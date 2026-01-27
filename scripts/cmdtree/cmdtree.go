@@ -14,7 +14,7 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/inovacc/glix/cmd"
+	"github.com/inovacc/goshell/cmd"
 	"github.com/spf13/cobra"
 )
 

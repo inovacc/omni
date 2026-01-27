@@ -1,26 +1,18 @@
-/*
-Copyright © 2026 NAME HERE <EMAIL ADDRESS>
-*/
 package cmd
 
 import (
-	"fmt"
+	"github.com/inovacc/goshell/pkg/cli"
 
 	"github.com/spf13/cobra"
 )
 
 // basenameCmd represents the basename command
 var basenameCmd = &cobra.Command{
-	Use:   "basename",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("basename called")
+	Use:   "basename NAME [SUFFIX]",
+	Short: "Strip directory and suffix from file names",
+	Long:  `Print NAME with any leading directory components removed. If specified, also remove a trailing SUFFIX.`,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return cli.RunBasename(args)
 	},
 }
 

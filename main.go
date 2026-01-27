@@ -22,7 +22,7 @@ THE SOFTWARE.
 
 package main
 
-import "project-name/cmd"
+import "github.com/inovacc/goshell/cmd"
 
 func main() {
 	cmd.Execute()

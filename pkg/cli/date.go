@@ -2,10 +2,10 @@ package cli
 
 import (
 	"fmt"
-	"time"
+	"github.com/inovacc/goshell/pkg/timeutil"
 )
 
 func RunDate() error {
-	fmt.Println(time.Now().Format(time.RFC3339))
+	fmt.Println(timeutil.Date(""))
 	return nil
 }

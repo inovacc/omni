@@ -1,12 +1,7 @@
-/*
-Copyright © 2026 NAME HERE <EMAIL ADDRESS>
-*/
 package cmd
 
 import (
-	"fmt"
-
-	"goshell/pkg/cli"
+	"github.com/inovacc/goshell/pkg/cli"
 
 	"github.com/spf13/cobra"
 )
