@@ -3,7 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/inovacc/goshell/pkg/cli"
+	"github.com/inovacc/omni/pkg/cli"
 
 	"github.com/spf13/cobra"
 )
@@ -21,10 +21,10 @@ With no FILE, or when FILE is -, read standard input.
   -i, --ignore-garbage  ignore non-alphabet characters when decoding
 
 Examples:
-  echo "hello" | goshell base64           # encode
-  echo "aGVsbG8K" | goshell base64 -d     # decode
-  goshell base64 file.bin                 # encode file
-  goshell base64 -d encoded.txt           # decode file`,
+  echo "hello" | omni base64           # encode
+  echo "aGVsbG8K" | omni base64 -d     # decode
+  omni base64 file.bin                 # encode file
+  omni base64 -d encoded.txt           # decode file`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		opts := cli.BaseOptions{}
 

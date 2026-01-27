@@ -4,7 +4,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/inovacc/goshell/pkg/cli"
+	"github.com/inovacc/omni/pkg/cli"
 
 	"github.com/spf13/cobra"
 )

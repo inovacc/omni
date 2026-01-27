@@ -3,7 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/inovacc/goshell/pkg/cli"
+	"github.com/inovacc/omni/pkg/cli"
 
 	"github.com/spf13/cobra"
 )
@@ -21,10 +21,10 @@ Generates version 4 (random) UUIDs per RFC 4122.
   -x, --no-dashes output without dashes
 
 Examples:
-  goshell uuid                  # generate one UUID
-  goshell uuid -n 5             # generate 5 UUIDs
-  goshell uuid -u               # uppercase output
-  goshell uuid -x               # no dashes (32 hex chars)`,
+  omni uuid                  # generate one UUID
+  omni uuid -n 5             # generate 5 UUIDs
+  omni uuid -u               # uppercase output
+  omni uuid -x               # no dashes (32 hex chars)`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		opts := cli.UUIDOptions{}
 

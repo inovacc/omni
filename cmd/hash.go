@@ -3,7 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/inovacc/goshell/pkg/cli"
+	"github.com/inovacc/omni/pkg/cli"
 
 	"github.com/spf13/cobra"
 )
@@ -25,11 +25,11 @@ With no FILE, or when FILE is -, read standard input.
   -w, --warn           warn about improperly formatted checksum lines
 
 Examples:
-  goshell hash file.txt                    # SHA256 hash
-  goshell hash -a md5 file.txt             # MD5 hash
-  goshell hash -r ./dir                    # hash all files in directory
-  goshell hash -c checksums.txt            # verify checksums
-  goshell hash file1 file2 > checksums.txt # create checksum file`,
+  omni hash file.txt                    # SHA256 hash
+  omni hash -a md5 file.txt             # MD5 hash
+  omni hash -r ./dir                    # hash all files in directory
+  omni hash -c checksums.txt            # verify checksums
+  omni hash file1 file2 > checksums.txt # create checksum file`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		opts := cli.HashOptions{}
 

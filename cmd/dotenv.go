@@ -3,7 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/inovacc/goshell/pkg/cli"
+	"github.com/inovacc/omni/pkg/cli"
 
 	"github.com/spf13/cobra"
 )
@@ -28,11 +28,11 @@ The .env file format:
   export KEY=value    # export prefix is optional
 
 Examples:
-  goshell dotenv                    # display vars from .env
-  goshell dotenv .env.local         # display vars from specific file
-  goshell dotenv -e                 # output as export statements
-  eval $(goshell dotenv -e)         # load vars into shell
-  goshell dotenv -x                 # expand ${VAR} references`,
+  omni dotenv                    # display vars from .env
+  omni dotenv .env.local         # display vars from specific file
+  omni dotenv -e                 # output as export statements
+  eval $(omni dotenv -e)         # load vars into shell
+  omni dotenv -x                 # expand ${VAR} references`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		opts := cli.DotenvOptions{}
 

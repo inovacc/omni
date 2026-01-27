@@ -26,7 +26,7 @@ type XargsOptions struct {
 type XargsWorkerFunc func(args []string) error
 
 // RunXargs reads arguments from input and passes them to a worker function
-// Note: goshell doesn't exec external commands, so this works with worker functions
+// Note: omni doesn't exec external commands, so this works with worker functions
 func RunXargs(w io.Writer, r io.Reader, initialArgs []string, opts XargsOptions, worker XargsWorkerFunc) error {
 	// Parse input into arguments
 	args, err := parseXargsInput(r, opts)

@@ -3,7 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/inovacc/goshell/pkg/cli"
+	"github.com/inovacc/omni/pkg/cli"
 
 	"github.com/spf13/cobra"
 )
@@ -24,12 +24,12 @@ Special modes:
   -r        Recursively compare directories
 
 Examples:
-  goshell diff file1.txt file2.txt
-  goshell diff -u 5 old.txt new.txt         # 5 lines of context
-  goshell diff -y file1.txt file2.txt       # side-by-side
-  goshell diff -q dir1/ dir2/               # brief comparison
-  goshell diff --json config1.json config2.json
-  goshell diff -r dir1/ dir2/               # recursive`,
+  omni diff file1.txt file2.txt
+  omni diff -u 5 old.txt new.txt         # 5 lines of context
+  omni diff -y file1.txt file2.txt       # side-by-side
+  omni diff -q dir1/ dir2/               # brief comparison
+  omni diff --json config1.json config2.json
+  omni diff -r dir1/ dir2/               # recursive`,
 	Args: cobra.MinimumNArgs(2),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		opts := cli.DiffOptions{}

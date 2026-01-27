@@ -3,7 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/inovacc/goshell/pkg/cli"
+	"github.com/inovacc/omni/pkg/cli"
 
 	"github.com/spf13/cobra"
 )
@@ -25,11 +25,11 @@ var psCmd = &cobra.Command{
 Note: On Linux, reads /proc filesystem. On Windows, uses Win32 API.
 
 Examples:
-  goshell ps                 # show current user's processes
-  goshell ps -a              # show all processes
-  goshell ps -f              # full format listing
-  goshell ps -p 1234         # show specific process
-  goshell ps --sort cpu      # sort by CPU usage`,
+  omni ps                 # show current user's processes
+  omni ps -a              # show all processes
+  omni ps -f              # full format listing
+  omni ps -p 1234         # show specific process
+  omni ps --sort cpu      # sort by CPU usage`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		opts := cli.PsOptions{}
 

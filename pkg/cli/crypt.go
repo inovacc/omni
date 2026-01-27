@@ -229,11 +229,11 @@ func getPassword(opts CryptOptions) (string, error) {
 	}
 
 	// Check environment variable
-	if envPass := os.Getenv("GOSHELL_PASSWORD"); envPass != "" {
+	if envPass := os.Getenv("omni_PASSWORD"); envPass != "" {
 		return envPass, nil
 	}
 
-	return "", fmt.Errorf("no password provided (use -p, -P, -k, or GOSHELL_PASSWORD)")
+	return "", fmt.Errorf("no password provided (use -p, -P, -k, or omni_PASSWORD)")
 }
 
 // GenerateKey generates a random encryption key

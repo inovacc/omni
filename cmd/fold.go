@@ -3,7 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/inovacc/goshell/pkg/cli"
+	"github.com/inovacc/omni/pkg/cli"
 
 	"github.com/spf13/cobra"
 )
@@ -21,8 +21,8 @@ With no FILE, or when FILE is -, read standard input.
   -s, --spaces       break at spaces
 
 Examples:
-  goshell fold -w 40 file.txt     # wrap lines at 40 columns
-  goshell fold -s -w 72 README    # wrap at spaces, 72 columns`,
+  omni fold -w 40 file.txt     # wrap lines at 40 columns
+  omni fold -s -w 72 README    # wrap at spaces, 72 columns`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		opts := cli.FoldOptions{}
 

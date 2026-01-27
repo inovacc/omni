@@ -3,7 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/inovacc/goshell/pkg/cli"
+	"github.com/inovacc/omni/pkg/cli"
 
 	"github.com/spf13/cobra"
 )
@@ -28,10 +28,10 @@ Uses the same filter syntax as jq:
   -n          null input
 
 Examples:
-  goshell yq '.name' config.yaml
-  goshell yq -o json '.' config.yaml    # convert YAML to JSON
-  echo "name: John" | goshell yq '.name'
-  goshell yq '.items[]' data.yaml`,
+  omni yq '.name' config.yaml
+  omni yq -o json '.' config.yaml    # convert YAML to JSON
+  echo "name: John" | omni yq '.name'
+  omni yq '.items[]' data.yaml`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		opts := cli.YqOptions{}
 

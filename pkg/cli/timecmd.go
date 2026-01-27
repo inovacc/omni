@@ -15,7 +15,7 @@ type TimeResult struct {
 }
 
 // RunTime measures execution time of a function
-// Since goshell doesn't exec external commands, this is used as a timing utility
+// Since omni doesn't exec external commands, this is used as a timing utility
 func RunTime(w io.Writer, fn func() error) (TimeResult, error) {
 	start := time.Now()
 

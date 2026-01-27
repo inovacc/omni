@@ -3,7 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/inovacc/goshell/pkg/cli"
+	"github.com/inovacc/omni/pkg/cli"
 
 	"github.com/spf13/cobra"
 )
@@ -24,11 +24,11 @@ This is a simplified subset of AWK supporting:
   -v var=value   assign value to variable var
 
 Examples:
-  goshell awk '{print $1}' file.txt          # print first field
-  goshell awk -F: '{print $1}' /etc/passwd   # use : as separator
-  goshell awk '/pattern/{print}' file.txt    # print matching lines
-  goshell awk 'BEGIN{print "start"} {print} END{print "end"}' file
-  goshell awk '{print $1, $NF}' file.txt     # print first and last field`,
+  omni awk '{print $1}' file.txt          # print first field
+  omni awk -F: '{print $1}' /etc/passwd   # use : as separator
+  omni awk '/pattern/{print}' file.txt    # print matching lines
+  omni awk 'BEGIN{print "start"} {print} END{print "end"}' file
+  omni awk '{print $1, $NF}' file.txt     # print first and last field`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		opts := cli.AwkOptions{}
 

@@ -3,7 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/inovacc/goshell/pkg/cli"
+	"github.com/inovacc/omni/pkg/cli"
 
 	"github.com/spf13/cobra"
 )
@@ -31,10 +31,10 @@ This is a simplified implementation supporting common operations:
   --tab       use tabs for indentation
 
 Examples:
-  echo '{"name":"John"}' | goshell jq '.name'
-  echo '[1,2,3]' | goshell jq '.[]'
-  echo '{"a":{"b":1}}' | goshell jq '.a.b'
-  goshell jq -r '.name' data.json`,
+  echo '{"name":"John"}' | omni jq '.name'
+  echo '[1,2,3]' | omni jq '.[]'
+  echo '{"a":{"b":1}}' | omni jq '.a.b'
+  omni jq -r '.name' data.json`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		opts := cli.JqOptions{}
 

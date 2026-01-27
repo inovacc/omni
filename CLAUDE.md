@@ -1,16 +1,16 @@
-# goshell - Project Memory
+# omni - Project Memory
 
 ## Project Overview
 
-**goshell** is a cross-platform, Go-native shell utility replacement. It provides deterministic, testable implementations of common Unix commands for use in Taskfile, CI/CD, and enterprise environments.
+**omni** is a cross-platform, Go-native shell utility replacement. It provides deterministic, testable implementations of common Unix commands for use in Taskfile, CI/CD, and enterprise environments.
 
 ### Branding
 
 | Item | Value |
 |------|-------|
-| **Name** | goshell |
-| **Package** | `github.com/inovacc/goshell` |
-| **Binary** | `goshell` |
+| **Name** | omni |
+| **Package** | `github.com/inovacc/omni` |
+| **Binary** | `omni` |
 | **Tagline** | "Shell utilities, rewritten in Go" |
 
 ### Design Principles
@@ -29,7 +29,7 @@
 ### Directory Structure
 
 ```
-goshell/
+omni/
 ├── cmd/           # Cobra CLI commands (thin wrappers)
 ├── pkg/cli/       # Library implementations (all logic here)
 ├── tests/         # Integration tests
@@ -184,15 +184,15 @@ func TestLs(t *testing.T) {
 ### Build
 
 ```bash
-go build -ldflags="-s -w" -o goshell .
+go build -ldflags="-s -w" -o omni .
 ```
 
 ### Cross-Compile
 
 ```bash
-GOOS=linux GOARCH=amd64 go build -o goshell-linux .
-GOOS=darwin GOARCH=amd64 go build -o goshell-darwin .
-GOOS=windows GOARCH=amd64 go build -o goshell.exe .
+GOOS=linux GOARCH=amd64 go build -o omni-linux .
+GOOS=darwin GOARCH=amd64 go build -o omni-darwin .
+GOOS=windows GOARCH=amd64 go build -o omni.exe .
 ```
 
 ---
@@ -227,6 +227,6 @@ GOOS=windows GOARCH=amd64 go build -o goshell.exe .
 
 ## Links
 
-- **Repo**: https://github.com/inovacc/goshell
+- **Repo**: https://github.com/inovacc/omni
 - **Taskfile**: https://taskfile.dev/
 - **Cobra**: https://github.com/spf13/cobra

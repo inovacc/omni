@@ -3,7 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/inovacc/goshell/pkg/cli"
+	"github.com/inovacc/omni/pkg/cli"
 
 	"github.com/spf13/cobra"
 )
@@ -21,8 +21,8 @@ With no FILE, or when FILE is -, read standard input.
   -d, --decode    decode data
 
 Examples:
-  echo "hello" | goshell base58           # encode
-  goshell base58 -d encoded.txt           # decode`,
+  echo "hello" | omni base58           # encode
+  omni base58 -d encoded.txt           # decode`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		opts := cli.BaseOptions{}
 

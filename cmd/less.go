@@ -3,7 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/inovacc/goshell/pkg/cli"
+	"github.com/inovacc/omni/pkg/cli"
 
 	"github.com/spf13/cobra"
 )
@@ -28,10 +28,10 @@ Navigation:
   q               Quit
 
 Examples:
-  goshell less file.txt
-  goshell less -N file.txt     # with line numbers
-  goshell less -S file.txt     # chop long lines
-  cat file.txt | goshell less  # from stdin`,
+  omni less file.txt
+  omni less -N file.txt     # with line numbers
+  omni less -S file.txt     # chop long lines
+  cat file.txt | omni less  # from stdin`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		opts := cli.PagerOptions{}
 

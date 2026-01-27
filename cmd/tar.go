@@ -3,7 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/inovacc/goshell/pkg/cli"
+	"github.com/inovacc/omni/pkg/cli"
 
 	"github.com/spf13/cobra"
 )
@@ -24,12 +24,12 @@ var tarCmd = &cobra.Command{
       --strip-components=N  strip N leading path components
 
 Examples:
-  goshell tar -cvf archive.tar dir/        # create tar archive
-  goshell tar -czvf archive.tar.gz dir/    # create gzipped tar
-  goshell tar -xvf archive.tar             # extract tar archive
-  goshell tar -xzvf archive.tar.gz         # extract gzipped tar
-  goshell tar -tvf archive.tar             # list contents
-  goshell tar -xvf archive.tar -C /dest    # extract to directory`,
+  omni tar -cvf archive.tar dir/        # create tar archive
+  omni tar -czvf archive.tar.gz dir/    # create gzipped tar
+  omni tar -xvf archive.tar             # extract tar archive
+  omni tar -xzvf archive.tar.gz         # extract gzipped tar
+  omni tar -tvf archive.tar             # list contents
+  omni tar -xvf archive.tar -C /dest    # extract to directory`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		opts := cli.ArchiveOptions{}
 

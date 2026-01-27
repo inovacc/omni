@@ -8,7 +8,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/inovacc/goshell/pkg/cli"
+	"github.com/inovacc/omni/pkg/cli"
 
 	"github.com/spf13/cobra"
 )
@@ -19,7 +19,7 @@ var watchCmd = &cobra.Command{
 	Short: "Execute a program periodically, showing output fullscreen",
 	Long: `Execute a command repeatedly, displaying its output.
 
-Note: Since goshell doesn't execute external commands, this version
+Note: Since omni doesn't execute external commands, this version
 monitors files or directories for changes.
 
   -n, --interval=SECS   seconds to wait between updates (default 2)
@@ -31,8 +31,8 @@ monitors files or directories for changes.
   -c, --color           interpret ANSI color and style sequences
 
 Examples:
-  goshell watch -n 1 file myfile.txt    # Watch a file for changes
-  goshell watch -n 5 dir ./logs         # Watch a directory`,
+  omni watch -n 1 file myfile.txt    # Watch a file for changes
+  omni watch -n 5 dir ./logs         # Watch a directory`,
 	Args: cobra.MinimumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		opts := cli.WatchOptions{}

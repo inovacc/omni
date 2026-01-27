@@ -3,7 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/inovacc/goshell/pkg/cli"
+	"github.com/inovacc/omni/pkg/cli"
 
 	"github.com/spf13/cobra"
 )
@@ -26,8 +26,8 @@ Note: MD5 is cryptographically broken and should not be used for security.
 Use SHA256 for secure hashing.
 
 Examples:
-  goshell md5sum file.txt           # compute hash
-  goshell md5sum -c checksums.txt   # verify checksums`,
+  omni md5sum file.txt           # compute hash
+  omni md5sum -c checksums.txt   # verify checksums`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		opts := cli.HashOptions{Algorithm: "md5"}
 

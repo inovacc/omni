@@ -8,13 +8,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/inovacc/goshell/pkg/cli"
+	"github.com/inovacc/omni/pkg/cli"
 )
 
 //nolint:maintidx // Test function has expected high complexity with many subtest cases
 func TestPhase1Commands(t *testing.T) {
 	// Setup: Create a temporary directory for tests
-	tmpDir, err := os.MkdirTemp("", "goshell_test")
+	tmpDir, err := os.MkdirTemp("", "omni_test")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -304,22 +304,22 @@ func TestPhase1Commands(t *testing.T) {
 	// 14. Test env
 	t.Run("env", func(t *testing.T) {
 		// Set a test variable
-		if err := os.Setenv("GOSHELL_TEST_VAR", "test_value"); err != nil {
+		if err := os.Setenv("omni_TEST_VAR", "test_value"); err != nil {
 			t.Fatal(err)
 		}
 
 		defer func() {
-			_ = os.Unsetenv("GOSHELL_TEST_VAR")
+			_ = os.Unsetenv("omni_TEST_VAR")
 		}()
 
 		var buf bytes.Buffer
 
-		err := cli.RunEnv(&buf, []string{"GOSHELL_TEST_VAR"}, cli.EnvOptions{})
+		err := cli.RunEnv(&buf, []string{"omni_TEST_VAR"}, cli.EnvOptions{})
 		if err != nil {
 			t.Fatalf("command failed: %v", err)
 		}
 
-		if !strings.Contains(buf.String(), "GOSHELL_TEST_VAR=test_value") {
+		if !strings.Contains(buf.String(), "omni_TEST_VAR=test_value") {
 			t.Errorf("expected env var, got %s", buf.String())
 		}
 	})

@@ -3,7 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/inovacc/goshell/pkg/cli"
+	"github.com/inovacc/omni/pkg/cli"
 
 	"github.com/spf13/cobra"
 )
@@ -17,7 +17,7 @@ var nohupCmd = &cobra.Command{
 If standard output is a terminal, append output to 'nohup.out' if possible,
 '$HOME/nohup.out' otherwise.
 
-Note: goshell cannot execute external commands. This command provides
+Note: omni cannot execute external commands. This command provides
 signal handling and output redirection for documentation/compatibility purposes.
 Use system nohup for actual process detachment.
 

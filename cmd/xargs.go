@@ -3,7 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/inovacc/goshell/pkg/cli"
+	"github.com/inovacc/omni/pkg/cli"
 
 	"github.com/spf13/cobra"
 )
@@ -15,7 +15,7 @@ var xargsCmd = &cobra.Command{
 	Long: `Read items from standard input, delimited by blanks or newlines, and
 execute a command for each item.
 
-Note: Since goshell doesn't execute external commands, this version
+Note: Since omni doesn't execute external commands, this version
 reads and prints arguments from stdin. It can be used to transform
 input for piping to other tools.
 
@@ -28,9 +28,9 @@ input for piping to other tools.
   -I REPLACE-STR        replace occurrences of REPLACE-STR in initial args
 
 Examples:
-  echo "a b c" | goshell xargs        # prints: a b c
-  echo -e "a\nb\nc" | goshell xargs   # prints: a b c
-  echo -e "a\nb\nc" | goshell xargs -n 1  # prints each on separate line`,
+  echo "a b c" | omni xargs        # prints: a b c
+  echo -e "a\nb\nc" | omni xargs   # prints: a b c
+  echo -e "a\nb\nc" | omni xargs -n 1  # prints each on separate line`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		opts := cli.XargsOptions{}
 

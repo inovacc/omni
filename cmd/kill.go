@@ -3,7 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/inovacc/goshell/pkg/cli"
+	"github.com/inovacc/omni/pkg/cli"
 
 	"github.com/spf13/cobra"
 )
@@ -24,10 +24,10 @@ Common signals:
    9) SIGKILL     15) SIGTERM (default)
 
 Examples:
-  goshell kill 1234           # send SIGTERM to process 1234
-  goshell kill -9 1234        # send SIGKILL to process 1234
-  goshell kill -s HUP 1234    # send SIGHUP to process 1234
-  goshell kill -l             # list all signal names`,
+  omni kill 1234           # send SIGTERM to process 1234
+  omni kill -9 1234        # send SIGKILL to process 1234
+  omni kill -s HUP 1234    # send SIGHUP to process 1234
+  omni kill -l             # list all signal names`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		opts := cli.KillOptions{}
 

@@ -5,7 +5,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/inovacc/goshell/pkg/cli"
+	"github.com/inovacc/omni/pkg/cli"
 
 	"github.com/spf13/cobra"
 )
@@ -18,12 +18,12 @@ var timeCmd = &cobra.Command{
 utility finishes, time writes to the standard error stream, the total
 time elapsed.
 
-Note: Since goshell doesn't execute external commands, this command
+Note: Since omni doesn't execute external commands, this command
 provides timing utilities and can measure internal operations.
 
 Examples:
-  goshell time sleep 2    # Time a sleep operation
-  goshell time            # Just show current time info`,
+  omni time sleep 2    # Time a sleep operation
+  omni time            # Just show current time info`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if len(args) == 0 {
 			// Just print current time

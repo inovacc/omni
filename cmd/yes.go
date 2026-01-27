@@ -6,7 +6,7 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/inovacc/goshell/pkg/cli"
+	"github.com/inovacc/omni/pkg/cli"
 
 	"github.com/spf13/cobra"
 )
@@ -18,9 +18,9 @@ var yesCmd = &cobra.Command{
 	Long: `Repeatedly output a line with all specified STRING(s), or 'y'.
 
 Examples:
-  goshell yes              # outputs 'y' forever
-  goshell yes hello        # outputs 'hello' forever
-  goshell yes | head -5    # outputs 5 'y' lines`,
+  omni yes              # outputs 'y' forever
+  omni yes hello        # outputs 'hello' forever
+  omni yes | head -5    # outputs 5 'y' lines`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()

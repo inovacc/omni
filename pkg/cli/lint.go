@@ -49,64 +49,64 @@ type LintResult struct {
 	WarnCount  int         `json:"warning_count"`
 }
 
-// Common shell commands that should use goshell
+// Common shell commands that should use omni
 var shellCommands = map[string]string{
-	"ls":        "goshell ls",
-	"cat":       "goshell cat",
-	"cp":        "goshell cp",
-	"mv":        "goshell mv",
-	"rm":        "goshell rm",
-	"mkdir":     "goshell mkdir",
-	"rmdir":     "goshell rmdir",
-	"touch":     "goshell touch",
-	"chmod":     "goshell chmod",
-	"chown":     "goshell chown",
-	"grep":      "goshell grep",
-	"sed":       "goshell sed",
-	"awk":       "goshell awk",
-	"head":      "goshell head",
-	"tail":      "goshell tail",
-	"sort":      "goshell sort",
-	"uniq":      "goshell uniq",
-	"wc":        "goshell wc",
-	"cut":       "goshell cut",
-	"tr":        "goshell tr",
-	"base64":    "goshell base64",
-	"tar":       "goshell tar",
-	"zip":       "goshell zip",
-	"unzip":     "goshell unzip",
-	"sha256sum": "goshell sha256sum",
-	"sha512sum": "goshell sha512sum",
-	"md5sum":    "goshell md5sum",
-	"uname":     "goshell uname",
-	"whoami":    "goshell whoami",
-	"pwd":       "goshell pwd",
-	"date":      "goshell date",
-	"env":       "goshell env",
-	"df":        "goshell df",
-	"du":        "goshell du",
-	"ps":        "goshell ps",
-	"kill":      "goshell kill",
-	"diff":      "goshell diff",
-	"stat":      "goshell stat",
-	"ln":        "goshell ln",
-	"readlink":  "goshell readlink",
-	"realpath":  "goshell realpath",
-	"dirname":   "goshell dirname",
-	"basename":  "goshell basename",
-	"nl":        "goshell nl",
-	"fold":      "goshell fold",
-	"join":      "goshell join",
-	"paste":     "goshell paste",
-	"column":    "goshell column",
-	"tac":       "goshell tac",
-	"yes":       "goshell yes",
-	"xargs":     "goshell xargs",
+	"ls":        "omni ls",
+	"cat":       "omni cat",
+	"cp":        "omni cp",
+	"mv":        "omni mv",
+	"rm":        "omni rm",
+	"mkdir":     "omni mkdir",
+	"rmdir":     "omni rmdir",
+	"touch":     "omni touch",
+	"chmod":     "omni chmod",
+	"chown":     "omni chown",
+	"grep":      "omni grep",
+	"sed":       "omni sed",
+	"awk":       "omni awk",
+	"head":      "omni head",
+	"tail":      "omni tail",
+	"sort":      "omni sort",
+	"uniq":      "omni uniq",
+	"wc":        "omni wc",
+	"cut":       "omni cut",
+	"tr":        "omni tr",
+	"base64":    "omni base64",
+	"tar":       "omni tar",
+	"zip":       "omni zip",
+	"unzip":     "omni unzip",
+	"sha256sum": "omni sha256sum",
+	"sha512sum": "omni sha512sum",
+	"md5sum":    "omni md5sum",
+	"uname":     "omni uname",
+	"whoami":    "omni whoami",
+	"pwd":       "omni pwd",
+	"date":      "omni date",
+	"env":       "omni env",
+	"df":        "omni df",
+	"du":        "omni du",
+	"ps":        "omni ps",
+	"kill":      "omni kill",
+	"diff":      "omni diff",
+	"stat":      "omni stat",
+	"ln":        "omni ln",
+	"readlink":  "omni readlink",
+	"realpath":  "omni realpath",
+	"dirname":   "omni dirname",
+	"basename":  "omni basename",
+	"nl":        "omni nl",
+	"fold":      "omni fold",
+	"join":      "omni join",
+	"paste":     "omni paste",
+	"column":    "omni column",
+	"tac":       "omni tac",
+	"yes":       "omni yes",
+	"xargs":     "omni xargs",
 }
 
 // Non-portable commands that should be avoided
 var nonPortableCommands = map[string]string{
-	"find":      "Use 'goshell ls -R' or Go filepath.Walk",
+	"find":      "Use 'omni ls -R' or Go filepath.Walk",
 	"xdg-open":  "Not available on Windows/macOS",
 	"open":      "macOS-specific, not available on Linux/Windows",
 	"start":     "Windows-specific",
@@ -143,7 +143,7 @@ var bashSpecificPatterns = []struct {
 	{
 		Pattern: regexp.MustCompile(`\$\([^)]+\)`),
 		Message: "Command substitution $() - prefer cross-platform alternatives",
-		Fix:     "Use goshell commands or Go code instead",
+		Fix:     "Use omni commands or Go code instead",
 	},
 	{
 		Pattern: regexp.MustCompile(`\|&`),
@@ -390,7 +390,7 @@ func lintTaskfile(filename string, opts LintOptions) (LintResult, error) {
 			// Find line number for this command
 			lineNum := findLineNumber(lines, cmd)
 
-			// Check for shell commands that should use goshell
+			// Check for shell commands that should use omni
 			issues := checkCommand(filename, taskName, cmd, lineNum, opts)
 			for _, issue := range issues {
 				result.Issues = append(result.Issues, issue)
@@ -456,15 +456,15 @@ func checkCommand(filename, taskName, cmd string, lineNum int, opts LintOptions)
 
 	baseCmd := filepath.Base(parts[0])
 
-	// Check for shell commands that should use goshell
+	// Check for shell commands that should use omni
 	if replacement, ok := shellCommands[baseCmd]; ok {
-		// Don't flag if already using goshell
-		if !strings.HasPrefix(parts[0], "goshell") {
+		// Don't flag if already using omni
+		if !strings.HasPrefix(parts[0], "omni") {
 			issues = append(issues, LintIssue{
 				File:     filename,
 				Line:     lineNum,
 				Severity: LintWarning,
-				Rule:     "use-goshell",
+				Rule:     "use-omni",
 				Message:  fmt.Sprintf("Task '%s': '%s' could be replaced with '%s' for portability", taskName, baseCmd, replacement),
 				Fix:      fmt.Sprintf("Replace '%s' with '%s'", baseCmd, replacement),
 			})
@@ -510,7 +510,7 @@ func checkCommand(filename, taskName, cmd string, lineNum int, opts LintOptions)
 				Severity: LintInfo,
 				Rule:     "pipe-safety",
 				Message:  fmt.Sprintf("Task '%s': Pipe chain without pipefail may hide errors", taskName),
-				Fix:      "Use 'set -o pipefail' or goshell commands",
+				Fix:      "Use 'set -o pipefail' or omni commands",
 			})
 		}
 	}

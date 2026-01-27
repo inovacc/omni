@@ -1,8 +1,8 @@
-# goshell - Implementation Roadmap
+# omni - Implementation Roadmap
 
 ## Overview
 
-**goshell** is a cross-platform, Go-native replacement for common shell utilities. It provides deterministic, testable implementations designed for Taskfile, CI/CD, and enterprise environments.
+**omni** is a cross-platform, Go-native replacement for common shell utilities. It provides deterministic, testable implementations designed for Taskfile, CI/CD, and enterprise environments.
 
 ### Design Principles
 
@@ -36,7 +36,7 @@ Foundation commands using Go standard library.
 ### Architecture
 
 ```
-goshell/
+omni/
 ├── cmd/                    # Cobra CLI commands
 │   ├── root.go
 │   ├── ls.go
@@ -93,7 +93,7 @@ type RMOptions struct {
 ### Library API
 
 ```go
-import "github.com/inovacc/goshell/pkg/fs"
+import "github.com/inovacc/omni/pkg/fs"
 
 fs.Copy("src", "dst", fs.CopyOptions{Recursive: true})
 fs.Move("src", "dst")
@@ -236,7 +236,7 @@ Concurrency, streaming, and flow control.
 ### xargs Design (Safe)
 
 ```go
-// Only executes internal goshell commands - NO external exec
+// Only executes internal omni commands - NO external exec
 type WorkerFunc func(arg string) error
 
 type XargsOptions struct {
@@ -248,7 +248,7 @@ func Run(args []string, fn WorkerFunc, opt XargsOptions) error
 
 Usage:
 ```bash
-goshell find . .go | goshell xargs -P 4 stat
+omni find . .go | omni xargs -P 4 stat
 ```
 
 ### Watch Design
@@ -257,7 +257,7 @@ goshell find . .go | goshell xargs -P 4 stat
 type WatchOptions struct {
     Interval  time.Duration
     OnChange  bool          // Use fsnotify instead of polling
-    Command   string        // Internal goshell command to run
+    Command   string        // Internal omni command to run
 }
 
 func Watch(path string, opt WatchOptions, fn func() error) error
@@ -290,28 +290,28 @@ Integration, documentation, and developer experience.
 ### Taskfile Linter
 
 ```bash
-goshell lint Taskfile.yml
+omni lint Taskfile.yml
 ```
 
 Checks:
 - [ ] No shell-specific commands (rm, grep, etc.)
-- [ ] All commands are goshell-compatible
+- [ ] All commands are omni-compatible
 - [ ] No `exec` or external process calls
 
 ### Archive Commands
 
 ```bash
-goshell archive create out.zip ./dir
-goshell archive list out.zip
-goshell archive extract out.zip
+omni archive create out.zip ./dir
+omni archive list out.zip
+omni archive extract out.zip
 ```
 
 ### Hash Commands
 
 ```bash
-goshell hash file.bin
-goshell hash dir/ --recursive
-goshell hash --verify checksums.txt
+omni hash file.bin
+omni hash dir/ --recursive
+omni hash --verify checksums.txt
 ```
 
 ---
@@ -322,11 +322,11 @@ All commands are available as importable Go packages:
 
 ```go
 import (
-    "github.com/inovacc/goshell/pkg/fs"      // File system operations
-    "github.com/inovacc/goshell/pkg/text"    // Text processing
-    "github.com/inovacc/goshell/pkg/sys"     // System information
-    "github.com/inovacc/goshell/pkg/hash"    // Hashing utilities
-    "github.com/inovacc/goshell/pkg/archive" // Archive operations
+    "github.com/inovacc/omni/pkg/fs"      // File system operations
+    "github.com/inovacc/omni/pkg/text"    // Text processing
+    "github.com/inovacc/omni/pkg/sys"     // System information
+    "github.com/inovacc/omni/pkg/hash"    // Hashing utilities
+    "github.com/inovacc/omni/pkg/archive" // Archive operations
 )
 
 // Examples
@@ -344,12 +344,12 @@ All commands support multiple output formats:
 
 ### Text (Default)
 ```bash
-goshell ls
+omni ls
 ```
 
 ### JSON
 ```bash
-goshell ls --json
+omni ls --json
 ```
 ```json
 [
@@ -402,7 +402,7 @@ func BenchmarkSortGo(b *testing.B) {
 ### Golden Tests
 ```bash
 # Generate expected output
-goshell ls testdata/ > testdata/ls.golden
+omni ls testdata/ > testdata/ls.golden
 
 # Compare in tests
 func TestLsGolden(t *testing.T) {
@@ -472,7 +472,7 @@ func TestLsGolden(t *testing.T) {
 
 ```bash
 # Build
-go build -o goshell ./cmd/goshell
+go build -o omni ./cmd/omni
 
 # Or run directly
 go run . ls
@@ -480,7 +480,7 @@ go run . pwd --json
 go run . date --format "2006-01-02"
 
 # Use as library
-import "github.com/inovacc/goshell/pkg/fs"
+import "github.com/inovacc/omni/pkg/fs"
 files, _ := fs.Ls(".", fs.LsOptions{})
 ```
 

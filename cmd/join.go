@@ -3,7 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/inovacc/goshell/pkg/cli"
+	"github.com/inovacc/omni/pkg/cli"
 
 	"github.com/spf13/cobra"
 )
@@ -26,9 +26,9 @@ standard output. The default join field is the first, delimited by blanks.
 When FILE1 or FILE2 is -, read standard input.
 
 Examples:
-  goshell join file1.txt file2.txt           # join on first field
-  goshell join -1 2 -2 1 file1.txt file2.txt # join field 2 of file1 with field 1 of file2
-  goshell join -t ',' data1.csv data2.csv    # join CSV files`,
+  omni join file1.txt file2.txt           # join on first field
+  omni join -1 2 -2 1 file1.txt file2.txt # join field 2 of file1 with field 1 of file2
+  omni join -t ',' data1.csv data2.csv    # join CSV files`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		opts := cli.JoinOptions{}
 

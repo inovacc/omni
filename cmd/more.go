@@ -3,7 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/inovacc/goshell/pkg/cli"
+	"github.com/inovacc/omni/pkg/cli"
 
 	"github.com/spf13/cobra"
 )
@@ -22,9 +22,9 @@ Navigation:
   q               Quit
 
 Examples:
-  goshell more file.txt
-  goshell more -n file.txt     # with line numbers
-  cat file.txt | goshell more  # from stdin`,
+  omni more file.txt
+  omni more -n file.txt     # with line numbers
+  cat file.txt | omni more  # from stdin`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		opts := cli.PagerOptions{}
 

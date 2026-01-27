@@ -3,7 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/inovacc/goshell/pkg/cli"
+	"github.com/inovacc/omni/pkg/cli"
 
 	"github.com/spf13/cobra"
 )
@@ -20,10 +20,10 @@ var unzipCmd = &cobra.Command{
       --strip-components=N  strip N leading path components
 
 Examples:
-  goshell unzip archive.zip              # extract to current directory
-  goshell unzip -d /dest archive.zip     # extract to specific directory
-  goshell unzip -l archive.zip           # list contents
-  goshell unzip -v archive.zip           # verbose extraction`,
+  omni unzip archive.zip              # extract to current directory
+  omni unzip -d /dest archive.zip     # extract to specific directory
+  omni unzip -l archive.zip           # list contents
+  omni unzip -v archive.zip           # verbose extraction`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if len(args) < 1 {
 			return cmd.Help()

@@ -25,7 +25,7 @@ type WatchOptions struct {
 type WatchFunc func() (string, error)
 
 // RunWatch repeatedly executes a function at specified intervals
-// Note: goshell doesn't exec external commands, so this works with functions
+// Note: omni doesn't exec external commands, so this works with functions
 func RunWatch(ctx context.Context, w io.Writer, fn WatchFunc, opts WatchOptions) error {
 	if opts.Interval == 0 {
 		opts.Interval = 2 * time.Second

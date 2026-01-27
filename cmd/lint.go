@@ -3,7 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/inovacc/goshell/pkg/cli"
+	"github.com/inovacc/omni/pkg/cli"
 
 	"github.com/spf13/cobra"
 )
@@ -15,7 +15,7 @@ var lintCmd = &cobra.Command{
 	Long: `Lint Taskfiles for cross-platform portability.
 
 Checks for:
-  - Shell commands that should use goshell equivalents
+  - Shell commands that should use omni equivalents
   - Non-portable commands (package managers, OS-specific tools)
   - Bash-specific syntax ([[ ]], <<<, etc.)
   - Hardcoded Unix paths
@@ -27,11 +27,11 @@ Severity levels:
   info    - Suggestions for improvement
 
 Examples:
-  goshell lint                            # lint Taskfile.yml in current dir
-  goshell lint Taskfile.yml               # lint specific file
-  goshell lint ./tasks/                   # lint all Taskfiles in directory
-  goshell lint --strict Taskfile.yml      # enable strict mode
-  goshell lint -q Taskfile.yml            # only show errors`,
+  omni lint                            # lint Taskfile.yml in current dir
+  omni lint Taskfile.yml               # lint specific file
+  omni lint ./tasks/                   # lint all Taskfiles in directory
+  omni lint --strict Taskfile.yml      # enable strict mode
+  omni lint -q Taskfile.yml            # only show errors`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		opts := cli.LintOptions{}
 

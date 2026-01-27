@@ -3,7 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/inovacc/goshell/pkg/cli"
+	"github.com/inovacc/omni/pkg/cli"
 
 	"github.com/spf13/cobra"
 )
@@ -19,9 +19,9 @@ var zipCmd = &cobra.Command{
   -C, --directory   change to directory before adding files
 
 Examples:
-  goshell zip archive.zip file1.txt file2.txt   # create zip
-  goshell zip archive.zip dir/                   # zip directory
-  goshell zip -v archive.zip file.txt           # verbose output`,
+  omni zip archive.zip file1.txt file2.txt   # create zip
+  omni zip archive.zip dir/                   # zip directory
+  omni zip -v archive.zip file.txt           # verbose output`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if len(args) < 1 {
 			return cmd.Help()

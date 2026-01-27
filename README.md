@@ -1,4 +1,4 @@
-# goshell
+# omni
 
 A cross-platform, Go-native replacement for common shell utilities, designed for Taskfile, CI/CD, and enterprise environments.
 
@@ -13,47 +13,47 @@ A cross-platform, Go-native replacement for common shell utilities, designed for
 ## Installation
 
 ```bash
-go install github.com/inovacc/goshell@latest
+go install github.com/inovacc/omni@latest
 ```
 
 Or build from source:
 ```bash
-git clone https://github.com/inovacc/goshell.git
-cd goshell
-go build -o goshell .
+git clone https://github.com/inovacc/omni.git
+cd omni
+go build -o omni .
 ```
 
 ## Quick Start
 
 ```bash
 # File operations
-goshell ls -la
-goshell cat file.txt
-goshell cp -r src/ dst/
-goshell rm -rf temp/
+omni ls -la
+omni cat file.txt
+omni cp -r src/ dst/
+omni rm -rf temp/
 
 # Text processing
-goshell grep -i "pattern" file.txt
-goshell sed 's/old/new/g' file.txt
-goshell awk '{print $1}' data.txt
-goshell jq '.name' data.json
-goshell yq '.items[]' config.yaml
+omni grep -i "pattern" file.txt
+omni sed 's/old/new/g' file.txt
+omni awk '{print $1}' data.txt
+omni jq '.name' data.json
+omni yq '.items[]' config.yaml
 
 # System info
-goshell ps -a
-goshell df -h
-goshell free -h
-goshell uptime
+omni ps -a
+omni df -h
+omni free -h
+omni uptime
 
 # Utilities
-goshell sha256sum file.bin
-goshell base64 -d encoded.txt
-goshell uuid -n 5
-goshell random -t password -l 20
+omni sha256sum file.bin
+omni base64 -d encoded.txt
+omni uuid -n 5
+omni random -t password -l 20
 
 # Encryption
-echo "secret" | goshell encrypt -p mypass -a
-goshell decrypt -p mypass -a secret.enc
+echo "secret" | omni encrypt -p mypass -a
+omni decrypt -p mypass -a secret.enc
 ```
 
 ## Command Categories
@@ -183,7 +183,7 @@ goshell decrypt -p mypass -a secret.enc
 All commands are available as importable Go packages:
 
 ```go
-import "github.com/inovacc/goshell/pkg/cli"
+import "github.com/inovacc/omni/pkg/cli"
 
 // List files
 cli.RunLs(os.Stdout, []string{"."}, cli.LsOptions{All: true, Long: true})
@@ -207,7 +207,7 @@ cli.RunJq(os.Stdout, []string{".name", "data.json"}, cli.JqOptions{Raw: true})
 ## Project Structure
 
 ```
-goshell/
+omni/
 ├── cmd/                    # Cobra CLI commands
 │   ├── root.go
 │   ├── ls.go
@@ -240,7 +240,7 @@ goshell/
 
 ## Use with Taskfile
 
-goshell is designed to work with [Taskfile](https://taskfile.dev/):
+omni is designed to work with [Taskfile](https://taskfile.dev/):
 
 ```yaml
 version: '3'
@@ -248,17 +248,17 @@ version: '3'
 tasks:
   build:
     cmds:
-      - goshell mkdir -p dist
+      - omni mkdir -p dist
       - go build -o dist/app .
-      - goshell sha256sum dist/app > dist/checksums.txt
+      - omni sha256sum dist/app > dist/checksums.txt
 
   clean:
     cmds:
-      - goshell rm -rf dist
+      - omni rm -rf dist
 
   deploy:
     cmds:
-      - goshell tar -czvf release.tar.gz dist/
+      - omni tar -czvf release.tar.gz dist/
 ```
 
 ## Contributing

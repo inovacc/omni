@@ -59,7 +59,7 @@ func RunNohup(w io.Writer, args []string, opts NohupOptions) error {
 	// Since we can't exec external commands, this is limited to printing a message
 	// In a real implementation, this would use syscall.Exec or os/exec
 	_, _ = fmt.Fprintf(w, "nohup: would run: %v\n", args)
-	_, _ = fmt.Fprintln(w, "nohup: note: goshell cannot spawn external processes")
+	_, _ = fmt.Fprintln(w, "nohup: note: omni cannot spawn external processes")
 	_, _ = fmt.Fprintln(w, "nohup: use system nohup for external commands")
 
 	return nil

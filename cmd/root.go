@@ -5,9 +5,9 @@ import (
 )
 
 var rootCmd = &cobra.Command{
-	Use:   "goshell",
+	Use:   "omni",
 	Short: "Go-native replacement for common shell utilities",
-	Long: `goshell is a cross-platform, safe, Go-native replacement for common shell utilities,
+	Long: `omni is a cross-platform, safe, Go-native replacement for common shell utilities,
 designed for Taskfile, CI/CD, and enterprise environments.`,
 }
 

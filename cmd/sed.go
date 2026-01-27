@@ -3,7 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/inovacc/goshell/pkg/cli"
+	"github.com/inovacc/omni/pkg/cli"
 
 	"github.com/spf13/cobra"
 )
@@ -27,11 +27,11 @@ Supported commands:
   q                           quit
 
 Examples:
-  goshell sed 's/old/new/' file.txt        # replace first occurrence
-  goshell sed 's/old/new/g' file.txt       # replace all occurrences
-  goshell sed -i.bak 's/foo/bar/g' file    # in-place edit with backup
-  goshell sed '/pattern/d' file.txt        # delete matching lines
-  goshell sed -n '/pattern/p' file.txt     # print only matching lines`,
+  omni sed 's/old/new/' file.txt        # replace first occurrence
+  omni sed 's/old/new/g' file.txt       # replace all occurrences
+  omni sed -i.bak 's/foo/bar/g' file    # in-place edit with backup
+  omni sed '/pattern/d' file.txt        # delete matching lines
+  omni sed -n '/pattern/p' file.txt     # print only matching lines`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		opts := cli.SedOptions{}
 

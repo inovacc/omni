@@ -3,7 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/inovacc/goshell/pkg/cli"
+	"github.com/inovacc/omni/pkg/cli"
 
 	"github.com/spf13/cobra"
 )
@@ -20,9 +20,9 @@ With no FILE, or when FILE is -, read standard input.
   -w, --wrap=N    wrap encoded lines after N characters (default 76, 0 = no wrap)
 
 Examples:
-  echo "hello" | goshell base32           # encode
-  echo "NBSWY3DP" | goshell base32 -d     # decode
-  goshell base32 file.bin                 # encode file`,
+  echo "hello" | omni base32           # encode
+  echo "NBSWY3DP" | omni base32 -d     # decode
+  omni base32 file.bin                 # encode file`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		opts := cli.BaseOptions{}
 

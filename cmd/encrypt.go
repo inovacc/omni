@@ -3,7 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/inovacc/goshell/pkg/cli"
+	"github.com/inovacc/omni/pkg/cli"
 
 	"github.com/spf13/cobra"
 )
@@ -23,13 +23,13 @@ Uses PBKDF2 for key derivation with SHA-256.
   -a, --armor             ASCII armor (base64) output
   -i, --iterations N      PBKDF2 iterations (default 100000)
 
-Password can also be set via GOSHELL_PASSWORD environment variable.
+Password can also be set via omni_PASSWORD environment variable.
 
 Examples:
-  echo "secret" | goshell encrypt -p mypassword
-  goshell encrypt -p mypassword -o secret.enc file.txt
-  goshell encrypt -P ~/.password -a file.txt
-  GOSHELL_PASSWORD=pass goshell encrypt file.txt`,
+  echo "secret" | omni encrypt -p mypassword
+  omni encrypt -p mypassword -o secret.enc file.txt
+  omni encrypt -P ~/.password -a file.txt
+  omni_PASSWORD=pass omni encrypt file.txt`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		opts := cli.CryptOptions{}
 

@@ -3,7 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/inovacc/goshell/pkg/cli"
+	"github.com/inovacc/omni/pkg/cli"
 
 	"github.com/spf13/cobra"
 )
@@ -21,13 +21,13 @@ var decryptCmd = &cobra.Command{
   -a, --armor             input is ASCII armored (base64)
   -i, --iterations N      PBKDF2 iterations (default 100000)
 
-Password can also be set via GOSHELL_PASSWORD environment variable.
+Password can also be set via omni_PASSWORD environment variable.
 
 Examples:
-  goshell decrypt -p mypassword secret.enc
-  goshell decrypt -p mypassword -a < secret.b64
-  goshell decrypt -P ~/.password -o file.txt secret.enc
-  cat secret.enc | GOSHELL_PASSWORD=pass goshell decrypt`,
+  omni decrypt -p mypassword secret.enc
+  omni decrypt -p mypassword -a < secret.b64
+  omni decrypt -P ~/.password -o file.txt secret.enc
+  cat secret.enc | omni_PASSWORD=pass omni decrypt`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		opts := cli.CryptOptions{}
 

@@ -3,7 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/inovacc/goshell/pkg/cli"
+	"github.com/inovacc/omni/pkg/cli"
 
 	"github.com/spf13/cobra"
 )
@@ -34,12 +34,12 @@ Types:
   -s, --separator   separator between values (default: newline)
 
 Examples:
-  goshell random                         # random 16-char string
-  goshell random -t int --max 100        # random int 0-99
-  goshell random -t hex -l 32            # random 32-char hex
-  goshell random -t password -l 20       # random password
-  goshell random -n 5 -t int --max 10    # 5 random ints 0-9
-  goshell random -t custom -c "abc123"   # from custom charset`,
+  omni random                         # random 16-char string
+  omni random -t int --max 100        # random int 0-99
+  omni random -t hex -l 32            # random 32-char hex
+  omni random -t password -l 20       # random password
+  omni random -n 5 -t int --max 10    # 5 random ints 0-9
+  omni random -t custom -c "abc123"   # from custom charset`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		opts := cli.RandomOptions{}
 
