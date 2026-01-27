@@ -1,36 +1,59 @@
 package cmd
 
 import (
-	"fmt"
+	"os"
+
+	"github.com/inovacc/goshell/pkg/cli"
 
 	"github.com/spf13/cobra"
 )
 
 // xargsCmd represents the xargs command
 var xargsCmd = &cobra.Command{
-	Use:   "xargs",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
+	Use:   "xargs [OPTION]... [COMMAND [INITIAL-ARGS]]",
+	Short: "Build and execute command lines from standard input",
+	Long: `Read items from standard input, delimited by blanks or newlines, and
+execute a command for each item.
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("xargs called")
+Note: Since goshell doesn't execute external commands, this version
+reads and prints arguments from stdin. It can be used to transform
+input for piping to other tools.
+
+  -0, --null            input items are separated by a null character
+  -d, --delimiter=DELIM  input items are separated by DELIM
+  -n, --max-args=MAX    use at most MAX arguments per command line
+  -P, --max-procs=MAX   run at most MAX processes at a time
+  -r, --no-run-if-empty if there are no arguments, do not run COMMAND
+  -t, --verbose         print commands before executing them
+  -I REPLACE-STR        replace occurrences of REPLACE-STR in initial args
+
+Examples:
+  echo "a b c" | goshell xargs        # prints: a b c
+  echo -e "a\nb\nc" | goshell xargs   # prints: a b c
+  echo -e "a\nb\nc" | goshell xargs -n 1  # prints each on separate line`,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		opts := cli.XargsOptions{}
+
+		opts.NullInput, _ = cmd.Flags().GetBool("null")
+		opts.Delimiter, _ = cmd.Flags().GetString("delimiter")
+		opts.MaxArgs, _ = cmd.Flags().GetInt("max-args")
+		opts.MaxProcs, _ = cmd.Flags().GetInt("max-procs")
+		opts.NoRunEmpty, _ = cmd.Flags().GetBool("no-run-if-empty")
+		opts.Verbose, _ = cmd.Flags().GetBool("verbose")
+		opts.ReplaceStr, _ = cmd.Flags().GetString("I")
+
+		return cli.RunXargsWithPrint(os.Stdout, os.Stdin, opts)
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(xargsCmd)
 
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// xargsCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// xargsCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	xargsCmd.Flags().BoolP("null", "0", false, "input items are separated by a null character")
+	xargsCmd.Flags().StringP("delimiter", "d", "", "input items are separated by DELIM")
+	xargsCmd.Flags().IntP("max-args", "n", 0, "use at most MAX arguments per command line")
+	xargsCmd.Flags().IntP("max-procs", "P", 1, "run at most MAX processes at a time")
+	xargsCmd.Flags().BoolP("no-run-if-empty", "r", false, "if there are no arguments, do not run")
+	xargsCmd.Flags().BoolP("verbose", "t", false, "print commands before executing them")
+	xargsCmd.Flags().StringP("I", "I", "", "replace occurrences of REPLACE-STR")
 }

@@ -2,15 +2,17 @@ package cli
 
 import (
 	"fmt"
+	"io"
 )
 
-func RunDirname(args []string) error {
+// RunDirname prints the directory portion of each path
+func RunDirname(w io.Writer, args []string) error {
 	if len(args) == 0 {
 		return fmt.Errorf("dirname: missing operand")
 	}
 
 	for _, arg := range args {
-		fmt.Println(Dirname(arg))
+		_, _ = fmt.Fprintln(w, Dirname(arg))
 	}
 	return nil
 }

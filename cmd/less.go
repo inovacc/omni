@@ -1,36 +1,58 @@
 package cmd
 
 import (
-	"fmt"
+	"os"
+
+	"github.com/inovacc/goshell/pkg/cli"
 
 	"github.com/spf13/cobra"
 )
 
 // lessCmd represents the less command
 var lessCmd = &cobra.Command{
-	Use:   "less",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
+	Use:   "less [OPTION]... [FILE]",
+	Short: "View file contents with scrolling",
+	Long: `Display file contents one screen at a time with scrolling support.
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("less called")
+Navigation:
+  j, Down, Enter  Scroll down one line
+  k, Up           Scroll up one line
+  Space, PgDn     Scroll down one page
+  PgUp            Scroll up one page
+  g, Home         Go to beginning
+  G, End          Go to end
+  /               Search forward
+  n               Next search match
+  N               Previous search match
+  h               Show help
+  q               Quit
+
+Examples:
+  goshell less file.txt
+  goshell less -N file.txt     # with line numbers
+  goshell less -S file.txt     # chop long lines
+  cat file.txt | goshell less  # from stdin`,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		opts := cli.PagerOptions{}
+
+		opts.LineNumbers, _ = cmd.Flags().GetBool("LINE-NUMBERS")
+		opts.NoInit, _ = cmd.Flags().GetBool("no-init")
+		opts.Quit, _ = cmd.Flags().GetBool("quit-if-one-screen")
+		opts.IgnoreCase, _ = cmd.Flags().GetBool("ignore-case")
+		opts.Chop, _ = cmd.Flags().GetBool("chop-long-lines")
+		opts.Raw, _ = cmd.Flags().GetBool("raw-control-chars")
+
+		return cli.RunLess(os.Stdout, args, opts)
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(lessCmd)
 
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// lessCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// lessCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	lessCmd.Flags().BoolP("LINE-NUMBERS", "N", false, "show line numbers")
+	lessCmd.Flags().BoolP("no-init", "X", false, "don't clear screen on start")
+	lessCmd.Flags().BoolP("quit-if-one-screen", "F", false, "quit if content fits on one screen")
+	lessCmd.Flags().BoolP("ignore-case", "i", false, "case-insensitive search")
+	lessCmd.Flags().BoolP("chop-long-lines", "S", false, "truncate long lines")
+	lessCmd.Flags().BoolP("raw-control-chars", "R", false, "show raw control characters")
 }

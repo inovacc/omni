@@ -1,36 +1,49 @@
 package cmd
 
 import (
-	"fmt"
+	"os"
+
+	"github.com/inovacc/goshell/pkg/cli"
 
 	"github.com/spf13/cobra"
 )
 
-// columCmd represents the colum command
+// columCmd represents the column command
 var columCmd = &cobra.Command{
-	Use:   "colum",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
+	Use:     "column [OPTION]... [FILE]...",
+	Aliases: []string{"colum"},
+	Short:   "Columnate lists",
+	Long: `Format input into multiple columns.
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("colum called")
+With no FILE, or when FILE is -, read standard input.
+
+  -t, --table            determine column count based on input
+  -s, --separator=STRING delimiter characters for -t option
+  -o, --output-separator=STRING  output separator for table mode
+  -c, --columns=N        output width in characters (default 80)
+  -x, --fillrows         fill rows before columns
+  -R, --right            right-align columns`,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		opts := cli.ColumnOptions{}
+
+		opts.Table, _ = cmd.Flags().GetBool("table")
+		opts.Separator, _ = cmd.Flags().GetString("separator")
+		opts.OutputSep, _ = cmd.Flags().GetString("output-separator")
+		opts.Columns, _ = cmd.Flags().GetInt("columns")
+		opts.FillRows, _ = cmd.Flags().GetBool("fillrows")
+		opts.Right, _ = cmd.Flags().GetBool("right")
+
+		return cli.RunColumn(os.Stdout, args, opts)
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(columCmd)
 
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// columCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// columCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	columCmd.Flags().BoolP("table", "t", false, "determine column count based on input")
+	columCmd.Flags().StringP("separator", "s", "", "delimiter characters for -t option")
+	columCmd.Flags().StringP("output-separator", "o", "", "output separator for table mode")
+	columCmd.Flags().IntP("columns", "c", 80, "output width in characters")
+	columCmd.Flags().BoolP("fillrows", "x", false, "fill rows before columns")
+	columCmd.Flags().BoolP("right", "R", false, "right-align columns")
 }

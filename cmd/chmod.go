@@ -1,36 +1,54 @@
 package cmd
 
 import (
-	"fmt"
+	"os"
+
+	"github.com/inovacc/goshell/pkg/cli"
 
 	"github.com/spf13/cobra"
 )
 
 // chmodCmd represents the chmod command
 var chmodCmd = &cobra.Command{
-	Use:   "chmod",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
+	Use:   "chmod [OPTION]... MODE[,MODE]... FILE...",
+	Short: "Change file mode bits",
+	Long: `Change the mode of each FILE to MODE.
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("chmod called")
+MODE can be:
+  - Octal number (e.g., 755, 644)
+  - Symbolic mode (e.g., u+x, go-w, a=rw)
+
+Symbolic mode format: [ugoa][+-=][rwx]
+  u = user, g = group, o = others, a = all
+  + = add, - = remove, = = set exactly
+  r = read, w = write, x = execute
+
+Options:
+  -R, --recursive  change files and directories recursively
+  -v, --verbose    output a diagnostic for every file processed
+  -c, --changes    like verbose but report only when a change is made
+  -f, --silent     suppress most error messages
+      --reference  use RFILE's mode instead of MODE values`,
+	Args: cobra.MinimumNArgs(2),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		opts := cli.ChmodOptions{}
+
+		opts.Recursive, _ = cmd.Flags().GetBool("recursive")
+		opts.Verbose, _ = cmd.Flags().GetBool("verbose")
+		opts.Changes, _ = cmd.Flags().GetBool("changes")
+		opts.Silent, _ = cmd.Flags().GetBool("silent")
+		opts.Reference, _ = cmd.Flags().GetString("reference")
+
+		return cli.RunChmod(os.Stdout, args, opts)
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(chmodCmd)
 
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// chmodCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// chmodCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	chmodCmd.Flags().BoolP("recursive", "R", false, "change files and directories recursively")
+	chmodCmd.Flags().BoolP("verbose", "v", false, "output a diagnostic for every file processed")
+	chmodCmd.Flags().BoolP("changes", "c", false, "like verbose but report only when a change is made")
+	chmodCmd.Flags().BoolP("silent", "f", false, "suppress most error messages")
+	chmodCmd.Flags().String("reference", "", "use RFILE's mode instead of MODE values")
 }

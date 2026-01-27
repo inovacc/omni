@@ -1,55 +1,254 @@
 # goshell
 
-goshell is a cross-platform, safe, Go-native replacement for common shell utilities,
-designed for Taskfile, CI/CD, and enterprise environments.
+A cross-platform, Go-native replacement for common shell utilities, designed for Taskfile, CI/CD, and enterprise environments.
 
-## Goals
-- No exec / no external binaries
-- 100% Go standard library (or well-justified small deps)
-- Portable: Linux, macOS, Windows
-- CLI + Library mode
+## Features
 
-## Why
-Traditional shell commands (ls, grep, sort, uniq, date, etc) are:
-- Not portable
-- Hard to test
-- Fragile in CI
+- **No exec** - Never spawns external processes
+- **Pure Go** - Standard library first, minimal dependencies
+- **Cross-platform** - Linux, macOS, Windows
+- **Library + CLI** - Use as commands or import as Go packages
+- **Safe defaults** - Destructive operations require explicit flags
 
-goshell replaces them with deterministic Go implementations.
+## Installation
 
-## Status
-🚧 Early development
-
-### Implemented Commands (Phase 1)
-- `ls`: List directory contents
-- `pwd`: Print working directory
-- `cat`: Concatenate and print files
-- `date`: Print current date and time
-- `dirname`: Strip last component from file name
-- `basename`: Strip directory and suffix from file names
-- `realpath`: Print the resolved path
-
-### Planned Commands
-The project aims to provide Go-native versions of common shell utilities. See [ROADMAP.md](docs/ROADMAP.md) for the full list and implementation phases including `grep`, `sed`, `awk`, `cp`, `mv`, `ps`, and more.
-
-## Usage
-Build the project:
 ```bash
-go build -o goshell main.go
+go install github.com/inovacc/goshell@latest
 ```
 
-Run a command:
+Or build from source:
 ```bash
-./goshell ls
-./goshell pwd
+git clone https://github.com/inovacc/goshell.git
+cd goshell
+go build -o goshell .
 ```
 
-### Package Categories
-The project is organized into functional packages within `pkg/`, following a library-first architecture:
-- `pkg/fs`: Filesystem operations (ls, pwd, cat, chmod, path manipulation).
-- `pkg/text`: Text processing (sort, uniq, grep, trimming).
-- `pkg/timeutil`: Time and date formatting.
-- `pkg/cli`: CLI-specific logic, argument handling, and output formatting.
+## Quick Start
 
-See ROADMAP.md and BACKLOG.md.
-# goshell
+```bash
+# File operations
+goshell ls -la
+goshell cat file.txt
+goshell cp -r src/ dst/
+goshell rm -rf temp/
+
+# Text processing
+goshell grep -i "pattern" file.txt
+goshell sed 's/old/new/g' file.txt
+goshell awk '{print $1}' data.txt
+goshell jq '.name' data.json
+goshell yq '.items[]' config.yaml
+
+# System info
+goshell ps -a
+goshell df -h
+goshell free -h
+goshell uptime
+
+# Utilities
+goshell sha256sum file.bin
+goshell base64 -d encoded.txt
+goshell uuid -n 5
+goshell random -t password -l 20
+
+# Encryption
+echo "secret" | goshell encrypt -p mypass -a
+goshell decrypt -p mypass -a secret.enc
+```
+
+## Command Categories
+
+### Core Commands
+| Command | Description |
+|---------|-------------|
+| `ls` | List directory contents |
+| `pwd` | Print working directory |
+| `cat` | Concatenate and print files |
+| `date` | Print current date/time |
+| `dirname` | Strip last path component |
+| `basename` | Strip directory from path |
+| `realpath` | Print resolved absolute path |
+
+### File Operations
+| Command | Description |
+|---------|-------------|
+| `cp` | Copy files and directories |
+| `mv` | Move/rename files |
+| `rm` | Remove files/directories |
+| `mkdir` | Create directories |
+| `rmdir` | Remove empty directories |
+| `touch` | Update file timestamps |
+| `stat` | Display file status |
+| `ln` | Create links |
+| `readlink` | Print symlink target |
+| `chmod` | Change file permissions |
+| `chown` | Change file ownership |
+
+### Text Processing
+| Command | Description |
+|---------|-------------|
+| `grep` | Search for patterns |
+| `egrep` | Extended regex grep |
+| `fgrep` | Fixed string grep |
+| `head` | Output first lines |
+| `tail` | Output last lines |
+| `sort` | Sort lines |
+| `uniq` | Filter duplicate lines |
+| `wc` | Word/line/byte count |
+| `cut` | Extract fields |
+| `tr` | Translate characters |
+| `nl` | Number lines |
+| `paste` | Merge lines |
+| `tac` | Reverse line order |
+| `column` | Columnate lists |
+| `fold` | Wrap lines |
+| `join` | Join files on field |
+| `sed` | Stream editor |
+| `awk` | Pattern scanning |
+
+### System Information
+| Command | Description |
+|---------|-------------|
+| `env` | Print environment |
+| `whoami` | Print current user |
+| `id` | Print user/group IDs |
+| `uname` | Print system info |
+| `uptime` | Show system uptime |
+| `free` | Display memory info |
+| `df` | Show disk usage |
+| `du` | Estimate file space |
+| `ps` | List processes |
+| `kill` | Send signals |
+| `time` | Time a command |
+
+### Flow Control
+| Command | Description |
+|---------|-------------|
+| `xargs` | Build arguments |
+| `watch` | Execute repeatedly |
+| `yes` | Output repeatedly |
+| `nohup` | Ignore hangup signal |
+
+### Archive & Compression
+| Command | Description |
+|---------|-------------|
+| `tar` | Create/extract tar archives |
+| `zip` | Create zip archives |
+| `unzip` | Extract zip archives |
+
+### Hash & Encoding
+| Command | Description |
+|---------|-------------|
+| `hash` | Compute file hashes |
+| `sha256sum` | SHA256 checksum |
+| `sha512sum` | SHA512 checksum |
+| `md5sum` | MD5 checksum |
+| `base64` | Base64 encode/decode |
+| `base32` | Base32 encode/decode |
+| `base58` | Base58 encode/decode |
+
+### Data Processing
+| Command | Description |
+|---------|-------------|
+| `jq` | JSON processor |
+| `yq` | YAML processor |
+| `dotenv` | Parse .env files |
+
+### Security & Random
+| Command | Description |
+|---------|-------------|
+| `encrypt` | AES-256-GCM encryption |
+| `decrypt` | AES-256-GCM decryption |
+| `uuid` | Generate UUIDs |
+| `random` | Generate random values |
+
+## Library Usage
+
+All commands are available as importable Go packages:
+
+```go
+import "github.com/inovacc/goshell/pkg/cli"
+
+// List files
+cli.RunLs(os.Stdout, []string{"."}, cli.LsOptions{All: true, Long: true})
+
+// Hash a file
+cli.RunSHA256Sum(os.Stdout, []string{"file.bin"}, cli.HashOptions{})
+
+// Generate UUID
+uuid := cli.NewUUID()
+
+// Generate random password
+password := cli.RandomPassword(20)
+
+// Load .env file
+cli.LoadDotenv(".env")
+
+// Parse JSON
+cli.RunJq(os.Stdout, []string{".name", "data.json"}, cli.JqOptions{Raw: true})
+```
+
+## Project Structure
+
+```
+goshell/
+├── cmd/                    # Cobra CLI commands
+│   ├── root.go
+│   ├── ls.go
+│   ├── grep.go
+│   └── ...
+├── pkg/cli/               # Library implementations
+│   ├── ls.go
+│   ├── grep.go
+│   ├── jq.go
+│   └── ...
+├── tests/                 # Integration tests
+├── docs/                  # Documentation
+│   ├── ROADMAP.md
+│   ├── COMMANDS.md
+│   └── BACKLOG.md
+└── main.go
+```
+
+## Platform Support
+
+| Command | Linux | macOS | Windows |
+|---------|:-----:|:-----:|:-------:|
+| Most commands | ✅ | ✅ | ✅ |
+| `chmod` | ✅ | ✅ | ⚠️ Limited |
+| `chown` | ✅ | ✅ | ❌ |
+| `ps` | ✅ | ✅ | ✅ |
+| `df` | ✅ | ✅ | ✅ |
+| `free` | ✅ | ✅ | ✅ |
+| `uptime` | ✅ | ✅ | ✅ |
+
+## Use with Taskfile
+
+goshell is designed to work with [Taskfile](https://taskfile.dev/):
+
+```yaml
+version: '3'
+
+tasks:
+  build:
+    cmds:
+      - goshell mkdir -p dist
+      - go build -o dist/app .
+      - goshell sha256sum dist/app > dist/checksums.txt
+
+  clean:
+    cmds:
+      - goshell rm -rf dist
+
+  deploy:
+    cmds:
+      - goshell tar -czvf release.tar.gz dist/
+```
+
+## Contributing
+
+Contributions are welcome! Please see [ROADMAP.md](docs/ROADMAP.md) for planned features.
+
+## License
+
+MIT License - see [LICENSE](LICENSE) for details.

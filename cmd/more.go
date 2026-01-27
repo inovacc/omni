@@ -1,36 +1,42 @@
 package cmd
 
 import (
-	"fmt"
+	"os"
+
+	"github.com/inovacc/goshell/pkg/cli"
 
 	"github.com/spf13/cobra"
 )
 
 // moreCmd represents the more command
 var moreCmd = &cobra.Command{
-	Use:   "more",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
+	Use:   "more [OPTION]... [FILE]",
+	Short: "View file contents page by page",
+	Long: `Display file contents one screen at a time.
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("more called")
+more is a simpler pager than less - it's designed to show content
+and quit when reaching the end.
+
+Navigation:
+  Space, Enter    Scroll down one page
+  q               Quit
+
+Examples:
+  goshell more file.txt
+  goshell more -n file.txt     # with line numbers
+  cat file.txt | goshell more  # from stdin`,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		opts := cli.PagerOptions{}
+
+		opts.LineNumbers, _ = cmd.Flags().GetBool("line-numbers")
+		opts.Quit = true // more traditionally quits at end
+
+		return cli.RunMore(os.Stdout, args, opts)
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(moreCmd)
 
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// moreCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// moreCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	moreCmd.Flags().BoolP("line-numbers", "n", false, "show line numbers")
 }

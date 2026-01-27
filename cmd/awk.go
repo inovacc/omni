@@ -1,36 +1,61 @@
 package cmd
 
 import (
-	"fmt"
+	"os"
+
+	"github.com/inovacc/goshell/pkg/cli"
 
 	"github.com/spf13/cobra"
 )
 
 // awkCmd represents the awk command
 var awkCmd = &cobra.Command{
-	Use:   "awk",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
+	Use:   "awk [OPTION]... 'program' [FILE]...",
+	Short: "Pattern scanning and processing language",
+	Long: `Awk scans each input file for lines that match any of a set of patterns.
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("awk called")
+This is a simplified subset of AWK supporting:
+  - Field access: $0 (whole line), $1, $2, etc.
+  - Pattern blocks: BEGIN{}, END{}, /regex/{}
+  - Print statements: print, print $1, print $1,$2
+  - Built-in variable: NF (number of fields)
+
+  -F fs          use fs for the input field separator
+  -v var=value   assign value to variable var
+
+Examples:
+  goshell awk '{print $1}' file.txt          # print first field
+  goshell awk -F: '{print $1}' /etc/passwd   # use : as separator
+  goshell awk '/pattern/{print}' file.txt    # print matching lines
+  goshell awk 'BEGIN{print "start"} {print} END{print "end"}' file
+  goshell awk '{print $1, $NF}' file.txt     # print first and last field`,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		opts := cli.AwkOptions{}
+
+		opts.FieldSeparator, _ = cmd.Flags().GetString("field-separator")
+
+		// Parse -v assignments
+		vars, _ := cmd.Flags().GetStringSlice("assign")
+		if len(vars) > 0 {
+			opts.Variables = make(map[string]string)
+			for _, v := range vars {
+				// Split on first =
+				for i, c := range v {
+					if c == '=' {
+						opts.Variables[v[:i]] = v[i+1:]
+						break
+					}
+				}
+			}
+		}
+
+		return cli.RunAwk(os.Stdout, args, opts)
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(awkCmd)
 
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// awkCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// awkCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	awkCmd.Flags().StringP("field-separator", "F", "", "use FS for the input field separator")
+	awkCmd.Flags().StringSliceP("assign", "v", nil, "assign value to variable (var=value)")
 }

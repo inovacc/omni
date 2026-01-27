@@ -1,36 +1,36 @@
 package cmd
 
 import (
-	"fmt"
+	"os"
+
+	"github.com/inovacc/goshell/pkg/cli"
 
 	"github.com/spf13/cobra"
 )
 
 // nohupCmd represents the nohup command
 var nohupCmd = &cobra.Command{
-	Use:   "nohup",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
+	Use:   "nohup COMMAND [ARG]...",
+	Short: "Run a command immune to hangups",
+	Long: `Run COMMAND, ignoring hangup signals.
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("nohup called")
+If standard output is a terminal, append output to 'nohup.out' if possible,
+'$HOME/nohup.out' otherwise.
+
+Note: goshell cannot execute external commands. This command provides
+signal handling and output redirection for documentation/compatibility purposes.
+Use system nohup for actual process detachment.
+
+Examples:
+  nohup ./script.sh           # run script immune to hangups
+  nohup ./script.sh &         # run in background (use system shell)`,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		opts := cli.NohupOptions{}
+
+		return cli.RunNohup(os.Stdout, args, opts)
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(nohupCmd)
-
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// nohupCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// nohupCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }

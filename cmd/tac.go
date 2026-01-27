@@ -1,36 +1,39 @@
 package cmd
 
 import (
-	"fmt"
+	"os"
+
+	"github.com/inovacc/goshell/pkg/cli"
 
 	"github.com/spf13/cobra"
 )
 
 // tacCmd represents the tac command
 var tacCmd = &cobra.Command{
-	Use:   "tac",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
+	Use:   "tac [OPTION]... [FILE]...",
+	Short: "Concatenate and print files in reverse",
+	Long: `Write each FILE to standard output, last line first.
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("tac called")
+With no FILE, or when FILE is -, read standard input.
+
+  -b, --before             attach the separator before instead of after
+  -r, --regex              interpret the separator as a regular expression
+  -s, --separator=STRING   use STRING as the separator instead of newline`,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		opts := cli.TacOptions{}
+
+		opts.Before, _ = cmd.Flags().GetBool("before")
+		opts.Regex, _ = cmd.Flags().GetBool("regex")
+		opts.Separator, _ = cmd.Flags().GetString("separator")
+
+		return cli.RunTac(os.Stdout, args, opts)
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(tacCmd)
 
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// tacCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// tacCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	tacCmd.Flags().BoolP("before", "b", false, "attach the separator before instead of after")
+	tacCmd.Flags().BoolP("regex", "r", false, "interpret the separator as a regular expression")
+	tacCmd.Flags().StringP("separator", "s", "", "use STRING as the separator instead of newline")
 }

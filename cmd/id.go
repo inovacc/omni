@@ -1,36 +1,48 @@
 package cmd
 
 import (
-	"fmt"
+	"os"
+
+	"github.com/inovacc/goshell/pkg/cli"
 
 	"github.com/spf13/cobra"
 )
 
 // idCmd represents the id command
 var idCmd = &cobra.Command{
-	Use:   "id",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
+	Use:   "id [OPTION]... [USER]",
+	Short: "Print user and group information",
+	Long: `Print user and group information for the specified USER,
+or (when USER omitted) for the current user.
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("id called")
+  -g, --group   print only the effective group ID
+  -G, --groups  print all group IDs
+  -n, --name    print a name instead of a number, for -ugG
+  -r, --real    print the real ID instead of the effective ID, with -ugG
+  -u, --user    print only the effective user ID`,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		opts := cli.IDOptions{}
+
+		opts.User, _ = cmd.Flags().GetBool("user")
+		opts.Group, _ = cmd.Flags().GetBool("group")
+		opts.Groups, _ = cmd.Flags().GetBool("groups")
+		opts.Name, _ = cmd.Flags().GetBool("name")
+		opts.Real, _ = cmd.Flags().GetBool("real")
+
+		if len(args) > 0 {
+			opts.Username = args[0]
+		}
+
+		return cli.RunID(os.Stdout, opts)
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(idCmd)
 
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// idCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// idCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	idCmd.Flags().BoolP("user", "u", false, "print only the effective user ID")
+	idCmd.Flags().BoolP("group", "g", false, "print only the effective group ID")
+	idCmd.Flags().BoolP("groups", "G", false, "print all group IDs")
+	idCmd.Flags().BoolP("name", "n", false, "print a name instead of a number")
+	idCmd.Flags().BoolP("real", "r", false, "print the real ID instead of the effective ID")
 }

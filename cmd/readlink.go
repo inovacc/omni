@@ -1,36 +1,53 @@
 package cmd
 
 import (
-	"fmt"
+	"os"
+
+	"github.com/inovacc/goshell/pkg/cli"
 
 	"github.com/spf13/cobra"
 )
 
 // readlinkCmd represents the readlink command
 var readlinkCmd = &cobra.Command{
-	Use:   "readlink",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
+	Use:   "readlink [OPTION]... FILE...",
+	Short: "Print resolved symbolic links or canonical file names",
+	Long: `Print value of a symbolic link or canonical file name.
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("readlink called")
+  -f, --canonicalize            canonicalize by following every symlink
+  -e, --canonicalize-existing   canonicalize, all components must exist
+  -m, --canonicalize-missing    canonicalize without requirements on existence
+  -n, --no-newline              do not output the trailing delimiter
+  -q, --quiet                   suppress most error messages
+  -s, --silent                  suppress most error messages
+  -v, --verbose                 report error messages
+  -z, --zero                    end each output line with NUL, not newline`,
+	Args: cobra.MinimumNArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		opts := cli.ReadlinkOptions{}
+
+		opts.Canonicalize, _ = cmd.Flags().GetBool("canonicalize")
+		opts.CanonicalizeExisting, _ = cmd.Flags().GetBool("canonicalize-existing")
+		opts.CanonicalizeMissing, _ = cmd.Flags().GetBool("canonicalize-missing")
+		opts.NoNewline, _ = cmd.Flags().GetBool("no-newline")
+		opts.Quiet, _ = cmd.Flags().GetBool("quiet")
+		opts.Silent, _ = cmd.Flags().GetBool("silent")
+		opts.Verbose, _ = cmd.Flags().GetBool("verbose")
+		opts.Zero, _ = cmd.Flags().GetBool("zero")
+
+		return cli.RunReadlink(os.Stdout, args, opts)
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(readlinkCmd)
 
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// readlinkCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// readlinkCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	readlinkCmd.Flags().BoolP("canonicalize", "f", false, "canonicalize by following every symlink")
+	readlinkCmd.Flags().BoolP("canonicalize-existing", "e", false, "canonicalize, all components must exist")
+	readlinkCmd.Flags().BoolP("canonicalize-missing", "m", false, "canonicalize without requirements on existence")
+	readlinkCmd.Flags().BoolP("no-newline", "n", false, "do not output the trailing delimiter")
+	readlinkCmd.Flags().BoolP("quiet", "q", false, "suppress most error messages")
+	readlinkCmd.Flags().BoolP("silent", "s", false, "suppress most error messages")
+	readlinkCmd.Flags().BoolP("verbose", "v", false, "report error messages")
+	readlinkCmd.Flags().BoolP("zero", "z", false, "end each output line with NUL, not newline")
 }

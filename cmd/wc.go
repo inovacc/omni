@@ -1,36 +1,44 @@
 package cmd
 
 import (
-	"fmt"
+	"os"
+
+	"github.com/inovacc/goshell/pkg/cli"
 
 	"github.com/spf13/cobra"
 )
 
 // wcCmd represents the wc command
 var wcCmd = &cobra.Command{
-	Use:   "wc",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
+	Use:   "wc [option]... [file]...",
+	Short: "Print newline, word, and byte counts for each file",
+	Long: `Print newline, word, and byte counts for each FILE, and a total line if
+more than one FILE is specified. A word is a non-zero-length sequence of
+characters delimited by white space.
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("wc called")
+With no FILE, or when FILE is -, read standard input.
+
+The options below may be used to select which counts are printed, always in
+the following order: newline, word, character, byte, maximum line length.`,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		opts := cli.WCOptions{}
+
+		opts.Lines, _ = cmd.Flags().GetBool("lines")
+		opts.Words, _ = cmd.Flags().GetBool("words")
+		opts.Bytes, _ = cmd.Flags().GetBool("bytes")
+		opts.Chars, _ = cmd.Flags().GetBool("chars")
+		opts.MaxLineLen, _ = cmd.Flags().GetBool("max-line-length")
+
+		return cli.RunWC(os.Stdout, args, opts)
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(wcCmd)
 
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// wcCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// wcCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	wcCmd.Flags().BoolP("lines", "l", false, "print the newline counts")
+	wcCmd.Flags().BoolP("words", "w", false, "print the word counts")
+	wcCmd.Flags().BoolP("bytes", "c", false, "print the byte counts")
+	wcCmd.Flags().BoolP("chars", "m", false, "print the character counts")
+	wcCmd.Flags().BoolP("max-line-length", "L", false, "print the maximum display width")
 }

@@ -1,36 +1,37 @@
 package cmd
 
 import (
-	"fmt"
+	"os"
+
+	"github.com/inovacc/goshell/pkg/cli"
 
 	"github.com/spf13/cobra"
 )
 
 // headCmd represents the head command
 var headCmd = &cobra.Command{
-	Use:   "head",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
+	Use:   "head [option]... [file]...",
+	Short: "Output the first part of files",
+	Long: `Print the first 10 lines of each FILE to standard output.
+With more than one FILE, precede each with a header giving the file name.
+With no FILE, or when FILE is -, read standard input.`,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		opts := cli.HeadOptions{}
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("head called")
+		opts.Lines, _ = cmd.Flags().GetInt("lines")
+		opts.Bytes, _ = cmd.Flags().GetInt("bytes")
+		opts.Quiet, _ = cmd.Flags().GetBool("quiet")
+		opts.Verbose, _ = cmd.Flags().GetBool("verbose")
+
+		return cli.RunHead(os.Stdout, args, opts)
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(headCmd)
 
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// headCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// headCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	headCmd.Flags().IntP("lines", "n", 10, "print the first NUM lines instead of the first 10")
+	headCmd.Flags().IntP("bytes", "c", 0, "print the first NUM bytes of each file")
+	headCmd.Flags().BoolP("quiet", "q", false, "never print headers giving file names")
+	headCmd.Flags().BoolP("verbose", "v", false, "always print headers giving file names")
 }

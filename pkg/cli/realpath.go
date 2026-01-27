@@ -2,9 +2,11 @@ package cli
 
 import (
 	"fmt"
+	"io"
 )
 
-func RunRealpath(args []string) error {
+// RunRealpath prints the resolved absolute path for each argument
+func RunRealpath(w io.Writer, args []string) error {
 	if len(args) == 0 {
 		return fmt.Errorf("realpath: missing operand")
 	}
@@ -14,7 +16,7 @@ func RunRealpath(args []string) error {
 		if err != nil {
 			return err
 		}
-		fmt.Println(abs)
+		_, _ = fmt.Fprintln(w, abs)
 	}
 	return nil
 }

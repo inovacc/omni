@@ -1,36 +1,41 @@
 package cmd
 
 import (
-	"fmt"
+	"context"
+	"os"
+	"os/signal"
+	"syscall"
+
+	"github.com/inovacc/goshell/pkg/cli"
 
 	"github.com/spf13/cobra"
 )
 
 // yesCmd represents the yes command
 var yesCmd = &cobra.Command{
-	Use:   "yes",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
+	Use:   "yes [STRING]...",
+	Short: "Output a string repeatedly until killed",
+	Long: `Repeatedly output a line with all specified STRING(s), or 'y'.
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("yes called")
+Examples:
+  goshell yes              # outputs 'y' forever
+  goshell yes hello        # outputs 'hello' forever
+  goshell yes | head -5    # outputs 5 'y' lines`,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
+
+		sigCh := make(chan os.Signal, 1)
+		signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM, syscall.SIGPIPE)
+		go func() {
+			<-sigCh
+			cancel()
+		}()
+
+		return cli.RunYes(ctx, os.Stdout, args)
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(yesCmd)
-
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// yesCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// yesCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }

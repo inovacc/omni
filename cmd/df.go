@@ -1,36 +1,53 @@
 package cmd
 
 import (
-	"fmt"
+	"os"
+
+	"github.com/inovacc/goshell/pkg/cli"
 
 	"github.com/spf13/cobra"
 )
 
 // dfCmd represents the df command
 var dfCmd = &cobra.Command{
-	Use:   "df",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
+	Use:   "df [OPTION]... [FILE]...",
+	Short: "Report file system disk space usage",
+	Long: `Show information about the file system on which each FILE resides,
+or all file systems by default.
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("df called")
+  -h, --human-readable  print sizes in human readable format (e.g., 1K 234M 2G)
+  -i, --inodes          list inode information instead of block usage
+  -B, --block-size=SIZE scale sizes by SIZE before printing them
+      --total           produce a grand total
+  -t, --type=TYPE       limit listing to file systems of type TYPE
+  -x, --exclude-type=TYPE  exclude file systems of type TYPE
+  -l, --local           limit listing to local file systems
+  -P, --portability     use the POSIX output format`,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		opts := cli.DFOptions{}
+
+		opts.HumanReadable, _ = cmd.Flags().GetBool("human-readable")
+		opts.Inodes, _ = cmd.Flags().GetBool("inodes")
+		opts.BlockSize, _ = cmd.Flags().GetInt64("block-size")
+		opts.Total, _ = cmd.Flags().GetBool("total")
+		opts.Type, _ = cmd.Flags().GetString("type")
+		opts.ExcludeType, _ = cmd.Flags().GetString("exclude-type")
+		opts.Local, _ = cmd.Flags().GetBool("local")
+		opts.Portability, _ = cmd.Flags().GetBool("portability")
+
+		return cli.RunDF(os.Stdout, args, opts)
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(dfCmd)
 
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// dfCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// dfCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	dfCmd.Flags().BoolP("human-readable", "H", false, "print sizes in human readable format")
+	dfCmd.Flags().BoolP("inodes", "i", false, "list inode information instead of block usage")
+	dfCmd.Flags().Int64P("block-size", "B", 0, "scale sizes by SIZE before printing them")
+	dfCmd.Flags().Bool("total", false, "produce a grand total")
+	dfCmd.Flags().StringP("type", "t", "", "limit listing to file systems of type TYPE")
+	dfCmd.Flags().StringP("exclude-type", "x", "", "exclude file systems of type TYPE")
+	dfCmd.Flags().BoolP("local", "l", false, "limit listing to local file systems")
+	dfCmd.Flags().BoolP("portability", "P", false, "use the POSIX output format")
 }

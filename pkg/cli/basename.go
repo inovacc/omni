@@ -2,21 +2,21 @@ package cli
 
 import (
 	"fmt"
+	"io"
 )
 
-func RunBasename(args []string) error {
+// RunBasename prints the base name of each path, optionally removing a suffix
+func RunBasename(w io.Writer, args []string, suffix string) error {
 	if len(args) == 0 {
 		return fmt.Errorf("basename: missing operand")
 	}
 
-	name := Basename(args[0])
-	if len(args) > 1 {
-		suffix := args[1]
-		if len(name) > len(suffix) && name[len(name)-len(suffix):] == suffix {
+	for _, arg := range args {
+		name := Basename(arg)
+		if suffix != "" && len(name) > len(suffix) && name[len(name)-len(suffix):] == suffix {
 			name = name[:len(name)-len(suffix)]
 		}
+		_, _ = fmt.Fprintln(w, name)
 	}
-
-	fmt.Println(name)
 	return nil
 }

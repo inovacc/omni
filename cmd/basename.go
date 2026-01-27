@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"os"
+
 	"github.com/inovacc/goshell/pkg/cli"
 
 	"github.com/spf13/cobra"
@@ -10,22 +12,25 @@ import (
 var basenameCmd = &cobra.Command{
 	Use:   "basename NAME [SUFFIX]",
 	Short: "Strip directory and suffix from file names",
-	Long:  `Print NAME with any leading directory components removed. If specified, also remove a trailing SUFFIX.`,
+	Long: `Print NAME with any leading directory components removed.
+If specified, also remove a trailing SUFFIX.`,
+	Args: cobra.MinimumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return cli.RunBasename(args)
+		suffix, _ := cmd.Flags().GetString("suffix")
+
+		// Handle suffix from positional argument (traditional usage)
+		names := args
+		if suffix == "" && len(args) > 1 {
+			suffix = args[1]
+			names = args[:1]
+		}
+
+		return cli.RunBasename(os.Stdout, names, suffix)
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(basenameCmd)
 
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// basenameCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// basenameCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	basenameCmd.Flags().StringP("suffix", "s", "", "remove a trailing SUFFIX")
 }

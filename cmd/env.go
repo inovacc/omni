@@ -1,36 +1,34 @@
 package cmd
 
 import (
-	"fmt"
+	"os"
+
+	"github.com/inovacc/goshell/pkg/cli"
 
 	"github.com/spf13/cobra"
 )
 
 // envCmd represents the env command
 var envCmd = &cobra.Command{
-	Use:   "env",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
+	Use:   "env [NAME...]",
+	Short: "Print environment variables",
+	Long: `Print the values of the specified environment variables.
+If no NAME is specified, print all environment variables.`,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		opts := cli.EnvOptions{}
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("env called")
+		opts.NullTerminated, _ = cmd.Flags().GetBool("null")
+		opts.Unset, _ = cmd.Flags().GetString("unset")
+		opts.Ignore, _ = cmd.Flags().GetBool("ignore-environment")
+
+		return cli.RunEnv(os.Stdout, args, opts)
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(envCmd)
 
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// envCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// envCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	envCmd.Flags().BoolP("null", "0", false, "end each output line with NUL, not newline")
+	envCmd.Flags().StringP("unset", "u", "", "remove variable from the environment")
+	envCmd.Flags().BoolP("ignore-environment", "i", false, "start with an empty environment")
 }

@@ -1,0 +1,68 @@
+package cmd
+
+import (
+	"os"
+
+	"github.com/inovacc/goshell/pkg/cli"
+
+	"github.com/spf13/cobra"
+)
+
+// randomCmd represents the random command
+var randomCmd = &cobra.Command{
+	Use:   "random [OPTION]...",
+	Short: "Generate random values",
+	Long: `Generate random numbers, strings, or bytes using crypto/rand.
+
+Types:
+  int, integer    random integer (use --min, --max)
+  float, decimal  random float between 0 and 1
+  string, str     random alphanumeric string (default)
+  alpha           random letters only
+  alnum           random alphanumeric
+  hex             random hexadecimal string
+  password        random password (letters, digits, symbols)
+  bytes           random bytes as hex
+  custom          use custom charset (-c)
+
+  -n, --count N     number of values to generate
+  -l, --length N    length of strings (default 16)
+  -t, --type TYPE   value type (default: string)
+  --min N           minimum for integers
+  --max N           maximum for integers
+  -c, --charset STR custom character set
+  -s, --separator   separator between values (default: newline)
+
+Examples:
+  goshell random                         # random 16-char string
+  goshell random -t int --max 100        # random int 0-99
+  goshell random -t hex -l 32            # random 32-char hex
+  goshell random -t password -l 20       # random password
+  goshell random -n 5 -t int --max 10    # 5 random ints 0-9
+  goshell random -t custom -c "abc123"   # from custom charset`,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		opts := cli.RandomOptions{}
+
+		opts.Count, _ = cmd.Flags().GetInt("count")
+		opts.Length, _ = cmd.Flags().GetInt("length")
+		opts.Type, _ = cmd.Flags().GetString("type")
+		opts.Min, _ = cmd.Flags().GetInt64("min")
+		opts.Max, _ = cmd.Flags().GetInt64("max")
+		opts.Charset, _ = cmd.Flags().GetString("charset")
+		opts.Sep, _ = cmd.Flags().GetString("separator")
+
+		return cli.RunRandom(os.Stdout, opts)
+	},
+}
+
+func init() {
+	rootCmd.AddCommand(randomCmd)
+
+	randomCmd.Flags().IntP("count", "n", 1, "number of values to generate")
+	randomCmd.Flags().IntP("length", "l", 16, "length of random strings")
+	randomCmd.Flags().StringP("type", "t", "string", "type: int, float, string, alpha, hex, password, bytes, custom")
+	randomCmd.Flags().Int64("min", 0, "minimum value for integers")
+	randomCmd.Flags().Int64("max", 100, "maximum value for integers")
+	randomCmd.Flags().StringP("charset", "c", "", "custom character set")
+	randomCmd.Flags().StringP("separator", "s", "\n", "separator between values")
+}

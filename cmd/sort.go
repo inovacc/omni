@@ -1,36 +1,54 @@
 package cmd
 
 import (
-	"fmt"
+	"os"
+
+	"github.com/inovacc/goshell/pkg/cli"
 
 	"github.com/spf13/cobra"
 )
 
 // sortCmd represents the sort command
 var sortCmd = &cobra.Command{
-	Use:   "sort",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
+	Use:   "sort [option]... [file]...",
+	Short: "Sort lines of text files",
+	Long: `Write sorted concatenation of all FILE(s) to standard output.
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("sort called")
+With no FILE, or when FILE is -, read standard input.`,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		opts := cli.SortOptions{}
+
+		opts.Reverse, _ = cmd.Flags().GetBool("reverse")
+		opts.Numeric, _ = cmd.Flags().GetBool("numeric-sort")
+		opts.Unique, _ = cmd.Flags().GetBool("unique")
+		opts.IgnoreCase, _ = cmd.Flags().GetBool("ignore-case")
+		opts.IgnoreLeading, _ = cmd.Flags().GetBool("ignore-leading-blanks")
+		opts.Dictionary, _ = cmd.Flags().GetBool("dictionary-order")
+		opts.Key, _ = cmd.Flags().GetString("key")
+		opts.FieldSep, _ = cmd.Flags().GetString("field-separator")
+		opts.Check, _ = cmd.Flags().GetBool("check")
+		opts.Stable, _ = cmd.Flags().GetBool("stable")
+		opts.Output, _ = cmd.Flags().GetString("output")
+
+		return cli.RunSort(os.Stdout, args, opts)
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(sortCmd)
 
-	// Here you will define your flags and configuration settings.
+	// Ordering options
+	sortCmd.Flags().BoolP("reverse", "r", false, "reverse the result of comparisons")
+	sortCmd.Flags().BoolP("numeric-sort", "n", false, "compare according to string numerical value")
+	sortCmd.Flags().BoolP("ignore-case", "f", false, "fold lower case to upper case characters")
+	sortCmd.Flags().BoolP("ignore-leading-blanks", "b", false, "ignore leading blanks")
+	sortCmd.Flags().BoolP("dictionary-order", "d", false, "consider only blanks and alphanumeric characters")
 
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// sortCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// sortCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	// Other options
+	sortCmd.Flags().BoolP("unique", "u", false, "with -c, check for strict ordering; without -c, output only the first of an equal run")
+	sortCmd.Flags().StringP("key", "k", "", "sort via a key")
+	sortCmd.Flags().StringP("field-separator", "t", "", "use SEP instead of non-blank to blank transition")
+	sortCmd.Flags().BoolP("check", "c", false, "check for sorted input; do not sort")
+	sortCmd.Flags().BoolP("stable", "s", false, "stabilize sort by disabling last-resort comparison")
+	sortCmd.Flags().StringP("output", "o", "", "write result to FILE instead of standard output")
 }

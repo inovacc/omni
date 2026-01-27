@@ -1,36 +1,40 @@
 package cmd
 
 import (
-	"fmt"
+	"os"
+
+	"github.com/inovacc/goshell/pkg/cli"
 
 	"github.com/spf13/cobra"
 )
 
 // pasteCmd represents the paste command
 var pasteCmd = &cobra.Command{
-	Use:   "paste",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
+	Use:   "paste [OPTION]... [FILE]...",
+	Short: "Merge lines of files",
+	Long: `Write lines consisting of the sequentially corresponding lines from
+each FILE, separated by TABs, to standard output.
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("paste called")
+With no FILE, or when FILE is -, read standard input.
+
+  -d, --delimiters=LIST   reuse characters from LIST instead of TABs
+  -s, --serial            paste one file at a time instead of in parallel
+  -z, --zero-terminated   line delimiter is NUL, not newline`,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		opts := cli.PasteOptions{}
+
+		opts.Delimiters, _ = cmd.Flags().GetString("delimiters")
+		opts.Serial, _ = cmd.Flags().GetBool("serial")
+		opts.Zero, _ = cmd.Flags().GetBool("zero-terminated")
+
+		return cli.RunPaste(os.Stdout, args, opts)
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(pasteCmd)
 
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// pasteCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// pasteCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	pasteCmd.Flags().StringP("delimiters", "d", "", "reuse characters from LIST instead of TABs")
+	pasteCmd.Flags().BoolP("serial", "s", false, "paste one file at a time instead of in parallel")
+	pasteCmd.Flags().BoolP("zero-terminated", "z", false, "line delimiter is NUL, not newline")
 }

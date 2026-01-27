@@ -2,13 +2,7 @@ package cli
 
 import "time"
 
-func Date(layout string) string {
-	if layout == "" {
-		layout = time.RFC3339
-	}
-	return time.Now().Format(layout)
-}
-
+// Now returns the current time
 func Now() time.Time {
 	return time.Now()
 }

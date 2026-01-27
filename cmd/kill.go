@@ -1,36 +1,48 @@
 package cmd
 
 import (
-	"fmt"
+	"os"
+
+	"github.com/inovacc/goshell/pkg/cli"
 
 	"github.com/spf13/cobra"
 )
 
 // killCmd represents the kill command
 var killCmd = &cobra.Command{
-	Use:   "kill",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
+	Use:   "kill [OPTION]... PID...",
+	Short: "Send a signal to a process",
+	Long: `Send the specified signal to the specified processes.
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("kill called")
+  -s, --signal=SIGNAL  specify the signal to be sent
+  -l, --list           list signal names
+  -v, --verbose        report successful signals
+
+Signal can be specified by name (e.g., HUP, KILL, TERM) or number.
+Common signals:
+   1) SIGHUP       2) SIGINT       3) SIGQUIT
+   9) SIGKILL     15) SIGTERM (default)
+
+Examples:
+  goshell kill 1234           # send SIGTERM to process 1234
+  goshell kill -9 1234        # send SIGKILL to process 1234
+  goshell kill -s HUP 1234    # send SIGHUP to process 1234
+  goshell kill -l             # list all signal names`,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		opts := cli.KillOptions{}
+
+		opts.Signal, _ = cmd.Flags().GetString("signal")
+		opts.List, _ = cmd.Flags().GetBool("list")
+		opts.Verbose, _ = cmd.Flags().GetBool("verbose")
+
+		return cli.RunKill(os.Stdout, args, opts)
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(killCmd)
 
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// killCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// killCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	killCmd.Flags().StringP("signal", "s", "", "specify the signal to be sent")
+	killCmd.Flags().BoolP("list", "l", false, "list signal names")
+	killCmd.Flags().BoolP("verbose", "v", false, "report successful signals")
 }

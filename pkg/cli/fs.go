@@ -40,10 +40,6 @@ func Touch(path string) error {
 	return os.Chtimes(path, now, now)
 }
 
-func Stat(path string) (os.FileInfo, error) {
-	return os.Stat(path)
-}
-
 func Rm(path string, recursive bool) error {
 	if recursive {
 		return os.RemoveAll(path)
@@ -82,4 +78,14 @@ func Copy(src, dst string) error {
 
 func Move(src, dst string) error {
 	return os.Rename(src, dst)
+}
+
+// Stat returns file information
+func Stat(path string) (os.FileInfo, error) {
+	return os.Stat(path)
+}
+
+// Lstat returns file information without following symlinks
+func Lstat(path string) (os.FileInfo, error) {
+	return os.Lstat(path)
 }

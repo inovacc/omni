@@ -1,36 +1,58 @@
 package cmd
 
 import (
-	"fmt"
+	"os"
+
+	"github.com/inovacc/goshell/pkg/cli"
 
 	"github.com/spf13/cobra"
 )
 
 // nlCmd represents the nl command
 var nlCmd = &cobra.Command{
-	Use:   "nl",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
+	Use:   "nl [OPTION]... [FILE]...",
+	Short: "Number lines of files",
+	Long: `Write each FILE to standard output, with line numbers added.
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("nl called")
+With no FILE, or when FILE is -, read standard input.
+
+  -b, --body-numbering=STYLE      use STYLE for numbering body lines
+  -n, --number-format=FORMAT      insert line numbers according to FORMAT
+  -s, --number-separator=STRING   add STRING after line number
+  -v, --starting-line-number=N    first line number on each logical page
+  -i, --line-increment=N          line number increment at each line
+  -w, --number-width=N            use N columns for line numbers
+
+STYLE is one of:
+  a      number all lines
+  t      number only nonempty lines (default for body)
+  n      number no lines
+
+FORMAT is one of:
+  ln     left justified, no leading zeros
+  rn     right justified, no leading zeros (default)
+  rz     right justified, leading zeros`,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		opts := cli.NlOptions{}
+
+		opts.BodyNumbering, _ = cmd.Flags().GetString("body-numbering")
+		opts.NumberFormat, _ = cmd.Flags().GetString("number-format")
+		opts.NumberSep, _ = cmd.Flags().GetString("number-separator")
+		opts.StartingNumber, _ = cmd.Flags().GetInt("starting-line-number")
+		opts.Increment, _ = cmd.Flags().GetInt("line-increment")
+		opts.NumberWidth, _ = cmd.Flags().GetInt("number-width")
+
+		return cli.RunNl(os.Stdout, args, opts)
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(nlCmd)
 
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// nlCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// nlCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	nlCmd.Flags().StringP("body-numbering", "b", "t", "use STYLE for numbering body lines")
+	nlCmd.Flags().StringP("number-format", "n", "rn", "insert line numbers according to FORMAT")
+	nlCmd.Flags().StringP("number-separator", "s", "\t", "add STRING after line number")
+	nlCmd.Flags().IntP("starting-line-number", "v", 1, "first line number")
+	nlCmd.Flags().IntP("line-increment", "i", 1, "line number increment")
+	nlCmd.Flags().IntP("number-width", "w", 6, "use N columns for line numbers")
 }

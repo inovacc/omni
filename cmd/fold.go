@@ -1,36 +1,43 @@
 package cmd
 
 import (
-	"fmt"
+	"os"
+
+	"github.com/inovacc/goshell/pkg/cli"
 
 	"github.com/spf13/cobra"
 )
 
 // foldCmd represents the fold command
 var foldCmd = &cobra.Command{
-	Use:   "fold",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
+	Use:   "fold [OPTION]... [FILE]...",
+	Short: "Wrap each input line to fit in specified width",
+	Long: `Wrap input lines in each FILE, writing to standard output.
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("fold called")
+With no FILE, or when FILE is -, read standard input.
+
+  -w, --width=WIDTH  use WIDTH columns instead of 80
+  -b, --bytes        count bytes rather than columns
+  -s, --spaces       break at spaces
+
+Examples:
+  goshell fold -w 40 file.txt     # wrap lines at 40 columns
+  goshell fold -s -w 72 README    # wrap at spaces, 72 columns`,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		opts := cli.FoldOptions{}
+
+		opts.Width, _ = cmd.Flags().GetInt("width")
+		opts.Bytes, _ = cmd.Flags().GetBool("bytes")
+		opts.Spaces, _ = cmd.Flags().GetBool("spaces")
+
+		return cli.RunFold(os.Stdout, args, opts)
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(foldCmd)
 
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// foldCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// foldCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	foldCmd.Flags().IntP("width", "w", 80, "use WIDTH columns instead of 80")
+	foldCmd.Flags().BoolP("bytes", "b", false, "count bytes rather than columns")
+	foldCmd.Flags().BoolP("spaces", "s", false, "break at spaces")
 }

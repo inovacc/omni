@@ -1,36 +1,36 @@
 package cmd
 
 import (
-	"fmt"
+	"os"
+
+	"github.com/inovacc/goshell/pkg/cli"
 
 	"github.com/spf13/cobra"
 )
 
 // uptimeCmd represents the uptime command
 var uptimeCmd = &cobra.Command{
-	Use:   "uptime",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
+	Use:   "uptime [OPTION]...",
+	Short: "Tell how long the system has been running",
+	Long: `Print the current time, how long the system has been running,
+how many users are currently logged on, and the system load averages
+for the past 1, 5, and 15 minutes.
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("uptime called")
+  -p, --pretty   show uptime in pretty format
+  -s, --since    system up since, in yyyy-mm-dd HH:MM:SS format`,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		opts := cli.UptimeOptions{}
+
+		opts.Pretty, _ = cmd.Flags().GetBool("pretty")
+		opts.Since, _ = cmd.Flags().GetBool("since")
+
+		return cli.RunUptime(os.Stdout, opts)
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(uptimeCmd)
 
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// uptimeCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// uptimeCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	uptimeCmd.Flags().BoolP("pretty", "p", false, "show uptime in pretty format")
+	uptimeCmd.Flags().BoolP("since", "s", false, "system up since")
 }

@@ -1,36 +1,58 @@
 package cmd
 
 import (
-	"fmt"
+	"os"
+
+	"github.com/inovacc/goshell/pkg/cli"
 
 	"github.com/spf13/cobra"
 )
 
 // chownCmd represents the chown command
 var chownCmd = &cobra.Command{
-	Use:   "chown",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
+	Use:   "chown [OPTION]... OWNER[:GROUP] FILE...",
+	Short: "Change file owner and group",
+	Long: `Change the owner and/or group of each FILE to OWNER and/or GROUP.
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("chown called")
+OWNER can be specified as:
+  - User name (e.g., root)
+  - Numeric user ID (e.g., 0)
+  - OWNER:GROUP to change both
+  - OWNER: to change owner and set group to owner's login group
+  - :GROUP to change only the group
+
+Options:
+  -R, --recursive   operate on files and directories recursively
+  -v, --verbose     output a diagnostic for every file processed
+  -c, --changes     like verbose but report only when a change is made
+  -f, --silent      suppress most error messages
+  -h, --no-dereference  affect symbolic links instead of referenced file
+      --reference   use RFILE's owner and group
+      --preserve-root  fail to operate recursively on '/'`,
+	Args: cobra.MinimumNArgs(2),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		opts := cli.ChownOptions{}
+
+		opts.Recursive, _ = cmd.Flags().GetBool("recursive")
+		opts.Verbose, _ = cmd.Flags().GetBool("verbose")
+		opts.Changes, _ = cmd.Flags().GetBool("changes")
+		opts.Silent, _ = cmd.Flags().GetBool("silent")
+		opts.NoDereference, _ = cmd.Flags().GetBool("no-dereference")
+		opts.Reference, _ = cmd.Flags().GetString("reference")
+		opts.PreserveRoot, _ = cmd.Flags().GetBool("preserve-root")
+
+		return cli.RunChown(os.Stdout, args, opts)
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(chownCmd)
 
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// chownCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// chownCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	chownCmd.Flags().BoolP("recursive", "R", false, "operate on files and directories recursively")
+	chownCmd.Flags().BoolP("verbose", "v", false, "output a diagnostic for every file processed")
+	chownCmd.Flags().BoolP("changes", "c", false, "like verbose but report only when a change is made")
+	chownCmd.Flags().BoolP("silent", "f", false, "suppress most error messages")
+	chownCmd.Flags().BoolP("no-dereference", "h", false, "affect symbolic links instead of referenced file")
+	chownCmd.Flags().String("reference", "", "use RFILE's owner and group")
+	chownCmd.Flags().Bool("preserve-root", false, "fail to operate recursively on '/'")
 }

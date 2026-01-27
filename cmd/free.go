@@ -1,36 +1,50 @@
 package cmd
 
 import (
-	"fmt"
+	"os"
+
+	"github.com/inovacc/goshell/pkg/cli"
 
 	"github.com/spf13/cobra"
 )
 
 // freeCmd represents the free command
 var freeCmd = &cobra.Command{
-	Use:   "free",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
+	Use:   "free [OPTION]...",
+	Short: "Display amount of free and used memory in the system",
+	Long: `Display the total amount of free and used physical and swap memory
+in the system, as well as the buffers and caches used by the kernel.
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("free called")
+  -b, --bytes         show output in bytes
+  -k, --kibibytes     show output in kibibytes (default)
+  -m, --mebibytes     show output in mebibytes
+  -g, --gibibytes     show output in gibibytes
+  -h, --human         show human-readable output
+  -w, --wide          wide output
+  -t, --total         show total for RAM + swap`,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		opts := cli.FreeOptions{}
+
+		opts.Bytes, _ = cmd.Flags().GetBool("bytes")
+		opts.Kibibytes, _ = cmd.Flags().GetBool("kibibytes")
+		opts.Mebibytes, _ = cmd.Flags().GetBool("mebibytes")
+		opts.Gibibytes, _ = cmd.Flags().GetBool("gibibytes")
+		opts.Human, _ = cmd.Flags().GetBool("human")
+		opts.Wide, _ = cmd.Flags().GetBool("wide")
+		opts.Total, _ = cmd.Flags().GetBool("total")
+
+		return cli.RunFree(os.Stdout, opts)
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(freeCmd)
 
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// freeCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// freeCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	freeCmd.Flags().BoolP("bytes", "b", false, "show output in bytes")
+	freeCmd.Flags().BoolP("kibibytes", "k", false, "show output in kibibytes")
+	freeCmd.Flags().BoolP("mebibytes", "m", false, "show output in mebibytes")
+	freeCmd.Flags().BoolP("gibibytes", "g", false, "show output in gibibytes")
+	freeCmd.Flags().BoolP("human", "H", false, "show human-readable output")
+	freeCmd.Flags().BoolP("wide", "w", false, "wide output")
+	freeCmd.Flags().BoolP("total", "t", false, "show total for RAM + swap")
 }

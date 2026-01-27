@@ -1,36 +1,48 @@
 package cmd
 
 import (
-	"fmt"
+	"os"
+
+	"github.com/inovacc/goshell/pkg/cli"
 
 	"github.com/spf13/cobra"
 )
 
 // lnCmd represents the ln command
 var lnCmd = &cobra.Command{
-	Use:   "ln",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
+	Use:   "ln [OPTION]... TARGET LINK_NAME",
+	Short: "Make links between files",
+	Long: `Create a link to TARGET with the name LINK_NAME.
+Create hard links by default, symbolic links with --symbolic.
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("ln called")
+  -s, --symbolic     make symbolic links instead of hard links
+  -f, --force        remove existing destination files
+  -n, --no-dereference  treat LINK_NAME as a normal file if it is a symlink
+  -v, --verbose      print name of each linked file
+  -b, --backup       make a backup of each existing destination file
+  -r, --relative     create symbolic links relative to link location`,
+	Args: cobra.MinimumNArgs(2),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		opts := cli.LnOptions{}
+
+		opts.Symbolic, _ = cmd.Flags().GetBool("symbolic")
+		opts.Force, _ = cmd.Flags().GetBool("force")
+		opts.NoClobber, _ = cmd.Flags().GetBool("no-dereference")
+		opts.Verbose, _ = cmd.Flags().GetBool("verbose")
+		opts.Backup, _ = cmd.Flags().GetBool("backup")
+		opts.Relative, _ = cmd.Flags().GetBool("relative")
+
+		return cli.RunLn(os.Stdout, args, opts)
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(lnCmd)
 
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// lnCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// lnCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	lnCmd.Flags().BoolP("symbolic", "s", false, "make symbolic links instead of hard links")
+	lnCmd.Flags().BoolP("force", "f", false, "remove existing destination files")
+	lnCmd.Flags().BoolP("no-dereference", "n", false, "treat LINK_NAME as a normal file if it is a symlink")
+	lnCmd.Flags().BoolP("verbose", "v", false, "print name of each linked file")
+	lnCmd.Flags().BoolP("backup", "b", false, "make a backup of each existing destination file")
+	lnCmd.Flags().BoolP("relative", "r", false, "create symbolic links relative to link location")
 }

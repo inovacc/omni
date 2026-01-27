@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"os"
+
 	"github.com/inovacc/goshell/pkg/cli"
 
 	"github.com/spf13/cobra"
@@ -8,24 +10,78 @@ import (
 
 // dateCmd represents the date command
 var dateCmd = &cobra.Command{
-	Use:   "date",
+	Use:   "date [+FORMAT]",
 	Short: "Print the current date and time",
-	Long:  `Print the current date and time in RFC3339 format.`,
+	Long: `Display the current time in the given FORMAT, or set the system date.
+
+FORMAT controls the output. Interpreted sequences are:
+  %Y   year
+  %m   month (01..12)
+  %d   day of month (01..31)
+  %H   hour (00..23)
+  %M   minute (00..59)
+  %S   second (00..60)`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return cli.RunDate()
+		opts := cli.DateOptions{}
+
+		opts.UTC, _ = cmd.Flags().GetBool("utc")
+		opts.ISO, _ = cmd.Flags().GetBool("iso-8601")
+
+		// Check if format is provided as argument (like +%Y-%m-%d)
+		if len(args) > 0 && len(args[0]) > 0 && args[0][0] == '+' {
+			opts.Format = convertDateFormat(args[0][1:])
+		}
+
+		return cli.RunDate(os.Stdout, opts)
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(dateCmd)
 
-	// Here you will define your flags and configuration settings.
+	dateCmd.Flags().BoolP("utc", "u", false, "print Coordinated Universal Time (UTC)")
+	dateCmd.Flags().Bool("iso-8601", false, "output date/time in ISO 8601 format")
+}
 
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// dateCmd.PersistentFlags().String("foo", "", "A help for foo")
+// convertDateFormat converts strftime-style format to Go's time format
+func convertDateFormat(format string) string {
+	replacements := map[string]string{
+		"%Y": "2006",
+		"%m": "01",
+		"%d": "02",
+		"%H": "15",
+		"%M": "04",
+		"%S": "05",
+		"%y": "06",
+		"%b": "Jan",
+		"%B": "January",
+		"%a": "Mon",
+		"%A": "Monday",
+		"%p": "PM",
+		"%Z": "MST",
+		"%z": "-0700",
+		"%n": "\n",
+		"%t": "\t",
+		"%%": "%",
+	}
 
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// dateCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	result := format
+	for k, v := range replacements {
+		result = replaceAll(result, k, v)
+	}
+	return result
+}
+
+func replaceAll(s, old, new string) string {
+	result := ""
+	for i := 0; i < len(s); {
+		if i+len(old) <= len(s) && s[i:i+len(old)] == old {
+			result += new
+			i += len(old)
+		} else {
+			result += string(s[i])
+			i++
+		}
+	}
+	return result
 }
