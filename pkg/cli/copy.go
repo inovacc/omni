@@ -25,11 +25,13 @@ func RunCopy(args []string) error {
 		if destIsDir {
 			target = filepath.Join(dest, filepath.Base(src))
 		}
+
 		err := Copy(src, target)
 		if err != nil {
 			return fmt.Errorf("cp: %w", err)
 		}
 	}
+
 	return nil
 }
 
@@ -53,10 +55,12 @@ func RunMove(args []string) error {
 		if destIsDir {
 			target = filepath.Join(dest, filepath.Base(src))
 		}
+
 		err := Move(src, target)
 		if err != nil {
 			return fmt.Errorf("mv: %w", err)
 		}
 	}
+
 	return nil
 }

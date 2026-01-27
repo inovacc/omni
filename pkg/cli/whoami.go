@@ -14,6 +14,7 @@ func RunWhoami(w io.Writer) error {
 	}
 
 	_, _ = fmt.Fprintln(w, u.Username)
+
 	return nil
 }
 
@@ -23,6 +24,7 @@ func Whoami() (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("cannot get current user: %w", err)
 	}
+
 	return u.Username, nil
 }
 

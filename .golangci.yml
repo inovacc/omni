@@ -38,6 +38,11 @@ linters:
         - whitespace
         - wsl_v5
 
+    settings:
+        gocritic:
+            disabled-checks:
+                - ifElseChain
+
     disable:
         - tagliatelle
         - gochecknoglobals

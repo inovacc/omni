@@ -29,12 +29,14 @@ func RunEnv(w io.Writer, args []string, opts EnvOptions) error {
 	// Filter out unset variable if specified
 	if opts.Unset != "" {
 		filtered := make([]string, 0, len(envVars))
+
 		prefix := opts.Unset + "="
 		for _, env := range envVars {
 			if !strings.HasPrefix(env, prefix) {
 				filtered = append(filtered, env)
 			}
 		}
+
 		envVars = filtered
 	}
 
@@ -50,6 +52,7 @@ func RunEnv(w io.Writer, args []string, opts EnvOptions) error {
 				}
 			}
 		}
+
 		return nil
 	}
 
@@ -81,10 +84,12 @@ func LookupEnv(name string) (string, bool) {
 // Environ returns all environment variables as a map
 func Environ() map[string]string {
 	env := make(map[string]string)
+
 	for _, e := range os.Environ() {
 		if idx := strings.Index(e, "="); idx > 0 {
 			env[e[:idx]] = e[idx+1:]
 		}
 	}
+
 	return env
 }

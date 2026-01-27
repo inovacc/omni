@@ -2,6 +2,7 @@ package cli
 
 import (
 	"bufio"
+	"bytes"
 	"fmt"
 	"io"
 	"os"
@@ -53,21 +54,22 @@ func RunXargs(w io.Writer, r io.Reader, initialArgs []string, opts XargsOptions,
 
 	// Create batches
 	var batches [][]string
+
 	for i := 0; i < len(args); i += batchSize {
-		end := i + batchSize
-		if end > len(args) {
-			end = len(args)
-		}
+		end := min(i+batchSize, len(args))
+
 		batch := args[i:end]
 
 		// Handle replacement string
 		if opts.ReplaceStr != "" && len(initialArgs) > 0 {
 			var expandedArgs []string
+
 			for _, arg := range initialArgs {
 				for _, input := range batch {
 					expandedArgs = append(expandedArgs, strings.ReplaceAll(arg, opts.ReplaceStr, input))
 				}
 			}
+
 			batches = append(batches, expandedArgs)
 		} else {
 			combined := make([]string, 0, len(initialArgs)+len(batch))
@@ -89,6 +91,7 @@ func RunXargs(w io.Writer, r io.Reader, initialArgs []string, opts XargsOptions,
 			if opts.Verbose {
 				_, _ = fmt.Fprintf(os.Stderr, "%s\n", strings.Join(batch, " "))
 			}
+
 			if err := worker(batch); err != nil {
 				return err
 			}
@@ -96,19 +99,24 @@ func RunXargs(w io.Writer, r io.Reader, initialArgs []string, opts XargsOptions,
 	} else {
 		// Parallel execution
 		var wg sync.WaitGroup
+
 		sem := make(chan struct{}, maxProcs)
 		errCh := make(chan error, len(batches))
 
 		for _, batch := range batches {
 			wg.Add(1)
+
 			go func(b []string) {
 				defer wg.Done()
+
 				sem <- struct{}{}
+
 				defer func() { <-sem }()
 
 				if opts.Verbose {
 					_, _ = fmt.Fprintf(os.Stderr, "%s\n", strings.Join(b, " "))
 				}
+
 				if err := worker(b); err != nil {
 					errCh <- err
 				}
@@ -140,12 +148,15 @@ func parseXargsInput(r io.Reader, opts XargsOptions) ([]string, error) {
 			if atEOF && len(data) == 0 {
 				return 0, nil, nil
 			}
-			if i := strings.IndexByte(string(data), 0); i >= 0 {
+
+			if i := bytes.IndexByte(data, 0); i >= 0 {
 				return i + 1, data[0:i], nil
 			}
+
 			if atEOF {
 				return len(data), data, nil
 			}
+
 			return 0, nil, nil
 		})
 
@@ -154,25 +165,31 @@ func parseXargsInput(r io.Reader, opts XargsOptions) ([]string, error) {
 				args = append(args, text)
 			}
 		}
+
 		return args, scanner.Err()
 	}
 
 	if opts.Delimiter != "" {
 		// Read with custom delimiter
 		scanner := bufio.NewScanner(r)
+
 		delim := opts.Delimiter
 		if len(delim) > 0 {
 			delimByte := delim[0]
+
 			scanner.Split(func(data []byte, atEOF bool) (advance int, token []byte, err error) {
 				if atEOF && len(data) == 0 {
 					return 0, nil, nil
 				}
-				if i := strings.IndexByte(string(data), delimByte); i >= 0 {
+
+				if i := bytes.IndexByte(data, delimByte); i >= 0 {
 					return i + 1, data[0:i], nil
 				}
+
 				if atEOF {
 					return len(data), data, nil
 				}
+
 				return 0, nil, nil
 			})
 		}
@@ -182,6 +199,7 @@ func parseXargsInput(r io.Reader, opts XargsOptions) ([]string, error) {
 				args = append(args, text)
 			}
 		}
+
 		return args, scanner.Err()
 	}
 

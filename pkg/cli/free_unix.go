@@ -23,6 +23,7 @@ func getMemInfo() (MemInfo, error) {
 		scanner := bufio.NewScanner(file)
 		for scanner.Scan() {
 			line := scanner.Text()
+
 			fields := strings.Fields(line)
 			if len(fields) < 2 {
 				continue
@@ -59,13 +60,13 @@ func getMemInfo() (MemInfo, error) {
 	}
 
 	unit := uint64(sysinfo.Unit)
-	info.MemTotal = uint64(sysinfo.Totalram) * unit
-	info.MemFree = uint64(sysinfo.Freeram) * unit
+	info.MemTotal = sysinfo.Totalram * unit
+	info.MemFree = sysinfo.Freeram * unit
 	info.MemAvailable = info.MemFree // Approximation
-	info.Buffers = uint64(sysinfo.Bufferram) * unit
+	info.Buffers = sysinfo.Bufferram * unit
 	info.Cached = 0 // Not available from sysinfo
-	info.SwapTotal = uint64(sysinfo.Totalswap) * unit
-	info.SwapFree = uint64(sysinfo.Freeswap) * unit
+	info.SwapTotal = sysinfo.Totalswap * unit
+	info.SwapFree = sysinfo.Freeswap * unit
 
 	return info, nil
 }

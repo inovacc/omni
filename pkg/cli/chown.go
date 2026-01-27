@@ -51,8 +51,10 @@ func RunChown(w io.Writer, args []string, opts ChownOptions) error {
 					if !opts.Silent {
 						_, _ = fmt.Fprintf(os.Stderr, "chown: cannot access '%s': %v\n", path, err)
 					}
+
 					return nil
 				}
+
 				return chownFile(w, path, uid, gid, opts)
 			})
 			if err != nil {
@@ -76,6 +78,7 @@ func parseOwnerGroup(spec string, reference string) (int, int, error) {
 		if err != nil {
 			return -1, -1, fmt.Errorf("cannot stat '%s': %w", reference, err)
 		}
+
 		return getFileOwner(info)
 	}
 
@@ -100,6 +103,7 @@ func parseOwnerGroup(spec string, reference string) (int, int, error) {
 			if err != nil {
 				return -1, -1, fmt.Errorf("invalid user: '%s'", owner)
 			}
+
 			uid, _ = strconv.Atoi(u.Uid)
 		}
 	}
@@ -113,6 +117,7 @@ func parseOwnerGroup(spec string, reference string) (int, int, error) {
 			if err != nil {
 				return -1, -1, fmt.Errorf("invalid group: '%s'", group)
 			}
+
 			gid, _ = strconv.Atoi(g.Gid)
 		}
 	}
@@ -138,10 +143,12 @@ func chownFile(w io.Writer, path string, uid, gid int, opts ChownOptions) error 
 		if uid == -1 {
 			ownerStr = ""
 		}
+
 		groupStr := fmt.Sprintf("%d", gid)
 		if gid == -1 {
 			groupStr = ""
 		}
+
 		_, _ = fmt.Fprintf(w, "ownership of '%s' changed to %s:%s\n", path, ownerStr, groupStr)
 	}
 

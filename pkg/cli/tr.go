@@ -24,9 +24,11 @@ func RunTr(w io.Writer, r io.Reader, set1, set2 string, opts TrOptions) error {
 	expandedSet2 := expandCharSet(set2)
 
 	// Build translation map
-	var transMap map[rune]rune
-	var deleteSet map[rune]bool
-	var squeezeSet map[rune]bool
+	var (
+		transMap   map[rune]rune
+		deleteSet  map[rune]bool
+		squeezeSet map[rune]bool
+	)
 
 	if opts.Complement {
 		expandedSet1 = complementSet(expandedSet1)
@@ -43,18 +45,23 @@ func RunTr(w io.Writer, r io.Reader, set1, set2 string, opts TrOptions) error {
 
 	if opts.Squeeze {
 		squeezeSet = make(map[rune]bool)
+
 		targetSet := expandedSet2
 		if opts.Delete || expandedSet2 == "" {
 			targetSet = expandedSet1
 		}
+
 		for _, r := range targetSet {
 			squeezeSet[r] = true
 		}
 	}
 
 	reader := bufio.NewReader(r)
-	var lastRune rune
-	var lastWasSqueezeChar bool
+
+	var (
+		lastRune           rune
+		lastWasSqueezeChar bool
+	)
 
 	for {
 		ru, _, err := reader.ReadRune()
@@ -62,6 +69,7 @@ func RunTr(w io.Writer, r io.Reader, set1, set2 string, opts TrOptions) error {
 			if err == io.EOF {
 				break
 			}
+
 			return err
 		}
 
@@ -82,6 +90,7 @@ func RunTr(w io.Writer, r io.Reader, set1, set2 string, opts TrOptions) error {
 			if lastWasSqueezeChar && ru == lastRune {
 				continue
 			}
+
 			lastWasSqueezeChar = true
 		} else {
 			lastWasSqueezeChar = false
@@ -97,6 +106,7 @@ func RunTr(w io.Writer, r io.Reader, set1, set2 string, opts TrOptions) error {
 // expandCharSet expands character classes and ranges
 func expandCharSet(set string) string {
 	var result strings.Builder
+
 	runes := []rune(set)
 
 	for i := 0; i < len(runes); i++ {
@@ -107,7 +117,9 @@ func expandCharSet(set string) string {
 			if end > 0 {
 				class := string(runes[i+2 : i+end])
 				result.WriteString(expandClass(class))
+
 				i += end + 1
+
 				continue
 			}
 		}
@@ -115,13 +127,16 @@ func expandCharSet(set string) string {
 		// Check for range (a-z)
 		if i+2 < len(runes) && runes[i+1] == '-' && runes[i+2] != '-' {
 			start := runes[i]
+
 			endR := runes[i+2]
 			if start <= endR {
 				for c := start; c <= endR; c++ {
 					result.WriteRune(c)
 				}
 			}
+
 			i += 2
+
 			continue
 		}
 
@@ -139,7 +154,9 @@ func expandCharSet(set string) string {
 			default:
 				result.WriteRune(runes[i+1])
 			}
+
 			i++
+
 			continue
 		}
 
@@ -158,9 +175,11 @@ func expandClass(class string) string {
 		for c := 'a'; c <= 'z'; c++ {
 			result.WriteRune(c)
 		}
+
 		for c := 'A'; c <= 'Z'; c++ {
 			result.WriteRune(c)
 		}
+
 		for c := '0'; c <= '9'; c++ {
 			result.WriteRune(c)
 		}
@@ -168,6 +187,7 @@ func expandClass(class string) string {
 		for c := 'a'; c <= 'z'; c++ {
 			result.WriteRune(c)
 		}
+
 		for c := 'A'; c <= 'Z'; c++ {
 			result.WriteRune(c)
 		}
@@ -214,7 +234,8 @@ func complementSet(set string) string {
 	}
 
 	var result strings.Builder
-	for c := rune(0); c < 256; c++ {
+
+	for c := range rune(256) {
 		if !inSet[c] && unicode.IsPrint(c) {
 			result.WriteRune(c)
 		}
@@ -246,6 +267,7 @@ func buildTransMap(set1, set2 string, truncate bool) map[rune]rune {
 		if truncate && i >= len(runes2) {
 			break
 		}
+
 		if i < len(runes2) {
 			transMap[r] = runes2[i]
 		}

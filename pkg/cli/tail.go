@@ -43,7 +43,9 @@ func RunTail(w io.Writer, args []string, opts TailOptions) error {
 
 	for i, file := range files {
 		var r io.Reader
+
 		filename := file
+
 		var f *os.File
 
 		if file == "-" {
@@ -51,11 +53,14 @@ func RunTail(w io.Writer, args []string, opts TailOptions) error {
 			filename = "standard input"
 		} else {
 			var err error
+
 			f, err = os.Open(file)
 			if err != nil {
 				return fmt.Errorf("tail: cannot open '%s' for reading: %w", file, err)
 			}
+
 			r = f
+
 			defer func() {
 				_ = f.Close()
 			}()
@@ -65,6 +70,7 @@ func RunTail(w io.Writer, args []string, opts TailOptions) error {
 			if i > 0 {
 				_, _ = fmt.Fprintln(w)
 			}
+
 			_, _ = fmt.Fprintf(w, "==> %s <==\n", filename)
 		}
 
@@ -117,15 +123,15 @@ func tailBytes(w io.Writer, r io.Reader, n int) error {
 	if seeker, ok := r.(io.ReadSeeker); ok {
 		size, err := seeker.Seek(0, io.SeekEnd)
 		if err == nil {
-			start := size - int64(n)
-			if start < 0 {
-				start = 0
-			}
+			start := max(size-int64(n), 0)
+
 			_, err = seeker.Seek(start, io.SeekStart)
 			if err != nil {
 				return err
 			}
+
 			_, err = io.Copy(w, r)
+
 			return err
 		}
 	}
@@ -136,12 +142,10 @@ func tailBytes(w io.Writer, r io.Reader, n int) error {
 		return err
 	}
 
-	start := len(data) - n
-	if start < 0 {
-		start = 0
-	}
+	start := max(len(data)-n, 0)
 
 	_, err = w.Write(data[start:])
+
 	return err
 }
 
@@ -155,8 +159,10 @@ func followFile(w io.Writer, f *os.File, sleep time.Duration) error {
 				time.Sleep(sleep)
 				continue
 			}
+
 			return err
 		}
+
 		_, _ = fmt.Fprint(w, line)
 	}
 }
@@ -166,8 +172,10 @@ func Tail(lines []string, n int) []string {
 	if n > len(lines) {
 		n = len(lines)
 	}
+
 	if n < 0 {
 		n = 0
 	}
+
 	return lines[len(lines)-n:]
 }

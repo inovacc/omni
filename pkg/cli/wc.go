@@ -42,10 +42,12 @@ func RunWC(w io.Writer, args []string, opts WCOptions) error {
 	}
 
 	var totals WCResult
+
 	totals.Filename = "total"
 
 	for _, file := range files {
 		var r io.Reader
+
 		filename := file
 
 		if file == "-" {
@@ -57,7 +59,9 @@ func RunWC(w io.Writer, args []string, opts WCOptions) error {
 				_, _ = fmt.Fprintf(os.Stderr, "wc: %s: %v\n", file, err)
 				continue
 			}
+
 			r = f
+
 			defer func() {
 				_ = f.Close()
 			}()
@@ -68,6 +72,7 @@ func RunWC(w io.Writer, args []string, opts WCOptions) error {
 			_, _ = fmt.Fprintf(os.Stderr, "wc: %s: %v\n", file, err)
 			continue
 		}
+
 		result.Filename = filename
 
 		printWCResult(w, result, opts)
@@ -76,6 +81,7 @@ func RunWC(w io.Writer, args []string, opts WCOptions) error {
 		totals.Lines += result.Lines
 		totals.Words += result.Words
 		totals.Bytes += result.Bytes
+
 		totals.Chars += result.Chars
 		if result.MaxLineLen > totals.MaxLineLen {
 			totals.MaxLineLen = result.MaxLineLen
@@ -103,6 +109,7 @@ func countReader(r io.Reader, opts WCOptions) (WCResult, error) {
 			if err == io.EOF {
 				break
 			}
+
 			return result, err
 		}
 
@@ -121,6 +128,7 @@ func countReader(r io.Reader, opts WCOptions) (WCResult, error) {
 			if lineLen > result.MaxLineLen {
 				result.MaxLineLen = lineLen
 			}
+
 			lineLen = 0
 		} else {
 			lineLen++
@@ -145,32 +153,44 @@ func countReader(r io.Reader, opts WCOptions) (WCResult, error) {
 }
 
 func printWCResult(w io.Writer, result WCResult, opts WCOptions) {
-	var fields []interface{}
-	var format string
+	var (
+		fields []any
+		format string
+	)
 
 	if opts.Lines {
 		format += "%7d "
+
 		fields = append(fields, result.Lines)
 	}
+
 	if opts.Words {
 		format += "%7d "
+
 		fields = append(fields, result.Words)
 	}
+
 	if opts.Chars {
 		format += "%7d "
+
 		fields = append(fields, result.Chars)
 	}
+
 	if opts.Bytes {
 		format += "%7d "
+
 		fields = append(fields, result.Bytes)
 	}
+
 	if opts.MaxLineLen {
 		format += "%7d "
+
 		fields = append(fields, result.MaxLineLen)
 	}
 
 	if result.Filename != "" {
 		format += "%s"
+
 		fields = append(fields, result.Filename)
 	}
 
@@ -189,6 +209,7 @@ func WC(data []byte) WCResult {
 		if b == '\n' {
 			lines++
 		}
+
 		if b == ' ' || b == '\n' || b == '\t' {
 			inWord = false
 		} else if !inWord {

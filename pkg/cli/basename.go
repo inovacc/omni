@@ -16,7 +16,9 @@ func RunBasename(w io.Writer, args []string, suffix string) error {
 		if suffix != "" && len(name) > len(suffix) && name[len(name)-len(suffix):] == suffix {
 			name = name[:len(name)-len(suffix)]
 		}
+
 		_, _ = fmt.Fprintln(w, name)
 	}
+
 	return nil
 }

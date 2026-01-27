@@ -5,6 +5,7 @@ import (
 	"io"
 	"os/user"
 	"strconv"
+	"strings"
 )
 
 // IDOptions configures the id command behavior
@@ -27,8 +28,10 @@ type IDInfo struct {
 
 // RunID executes the id command
 func RunID(w io.Writer, opts IDOptions) error {
-	var u *user.User
-	var err error
+	var (
+		u   *user.User
+		err error
+	)
 
 	if opts.Username != "" {
 		u, err = user.Lookup(opts.Username)
@@ -50,6 +53,7 @@ func RunID(w io.Writer, opts IDOptions) error {
 		} else {
 			_, _ = fmt.Fprintln(w, u.Uid)
 		}
+
 		return nil
 	}
 
@@ -64,12 +68,14 @@ func RunID(w io.Writer, opts IDOptions) error {
 		} else {
 			_, _ = fmt.Fprintln(w, u.Gid)
 		}
+
 		return nil
 	}
 
 	if opts.Groups {
 		if opts.Name {
 			var names []string
+
 			for _, gid := range groups {
 				g, err := user.LookupGroupId(gid)
 				if err != nil {
@@ -78,52 +84,65 @@ func RunID(w io.Writer, opts IDOptions) error {
 					names = append(names, g.Name)
 				}
 			}
+
 			for i, name := range names {
 				if i > 0 {
 					_, _ = fmt.Fprint(w, " ")
 				}
+
 				_, _ = fmt.Fprint(w, name)
 			}
+
 			_, _ = fmt.Fprintln(w)
 		} else {
 			for i, gid := range groups {
 				if i > 0 {
 					_, _ = fmt.Fprint(w, " ")
 				}
+
 				_, _ = fmt.Fprint(w, gid)
 			}
+
 			_, _ = fmt.Fprintln(w)
 		}
+
 		return nil
 	}
 
 	// Default: print all info in standard format
 	// uid=1000(username) gid=1000(groupname) groups=1000(group1),1001(group2),...
-	output := fmt.Sprintf("uid=%s", u.Uid)
-	output += fmt.Sprintf("(%s)", u.Username)
+	var output strings.Builder
+	output.WriteString(fmt.Sprintf("uid=%s", u.Uid))
+	output.WriteString(fmt.Sprintf("(%s)", u.Username))
 
 	g, err := user.LookupGroupId(u.Gid)
+
 	groupName := u.Gid
 	if err == nil {
 		groupName = g.Name
 	}
-	output += fmt.Sprintf(" gid=%s(%s)", u.Gid, groupName)
+
+	output.WriteString(fmt.Sprintf(" gid=%s(%s)", u.Gid, groupName))
 
 	if len(groups) > 0 {
-		output += " groups="
+		output.WriteString(" groups=")
+
 		for i, gid := range groups {
 			if i > 0 {
-				output += ","
+				output.WriteString(",")
 			}
+
 			gname := gid
 			if grp, err := user.LookupGroupId(gid); err == nil {
 				gname = grp.Name
 			}
-			output += fmt.Sprintf("%s(%s)", gid, gname)
+
+			output.WriteString(fmt.Sprintf("%s(%s)", gid, gname))
 		}
 	}
 
-	_, _ = fmt.Fprintln(w, output)
+	_, _ = fmt.Fprintln(w, output.String())
+
 	return nil
 }
 
@@ -133,6 +152,7 @@ func GetUID() (int, error) {
 	if err != nil {
 		return 0, err
 	}
+
 	return strconv.Atoi(u.Uid)
 }
 
@@ -142,6 +162,7 @@ func GetGID() (int, error) {
 	if err != nil {
 		return 0, err
 	}
+
 	return strconv.Atoi(u.Gid)
 }
 

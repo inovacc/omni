@@ -7,6 +7,7 @@ func Realpath(path string) (string, error) {
 	if err != nil {
 		return "", err
 	}
+
 	return filepath.EvalSymlinks(abs)
 }
 

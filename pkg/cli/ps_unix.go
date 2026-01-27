@@ -67,6 +67,7 @@ func readProcInfo(pid int) (ProcessInfo, error) {
 
 	// Read stat file
 	statPath := filepath.Join(procPath, "stat")
+
 	statData, err := os.ReadFile(statPath)
 	if err != nil {
 		return proc, err
@@ -77,6 +78,7 @@ func readProcInfo(pid int) (ProcessInfo, error) {
 
 	// Find command name between parentheses
 	start := strings.Index(statStr, "(")
+
 	end := strings.LastIndex(statStr, ")")
 	if start == -1 || end == -1 {
 		return proc, fmt.Errorf("invalid stat format")
@@ -130,9 +132,11 @@ func readProcInfo(pid int) (ProcessInfo, error) {
 				if len(fields) >= 2 {
 					proc.UID, _ = strconv.Atoi(fields[1])
 				}
+
 				break
 			}
 		}
+
 		_ = statusFile.Close()
 	}
 
@@ -148,6 +152,7 @@ func readProcInfo(pid int) (ProcessInfo, error) {
 	if cmdlineData, err := os.ReadFile(cmdlinePath); err == nil && len(cmdlineData) > 0 {
 		// Replace null bytes with spaces
 		cmdline := strings.ReplaceAll(string(cmdlineData), "\x00", " ")
+
 		cmdline = strings.TrimSpace(cmdline)
 		if cmdline != "" {
 			proc.Command = cmdline
@@ -168,6 +173,7 @@ func formatTTY(ttyNr int) string {
 	if ttyNr == 0 {
 		return "?"
 	}
+
 	major := (ttyNr >> 8) & 0xff
 	minor := ttyNr & 0xff
 
@@ -191,5 +197,6 @@ func formatCPUTime(ticks int64) string {
 	if hours > 0 {
 		return fmt.Sprintf("%d:%02d:%02d", hours, minutes, seconds)
 	}
+
 	return fmt.Sprintf("%d:%02d", minutes, seconds)
 }

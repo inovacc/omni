@@ -3,6 +3,7 @@ package cli
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 )
 
@@ -17,6 +18,7 @@ func RunTouch(args []string) error {
 			return fmt.Errorf("touch: %w", err)
 		}
 	}
+
 	return nil
 }
 
@@ -28,12 +30,13 @@ type StatInfo struct {
 	IsDir   bool        `json:"is_dir"`
 }
 
-func RunStat(args []string, jsonMode bool) error {
+func RunStat(w io.Writer, args []string, jsonMode bool) error {
 	if len(args) == 0 {
 		return fmt.Errorf("stat: missing operand")
 	}
 
 	var results []StatInfo
+
 	for _, path := range args {
 		info, err := Stat(path)
 		if err != nil {
@@ -50,24 +53,26 @@ func RunStat(args []string, jsonMode bool) error {
 		results = append(results, statInfo)
 
 		if !jsonMode {
-			fmt.Printf("  File: %s\n", statInfo.Name)
-			fmt.Printf("  Size: %d\tBlocks: %d\tIO Block: %d\t", statInfo.Size, 0, 0) // Simplified
+			_, _ = fmt.Fprintf(w, "  File: %s\n", statInfo.Name)
+			_, _ = fmt.Fprintf(w, "  Size: %d\tBlocks: %d\tIO Block: %d\t", statInfo.Size, 0, 0) // Simplified
+
 			if statInfo.IsDir {
-				fmt.Print("directory\n")
+				_, _ = fmt.Fprint(w, "directory\n")
 			} else {
-				fmt.Print("regular file\n")
+				_, _ = fmt.Fprint(w, "regular file\n")
 			}
-			fmt.Printf("Device: %s\tInode: %d\tLinks: %d\n", "unknown", 0, 0)
-			fmt.Printf("Access: (%04o/%s)  Uid: (%d/ %s)   Gid: (%d/ %s)\n", statInfo.Mode.Perm(), statInfo.Mode.String(), 0, "unknown", 0, "unknown")
-			fmt.Printf("Access: %s\n", statInfo.ModTime)
-			fmt.Printf("Modify: %s\n", statInfo.ModTime)
-			fmt.Printf("Change: %s\n", statInfo.ModTime)
-			fmt.Printf(" Birth: -\n")
+
+			_, _ = fmt.Fprintf(w, "Device: %s\tInode: %d\tLinks: %d\n", "unknown", 0, 0)
+			_, _ = fmt.Fprintf(w, "Access: (%04o/%s)  Uid: (%d/ %s)   Gid: (%d/ %s)\n", statInfo.Mode.Perm(), statInfo.Mode.String(), 0, "unknown", 0, "unknown")
+			_, _ = fmt.Fprintf(w, "Access: %s\n", statInfo.ModTime)
+			_, _ = fmt.Fprintf(w, "Modify: %s\n", statInfo.ModTime)
+			_, _ = fmt.Fprintf(w, "Change: %s\n", statInfo.ModTime)
+			_, _ = fmt.Fprintf(w, " Birth: -\n")
 		}
 	}
 
 	if jsonMode {
-		return json.NewEncoder(os.Stdout).Encode(results)
+		return json.NewEncoder(w).Encode(results)
 	}
 
 	return nil

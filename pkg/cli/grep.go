@@ -68,6 +68,7 @@ func RunGrep(w io.Writer, pattern string, args []string, opts GrepOptions) error
 
 	for _, file := range files {
 		var r io.Reader
+
 		filename := file
 
 		if file == "-" {
@@ -79,9 +80,12 @@ func RunGrep(w io.Writer, pattern string, args []string, opts GrepOptions) error
 				if !opts.Quiet {
 					_, _ = fmt.Fprintf(os.Stderr, "grep: %s: %v\n", file, err)
 				}
+
 				continue
 			}
+
 			r = f
+
 			defer func() {
 				_ = f.Close()
 			}()
@@ -93,6 +97,7 @@ func RunGrep(w io.Writer, pattern string, args []string, opts GrepOptions) error
 		}
 
 		totalMatches += matches
+
 		if hasMatch {
 			anyMatch = true
 		}
@@ -106,6 +111,7 @@ func RunGrep(w io.Writer, pattern string, args []string, opts GrepOptions) error
 		if anyMatch {
 			return nil
 		}
+
 		return fmt.Errorf("no match")
 	}
 
@@ -141,6 +147,7 @@ func grepReader(w io.Writer, r io.Reader, filename string, re *regexp.Regexp, op
 
 	// Context handling
 	var beforeLines []string
+
 	afterRemaining := 0
 
 	for scanner.Scan() {
@@ -171,13 +178,10 @@ func grepReader(w io.Writer, r io.Reader, filename string, re *regexp.Regexp, op
 
 			// Print before-context lines
 			if opts.BeforeContext > 0 || opts.Context > 0 {
-				contextLines := opts.BeforeContext
-				if opts.Context > contextLines {
-					contextLines = opts.Context
-				}
 				for _, ctxLine := range beforeLines {
 					printGrepLine(w, filename, 0, ctxLine, opts, showFilename, true)
 				}
+
 				beforeLines = nil
 			}
 
@@ -192,24 +196,20 @@ func grepReader(w io.Writer, r io.Reader, filename string, re *regexp.Regexp, op
 
 			// Set up after-context
 			if opts.AfterContext > 0 || opts.Context > 0 {
-				afterRemaining = opts.AfterContext
-				if opts.Context > afterRemaining {
-					afterRemaining = opts.Context
-				}
+				afterRemaining = max(opts.Context, opts.AfterContext)
 			}
 		} else {
 			// Handle after-context
 			if afterRemaining > 0 {
 				printGrepLine(w, filename, 0, line, opts, showFilename, true)
+
 				afterRemaining--
 			}
 
 			// Track before-context
 			if opts.BeforeContext > 0 || opts.Context > 0 {
-				contextLines := opts.BeforeContext
-				if opts.Context > contextLines {
-					contextLines = opts.Context
-				}
+				contextLines := max(opts.Context, opts.BeforeContext)
+
 				beforeLines = append(beforeLines, line)
 				if len(beforeLines) > contextLines {
 					beforeLines = beforeLines[1:]
@@ -219,11 +219,12 @@ func grepReader(w io.Writer, r io.Reader, filename string, re *regexp.Regexp, op
 	}
 
 	// Handle file-level output options
-	if opts.FilesWithMatch && hasMatch {
+	switch {
+	case opts.FilesWithMatch && hasMatch:
 		_, _ = fmt.Fprintln(w, filename)
-	} else if opts.FilesNoMatch && !hasMatch {
+	case opts.FilesNoMatch && !hasMatch:
 		_, _ = fmt.Fprintln(w, filename)
-	} else if opts.Count {
+	case opts.Count:
 		if showFilename {
 			_, _ = fmt.Fprintf(w, "%s:%d\n", filename, matchCount)
 		} else {
@@ -236,6 +237,7 @@ func grepReader(w io.Writer, r io.Reader, filename string, re *regexp.Regexp, op
 
 func printGrepLine(w io.Writer, filename string, lineNum int, line string, opts GrepOptions, showFilename bool, isContext bool) {
 	var prefix string
+
 	separator := ":"
 	if isContext {
 		separator = "-"
@@ -255,11 +257,13 @@ func printGrepLine(w io.Writer, filename string, lineNum int, line string, opts 
 // Grep filters lines containing the pattern (simple version for compatibility)
 func Grep(lines []string, pattern string) []string {
 	var out []string
+
 	for _, l := range lines {
 		if strings.Contains(l, pattern) {
 			out = append(out, l)
 		}
 	}
+
 	return out
 }
 
@@ -273,19 +277,23 @@ func GrepWithOptions(lines []string, pattern string, opt GrepOptions) []string {
 		if opt.IgnoreCase {
 			pattern = strings.ToLower(pattern)
 		}
+
 		for _, l := range lines {
 			line := l
 			if opt.IgnoreCase {
 				line = strings.ToLower(l)
 			}
+
 			match := strings.Contains(line, pattern)
 			if opt.InvertMatch {
 				match = !match
 			}
+
 			if match {
 				out = append(out, l)
 			}
 		}
+
 		return out
 	}
 
@@ -294,9 +302,11 @@ func GrepWithOptions(lines []string, pattern string, opt GrepOptions) []string {
 		if opt.InvertMatch {
 			match = !match
 		}
+
 		if match {
 			out = append(out, l)
 		}
 	}
+
 	return out
 }

@@ -46,6 +46,7 @@ func countUsers() int {
 	// Real utmp records are 384 bytes on 64-bit systems
 	recordSize := 384
 	count := 0
+
 	for i := 0; i+recordSize <= len(content); i += recordSize {
 		// Check if record type is USER_PROCESS (7)
 		if content[i] == 7 {
@@ -60,8 +61,10 @@ func countUsers() int {
 	return count
 }
 
-// getLoadAvg reads load average from /proc/loadavg (alternative method)
-func getLoadAvg() (float64, float64, float64, error) {
+// getLoadAvgFromProc reads load average from /proc/loadavg (alternative method)
+//
+//nolint:unused // kept as utility function for future use
+func getLoadAvgFromProc() (float64, float64, float64, error) {
 	content, err := os.ReadFile("/proc/loadavg")
 	if err != nil {
 		return 0, 0, 0, err

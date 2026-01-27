@@ -27,24 +27,31 @@ func RunNl(w io.Writer, args []string, opts NlOptions) error {
 	if opts.BodyNumbering == "" {
 		opts.BodyNumbering = "t" // number non-empty lines by default
 	}
+
 	if opts.HeaderNumbering == "" {
 		opts.HeaderNumbering = "n"
 	}
+
 	if opts.FooterNumbering == "" {
 		opts.FooterNumbering = "n"
 	}
+
 	if opts.NumberFormat == "" {
 		opts.NumberFormat = "rn" // right justified
 	}
+
 	if opts.NumberWidth == 0 {
 		opts.NumberWidth = 6
 	}
+
 	if opts.NumberSep == "" {
 		opts.NumberSep = "\t"
 	}
+
 	if opts.StartingNumber == 0 {
 		opts.StartingNumber = 1
 	}
+
 	if opts.Increment == 0 {
 		opts.Increment = 1
 	}
@@ -66,9 +73,11 @@ func RunNl(w io.Writer, args []string, opts NlOptions) error {
 				_, _ = fmt.Fprintf(os.Stderr, "nl: %s: %v\n", file, err)
 				continue
 			}
+
 			defer func() {
 				_ = f.Close()
 			}()
+
 			r = f
 		}
 
@@ -78,6 +87,7 @@ func RunNl(w io.Writer, args []string, opts NlOptions) error {
 
 			// Determine if line should be numbered
 			shouldNumber := false
+
 			switch opts.BodyNumbering {
 			case "a":
 				shouldNumber = true

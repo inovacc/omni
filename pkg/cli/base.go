@@ -35,9 +35,11 @@ func RunBase64(w io.Writer, args []string, opts BaseOptions) error {
 		if err != nil {
 			return fmt.Errorf("base64: %w", err)
 		}
+
 		defer func() {
 			_ = f.Close()
 		}()
+
 		input = f
 	}
 
@@ -52,6 +54,7 @@ func RunBase64(w io.Writer, args []string, opts BaseOptions) error {
 			if r == ' ' || r == '\n' || r == '\r' || r == '\t' {
 				return -1
 			}
+
 			return r
 		}, string(data))
 
@@ -59,12 +62,14 @@ func RunBase64(w io.Writer, args []string, opts BaseOptions) error {
 		if err != nil {
 			return fmt.Errorf("base64: invalid input: %w", err)
 		}
+
 		_, _ = w.Write(decoded)
 	} else {
 		encoded := base64.StdEncoding.EncodeToString(data)
 		if opts.Wrap > 0 {
 			encoded = wrapString(encoded, opts.Wrap)
 		}
+
 		_, _ = fmt.Fprintln(w, encoded)
 	}
 
@@ -85,9 +90,11 @@ func RunBase32(w io.Writer, args []string, opts BaseOptions) error {
 		if err != nil {
 			return fmt.Errorf("base32: %w", err)
 		}
+
 		defer func() {
 			_ = f.Close()
 		}()
+
 		input = f
 	}
 
@@ -101,6 +108,7 @@ func RunBase32(w io.Writer, args []string, opts BaseOptions) error {
 			if r == ' ' || r == '\n' || r == '\r' || r == '\t' {
 				return -1
 			}
+
 			return r
 		}, string(data))
 
@@ -108,12 +116,14 @@ func RunBase32(w io.Writer, args []string, opts BaseOptions) error {
 		if err != nil {
 			return fmt.Errorf("base32: invalid input: %w", err)
 		}
+
 		_, _ = w.Write(decoded)
 	} else {
 		encoded := base32.StdEncoding.EncodeToString(data)
 		if opts.Wrap > 0 {
 			encoded = wrapString(encoded, opts.Wrap)
 		}
+
 		_, _ = fmt.Fprintln(w, encoded)
 	}
 
@@ -130,9 +140,11 @@ func RunBase58(w io.Writer, args []string, opts BaseOptions) error {
 		if err != nil {
 			return fmt.Errorf("base58: %w", err)
 		}
+
 		defer func() {
 			_ = f.Close()
 		}()
+
 		input = f
 	}
 
@@ -145,6 +157,7 @@ func RunBase58(w io.Writer, args []string, opts BaseOptions) error {
 			if err != nil {
 				return fmt.Errorf("base58: invalid input: %w", err)
 			}
+
 			_, _ = w.Write(decoded)
 			_, _ = fmt.Fprintln(w)
 		} else {
@@ -163,6 +176,7 @@ func base58Encode(data []byte) string {
 
 	// Count leading zeros
 	var leadingZeros int
+
 	for _, b := range data {
 		if b == 0 {
 			leadingZeros++
@@ -178,6 +192,7 @@ func base58Encode(data []byte) string {
 	mod := new(big.Int)
 
 	var encoded []byte
+
 	for num.Cmp(zero) > 0 {
 		num.DivMod(num, base, mod)
 		encoded = append([]byte{base58Alphabet[mod.Int64()]}, encoded...)
@@ -198,6 +213,7 @@ func base58Decode(s string) ([]byte, error) {
 
 	// Count leading '1's
 	var leadingOnes int
+
 	for _, c := range s {
 		if c == '1' {
 			leadingOnes++
@@ -215,6 +231,7 @@ func base58Decode(s string) ([]byte, error) {
 		if idx == -1 {
 			return nil, fmt.Errorf("invalid base58 character: %c", c)
 		}
+
 		num.Mul(num, base)
 		num.Add(num, big.NewInt(int64(idx)))
 	}
@@ -234,15 +251,16 @@ func wrapString(s string, width int) string {
 	}
 
 	var result strings.Builder
+
 	for i := 0; i < len(s); i += width {
-		end := i + width
-		if end > len(s) {
-			end = len(s)
-		}
+		end := min(i+width, len(s))
+
 		result.WriteString(s[i:end])
+
 		if end < len(s) {
 			result.WriteString("\n")
 		}
 	}
+
 	return result.String()
 }

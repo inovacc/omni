@@ -9,6 +9,7 @@ func RunRm(args []string, recursive bool, force bool) error {
 		if force {
 			return nil
 		}
+
 		return fmt.Errorf("rm: missing operand")
 	}
 
@@ -18,8 +19,10 @@ func RunRm(args []string, recursive bool, force bool) error {
 			if force && (IsNotExist(err)) {
 				continue
 			}
+
 			return fmt.Errorf("rm: %w", err)
 		}
 	}
+
 	return nil
 }

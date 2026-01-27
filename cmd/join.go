@@ -39,16 +39,18 @@ Examples:
 		opts.Empty, _ = cmd.Flags().GetString("e")
 
 		unpaired, _ := cmd.Flags().GetInt("a")
-		if unpaired == 1 {
+		switch unpaired {
+		case 1:
 			opts.Unpaired1 = true
-		} else if unpaired == 2 {
+		case 2:
 			opts.Unpaired2 = true
 		}
 
 		onlyUnpaired, _ := cmd.Flags().GetInt("v")
-		if onlyUnpaired == 1 {
+		switch onlyUnpaired {
+		case 1:
 			opts.OnlyUnpaired1 = true
-		} else if onlyUnpaired == 2 {
+		case 2:
 			opts.OnlyUnpaired2 = true
 		}
 

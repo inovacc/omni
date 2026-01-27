@@ -24,6 +24,7 @@ type JqOptions struct {
 // RunJq executes jq-like JSON processing
 func RunJq(w io.Writer, args []string, opts JqOptions) error {
 	filter := "."
+
 	var files []string
 
 	if len(args) > 0 {
@@ -41,9 +42,12 @@ func RunJq(w io.Writer, args []string, opts JqOptions) error {
 		if err != nil {
 			return fmt.Errorf("jq: %w", err)
 		}
+
 		if opts.Slurp {
 			var items []any
+
 			dec := json.NewDecoder(strings.NewReader(string(data)))
+
 			for {
 				var v any
 				if err := dec.Decode(&v); err == io.EOF {
@@ -51,14 +55,17 @@ func RunJq(w io.Writer, args []string, opts JqOptions) error {
 				} else if err != nil {
 					return fmt.Errorf("jq: parse error: %w", err)
 				}
+
 				items = append(items, v)
 			}
+
 			inputs = []any{items}
 		} else {
 			var v any
 			if err := json.Unmarshal(data, &v); err != nil {
 				return fmt.Errorf("jq: parse error: %w", err)
 			}
+
 			inputs = []any{v}
 		}
 	} else {
@@ -67,12 +74,15 @@ func RunJq(w io.Writer, args []string, opts JqOptions) error {
 			if err != nil {
 				return fmt.Errorf("jq: %w", err)
 			}
+
 			var v any
 			if err := json.Unmarshal(data, &v); err != nil {
 				return fmt.Errorf("jq: %s: parse error: %w", file, err)
 			}
+
 			inputs = append(inputs, v)
 		}
+
 		if opts.Slurp {
 			inputs = []any{inputs}
 		}
@@ -151,16 +161,18 @@ func applyJqFilter(input any, filter string) ([]any, error) {
 func jqKeys(input any) ([]any, error) {
 	switch v := input.(type) {
 	case map[string]any:
-		var keys []any
+		keys := make([]any, 0, len(v))
 		for k := range v {
 			keys = append(keys, k)
 		}
+
 		return []any{keys}, nil
 	case []any:
-		var keys []any
+		keys := make([]any, 0, len(v))
 		for i := range v {
 			keys = append(keys, i)
 		}
+
 		return []any{keys}, nil
 	default:
 		return nil, fmt.Errorf("cannot get keys of %T", input)
@@ -210,6 +222,7 @@ func jqIterateArray(input any) ([]any, error) {
 		for _, val := range v {
 			values = append(values, val)
 		}
+
 		return values, nil
 	default:
 		return nil, fmt.Errorf("cannot iterate over %T", input)
@@ -221,12 +234,15 @@ func jqArrayIndex(input any, idx int) ([]any, error) {
 	if !ok {
 		return nil, fmt.Errorf("cannot index %T with number", input)
 	}
+
 	if idx < 0 {
 		idx = len(arr) + idx
 	}
+
 	if idx < 0 || idx >= len(arr) {
 		return []any{nil}, nil
 	}
+
 	return []any{arr[idx]}, nil
 }
 
@@ -235,6 +251,7 @@ func jqObjectKey(input any, key string) ([]any, error) {
 	if !ok {
 		return nil, fmt.Errorf("cannot index %T with string", input)
 	}
+
 	return []any{obj[key]}, nil
 }
 
@@ -259,6 +276,7 @@ func jqFieldAccess(input any, path string) ([]any, error) {
 				if !ok {
 					return []any{nil}, nil
 				}
+
 				current = obj[fieldName]
 			}
 
@@ -270,15 +288,19 @@ func jqFieldAccess(input any, path string) ([]any, error) {
 					if !ok {
 						return []any{nil}, nil
 					}
+
 					if i < 0 {
 						i = len(arr) + i
 					}
+
 					if i < 0 || i >= len(arr) {
 						return []any{nil}, nil
 					}
+
 					current = arr[i]
 				}
 			}
+
 			continue
 		}
 
@@ -286,6 +308,7 @@ func jqFieldAccess(input any, path string) ([]any, error) {
 		if !ok {
 			return []any{nil}, nil
 		}
+
 		current = obj[part]
 	}
 
@@ -306,11 +329,13 @@ func jqPipe(input any, filter string) ([]any, error) {
 
 	// Apply second filter to each result
 	var results []any
+
 	for _, item := range intermediate {
 		r, err := applyJqFilter(item, strings.TrimSpace(parts[1]))
 		if err != nil {
 			return nil, err
 		}
+
 		results = append(results, r...)
 	}
 
@@ -328,6 +353,7 @@ func outputJqResult(w io.Writer, result any, opts JqOptions) error {
 
 	// JSON output
 	encoder := json.NewEncoder(w)
+
 	if !opts.Compact {
 		if opts.Tab {
 			encoder.SetIndent("", "\t")

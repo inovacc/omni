@@ -10,6 +10,7 @@ func getKernelRelease() string {
 	if err := syscall.Uname(&uname); err != nil {
 		return "unknown"
 	}
+
 	return charsToString(uname.Release[:])
 }
 
@@ -19,6 +20,7 @@ func getKernelVersion() string {
 	if err := syscall.Uname(&uname); err != nil {
 		return "unknown"
 	}
+
 	return charsToString(uname.Version[:])
 }
 
@@ -29,7 +31,9 @@ func charsToString(ca []int8) string {
 		if c == 0 {
 			break
 		}
+
 		s = append(s, byte(c))
 	}
+
 	return string(s)
 }

@@ -16,7 +16,9 @@ func RunRealpath(w io.Writer, args []string) error {
 		if err != nil {
 			return err
 		}
+
 		_, _ = fmt.Fprintln(w, abs)
 	}
+
 	return nil
 }

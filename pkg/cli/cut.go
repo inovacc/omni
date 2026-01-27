@@ -27,9 +27,11 @@ func RunCut(w io.Writer, args []string, opts CutOptions) error {
 	if opts.Bytes != "" {
 		modes++
 	}
+
 	if opts.Characters != "" {
 		modes++
 	}
+
 	if opts.Fields != "" {
 		modes++
 	}
@@ -37,6 +39,7 @@ func RunCut(w io.Writer, args []string, opts CutOptions) error {
 	if modes == 0 {
 		return fmt.Errorf("you must specify a list of bytes, characters, or fields")
 	}
+
 	if modes > 1 {
 		return fmt.Errorf("only one type of list may be specified")
 	}
@@ -68,9 +71,11 @@ func RunCut(w io.Writer, args []string, opts CutOptions) error {
 				_, _ = fmt.Fprintf(os.Stderr, "cut: %s: %v\n", file, err)
 				continue
 			}
+
 			defer func() {
 				_ = f.Close()
 			}()
+
 			r = f
 		}
 
@@ -87,14 +92,18 @@ func cutReader(w io.Writer, r io.Reader, opts CutOptions) error {
 
 	for scanner.Scan() {
 		line := scanner.Text()
-		var result string
-		var err error
 
-		if opts.Fields != "" {
+		var (
+			result string
+			err    error
+		)
+
+		switch {
+		case opts.Fields != "":
 			result, err = cutFields(line, opts)
-		} else if opts.Characters != "" {
+		case opts.Characters != "":
 			result, err = cutChars(line, opts.Characters, opts.Complement)
-		} else if opts.Bytes != "" {
+		case opts.Bytes != "":
 			result, err = cutBytes(line, opts.Bytes, opts.Complement)
 		}
 
@@ -116,10 +125,12 @@ func cutFields(line string, opts CutOptions) (string, error) {
 		if opts.OnlyDelim {
 			return "", nil
 		}
+
 		return line, nil
 	}
 
 	fields := strings.Split(line, opts.Delimiter)
+
 	ranges, err := parseRanges(opts.Fields, len(fields))
 	if err != nil {
 		return "", err
@@ -130,6 +141,7 @@ func cutFields(line string, opts CutOptions) (string, error) {
 	}
 
 	var selected []string
+
 	for _, idx := range ranges {
 		if idx > 0 && idx <= len(fields) {
 			selected = append(selected, fields[idx-1])
@@ -141,6 +153,7 @@ func cutFields(line string, opts CutOptions) (string, error) {
 
 func cutChars(line string, spec string, complement bool) (string, error) {
 	runes := []rune(line)
+
 	ranges, err := parseRanges(spec, len(runes))
 	if err != nil {
 		return "", err
@@ -151,6 +164,7 @@ func cutChars(line string, spec string, complement bool) (string, error) {
 	}
 
 	var result []rune
+
 	for _, idx := range ranges {
 		if idx > 0 && idx <= len(runes) {
 			result = append(result, runes[idx-1])
@@ -162,6 +176,7 @@ func cutChars(line string, spec string, complement bool) (string, error) {
 
 func cutBytes(line string, spec string, complement bool) (string, error) {
 	bytes := []byte(line)
+
 	ranges, err := parseRanges(spec, len(bytes))
 	if err != nil {
 		return "", err
@@ -172,6 +187,7 @@ func cutBytes(line string, spec string, complement bool) (string, error) {
 	}
 
 	var result []byte
+
 	for _, idx := range ranges {
 		if idx > 0 && idx <= len(bytes) {
 			result = append(result, bytes[idx-1])
@@ -182,12 +198,13 @@ func cutBytes(line string, spec string, complement bool) (string, error) {
 }
 
 // parseRanges parses a range specification like "1,3-5,7-"
-func parseRanges(spec string, max int) ([]int, error) {
+func parseRanges(spec string, maxVal int) ([]int, error) {
 	var result []int
+
 	seen := make(map[int]bool)
 
-	parts := strings.Split(spec, ",")
-	for _, part := range parts {
+	parts := strings.SplitSeq(spec, ",")
+	for part := range parts {
 		part = strings.TrimSpace(part)
 		if part == "" {
 			continue
@@ -197,10 +214,11 @@ func parseRanges(spec string, max int) ([]int, error) {
 			// Range: N-M, N-, or -M
 			rangeParts := strings.SplitN(part, "-", 2)
 			start := 1
-			end := max
+			end := maxVal
 
 			if rangeParts[0] != "" {
 				var err error
+
 				start, err = strconv.Atoi(rangeParts[0])
 				if err != nil {
 					return nil, fmt.Errorf("invalid range: %s", part)
@@ -209,13 +227,14 @@ func parseRanges(spec string, max int) ([]int, error) {
 
 			if rangeParts[1] != "" {
 				var err error
+
 				end, err = strconv.Atoi(rangeParts[1])
 				if err != nil {
 					return nil, fmt.Errorf("invalid range: %s", part)
 				}
 			}
 
-			for i := start; i <= end && i <= max; i++ {
+			for i := start; i <= end && i <= maxVal; i++ {
 				if !seen[i] {
 					result = append(result, i)
 					seen[i] = true
@@ -227,6 +246,7 @@ func parseRanges(spec string, max int) ([]int, error) {
 			if err != nil {
 				return nil, fmt.Errorf("invalid field: %s", part)
 			}
+
 			if !seen[n] {
 				result = append(result, n)
 				seen[n] = true
@@ -238,14 +258,15 @@ func parseRanges(spec string, max int) ([]int, error) {
 }
 
 // complementRanges returns all indices NOT in the given ranges
-func complementRanges(ranges []int, max int) []int {
+func complementRanges(ranges []int, maxVal int) []int {
 	included := make(map[int]bool)
 	for _, r := range ranges {
 		included[r] = true
 	}
 
 	var result []int
-	for i := 1; i <= max; i++ {
+
+	for i := 1; i <= maxVal; i++ {
 		if !included[i] {
 			result = append(result, i)
 		}

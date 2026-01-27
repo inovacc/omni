@@ -54,17 +54,22 @@ func pasteParallel(w io.Writer, files []string, delimiters, lineTerminator strin
 			if err != nil {
 				return fmt.Errorf("paste: %s: %w", file, err)
 			}
+
 			defer func() {
 				_ = f.Close()
 			}()
+
 			r = f
 		}
+
 		readers[i] = bufio.NewScanner(r)
 	}
 
 	delimIdx := 0
+
 	for {
 		var parts []string
+
 		anyMore := false
 
 		for _, scanner := range readers {
@@ -82,14 +87,18 @@ func pasteParallel(w io.Writer, files []string, delimiters, lineTerminator strin
 
 		// Join with delimiters (cycling through them)
 		var result strings.Builder
+
 		for i, part := range parts {
 			if i > 0 {
 				delim := string(delimiters[delimIdx%len(delimiters)])
 				result.WriteString(delim)
+
 				delimIdx++
 			}
+
 			result.WriteString(part)
 		}
+
 		delimIdx = 0 // Reset delimiter index for next line
 
 		_, _ = fmt.Fprint(w, result.String()+lineTerminator)
@@ -108,13 +117,16 @@ func pasteSerial(w io.Writer, files []string, delimiters, lineTerminator string)
 			if err != nil {
 				return fmt.Errorf("paste: %s: %w", file, err)
 			}
+
 			defer func() {
 				_ = f.Close()
 			}()
+
 			r = f
 		}
 
 		scanner := bufio.NewScanner(r)
+
 		var parts []string
 		for scanner.Scan() {
 			parts = append(parts, scanner.Text())
@@ -126,13 +138,17 @@ func pasteSerial(w io.Writer, files []string, delimiters, lineTerminator string)
 
 		// Join with delimiters
 		var result strings.Builder
+
 		delimIdx := 0
+
 		for i, part := range parts {
 			if i > 0 {
 				delim := string(delimiters[delimIdx%len(delimiters)])
 				result.WriteString(delim)
+
 				delimIdx++
 			}
+
 			result.WriteString(part)
 		}
 
@@ -144,6 +160,7 @@ func pasteSerial(w io.Writer, files []string, delimiters, lineTerminator string)
 
 func expandDelimiters(s string) string {
 	var result strings.Builder
+
 	i := 0
 	for i < len(s) {
 		if s[i] == '\\' && i+1 < len(s) {
@@ -159,11 +176,13 @@ func expandDelimiters(s string) string {
 			default:
 				result.WriteByte(s[i+1])
 			}
+
 			i += 2
 		} else {
 			result.WriteByte(s[i])
 			i++
 		}
 	}
+
 	return result.String()
 }

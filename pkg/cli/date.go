@@ -28,6 +28,7 @@ func RunDate(w io.Writer, opts DateOptions) error {
 	}
 
 	_, _ = fmt.Fprintln(w, now.Format(format))
+
 	return nil
 }
 
@@ -36,5 +37,6 @@ func Date(layout string) string {
 	if layout == "" {
 		layout = time.RFC3339
 	}
+
 	return time.Now().Format(layout)
 }

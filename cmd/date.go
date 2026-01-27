@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"os"
+	"strings"
 
 	"github.com/inovacc/goshell/pkg/cli"
 
@@ -69,19 +70,23 @@ func convertDateFormat(format string) string {
 	for k, v := range replacements {
 		result = replaceAll(result, k, v)
 	}
+
 	return result
 }
 
-func replaceAll(s, old, new string) string {
-	result := ""
+func replaceAll(s, old, replacement string) string {
+	var result strings.Builder
+
 	for i := 0; i < len(s); {
 		if i+len(old) <= len(s) && s[i:i+len(old)] == old {
-			result += new
+			result.WriteString(replacement)
+
 			i += len(old)
 		} else {
-			result += string(s[i])
+			result.WriteString(string(s[i]))
 			i++
 		}
 	}
-	return result
+
+	return result.String()
 }

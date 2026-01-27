@@ -14,5 +14,6 @@ func RunDirname(w io.Writer, args []string) error {
 	for _, arg := range args {
 		_, _ = fmt.Fprintln(w, Dirname(arg))
 	}
+
 	return nil
 }

@@ -6,7 +6,6 @@ func Pipeline(
 	doSort bool,
 	doUniq bool,
 ) []string {
-
 	out := lines
 
 	if grepPattern != "" {

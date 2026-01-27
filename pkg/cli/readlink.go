@@ -29,14 +29,18 @@ func RunReadlink(w io.Writer, args []string, opts ReadlinkOptions) error {
 	if opts.Zero {
 		terminator = "\x00"
 	}
+
 	if opts.NoNewline && len(args) == 1 {
 		terminator = ""
 	}
 
 	hasError := false
+
 	for _, path := range args {
-		var result string
-		var err error
+		var (
+			result string
+			err    error
+		)
 
 		if opts.Canonicalize || opts.CanonicalizeExisting || opts.CanonicalizeMissing {
 			result, err = canonicalize(path, opts)
@@ -49,7 +53,9 @@ func RunReadlink(w io.Writer, args []string, opts ReadlinkOptions) error {
 			if !opts.Quiet && !opts.Silent {
 				_, _ = fmt.Fprintf(os.Stderr, "readlink: %s: %v\n", path, err)
 			}
+
 			hasError = true
+
 			continue
 		}
 
@@ -79,6 +85,7 @@ func canonicalize(path string, opts ReadlinkOptions) (string, error) {
 		if _, err := os.Stat(absPath); err != nil {
 			return "", err
 		}
+
 		return filepath.EvalSymlinks(absPath)
 	}
 
@@ -87,6 +94,7 @@ func canonicalize(path string, opts ReadlinkOptions) (string, error) {
 	if err != nil {
 		return "", err
 	}
+
 	return filepath.EvalSymlinks(absPath)
 }
 
@@ -101,5 +109,6 @@ func CanonicalPath(path string) (string, error) {
 	if err != nil {
 		return "", err
 	}
+
 	return filepath.EvalSymlinks(absPath)
 }

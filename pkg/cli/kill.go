@@ -68,9 +68,12 @@ func RunKill(w io.Writer, args []string, opts KillOptions) error {
 
 	// Determine signal
 	sig := syscall.SIGTERM // Default signal
+
 	if opts.Signal != "" {
 		var ok bool
+
 		sigName := strings.ToUpper(strings.TrimPrefix(opts.Signal, "SIG"))
+
 		sig, ok = signalMap[sigName]
 		if !ok {
 			// Try parsing as a number
@@ -78,16 +81,19 @@ func RunKill(w io.Writer, args []string, opts KillOptions) error {
 			if err != nil {
 				return fmt.Errorf("kill: invalid signal: %s", opts.Signal)
 			}
+
 			sig = syscall.Signal(sigNum)
 		}
 	}
 
 	// Process each PID
 	var lastErr error
+
 	for _, arg := range args {
 		// Check for signal specification in argument (-9, -KILL, etc.)
 		if strings.HasPrefix(arg, "-") && !strings.HasPrefix(arg, "--") {
 			sigSpec := arg[1:]
+
 			sigName := strings.ToUpper(strings.TrimPrefix(sigSpec, "SIG"))
 			if s, ok := signalMap[sigName]; ok {
 				sig = s
@@ -99,6 +105,7 @@ func RunKill(w io.Writer, args []string, opts KillOptions) error {
 		if err != nil {
 			_, _ = fmt.Fprintf(os.Stderr, "kill: invalid PID: %s\n", arg)
 			lastErr = err
+
 			continue
 		}
 
@@ -106,12 +113,14 @@ func RunKill(w io.Writer, args []string, opts KillOptions) error {
 		if err != nil {
 			_, _ = fmt.Fprintf(os.Stderr, "kill: no such process: %d\n", pid)
 			lastErr = err
+
 			continue
 		}
 
 		if err := process.Signal(sig); err != nil {
 			_, _ = fmt.Fprintf(os.Stderr, "kill: (%d) - %v\n", pid, err)
 			lastErr = err
+
 			continue
 		}
 
@@ -157,6 +166,7 @@ func listSignals(w io.Writer) {
 			_, _ = fmt.Fprintln(w)
 		}
 	}
+
 	_, _ = fmt.Fprintln(w)
 }
 
@@ -166,5 +176,6 @@ func Kill(pid int, sig syscall.Signal) error {
 	if err != nil {
 		return err
 	}
+
 	return process.Signal(sig)
 }

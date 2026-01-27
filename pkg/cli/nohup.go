@@ -42,10 +42,12 @@ func RunNohup(w io.Writer, args []string, opts NohupOptions) error {
 				outputFile = home + "/nohup.out"
 				f, err = os.OpenFile(outputFile, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
 			}
+
 			if err != nil {
 				return fmt.Errorf("nohup: cannot create output file: %w", err)
 			}
 		}
+
 		defer func() {
 			_ = f.Close()
 		}()

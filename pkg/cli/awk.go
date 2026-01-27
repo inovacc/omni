@@ -60,6 +60,7 @@ func RunAwk(w io.Writer, args []string, opts AwkOptions) error {
 				if err := awkProcessReader(w, os.Stdin, program, opts); err != nil {
 					return err
 				}
+
 				continue
 			}
 
@@ -72,6 +73,7 @@ func RunAwk(w io.Writer, args []string, opts AwkOptions) error {
 			if closeErr := f.Close(); closeErr != nil && err == nil {
 				err = closeErr
 			}
+
 			if err != nil {
 				return err
 			}
@@ -116,22 +118,26 @@ func parseAwkProgram(text string) (*awkProgram, error) {
 			break
 		}
 
-		if strings.HasPrefix(text, "BEGIN") {
-			text = strings.TrimPrefix(text, "BEGIN")
+		if after, ok := strings.CutPrefix(text, "BEGIN"); ok {
+			text = after
 			text = strings.TrimSpace(text)
+
 			action, rest, err := parseAwkAction(text)
 			if err != nil {
 				return nil, err
 			}
+
 			program.begin = action
 			text = rest
-		} else if strings.HasPrefix(text, "END") {
-			text = strings.TrimPrefix(text, "END")
+		} else if after, ok := strings.CutPrefix(text, "END"); ok {
+			text = after
 			text = strings.TrimSpace(text)
+
 			action, rest, err := parseAwkAction(text)
 			if err != nil {
 				return nil, err
 			}
+
 			program.end = action
 			text = rest
 		} else if strings.HasPrefix(text, "/") {
@@ -140,17 +146,21 @@ func parseAwkProgram(text string) (*awkProgram, error) {
 			if end == -1 {
 				return nil, fmt.Errorf("unterminated regex")
 			}
+
 			pattern := text[1 : end+1]
+
 			re, err := regexp.Compile(pattern)
 			if err != nil {
 				return nil, fmt.Errorf("invalid regex: %w", err)
 			}
+
 			text = strings.TrimSpace(text[end+2:])
 
 			action, rest, err := parseAwkAction(text)
 			if err != nil {
 				return nil, err
 			}
+
 			program.rules = append(program.rules, awkRule{pattern: re, action: action})
 			text = rest
 		} else if strings.HasPrefix(text, "{") {
@@ -159,6 +169,7 @@ func parseAwkProgram(text string) (*awkProgram, error) {
 			if err != nil {
 				return nil, err
 			}
+
 			program.rules = append(program.rules, awkRule{action: action})
 			text = rest
 		} else {
@@ -166,6 +177,7 @@ func parseAwkProgram(text string) (*awkProgram, error) {
 			program.rules = append(program.rules, awkRule{
 				action: &awkAction{commands: []string{"print " + text}},
 			})
+
 			break
 		}
 	}
@@ -181,6 +193,7 @@ func parseAwkAction(text string) (*awkAction, string, error) {
 	// Find a matching closing brace
 	depth := 0
 	end := -1
+
 	for i, c := range text {
 		if c == '{' {
 			depth++
@@ -206,6 +219,7 @@ func parseAwkAction(text string) (*awkAction, string, error) {
 	})
 
 	var trimmed []string
+
 	for _, cmd := range commands {
 		cmd = strings.TrimSpace(cmd)
 		if cmd != "" {
@@ -240,6 +254,7 @@ func awkProcessReader(w io.Writer, r io.Reader, program *awkProgram, opts AwkOpt
 			if rule.pattern != nil && !rule.pattern.MatchString(line) {
 				continue
 			}
+
 			if err := executeAwkAction(w, rule.action, allFields, lineNum, opts); err != nil {
 				return err
 			}
@@ -257,8 +272,8 @@ func executeAwkAction(w io.Writer, action *awkAction, fields []string, _ int, _ 
 	for _, cmd := range action.commands {
 		cmd = strings.TrimSpace(cmd)
 
-		if strings.HasPrefix(cmd, "print") {
-			args := strings.TrimPrefix(cmd, "print")
+		if after, ok := strings.CutPrefix(cmd, "print"); ok {
+			args := after
 			args = strings.TrimSpace(args)
 
 			if args == "" {
@@ -280,7 +295,8 @@ func executeAwkAction(w io.Writer, action *awkAction, fields []string, _ int, _ 
 func expandAwkFields(expr string, fields []string) string {
 	// Handle comma-separated print arguments
 	parts := strings.Split(expr, ",")
-	var outputs []string
+
+	outputs := make([]string, 0, len(parts))
 
 	for _, part := range parts {
 		part = strings.TrimSpace(part)
@@ -304,6 +320,7 @@ func expandSingleField(expr string, fields []string) string {
 			if num >= 0 && num < len(fields) {
 				return fields[num]
 			}
+
 			return ""
 		}
 	}
@@ -313,6 +330,7 @@ func expandSingleField(expr string, fields []string) string {
 		if len(fields) > 0 {
 			return strconv.Itoa(len(fields) - 1) // -1 because $0 is included
 		}
+
 		return "0"
 	}
 

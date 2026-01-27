@@ -50,6 +50,7 @@ func RunEncrypt(w io.Writer, args []string, opts CryptOptions) error {
 	} else {
 		input, err = os.ReadFile(args[0])
 	}
+
 	if err != nil {
 		return fmt.Errorf("encrypt: %w", err)
 	}
@@ -91,15 +92,18 @@ func RunEncrypt(w io.Writer, args []string, opts CryptOptions) error {
 	output = append(output, ciphertext...)
 
 	// Write output
-	var outWriter io.Writer = w
+	var outWriter = w
+
 	if opts.Output != "" {
 		f, err := os.Create(opts.Output)
 		if err != nil {
 			return fmt.Errorf("encrypt: %w", err)
 		}
+
 		defer func() {
 			_ = f.Close()
 		}()
+
 		outWriter = f
 	}
 
@@ -130,6 +134,7 @@ func RunDecrypt(w io.Writer, args []string, opts CryptOptions) error {
 	} else {
 		input, err = os.ReadFile(args[0])
 	}
+
 	if err != nil {
 		return fmt.Errorf("decrypt: %w", err)
 	}
@@ -175,15 +180,18 @@ func RunDecrypt(w io.Writer, args []string, opts CryptOptions) error {
 	}
 
 	// Write output
-	var outWriter io.Writer = w
+	var outWriter = w
+
 	if opts.Output != "" {
 		f, err := os.Create(opts.Output)
 		if err != nil {
 			return fmt.Errorf("decrypt: %w", err)
 		}
+
 		defer func() {
 			_ = f.Close()
 		}()
+
 		outWriter = f
 	}
 
@@ -207,6 +215,7 @@ func getPassword(opts CryptOptions) (string, error) {
 		if len(password) > 0 && password[len(password)-1] == '\n' {
 			password = password[:len(password)-1]
 		}
+
 		return password, nil
 	}
 
@@ -239,5 +248,6 @@ func GenerateKey(w io.Writer, size int) error {
 	}
 
 	_, _ = fmt.Fprintln(w, base64.StdEncoding.EncodeToString(key))
+
 	return nil
 }

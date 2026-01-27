@@ -46,6 +46,7 @@ func RunTime(w io.Writer, fn func() error) (TimeResult, error) {
 func formatDuration(d time.Duration) string {
 	minutes := int(d.Minutes())
 	seconds := d.Seconds() - float64(minutes*60)
+
 	return fmt.Sprintf("%dm%.3fs", minutes, seconds)
 }
 
@@ -66,6 +67,7 @@ func NewStopwatch() *Stopwatch {
 func (s *Stopwatch) Lap() time.Duration {
 	lap := time.Since(s.start)
 	s.laps = append(s.laps, lap)
+
 	return lap
 }
 

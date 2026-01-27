@@ -69,6 +69,7 @@ func NewUUID() string {
 		// Fallback to empty string on error (shouldn't happen with crypto/rand)
 		return ""
 	}
+
 	return uuid
 }
 
@@ -78,6 +79,7 @@ func MustNewUUID() string {
 	if err != nil {
 		panic(fmt.Sprintf("uuid: %v", err))
 	}
+
 	return uuid
 }
 
@@ -91,7 +93,7 @@ func IsValidUUID(s string) bool {
 	}
 
 	for _, c := range s {
-		if !((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F')) {
+		if (c < '0' || c > '9') && (c < 'a' || c > 'f') && (c < 'A' || c > 'F') {
 			return false
 		}
 	}

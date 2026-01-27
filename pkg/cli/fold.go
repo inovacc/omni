@@ -31,6 +31,7 @@ func RunFold(w io.Writer, args []string, opts FoldOptions) error {
 			if err := foldReader(w, os.Stdin, opts); err != nil {
 				return err
 			}
+
 			continue
 		}
 
@@ -43,6 +44,7 @@ func RunFold(w io.Writer, args []string, opts FoldOptions) error {
 		if closeErr := f.Close(); closeErr != nil && err == nil {
 			err = closeErr
 		}
+
 		if err != nil {
 			return err
 		}
@@ -55,6 +57,7 @@ func foldReader(w io.Writer, r io.Reader, opts FoldOptions) error {
 	scanner := bufio.NewScanner(r)
 	for scanner.Scan() {
 		line := scanner.Text()
+
 		folded := foldLine(line, opts)
 		for _, part := range folded {
 			if _, err := fmt.Fprintln(w, part); err != nil {
@@ -62,6 +65,7 @@ func foldReader(w io.Writer, r io.Reader, opts FoldOptions) error {
 			}
 		}
 	}
+
 	return scanner.Err()
 }
 
@@ -71,6 +75,7 @@ func foldLine(line string, opts FoldOptions) []string {
 	}
 
 	var result []string
+
 	width := opts.Width
 
 	for len(line) > 0 {
@@ -81,6 +86,7 @@ func foldLine(line string, opts FoldOptions) []string {
 				result = append(result, line)
 				break
 			}
+
 			cutPoint = width
 		} else {
 			// Count by runes (columns)
@@ -90,14 +96,17 @@ func foldLine(line string, opts FoldOptions) []string {
 			}
 			// Find byte position for width runes
 			cutPoint = 0
+
 			runeCount := 0
 			for i := range line {
 				if runeCount >= width {
 					cutPoint = i
 					break
 				}
+
 				runeCount++
 			}
+
 			if cutPoint == 0 {
 				cutPoint = len(line)
 			}

@@ -32,9 +32,11 @@ func RunTac(w io.Writer, args []string, opts TacOptions) error {
 				_, _ = fmt.Fprintf(os.Stderr, "tac: %s: %v\n", file, err)
 				continue
 			}
+
 			defer func() {
 				_ = f.Close()
 			}()
+
 			r = f
 		}
 
@@ -49,6 +51,7 @@ func RunTac(w io.Writer, args []string, opts TacOptions) error {
 func tacReader(w io.Writer, r io.Reader, opts TacOptions) error {
 	// Read all lines
 	var lines []string
+
 	scanner := bufio.NewScanner(r)
 
 	if opts.Separator != "" && opts.Separator != "\n" {
@@ -58,8 +61,10 @@ func tacReader(w io.Writer, r io.Reader, opts TacOptions) error {
 			if content.Len() > 0 {
 				content.WriteString("\n")
 			}
+
 			content.WriteString(scanner.Text())
 		}
+
 		if err := scanner.Err(); err != nil {
 			return err
 		}
@@ -71,6 +76,7 @@ func tacReader(w io.Writer, r io.Reader, opts TacOptions) error {
 		for scanner.Scan() {
 			lines = append(lines, scanner.Text())
 		}
+
 		if err := scanner.Err(); err != nil {
 			return err
 		}
@@ -86,6 +92,7 @@ func tacReader(w io.Writer, r io.Reader, opts TacOptions) error {
 		if opts.Before && i < len(lines)-1 {
 			_, _ = fmt.Fprint(w, sep)
 		}
+
 		_, _ = fmt.Fprint(w, lines[i])
 		if !opts.Before && i > 0 {
 			_, _ = fmt.Fprint(w, sep)
@@ -106,5 +113,6 @@ func Reverse(lines []string) []string {
 	for i, line := range lines {
 		result[len(lines)-1-i] = line
 	}
+
 	return result
 }

@@ -3,6 +3,7 @@ package cli
 import (
 	"fmt"
 	"io"
+	"strings"
 	"time"
 )
 
@@ -57,6 +58,7 @@ func formatUptime(d time.Duration) string {
 	if days > 0 {
 		return fmt.Sprintf("%d day(s), %d:%02d", days, hours, minutes)
 	}
+
 	return fmt.Sprintf("%d:%02d", hours, minutes)
 }
 
@@ -66,6 +68,7 @@ func formatPrettyUptime(d time.Duration) string {
 	minutes := int(d.Minutes()) % 60
 
 	var parts []string
+
 	if days > 0 {
 		if days == 1 {
 			parts = append(parts, "1 day")
@@ -73,6 +76,7 @@ func formatPrettyUptime(d time.Duration) string {
 			parts = append(parts, fmt.Sprintf("%d days", days))
 		}
 	}
+
 	if hours > 0 {
 		if hours == 1 {
 			parts = append(parts, "1 hour")
@@ -80,6 +84,7 @@ func formatPrettyUptime(d time.Duration) string {
 			parts = append(parts, fmt.Sprintf("%d hours", hours))
 		}
 	}
+
 	if minutes > 0 || len(parts) == 0 {
 		if minutes == 1 {
 			parts = append(parts, "1 minute")
@@ -88,19 +93,21 @@ func formatPrettyUptime(d time.Duration) string {
 		}
 	}
 
-	result := ""
+	var result strings.Builder
+
 	for i, part := range parts {
 		if i > 0 {
 			if i == len(parts)-1 {
-				result += " and "
+				result.WriteString(" and ")
 			} else {
-				result += ", "
+				result.WriteString(", ")
 			}
 		}
-		result += part
+
+		result.WriteString(part)
 	}
 
-	return result
+	return result.String()
 }
 
 // GetUptime returns the system uptime duration
@@ -109,5 +116,6 @@ func GetUptime() (time.Duration, error) {
 	if err != nil {
 		return 0, err
 	}
+
 	return info.Uptime, nil
 }

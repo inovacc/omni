@@ -24,6 +24,8 @@ type PagerOptions struct {
 }
 
 // pagerModel represents the TUI state.
+//
+//nolint:recvcheck // bubbletea interface requires value receivers for Init/Update/View
 type pagerModel struct {
 	content     []string
 	width       int
@@ -51,27 +53,34 @@ func RunMore(w io.Writer, args []string, opts PagerOptions) error {
 	return runPager(w, args, opts, "more")
 }
 
-func runPager(w io.Writer, args []string, opts PagerOptions, name string) error {
-	var content []string
-	var filename string
+func runPager(_ io.Writer, args []string, opts PagerOptions, name string) error {
+	// Note: io.Writer is unused because bubbletea manages its own terminal output
+	var (
+		content  []string
+		filename string
+	)
 
 	if len(args) == 0 || args[0] == "-" {
 		// Read from stdin
 		filename = "(stdin)"
+
 		scanner := bufio.NewScanner(os.Stdin)
 		for scanner.Scan() {
 			content = append(content, scanner.Text())
 		}
+
 		if err := scanner.Err(); err != nil {
 			return fmt.Errorf("%s: %w", name, err)
 		}
 	} else {
 		// Read from file
 		filename = args[0]
+
 		file, err := os.Open(filename)
 		if err != nil {
 			return fmt.Errorf("%s: %w", name, err)
 		}
+
 		defer func() {
 			_ = file.Close()
 		}()
@@ -80,6 +89,7 @@ func runPager(w io.Writer, args []string, opts PagerOptions, name string) error 
 		for scanner.Scan() {
 			content = append(content, scanner.Text())
 		}
+
 		if err := scanner.Err(); err != nil {
 			return fmt.Errorf("%s: %w", name, err)
 		}
@@ -97,6 +107,7 @@ func runPager(w io.Writer, args []string, opts PagerOptions, name string) error 
 
 	p := tea.NewProgram(model, tea.WithAltScreen())
 	_, err := p.Run()
+
 	return err
 }
 
@@ -123,6 +134,7 @@ func (m pagerModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			case "enter":
 				m.searching = false
 				m.findMatches()
+
 				if len(m.matches) > 0 {
 					m.offset = m.matches[0]
 					m.searchIdx = 0
@@ -142,6 +154,7 @@ func (m pagerModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					m.searchQuery += msg.String()
 				}
 			}
+
 			return m, nil
 		}
 
@@ -165,6 +178,7 @@ func (m pagerModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if m.offset > len(m.content)-m.height {
 				m.offset = len(m.content) - m.height
 			}
+
 			if m.offset < 0 {
 				m.offset = 0
 			}
@@ -179,10 +193,7 @@ func (m pagerModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.offset = 0
 
 		case "end", "G":
-			m.offset = len(m.content) - m.height
-			if m.offset < 0 {
-				m.offset = 0
-			}
+			m.offset = max(len(m.content)-m.height, 0)
 
 		case "/":
 			m.searching = true
@@ -203,6 +214,7 @@ func (m pagerModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				if m.searchIdx < 0 {
 					m.searchIdx = len(m.matches) - 1
 				}
+
 				m.offset = m.matches[m.searchIdx]
 			}
 
@@ -231,10 +243,8 @@ func (m pagerModel) View() string {
 
 	// Calculate visible range
 	start := m.offset
-	end := m.offset + m.height
-	if end > len(m.content) {
-		end = len(m.content)
-	}
+
+	end := min(m.offset+m.height, len(m.content))
 
 	// Render visible lines
 	for i := start; i < end; i++ {
@@ -277,6 +287,7 @@ func (m pagerModel) View() string {
 		if len(m.content) > m.height {
 			percent = (m.offset * 100) / (len(m.content) - m.height)
 		}
+
 		if m.offset == 0 {
 			status = fmt.Sprintf(" %s (TOP)", m.filename)
 		} else if m.offset >= len(m.content)-m.height {
@@ -288,7 +299,7 @@ func (m pagerModel) View() string {
 
 	// Pad status to full width
 	if len(status) < m.width {
-		status = status + strings.Repeat(" ", m.width-len(status))
+		status += strings.Repeat(" ", m.width-len(status))
 	}
 
 	sb.WriteString(statusStyle.Render(status))

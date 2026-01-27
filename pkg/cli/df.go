@@ -49,18 +49,20 @@ func RunDF(w io.Writer, args []string, opts DFOptions) error {
 	}
 
 	// Print header
-	if opts.Inodes {
+	switch {
+	case opts.Inodes:
 		_, _ = fmt.Fprintf(w, "%-20s %10s %10s %10s %5s %s\n",
 			"Filesystem", "Inodes", "IUsed", "IFree", "IUse%", "Mounted on")
-	} else if opts.HumanReadable {
+	case opts.HumanReadable:
 		_, _ = fmt.Fprintf(w, "%-20s %6s %6s %6s %5s %s\n",
 			"Filesystem", "Size", "Used", "Avail", "Use%", "Mounted on")
-	} else {
+	default:
 		_, _ = fmt.Fprintf(w, "%-20s %10s %10s %10s %5s %s\n",
 			"Filesystem", "1K-blocks", "Used", "Available", "Use%", "Mounted on")
 	}
 
 	var total DFInfo
+
 	total.Filesystem = "total"
 
 	for _, path := range paths {
@@ -85,9 +87,11 @@ func RunDF(w io.Writer, args []string, opts DFOptions) error {
 		if total.Size > 0 {
 			total.UsePercent = int(float64(total.Used) / float64(total.Size) * 100)
 		}
+
 		if total.Inodes > 0 {
 			total.IUsePercent = int(float64(total.IUsed) / float64(total.Inodes) * 100)
 		}
+
 		total.MountedOn = "-"
 		printDFInfo(w, total, opts)
 	}
@@ -96,7 +100,8 @@ func RunDF(w io.Writer, args []string, opts DFOptions) error {
 }
 
 func printDFInfo(w io.Writer, info DFInfo, opts DFOptions) {
-	if opts.Inodes {
+	switch {
+	case opts.Inodes:
 		_, _ = fmt.Fprintf(w, "%-20s %10d %10d %10d %4d%% %s\n",
 			info.Filesystem,
 			info.Inodes,
@@ -104,7 +109,7 @@ func printDFInfo(w io.Writer, info DFInfo, opts DFOptions) {
 			info.IFree,
 			info.IUsePercent,
 			info.MountedOn)
-	} else if opts.HumanReadable {
+	case opts.HumanReadable:
 		_, _ = fmt.Fprintf(w, "%-20s %6s %6s %6s %4d%% %s\n",
 			info.Filesystem,
 			formatHumanSize(int64(info.Size)),
@@ -112,7 +117,7 @@ func printDFInfo(w io.Writer, info DFInfo, opts DFOptions) {
 			formatHumanSize(int64(info.Available)),
 			info.UsePercent,
 			info.MountedOn)
-	} else {
+	default:
 		blocks := info.Size / uint64(opts.BlockSize)
 		usedBlocks := info.Used / uint64(opts.BlockSize)
 		availBlocks := info.Available / uint64(opts.BlockSize)

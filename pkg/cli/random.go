@@ -33,12 +33,15 @@ func RunRandom(w io.Writer, opts RandomOptions) error {
 	if opts.Count <= 0 {
 		opts.Count = 1
 	}
+
 	if opts.Length <= 0 {
 		opts.Length = 16
 	}
+
 	if opts.Sep == "" {
 		opts.Sep = "\n"
 	}
+
 	if opts.Type == "" {
 		opts.Type = "string"
 	}
@@ -46,8 +49,10 @@ func RunRandom(w io.Writer, opts RandomOptions) error {
 	var results []string
 
 	for i := 0; i < opts.Count; i++ {
-		var result string
-		var err error
+		var (
+			result string
+			err    error
+		)
 
 		switch strings.ToLower(opts.Type) {
 		case "int", "integer", "number":
@@ -70,6 +75,7 @@ func RunRandom(w io.Writer, opts RandomOptions) error {
 			if opts.Charset == "" {
 				return fmt.Errorf("random: custom type requires -c charset")
 			}
+
 			result, err = randomString(opts.Length, opts.Charset)
 		default:
 			return fmt.Errorf("random: unknown type: %s", opts.Type)
@@ -78,25 +84,28 @@ func RunRandom(w io.Writer, opts RandomOptions) error {
 		if err != nil {
 			return fmt.Errorf("random: %w", err)
 		}
+
 		results = append(results, result)
 	}
 
 	_, _ = fmt.Fprintln(w, strings.Join(results, opts.Sep))
+
 	return nil
 }
 
-func randomInt(min, max int64) (string, error) {
-	if max <= min {
-		max = min + 100
+func randomInt(minVal, maxVal int64) (string, error) {
+	if maxVal <= minVal {
+		maxVal = minVal + 100
 	}
 
-	rangeSize := max - min
+	rangeSize := maxVal - minVal
+
 	n, err := rand.Int(rand.Reader, big.NewInt(rangeSize))
 	if err != nil {
 		return "", err
 	}
 
-	return fmt.Sprintf("%d", n.Int64()+min), nil
+	return fmt.Sprintf("%d", n.Int64()+minVal), nil
 }
 
 func randomFloat() (string, error) {
@@ -107,6 +116,7 @@ func randomFloat() (string, error) {
 	}
 
 	f := float64(n.Int64()) / float64(1<<53)
+
 	return fmt.Sprintf("%f", f), nil
 }
 
@@ -114,6 +124,7 @@ func randomString(length int, charset string) (string, error) {
 	if length <= 0 {
 		length = 16
 	}
+
 	if charset == "" {
 		charset = charsetAlnum
 	}
@@ -126,6 +137,7 @@ func randomString(length int, charset string) (string, error) {
 		if err != nil {
 			return "", err
 		}
+
 		result[i] = charset[idx.Int64()]
 	}
 
@@ -164,16 +176,18 @@ func RandomPassword(length int) string {
 	return s
 }
 
-// RandomInt generates a random integer in [min, max)
-func RandomInt(min, max int64) int64 {
-	if max <= min {
-		return min
+// RandomInt generates a random integer in [minVal, maxVal)
+func RandomInt(minVal, maxVal int64) int64 {
+	if maxVal <= minVal {
+		return minVal
 	}
-	n, err := rand.Int(rand.Reader, big.NewInt(max-min))
+
+	n, err := rand.Int(rand.Reader, big.NewInt(maxVal-minVal))
 	if err != nil {
-		return min
+		return minVal
 	}
-	return n.Int64() + min
+
+	return n.Int64() + minVal
 }
 
 // RandomChoice returns a random element from the slice
@@ -182,7 +196,9 @@ func RandomChoice[T any](items []T) T {
 	if len(items) == 0 {
 		return zero
 	}
+
 	idx := RandomInt(0, int64(len(items)))
+
 	return items[idx]
 }
 

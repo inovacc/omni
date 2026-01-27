@@ -34,6 +34,7 @@ func RunJoin(w io.Writer, args []string, opts JoinOptions) error {
 	if opts.Field1 <= 0 {
 		opts.Field1 = 1
 	}
+
 	if opts.Field2 <= 0 {
 		opts.Field2 = 1
 	}
@@ -58,11 +59,13 @@ func RunJoin(w io.Writer, args []string, opts JoinOptions) error {
 
 	// Build index for file 2
 	index2 := make(map[string][]joinLine)
+
 	for _, line := range lines2 {
 		key := line.key(opts.Field2 - 1)
 		if opts.IgnoreCase {
 			key = strings.ToLower(key)
 		}
+
 		index2[key] = append(index2[key], line)
 	}
 
@@ -110,6 +113,7 @@ func (j joinLine) key(fieldIdx int) string {
 	if fieldIdx < 0 || fieldIdx >= len(j.fields) {
 		return ""
 	}
+
 	return j.fields[fieldIdx]
 }
 
@@ -122,23 +126,29 @@ func readJoinFile(path string, sep string) ([]joinLine, error) {
 		if err != nil {
 			return nil, fmt.Errorf("join: %w", err)
 		}
+
 		defer func() {
 			_ = f.Close()
 		}()
+
 		r = f
 	}
 
 	var lines []joinLine
+
 	scanner := bufio.NewScanner(r)
 	idx := 0
+
 	for scanner.Scan() {
 		text := scanner.Text()
+
 		var fields []string
 		if sep == " " {
 			fields = strings.Fields(text)
 		} else {
 			fields = strings.Split(text, sep)
 		}
+
 		lines = append(lines, joinLine{fields: fields, index: idx})
 		idx++
 	}
@@ -176,10 +186,11 @@ func outputJoinedLine(w io.Writer, line1, line2 joinLine, opts JoinOptions, sep 
 	_, _ = fmt.Fprintln(w, strings.Join(parts, outSep))
 }
 
-func outputUnpairedLine(w io.Writer, line joinLine, opts JoinOptions, sep string) {
+func outputUnpairedLine(w io.Writer, line joinLine, _ JoinOptions, sep string) {
 	outSep := sep
 	if outSep == " " {
 		outSep = " "
 	}
+
 	_, _ = fmt.Fprintln(w, strings.Join(line.fields, outSep))
 }

@@ -22,6 +22,7 @@ type YqOptions struct {
 // RunYq executes yq-like YAML processing
 func RunYq(w io.Writer, args []string, opts YqOptions) error {
 	filter := "."
+
 	var files []string
 
 	if len(args) > 0 {
@@ -43,10 +44,12 @@ func RunYq(w io.Writer, args []string, opts YqOptions) error {
 		if err != nil {
 			return fmt.Errorf("yq: %w", err)
 		}
+
 		docs, err := parseYAML(string(data))
 		if err != nil {
 			return fmt.Errorf("yq: parse error: %w", err)
 		}
+
 		inputs = docs
 	} else {
 		for _, file := range files {
@@ -54,10 +57,12 @@ func RunYq(w io.Writer, args []string, opts YqOptions) error {
 			if err != nil {
 				return fmt.Errorf("yq: %w", err)
 			}
+
 			docs, err := parseYAML(string(data))
 			if err != nil {
 				return fmt.Errorf("yq: %s: parse error: %w", file, err)
 			}
+
 			inputs = append(inputs, docs...)
 		}
 	}
@@ -83,9 +88,9 @@ func parseYAML(content string) ([]any, error) {
 	var docs []any
 
 	// Split by document separator
-	docStrings := strings.Split(content, "\n---")
+	docStrings := strings.SplitSeq(content, "\n---")
 
-	for _, docStr := range docStrings {
+	for docStr := range docStrings {
 		docStr = strings.TrimSpace(docStr)
 		if docStr == "" || docStr == "---" {
 			continue
@@ -103,6 +108,7 @@ func parseYAML(content string) ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
+
 		docs = append(docs, doc)
 	}
 
@@ -120,11 +126,12 @@ func parseYAMLDocument(content string) (any, error) {
 
 func parseYAMLLines(lines []string, baseIndent int) (any, error) {
 	if len(lines) == 0 {
-		return nil, nil
+		return nil, nil //nolint:nilnil // Valid: empty input returns nil value
 	}
 
 	// Check first non-empty line
 	firstLine := ""
+
 	for _, line := range lines {
 		trimmed := strings.TrimSpace(line)
 		if trimmed != "" && !strings.HasPrefix(trimmed, "#") {
@@ -134,7 +141,7 @@ func parseYAMLLines(lines []string, baseIndent int) (any, error) {
 	}
 
 	if firstLine == "" {
-		return nil, nil
+		return nil, nil //nolint:nilnil // Valid: empty content returns nil value
 	}
 
 	trimmed := strings.TrimSpace(firstLine)
@@ -153,9 +160,12 @@ func parseYAMLLines(lines []string, baseIndent int) (any, error) {
 	return parseYAMLScalar(trimmed), nil
 }
 
-func parseYAMLArray(lines []string, baseIndent int) ([]any, error) {
-	var result []any
-	var currentItem []string
+func parseYAMLArray(lines []string, _ int) ([]any, error) {
+	var (
+		result      []any
+		currentItem []string
+	)
+
 	itemIndent := -1
 
 	for _, line := range lines {
@@ -173,9 +183,11 @@ func parseYAMLArray(lines []string, baseIndent int) ([]any, error) {
 				if err != nil {
 					return nil, err
 				}
+
 				result = append(result, item)
 				currentItem = nil
 			}
+
 			itemIndent = indent
 			// Remove "- " prefix
 			content := strings.TrimPrefix(trimmed, "- ")
@@ -193,6 +205,7 @@ func parseYAMLArray(lines []string, baseIndent int) ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
+
 		result = append(result, item)
 	}
 
@@ -201,7 +214,7 @@ func parseYAMLArray(lines []string, baseIndent int) ([]any, error) {
 
 func parseArrayItem(lines []string, baseIndent int) (any, error) {
 	if len(lines) == 0 {
-		return nil, nil
+		return nil, nil //nolint:nilnil // Valid: empty array item returns nil
 	}
 
 	// Single line value
@@ -212,10 +225,14 @@ func parseArrayItem(lines []string, baseIndent int) (any, error) {
 	return parseYAMLLines(lines, baseIndent+2)
 }
 
-func parseYAMLObject(lines []string, baseIndent int) (map[string]any, error) {
+func parseYAMLObject(lines []string, _ int) (map[string]any, error) {
 	result := make(map[string]any)
-	var currentKey string
-	var currentValue []string
+
+	var (
+		currentKey   string
+		currentValue []string
+	)
+
 	keyIndent := -1
 
 	for _, line := range lines {
@@ -235,6 +252,7 @@ func parseYAMLObject(lines []string, baseIndent int) (map[string]any, error) {
 				if err != nil {
 					return nil, err
 				}
+
 				result[currentKey] = value
 				currentValue = nil
 			}
@@ -259,6 +277,7 @@ func parseYAMLObject(lines []string, baseIndent int) (map[string]any, error) {
 		if err != nil {
 			return nil, err
 		}
+
 		result[currentKey] = value
 	}
 
@@ -267,8 +286,9 @@ func parseYAMLObject(lines []string, baseIndent int) (map[string]any, error) {
 
 func parseYAMLValue(lines []string, baseIndent int) (any, error) {
 	if len(lines) == 0 {
-		return nil, nil
+		return nil, nil //nolint:nilnil // Valid: empty value returns nil
 	}
+
 	return parseYAMLLines(lines, baseIndent)
 }
 
@@ -286,6 +306,7 @@ func parseYAMLScalar(s string) any {
 	if lower == "true" || lower == "yes" || lower == "on" {
 		return true
 	}
+
 	if lower == "false" || lower == "no" || lower == "off" {
 		return false
 	}
@@ -299,6 +320,7 @@ func parseYAMLScalar(s string) any {
 	if i, err := strconv.ParseInt(s, 10, 64); err == nil {
 		return float64(i)
 	}
+
 	if f, err := strconv.ParseFloat(s, 64); err == nil {
 		return f
 	}
@@ -308,15 +330,19 @@ func parseYAMLScalar(s string) any {
 
 func countIndent(line string) int {
 	count := 0
+
+loop:
 	for _, c := range line {
-		if c == ' ' {
+		switch c {
+		case ' ':
 			count++
-		} else if c == '\t' {
+		case '\t':
 			count += 2
-		} else {
-			break
+		default:
+			break loop
 		}
 	}
+
 	return count
 }
 
@@ -333,6 +359,7 @@ func outputYqResult(w io.Writer, result any, opts YqOptions) error {
 		if !opts.Compact {
 			encoder.SetIndent("", "  ")
 		}
+
 		return encoder.Encode(result)
 	}
 
@@ -365,10 +392,12 @@ func writeYAML(w io.Writer, v any, depth int, indentSize int) error {
 			_, _ = fmt.Fprintln(w, "[]")
 			return nil
 		}
+
 		for i, item := range val {
 			if i == 0 && depth > 0 {
 				_, _ = fmt.Fprint(w, "\n")
 			}
+
 			_, _ = fmt.Fprintf(w, "%s- ", indent)
 			if isScalar(item) {
 				if err := writeYAML(w, item, 0, indentSize); err != nil {
@@ -385,12 +414,14 @@ func writeYAML(w io.Writer, v any, depth int, indentSize int) error {
 			_, _ = fmt.Fprintln(w, "{}")
 			return nil
 		}
+
 		first := true
 		for k, item := range val {
 			if first && depth > 0 {
 				_, _ = fmt.Fprint(w, "\n")
 				first = false
 			}
+
 			_, _ = fmt.Fprintf(w, "%s%s: ", indent, k)
 			if isScalar(item) {
 				if err := writeYAML(w, item, 0, indentSize); err != nil {
@@ -433,5 +464,6 @@ func needsQuoting(s string) bool {
 	if lower == "true" || lower == "false" || lower == "null" || lower == "yes" || lower == "no" {
 		return true
 	}
+
 	return false
 }

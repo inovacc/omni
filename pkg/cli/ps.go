@@ -53,6 +53,7 @@ func RunPs(w io.Writer, opts PsOptions) error {
 	if opts.Long || opts.Full || opts.Aux {
 		return printPsLong(w, processes, opts)
 	}
+
 	return printPsSimple(w, processes, opts)
 }
 
@@ -87,6 +88,7 @@ func printPsSimple(w io.Writer, procs []ProcessInfo, opts PsOptions) error {
 		if len(cmd) > 60 {
 			cmd = cmd[:60]
 		}
+
 		_, _ = fmt.Fprintf(w, "%5d %-8s %8s %s\n", p.PID, p.TTY, p.Time, cmd)
 	}
 

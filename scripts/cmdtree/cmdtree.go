@@ -159,7 +159,7 @@ func main() {
 		writeFile(outTree, tree)
 		_, _ = fmt.Fprintf(os.Stderr, "Tree written to %s\n", outTree)
 	} else if outGo == "" && outDocs == "" {
-		fmt.Print(string(tree))
+		_, _ = os.Stdout.Write(tree)
 	}
 
 	// 3️⃣ Generate Go file
@@ -211,10 +211,8 @@ func printCommands(w io.Writer, commands []*cobra.Command, prefix string) {
 		}
 
 		cmdPart := prefix + connector + c.Name()
-		padding := commentCol - len(cmdPart)
-		if padding < 2 {
-			padding = 2
-		}
+
+		padding := max(commentCol-len(cmdPart), 2)
 
 		_, _ = fmt.Fprintf(w, "%s%s# %s\n", cmdPart, strings.Repeat(" ", padding), desc)
 
@@ -234,6 +232,7 @@ func writeFile(path string, buf []byte) {
 	if err != nil {
 		panic(err)
 	}
+
 	defer func() {
 		_ = f.Close()
 	}()
@@ -258,6 +257,7 @@ func generateGoFile(path string, buf []byte) {
 	if err != nil {
 		panic(err)
 	}
+
 	defer func() {
 		_ = f.Close()
 	}()
@@ -272,16 +272,19 @@ func generateDocs(path string, root *cobra.Command) {
 	if err != nil {
 		panic(err)
 	}
+
 	defer func() {
 		_ = f.Close()
 	}()
 
 	// Build command map for quick lookup
 	cmdMap := make(map[string]*cobra.Command)
+
 	for _, c := range root.Commands() {
 		if c.Name() == "help" || c.Name() == "completion" {
 			continue
 		}
+
 		cmdMap[c.Name()] = c
 	}
 
@@ -304,6 +307,7 @@ func generateDocs(path string, root *cobra.Command) {
 
 		// Check if any commands in this category exist
 		hasCommands := false
+
 		for _, name := range cmdNames {
 			if _, ok := cmdMap[name]; ok {
 				hasCommands = true
@@ -324,6 +328,7 @@ func generateDocs(path string, root *cobra.Command) {
 			}
 
 			documented[name] = true
+
 			writeCommandDoc(f, c)
 		}
 
@@ -333,6 +338,7 @@ func generateDocs(path string, root *cobra.Command) {
 
 	// Write any undocumented commands in "Other" category
 	var other []*cobra.Command
+
 	for name, c := range cmdMap {
 		if !documented[name] {
 			other = append(other, c)
@@ -384,6 +390,7 @@ func writeCommandDoc(w io.Writer, c *cobra.Command) {
 
 	// Collect flags
 	var flags []string
+
 	c.Flags().VisitAll(func(f *pflag.Flag) {
 		if f.Hidden {
 			return
@@ -410,16 +417,20 @@ func writeCommandDoc(w io.Writer, c *cobra.Command) {
 
 		// Find examples or special sections
 		var notes []string
+
 		inExample := false
+
 		for _, line := range lines {
 			trimmed := strings.TrimSpace(line)
 			if strings.HasPrefix(trimmed, "Examples:") || strings.HasPrefix(trimmed, "Example:") {
 				inExample = true
 				continue
 			}
+
 			if inExample && (trimmed == "" || strings.HasPrefix(trimmed, "#")) {
 				continue
 			}
+
 			if inExample && strings.HasPrefix(trimmed, "goshell") {
 				notes = append(notes, "  "+trimmed)
 			}
@@ -428,10 +439,12 @@ func writeCommandDoc(w io.Writer, c *cobra.Command) {
 		if len(notes) > 0 {
 			_, _ = fmt.Fprintln(w, "")
 			_, _ = fmt.Fprintln(w, "**Examples:**")
+
 			_, _ = fmt.Fprintln(w, "```bash")
 			for _, note := range notes {
 				_, _ = fmt.Fprintln(w, strings.TrimPrefix(note, "  "))
 			}
+
 			_, _ = fmt.Fprintln(w, "```")
 		}
 	}
@@ -454,13 +467,15 @@ func formatFlag(f *pflag.Flag) string {
 		// Add value placeholder for non-bool flags
 		if f.Value.Type() != "bool" {
 			valueType := strings.ToUpper(f.Value.Type())
-			if valueType == "STRING" {
+			switch valueType {
+			case "STRING":
 				valueType = "STR"
-			} else if valueType == "INT" || valueType == "INT64" {
+			case "INT", "INT64":
 				valueType = "N"
-			} else if valueType == "STRINGSLICE" {
+			case "STRINGSLICE":
 				valueType = "LIST"
 			}
+
 			longFlag += fmt.Sprintf("=%s", valueType)
 		}
 
@@ -480,10 +495,7 @@ func formatFlag(f *pflag.Flag) string {
 	}
 
 	// Format with padding
-	padding := 25 - len(flagStr)
-	if padding < 2 {
-		padding = 2
-	}
+	padding := max(25-len(flagStr), 2)
 
 	return fmt.Sprintf("  %s%s%s", flagStr, strings.Repeat(" ", padding), usage)
 }

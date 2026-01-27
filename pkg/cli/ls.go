@@ -53,8 +53,10 @@ func RunLs(w io.Writer, args []string, opts LsOptions) error {
 		paths = []string{"."}
 	}
 
-	var allEntries []FileEntry
-	var errors []error
+	var (
+		allEntries []FileEntry
+		errors     []error
+	)
 
 	for i, path := range paths {
 		entries, err := listPath(path, opts)
@@ -71,8 +73,10 @@ func RunLs(w io.Writer, args []string, opts LsOptions) error {
 				if i > 0 {
 					_, _ = fmt.Fprintln(w)
 				}
+
 				_, _ = fmt.Fprintf(w, "%s:\n", path)
 			}
+
 			printEntries(w, entries, opts)
 		}
 	}
@@ -84,6 +88,7 @@ func RunLs(w io.Writer, args []string, opts LsOptions) error {
 	if len(errors) > 0 {
 		return errors[0]
 	}
+
 	return nil
 }
 
@@ -106,6 +111,7 @@ func listPath(path string, opts LsOptions) ([]FileEntry, error) {
 	}
 
 	var entries []FileEntry
+
 	for _, de := range dirEntries {
 		name := de.Name()
 
@@ -113,11 +119,13 @@ func listPath(path string, opts LsOptions) ([]FileEntry, error) {
 		if !opts.All && !opts.AlmostAll && strings.HasPrefix(name, ".") {
 			continue
 		}
+
 		if opts.AlmostAll && (name == "." || name == "..") {
 			continue
 		}
 
 		fullPath := filepath.Join(path, name)
+
 		info, err := de.Info()
 		if err != nil {
 			continue
@@ -135,6 +143,7 @@ func listPath(path string, opts LsOptions) ([]FileEntry, error) {
 			dot.Name = "."
 			entries = append([]FileEntry{dot}, entries...)
 		}
+
 		parentPath := filepath.Dir(path)
 		if parentInfo, err := os.Lstat(parentPath); err == nil {
 			dotdot := fileInfoToEntry(parentPath, parentInfo)
@@ -149,16 +158,19 @@ func listPath(path string, opts LsOptions) ([]FileEntry, error) {
 	// Handle recursive listing
 	if opts.Recursive {
 		var recursiveEntries []FileEntry
+
 		recursiveEntries = append(recursiveEntries, entries...)
 		for _, entry := range entries {
 			if entry.IsDir && entry.Name != "." && entry.Name != ".." {
 				subPath := filepath.Join(path, entry.Name)
+
 				subEntries, err := listPath(subPath, opts)
 				if err == nil {
 					recursiveEntries = append(recursiveEntries, subEntries...)
 				}
 			}
 		}
+
 		return recursiveEntries, nil
 	}
 
@@ -199,12 +211,15 @@ func sortEntries(entries []FileEntry, opts LsOptions) {
 		if entries[i].Name == "." {
 			return true
 		}
+
 		if entries[j].Name == "." {
 			return false
 		}
+
 		if entries[i].Name == ".." {
 			return true
 		}
+
 		if entries[j].Name == ".." {
 			return false
 		}
@@ -221,6 +236,7 @@ func sortEntries(entries []FileEntry, opts LsOptions) {
 		if opts.Reverse {
 			return !result
 		}
+
 		return result
 	})
 }
@@ -241,6 +257,7 @@ func printLongFormat(w io.Writer, entries []FileEntry, opts LsOptions) {
 		if opts.Classify {
 			name += classifyIndicator(e)
 		}
+
 		if e.IsLink && e.Link != "" {
 			name = fmt.Sprintf("%s -> %s", name, e.Link)
 		}
@@ -258,6 +275,7 @@ func printLongFormat(w io.Writer, entries []FileEntry, opts LsOptions) {
 		if opts.Inode {
 			_, _ = fmt.Fprintf(w, "%8d ", e.Inode)
 		}
+
 		_, _ = fmt.Fprintf(w, "%s %8s %s %s\n", e.Mode, size, timeStr, name)
 	}
 }
@@ -268,19 +286,23 @@ func printOnePerLine(w io.Writer, entries []FileEntry, opts LsOptions) {
 		if opts.Classify {
 			name += classifyIndicator(e)
 		}
+
 		_, _ = fmt.Fprintln(w, name)
 	}
 }
 
 func printSimple(w io.Writer, entries []FileEntry, opts LsOptions) {
-	var names []string
+	names := make([]string, 0, len(entries))
+
 	for _, e := range entries {
 		name := e.Name
 		if opts.Classify {
 			name += classifyIndicator(e)
 		}
+
 		names = append(names, name)
 	}
+
 	_, _ = fmt.Fprintln(w, strings.Join(names, "  "))
 }
 
@@ -288,12 +310,15 @@ func classifyIndicator(e FileEntry) string {
 	if e.IsDir {
 		return "/"
 	}
+
 	if e.IsLink {
 		return "@"
 	}
+
 	if e.perm&0111 != 0 {
 		return "*"
 	}
+
 	return ""
 }
 
@@ -302,11 +327,13 @@ func humanReadableSize(size int64) string {
 	if size < unit {
 		return fmt.Sprintf("%d", size)
 	}
+
 	div, exp := int64(unit), 0
 	for n := size / unit; n >= unit; n /= unit {
 		div *= unit
 		exp++
 	}
+
 	return fmt.Sprintf("%.1f%c", float64(size)/float64(div), "KMGTPE"[exp])
 }
 
@@ -325,5 +352,6 @@ func Ls(path string) ([]string, error) {
 	for _, e := range entries {
 		out = append(out, e.Name())
 	}
+
 	return out, nil
 }

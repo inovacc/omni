@@ -48,6 +48,7 @@ func RunSort(w io.Writer, args []string, opts SortOptions) error {
 		for scanner.Scan() {
 			lines = append(lines, scanner.Text())
 		}
+
 		if err := scanner.Err(); err != nil {
 			return fmt.Errorf("sort: %w", err)
 		}
@@ -58,11 +59,14 @@ func RunSort(w io.Writer, args []string, opts SortOptions) error {
 			if err != nil {
 				return fmt.Errorf("sort: cannot read: %s: %w", file, err)
 			}
+
 			scanner := bufio.NewScanner(f)
 			for scanner.Scan() {
 				lines = append(lines, scanner.Text())
 			}
+
 			_ = f.Close()
+
 			if err := scanner.Err(); err != nil {
 				return fmt.Errorf("sort: %w", err)
 			}
@@ -83,15 +87,18 @@ func RunSort(w io.Writer, args []string, opts SortOptions) error {
 	}
 
 	// Write output
-	var output io.Writer = w
+	var output = w
+
 	if opts.Output != "" {
 		f, err := os.Create(opts.Output)
 		if err != nil {
 			return fmt.Errorf("sort: %w", err)
 		}
+
 		defer func() {
 			_ = f.Close()
 		}()
+
 		output = f
 	}
 
@@ -121,10 +128,12 @@ func sortLines(lines []string, opts SortOptions) {
 		// Numeric comparison
 		if opts.Numeric {
 			na, _ := strconv.ParseFloat(strings.TrimSpace(a), 64)
+
 			nb, _ := strconv.ParseFloat(strings.TrimSpace(b), 64)
 			if opts.Reverse {
 				return na > nb
 			}
+
 			return na < nb
 		}
 
@@ -132,6 +141,7 @@ func sortLines(lines []string, opts SortOptions) {
 		if opts.Reverse {
 			return a > b
 		}
+
 		return a < b
 	}
 
@@ -151,8 +161,10 @@ func checkSorted(lines []string, opts SortOptions) error {
 		}
 
 		var outOfOrder bool
+
 		if opts.Numeric {
 			na, _ := strconv.ParseFloat(strings.TrimSpace(a), 64)
+
 			nb, _ := strconv.ParseFloat(strings.TrimSpace(b), 64)
 			if opts.Reverse {
 				outOfOrder = na < nb
@@ -171,6 +183,7 @@ func checkSorted(lines []string, opts SortOptions) error {
 			return fmt.Errorf("sort: disorder: %s", lines[i])
 		}
 	}
+
 	return nil
 }
 
@@ -182,6 +195,7 @@ func uniqueLines(lines []string, ignoreCase bool) []string {
 	result := []string{lines[0]}
 	for i := 1; i < len(lines); i++ {
 		prev := result[len(result)-1]
+
 		curr := lines[i]
 		if ignoreCase {
 			if !strings.EqualFold(prev, curr) {
@@ -193,6 +207,7 @@ func uniqueLines(lines []string, ignoreCase bool) []string {
 			}
 		}
 	}
+
 	return result
 }
 
@@ -205,15 +220,21 @@ func RunUniq(w io.Writer, args []string, opts UniqOptions) error {
 		if err != nil {
 			return fmt.Errorf("uniq: %w", err)
 		}
+
 		defer func() {
 			_ = f.Close()
 		}()
+
 		r = f
 	}
 
 	scanner := bufio.NewScanner(r)
-	var prevLine string
-	var prevKey string
+
+	var (
+		prevLine string
+		prevKey  string
+	)
+
 	count := 0
 	first := true
 
@@ -221,6 +242,7 @@ func RunUniq(w io.Writer, args []string, opts UniqOptions) error {
 		if opts.Unique && cnt > 1 {
 			return
 		}
+
 		if opts.Repeated && cnt <= 1 {
 			return
 		}
@@ -241,11 +263,13 @@ func RunUniq(w io.Writer, args []string, opts UniqOptions) error {
 			prevKey = key
 			count = 1
 			first = false
+
 			continue
 		}
 
 		if keysEqual(prevKey, key, opts) {
 			count++
+
 			if opts.AllRepeated {
 				_, _ = fmt.Fprintln(w, line)
 			}
@@ -295,6 +319,7 @@ func keysEqual(a, b string, opts UniqOptions) bool {
 	if opts.IgnoreCase {
 		return strings.EqualFold(a, b)
 	}
+
 	return a == b
 }
 
@@ -314,6 +339,7 @@ func Uniq(lines []string) []string {
 			out = append(out, l)
 		}
 	}
+
 	return out
 }
 
@@ -323,5 +349,6 @@ func TrimLines(lines []string) []string {
 	for _, l := range lines {
 		out = append(out, strings.TrimSpace(l))
 	}
+
 	return out
 }

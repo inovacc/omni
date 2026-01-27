@@ -28,12 +28,15 @@ func RunArchive(w io.Writer, args []string, opts ArchiveOptions) error {
 	if opts.Create {
 		return createArchive(w, args, opts)
 	}
+
 	if opts.Extract {
 		return extractArchive(w, opts)
 	}
+
 	if opts.List {
 		return listArchive(w, opts)
 	}
+
 	return fmt.Errorf("archive: must specify -c, -x, or -t")
 }
 
@@ -50,6 +53,7 @@ func createArchive(w io.Writer, sources []string, opts ArchiveOptions) error {
 	if err != nil {
 		return fmt.Errorf("archive: %w", err)
 	}
+
 	defer func() {
 		_ = outFile.Close()
 	}()
@@ -57,6 +61,7 @@ func createArchive(w io.Writer, sources []string, opts ArchiveOptions) error {
 	if isZip {
 		return createZipArchive(w, outFile, sources, opts)
 	}
+
 	return createTarArchive(w, outFile, sources, opts, isTarGz)
 }
 
@@ -65,13 +70,16 @@ func createTarArchive(w io.Writer, outFile *os.File, sources []string, opts Arch
 
 	if useGzip {
 		gw := gzip.NewWriter(outFile)
+
 		defer func() {
 			_ = gw.Close()
 		}()
+
 		tw = tar.NewWriter(gw)
 	} else {
 		tw = tar.NewWriter(outFile)
 	}
+
 	defer func() {
 		_ = tw.Close()
 	}()
@@ -109,6 +117,7 @@ func createTarArchive(w io.Writer, outFile *os.File, sources []string, opts Arch
 			if err != nil {
 				relPath = path
 			}
+
 			header.Name = relPath
 
 			// Handle symlinks
@@ -117,6 +126,7 @@ func createTarArchive(w io.Writer, outFile *os.File, sources []string, opts Arch
 				if err != nil {
 					return err
 				}
+
 				header.Linkname = link
 			}
 
@@ -134,8 +144,10 @@ func createTarArchive(w io.Writer, outFile *os.File, sources []string, opts Arch
 				if err != nil {
 					return err
 				}
+
 				_, err = io.Copy(tw, f)
 				_ = f.Close()
+
 				if err != nil {
 					return err
 				}
@@ -143,7 +155,6 @@ func createTarArchive(w io.Writer, outFile *os.File, sources []string, opts Arch
 
 			return nil
 		})
-
 		if err != nil {
 			return fmt.Errorf("archive: %w", err)
 		}
@@ -154,6 +165,7 @@ func createTarArchive(w io.Writer, outFile *os.File, sources []string, opts Arch
 
 func createZipArchive(w io.Writer, outFile *os.File, sources []string, opts ArchiveOptions) error {
 	zw := zip.NewWriter(outFile)
+
 	defer func() {
 		_ = zw.Close()
 	}()
@@ -191,6 +203,7 @@ func createZipArchive(w io.Writer, outFile *os.File, sources []string, opts Arch
 			if err != nil {
 				relPath = path
 			}
+
 			header.Name = relPath
 
 			if info.IsDir() {
@@ -213,8 +226,10 @@ func createZipArchive(w io.Writer, outFile *os.File, sources []string, opts Arch
 				if err != nil {
 					return err
 				}
+
 				_, err = io.Copy(writer, f)
 				_ = f.Close()
+
 				if err != nil {
 					return err
 				}
@@ -222,7 +237,6 @@ func createZipArchive(w io.Writer, outFile *os.File, sources []string, opts Arch
 
 			return nil
 		})
-
 		if err != nil {
 			return fmt.Errorf("archive: %w", err)
 		}
@@ -241,6 +255,7 @@ func extractArchive(w io.Writer, opts ArchiveOptions) error {
 	if isZip {
 		return extractZipArchive(w, opts)
 	}
+
 	return extractTarArchive(w, opts)
 }
 
@@ -249,6 +264,7 @@ func extractTarArchive(w io.Writer, opts ArchiveOptions) error {
 	if err != nil {
 		return fmt.Errorf("archive: %w", err)
 	}
+
 	defer func() {
 		_ = f.Close()
 	}()
@@ -262,9 +278,11 @@ func extractTarArchive(w io.Writer, opts ArchiveOptions) error {
 		if err != nil {
 			return fmt.Errorf("archive: %w", err)
 		}
+
 		defer func() {
 			_ = gr.Close()
 		}()
+
 		tr = tar.NewReader(gr)
 	} else {
 		tr = tar.NewReader(f)
@@ -280,6 +298,7 @@ func extractTarArchive(w io.Writer, opts ArchiveOptions) error {
 		if err == io.EOF {
 			break
 		}
+
 		if err != nil {
 			return fmt.Errorf("archive: %w", err)
 		}
@@ -310,12 +329,15 @@ func extractTarArchive(w io.Writer, opts ArchiveOptions) error {
 			if err := os.MkdirAll(filepath.Dir(target), 0755); err != nil {
 				return err
 			}
+
 			outFile, err := os.OpenFile(target, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, os.FileMode(header.Mode))
 			if err != nil {
 				return err
 			}
+
 			_, err = io.Copy(outFile, tr)
 			_ = outFile.Close()
+
 			if err != nil {
 				return err
 			}
@@ -323,6 +345,7 @@ func extractTarArchive(w io.Writer, opts ArchiveOptions) error {
 			if err := os.MkdirAll(filepath.Dir(target), 0755); err != nil {
 				return err
 			}
+
 			if err := os.Symlink(header.Linkname, target); err != nil {
 				return err
 			}
@@ -330,6 +353,7 @@ func extractTarArchive(w io.Writer, opts ArchiveOptions) error {
 			if err := os.MkdirAll(filepath.Dir(target), 0755); err != nil {
 				return err
 			}
+
 			linkTarget := filepath.Join(destDir, header.Linkname)
 			if err := os.Link(linkTarget, target); err != nil {
 				return err
@@ -345,6 +369,7 @@ func extractZipArchive(w io.Writer, opts ArchiveOptions) error {
 	if err != nil {
 		return fmt.Errorf("archive: %w", err)
 	}
+
 	defer func() {
 		_ = r.Close()
 	}()
@@ -375,6 +400,7 @@ func extractZipArchive(w io.Writer, opts ArchiveOptions) error {
 			if err := os.MkdirAll(target, f.Mode()); err != nil {
 				return err
 			}
+
 			continue
 		}
 
@@ -396,6 +422,7 @@ func extractZipArchive(w io.Writer, opts ArchiveOptions) error {
 		_, err = io.Copy(outFile, rc)
 		_ = outFile.Close()
 		_ = rc.Close()
+
 		if err != nil {
 			return err
 		}
@@ -414,6 +441,7 @@ func listArchive(w io.Writer, opts ArchiveOptions) error {
 	if isZip {
 		return listZipArchive(w, opts)
 	}
+
 	return listTarArchive(w, opts)
 }
 
@@ -422,6 +450,7 @@ func listTarArchive(w io.Writer, opts ArchiveOptions) error {
 	if err != nil {
 		return fmt.Errorf("archive: %w", err)
 	}
+
 	defer func() {
 		_ = f.Close()
 	}()
@@ -434,9 +463,11 @@ func listTarArchive(w io.Writer, opts ArchiveOptions) error {
 		if err != nil {
 			return fmt.Errorf("archive: %w", err)
 		}
+
 		defer func() {
 			_ = gr.Close()
 		}()
+
 		tr = tar.NewReader(gr)
 	} else {
 		tr = tar.NewReader(f)
@@ -447,6 +478,7 @@ func listTarArchive(w io.Writer, opts ArchiveOptions) error {
 		if err == io.EOF {
 			break
 		}
+
 		if err != nil {
 			return fmt.Errorf("archive: %w", err)
 		}
@@ -470,6 +502,7 @@ func listZipArchive(w io.Writer, opts ArchiveOptions) error {
 	if err != nil {
 		return fmt.Errorf("archive: %w", err)
 	}
+
 	defer func() {
 		_ = r.Close()
 	}()
@@ -500,7 +533,9 @@ func RunZip(w io.Writer, args []string, opts ArchiveOptions) error {
 		opts.File = args[0]
 		args = args[1:]
 	}
+
 	opts.Create = true
+
 	return RunArchive(w, args, opts)
 }
 
@@ -509,6 +544,8 @@ func RunUnzip(w io.Writer, args []string, opts ArchiveOptions) error {
 	if opts.File == "" && len(args) > 0 {
 		opts.File = args[0]
 	}
+
 	opts.Extract = true
+
 	return RunArchive(w, args, opts)
 }

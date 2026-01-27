@@ -36,6 +36,7 @@ func RunHead(w io.Writer, args []string, opts HeadOptions) error {
 
 	for i, file := range files {
 		var r io.Reader
+
 		filename := file
 
 		if file == "-" {
@@ -46,7 +47,9 @@ func RunHead(w io.Writer, args []string, opts HeadOptions) error {
 			if err != nil {
 				return fmt.Errorf("head: cannot open '%s' for reading: %w", file, err)
 			}
+
 			r = f
+
 			defer func() {
 				_ = f.Close()
 			}()
@@ -56,6 +59,7 @@ func RunHead(w io.Writer, args []string, opts HeadOptions) error {
 			if i > 0 {
 				_, _ = fmt.Fprintln(w)
 			}
+
 			_, _ = fmt.Fprintf(w, "==> %s <==\n", filename)
 		}
 
@@ -75,24 +79,30 @@ func RunHead(w io.Writer, args []string, opts HeadOptions) error {
 
 func headLines(w io.Writer, r io.Reader, n int) error {
 	scanner := bufio.NewScanner(r)
+
 	count := 0
 	for scanner.Scan() {
 		if count >= n {
 			break
 		}
+
 		_, _ = fmt.Fprintln(w, scanner.Text())
 		count++
 	}
+
 	return scanner.Err()
 }
 
 func headBytes(w io.Writer, r io.Reader, n int) error {
 	buf := make([]byte, n)
+
 	read, err := io.ReadFull(r, buf)
 	if err != nil && err != io.EOF && err != io.ErrUnexpectedEOF {
 		return err
 	}
+
 	_, err = w.Write(buf[:read])
+
 	return err
 }
 
@@ -101,8 +111,10 @@ func Head(lines []string, n int) []string {
 	if n > len(lines) {
 		n = len(lines)
 	}
+
 	if n < 0 {
 		n = 0
 	}
+
 	return lines[:n]
 }

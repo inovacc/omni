@@ -67,6 +67,7 @@ func RunDiff(w io.Writer, args []string, opts DiffOptions) error {
 	if err != nil {
 		return fmt.Errorf("diff: %s: %w", file1, err)
 	}
+
 	info2, err := os.Stat(file2)
 	if err != nil {
 		return fmt.Errorf("diff: %s: %w", file2, err)
@@ -76,6 +77,7 @@ func RunDiff(w io.Writer, args []string, opts DiffOptions) error {
 		if opts.Recursive {
 			return diffDirs(w, file1, file2, opts)
 		}
+
 		return fmt.Errorf("diff: %s: Is a directory", file1)
 	}
 
@@ -91,6 +93,7 @@ func diffFiles(w io.Writer, file1, file2 string, opts DiffOptions) error {
 	if err != nil {
 		return err
 	}
+
 	lines2, err := readLines(file2, opts)
 	if err != nil {
 		return err
@@ -121,25 +124,31 @@ func readLines(filename string, opts DiffOptions) ([]string, error) {
 	if err != nil {
 		return nil, fmt.Errorf("diff: %w", err)
 	}
+
 	defer func() {
 		_ = file.Close()
 	}()
 
 	var lines []string
+
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 		line := scanner.Text()
 		if opts.IgnoreCase {
 			line = strings.ToLower(line)
 		}
+
 		if opts.IgnoreSpace {
 			line = strings.Join(strings.Fields(line), " ")
 		}
+
 		if opts.IgnoreBlank && strings.TrimSpace(line) == "" {
 			continue
 		}
+
 		lines = append(lines, line)
 	}
+
 	return lines, scanner.Err()
 }
 
@@ -158,17 +167,14 @@ func computeDiff(lines1, lines2 []string, opts DiffOptions) []DiffHunk {
 			if lines1[i-1] == lines2[j-1] {
 				lcs[i][j] = lcs[i-1][j-1] + 1
 			} else {
-				if lcs[i-1][j] > lcs[i][j-1] {
-					lcs[i][j] = lcs[i-1][j]
-				} else {
-					lcs[i][j] = lcs[i][j-1]
-				}
+				lcs[i][j] = max(lcs[i-1][j], lcs[i][j-1])
 			}
 		}
 	}
 
 	// Backtrack to find diff
 	var allLines []DiffLine
+
 	i, j := m, n
 	for i > 0 || j > 0 {
 		if i > 0 && j > 0 && lines1[i-1] == lines2[j-1] {
@@ -188,14 +194,17 @@ func computeDiff(lines1, lines2 []string, opts DiffOptions) []DiffHunk {
 	return groupIntoHunks(allLines, lines1, lines2, opts)
 }
 
-func groupIntoHunks(allLines []DiffLine, lines1, lines2 []string, opts DiffOptions) []DiffHunk {
+func groupIntoHunks(allLines []DiffLine, _, _ []string, opts DiffOptions) []DiffHunk {
 	context := opts.Unified
 	if context == 0 {
 		context = 3
 	}
 
-	var hunks []DiffHunk
-	var currentHunk *DiffHunk
+	var (
+		hunks       []DiffHunk
+		currentHunk *DiffHunk
+	)
+
 	contextBuffer := make([]DiffLine, 0, context)
 
 	pos1, pos2 := 0, 0
@@ -208,24 +217,29 @@ func groupIntoHunks(allLines []DiffLine, lines1, lines2 []string, opts DiffOptio
 				// Start new hunk
 				start1 := pos1 - len(contextBuffer)
 				start2 := pos2 - len(contextBuffer)
+
 				if start1 < 0 {
 					start1 = 0
 				}
+
 				if start2 < 0 {
 					start2 = 0
 				}
+
 				currentHunk = &DiffHunk{
 					Start1: start1 + 1,
 					Start2: start2 + 1,
 					Lines:  append([]DiffLine{}, contextBuffer...),
 				}
 			}
+
 			currentHunk.Lines = append(currentHunk.Lines, line)
 		} else {
 			if currentHunk != nil {
 				currentHunk.Lines = append(currentHunk.Lines, line)
 				// Check if we've accumulated enough trailing context
 				trailingContext := 0
+
 				for i := len(currentHunk.Lines) - 1; i >= 0; i-- {
 					if currentHunk.Lines[i].Type == ' ' {
 						trailingContext++
@@ -233,6 +247,7 @@ func groupIntoHunks(allLines []DiffLine, lines1, lines2 []string, opts DiffOptio
 						break
 					}
 				}
+
 				if trailingContext >= context*2 {
 					// Trim trailing context and close hunk
 					currentHunk.Lines = currentHunk.Lines[:len(currentHunk.Lines)-context]
@@ -265,6 +280,7 @@ func groupIntoHunks(allLines []DiffLine, lines1, lines2 []string, opts DiffOptio
 	if currentHunk != nil {
 		// Trim trailing context
 		trailingContext := 0
+
 		for i := len(currentHunk.Lines) - 1; i >= 0; i-- {
 			if currentHunk.Lines[i].Type == ' ' {
 				trailingContext++
@@ -272,9 +288,11 @@ func groupIntoHunks(allLines []DiffLine, lines1, lines2 []string, opts DiffOptio
 				break
 			}
 		}
+
 		if trailingContext > context {
 			currentHunk.Lines = currentHunk.Lines[:len(currentHunk.Lines)-(trailingContext-context)]
 		}
+
 		currentHunk.Count1, currentHunk.Count2 = countLines(currentHunk.Lines)
 		hunks = append(hunks, *currentHunk)
 	}
@@ -294,10 +312,11 @@ func countLines(lines []DiffLine) (count1, count2 int) {
 			count2++
 		}
 	}
+
 	return
 }
 
-func printUnifiedDiff(w io.Writer, file1, file2 string, lines1, lines2 []string, hunks []DiffHunk, opts DiffOptions) error {
+func printUnifiedDiff(w io.Writer, file1, file2 string, _, _ []string, hunks []DiffHunk, opts DiffOptions) error {
 	// Header
 	_, _ = fmt.Fprintf(w, "--- %s\n", file1)
 	_, _ = fmt.Fprintf(w, "+++ %s\n", file2)
@@ -331,6 +350,7 @@ func printSideBySide(w io.Writer, lines1, lines2 []string, hunks []DiffHunk, opt
 	if width == 0 {
 		width = 130
 	}
+
 	colWidth := (width - 3) / 2
 
 	// Build aligned lines
@@ -343,6 +363,7 @@ func printSideBySide(w io.Writer, lines1, lines2 []string, hunks []DiffHunk, opt
 				right := truncateOrPad(lines2[pos2], colWidth)
 				_, _ = fmt.Fprintf(w, "%s   %s\n", left, right)
 			}
+
 			pos1++
 			pos2++
 		}
@@ -356,25 +377,30 @@ func printSideBySide(w io.Writer, lines1, lines2 []string, hunks []DiffHunk, opt
 					right := truncateOrPad(line.Content, colWidth)
 					_, _ = fmt.Fprintf(w, "%s   %s\n", left, right)
 				}
+
 				pos1++
 				pos2++
 			case '-':
 				left := truncateOrPad(line.Content, colWidth)
+
 				right := strings.Repeat(" ", colWidth)
 				if opts.Color {
 					_, _ = fmt.Fprintf(w, "\033[31m%s\033[0m < %s\n", left, right)
 				} else {
 					_, _ = fmt.Fprintf(w, "%s < %s\n", left, right)
 				}
+
 				pos1++
 			case '+':
 				left := strings.Repeat(" ", colWidth)
+
 				right := truncateOrPad(line.Content, colWidth)
 				if opts.Color {
 					_, _ = fmt.Fprintf(w, "%s > \033[32m%s\033[0m\n", left, right)
 				} else {
 					_, _ = fmt.Fprintf(w, "%s > %s\n", left, right)
 				}
+
 				pos2++
 			}
 		}
@@ -387,6 +413,7 @@ func printSideBySide(w io.Writer, lines1, lines2 []string, hunks []DiffHunk, opt
 			right := truncateOrPad(lines2[pos2], colWidth)
 			_, _ = fmt.Fprintf(w, "%s   %s\n", left, right)
 		}
+
 		pos1++
 		pos2++
 	}
@@ -398,6 +425,7 @@ func truncateOrPad(s string, width int) string {
 	if len(s) > width {
 		return s[:width-1] + ">"
 	}
+
 	return s + strings.Repeat(" ", width-len(s))
 }
 
@@ -406,6 +434,7 @@ func diffDirs(w io.Writer, dir1, dir2 string, opts DiffOptions) error {
 	if err != nil {
 		return fmt.Errorf("diff: %w", err)
 	}
+
 	entries2, err := os.ReadDir(dir2)
 	if err != nil {
 		return fmt.Errorf("diff: %w", err)
@@ -414,9 +443,11 @@ func diffDirs(w io.Writer, dir1, dir2 string, opts DiffOptions) error {
 	// Build maps
 	map1 := make(map[string]os.DirEntry)
 	map2 := make(map[string]os.DirEntry)
+
 	for _, e := range entries1 {
 		map1[e.Name()] = e
 	}
+
 	for _, e := range entries2 {
 		map2[e.Name()] = e
 	}
@@ -426,6 +457,7 @@ func diffDirs(w io.Writer, dir1, dir2 string, opts DiffOptions) error {
 	for name := range map1 {
 		allNames[name] = true
 	}
+
 	for name := range map2 {
 		allNames[name] = true
 	}
@@ -441,6 +473,7 @@ func diffDirs(w io.Writer, dir1, dir2 string, opts DiffOptions) error {
 			_, _ = fmt.Fprintf(w, "Only in %s: %s\n", dir2, name)
 			continue
 		}
+
 		if !in2 {
 			_, _ = fmt.Fprintf(w, "Only in %s: %s\n", dir1, name)
 			continue
@@ -467,6 +500,7 @@ func fileType(e os.DirEntry) string {
 	if e.IsDir() {
 		return "directory"
 	}
+
 	return "regular file"
 }
 
@@ -476,15 +510,17 @@ func diffJSON(w io.Writer, file1, file2 string, opts DiffOptions) error {
 	if err != nil {
 		return fmt.Errorf("diff: %w", err)
 	}
+
 	data2, err := os.ReadFile(file2)
 	if err != nil {
 		return fmt.Errorf("diff: %w", err)
 	}
 
-	var json1, json2 interface{}
+	var json1, json2 any
 	if err := json.Unmarshal(data1, &json1); err != nil {
 		return fmt.Errorf("diff: %s: invalid JSON: %w", file1, err)
 	}
+
 	if err := json.Unmarshal(data2, &json2); err != nil {
 		return fmt.Errorf("diff: %s: invalid JSON: %w", file2, err)
 	}
@@ -507,7 +543,7 @@ func diffJSON(w io.Writer, file1, file2 string, opts DiffOptions) error {
 	return nil
 }
 
-func compareJSON(path string, v1, v2 interface{}) []string {
+func compareJSON(path string, v1, v2 any) []string {
 	var diffs []string
 
 	if reflect.TypeOf(v1) != reflect.TypeOf(v2) {
@@ -516,22 +552,28 @@ func compareJSON(path string, v1, v2 interface{}) []string {
 	}
 
 	switch val1 := v1.(type) {
-	case map[string]interface{}:
-		val2 := v2.(map[string]interface{})
+	case map[string]any:
+		val2 := v2.(map[string]any)
+
 		allKeys := make(map[string]bool)
 		for k := range val1 {
 			allKeys[k] = true
 		}
+
 		for k := range val2 {
 			allKeys[k] = true
 		}
+
 		for k := range allKeys {
 			p := path + "." + k
 			if path == "" {
 				p = k
 			}
+
 			_, in1 := val1[k]
+
 			_, in2 := val2[k]
+
 			if !in1 {
 				diffs = append(diffs, fmt.Sprintf("+ %s: %v", p, val2[k]))
 			} else if !in2 {
@@ -540,17 +582,17 @@ func compareJSON(path string, v1, v2 interface{}) []string {
 				diffs = append(diffs, compareJSON(p, val1[k], val2[k])...)
 			}
 		}
-	case []interface{}:
-		val2 := v2.([]interface{})
-		maxLen := len(val1)
-		if len(val2) > maxLen {
-			maxLen = len(val2)
-		}
-		for i := 0; i < maxLen; i++ {
+	case []any:
+		val2 := v2.([]any)
+
+		maxLen := max(len(val2), len(val1))
+
+		for i := range maxLen {
 			p := fmt.Sprintf("%s[%d]", path, i)
 			if path == "" {
 				p = fmt.Sprintf("[%d]", i)
 			}
+
 			if i >= len(val1) {
 				diffs = append(diffs, fmt.Sprintf("+ %s: %v", p, val2[i]))
 			} else if i >= len(val2) {
@@ -572,5 +614,6 @@ func pathOrRoot(path string) string {
 	if path == "" {
 		return "(root)"
 	}
+
 	return path
 }

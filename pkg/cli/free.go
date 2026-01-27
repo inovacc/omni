@@ -38,21 +38,23 @@ func RunFree(w io.Writer, opts FreeOptions) error {
 
 	// Determine unit divisor and suffix
 	var divisor uint64 = 1024 // Default kibibytes
+
 	suffix := ""
 
-	if opts.Bytes {
+	switch {
+	case opts.Bytes:
 		divisor = 1
 		suffix = "B"
-	} else if opts.Mebibytes {
+	case opts.Mebibytes:
 		divisor = 1024 * 1024
 		suffix = "Mi"
-	} else if opts.Gibibytes {
+	case opts.Gibibytes:
 		divisor = 1024 * 1024 * 1024
 		suffix = "Gi"
-	} else if opts.Human {
+	case opts.Human:
 		// Will format each value individually
 		divisor = 0
-	} else {
+	default:
 		suffix = "Ki"
 	}
 
@@ -134,11 +136,13 @@ func formatBytes(bytes uint64) string {
 	if bytes < unit {
 		return fmt.Sprintf("%dB", bytes)
 	}
+
 	div, exp := uint64(unit), 0
 	for n := bytes / unit; n >= unit; n /= unit {
 		div *= unit
 		exp++
 	}
+
 	return fmt.Sprintf("%.1f%ci", float64(bytes)/float64(div), "KMGTPE"[exp])
 }
 

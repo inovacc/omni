@@ -29,6 +29,7 @@ func RunDotenv(w io.Writer, args []string, opts DotenvOptions) error {
 	if len(files) == 0 {
 		files = args
 	}
+
 	if len(files) == 0 {
 		files = []string{".env"}
 	}
@@ -41,8 +42,10 @@ func RunDotenv(w io.Writer, args []string, opts DotenvOptions) error {
 			if !opts.Quiet {
 				_, _ = fmt.Fprintf(os.Stderr, "dotenv: %s: %v\n", file, err)
 			}
+
 			continue
 		}
+
 		allVars = append(allVars, vars...)
 	}
 
@@ -64,6 +67,7 @@ func ParseDotenvFile(path string, opts DotenvOptions) ([]EnvVar, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	defer func() {
 		_ = f.Close()
 	}()
@@ -74,6 +78,7 @@ func ParseDotenvFile(path string, opts DotenvOptions) ([]EnvVar, error) {
 // ParseDotenv parses .env content from a reader
 func ParseDotenv(r io.Reader, opts DotenvOptions) ([]EnvVar, error) {
 	var vars []EnvVar
+
 	scanner := bufio.NewScanner(r)
 	lineNum := 0
 
@@ -106,19 +111,19 @@ func ParseDotenv(r io.Reader, opts DotenvOptions) ([]EnvVar, error) {
 
 func parseDotenvLine(line string) (string, string, error) {
 	// Handle export prefix
-	if strings.HasPrefix(line, "export ") {
-		line = strings.TrimPrefix(line, "export ")
+	if after, ok := strings.CutPrefix(line, "export "); ok {
+		line = after
 		line = strings.TrimSpace(line)
 	}
 
 	// Find the = separator
-	idx := strings.Index(line, "=")
-	if idx == -1 {
+	before, after, ok := strings.Cut(line, "=")
+	if !ok {
 		return "", "", fmt.Errorf("invalid line: no '=' found")
 	}
 
-	key := strings.TrimSpace(line[:idx])
-	value := line[idx+1:]
+	key := strings.TrimSpace(before)
+	value := after
 
 	// Validate key
 	if key == "" {
@@ -145,6 +150,7 @@ func parseValue(value string) string {
 			if quote == '"' {
 				value = unescapeDoubleQuoted(value)
 			}
+
 			return value
 		}
 	}
@@ -165,6 +171,7 @@ func unescapeDoubleQuoted(s string) string {
 		`\r`, "\r",
 		`\t`, "\t",
 	)
+
 	return replacer.Replace(s)
 }
 
@@ -203,6 +210,7 @@ func LoadDotenv(files ...string) error {
 			if os.IsNotExist(err) {
 				continue
 			}
+
 			return err
 		}
 
@@ -233,6 +241,7 @@ func LoadDotenvOverride(files ...string) error {
 			if os.IsNotExist(err) {
 				continue
 			}
+
 			return err
 		}
 

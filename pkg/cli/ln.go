@@ -27,6 +27,7 @@ func RunLn(w io.Writer, args []string, opts LnOptions) error {
 	// Handle multiple sources -> directory case
 	if len(args) > 2 {
 		dest := args[len(args)-1]
+
 		info, err := os.Stat(dest)
 		if err != nil || !info.IsDir() {
 			return fmt.Errorf("ln: target '%s' is not a directory", dest)
@@ -38,6 +39,7 @@ func RunLn(w io.Writer, args []string, opts LnOptions) error {
 				return err
 			}
 		}
+
 		return nil
 	}
 
@@ -63,16 +65,20 @@ func createLink(w io.Writer, target, linkName string, opts LnOptions) error {
 	}
 
 	var err error
+
 	if opts.Symbolic {
 		// Handle relative symlinks
 		actualTarget := target
+
 		if opts.Relative {
 			linkDir := filepath.Dir(linkName)
+
 			relTarget, relErr := filepath.Rel(linkDir, target)
 			if relErr == nil {
 				actualTarget = relTarget
 			}
 		}
+
 		err = os.Symlink(actualTarget, linkName)
 	} else {
 		err = os.Link(target, linkName)

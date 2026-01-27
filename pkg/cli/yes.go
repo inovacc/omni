@@ -31,7 +31,7 @@ func RunYes(ctx context.Context, w io.Writer, args []string) error {
 			_, err := fmt.Fprintln(w, output)
 			if err != nil {
 				// Likely a broken pipe, exit gracefully
-				return nil
+				return nil //nolint:nilerr // Intentional: exit gracefully on broken pipe
 			}
 		}
 	}
@@ -42,9 +42,11 @@ func Yes(output string, count int) []string {
 	if output == "" {
 		output = "y"
 	}
+
 	result := make([]string, count)
-	for i := 0; i < count; i++ {
+	for i := range count {
 		result[i] = output
 	}
+
 	return result
 }

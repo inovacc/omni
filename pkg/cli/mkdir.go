@@ -15,6 +15,7 @@ func RunMkdir(args []string, parents bool) error {
 			return fmt.Errorf("mkdir: %w", err)
 		}
 	}
+
 	return nil
 }
 
@@ -29,5 +30,6 @@ func RunRmdir(args []string) error {
 			return fmt.Errorf("rmdir: %w", err)
 		}
 	}
+
 	return nil
 }

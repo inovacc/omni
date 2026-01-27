@@ -46,6 +46,7 @@ func RunDU(w io.Writer, args []string, opts DUOptions) error {
 	}
 
 	var grandTotal int64
+
 	terminator := "\n"
 	if opts.NullTerminator {
 		terminator = "\x00"
@@ -57,6 +58,7 @@ func RunDU(w io.Writer, args []string, opts DUOptions) error {
 			_, _ = fmt.Fprintf(os.Stderr, "du: %s: %v\n", path, err)
 			continue
 		}
+
 		grandTotal += total
 	}
 
@@ -67,7 +69,7 @@ func RunDU(w io.Writer, args []string, opts DUOptions) error {
 	return nil
 }
 
-func duPath(w io.Writer, path string, opts DUOptions, depth int, terminator string) (int64, error) {
+func duPath(w io.Writer, path string, opts DUOptions, _ int, terminator string) (int64, error) {
 	info, err := os.Lstat(path)
 	if err != nil {
 		return 0, err
@@ -79,21 +81,23 @@ func duPath(w io.Writer, path string, opts DUOptions, depth int, terminator stri
 		if opts.All || opts.SummarizeOnly {
 			printDUSize(w, size, path, opts, terminator)
 		}
+
 		return size, nil
 	}
 
 	// It's a directory - walk it
 	var totalSize int64
+
 	entries := make(map[string]int64)
 
 	err = filepath.WalkDir(path, func(p string, d fs.DirEntry, err error) error {
 		if err != nil {
-			return nil // Skip errors
+			return nil //nolint:nilerr // Intentionally skip errors
 		}
 
 		fileInfo, err := d.Info()
 		if err != nil {
-			return nil
+			return nil //nolint:nilerr // Intentionally skip errors
 		}
 
 		size := fileInfo.Size()
@@ -102,6 +106,7 @@ func duPath(w io.Writer, path string, opts DUOptions, depth int, terminator stri
 		// Track directory sizes for non-summarize mode
 		if d.IsDir() && p != path {
 			rel, _ := filepath.Rel(path, p)
+
 			relDepth := len(filepath.SplitList(rel))
 			if opts.MaxDepth == 0 || relDepth <= opts.MaxDepth {
 				entries[p] = 0 // Will be calculated
@@ -110,6 +115,7 @@ func duPath(w io.Writer, path string, opts DUOptions, depth int, terminator stri
 
 		if opts.All && !d.IsDir() {
 			rel, _ := filepath.Rel(path, p)
+
 			relDepth := len(filepath.SplitList(rel))
 			if opts.MaxDepth == 0 || relDepth <= opts.MaxDepth {
 				printDUSize(w, size, p, opts, terminator)
@@ -118,7 +124,6 @@ func duPath(w io.Writer, path string, opts DUOptions, depth int, terminator stri
 
 		return nil
 	})
-
 	if err != nil {
 		return 0, err
 	}
@@ -130,11 +135,13 @@ func duPath(w io.Writer, path string, opts DUOptions, depth int, terminator stri
 		for dir := range entries {
 			dirs = append(dirs, dir)
 		}
+
 		sort.Strings(dirs)
 
 		for _, dir := range dirs {
 			dirSize := calculateDirSize(dir)
 			rel, _ := filepath.Rel(path, dir)
+
 			relDepth := len(filepath.SplitList(rel))
 			if opts.MaxDepth == 0 || relDepth <= opts.MaxDepth {
 				printDUSize(w, dirSize, dir, opts, terminator)
@@ -150,15 +157,19 @@ func duPath(w io.Writer, path string, opts DUOptions, depth int, terminator stri
 
 func calculateDirSize(path string) int64 {
 	var size int64
+
 	_ = filepath.WalkDir(path, func(p string, d fs.DirEntry, err error) error {
 		if err != nil {
-			return nil
+			return nil //nolint:nilerr // Intentionally skip errors
 		}
+
 		if info, err := d.Info(); err == nil {
 			size += info.Size()
 		}
+
 		return nil
 	})
+
 	return size
 }
 
@@ -181,25 +192,31 @@ func formatHumanSize(bytes int64) string {
 	if bytes < unit {
 		return fmt.Sprintf("%d", bytes)
 	}
+
 	div, exp := int64(unit), 0
 	for n := bytes / unit; n >= unit; n /= unit {
 		div *= unit
 		exp++
 	}
+
 	return fmt.Sprintf("%.1f%c", float64(bytes)/float64(div), "KMGTPE"[exp])
 }
 
 // DiskUsage returns the total size of a path
 func DiskUsage(path string) (int64, error) {
 	var size int64
+
 	err := filepath.WalkDir(path, func(p string, d fs.DirEntry, err error) error {
 		if err != nil {
-			return nil
+			return nil //nolint:nilerr // Intentionally skip errors
 		}
+
 		if info, err := d.Info(); err == nil && !info.IsDir() {
 			size += info.Size()
 		}
+
 		return nil
 	})
+
 	return size, err
 }

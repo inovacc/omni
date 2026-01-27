@@ -54,7 +54,9 @@ func computeHashes(w io.Writer, args []string, opts HashOptions) error {
 		if _, err := io.Copy(h, os.Stdin); err != nil {
 			return fmt.Errorf("hash: %w", err)
 		}
+
 		_, _ = fmt.Fprintf(w, "%s  -\n", hex.EncodeToString(h.Sum(nil)))
+
 		return nil
 	}
 
@@ -71,9 +73,11 @@ func computeHashes(w io.Writer, args []string, opts HashOptions) error {
 					if err != nil {
 						return err
 					}
+
 					if !d.IsDir() {
 						return hashFile(w, p, opts)
 					}
+
 					return nil
 				})
 				if err != nil {
@@ -82,6 +86,7 @@ func computeHashes(w io.Writer, args []string, opts HashOptions) error {
 			} else {
 				_, _ = fmt.Fprintf(os.Stderr, "hash: %s: Is a directory\n", path)
 			}
+
 			continue
 		}
 
@@ -98,6 +103,7 @@ func hashFile(w io.Writer, path string, opts HashOptions) error {
 	if err != nil {
 		return err
 	}
+
 	defer func() {
 		_ = f.Close()
 	}()
@@ -108,10 +114,12 @@ func hashFile(w io.Writer, path string, opts HashOptions) error {
 	}
 
 	sum := hex.EncodeToString(h.Sum(nil))
+
 	mode := " "
 	if opts.Binary {
 		mode = "*"
 	}
+
 	_, _ = fmt.Fprintf(w, "%s %s%s\n", sum, mode, path)
 
 	return nil
@@ -132,12 +140,13 @@ func verifyChecksums(w io.Writer, args []string, opts HashOptions) error {
 
 		content, err := io.ReadAll(f)
 		_ = f.Close()
+
 		if err != nil {
 			return fmt.Errorf("hash: %w", err)
 		}
 
-		lines := strings.Split(string(content), "\n")
-		for _, line := range lines {
+		lines := strings.SplitSeq(string(content), "\n")
+		for line := range lines {
 			line = strings.TrimSpace(line)
 			if line == "" || strings.HasPrefix(line, "#") {
 				continue
@@ -149,7 +158,9 @@ func verifyChecksums(w io.Writer, args []string, opts HashOptions) error {
 				if opts.Warn {
 					_, _ = fmt.Fprintf(os.Stderr, "hash: %s: improperly formatted checksum line\n", line)
 				}
+
 				malformed++
+
 				continue
 			}
 
@@ -162,7 +173,9 @@ func verifyChecksums(w io.Writer, args []string, opts HashOptions) error {
 				if !opts.Status {
 					_, _ = fmt.Fprintf(w, "%s: FAILED open or read\n", filename)
 				}
+
 				notFound++
+
 				continue
 			}
 
@@ -174,6 +187,7 @@ func verifyChecksums(w io.Writer, args []string, opts HashOptions) error {
 				if !opts.Status {
 					_, _ = fmt.Fprintf(w, "%s: FAILED\n", filename)
 				}
+
 				failed++
 			}
 		}
@@ -184,10 +198,12 @@ func verifyChecksums(w io.Writer, args []string, opts HashOptions) error {
 			if failed > 0 {
 				_, _ = fmt.Fprintf(os.Stderr, "hash: WARNING: %d computed checksum did NOT match\n", failed)
 			}
+
 			if notFound > 0 {
 				_, _ = fmt.Fprintf(os.Stderr, "hash: WARNING: %d listed file could not be read\n", notFound)
 			}
 		}
+
 		return fmt.Errorf("verification failed")
 	}
 
@@ -199,6 +215,7 @@ func computeFileHash(path string, algorithm string) (string, error) {
 	if err != nil {
 		return "", err
 	}
+
 	defer func() {
 		_ = f.Close()
 	}()

@@ -32,11 +32,13 @@ func RunSed(w io.Writer, args []string, opts SedOptions) error {
 
 	// Parse all expressions into commands
 	var commands []sedCommand
+
 	for _, expr := range opts.Expression {
 		cmd, err := parseSedExpression(expr)
 		if err != nil {
 			return fmt.Errorf("sed: %w", err)
 		}
+
 		commands = append(commands, cmd)
 	}
 
@@ -50,6 +52,7 @@ func RunSed(w io.Writer, args []string, opts SedOptions) error {
 			if err := sedProcessReader(w, os.Stdin, commands, opts); err != nil {
 				return err
 			}
+
 			continue
 		}
 
@@ -62,10 +65,12 @@ func RunSed(w io.Writer, args []string, opts SedOptions) error {
 			if err != nil {
 				return fmt.Errorf("sed: %w", err)
 			}
+
 			err = sedProcessReader(w, f, commands, opts)
 			if closeErr := f.Close(); closeErr != nil && err == nil {
 				err = closeErr
 			}
+
 			if err != nil {
 				return err
 			}
@@ -100,6 +105,7 @@ func (s *sedSubstitute) execute(line string, _ int) (string, bool) {
 			if count == s.nthMatch {
 				return s.pattern.ReplaceAllString(match, s.replacement)
 			}
+
 			return match
 		})
 	} else {
@@ -111,6 +117,7 @@ func (s *sedSubstitute) execute(line string, _ int) (string, bool) {
 			result = line
 		}
 	}
+
 	return result, !s.printOnly
 }
 
@@ -126,8 +133,10 @@ func (d *sedDelete) execute(line string, lineNum int) (string, bool) {
 		if d.pattern.MatchString(line) {
 			return "", false
 		}
+
 		return line, true
 	}
+
 	if d.addressStart > 0 {
 		if d.addressEnd > 0 {
 			if lineNum >= d.addressStart && lineNum <= d.addressEnd {
@@ -137,6 +146,7 @@ func (d *sedDelete) execute(line string, lineNum int) (string, bool) {
 			return "", false
 		}
 	}
+
 	return line, true
 }
 
@@ -149,6 +159,7 @@ func (p *sedPrint) execute(line string, _ int) (string, bool) {
 	if p.pattern != nil {
 		return line, p.pattern.MatchString(line)
 	}
+
 	return line, true
 }
 
@@ -169,15 +180,19 @@ func parseSedExpression(expr string) (sedCommand, error) {
 		if end == -1 {
 			return nil, fmt.Errorf("unterminated address regex")
 		}
+
 		pattern := expr[1 : end+1]
+
 		re, err := regexp.Compile(pattern)
 		if err != nil {
 			return nil, fmt.Errorf("invalid regex: %w", err)
 		}
+
 		rest := strings.TrimSpace(expr[end+2:])
 		if rest == "d" {
 			return &sedDelete{pattern: re}, nil
 		}
+
 		if rest == "p" {
 			return &sedPrint{pattern: re}, nil
 		}
@@ -190,16 +205,20 @@ func parseSedExpression(expr string) (sedCommand, error) {
 		for i < len(expr) && expr[i] >= '0' && expr[i] <= '9' {
 			i++
 		}
+
 		startAddr, _ := strconv.Atoi(expr[:i])
 		rest := expr[i:]
 
 		var endAddr int
+
 		if len(rest) > 0 && rest[0] == ',' {
 			rest = rest[1:]
+
 			j := 0
 			for j < len(rest) && rest[j] >= '0' && rest[j] <= '9' {
 				j++
 			}
+
 			if j > 0 {
 				endAddr, _ = strconv.Atoi(rest[:j])
 				rest = rest[j:]
@@ -221,9 +240,11 @@ func parseSedExpression(expr string) (sedCommand, error) {
 	if expr == "d" {
 		return &sedDelete{}, nil
 	}
+
 	if expr == "p" {
 		return &sedPrint{}, nil
 	}
+
 	if expr == "q" {
 		return &sedQuit{}, nil
 	}
@@ -237,6 +258,7 @@ func parseSubstitute(expr string) (*sedSubstitute, error) {
 	}
 
 	delim := expr[1]
+
 	parts := strings.Split(expr[2:], string(delim))
 	if len(parts) < 2 {
 		return nil, fmt.Errorf("invalid substitution")
@@ -244,6 +266,7 @@ func parseSubstitute(expr string) (*sedSubstitute, error) {
 
 	pattern := parts[0]
 	replacement := parts[1]
+
 	flags := ""
 	if len(parts) > 2 {
 		flags = parts[2]
@@ -283,15 +306,18 @@ func sedProcessReader(w io.Writer, r io.Reader, commands []sedCommand, opts SedO
 		shouldPrint := !opts.Quiet
 
 		for _, cmd := range commands {
-			var print bool
-			line, print = cmd.execute(line, lineNum)
-			if !print {
+			var doPrint bool
+
+			line, doPrint = cmd.execute(line, lineNum)
+			if !doPrint {
 				shouldPrint = false
 			}
+
 			if _, ok := cmd.(*sedQuit); ok {
 				if shouldPrint {
 					_, _ = fmt.Fprintln(w, line)
 				}
+
 				return nil
 			}
 		}
@@ -321,21 +347,24 @@ func sedProcessInPlace(path string, commands []sedCommand, opts SedOptions) erro
 
 	// Process lines
 	var output strings.Builder
+
 	lines := strings.Split(string(content), "\n")
 
 	for lineNum, line := range lines {
 		shouldPrint := !opts.Quiet
 
 		for _, cmd := range commands {
-			var print bool
-			line, print = cmd.execute(line, lineNum+1)
-			if !print {
+			var doPrint bool
+
+			line, doPrint = cmd.execute(line, lineNum+1)
+			if !doPrint {
 				shouldPrint = false
 			}
 		}
 
 		if shouldPrint {
 			output.WriteString(line)
+
 			if lineNum < len(lines)-1 {
 				output.WriteString("\n")
 			}

@@ -43,6 +43,7 @@ func RunColumn(w io.Writer, args []string, opts ColumnOptions) error {
 
 	// Read all lines
 	var lines []string
+
 	for _, file := range files {
 		var r io.Reader
 		if file == "-" {
@@ -53,9 +54,11 @@ func RunColumn(w io.Writer, args []string, opts ColumnOptions) error {
 				_, _ = fmt.Fprintf(os.Stderr, "column: %s: %v\n", file, err)
 				continue
 			}
+
 			defer func() {
 				_ = f.Close()
 			}()
+
 			r = f
 		}
 
@@ -72,14 +75,17 @@ func RunColumn(w io.Writer, args []string, opts ColumnOptions) error {
 	return columnFill(w, lines, opts)
 }
 
+//nolint:unparam // error kept for consistent interface
 func columnTable(w io.Writer, lines []string, opts ColumnOptions) error {
 	if len(lines) == 0 {
 		return nil
 	}
 
 	// Split lines into fields
-	var rows [][]string
-	var maxCols int
+	var (
+		rows    [][]string
+		maxCols int
+	)
 
 	for _, line := range lines {
 		var fields []string
@@ -90,6 +96,7 @@ func columnTable(w io.Writer, lines []string, opts ColumnOptions) error {
 				return strings.ContainsRune(opts.Separator, r)
 			})
 		}
+
 		rows = append(rows, fields)
 		if len(fields) > maxCols {
 			maxCols = len(fields)
@@ -98,6 +105,7 @@ func columnTable(w io.Writer, lines []string, opts ColumnOptions) error {
 
 	// Calculate column widths
 	colWidths := make([]int, maxCols)
+
 	for _, row := range rows {
 		for i, field := range row {
 			if len(field) > colWidths[i] {
@@ -119,6 +127,7 @@ func columnTable(w io.Writer, lines []string, opts ColumnOptions) error {
 			if i > 0 {
 				_, _ = fmt.Fprint(w, opts.OutputSep)
 			}
+
 			if i < maxCols {
 				if opts.Right {
 					_, _ = fmt.Fprintf(w, "%*s", colWidths[i], header)
@@ -127,6 +136,7 @@ func columnTable(w io.Writer, lines []string, opts ColumnOptions) error {
 				}
 			}
 		}
+
 		_, _ = fmt.Fprintln(w)
 	}
 
@@ -136,10 +146,12 @@ func columnTable(w io.Writer, lines []string, opts ColumnOptions) error {
 			if i > 0 {
 				_, _ = fmt.Fprint(w, opts.OutputSep)
 			}
+
 			field := ""
 			if i < len(row) {
 				field = row[i]
 			}
+
 			if opts.Right {
 				_, _ = fmt.Fprintf(w, "%*s", colWidths[i], field)
 			} else {
@@ -151,12 +163,14 @@ func columnTable(w io.Writer, lines []string, opts ColumnOptions) error {
 				}
 			}
 		}
+
 		_, _ = fmt.Fprintln(w)
 	}
 
 	return nil
 }
 
+//nolint:unparam // error kept for consistent interface
 func columnFill(w io.Writer, lines []string, opts ColumnOptions) error {
 	if len(lines) == 0 {
 		return nil
@@ -172,26 +186,26 @@ func columnFill(w io.Writer, lines []string, opts ColumnOptions) error {
 
 	// Add padding
 	colWidth := maxWidth + 2
-	numCols := opts.Columns / colWidth
-	if numCols < 1 {
-		numCols = 1
-	}
+
+	numCols := max(opts.Columns/colWidth, 1)
 
 	numRows := (len(lines) + numCols - 1) / numCols
 
 	if opts.FillRows {
 		// Fill rows first
-		for i := 0; i < len(lines); i++ {
+		for i := range lines {
 			if i > 0 && i%numCols == 0 {
 				_, _ = fmt.Fprintln(w)
 			}
+
 			_, _ = fmt.Fprintf(w, "%-*s", colWidth, lines[i])
 		}
+
 		_, _ = fmt.Fprintln(w)
 	} else {
 		// Fill columns first (default)
-		for row := 0; row < numRows; row++ {
-			for col := 0; col < numCols; col++ {
+		for row := range numRows {
+			for col := range numCols {
 				idx := col*numRows + row
 				if idx < len(lines) {
 					if col == numCols-1 || idx+numRows >= len(lines) {
@@ -201,6 +215,7 @@ func columnFill(w io.Writer, lines []string, opts ColumnOptions) error {
 					}
 				}
 			}
+
 			_, _ = fmt.Fprintln(w)
 		}
 	}

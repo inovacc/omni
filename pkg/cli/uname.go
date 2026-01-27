@@ -61,29 +61,37 @@ func RunUname(w io.Writer, opts UnameOptions) error {
 	if opts.KernelName {
 		parts = append(parts, info.KernelName)
 	}
+
 	if opts.NodeName {
 		parts = append(parts, info.NodeName)
 	}
+
 	if opts.KernelRelease {
 		parts = append(parts, info.KernelRelease)
 	}
+
 	if opts.KernelVersion {
 		parts = append(parts, info.KernelVersion)
 	}
+
 	if opts.Machine {
 		parts = append(parts, info.Machine)
 	}
+
 	if opts.Processor {
 		parts = append(parts, info.Processor)
 	}
+
 	if opts.HardwarePlatform {
 		parts = append(parts, info.HardwarePlatform)
 	}
+
 	if opts.OperatingSystem {
 		parts = append(parts, info.OperatingSystem)
 	}
 
 	_, _ = fmt.Fprintln(w, strings.Join(parts, " "))
+
 	return nil
 }
 
@@ -131,7 +139,12 @@ func mapKernelName(goos string) string {
 	case "aix":
 		return "AIX"
 	default:
-		return strings.Title(goos)
+		// Simple title case: capitalize first letter
+		if len(goos) == 0 {
+			return goos
+		}
+
+		return strings.ToUpper(goos[:1]) + goos[1:]
 	}
 }
 

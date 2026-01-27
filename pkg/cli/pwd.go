@@ -12,7 +12,9 @@ func RunPwd(w io.Writer) error {
 	if err != nil {
 		return err
 	}
+
 	_, _ = fmt.Fprintln(w, wd)
+
 	return nil
 }
 

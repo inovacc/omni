@@ -19,6 +19,7 @@ func Mkdir(path string, perm os.FileMode, parents bool) error {
 	if parents {
 		return os.MkdirAll(path, perm)
 	}
+
 	return os.Mkdir(path, perm)
 }
 
@@ -33,10 +34,12 @@ func Touch(path string) error {
 		if err != nil {
 			return err
 		}
+
 		return f.Close()
 	}
 
 	now := time.Now()
+
 	return os.Chtimes(path, now, now)
 }
 
@@ -44,6 +47,7 @@ func Rm(path string, recursive bool) error {
 	if recursive {
 		return os.RemoveAll(path)
 	}
+
 	return os.Remove(path)
 }
 
@@ -65,14 +69,22 @@ func Copy(src, dst string) error {
 	if err != nil {
 		return err
 	}
-	defer source.Close()
+
+	defer func() {
+		_ = source.Close()
+	}()
 
 	destination, err := os.Create(dst)
 	if err != nil {
 		return err
 	}
-	defer destination.Close()
+
+	defer func() {
+		_ = destination.Close()
+	}()
+
 	_, err = io.Copy(destination, source)
+
 	return err
 }
 

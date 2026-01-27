@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"strings"
 
 	"gopkg.in/yaml.v3"
@@ -179,6 +180,7 @@ func RunLint(w io.Writer, args []string, opts LintOptions) error {
 	}
 
 	var allResults []LintResult
+
 	exitCode := 0
 
 	for _, arg := range args {
@@ -187,6 +189,7 @@ func RunLint(w io.Writer, args []string, opts LintOptions) error {
 		if err != nil {
 			_, _ = fmt.Fprintf(w, "lint: %s: %v\n", arg, err)
 			exitCode = 1
+
 			continue
 		}
 
@@ -203,6 +206,7 @@ func RunLint(w io.Writer, args []string, opts LintOptions) error {
 			if err != nil {
 				_, _ = fmt.Fprintf(w, "lint: %s: %v\n", file, err)
 				exitCode = 1
+
 				continue
 			}
 
@@ -220,6 +224,7 @@ func RunLint(w io.Writer, args []string, opts LintOptions) error {
 			if !opts.Quiet {
 				_, _ = fmt.Fprintf(w, "%s: OK\n", result.File)
 			}
+
 			continue
 		}
 
@@ -256,11 +261,13 @@ func RunLint(w io.Writer, args []string, opts LintOptions) error {
 	if exitCode != 0 {
 		return fmt.Errorf("lint found issues")
 	}
+
 	return nil
 }
 
 func findTaskfiles(dir string) []string {
 	var files []string
+
 	patterns := []string{"Taskfile.yml", "Taskfile.yaml", "taskfile.yml", "taskfile.yaml"}
 
 	for _, pattern := range patterns {
@@ -273,27 +280,25 @@ func findTaskfiles(dir string) []string {
 	// Also check subdirectories for included taskfiles
 	_ = filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
-			return nil
+			return nil //nolint:nilerr // Intentionally skip errors
 		}
+
 		if info.IsDir() {
 			return nil
 		}
+
 		base := filepath.Base(path)
 		for _, pattern := range patterns {
 			if base == pattern {
 				// Avoid duplicates
-				found := false
-				for _, f := range files {
-					if f == path {
-						found = true
-						break
-					}
-				}
+				found := slices.Contains(files, path)
+
 				if !found {
 					files = append(files, path)
 				}
 			}
 		}
+
 		return nil
 	})
 
@@ -312,7 +317,7 @@ func lintTaskfile(filename string, opts LintOptions) (LintResult, error) {
 	}
 
 	// Parse YAML
-	var taskfile map[string]interface{}
+	var taskfile map[string]any
 	if err := yaml.Unmarshal(data, &taskfile); err != nil {
 		result.Issues = append(result.Issues, LintIssue{
 			File:     filename,
@@ -321,6 +326,7 @@ func lintTaskfile(filename string, opts LintOptions) (LintResult, error) {
 			Message:  fmt.Sprintf("Invalid YAML: %v", err),
 		})
 		result.ErrorCount++
+
 		return result, nil
 	}
 
@@ -340,7 +346,7 @@ func lintTaskfile(filename string, opts LintOptions) (LintResult, error) {
 	}
 
 	// Check tasks
-	tasks, ok := taskfile["tasks"].(map[string]interface{})
+	tasks, ok := taskfile["tasks"].(map[string]any)
 	if !ok {
 		result.Issues = append(result.Issues, LintIssue{
 			File:     filename,
@@ -349,27 +355,29 @@ func lintTaskfile(filename string, opts LintOptions) (LintResult, error) {
 			Message:  "No tasks defined",
 		})
 		result.ErrorCount++
+
 		return result, nil
 	}
 
 	for taskName, taskDef := range tasks {
-		taskMap, ok := taskDef.(map[string]interface{})
+		taskMap, ok := taskDef.(map[string]any)
 		if !ok {
 			continue
 		}
 
 		// Check commands
-		cmds, ok := taskMap["cmds"].([]interface{})
+		cmds, ok := taskMap["cmds"].([]any)
 		if !ok {
 			continue
 		}
 
 		for _, cmdDef := range cmds {
 			var cmd string
+
 			switch c := cmdDef.(type) {
 			case string:
 				cmd = c
-			case map[string]interface{}:
+			case map[string]any:
 				if cmdStr, ok := c["cmd"].(string); ok {
 					cmd = cmdStr
 				}
@@ -391,6 +399,8 @@ func lintTaskfile(filename string, opts LintOptions) (LintResult, error) {
 					result.ErrorCount++
 				case LintWarning:
 					result.WarnCount++
+				case LintInfo:
+					// Info level doesn't count towards error/warning totals
 				}
 			}
 		}
@@ -404,15 +414,18 @@ func readFileLines(filename string) ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	defer func() {
 		_ = file.Close()
 	}()
 
 	var lines []string
+
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 		lines = append(lines, scanner.Text())
 	}
+
 	return lines, scanner.Err()
 }
 
@@ -428,6 +441,7 @@ func findLineNumber(lines []string, search string) int {
 			return i + 1
 		}
 	}
+
 	return 0
 }
 
@@ -475,6 +489,7 @@ func checkCommand(filename, taskName, cmd string, lineNum int, opts LintOptions)
 			if opts.Strict {
 				severity = LintError
 			}
+
 			issues = append(issues, LintIssue{
 				File:     filename,
 				Line:     lineNum,

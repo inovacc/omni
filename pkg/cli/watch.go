@@ -43,6 +43,7 @@ func RunWatch(ctx context.Context, w io.Writer, fn WatchFunc, opts WatchOptions)
 		if opts.ExitOnError {
 			return err
 		}
+
 		if opts.BeepOnError {
 			_, _ = fmt.Fprint(w, "\a") // Bell character
 		}
@@ -59,6 +60,7 @@ func RunWatch(ctx context.Context, w io.Writer, fn WatchFunc, opts WatchOptions)
 				if opts.ExitOnError {
 					return err
 				}
+
 				if opts.BeepOnError {
 					_, _ = fmt.Fprint(w, "\a")
 				}
@@ -103,6 +105,7 @@ func WatchFile(ctx context.Context, path string, callback func(path string) erro
 	if err != nil {
 		return err
 	}
+
 	lastModTime = info.ModTime()
 
 	ticker := time.NewTicker(interval)
@@ -120,6 +123,7 @@ func WatchFile(ctx context.Context, path string, callback func(path string) erro
 
 			if info.ModTime().After(lastModTime) {
 				lastModTime = info.ModTime()
+
 				if err := callback(path); err != nil {
 					return err
 				}
@@ -148,6 +152,7 @@ func WatchDir(ctx context.Context, path string, callback func(event string, path
 		if err != nil {
 			continue
 		}
+
 		fileStates[entry.Name()] = info.ModTime()
 	}
 
@@ -195,6 +200,7 @@ func WatchDir(ctx context.Context, path string, callback func(event string, path
 			for name := range fileStates {
 				if !currentFiles[name] {
 					delete(fileStates, name)
+
 					if err := callback("deleted", name); err != nil {
 						return err
 					}

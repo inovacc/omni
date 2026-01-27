@@ -29,28 +29,35 @@ func RunChmod(w io.Writer, args []string, opts ChmodOptions) error {
 	files := args[1:]
 
 	// Parse mode
-	var newMode fs.FileMode
-	var isSymbolic bool
-	var symbolicOp func(fs.FileMode) fs.FileMode
+	var (
+		newMode    fs.FileMode
+		isSymbolic bool
+		symbolicOp func(fs.FileMode) fs.FileMode
+	)
 
-	if opts.Reference != "" {
+	switch {
+	case opts.Reference != "":
 		// Use reference file's mode
 		info, err := os.Stat(opts.Reference)
 		if err != nil {
 			return fmt.Errorf("chmod: cannot stat '%s': %w", opts.Reference, err)
 		}
+
 		newMode = info.Mode().Perm()
-	} else if isOctalMode(modeStr) {
+	case isOctalMode(modeStr):
 		// Octal mode (e.g., 755, 0644)
 		mode, err := strconv.ParseUint(modeStr, 8, 32)
 		if err != nil {
 			return fmt.Errorf("chmod: invalid mode: '%s'", modeStr)
 		}
+
 		newMode = fs.FileMode(mode)
-	} else {
+	default:
 		// Symbolic mode (e.g., u+x, go-w, a=rw)
 		isSymbolic = true
+
 		var err error
+
 		symbolicOp, err = parseSymbolicMode(modeStr)
 		if err != nil {
 			return fmt.Errorf("chmod: invalid mode: '%s'", modeStr)
@@ -64,8 +71,10 @@ func RunChmod(w io.Writer, args []string, opts ChmodOptions) error {
 					if !opts.Silent {
 						_, _ = fmt.Fprintf(os.Stderr, "chmod: cannot access '%s': %v\n", path, err)
 					}
+
 					return nil
 				}
+
 				return chmodFile(w, path, newMode, isSymbolic, symbolicOp, opts)
 			})
 			if err != nil {
@@ -90,6 +99,7 @@ func chmodFile(w io.Writer, path string, newMode fs.FileMode, isSymbolic bool, s
 	}
 
 	oldMode := info.Mode().Perm()
+
 	var targetMode fs.FileMode
 
 	if isSymbolic {
@@ -115,18 +125,20 @@ func isOctalMode(s string) bool {
 			return false
 		}
 	}
+
 	return len(s) > 0
 }
 
+//nolint:unparam // error kept for API consistency with parseOctalMode
 func parseSymbolicMode(mode string) (func(fs.FileMode) fs.FileMode, error) {
 	// Parse symbolic mode like u+x, go-w, a=rw, +x, etc.
 	return func(current fs.FileMode) fs.FileMode {
 		result := current
 
 		// Split by comma for multiple operations
-		parts := strings.Split(mode, ",")
+		parts := strings.SplitSeq(mode, ",")
 
-		for _, part := range parts {
+		for part := range parts {
 			result = applySymbolicPart(result, part)
 		}
 
@@ -137,6 +149,7 @@ func parseSymbolicMode(mode string) (func(fs.FileMode) fs.FileMode, error) {
 func applySymbolicPart(mode fs.FileMode, part string) fs.FileMode {
 	// Parse who (u, g, o, a or empty for all)
 	who := ""
+
 	i := 0
 	for i < len(part) && (part[i] == 'u' || part[i] == 'g' || part[i] == 'o' || part[i] == 'a') {
 		who += string(part[i])
@@ -164,15 +177,18 @@ func applySymbolicPart(mode fs.FileMode, part string) fs.FileMode {
 
 	// Calculate permission bits
 	var bits fs.FileMode
+
 	for _, p := range perms {
 		switch p {
 		case 'r':
 			if strings.Contains(who, "u") {
 				bits |= 0400
 			}
+
 			if strings.Contains(who, "g") {
 				bits |= 0040
 			}
+
 			if strings.Contains(who, "o") {
 				bits |= 0004
 			}
@@ -180,9 +196,11 @@ func applySymbolicPart(mode fs.FileMode, part string) fs.FileMode {
 			if strings.Contains(who, "u") {
 				bits |= 0200
 			}
+
 			if strings.Contains(who, "g") {
 				bits |= 0020
 			}
+
 			if strings.Contains(who, "o") {
 				bits |= 0002
 			}
@@ -190,9 +208,11 @@ func applySymbolicPart(mode fs.FileMode, part string) fs.FileMode {
 			if strings.Contains(who, "u") {
 				bits |= 0100
 			}
+
 			if strings.Contains(who, "g") {
 				bits |= 0010
 			}
+
 			if strings.Contains(who, "o") {
 				bits |= 0001
 			}
@@ -210,12 +230,15 @@ func applySymbolicPart(mode fs.FileMode, part string) fs.FileMode {
 		if strings.Contains(who, "u") {
 			clearMask |= 0700
 		}
+
 		if strings.Contains(who, "g") {
 			clearMask |= 0070
 		}
+
 		if strings.Contains(who, "o") {
 			clearMask |= 0007
 		}
+
 		mode = (mode &^ clearMask) | bits
 	}
 

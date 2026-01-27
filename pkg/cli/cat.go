@@ -33,7 +33,9 @@ func RunCat(w io.Writer, args []string, opts CatOptions) error {
 			if err != nil {
 				return fmt.Errorf("cat: %s: %w", path, err)
 			}
+
 			r = f
+
 			defer func() {
 				_ = f.Close()
 			}()
@@ -43,10 +45,11 @@ func RunCat(w io.Writer, args []string, opts CatOptions) error {
 			return err
 		}
 	}
+
 	return nil
 }
 
-func catReader(w io.Writer, r io.Reader, name string, opts CatOptions) error {
+func catReader(w io.Writer, r io.Reader, _ string, opts CatOptions) error {
 	scanner := bufio.NewScanner(r)
 	lineNum := 0
 	prevBlank := false
@@ -59,6 +62,7 @@ func catReader(w io.Writer, r io.Reader, name string, opts CatOptions) error {
 		if opts.SqueezeBlank && isBlank && prevBlank {
 			continue
 		}
+
 		prevBlank = isBlank
 
 		// Process line content
@@ -96,25 +100,28 @@ func catReader(w io.Writer, r io.Reader, name string, opts CatOptions) error {
 
 func showNonPrintable(s string) string {
 	var result strings.Builder
+
 	for _, r := range s {
-		if r == '\t' {
+		switch {
+		case r == '\t':
 			result.WriteRune(r) // Tabs handled separately with -T
-		} else if r < 32 {
+		case r < 32:
 			// Control characters
 			result.WriteString(fmt.Sprintf("^%c", r+64))
-		} else if r == 127 {
+		case r == 127:
 			result.WriteString("^?")
-		} else if r > 127 {
+		case r > 127:
 			// High-bit characters (M- notation)
 			if r < 160 {
 				result.WriteString(fmt.Sprintf("M-^%c", r-128+64))
 			} else {
 				result.WriteString(fmt.Sprintf("M-%c", r-128))
 			}
-		} else {
+		default:
 			result.WriteRune(r)
 		}
 	}
+
 	return result.String()
 }
 
@@ -132,10 +139,12 @@ func CatFiles(w io.Writer, paths []string) error {
 // ReadFrom reads all lines from a reader
 func ReadFrom(r io.Reader) ([]string, error) {
 	sc := bufio.NewScanner(r)
+
 	var lines []string
 	for sc.Scan() {
 		lines = append(lines, sc.Text())
 	}
+
 	return lines, sc.Err()
 }
 
@@ -146,5 +155,6 @@ func WriteTo(w io.Writer, lines []string) error {
 			return err
 		}
 	}
+
 	return nil
 }
