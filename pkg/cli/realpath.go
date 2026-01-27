@@ -2,7 +2,6 @@ package cli
 
 import (
 	"fmt"
-	"github.com/inovacc/goshell/pkg/fs"
 )
 
 func RunRealpath(args []string) error {
@@ -11,7 +10,7 @@ func RunRealpath(args []string) error {
 	}
 
 	for _, arg := range args {
-		abs, err := fs.Realpath(arg)
+		abs, err := Realpath(arg)
 		if err != nil {
 			return err
 		}

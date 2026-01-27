@@ -29,6 +29,9 @@ goshell replaces them with deterministic Go implementations.
 - `basename`: Strip directory and suffix from file names
 - `realpath`: Print the resolved path
 
+### Planned Commands
+The project aims to provide Go-native versions of common shell utilities. See [ROADMAP.md](docs/ROADMAP.md) for the full list and implementation phases including `grep`, `sed`, `awk`, `cp`, `mv`, `ps`, and more.
+
 ## Usage
 Build the project:
 ```bash

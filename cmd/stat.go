@@ -1,36 +1,23 @@
 package cmd
 
 import (
-	"fmt"
+	"github.com/inovacc/goshell/pkg/cli"
 
 	"github.com/spf13/cobra"
 )
 
 // statCmd represents the stat command
 var statCmd = &cobra.Command{
-	Use:   "stat",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("stat called")
+	Use:   "stat [file...]",
+	Short: "Display file or file system status",
+	Long:  `Display file or file system status.`,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		jsonMode, _ := cmd.Flags().GetBool("json")
+		return cli.RunStat(args, jsonMode)
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(statCmd)
-
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// statCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// statCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	statCmd.Flags().Bool("json", false, "Output in JSON format")
 }

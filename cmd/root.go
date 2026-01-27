@@ -5,14 +5,10 @@ import (
 )
 
 var rootCmd = &cobra.Command{
-	Use:   "project-name",
-	Short: "A brief description of your application",
-	Long: `A longer description that spans multiple lines and likely contains
-examples and usage of using your application. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Use:   "goshell",
+	Short: "Go-native replacement for common shell utilities",
+	Long: `goshell is a cross-platform, safe, Go-native replacement for common shell utilities,
+designed for Taskfile, CI/CD, and enterprise environments.`,
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.

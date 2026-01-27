@@ -1,36 +1,21 @@
 package cmd
 
 import (
-	"fmt"
+	"github.com/inovacc/goshell/pkg/cli"
 
 	"github.com/spf13/cobra"
 )
 
 // touchCmd represents the touch command
 var touchCmd = &cobra.Command{
-	Use:   "touch",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("touch called")
+	Use:   "touch [file...]",
+	Short: "Update the access and modification times of each FILE to the current time",
+	Long:  `Update the access and modification times of each FILE to the current time. A FILE argument that does not exist is created empty.`,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return cli.RunTouch(args)
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(touchCmd)
-
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// touchCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// touchCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }

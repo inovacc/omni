@@ -2,7 +2,6 @@ package cli
 
 import (
 	"fmt"
-	"github.com/inovacc/goshell/pkg/fs"
 )
 
 func RunDirname(args []string) error {
@@ -11,7 +10,7 @@ func RunDirname(args []string) error {
 	}
 
 	for _, arg := range args {
-		fmt.Println(fs.Dirname(arg))
+		fmt.Println(Dirname(arg))
 	}
 	return nil
 }

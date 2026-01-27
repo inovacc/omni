@@ -2,14 +2,18 @@ package cli
 
 import (
 	"fmt"
-	"github.com/inovacc/goshell/pkg/fs"
+	"os"
 )
 
 func RunPwd() error {
-	wd, err := fs.Pwd()
+	wd, err := Pwd()
 	if err != nil {
 		return err
 	}
 	fmt.Println(wd)
 	return nil
+}
+
+func Pwd() (string, error) {
+	return os.Getwd()
 }
