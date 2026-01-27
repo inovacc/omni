@@ -1,0 +1,63 @@
+# Command Tree
+
+```
+goshell
++-- awk                                      # A brief description of your command
++-- basename                                 # Strip directory and suffix from file ...
++-- cat                                      # Concatenate files and print on the st...
++-- chmod                                    # A brief description of your command
++-- chown                                    # A brief description of your command
++-- colum                                    # A brief description of your command
++-- copy                                     # Alias for cp
++-- cp                                       # Copy files and directories
++-- cut                                      # A brief description of your command
++-- date                                     # Print the current date and time
++-- df                                       # A brief description of your command
++-- dirname                                  # Strip last component from file name
++-- du                                       # A brief description of your command
++-- egrep                                    # A brief description of your command
++-- env                                      # A brief description of your command
++-- fgrep                                    # A brief description of your command
++-- fold                                     # A brief description of your command
++-- free                                     # A brief description of your command
++-- gops                                     # A brief description of your command
++-- grep                                     # A brief description of your command
++-- head                                     # A brief description of your command
++-- id                                       # A brief description of your command
++-- join                                     # A brief description of your command
++-- kill                                     # A brief description of your command
++-- less                                     # A brief description of your command
++-- ln                                       # A brief description of your command
++-- ls                                       # List directory contents
++-- mkdir                                    # Create directories
++-- more                                     # A brief description of your command
++-- move                                     # Alias for mv
++-- mv                                       # Move (rename) files
++-- nl                                       # A brief description of your command
++-- nohup                                    # A brief description of your command
++-- paste                                    # A brief description of your command
++-- pipeline                                 # A brief description of your command
++-- ps                                       # A brief description of your command
++-- pwd                                      # Print working directory
++-- readlink                                 # A brief description of your command
++-- realpath                                 # Print the resolved path
++-- remove                                   # Alias for rm
++-- rm                                       # Remove files or directories
++-- rmdir                                    # Remove empty directories
++-- sed                                      # A brief description of your command
++-- sort                                     # A brief description of your command
++-- stat                                     # Display file or file system status
++-- tac                                      # A brief description of your command
++-- tail                                     # A brief description of your command
++-- time                                     # A brief description of your command
++-- top                                      # A brief description of your command
++-- touch                                    # Update the access and modification ti...
++-- tr                                       # A brief description of your command
++-- uname                                    # A brief description of your command
++-- uniq                                     # A brief description of your command
++-- uptime                                   # A brief description of your command
++-- watch                                    # A brief description of your command
++-- wc                                       # A brief description of your command
++-- whoami                                   # A brief description of your command
++-- xargs                                    # A brief description of your command
+\-- yes                                      # A brief description of your command
