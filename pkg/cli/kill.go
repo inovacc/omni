@@ -11,7 +11,7 @@ import (
 
 // KillOptions configures the kill command behavior
 type KillOptions struct {
-	Signal  string // -s: specify signal to send
+	Signal  string // -s: specify a signal to send
 	List    bool   // -l: list signal names
 	Verbose bool   // -v: verbose output
 }
@@ -63,7 +63,7 @@ func RunKill(w io.Writer, args []string, opts KillOptions) error {
 	}
 
 	if len(args) == 0 {
-		return fmt.Errorf("kill: usage: kill [-s signal | -signal] pid ...")
+		return fmt.Errorf("kill: usage: kill [-s signal | -signal] pid ")
 	}
 
 	// Determine signal
@@ -73,7 +73,7 @@ func RunKill(w io.Writer, args []string, opts KillOptions) error {
 		sigName := strings.ToUpper(strings.TrimPrefix(opts.Signal, "SIG"))
 		sig, ok = signalMap[sigName]
 		if !ok {
-			// Try parsing as number
+			// Try parsing as a number
 			sigNum, err := strconv.Atoi(opts.Signal)
 			if err != nil {
 				return fmt.Errorf("kill: invalid signal: %s", opts.Signal)

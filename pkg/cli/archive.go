@@ -98,7 +98,7 @@ func createTarArchive(w io.Writer, outFile *os.File, sources []string, opts Arch
 				return err
 			}
 
-			// Create tar header
+			// Create a tar header
 			header, err := tar.FileInfoHeader(info, "")
 			if err != nil {
 				return err

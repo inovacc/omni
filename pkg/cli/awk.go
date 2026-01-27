@@ -154,7 +154,7 @@ func parseAwkProgram(text string) (*awkProgram, error) {
 			program.rules = append(program.rules, awkRule{pattern: re, action: action})
 			text = rest
 		} else if strings.HasPrefix(text, "{") {
-			// Action without pattern (matches all lines)
+			// Action without a pattern (matches all lines)
 			action, rest, err := parseAwkAction(text)
 			if err != nil {
 				return nil, err
@@ -178,7 +178,7 @@ func parseAwkAction(text string) (*awkAction, string, error) {
 		return nil, text, fmt.Errorf("expected '{'")
 	}
 
-	// Find matching closing brace
+	// Find a matching closing brace
 	depth := 0
 	end := -1
 	for i, c := range text {

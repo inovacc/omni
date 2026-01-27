@@ -162,6 +162,22 @@ goshell decrypt -p mypass -a secret.enc
 | `uuid` | Generate UUIDs |
 | `random` | Generate random values |
 
+### TUI Pagers
+| Command | Description |
+|---------|-------------|
+| `less` | View file with scrolling |
+| `more` | View file page by page |
+
+### Comparison
+| Command | Description |
+|---------|-------------|
+| `diff` | Compare files line by line |
+
+### Tooling
+| Command | Description |
+|---------|-------------|
+| `lint` | Check Taskfiles for portability |
+
 ## Library Usage
 
 All commands are available as importable Go packages:

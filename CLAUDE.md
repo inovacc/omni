@@ -103,7 +103,7 @@ defer func() {
 
 ## Command Categories
 
-### Implemented (60+ commands)
+### Implemented (70+ commands)
 
 | Category | Commands |
 |----------|----------|
@@ -117,15 +117,15 @@ defer func() {
 | **Encoding** | base64, base32, base58 |
 | **Data** | jq, yq, dotenv |
 | **Security** | encrypt, decrypt, uuid, random |
+| **Pagers** | less, more |
+| **Comparison** | diff |
+| **Tooling** | lint |
 
 ### Backlog
 
 | Command | Notes |
 |---------|-------|
-| `less`, `more` | TUI pagers - need bubbletea |
 | `pipeline` | Internal streaming engine |
-| `diff` | Text/JSON comparison |
-| `lint` | Taskfile portability linter |
 
 ---
 
@@ -137,6 +137,9 @@ defer func() {
 |---------|---------|
 | `github.com/spf13/cobra` | CLI framework |
 | `golang.org/x/crypto` | PBKDF2 for encryption |
+| `github.com/charmbracelet/bubbletea` | TUI framework for pagers |
+| `github.com/charmbracelet/lipgloss` | Terminal styling |
+| `gopkg.in/yaml.v3` | YAML parsing for yq, lint |
 
 ### Standard Library Usage
 

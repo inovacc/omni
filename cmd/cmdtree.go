@@ -11,65 +11,86 @@ import (
 const commandTree = `# Command Tree
 
 goshell
-+-- awk                                      # A brief description of your command
++-- awk                                      # Pattern scanning and processing language
++-- base32                                   # Base32 encode or decode data
++-- base58                                   # Base58 encode or decode data (Bitcoin...
++-- base64                                   # Base64 encode or decode data
 +-- basename                                 # Strip directory and suffix from file ...
 +-- cat                                      # Concatenate files and print on the st...
-+-- chmod                                    # A brief description of your command
-+-- chown                                    # A brief description of your command
-+-- colum                                    # A brief description of your command
++-- chmod                                    # Change file mode bits
++-- chown                                    # Change file owner and group
++-- cmdtree                                  # Display command tree visualization
++-- column                                   # Columnate lists
 +-- copy                                     # Alias for cp
 +-- cp                                       # Copy files and directories
-+-- cut                                      # A brief description of your command
++-- cut                                      # Remove sections from each line of files
 +-- date                                     # Print the current date and time
-+-- df                                       # A brief description of your command
++-- decrypt                                  # Decrypt data using AES-256-GCM
++-- df                                       # Report file system disk space usage
++-- diff                                     # Compare files line by line
 +-- dirname                                  # Strip last component from file name
-+-- du                                       # A brief description of your command
-+-- egrep                                    # A brief description of your command
-+-- env                                      # A brief description of your command
-+-- fgrep                                    # A brief description of your command
-+-- fold                                     # A brief description of your command
-+-- free                                     # A brief description of your command
++-- dotenv                                   # Load environment variables from .env ...
++-- du                                       # Estimate file space usage
++-- egrep                                    # Print lines that match patterns (exte...
++-- encrypt                                  # Encrypt data using AES-256-GCM
++-- env                                      # Print environment variables
++-- fgrep                                    # Print lines that match patterns (fixe...
++-- fold                                     # Wrap each input line to fit in specif...
++-- free                                     # Display amount of free and used memor...
 +-- gops                                     # A brief description of your command
-+-- grep                                     # A brief description of your command
-+-- head                                     # A brief description of your command
-+-- id                                       # A brief description of your command
-+-- join                                     # A brief description of your command
-+-- kill                                     # A brief description of your command
-+-- less                                     # A brief description of your command
-+-- ln                                       # A brief description of your command
++-- grep                                     # Print lines that match patterns
++-- hash                                     # Compute and check file hashes
++-- head                                     # Output the first part of files
++-- id                                       # Print user and group information
++-- join                                     # Join lines of two files on a common f...
++-- jq                                       # Command-line JSON processor
++-- kill                                     # Send a signal to a process
++-- less                                     # View file contents with scrolling
++-- lint                                     # Check Taskfiles for portability issues
++-- ln                                       # Make links between files
 +-- ls                                       # List directory contents
++-- md5sum                                   # Compute and check MD5 message digest
 +-- mkdir                                    # Create directories
-+-- more                                     # A brief description of your command
++-- more                                     # View file contents page by page
 +-- move                                     # Alias for mv
 +-- mv                                       # Move (rename) files
-+-- nl                                       # A brief description of your command
-+-- nohup                                    # A brief description of your command
-+-- paste                                    # A brief description of your command
++-- nl                                       # Number lines of files
++-- nohup                                    # Run a command immune to hangups
++-- paste                                    # Merge lines of files
 +-- pipeline                                 # A brief description of your command
-+-- ps                                       # A brief description of your command
++-- ps                                       # Report a snapshot of current processes
 +-- pwd                                      # Print working directory
-+-- readlink                                 # A brief description of your command
++-- random                                   # Generate random values
++-- readlink                                 # Print resolved symbolic links or cano...
 +-- realpath                                 # Print the resolved path
 +-- remove                                   # Alias for rm
 +-- rm                                       # Remove files or directories
 +-- rmdir                                    # Remove empty directories
-+-- sed                                      # A brief description of your command
-+-- sort                                     # A brief description of your command
++-- sed                                      # Stream editor for filtering and trans...
++-- sha256sum                                # Compute and check SHA256 message digest
++-- sha512sum                                # Compute and check SHA512 message digest
++-- sort                                     # Sort lines of text files
 +-- stat                                     # Display file or file system status
-+-- tac                                      # A brief description of your command
-+-- tail                                     # A brief description of your command
-+-- time                                     # A brief description of your command
++-- tac                                      # Concatenate and print files in reverse
++-- tail                                     # Output the last part of files
++-- tar                                      # Create, extract, or list archive files
++-- time                                     # Time a simple command or give resourc...
 +-- top                                      # A brief description of your command
 +-- touch                                    # Update the access and modification ti...
-+-- tr                                       # A brief description of your command
-+-- uname                                    # A brief description of your command
-+-- uniq                                     # A brief description of your command
-+-- uptime                                   # A brief description of your command
-+-- watch                                    # A brief description of your command
-+-- wc                                       # A brief description of your command
-+-- whoami                                   # A brief description of your command
-+-- xargs                                    # A brief description of your command
-\-- yes                                      # A brief description of your command
++-- tr                                       # Translate or delete characters
++-- uname                                    # Print system information
++-- uniq                                     # Report or omit repeated lines
++-- unzip                                    # Extract files from a zip archive
++-- uptime                                   # Tell how long the system has been run...
++-- uuid                                     # Generate random UUIDs
++-- version                                  # Print version information
++-- watch                                    # Execute a program periodically, showi...
++-- wc                                       # Print newline, word, and byte counts ...
++-- whoami                                   # Print effective username
++-- xargs                                    # Build and execute command lines from ...
++-- yes                                      # Output a string repeatedly until killed
++-- yq                                       # Command-line YAML processor
+\-- zip                                      # Package and compress files into a zip...
 `
 
 var cmdtreeCmd = &cobra.Command{

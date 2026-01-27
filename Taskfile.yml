@@ -147,11 +147,22 @@ tasks:
 
   # === DOCUMENTATION ===
   cmdtree:
-    desc: Generate command tree visualization
+    desc: Display command tree visualization
     cmds:
       - go run scripts/cmdtree/cmdtree.go
 
-  cmdtree:save:
-    desc: Generate command tree and save to docs/COMMANDS.md
+  docs:
+    desc: Generate all documentation (COMMANDS.md and cmdtree.go)
     cmds:
-      - go run scripts/cmdtree/cmdtree.go -out-tree docs/COMMANDS.md -out-go cmd/cmdtree.go
+      - go run scripts/cmdtree/cmdtree.go -out-docs docs/COMMANDS.md -out-go cmd/cmdtree.go
+      - echo "Documentation generated successfully"
+
+  docs:commands:
+    desc: Generate docs/COMMANDS.md from command definitions
+    cmds:
+      - go run scripts/cmdtree/cmdtree.go -out-docs docs/COMMANDS.md
+
+  docs:cmdtree:
+    desc: Generate cmd/cmdtree.go with embedded tree
+    cmds:
+      - go run scripts/cmdtree/cmdtree.go -out-go cmd/cmdtree.go
