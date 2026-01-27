@@ -32,8 +32,10 @@
 omni/
 ├── cmd/           # Cobra CLI commands (thin wrappers)
 ├── pkg/cli/       # Library implementations (all logic here)
+├── scripts/       # Build/generation scripts
 ├── tests/         # Integration tests
 ├── docs/          # Documentation
+├── Taskfile.yml   # Task automation
 └── main.go        # Entry point
 ```
 
@@ -80,7 +82,10 @@ Use build tags for platform-specific implementations:
 pkg/cli/
 ├── df.go           # Interface + shared logic
 ├── df_unix.go      # //go:build unix
-└── df_windows.go   # //go:build windows
+├── df_windows.go   # //go:build windows
+├── kill.go         # Shared logic
+├── kill_unix.go    # Unix signals (30 signals)
+└── kill_windows.go # Windows signals (INT, KILL, TERM only)
 ```
 
 #### Error Handling
@@ -119,7 +124,7 @@ defer func() {
 | **Security** | encrypt, decrypt, uuid, random |
 | **Pagers** | less, more |
 | **Comparison** | diff |
-| **Tooling** | lint |
+| **Tooling** | lint, cmdtree |
 
 ### Backlog
 
@@ -179,9 +184,19 @@ func TestLs(t *testing.T) {
 
 ---
 
-## Build & Release
+## Build
 
-### Build
+### Using Taskfile
+
+```bash
+# Build for current platform
+task build
+
+# Build for all platforms (Linux, Windows)
+task build:all
+```
+
+### Manual Build
 
 ```bash
 go build -ldflags="-s -w" -o omni .
@@ -190,9 +205,9 @@ go build -ldflags="-s -w" -o omni .
 ### Cross-Compile
 
 ```bash
-GOOS=linux GOARCH=amd64 go build -o omni-linux .
-GOOS=darwin GOARCH=amd64 go build -o omni-darwin .
-GOOS=windows GOARCH=amd64 go build -o omni.exe .
+GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o omni-linux .
+GOOS=darwin GOARCH=amd64 go build -ldflags="-s -w" -o omni-darwin .
+GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" -o omni.exe .
 ```
 
 ---

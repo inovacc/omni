@@ -12,15 +12,16 @@ A cross-platform, Go-native replacement for common shell utilities, designed for
 
 ## Installation
 
-```bash
-go install github.com/inovacc/omni@latest
-```
-
-Or build from source:
+Build from source:
 ```bash
 git clone https://github.com/inovacc/omni.git
 cd omni
-go build -o omni .
+task build
+```
+
+Or manually:
+```bash
+go build -ldflags="-s -w" -o omni .
 ```
 
 ## Quick Start

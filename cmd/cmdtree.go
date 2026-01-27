@@ -29,7 +29,10 @@ var cmdtreeCmd = &cobra.Command{
 		var tree bytes.Buffer
 
 		tree.WriteString("# Command Tree\n\n```\n")
-		tree.Write(buildTree(cmd))
+		tree.Write(buildTree(rootCmd))
+		tree.WriteString("```\n")
+
+		cmd.Println(tree.String())
 	},
 }
 

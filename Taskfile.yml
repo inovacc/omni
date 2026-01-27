@@ -2,9 +2,9 @@ version: 3
 
 vars:
   MAIN_PACKAGE: .
+  BUILD_DIR: bin
+  BINARY_NAME: omni
   COVERAGE_FILE: coverage.out
-  GITHUB_OWNER:
-    sh: echo "${GITHUB_OWNER:-dyammarcano}"
 
 tasks:
   # === INFORMATION ===
@@ -15,26 +15,40 @@ tasks:
 
   # === CODE GENERATION ===
   generate:
-    desc: Generate version information and other generated code
+    desc: Generate documentation and command tree
     cmds:
       - go generate ./...
 
   # === BUILD TASKS ===
-  build:dev:
-    desc: Build development snapshot with goreleaser
+  build:
+    desc: Build the application
     deps: [ generate ]
-    env:
-      GITHUB_OWNER: "{{.GITHUB_OWNER}}"
     cmds:
-      - goreleaser build --snapshot --clean
+      - cmd: mkdir -p {{.BUILD_DIR}}
+        platforms: [ linux, darwin ]
+      - cmd: if not exist {{.BUILD_DIR}} mkdir {{.BUILD_DIR}}
+        platforms: [ windows ]
+      - cmd: go build -ldflags="-s -w" -o {{.BUILD_DIR}}/{{.BINARY_NAME}} {{.MAIN_PACKAGE}}
+        platforms: [ linux, darwin ]
+      - cmd: go build -ldflags="-s -w" -o {{.BUILD_DIR}}\{{.BINARY_NAME}}.exe {{.MAIN_PACKAGE}}
+        platforms: [ windows ]
 
-  build:prod:
-    desc: Build production snapshot with goreleaser
+  build:all:
+    desc: Build for all platforms (Linux, Windows)
     deps: [ generate ]
-    env:
-      GITHUB_OWNER: "{{.GITHUB_OWNER}}"
     cmds:
-      - goreleaser --snapshot --skip-publish,announce --rm-dist
+      - cmd: mkdir -p {{.BUILD_DIR}}
+        platforms: [ linux, darwin ]
+      - cmd: if not exist {{.BUILD_DIR}} mkdir {{.BUILD_DIR}}
+        platforms: [ windows ]
+      - cmd: GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -ldflags="-s -w" -o {{.BUILD_DIR}}/{{.BINARY_NAME}}-linux-amd64 {{.MAIN_PACKAGE}}
+        platforms: [ linux, darwin ]
+      - cmd: set GOOS=linux&& set GOARCH=amd64&& set CGO_ENABLED=0&& go build -ldflags="-s -w" -o {{.BUILD_DIR}}\{{.BINARY_NAME}}-linux-amd64 {{.MAIN_PACKAGE}}
+        platforms: [ windows ]
+      - cmd: GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -ldflags="-s -w" -o {{.BUILD_DIR}}/{{.BINARY_NAME}}-windows-amd64.exe {{.MAIN_PACKAGE}}
+        platforms: [ linux, darwin ]
+      - cmd: set GOOS=windows&& set GOARCH=amd64&& set CGO_ENABLED=0&& go build -ldflags="-s -w" -o {{.BUILD_DIR}}\{{.BINARY_NAME}}-windows-amd64.exe {{.MAIN_PACKAGE}}
+        platforms: [ windows ]
 
   # === TEST TASKS ===
   test:
@@ -116,34 +130,16 @@ tasks:
   clean:
     desc: Clean build artifacts and generated files
     cmds:
-      - rm -rf {{.BUILD_DIR}}
-      - rm -f {{.COVERAGE_FILE}} coverage.html
-      - rm -f .go-version cmd/version.go
-
-  # === RELEASE TASKS ===
-  release:
-    desc: Create a production release with goreleaser (requires git tag)
-    deps: [ generate ]
-    env:
-      GITHUB_OWNER: "{{.GITHUB_OWNER}}"
-    cmds:
-      - goreleaser release --clean
-
-
-  release:snapshot:
-    desc: Create a snapshot release (no git tag required)
-    deps: [ generate ]
-    env:
-      GITHUB_OWNER: "{{.GITHUB_OWNER}}"
-    cmds:
-      - goreleaser release --snapshot --clean
-
-  release:check:
-    desc: Validate goreleaser configuration
-    env:
-      GITHUB_OWNER: "{{.GITHUB_OWNER}}"
-    cmds:
-      - goreleaser check
+      - cmd: rm -rf {{.BUILD_DIR}}
+        platforms: [ linux, darwin ]
+      - cmd: if exist {{.BUILD_DIR}} rd /s /q {{.BUILD_DIR}}
+        platforms: [ windows ]
+      - cmd: rm -f {{.COVERAGE_FILE}} coverage.html
+        platforms: [ linux, darwin ]
+      - cmd: if exist {{.COVERAGE_FILE}} del {{.COVERAGE_FILE}}
+        platforms: [ windows ]
+      - cmd: if exist coverage.html del coverage.html
+        platforms: [ windows ]
 
   # === DOCUMENTATION ===
   cmdtree:
