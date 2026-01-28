@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"os"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -266,50 +267,52 @@ func printSingleCommand(cobraCmd *cobra.Command, root *cobra.Command, cmdName st
 		return fmt.Errorf("command not found: %s", cmdName)
 	}
 
-	var buf bytes.Buffer
-
 	if cmdtreeJSON {
 		detail := buildCommandDetail(target)
-		enc := json.NewEncoder(&buf)
+		enc := json.NewEncoder(os.Stdout)
 		enc.SetIndent("", "  ")
 
 		if err := enc.Encode(detail); err != nil {
 			return fmt.Errorf("json encode: %w", err)
 		}
-	} else {
-		buf.WriteString(fmt.Sprintf("# %s\n\n", target.Name()))
-		buf.WriteString(fmt.Sprintf("Usage: %s\n\n", target.UseLine()))
 
-		desc := target.Short
-		if target.Long != "" {
-			desc = target.Long
+		return nil
+	}
+
+	var buf bytes.Buffer
+
+	_, _ = buf.WriteString(fmt.Sprintf("# %s\n\n", target.Name()))
+	_, _ = buf.WriteString(fmt.Sprintf("Usage: %s\n\n", target.UseLine()))
+
+	desc := target.Short
+	if target.Long != "" {
+		desc = target.Long
+	}
+
+	if desc != "" {
+		_, _ = buf.WriteString(fmt.Sprintf("Description: %s\n\n", desc))
+	}
+
+	flags := collectFlags(target)
+	if len(flags) > 0 {
+		_, _ = buf.WriteString("Flags:\n")
+
+		for _, f := range flags {
+			printFlagDetail(&buf, "  ", f)
 		}
 
-		if desc != "" {
-			buf.WriteString(fmt.Sprintf("Description: %s\n\n", desc))
-		}
+		_, _ = buf.WriteString("\n")
+	}
 
-		flags := collectFlags(target)
-		if len(flags) > 0 {
-			buf.WriteString("Flags:\n")
+	if len(target.Commands()) > 0 {
+		_, _ = buf.WriteString("Subcommands:\n")
 
-			for _, f := range flags {
-				printFlagDetail(&buf, "  ", f)
+		for _, sub := range target.Commands() {
+			if !showHidden && sub.Hidden {
+				continue
 			}
 
-			buf.WriteString("\n")
-		}
-
-		if len(target.Commands()) > 0 {
-			buf.WriteString("Subcommands:\n")
-
-			for _, sub := range target.Commands() {
-				if !showHidden && sub.Hidden {
-					continue
-				}
-
-				_, _ = fmt.Fprintf(&buf, "  %s - %s\n", sub.Name(), sub.Short)
-			}
+			_, _ = fmt.Fprintf(&buf, "  %s - %s\n", sub.Name(), sub.Short)
 		}
 	}
 
@@ -336,19 +339,15 @@ func findCommand(root *cobra.Command, name string) *cobra.Command {
 	return nil
 }
 
-func printJSONTree(cobraCmd *cobra.Command, root *cobra.Command) error {
+func printJSONTree(_ *cobra.Command, root *cobra.Command) error {
 	detail := buildCommandDetail(root)
 
-	var buf bytes.Buffer
-
-	enc := json.NewEncoder(&buf)
+	enc := json.NewEncoder(os.Stdout)
 	enc.SetIndent("", "  ")
 
 	if err := enc.Encode(detail); err != nil {
 		return fmt.Errorf("json encode: %w", err)
 	}
-
-	cobraCmd.Print(buf.String())
 
 	return nil
 }
