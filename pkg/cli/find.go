@@ -376,41 +376,51 @@ func parseSizeFilter(sizeStr string) (func(int64) bool, error) {
 		return nil, fmt.Errorf("invalid number: %s", numStr)
 	}
 
-	// Convert to bytes
-	var multiplier int64
+	// Get unit size for rounding (Linux find rounds up to units)
+	var unitSize int64
 
 	switch suffix {
 	case 'b':
-		multiplier = 512
+		unitSize = 512
 	case 'c':
-		multiplier = 1
+		unitSize = 1 // bytes - no rounding
 	case 'w':
-		multiplier = 2
+		unitSize = 2
 	case 'k':
-		multiplier = 1024
+		unitSize = 1024
 	case 'M':
-		multiplier = 1024 * 1024
+		unitSize = 1024 * 1024
 	case 'G':
-		multiplier = 1024 * 1024 * 1024
+		unitSize = 1024 * 1024 * 1024
 	case 'T':
-		multiplier = 1024 * 1024 * 1024 * 1024
+		unitSize = 1024 * 1024 * 1024 * 1024
 	case 'P':
-		multiplier = 1024 * 1024 * 1024 * 1024 * 1024
+		unitSize = 1024 * 1024 * 1024 * 1024 * 1024
 	default:
-		multiplier = 512 // default to blocks
+		unitSize = 512 // default to blocks
 	}
 
-	size := n * multiplier
+	// Linux find rounds file size up to units: ceil(fileSize / unitSize)
+	// Then compares the number of units
+	roundUp := func(fileSize int64) int64 {
+		if unitSize == 1 {
+			return fileSize
+		}
+
+		return (fileSize + unitSize - 1) / unitSize
+	}
 
 	switch op {
 	case '+':
-		return func(fileSize int64) bool { return fileSize > size }, nil
+		// File uses more than n units
+		return func(fileSize int64) bool { return roundUp(fileSize) > n }, nil
 	case '-':
-		return func(fileSize int64) bool { return fileSize < size }, nil
+		// File uses less than n units
+		return func(fileSize int64) bool { return roundUp(fileSize) < n }, nil
 	default:
-		// Exact match (within the unit)
+		// File uses exactly n units
 		return func(fileSize int64) bool {
-			return fileSize >= size && fileSize < size+multiplier
+			return roundUp(fileSize) == n
 		}, nil
 	}
 }
