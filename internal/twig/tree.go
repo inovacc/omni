@@ -1,4 +1,4 @@
-// Package tree provides a high-level API for scanning, parsing, formatting, and building directory structures.
+// Package twig provides a high-level API for scanning, parsing, formatting, and building directory structures.
 //
 // # Quick Start
 //
