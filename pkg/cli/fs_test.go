@@ -13,10 +13,12 @@ func TestRunMkdir(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	t.Run("create single directory", func(t *testing.T) {
 		dir := filepath.Join(tmpDir, "newdir")
+
 		err := RunMkdir([]string{dir}, false)
 		if err != nil {
 			t.Fatalf("RunMkdir() error = %v", err)
@@ -26,6 +28,7 @@ func TestRunMkdir(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Directory not created: %v", err)
 		}
+
 		if !info.IsDir() {
 			t.Error("Created path is not a directory")
 		}
@@ -33,6 +36,7 @@ func TestRunMkdir(t *testing.T) {
 
 	t.Run("create nested directories with parents", func(t *testing.T) {
 		dir := filepath.Join(tmpDir, "a", "b", "c")
+
 		err := RunMkdir([]string{dir}, true)
 		if err != nil {
 			t.Fatalf("RunMkdir() error = %v", err)
@@ -42,6 +46,7 @@ func TestRunMkdir(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Directory not created: %v", err)
 		}
+
 		if !info.IsDir() {
 			t.Error("Created path is not a directory")
 		}
@@ -49,6 +54,7 @@ func TestRunMkdir(t *testing.T) {
 
 	t.Run("fail without parents flag", func(t *testing.T) {
 		dir := filepath.Join(tmpDir, "x", "y", "z")
+
 		err := RunMkdir([]string{dir}, false)
 		if err == nil {
 			t.Error("RunMkdir() expected error without parents flag")
@@ -68,6 +74,7 @@ func TestRunRmdir(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	t.Run("remove empty directory", func(t *testing.T) {
@@ -91,6 +98,7 @@ func TestRunRmdir(t *testing.T) {
 		if err := os.Mkdir(dir, 0755); err != nil {
 			t.Fatal(err)
 		}
+
 		if err := os.WriteFile(filepath.Join(dir, "file.txt"), []byte("test"), 0644); err != nil {
 			t.Fatal(err)
 		}
@@ -114,6 +122,7 @@ func TestRunRm(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	t.Run("remove file", func(t *testing.T) {
@@ -137,6 +146,7 @@ func TestRunRm(t *testing.T) {
 		if err := os.MkdirAll(filepath.Join(dir, "nested"), 0755); err != nil {
 			t.Fatal(err)
 		}
+
 		if err := os.WriteFile(filepath.Join(dir, "file.txt"), []byte("test"), 0644); err != nil {
 			t.Fatal(err)
 		}
@@ -180,10 +190,12 @@ func TestRunTouch(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	t.Run("create new file", func(t *testing.T) {
 		file := filepath.Join(tmpDir, "newfile.txt")
+
 		err := RunTouch([]string{file})
 		if err != nil {
 			t.Fatalf("RunTouch() error = %v", err)
@@ -219,6 +231,7 @@ func TestRunStat(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	file := filepath.Join(tmpDir, "statfile.txt")
@@ -228,6 +241,7 @@ func TestRunStat(t *testing.T) {
 
 	t.Run("stat file", func(t *testing.T) {
 		var buf bytes.Buffer
+
 		err := RunStat(&buf, []string{file}, false)
 		if err != nil {
 			t.Fatalf("RunStat() error = %v", err)
@@ -241,6 +255,7 @@ func TestRunStat(t *testing.T) {
 
 	t.Run("stat json mode", func(t *testing.T) {
 		var buf bytes.Buffer
+
 		err := RunStat(&buf, []string{file}, true)
 		if err != nil {
 			t.Fatalf("RunStat() error = %v", err)
@@ -254,6 +269,7 @@ func TestRunStat(t *testing.T) {
 
 	t.Run("stat nonexistent", func(t *testing.T) {
 		var buf bytes.Buffer
+
 		err := RunStat(&buf, []string{"/nonexistent/path"}, false)
 		if err == nil {
 			t.Error("RunStat() expected error for nonexistent file")
@@ -262,6 +278,7 @@ func TestRunStat(t *testing.T) {
 
 	t.Run("no arguments", func(t *testing.T) {
 		var buf bytes.Buffer
+
 		err := RunStat(&buf, []string{}, false)
 		if err == nil {
 			t.Error("RunStat() expected error with no arguments")
@@ -274,6 +291,7 @@ func TestRunCopy(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	t.Run("copy file", func(t *testing.T) {
@@ -294,6 +312,7 @@ func TestRunCopy(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Failed to read destination: %v", err)
 		}
+
 		if !bytes.Equal(dstContent, content) {
 			t.Errorf("RunCopy() content mismatch")
 		}
@@ -312,6 +331,7 @@ func TestRunMove(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	t.Run("move file", func(t *testing.T) {
@@ -330,6 +350,7 @@ func TestRunMove(t *testing.T) {
 		if _, err := os.Stat(src); !os.IsNotExist(err) {
 			t.Error("Source file still exists")
 		}
+
 		if _, err := os.Stat(dst); err != nil {
 			t.Error("Destination file not created")
 		}

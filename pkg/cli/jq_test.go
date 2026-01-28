@@ -13,10 +13,12 @@ func TestRunJq(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	t.Run("simple query", func(t *testing.T) {
 		file := filepath.Join(tmpDir, "data.json")
+
 		content := `{"name": "John", "age": 30}`
 		if err := os.WriteFile(file, []byte(content), 0644); err != nil {
 			t.Fatal(err)
@@ -37,12 +39,14 @@ func TestRunJq(t *testing.T) {
 
 	t.Run("raw output", func(t *testing.T) {
 		file := filepath.Join(tmpDir, "raw.json")
+
 		content := `{"message": "hello"}`
 		if err := os.WriteFile(file, []byte(content), 0644); err != nil {
 			t.Fatal(err)
 		}
 
 		var buf bytes.Buffer
+
 		err := RunJq(&buf, []string{".message", file}, JqOptions{Raw: true})
 		if err != nil {
 			t.Fatalf("RunJq() error = %v", err)
@@ -56,12 +60,14 @@ func TestRunJq(t *testing.T) {
 
 	t.Run("array access", func(t *testing.T) {
 		file := filepath.Join(tmpDir, "array.json")
+
 		content := `{"items": ["a", "b", "c"]}`
 		if err := os.WriteFile(file, []byte(content), 0644); err != nil {
 			t.Fatal(err)
 		}
 
 		var buf bytes.Buffer
+
 		err := RunJq(&buf, []string{".items[0]", file}, JqOptions{Raw: true})
 		if err != nil {
 			t.Fatalf("RunJq() error = %v", err)
@@ -75,12 +81,14 @@ func TestRunJq(t *testing.T) {
 
 	t.Run("nested object", func(t *testing.T) {
 		file := filepath.Join(tmpDir, "nested.json")
+
 		content := `{"user": {"name": "Jane", "address": {"city": "NYC"}}}`
 		if err := os.WriteFile(file, []byte(content), 0644); err != nil {
 			t.Fatal(err)
 		}
 
 		var buf bytes.Buffer
+
 		err := RunJq(&buf, []string{".user.address.city", file}, JqOptions{Raw: true})
 		if err != nil {
 			t.Fatalf("RunJq() error = %v", err)
@@ -94,12 +102,14 @@ func TestRunJq(t *testing.T) {
 
 	t.Run("identity query", func(t *testing.T) {
 		file := filepath.Join(tmpDir, "identity.json")
+
 		content := `{"key": "value"}`
 		if err := os.WriteFile(file, []byte(content), 0644); err != nil {
 			t.Fatal(err)
 		}
 
 		var buf bytes.Buffer
+
 		err := RunJq(&buf, []string{".", file}, JqOptions{})
 		if err != nil {
 			t.Fatalf("RunJq() error = %v", err)
@@ -112,12 +122,14 @@ func TestRunJq(t *testing.T) {
 
 	t.Run("compact output", func(t *testing.T) {
 		file := filepath.Join(tmpDir, "compact.json")
+
 		content := `{"a": 1, "b": 2}`
 		if err := os.WriteFile(file, []byte(content), 0644); err != nil {
 			t.Fatal(err)
 		}
 
 		var buf bytes.Buffer
+
 		err := RunJq(&buf, []string{".", file}, JqOptions{Compact: true})
 		if err != nil {
 			t.Fatalf("RunJq() error = %v", err)

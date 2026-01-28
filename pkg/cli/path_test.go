@@ -29,6 +29,7 @@ func TestRunDirname(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var buf bytes.Buffer
+
 			err := RunDirname(&buf, []string{tt.input})
 			if err != nil {
 				t.Fatalf("RunDirname() error = %v", err)
@@ -72,6 +73,7 @@ func TestRunBasename(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var buf bytes.Buffer
+
 			err := RunBasename(&buf, []string{tt.input}, tt.suffix)
 			if err != nil {
 				t.Fatalf("RunBasename() error = %v", err)
@@ -86,6 +88,7 @@ func TestRunBasename(t *testing.T) {
 
 	t.Run("no arguments", func(t *testing.T) {
 		var buf bytes.Buffer
+
 		err := RunBasename(&buf, []string{}, "")
 		if err == nil {
 			t.Error("RunBasename() expected error with no arguments")
@@ -98,6 +101,7 @@ func TestRunRealpath(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	t.Run("existing file", func(t *testing.T) {
@@ -107,6 +111,7 @@ func TestRunRealpath(t *testing.T) {
 		}
 
 		var buf bytes.Buffer
+
 		err := RunRealpath(&buf, []string{file})
 		if err != nil {
 			t.Fatalf("RunRealpath() error = %v", err)
@@ -123,7 +128,9 @@ func TestRunRealpath(t *testing.T) {
 
 	t.Run("relative path", func(t *testing.T) {
 		origDir, _ := os.Getwd()
+
 		defer func() { _ = os.Chdir(origDir) }()
+
 		_ = os.Chdir(tmpDir)
 
 		file := "localfile.txt"
@@ -132,6 +139,7 @@ func TestRunRealpath(t *testing.T) {
 		}
 
 		var buf bytes.Buffer
+
 		err := RunRealpath(&buf, []string{file})
 		if err != nil {
 			t.Fatalf("RunRealpath() error = %v", err)
@@ -149,6 +157,7 @@ func TestRunReadlink(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	t.Run("regular file", func(t *testing.T) {
@@ -158,6 +167,7 @@ func TestRunReadlink(t *testing.T) {
 		}
 
 		var buf bytes.Buffer
+
 		err := RunReadlink(&buf, []string{file}, ReadlinkOptions{})
 		// Regular file is not a symlink, should handle gracefully
 		if err != nil {
@@ -167,6 +177,7 @@ func TestRunReadlink(t *testing.T) {
 
 	t.Run("nonexistent file", func(t *testing.T) {
 		var buf bytes.Buffer
+
 		err := RunReadlink(&buf, []string{"/nonexistent/path"}, ReadlinkOptions{})
 		if err == nil {
 			t.Error("RunReadlink() expected error for nonexistent file")

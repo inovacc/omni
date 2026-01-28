@@ -26,6 +26,7 @@ func getMemInfo() (MemInfo, error) {
 	globalMemoryStatusEx := kernel32.NewProc("GlobalMemoryStatusEx")
 
 	var memStatus memoryStatusEx
+
 	memStatus.dwLength = uint32(unsafe.Sizeof(memStatus))
 
 	ret, _, err := globalMemoryStatusEx.Call(uintptr(unsafe.Pointer(&memStatus)))
@@ -48,6 +49,7 @@ func getMemInfo() (MemInfo, error) {
 	if info.SwapTotal > memStatus.ullTotalPageFile {
 		info.SwapTotal = 0
 	}
+
 	if info.SwapFree > memStatus.ullAvailPageFile {
 		info.SwapFree = 0
 	}

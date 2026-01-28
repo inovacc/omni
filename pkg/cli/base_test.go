@@ -13,6 +13,7 @@ func TestRunBase64(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	t.Run("encode", func(t *testing.T) {
@@ -22,6 +23,7 @@ func TestRunBase64(t *testing.T) {
 		}
 
 		var buf bytes.Buffer
+
 		err := RunBase64(&buf, []string{testFile}, BaseOptions{})
 		if err != nil {
 			t.Fatalf("RunBase64() error = %v", err)
@@ -40,6 +42,7 @@ func TestRunBase64(t *testing.T) {
 		}
 
 		var buf bytes.Buffer
+
 		err := RunBase64(&buf, []string{testFile}, BaseOptions{Decode: true})
 		if err != nil {
 			t.Fatalf("RunBase64() error = %v", err)
@@ -56,6 +59,7 @@ func TestRunBase32(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	t.Run("encode", func(t *testing.T) {
@@ -65,6 +69,7 @@ func TestRunBase32(t *testing.T) {
 		}
 
 		var buf bytes.Buffer
+
 		err := RunBase32(&buf, []string{testFile}, BaseOptions{})
 		if err != nil {
 			t.Fatalf("RunBase32() error = %v", err)
@@ -83,6 +88,7 @@ func TestRunBase32(t *testing.T) {
 		}
 
 		var buf bytes.Buffer
+
 		err := RunBase32(&buf, []string{testFile}, BaseOptions{Decode: true})
 		if err != nil {
 			t.Fatalf("RunBase32() error = %v", err)
@@ -124,6 +130,7 @@ func TestBase58EncodeDecode(t *testing.T) {
 				if err != nil {
 					t.Fatalf("base58Decode() error = %v", err)
 				}
+
 				if !bytes.Equal(decoded, tt.input) {
 					t.Errorf("base58Decode() = %v, want %v", decoded, tt.input)
 				}

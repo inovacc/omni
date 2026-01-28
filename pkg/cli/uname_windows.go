@@ -21,6 +21,7 @@ func getKernelRelease() string {
 			return strings.TrimPrefix(version[idx+1:endIdx], "Version ")
 		}
 	}
+
 	return "unknown"
 }
 

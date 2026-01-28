@@ -12,6 +12,7 @@ func TestEncryptDecrypt(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	t.Run("encrypt and decrypt file", func(t *testing.T) {
@@ -27,6 +28,7 @@ func TestEncryptDecrypt(t *testing.T) {
 
 		// Encrypt
 		var encBuf bytes.Buffer
+
 		err := RunEncrypt(&encBuf, []string{inputFile}, CryptOptions{
 			Password: password,
 			Armor:    true,
@@ -47,6 +49,7 @@ func TestEncryptDecrypt(t *testing.T) {
 
 		// Decrypt
 		var decBuf bytes.Buffer
+
 		err = RunDecrypt(&decBuf, []string{encryptedFile}, CryptOptions{
 			Password: password,
 			Armor:    true,
@@ -75,6 +78,7 @@ func TestEncryptDecrypt(t *testing.T) {
 
 		// Encrypt
 		var encBuf bytes.Buffer
+
 		err := RunEncrypt(&encBuf, []string{inputFile}, CryptOptions{
 			Password: password,
 			Armor:    true,
@@ -89,6 +93,7 @@ func TestEncryptDecrypt(t *testing.T) {
 
 		// Decrypt with wrong password
 		var decBuf bytes.Buffer
+
 		err = RunDecrypt(&decBuf, []string{encryptedFile}, CryptOptions{
 			Password: wrongPassword,
 			Armor:    true,
@@ -111,6 +116,7 @@ func TestEncryptDecrypt(t *testing.T) {
 
 		// Encrypt in binary mode
 		var encBuf bytes.Buffer
+
 		err := RunEncrypt(&encBuf, []string{inputFile}, CryptOptions{
 			Password: password,
 			Armor:    false,
@@ -125,6 +131,7 @@ func TestEncryptDecrypt(t *testing.T) {
 
 		// Decrypt
 		var decBuf bytes.Buffer
+
 		err = RunDecrypt(&decBuf, []string{encryptedFile}, CryptOptions{
 			Password: password,
 			Armor:    false,
@@ -145,6 +152,7 @@ func TestEncryptDecrypt(t *testing.T) {
 		}
 
 		var buf bytes.Buffer
+
 		err := RunEncrypt(&buf, []string{inputFile}, CryptOptions{
 			Password: "",
 		})
@@ -157,6 +165,7 @@ func TestEncryptDecrypt(t *testing.T) {
 func TestGenerateKey(t *testing.T) {
 	t.Run("default size", func(t *testing.T) {
 		var buf bytes.Buffer
+
 		err := GenerateKey(&buf, 0)
 		if err != nil {
 			t.Fatalf("GenerateKey() error = %v", err)
@@ -171,6 +180,7 @@ func TestGenerateKey(t *testing.T) {
 
 	t.Run("custom size", func(t *testing.T) {
 		var buf bytes.Buffer
+
 		err := GenerateKey(&buf, 64)
 		if err != nil {
 			t.Fatalf("GenerateKey() error = %v", err)

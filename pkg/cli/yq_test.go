@@ -13,10 +13,12 @@ func TestRunYq(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	t.Run("simple query", func(t *testing.T) {
 		file := filepath.Join(tmpDir, "config.yaml")
+
 		content := `name: John
 age: 30`
 		if err := os.WriteFile(file, []byte(content), 0644); err != nil {
@@ -38,6 +40,7 @@ age: 30`
 
 	t.Run("nested object", func(t *testing.T) {
 		file := filepath.Join(tmpDir, "nested.yaml")
+
 		content := `user:
   name: Jane
   address:
@@ -47,6 +50,7 @@ age: 30`
 		}
 
 		var buf bytes.Buffer
+
 		err := RunYq(&buf, []string{".user.address.city", file}, YqOptions{})
 		if err != nil {
 			t.Fatalf("RunYq() error = %v", err)
@@ -60,6 +64,7 @@ age: 30`
 
 	t.Run("array access", func(t *testing.T) {
 		file := filepath.Join(tmpDir, "array.yaml")
+
 		content := `items:
   - apple
   - banana
@@ -69,6 +74,7 @@ age: 30`
 		}
 
 		var buf bytes.Buffer
+
 		err := RunYq(&buf, []string{".items[0]", file}, YqOptions{})
 		if err != nil {
 			t.Fatalf("RunYq() error = %v", err)
@@ -82,6 +88,7 @@ age: 30`
 
 	t.Run("identity query", func(t *testing.T) {
 		file := filepath.Join(tmpDir, "identity.yaml")
+
 		content := `key: value
 another: data`
 		if err := os.WriteFile(file, []byte(content), 0644); err != nil {
@@ -89,6 +96,7 @@ another: data`
 		}
 
 		var buf bytes.Buffer
+
 		err := RunYq(&buf, []string{".", file}, YqOptions{})
 		if err != nil {
 			t.Fatalf("RunYq() error = %v", err)
@@ -102,6 +110,7 @@ another: data`
 
 	t.Run("json output", func(t *testing.T) {
 		file := filepath.Join(tmpDir, "tojson.yaml")
+
 		content := `name: test
 value: 123`
 		if err := os.WriteFile(file, []byte(content), 0644); err != nil {
@@ -109,6 +118,7 @@ value: 123`
 		}
 
 		var buf bytes.Buffer
+
 		err := RunYq(&buf, []string{".", file}, YqOptions{OutputJSON: true})
 		if err != nil {
 			t.Fatalf("RunYq() error = %v", err)
@@ -122,12 +132,14 @@ value: 123`
 
 	t.Run("raw output", func(t *testing.T) {
 		file := filepath.Join(tmpDir, "raw.yaml")
+
 		content := `message: hello world`
 		if err := os.WriteFile(file, []byte(content), 0644); err != nil {
 			t.Fatal(err)
 		}
 
 		var buf bytes.Buffer
+
 		err := RunYq(&buf, []string{".message", file}, YqOptions{Raw: true})
 		if err != nil {
 			t.Fatalf("RunYq() error = %v", err)

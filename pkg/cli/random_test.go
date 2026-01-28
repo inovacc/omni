@@ -11,6 +11,7 @@ import (
 func TestRunRandom(t *testing.T) {
 	t.Run("default string", func(t *testing.T) {
 		var buf bytes.Buffer
+
 		err := RunRandom(&buf, RandomOptions{})
 		if err != nil {
 			t.Fatalf("RunRandom() error = %v", err)
@@ -24,6 +25,7 @@ func TestRunRandom(t *testing.T) {
 
 	t.Run("custom length", func(t *testing.T) {
 		var buf bytes.Buffer
+
 		err := RunRandom(&buf, RandomOptions{Length: 32})
 		if err != nil {
 			t.Fatalf("RunRandom() error = %v", err)
@@ -37,6 +39,7 @@ func TestRunRandom(t *testing.T) {
 
 	t.Run("multiple values", func(t *testing.T) {
 		var buf bytes.Buffer
+
 		err := RunRandom(&buf, RandomOptions{Count: 5, Length: 8})
 		if err != nil {
 			t.Fatalf("RunRandom() error = %v", err)
@@ -50,16 +53,19 @@ func TestRunRandom(t *testing.T) {
 
 	t.Run("integer type", func(t *testing.T) {
 		var buf bytes.Buffer
+
 		err := RunRandom(&buf, RandomOptions{Type: "int", Min: 0, Max: 100})
 		if err != nil {
 			t.Fatalf("RunRandom() error = %v", err)
 		}
 
 		result := strings.TrimSpace(buf.String())
+
 		num, err := strconv.ParseInt(result, 10, 64)
 		if err != nil {
 			t.Fatalf("RunRandom() not a number: %v", result)
 		}
+
 		if num < 0 || num >= 100 {
 			t.Errorf("RunRandom() = %d, want 0-99", num)
 		}
@@ -67,12 +73,14 @@ func TestRunRandom(t *testing.T) {
 
 	t.Run("hex type", func(t *testing.T) {
 		var buf bytes.Buffer
+
 		err := RunRandom(&buf, RandomOptions{Type: "hex", Length: 16})
 		if err != nil {
 			t.Fatalf("RunRandom() error = %v", err)
 		}
 
 		result := strings.TrimSpace(buf.String())
+
 		matched, _ := regexp.MatchString("^[0-9a-f]+$", result)
 		if !matched {
 			t.Errorf("RunRandom() = %v, not valid hex", result)
@@ -81,12 +89,14 @@ func TestRunRandom(t *testing.T) {
 
 	t.Run("alpha type", func(t *testing.T) {
 		var buf bytes.Buffer
+
 		err := RunRandom(&buf, RandomOptions{Type: "alpha", Length: 20})
 		if err != nil {
 			t.Fatalf("RunRandom() error = %v", err)
 		}
 
 		result := strings.TrimSpace(buf.String())
+
 		matched, _ := regexp.MatchString("^[a-zA-Z]+$", result)
 		if !matched {
 			t.Errorf("RunRandom() = %v, not valid alpha", result)
@@ -95,6 +105,7 @@ func TestRunRandom(t *testing.T) {
 
 	t.Run("password type", func(t *testing.T) {
 		var buf bytes.Buffer
+
 		err := RunRandom(&buf, RandomOptions{Type: "password", Length: 20})
 		if err != nil {
 			t.Fatalf("RunRandom() error = %v", err)
@@ -108,16 +119,19 @@ func TestRunRandom(t *testing.T) {
 
 	t.Run("float type", func(t *testing.T) {
 		var buf bytes.Buffer
+
 		err := RunRandom(&buf, RandomOptions{Type: "float"})
 		if err != nil {
 			t.Fatalf("RunRandom() error = %v", err)
 		}
 
 		result := strings.TrimSpace(buf.String())
+
 		f, err := strconv.ParseFloat(result, 64)
 		if err != nil {
 			t.Fatalf("RunRandom() not a float: %v", result)
 		}
+
 		if f < 0 || f > 1 {
 			t.Errorf("RunRandom() = %f, want 0-1", f)
 		}
@@ -125,6 +139,7 @@ func TestRunRandom(t *testing.T) {
 
 	t.Run("unknown type", func(t *testing.T) {
 		var buf bytes.Buffer
+
 		err := RunRandom(&buf, RandomOptions{Type: "unknown"})
 		if err == nil {
 			t.Error("RunRandom() expected error for unknown type")
@@ -164,7 +179,7 @@ func TestRandomPassword(t *testing.T) {
 }
 
 func TestRandomInt(t *testing.T) {
-	for i := 0; i < 100; i++ {
+	for range 100 {
 		result := RandomInt(10, 20)
 		if result < 10 || result >= 20 {
 			t.Errorf("RandomInt(10, 20) = %d, out of range", result)
@@ -182,7 +197,7 @@ func TestRandomChoice(t *testing.T) {
 	items := []string{"a", "b", "c", "d", "e"}
 	counts := make(map[string]int)
 
-	for i := 0; i < 1000; i++ {
+	for range 1000 {
 		choice := RandomChoice(items)
 		counts[choice]++
 	}
@@ -196,6 +211,7 @@ func TestRandomChoice(t *testing.T) {
 
 	// Empty slice should return zero value
 	var empty []string
+
 	result := RandomChoice(empty)
 	if result != "" {
 		t.Errorf("RandomChoice([]) = %v, want empty string", result)
@@ -214,18 +230,21 @@ func TestShuffle(t *testing.T) {
 	for _, v := range items {
 		sum += v
 	}
+
 	if sum != 55 {
 		t.Error("Shuffle() lost elements")
 	}
 
 	// Should be different order (with very high probability)
 	same := true
+
 	for i := range items {
 		if items[i] != original[i] {
 			same = false
 			break
 		}
 	}
+
 	if same {
 		t.Log("Shuffle() returned same order (unlikely but possible)")
 	}
