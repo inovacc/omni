@@ -26,6 +26,7 @@ const (
 // cmdtree flags
 var (
 	cmdtreeVerbose bool
+	cmdtreeBrief   bool
 	cmdtreeCommand string
 	cmdtreeJSON    bool
 )
@@ -65,10 +66,10 @@ var cmdtreeCmd = &cobra.Command{
 		var tree bytes.Buffer
 
 		tree.WriteString("# Command Tree\n\n```\n")
-		if cmdtreeVerbose {
-			tree.Write(buildVerboseTree(rootCmd))
-		} else {
+		if cmdtreeBrief || !cmdtreeVerbose {
 			tree.Write(buildTree(rootCmd))
+		} else {
+			tree.Write(buildVerboseTree(rootCmd))
 		}
 		tree.WriteString("```\n")
 
@@ -80,7 +81,8 @@ var cmdtreeCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(cmdtreeCmd)
 
-	cmdtreeCmd.Flags().BoolVarP(&cmdtreeVerbose, "verbose", "v", false, "Show full details for all commands")
+	cmdtreeCmd.Flags().BoolVarP(&cmdtreeVerbose, "verbose", "v", true, "Show full details for all commands (default)")
+	cmdtreeCmd.Flags().BoolVarP(&cmdtreeBrief, "brief", "b", false, "Show compact tree with short descriptions only")
 	cmdtreeCmd.Flags().StringVarP(&cmdtreeCommand, "command", "c", "", "Show details for a specific command only")
 	cmdtreeCmd.Flags().BoolVar(&cmdtreeJSON, "json", false, "Output in JSON format")
 }
