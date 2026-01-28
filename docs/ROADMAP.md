@@ -379,6 +379,16 @@ func printOutput(cmd *cobra.Command, data any, format OutputFormat) error {
 
 ## Testing Strategy
 
+### Current Coverage Status (January 2026)
+
+| Category | Packages | Coverage | Status |
+|----------|----------|----------|--------|
+| **100% Coverage** | `basename`, `date`, `dirname` | 100% | ✅ Complete |
+| **High Coverage (80%+)** | `cat`, `grep`, `head`, `ls`, `realpath`, `pwd`, `uuid`, `text` | 80-95% | ✅ Good |
+| **Medium Coverage (50-79%)** | `base`, `crypt`, `env`, `jq`, `kill`, `random`, `tail`, `uname`, `yq`, `wc` | 50-79% | 🔄 In Progress |
+| **Low Coverage (<50%)** | `diff`, `hash`, `whoami` | 30-50% | 🔄 Needs Work |
+| **No Coverage (0%)** | 40+ packages | 0% | ❌ Not Started |
+
 ### Unit Tests
 - Table-driven tests for all functions
 - Edge cases: empty input, large files, special characters
@@ -409,6 +419,81 @@ func TestLsGolden(t *testing.T) {
     // Compare actual vs golden file
 }
 ```
+
+---
+
+## Testing Milestone - Phase 7
+
+### Milestone 7.1: Core Test Coverage (Target: 95%)
+
+| Package | Current | Target | Priority | Notes |
+|---------|---------|--------|----------|-------|
+| `basename` | 100% | 100% | ✅ | Done |
+| `date` | 100% | 100% | ✅ | Done |
+| `dirname` | 100% | 100% | ✅ | Done |
+| `cat` | 84% | 95% | P0 | Add binary, encoding tests |
+| `grep` | 86% | 95% | P0 | Add context, regex edge cases |
+| `head` | 88% | 95% | P0 | Add bytes mode edge cases |
+| `ls` | 85% | 95% | P0 | Add symlink, permission tests |
+| `pwd` | 83% | 95% | P1 | Add chdir tests |
+| `realpath` | 91% | 95% | P1 | Add symlink chain tests |
+| `wc` | 94% | 95% | P1 | Add unicode edge cases |
+
+### Milestone 7.2: Utility Test Coverage (Target: 80%)
+
+| Package | Current | Target | Priority | Notes |
+|---------|---------|--------|----------|-------|
+| `base` | 78% | 85% | P1 | Add base58 edge cases |
+| `crypt` | 66% | 80% | P1 | Add key derivation tests |
+| `env` | 52% | 80% | P1 | Add filter, unset tests |
+| `jq` | 55% | 80% | P1 | Add complex queries |
+| `kill` | 58% | 80% | P2 | Platform-specific signals |
+| `random` | 76% | 85% | P1 | Add distribution tests |
+| `tail` | 69% | 85% | P1 | Add follow mode tests |
+| `uname` | 60% | 80% | P2 | Platform-specific fields |
+| `uuid` | 88% | 95% | P1 | Add version validation |
+| `yq` | 76% | 85% | P1 | Add YAML edge cases |
+
+### Milestone 7.3: Uncovered Packages (Target: 60%)
+
+Priority P0 - Essential commands:
+| Package | Priority | Estimated Tests |
+|---------|----------|-----------------|
+| `copy` | P0 | 20+ tests |
+| `rm` | P0 | 15+ tests (safety critical) |
+| `mkdir` | P0 | 10+ tests |
+| `find` | P0 | 25+ tests |
+| `sed` | P0 | 20+ tests |
+
+Priority P1 - Common utilities:
+| Package | Priority | Estimated Tests |
+|---------|----------|-----------------|
+| `chmod` | P1 | 15+ tests |
+| `stat` | P1 | 15+ tests |
+| `cut` | P1 | 15+ tests |
+| `tr` | P1 | 15+ tests |
+| `nl` | P1 | 10+ tests |
+| `seq` | P1 | 10+ tests |
+
+Priority P2 - Specialized:
+| Package | Priority | Estimated Tests |
+|---------|----------|-----------------|
+| `archive` | P2 | 20+ tests |
+| `gzip` | P2 | 15+ tests |
+| `bzip2` | P2 | 10+ tests |
+| `xz` | P2 | 10+ tests |
+| `df` | P2 | 10+ tests |
+| `du` | P2 | 15+ tests |
+| `ps` | P2 | 10+ tests |
+
+### Testing Completion Criteria
+
+- [ ] All P0 packages have ≥80% coverage
+- [ ] All P1 packages have ≥60% coverage
+- [ ] All tests pass on Linux, macOS, and Windows
+- [ ] No flaky tests (consistent results across 10 runs)
+- [ ] Edge cases documented in test names
+- [ ] Error paths tested for all error-returning functions
 
 ---
 

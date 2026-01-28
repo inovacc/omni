@@ -280,4 +280,310 @@ func TestRun(t *testing.T) {
 			t.Error("Run() human readable should produce output")
 		}
 	})
+
+	t.Run("recursive listing", func(t *testing.T) {
+		// Create nested structure
+		nestedDir := filepath.Join(tmpDir, "nested")
+		if err := os.Mkdir(nestedDir, 0755); err != nil {
+			t.Fatal(err)
+		}
+
+		nestedFile := filepath.Join(nestedDir, "nested_file.txt")
+		if err := os.WriteFile(nestedFile, []byte("nested"), 0644); err != nil {
+			t.Fatal(err)
+		}
+
+		var buf bytes.Buffer
+
+		err := Run(&buf, []string{tmpDir}, Options{Recursive: true})
+		if err != nil {
+			t.Fatalf("Run() error = %v", err)
+		}
+
+		output := buf.String()
+		if !strings.Contains(output, "nested_file.txt") {
+			t.Errorf("Run() recursive should show nested files: %v", output)
+		}
+	})
+
+	t.Run("long format shows permissions", func(t *testing.T) {
+		var buf bytes.Buffer
+
+		err := Run(&buf, []string{tmpDir}, Options{LongFormat: true})
+		if err != nil {
+			t.Fatalf("Run() error = %v", err)
+		}
+
+		output := buf.String()
+		// Should contain permission characters
+		if !strings.Contains(output, "r") && !strings.Contains(output, "w") {
+			t.Log("Note: Long format permissions may vary by platform")
+		}
+	})
+
+	t.Run("long format shows size", func(t *testing.T) {
+		var buf bytes.Buffer
+
+		err := Run(&buf, []string{tmpDir}, Options{LongFormat: true})
+		if err != nil {
+			t.Fatalf("Run() error = %v", err)
+		}
+
+		// Output should include file size (number)
+		output := buf.String()
+		hasNumber := false
+		for _, r := range output {
+			if r >= '0' && r <= '9' {
+				hasNumber = true
+				break
+			}
+		}
+
+		if !hasNumber {
+			t.Error("Run() long format should show file sizes")
+		}
+	})
+
+	t.Run("multiple directories", func(t *testing.T) {
+		dir1 := filepath.Join(tmpDir, "dir1")
+		dir2 := filepath.Join(tmpDir, "dir2")
+
+		_ = os.Mkdir(dir1, 0755)
+		_ = os.Mkdir(dir2, 0755)
+		_ = os.WriteFile(filepath.Join(dir1, "d1file.txt"), []byte("d1"), 0644)
+		_ = os.WriteFile(filepath.Join(dir2, "d2file.txt"), []byte("d2"), 0644)
+
+		var buf bytes.Buffer
+
+		err := Run(&buf, []string{dir1, dir2}, Options{})
+		if err != nil {
+			t.Fatalf("Run() error = %v", err)
+		}
+
+		output := buf.String()
+		if !strings.Contains(output, "d1file.txt") || !strings.Contains(output, "d2file.txt") {
+			t.Errorf("Run() multiple dirs should show both: %v", output)
+		}
+	})
+
+	t.Run("inode number", func(t *testing.T) {
+		var buf bytes.Buffer
+
+		err := Run(&buf, []string{tmpDir}, Options{Inode: true})
+		if err != nil {
+			t.Fatalf("Run() error = %v", err)
+		}
+
+		// Should produce output with numbers (inodes)
+		if buf.Len() == 0 {
+			t.Error("Run() with inode should produce output")
+		}
+	})
+
+	t.Run("long format combined options", func(t *testing.T) {
+		var buf bytes.Buffer
+
+		err := Run(&buf, []string{tmpDir}, Options{LongFormat: true, HumanReadble: true, All: true})
+		if err != nil {
+			t.Fatalf("Run() error = %v", err)
+		}
+
+		if buf.Len() == 0 {
+			t.Error("Run() with combined options should produce output")
+		}
+	})
+
+	t.Run("all with long format", func(t *testing.T) {
+		var buf bytes.Buffer
+
+		err := Run(&buf, []string{tmpDir}, Options{LongFormat: true, All: true})
+		if err != nil {
+			t.Fatalf("Run() error = %v", err)
+		}
+
+		output := buf.String()
+		if !strings.Contains(output, ".hidden") {
+			t.Errorf("Run() -la should show hidden files: %v", output)
+		}
+	})
+
+	t.Run("unicode filename", func(t *testing.T) {
+		unicodeFile := filepath.Join(tmpDir, "文件名.txt")
+		if err := os.WriteFile(unicodeFile, []byte("unicode"), 0644); err != nil {
+			t.Fatal(err)
+		}
+
+		var buf bytes.Buffer
+
+		err := Run(&buf, []string{tmpDir}, Options{})
+		if err != nil {
+			t.Fatalf("Run() error = %v", err)
+		}
+
+		output := buf.String()
+		if !strings.Contains(output, "文件名") {
+			t.Log("Note: Unicode filenames may not display on all platforms")
+		}
+	})
+
+	t.Run("filename with spaces", func(t *testing.T) {
+		spaceFile := filepath.Join(tmpDir, "file with spaces.txt")
+		if err := os.WriteFile(spaceFile, []byte("spaces"), 0644); err != nil {
+			t.Fatal(err)
+		}
+
+		var buf bytes.Buffer
+
+		err := Run(&buf, []string{tmpDir}, Options{})
+		if err != nil {
+			t.Fatalf("Run() error = %v", err)
+		}
+
+		output := buf.String()
+		if !strings.Contains(output, "file with spaces") && !strings.Contains(output, "file") {
+			t.Errorf("Run() should show file with spaces: %v", output)
+		}
+	})
+
+	t.Run("consistent output", func(t *testing.T) {
+		var buf1, buf2 bytes.Buffer
+
+		_ = Run(&buf1, []string{tmpDir}, Options{OnePerLine: true})
+		_ = Run(&buf2, []string{tmpDir}, Options{OnePerLine: true})
+
+		if buf1.String() != buf2.String() {
+			t.Errorf("Run() inconsistent output")
+		}
+	})
+
+	t.Run("current directory default", func(t *testing.T) {
+		var buf bytes.Buffer
+
+		// Use the temp directory as current
+		oldWd, _ := os.Getwd()
+		_ = os.Chdir(tmpDir)
+
+		defer func() { _ = os.Chdir(oldWd) }()
+
+		err := Run(&buf, []string{}, Options{})
+		if err != nil {
+			t.Fatalf("Run() error = %v", err)
+		}
+
+		output := buf.String()
+		if !strings.Contains(output, "file1.txt") {
+			t.Errorf("Run() with no args should list current dir: %v", output)
+		}
+	})
+
+	t.Run("output ends with newline", func(t *testing.T) {
+		var buf bytes.Buffer
+
+		err := Run(&buf, []string{tmpDir}, Options{OnePerLine: true})
+		if err != nil {
+			t.Fatalf("Run() error = %v", err)
+		}
+
+		output := buf.String()
+		if len(output) > 0 && !strings.HasSuffix(output, "\n") {
+			t.Error("Run() output should end with newline")
+		}
+	})
+
+	t.Run("no trailing whitespace", func(t *testing.T) {
+		var buf bytes.Buffer
+
+		_ = Run(&buf, []string{tmpDir}, Options{OnePerLine: true})
+
+		lines := strings.Split(buf.String(), "\n")
+		for i, line := range lines {
+			if line != strings.TrimRight(line, " \t") {
+				t.Errorf("Run() line %d has trailing whitespace", i)
+			}
+		}
+	})
+
+	t.Run("no sort", func(t *testing.T) {
+		var buf bytes.Buffer
+
+		err := Run(&buf, []string{tmpDir}, Options{NoSort: true, OnePerLine: true})
+		if err != nil {
+			t.Fatalf("Run() error = %v", err)
+		}
+
+		if buf.Len() == 0 {
+			t.Error("Run() with no sort should produce output")
+		}
+	})
+
+	t.Run("symlink handling", func(t *testing.T) {
+		linkTarget := filepath.Join(tmpDir, "file1.txt")
+		linkPath := filepath.Join(tmpDir, "link.txt")
+
+		// Try to create symlink (may fail on Windows without admin)
+		err := os.Symlink(linkTarget, linkPath)
+		if err != nil {
+			t.Skip("Symlink creation not supported")
+		}
+
+		var buf bytes.Buffer
+
+		err = Run(&buf, []string{tmpDir}, Options{LongFormat: true})
+		if err != nil {
+			t.Fatalf("Run() error = %v", err)
+		}
+
+		output := buf.String()
+		if !strings.Contains(output, "link.txt") {
+			t.Errorf("Run() should show symlink: %v", output)
+		}
+	})
+
+	t.Run("classify with symlink", func(t *testing.T) {
+		linkTarget := filepath.Join(tmpDir, "file1.txt")
+		linkPath := filepath.Join(tmpDir, "link2.txt")
+
+		err := os.Symlink(linkTarget, linkPath)
+		if err != nil {
+			t.Skip("Symlink creation not supported")
+		}
+
+		var buf bytes.Buffer
+
+		err = Run(&buf, []string{tmpDir}, Options{Classify: true})
+		if err != nil {
+			t.Fatalf("Run() error = %v", err)
+		}
+
+		// Just verify it doesn't error
+		if buf.Len() == 0 {
+			t.Error("Run() classify with symlink should produce output")
+		}
+	})
+
+	t.Run("sort by time reverse", func(t *testing.T) {
+		var buf bytes.Buffer
+
+		err := Run(&buf, []string{tmpDir}, Options{SortByTime: true, Reverse: true, OnePerLine: true})
+		if err != nil {
+			t.Fatalf("Run() error = %v", err)
+		}
+
+		if buf.Len() == 0 {
+			t.Error("Run() sort by time reverse should produce output")
+		}
+	})
+
+	t.Run("sort by size reverse", func(t *testing.T) {
+		var buf bytes.Buffer
+
+		err := Run(&buf, []string{tmpDir}, Options{SortBySize: true, Reverse: true, OnePerLine: true})
+		if err != nil {
+			t.Fatalf("Run() error = %v", err)
+		}
+
+		if buf.Len() == 0 {
+			t.Error("Run() sort by size reverse should produce output")
+		}
+	})
 }

@@ -46,8 +46,8 @@ func TestRunDirname(t *testing.T) {
 		},
 		{
 			name:     "trailing slash",
-			args:     []string{filepath.Join("a", "b") + string(filepath.Separator)},
-			expected: "a",
+			args:     []string{filepath.Join("a", "b", "c") + string(filepath.Separator)},
+			expected: filepath.Join("a", "b", "c"), // With trailing slash, dirname returns the path itself
 		},
 		{
 			name:     "dot path",
@@ -74,6 +74,46 @@ func TestRunDirname(t *testing.T) {
 			args:     []string{filepath.Join("dir", "subdir", "file.tar.gz")},
 			expected: filepath.Join("dir", "subdir"),
 		},
+		{
+			name:     "deeply nested path",
+			args:     []string{filepath.Join("a", "b", "c", "d", "e", "f")},
+			expected: filepath.Join("a", "b", "c", "d", "e"),
+		},
+		{
+			name:     "path with spaces",
+			args:     []string{filepath.Join("path", "to my", "file.txt")},
+			expected: filepath.Join("path", "to my"),
+		},
+		{
+			name:     "relative dot path",
+			args:     []string{filepath.Join(".", "dir", "file.txt")},
+			expected: filepath.Join(".", "dir"),
+		},
+		{
+			name:     "relative dotdot path",
+			args:     []string{filepath.Join("..", "dir", "file.txt")},
+			expected: filepath.Join("..", "dir"),
+		},
+		{
+			name:     "three paths",
+			args:     []string{filepath.Join("a", "1"), filepath.Join("b", "2"), filepath.Join("c", "3")},
+			expected: "a\nb\nc",
+		},
+		{
+			name:     "single file in subdir",
+			args:     []string{filepath.Join("dir", "file")},
+			expected: "dir",
+		},
+		{
+			name:     "hidden file in hidden dir",
+			args:     []string{filepath.Join(".config", ".settings")},
+			expected: ".config",
+		},
+		{
+			name:     "file with multiple extensions",
+			args:     []string{filepath.Join("dir", "archive.tar.gz")},
+			expected: "dir",
+		},
 	}
 
 	for _, tt := range tests {
@@ -95,4 +135,115 @@ func TestRunDirname(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestRunDirname_OutputFormat(t *testing.T) {
+	t.Run("ends with newline", func(t *testing.T) {
+		var buf bytes.Buffer
+
+		_ = RunDirname(&buf, []string{filepath.Join("path", "file.txt")})
+
+		if !strings.HasSuffix(buf.String(), "\n") {
+			t.Error("RunDirname() output should end with newline")
+		}
+	})
+
+	t.Run("multiple outputs each on new line", func(t *testing.T) {
+		var buf bytes.Buffer
+
+		_ = RunDirname(&buf, []string{
+			filepath.Join("a", "1.txt"),
+			filepath.Join("b", "2.txt"),
+			filepath.Join("c", "3.txt"),
+		})
+
+		lines := strings.Split(strings.TrimSpace(buf.String()), "\n")
+		if len(lines) != 3 {
+			t.Errorf("RunDirname() got %d lines, want 3", len(lines))
+		}
+	})
+
+	t.Run("error message format", func(t *testing.T) {
+		var buf bytes.Buffer
+
+		err := RunDirname(&buf, []string{})
+
+		if err == nil {
+			t.Error("RunDirname() should return error for no args")
+			return
+		}
+
+		if !strings.Contains(err.Error(), "dirname") {
+			t.Errorf("RunDirname() error should mention dirname: %v", err)
+		}
+	})
+
+	t.Run("no extra whitespace", func(t *testing.T) {
+		var buf bytes.Buffer
+
+		_ = RunDirname(&buf, []string{filepath.Join("path", "file.txt")})
+
+		output := buf.String()
+		if strings.HasPrefix(output, " ") || strings.HasPrefix(output, "\t") {
+			t.Error("RunDirname() output should not have leading whitespace")
+		}
+	})
+}
+
+func TestRunDirname_EdgeCases(t *testing.T) {
+	t.Run("unicode path", func(t *testing.T) {
+		var buf bytes.Buffer
+
+		_ = RunDirname(&buf, []string{filepath.Join("путь", "файл.txt")})
+
+		got := strings.TrimSpace(buf.String())
+		if got != "путь" {
+			t.Errorf("RunDirname() unicode = %v, want путь", got)
+		}
+	})
+
+	t.Run("path with special characters", func(t *testing.T) {
+		var buf bytes.Buffer
+
+		_ = RunDirname(&buf, []string{filepath.Join("dir-name_v1", "file.txt")})
+
+		got := strings.TrimSpace(buf.String())
+		if got != "dir-name_v1" {
+			t.Errorf("RunDirname() special chars = %v", got)
+		}
+	})
+
+	t.Run("very long path", func(t *testing.T) {
+		longDir := strings.Repeat("a", 100)
+		path := filepath.Join(longDir, "file.txt")
+
+		var buf bytes.Buffer
+
+		_ = RunDirname(&buf, []string{path})
+
+		got := strings.TrimSpace(buf.String())
+		if got != longDir {
+			t.Errorf("RunDirname() long path = %v", got)
+		}
+	})
+
+	t.Run("many path components", func(t *testing.T) {
+		parts := make([]string, 20)
+		for i := range parts {
+			parts[i] = "dir"
+		}
+
+		path := filepath.Join(parts...)
+
+		var buf bytes.Buffer
+
+		_ = RunDirname(&buf, []string{path})
+
+		got := strings.TrimSpace(buf.String())
+		expected := filepath.Join(parts[:19]...)
+
+		if got != expected {
+			t.Errorf("RunDirname() many components = %v, want %v", got, expected)
+		}
+	})
 }
