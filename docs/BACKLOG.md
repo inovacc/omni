@@ -118,11 +118,31 @@ Prioritized items for future development phases.
 
 ## Testing
 
-### Unit Tests
-- [ ] Table-driven tests for all pkg/* functions
-- [ ] Edge cases: empty input, large files, special characters
-- [ ] Platform-specific tests with build tags
-- [ ] Target: 80% code coverage
+### Current Status (January 2026)
+- **Total Test Cases:** ~606 tests across pkg/cli
+- **Packages with Tests:** 24/64
+- **Packages at 100%:** basename, date, dirname
+- **Average Coverage (tested packages):** ~72%
+
+### Unit Tests - Completed ✅
+- [x] Table-driven tests for core functions
+- [x] Edge cases: empty input, large files, special characters
+- [x] Unicode content handling tests
+- [x] Binary file handling tests
+- [x] Consistency tests (multiple calls = same result)
+- [x] Output format tests (newlines, whitespace)
+
+### Unit Tests - In Progress 🔄
+- [ ] Platform-specific tests with build tags (Windows edge cases)
+- [ ] Symlink handling tests across platforms
+- [ ] Permission-related tests
+- [ ] Large file (>1GB) handling tests
+
+### Unit Tests - Pending ❌
+- [ ] Tests for 40+ uncovered packages
+- [ ] Error path coverage
+- [ ] Timeout/context cancellation tests
+- [ ] Concurrent access tests
 
 ### Integration Tests
 - [ ] Compare output with GNU tools
@@ -139,6 +159,12 @@ Prioritized items for future development phases.
 ### Golden Tests
 - [ ] Generate expected output files
 - [ ] Automated comparison in CI
+
+### Test Infrastructure
+- [ ] Add coverage reporting to CI
+- [ ] Add test result badges to README
+- [ ] Set up coverage threshold enforcement (80%)
+- [ ] Add mutation testing
 
 ---
 
@@ -180,7 +206,7 @@ Prioritized items for future development phases.
 
 ## Version Milestones
 
-### v0.1.0 - MVP
+### v0.1.0 - MVP ✅
 - Core commands (ls, pwd, cat, date, dirname, basename, realpath)
 - JSON output mode
 - Basic documentation
@@ -200,8 +226,30 @@ Prioritized items for future development phases.
 - env, whoami, uname
 - time, uptime
 
+### v0.5.0 - Test Coverage Milestone 🔄 (Current)
+**Goal:** Achieve 90%+ coverage for tested packages, 60%+ overall
+
+| Milestone | Target | Status |
+|-----------|--------|--------|
+| 7.1 Core Coverage | 95% for core packages | 🔄 In Progress |
+| 7.2 Utility Coverage | 80% for utility packages | 🔄 In Progress |
+| 7.3 Uncovered Packages | 60% for remaining packages | ❌ Not Started |
+
+**Completed:**
+- [x] Expanded tests for 24 packages (~606 test cases)
+- [x] Fixed platform-specific test failures
+- [x] Added edge case tests (unicode, binary, large files)
+- [x] Added consistency and output format tests
+
+**Remaining:**
+- [ ] Add tests for 40 uncovered packages
+- [ ] Increase coverage in low-coverage packages
+- [ ] Add platform-specific test variants
+- [ ] Set up CI coverage enforcement
+
 ### v1.0.0 - Production Ready
 - All P0/P1 commands complete
 - Full documentation
 - Taskfile linter
-- 80%+ test coverage
+- 90%+ test coverage for core packages
+- 80%+ overall test coverage
