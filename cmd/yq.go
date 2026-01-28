@@ -3,7 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/inovacc/omni/pkg/cli"
+	"github.com/inovacc/omni/pkg/cli/yq"
 
 	"github.com/spf13/cobra"
 )
@@ -33,7 +33,7 @@ Examples:
   echo "name: John" | omni yq '.name'
   omni yq '.items[]' data.yaml`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		opts := cli.YqOptions{}
+		opts := yq.YqOptions{}
 
 		opts.Raw, _ = cmd.Flags().GetBool("raw-output")
 		opts.Compact, _ = cmd.Flags().GetBool("compact-output")
@@ -47,7 +47,7 @@ Examples:
 			opts.OutputYAML = true
 		}
 
-		return cli.RunYq(os.Stdout, args, opts)
+		return yq.RunYq(os.Stdout, args, opts)
 	},
 }
 

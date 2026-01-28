@@ -3,7 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/inovacc/omni/pkg/cli"
+	"github.com/inovacc/omni/pkg/cli/paste"
 
 	"github.com/spf13/cobra"
 )
@@ -21,13 +21,13 @@ With no FILE, or when FILE is -, read standard input.
   -s, --serial            paste one file at a time instead of in parallel
   -z, --zero-terminated   line delimiter is NUL, not newline`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		opts := cli.PasteOptions{}
+		opts := paste.PasteOptions{}
 
 		opts.Delimiters, _ = cmd.Flags().GetString("delimiters")
 		opts.Serial, _ = cmd.Flags().GetBool("serial")
 		opts.Zero, _ = cmd.Flags().GetBool("zero-terminated")
 
-		return cli.RunPaste(os.Stdout, args, opts)
+		return paste.RunPaste(os.Stdout, args, opts)
 	},
 }
 

@@ -3,7 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/inovacc/omni/pkg/cli"
+	"github.com/inovacc/omni/pkg/cli/lint"
 
 	"github.com/spf13/cobra"
 )
@@ -33,14 +33,14 @@ Examples:
   omni lint --strict Taskfile.yml      # enable strict mode
   omni lint -q Taskfile.yml            # only show errors`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		opts := cli.LintOptions{}
+		opts := lint.LintOptions{}
 
 		opts.Format, _ = cmd.Flags().GetString("format")
 		opts.Fix, _ = cmd.Flags().GetBool("fix")
 		opts.Strict, _ = cmd.Flags().GetBool("strict")
 		opts.Quiet, _ = cmd.Flags().GetBool("quiet")
 
-		return cli.RunLint(os.Stdout, args, opts)
+		return lint.RunLint(os.Stdout, args, opts)
 	},
 }
 

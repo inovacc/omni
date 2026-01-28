@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"github.com/inovacc/omni/pkg/cli"
+	"github.com/inovacc/omni/pkg/cli/sleep"
 	"github.com/spf13/cobra"
 )
 
@@ -23,7 +23,7 @@ Examples:
   omni sleep 1h 30m      # sleep 1.5 hours`,
 	Args: cobra.MinimumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return cli.RunSleep(args)
+		return sleep.RunSleep(args)
 	},
 }
 

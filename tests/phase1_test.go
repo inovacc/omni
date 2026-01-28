@@ -8,8 +8,21 @@ import (
 	"testing"
 	"time"
 
-	"github.com/inovacc/omni/pkg/cli"
+	"github.com/inovacc/omni/pkg/cli/basename"
+	"github.com/inovacc/omni/pkg/cli/cat"
+	"github.com/inovacc/omni/pkg/cli/date"
+	"github.com/inovacc/omni/pkg/cli/dirname"
+	"github.com/inovacc/omni/pkg/cli/env"
+	"github.com/inovacc/omni/pkg/cli/grep"
+	"github.com/inovacc/omni/pkg/cli/head"
+	"github.com/inovacc/omni/pkg/cli/ls"
+	"github.com/inovacc/omni/pkg/cli/pwd"
+	"github.com/inovacc/omni/pkg/cli/realpath"
+	"github.com/inovacc/omni/pkg/cli/tail"
+	"github.com/inovacc/omni/pkg/cli/text"
 	"github.com/inovacc/omni/pkg/cli/uname"
+	"github.com/inovacc/omni/pkg/cli/wc"
+	"github.com/inovacc/omni/pkg/cli/whoami"
 )
 
 //nolint:maintidx // Test function has expected high complexity with many subtest cases
@@ -36,7 +49,7 @@ func TestPhase1Commands(t *testing.T) {
 	t.Run("pwd", func(t *testing.T) {
 		var buf bytes.Buffer
 
-		err := cli.RunPwd(&buf)
+		err := pwd.RunPwd(&buf)
 		if err != nil {
 			t.Fatalf("command failed: %v", err)
 		}
@@ -51,7 +64,7 @@ func TestPhase1Commands(t *testing.T) {
 	t.Run("date", func(t *testing.T) {
 		var buf bytes.Buffer
 
-		err := cli.RunDate(&buf, cli.DateOptions{})
+		err := date.RunDate(&buf, date.DateOptions{})
 		if err != nil {
 			t.Fatalf("command failed: %v", err)
 		}
@@ -72,7 +85,7 @@ func TestPhase1Commands(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := cli.RunLs(&buf, []string{"."}, cli.LsOptions{})
+		err := ls.Run(&buf, []string{"."}, ls.Options{})
 		if err != nil {
 			t.Fatalf("command failed: %v", err)
 		}
@@ -84,7 +97,7 @@ func TestPhase1Commands(t *testing.T) {
 		// Test JSON mode
 		var jsonBuf bytes.Buffer
 
-		err = cli.RunLs(&jsonBuf, []string{"."}, cli.LsOptions{JSON: true})
+		err = ls.Run(&jsonBuf, []string{"."}, ls.Options{JSON: true})
 		if err != nil {
 			t.Fatalf("command failed: %v", err)
 		}
@@ -105,7 +118,7 @@ func TestPhase1Commands(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := cli.RunCat(&buf, []string{fname}, cli.CatOptions{})
+		err := cat.RunCat(&buf, []string{fname}, cat.CatOptions{})
 		if err != nil {
 			t.Fatalf("command failed: %v", err)
 		}
@@ -121,7 +134,7 @@ func TestPhase1Commands(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := cli.RunDirname(&buf, []string{path})
+		err := dirname.RunDirname(&buf, []string{path})
 		if err != nil {
 			t.Fatalf("command failed: %v", err)
 		}
@@ -138,7 +151,7 @@ func TestPhase1Commands(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := cli.RunBasename(&buf, []string{path}, ".txt")
+		err := basename.RunBasename(&buf, []string{path}, ".txt")
 		if err != nil {
 			t.Fatalf("command failed: %v", err)
 		}
@@ -157,7 +170,7 @@ func TestPhase1Commands(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := cli.RunRealpath(&buf, []string{fname})
+		err := realpath.RunRealpath(&buf, []string{fname})
 		if err != nil {
 			t.Fatalf("command failed: %v", err)
 		}
@@ -185,7 +198,7 @@ func TestPhase1Commands(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := cli.RunGrep(&buf, "hello", []string{fname}, cli.GrepOptions{})
+		err := grep.RunGrep(&buf, "hello", []string{fname}, grep.GrepOptions{})
 		if err != nil {
 			t.Fatalf("command failed: %v", err)
 		}
@@ -207,7 +220,7 @@ func TestPhase1Commands(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := cli.RunHead(&buf, []string{fname}, cli.HeadOptions{Lines: 2})
+		err := head.RunHead(&buf, []string{fname}, head.HeadOptions{Lines: 2})
 		if err != nil {
 			t.Fatalf("command failed: %v", err)
 		}
@@ -229,7 +242,7 @@ func TestPhase1Commands(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := cli.RunTail(&buf, []string{fname}, cli.TailOptions{Lines: 2})
+		err := tail.RunTail(&buf, []string{fname}, tail.TailOptions{Lines: 2})
 		if err != nil {
 			t.Fatalf("command failed: %v", err)
 		}
@@ -255,7 +268,7 @@ func TestPhase1Commands(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := cli.RunWC(&buf, []string{fname}, cli.WCOptions{Lines: true})
+		err := wc.RunWC(&buf, []string{fname}, wc.WCOptions{Lines: true})
 		if err != nil {
 			t.Fatalf("command failed: %v", err)
 		}
@@ -276,7 +289,7 @@ func TestPhase1Commands(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := cli.RunSort(&buf, []string{fname}, cli.SortOptions{})
+		err := text.RunSort(&buf, []string{fname}, text.SortOptions{})
 		if err != nil {
 			t.Fatalf("command failed: %v", err)
 		}
@@ -291,7 +304,7 @@ func TestPhase1Commands(t *testing.T) {
 	t.Run("whoami", func(t *testing.T) {
 		var buf bytes.Buffer
 
-		err := cli.RunWhoami(&buf)
+		err := whoami.RunWhoami(&buf)
 		if err != nil {
 			t.Fatalf("command failed: %v", err)
 		}
@@ -315,7 +328,7 @@ func TestPhase1Commands(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := cli.RunEnv(&buf, []string{"omni_TEST_VAR"}, cli.EnvOptions{})
+		err := env.RunEnv(&buf, []string{"omni_TEST_VAR"}, env.EnvOptions{})
 		if err != nil {
 			t.Fatalf("command failed: %v", err)
 		}

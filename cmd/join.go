@@ -3,7 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/inovacc/omni/pkg/cli"
+	"github.com/inovacc/omni/pkg/cli/join"
 
 	"github.com/spf13/cobra"
 )
@@ -30,7 +30,7 @@ Examples:
   omni join -1 2 -2 1 file1.txt file2.txt # join field 2 of file1 with field 1 of file2
   omni join -t ',' data1.csv data2.csv    # join CSV files`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		opts := cli.JoinOptions{}
+		opts := join.JoinOptions{}
 
 		opts.Field1, _ = cmd.Flags().GetInt("1")
 		opts.Field2, _ = cmd.Flags().GetInt("2")
@@ -54,7 +54,7 @@ Examples:
 			opts.OnlyUnpaired2 = true
 		}
 
-		return cli.RunJoin(os.Stdout, args, opts)
+		return join.RunJoin(os.Stdout, args, opts)
 	},
 }
 

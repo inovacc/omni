@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"github.com/inovacc/omni/pkg/cli"
+	"github.com/inovacc/omni/pkg/cli/stat"
 
 	"github.com/spf13/cobra"
 )
@@ -12,7 +12,7 @@ var touchCmd = &cobra.Command{
 	Short: "Update the access and modification times of each FILE to the current time",
 	Long:  `Update the access and modification times of each FILE to the current time. A FILE argument that does not exist is created empty.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return cli.RunTouch(args)
+		return stat.RunTouch(args, stat.TouchOptions{})
 	},
 }
 

@@ -3,7 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/inovacc/omni/pkg/cli"
+	"github.com/inovacc/omni/pkg/cli/seq"
 	"github.com/spf13/cobra"
 )
 
@@ -31,13 +31,13 @@ Examples:
   omni seq 0.5 0.1 1.0     # print 0.5 0.6 0.7 0.8 0.9 1.0`,
 	Args: cobra.RangeArgs(1, 3),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		opts := cli.SeqOptions{
+		opts := seq.SeqOptions{
 			Separator:  seqSeparator,
 			Format:     seqFormat,
 			EqualWidth: seqEqualWidth,
 		}
 
-		return cli.RunSeq(os.Stdout, args, opts)
+		return seq.RunSeq(os.Stdout, args, opts)
 	},
 }
 

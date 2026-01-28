@@ -3,7 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/inovacc/omni/pkg/cli"
+	"github.com/inovacc/omni/pkg/cli/shuf"
 	"github.com/spf13/cobra"
 )
 
@@ -33,7 +33,7 @@ Examples:
   omni shuf -n 5 file.txt         # output 5 random lines
   omni shuf -rn 10 -e yes no      # 10 random picks with repetition`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		opts := cli.ShufOptions{
+		opts := shuf.ShufOptions{
 			Echo:       shufEcho,
 			InputRange: shufInputRange,
 			HeadCount:  shufHeadCount,
@@ -41,7 +41,7 @@ Examples:
 			ZeroTerm:   shufZeroTerm,
 		}
 
-		return cli.RunShuf(os.Stdout, args, opts)
+		return shuf.RunShuf(os.Stdout, args, opts)
 	},
 }
 

@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"github.com/inovacc/omni/pkg/cli"
+	"github.com/inovacc/omni/pkg/cli/rm"
 
 	"github.com/spf13/cobra"
 )
@@ -12,7 +12,7 @@ var rmdirCmd = &cobra.Command{
 	Short: "Remove empty directories",
 	Long:  `Remove the DIRECTORY(ies), if they are empty.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return cli.RunRmdir(args)
+		return rm.RunRmdir(args, rm.RmdirOptions{})
 	},
 }
 

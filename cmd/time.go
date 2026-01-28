@@ -5,7 +5,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/inovacc/omni/pkg/cli"
+	"github.com/inovacc/omni/pkg/cli/timecmd"
 
 	"github.com/spf13/cobra"
 )
@@ -44,7 +44,7 @@ Examples:
 				}
 			}
 
-			_, err = cli.RunTime(os.Stderr, func() error {
+			_, err = timecmd.RunTime(os.Stderr, func() error {
 				time.Sleep(duration)
 				return nil
 			})

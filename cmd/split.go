@@ -3,7 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/inovacc/omni/pkg/cli"
+	"github.com/inovacc/omni/pkg/cli/split"
 	"github.com/spf13/cobra"
 )
 
@@ -35,7 +35,7 @@ Examples:
   omni split -b 1M file.bin        # split into 1MB files
   omni split -d file.txt chunk_    # use numeric suffixes`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		opts := cli.SplitOptions{
+		opts := split.SplitOptions{
 			Lines:       splitLines,
 			Bytes:       splitBytes,
 			Suffix:      splitSuffixLen,
@@ -43,7 +43,7 @@ Examples:
 			Verbose:     splitVerbose,
 		}
 
-		return cli.RunSplit(os.Stdout, args, opts)
+		return split.RunSplit(os.Stdout, args, opts)
 	},
 }
 

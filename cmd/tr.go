@@ -3,7 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/inovacc/omni/pkg/cli"
+	"github.com/inovacc/omni/pkg/cli/tr"
 
 	"github.com/spf13/cobra"
 )
@@ -45,7 +45,7 @@ Interpreted sequences are:
   [:xdigit:]   all hexadecimal digits`,
 	Args: cobra.RangeArgs(1, 2),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		opts := cli.TrOptions{}
+		opts := tr.TrOptions{}
 
 		opts.Complement, _ = cmd.Flags().GetBool("complement")
 		opts.Delete, _ = cmd.Flags().GetBool("delete")
@@ -58,7 +58,7 @@ Interpreted sequences are:
 			set2 = args[1]
 		}
 
-		return cli.RunTr(os.Stdout, os.Stdin, set1, set2, opts)
+		return tr.RunTr(os.Stdout, os.Stdin, set1, set2, opts)
 	},
 }
 

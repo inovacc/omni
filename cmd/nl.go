@@ -3,7 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/inovacc/omni/pkg/cli"
+	"github.com/inovacc/omni/pkg/cli/nl"
 
 	"github.com/spf13/cobra"
 )
@@ -33,7 +33,7 @@ FORMAT is one of:
   rn     right justified, no leading zeros (default)
   rz     right justified, leading zeros`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		opts := cli.NlOptions{}
+		opts := nl.NlOptions{}
 
 		opts.BodyNumbering, _ = cmd.Flags().GetString("body-numbering")
 		opts.NumberFormat, _ = cmd.Flags().GetString("number-format")
@@ -42,7 +42,7 @@ FORMAT is one of:
 		opts.Increment, _ = cmd.Flags().GetInt("line-increment")
 		opts.NumberWidth, _ = cmd.Flags().GetInt("number-width")
 
-		return cli.RunNl(os.Stdout, args, opts)
+		return nl.RunNl(os.Stdout, args, opts)
 	},
 }
 

@@ -5,7 +5,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/inovacc/omni/pkg/cli"
+	"github.com/inovacc/omni/pkg/cli/dd"
 	"github.com/spf13/cobra"
 )
 
@@ -44,7 +44,7 @@ Examples:
   omni dd if=file.txt conv=ucase                   # convert to uppercase
   omni dd if=disk.img of=backup.img bs=4K          # disk image backup`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		opts := cli.DdOptions{}
+		opts := dd.DdOptions{}
 
 		// Parse operands
 		for _, arg := range args {
@@ -62,17 +62,17 @@ Examples:
 			case "of":
 				opts.OutputFile = value
 			case "bs":
-				opts.BlockSize, err = cli.ParseDdSize(value)
+				opts.BlockSize, err = dd.ParseDdSize(value)
 			case "ibs":
-				opts.InputBS, err = cli.ParseDdSize(value)
+				opts.InputBS, err = dd.ParseDdSize(value)
 			case "obs":
-				opts.OutputBS, err = cli.ParseDdSize(value)
+				opts.OutputBS, err = dd.ParseDdSize(value)
 			case "count":
-				opts.Count, err = cli.ParseDdSize(value)
+				opts.Count, err = dd.ParseDdSize(value)
 			case "skip":
-				opts.Skip, err = cli.ParseDdSize(value)
+				opts.Skip, err = dd.ParseDdSize(value)
 			case "seek":
-				opts.Seek, err = cli.ParseDdSize(value)
+				opts.Seek, err = dd.ParseDdSize(value)
 			case "conv":
 				opts.Conv = value
 			case "status":
@@ -86,7 +86,7 @@ Examples:
 			}
 		}
 
-		return cli.RunDd(os.Stdout, opts)
+		return dd.RunDd(os.Stdout, opts)
 	},
 }
 

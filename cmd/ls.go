@@ -3,7 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/inovacc/omni/pkg/cli"
+	"github.com/inovacc/omni/pkg/cli/ls"
 
 	"github.com/spf13/cobra"
 )
@@ -15,7 +15,7 @@ var lsCmd = &cobra.Command{
 	Long: `List information about the FILEs (the current directory by default).
 Sort entries alphabetically if none of -tSU is specified.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		opts := cli.LsOptions{}
+		opts := ls.Options{}
 
 		opts.All, _ = cmd.Flags().GetBool("all")
 		opts.AlmostAll, _ = cmd.Flags().GetBool("almost-all")
@@ -32,7 +32,7 @@ Sort entries alphabetically if none of -tSU is specified.`,
 		opts.Inode, _ = cmd.Flags().GetBool("inode")
 		opts.JSON, _ = cmd.Flags().GetBool("json")
 
-		return cli.RunLs(os.Stdout, args, opts)
+		return ls.Run(os.Stdout, args, opts)
 	},
 }
 

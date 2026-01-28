@@ -3,7 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/inovacc/omni/pkg/cli"
+	"github.com/inovacc/omni/pkg/cli/du"
 
 	"github.com/spf13/cobra"
 )
@@ -26,7 +26,7 @@ var duCmd = &cobra.Command{
   -0, --null            end each output line with NUL, not newline
   -B, --block-size=SIZE scale sizes by SIZE before printing them`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		opts := cli.DUOptions{}
+		opts := du.DUOptions{}
 
 		opts.All, _ = cmd.Flags().GetBool("all")
 		opts.ByteCount, _ = cmd.Flags().GetBool("bytes")
@@ -39,7 +39,7 @@ var duCmd = &cobra.Command{
 		opts.NullTerminator, _ = cmd.Flags().GetBool("null")
 		opts.BlockSize, _ = cmd.Flags().GetInt64("block-size")
 
-		return cli.RunDU(os.Stdout, args, opts)
+		return du.RunDU(os.Stdout, args, opts)
 	},
 }
 

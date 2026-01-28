@@ -3,7 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/inovacc/omni/pkg/cli"
+	"github.com/inovacc/omni/pkg/cli/head"
 
 	"github.com/spf13/cobra"
 )
@@ -16,14 +16,14 @@ var headCmd = &cobra.Command{
 With more than one FILE, precede each with a header giving the file name.
 With no FILE, or when FILE is -, read standard input.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		opts := cli.HeadOptions{}
+		opts := head.HeadOptions{}
 
 		opts.Lines, _ = cmd.Flags().GetInt("lines")
 		opts.Bytes, _ = cmd.Flags().GetInt("bytes")
 		opts.Quiet, _ = cmd.Flags().GetBool("quiet")
 		opts.Verbose, _ = cmd.Flags().GetBool("verbose")
 
-		return cli.RunHead(os.Stdout, args, opts)
+		return head.RunHead(os.Stdout, args, opts)
 	},
 }
 

@@ -3,7 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/inovacc/omni/pkg/cli"
+	"github.com/inovacc/omni/pkg/cli/stat"
 
 	"github.com/spf13/cobra"
 )
@@ -15,7 +15,7 @@ var statCmd = &cobra.Command{
 	Long:  `Display file or file system status.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		jsonMode, _ := cmd.Flags().GetBool("json")
-		return cli.RunStat(os.Stdout, args, jsonMode)
+		return stat.RunStat(os.Stdout, args, stat.StatOptions{JSON: jsonMode})
 	},
 }
 

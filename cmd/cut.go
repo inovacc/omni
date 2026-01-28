@@ -3,7 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/inovacc/omni/pkg/cli"
+	"github.com/inovacc/omni/pkg/cli/cut"
 
 	"github.com/spf13/cobra"
 )
@@ -32,7 +32,7 @@ range, or many ranges separated by commas.  Each range is one of:
   N-M   from N'th to M'th (included) byte, character or field
   -M    from first to M'th (included) byte, character or field`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		opts := cli.CutOptions{}
+		opts := cut.CutOptions{}
 
 		opts.Bytes, _ = cmd.Flags().GetString("bytes")
 		opts.Characters, _ = cmd.Flags().GetString("characters")
@@ -42,7 +42,7 @@ range, or many ranges separated by commas.  Each range is one of:
 		opts.OutputDelim, _ = cmd.Flags().GetString("output-delimiter")
 		opts.Complement, _ = cmd.Flags().GetBool("complement")
 
-		return cli.RunCut(os.Stdout, args, opts)
+		return cut.RunCut(os.Stdout, args, opts)
 	},
 }
 

@@ -3,7 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/inovacc/omni/pkg/cli"
+	"github.com/inovacc/omni/pkg/cli/rev"
 	"github.com/spf13/cobra"
 )
 
@@ -16,7 +16,7 @@ Examples:
   echo "hello" | omni rev     # olleh
   omni rev file.txt           # reverse each line in file`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return cli.RunRev(os.Stdout, args)
+		return rev.RunRev(os.Stdout, args)
 	},
 }
 

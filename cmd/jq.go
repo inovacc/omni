@@ -3,7 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/inovacc/omni/pkg/cli"
+	"github.com/inovacc/omni/pkg/cli/jq"
 
 	"github.com/spf13/cobra"
 )
@@ -36,7 +36,7 @@ Examples:
   echo '{"a":{"b":1}}' | omni jq '.a.b'
   omni jq -r '.name' data.json`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		opts := cli.JqOptions{}
+		opts := jq.JqOptions{}
 
 		opts.Raw, _ = cmd.Flags().GetBool("raw-output")
 		opts.Compact, _ = cmd.Flags().GetBool("compact-output")
@@ -45,7 +45,7 @@ Examples:
 		opts.Tab, _ = cmd.Flags().GetBool("tab")
 		opts.Sort, _ = cmd.Flags().GetBool("sort-keys")
 
-		return cli.RunJq(os.Stdout, args, opts)
+		return jq.RunJq(os.Stdout, args, opts)
 	},
 }
 

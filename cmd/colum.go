@@ -3,7 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/inovacc/omni/pkg/cli"
+	"github.com/inovacc/omni/pkg/cli/column"
 
 	"github.com/spf13/cobra"
 )
@@ -24,7 +24,7 @@ With no FILE, or when FILE is -, read standard input.
   -x, --fillrows         fill rows before columns
   -R, --right            right-align columns`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		opts := cli.ColumnOptions{}
+		opts := column.ColumnOptions{}
 
 		opts.Table, _ = cmd.Flags().GetBool("table")
 		opts.Separator, _ = cmd.Flags().GetString("separator")
@@ -33,7 +33,7 @@ With no FILE, or when FILE is -, read standard input.
 		opts.FillRows, _ = cmd.Flags().GetBool("fillrows")
 		opts.Right, _ = cmd.Flags().GetBool("right")
 
-		return cli.RunColumn(os.Stdout, args, opts)
+		return column.RunColumn(os.Stdout, args, opts)
 	},
 }
 

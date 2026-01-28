@@ -3,7 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/inovacc/omni/pkg/cli"
+	"github.com/inovacc/omni/pkg/cli/dirname"
 
 	"github.com/spf13/cobra"
 )
@@ -15,7 +15,7 @@ var dirnameCmd = &cobra.Command{
 	Long:  `Output each NAME with its last non-slash component and trailing slashes removed.`,
 	Args:  cobra.MinimumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return cli.RunDirname(os.Stdout, args)
+		return dirname.RunDirname(os.Stdout, args)
 	},
 }
 

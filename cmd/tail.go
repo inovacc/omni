@@ -4,7 +4,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/inovacc/omni/pkg/cli"
+	"github.com/inovacc/omni/pkg/cli/tail"
 
 	"github.com/spf13/cobra"
 )
@@ -17,7 +17,7 @@ var tailCmd = &cobra.Command{
 With more than one FILE, precede each with a header giving the file name.
 With no FILE, or when FILE is -, read standard input.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		opts := cli.TailOptions{}
+		opts := tail.TailOptions{}
 
 		opts.Lines, _ = cmd.Flags().GetInt("lines")
 		opts.Bytes, _ = cmd.Flags().GetInt("bytes")
@@ -26,7 +26,7 @@ With no FILE, or when FILE is -, read standard input.`,
 		opts.Verbose, _ = cmd.Flags().GetBool("verbose")
 		opts.Sleep, _ = cmd.Flags().GetDuration("sleep-interval")
 
-		return cli.RunTail(os.Stdout, args, opts)
+		return tail.RunTail(os.Stdout, args, opts)
 	},
 }
 

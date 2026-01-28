@@ -3,7 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/inovacc/omni/pkg/cli"
+	"github.com/inovacc/omni/pkg/cli/chmod"
 
 	"github.com/spf13/cobra"
 )
@@ -31,7 +31,7 @@ Options:
       --reference  use RFILE's mode instead of MODE values`,
 	Args: cobra.MinimumNArgs(2),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		opts := cli.ChmodOptions{}
+		opts := chmod.ChmodOptions{}
 
 		opts.Recursive, _ = cmd.Flags().GetBool("recursive")
 		opts.Verbose, _ = cmd.Flags().GetBool("verbose")
@@ -39,7 +39,7 @@ Options:
 		opts.Silent, _ = cmd.Flags().GetBool("silent")
 		opts.Reference, _ = cmd.Flags().GetString("reference")
 
-		return cli.RunChmod(os.Stdout, args, opts)
+		return chmod.RunChmod(os.Stdout, args, opts)
 	},
 }
 

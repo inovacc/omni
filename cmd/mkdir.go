@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"github.com/inovacc/omni/pkg/cli"
+	"github.com/inovacc/omni/pkg/cli/mkdir"
 
 	"github.com/spf13/cobra"
 )
@@ -13,7 +13,7 @@ var mkdirCmd = &cobra.Command{
 	Long:  `Create the DIRECTORY(ies), if they do not already exist.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		parents, _ := cmd.Flags().GetBool("parents")
-		return cli.RunMkdir(args, parents)
+		return mkdir.RunMkdir(args, mkdir.Options{Parents: parents})
 	},
 }
 

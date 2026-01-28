@@ -3,7 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/inovacc/omni/pkg/cli"
+	"github.com/inovacc/omni/pkg/cli/uuid"
 
 	"github.com/spf13/cobra"
 )
@@ -26,13 +26,13 @@ Examples:
   omni uuid -u               # uppercase output
   omni uuid -x               # no dashes (32 hex chars)`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		opts := cli.UUIDOptions{}
+		opts := uuid.UUIDOptions{}
 
 		opts.Count, _ = cmd.Flags().GetInt("count")
 		opts.Upper, _ = cmd.Flags().GetBool("upper")
 		opts.NoDashes, _ = cmd.Flags().GetBool("no-dashes")
 
-		return cli.RunUUID(os.Stdout, opts)
+		return uuid.RunUUID(os.Stdout, opts)
 	},
 }
 

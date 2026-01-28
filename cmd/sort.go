@@ -3,7 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/inovacc/omni/pkg/cli"
+	"github.com/inovacc/omni/pkg/cli/text"
 
 	"github.com/spf13/cobra"
 )
@@ -16,7 +16,7 @@ var sortCmd = &cobra.Command{
 
 With no FILE, or when FILE is -, read standard input.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		opts := cli.SortOptions{}
+		opts := text.SortOptions{}
 
 		opts.Reverse, _ = cmd.Flags().GetBool("reverse")
 		opts.Numeric, _ = cmd.Flags().GetBool("numeric-sort")
@@ -30,7 +30,7 @@ With no FILE, or when FILE is -, read standard input.`,
 		opts.Stable, _ = cmd.Flags().GetBool("stable")
 		opts.Output, _ = cmd.Flags().GetString("output")
 
-		return cli.RunSort(os.Stdout, args, opts)
+		return text.RunSort(os.Stdout, args, opts)
 	},
 }
 

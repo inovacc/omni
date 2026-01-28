@@ -4,7 +4,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/inovacc/omni/pkg/cli"
+	"github.com/inovacc/omni/pkg/cli/date"
 
 	"github.com/spf13/cobra"
 )
@@ -23,7 +23,7 @@ FORMAT controls the output. Interpreted sequences are:
   %M   minute (00..59)
   %S   second (00..60)`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		opts := cli.DateOptions{}
+		opts := date.DateOptions{}
 
 		opts.UTC, _ = cmd.Flags().GetBool("utc")
 		opts.ISO, _ = cmd.Flags().GetBool("iso-8601")
@@ -33,7 +33,7 @@ FORMAT controls the output. Interpreted sequences are:
 			opts.Format = convertDateFormat(args[0][1:])
 		}
 
-		return cli.RunDate(os.Stdout, opts)
+		return date.RunDate(os.Stdout, opts)
 	},
 }
 

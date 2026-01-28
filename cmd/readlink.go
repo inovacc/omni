@@ -3,7 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/inovacc/omni/pkg/cli"
+	"github.com/inovacc/omni/pkg/cli/readlink"
 
 	"github.com/spf13/cobra"
 )
@@ -24,7 +24,7 @@ var readlinkCmd = &cobra.Command{
   -z, --zero                    end each output line with NUL, not newline`,
 	Args: cobra.MinimumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		opts := cli.ReadlinkOptions{}
+		opts := readlink.ReadlinkOptions{}
 
 		opts.Canonicalize, _ = cmd.Flags().GetBool("canonicalize")
 		opts.CanonicalizeExisting, _ = cmd.Flags().GetBool("canonicalize-existing")
@@ -35,7 +35,7 @@ var readlinkCmd = &cobra.Command{
 		opts.Verbose, _ = cmd.Flags().GetBool("verbose")
 		opts.Zero, _ = cmd.Flags().GetBool("zero")
 
-		return cli.RunReadlink(os.Stdout, args, opts)
+		return readlink.RunReadlink(os.Stdout, args, opts)
 	},
 }
 

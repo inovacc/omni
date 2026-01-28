@@ -6,7 +6,7 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/inovacc/omni/pkg/cli"
+	"github.com/inovacc/omni/pkg/cli/yes"
 
 	"github.com/spf13/cobra"
 )
@@ -32,7 +32,7 @@ Examples:
 			cancel()
 		}()
 
-		return cli.RunYes(ctx, os.Stdout, args)
+		return yes.RunYes(ctx, os.Stdout, args)
 	},
 }
 

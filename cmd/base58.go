@@ -3,7 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/inovacc/omni/pkg/cli"
+	"github.com/inovacc/omni/pkg/cli/base"
 
 	"github.com/spf13/cobra"
 )
@@ -24,11 +24,11 @@ Examples:
   echo "hello" | omni base58           # encode
   omni base58 -d encoded.txt           # decode`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		opts := cli.BaseOptions{}
+		opts := base.BaseOptions{}
 
 		opts.Decode, _ = cmd.Flags().GetBool("decode")
 
-		return cli.RunBase58(os.Stdout, args, opts)
+		return base.RunBase58(os.Stdout, args, opts)
 	},
 }
 

@@ -3,7 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/inovacc/omni/pkg/cli"
+	"github.com/inovacc/omni/pkg/cli/fold"
 
 	"github.com/spf13/cobra"
 )
@@ -24,13 +24,13 @@ Examples:
   omni fold -w 40 file.txt     # wrap lines at 40 columns
   omni fold -s -w 72 README    # wrap at spaces, 72 columns`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		opts := cli.FoldOptions{}
+		opts := fold.FoldOptions{}
 
 		opts.Width, _ = cmd.Flags().GetInt("width")
 		opts.Bytes, _ = cmd.Flags().GetBool("bytes")
 		opts.Spaces, _ = cmd.Flags().GetBool("spaces")
 
-		return cli.RunFold(os.Stdout, args, opts)
+		return fold.RunFold(os.Stdout, args, opts)
 	},
 }
 

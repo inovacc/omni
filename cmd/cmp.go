@@ -3,7 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/inovacc/omni/pkg/cli"
+	"github.com/inovacc/omni/pkg/cli/cmp"
 	"github.com/spf13/cobra"
 )
 
@@ -37,7 +37,7 @@ Examples:
   omni cmp -l file1 file2          # show all differences`,
 	Args: cobra.ExactArgs(2),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		opts := cli.CmpOptions{
+		opts := cmp.CmpOptions{
 			Silent:     cmpSilent,
 			Verbose:    cmpVerbose,
 			PrintBytes: cmpPrintBytes,
@@ -46,12 +46,12 @@ Examples:
 			MaxBytes:   cmpMaxBytes,
 		}
 
-		result, err := cli.RunCmp(os.Stdout, args, opts)
+		result, err := cmp.RunCmp(os.Stdout, args, opts)
 		if err != nil {
 			return err
 		}
 
-		if result == cli.CmpDiffer {
+		if result == cmp.CmpDiffer {
 			os.Exit(1)
 		}
 

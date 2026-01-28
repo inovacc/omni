@@ -3,7 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/inovacc/omni/pkg/cli"
+	"github.com/inovacc/omni/pkg/cli/xargs"
 
 	"github.com/spf13/cobra"
 )
@@ -32,7 +32,7 @@ Examples:
   echo -e "a\nb\nc" | omni xargs   # prints: a b c
   echo -e "a\nb\nc" | omni xargs -n 1  # prints each on separate line`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		opts := cli.XargsOptions{}
+		opts := xargs.XargsOptions{}
 
 		opts.NullInput, _ = cmd.Flags().GetBool("null")
 		opts.Delimiter, _ = cmd.Flags().GetString("delimiter")
@@ -42,7 +42,7 @@ Examples:
 		opts.Verbose, _ = cmd.Flags().GetBool("verbose")
 		opts.ReplaceStr, _ = cmd.Flags().GetString("I")
 
-		return cli.RunXargsWithPrint(os.Stdout, os.Stdin, opts)
+		return xargs.RunXargsWithPrint(os.Stdout, os.Stdin, opts)
 	},
 }
 

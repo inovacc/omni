@@ -3,7 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/inovacc/omni/pkg/cli"
+	"github.com/inovacc/omni/pkg/cli/diff"
 
 	"github.com/spf13/cobra"
 )
@@ -32,7 +32,7 @@ Examples:
   omni diff -r dir1/ dir2/               # recursive`,
 	Args: cobra.MinimumNArgs(2),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		opts := cli.DiffOptions{}
+		opts := diff.DiffOptions{}
 
 		opts.Unified, _ = cmd.Flags().GetInt("unified")
 		opts.Side, _ = cmd.Flags().GetBool("side-by-side")
@@ -46,7 +46,7 @@ Examples:
 		opts.Width, _ = cmd.Flags().GetInt("width")
 		opts.SuppressCommon, _ = cmd.Flags().GetBool("suppress-common-lines")
 
-		return cli.RunDiff(os.Stdout, args, opts)
+		return diff.RunDiff(os.Stdout, args, opts)
 	},
 }
 

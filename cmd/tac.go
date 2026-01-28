@@ -3,7 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/inovacc/omni/pkg/cli"
+	"github.com/inovacc/omni/pkg/cli/tac"
 
 	"github.com/spf13/cobra"
 )
@@ -20,13 +20,13 @@ With no FILE, or when FILE is -, read standard input.
   -r, --regex              interpret the separator as a regular expression
   -s, --separator=STRING   use STRING as the separator instead of newline`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		opts := cli.TacOptions{}
+		opts := tac.TacOptions{}
 
 		opts.Before, _ = cmd.Flags().GetBool("before")
 		opts.Regex, _ = cmd.Flags().GetBool("regex")
 		opts.Separator, _ = cmd.Flags().GetString("separator")
 
-		return cli.RunTac(os.Stdout, args, opts)
+		return tac.RunTac(os.Stdout, args, opts)
 	},
 }
 

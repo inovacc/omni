@@ -3,7 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/inovacc/omni/pkg/cli"
+	"github.com/inovacc/omni/pkg/cli/whoami"
 
 	"github.com/spf13/cobra"
 )
@@ -15,7 +15,7 @@ var whoamiCmd = &cobra.Command{
 	Long:  `Print the user name associated with the current effective user ID.`,
 	Args:  cobra.NoArgs,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return cli.RunWhoami(os.Stdout)
+		return whoami.RunWhoami(os.Stdout)
 	},
 }
 
