@@ -44,15 +44,14 @@ func RunUname(w io.Writer, opts UnameOptions) error {
 		opts.KernelName = true
 	}
 
-	// If -a, enable all flags
+	// If -a, enable standard flags (matching GNU uname behavior)
+	// Note: -p and -i are not included in -a by default in GNU uname
 	if opts.All {
 		opts.KernelName = true
 		opts.NodeName = true
 		opts.KernelRelease = true
 		opts.KernelVersion = true
 		opts.Machine = true
-		opts.Processor = true
-		opts.HardwarePlatform = true
 		opts.OperatingSystem = true
 	}
 
