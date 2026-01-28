@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/inovacc/omni/pkg/cli"
+	"github.com/inovacc/omni/pkg/cli/du"
 )
 
 // DFOptions configures the df command behavior
@@ -114,9 +114,9 @@ func printDFInfo(w io.Writer, info DFInfo, opts DFOptions) {
 	case opts.HumanReadable:
 		_, _ = fmt.Fprintf(w, "%-20s %6s %6s %6s %4d%% %s\n",
 			info.Filesystem,
-			cli.FormatHumanSize(int64(info.Size)),
-			cli.FormatHumanSize(int64(info.Used)),
-			cli.FormatHumanSize(int64(info.Available)),
+			du.FormatHumanSize(int64(info.Size)),
+			du.FormatHumanSize(int64(info.Used)),
+			du.FormatHumanSize(int64(info.Available)),
 			info.UsePercent,
 			info.MountedOn)
 	default:
