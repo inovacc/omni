@@ -3,7 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/inovacc/omni/pkg/cli"
+	"github.com/inovacc/omni/pkg/cli/grep"
 
 	"github.com/spf13/cobra"
 )
@@ -16,7 +16,7 @@ var fgrepCmd = &cobra.Command{
 This is equivalent to 'grep -F'.`,
 	Args: cobra.MinimumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		opts := cli.GrepOptions{
+		opts := grep.GrepOptions{
 			FixedStrings: true, // fgrep always uses fixed strings
 		}
 
@@ -32,7 +32,7 @@ This is equivalent to 'grep -F'.`,
 		pattern := args[0]
 		files := args[1:]
 
-		return cli.RunGrep(os.Stdout, pattern, files, opts)
+		return grep.RunGrep(os.Stdout, pattern, files, opts)
 	},
 }
 

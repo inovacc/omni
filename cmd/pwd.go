@@ -3,7 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/inovacc/omni/pkg/cli"
+	"github.com/inovacc/omni/pkg/cli/pwd"
 
 	"github.com/spf13/cobra"
 )
@@ -14,7 +14,7 @@ var pwdCmd = &cobra.Command{
 	Short: "Print working directory",
 	Long:  `Print the full filename of the current working directory.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return cli.RunPwd(os.Stdout)
+		return pwd.RunPwd(os.Stdout)
 	},
 }
 

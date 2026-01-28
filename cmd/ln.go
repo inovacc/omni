@@ -3,7 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/inovacc/omni/pkg/cli"
+	"github.com/inovacc/omni/pkg/cli/ln"
 
 	"github.com/spf13/cobra"
 )
@@ -23,7 +23,7 @@ Create hard links by default, symbolic links with --symbolic.
   -r, --relative     create symbolic links relative to link location`,
 	Args: cobra.MinimumNArgs(2),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		opts := cli.LnOptions{}
+		opts := ln.LnOptions{}
 
 		opts.Symbolic, _ = cmd.Flags().GetBool("symbolic")
 		opts.Force, _ = cmd.Flags().GetBool("force")
@@ -32,7 +32,7 @@ Create hard links by default, symbolic links with --symbolic.
 		opts.Backup, _ = cmd.Flags().GetBool("backup")
 		opts.Relative, _ = cmd.Flags().GetBool("relative")
 
-		return cli.RunLn(os.Stdout, args, opts)
+		return ln.RunLn(os.Stdout, args, opts)
 	},
 }
 

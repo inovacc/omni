@@ -3,7 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/inovacc/omni/pkg/cli"
+	"github.com/inovacc/omni/pkg/cli/archive"
 
 	"github.com/spf13/cobra"
 )
@@ -31,7 +31,7 @@ Examples:
   omni tar -tvf archive.tar             # list contents
   omni tar -xvf archive.tar -C /dest    # extract to directory`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		opts := cli.ArchiveOptions{}
+		opts := archive.ArchiveOptions{}
 
 		opts.Create, _ = cmd.Flags().GetBool("create")
 		opts.Extract, _ = cmd.Flags().GetBool("extract")
@@ -42,7 +42,7 @@ Examples:
 		opts.Directory, _ = cmd.Flags().GetString("directory")
 		opts.StripComponents, _ = cmd.Flags().GetInt("strip-components")
 
-		return cli.RunTar(os.Stdout, args, opts)
+		return archive.RunTar(os.Stdout, args, opts)
 	},
 }
 

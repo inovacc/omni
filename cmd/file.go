@@ -3,7 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/inovacc/omni/pkg/cli"
+	"github.com/inovacc/omni/pkg/cli/file"
 	"github.com/spf13/cobra"
 )
 
@@ -31,14 +31,14 @@ Examples:
   omni file *                  # check all files`,
 	Args: cobra.MinimumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		opts := cli.FileOptions{
+		opts := file.FileOptions{
 			Brief:     fileBrief,
 			MimeType:  fileMimeType,
 			NoDeref:   fileNoDeref,
 			Separator: fileSeparator,
 		}
 
-		return cli.RunFile(os.Stdout, args, opts)
+		return file.RunFile(os.Stdout, args, opts)
 	},
 }
 

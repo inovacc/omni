@@ -4,7 +4,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/inovacc/omni/pkg/cli"
+	"github.com/inovacc/omni/pkg/cli/tree"
 	"github.com/spf13/cobra"
 )
 
@@ -23,7 +23,7 @@ Examples:
   omni tree -s                       # show statistics
   omni tree --json                   # output as JSON`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		opts := cli.TreeOptions{}
+		opts := tree.TreeOptions{}
 
 		opts.All, _ = cmd.Flags().GetBool("all")
 		opts.DirsOnly, _ = cmd.Flags().GetBool("dirs-only")
@@ -41,7 +41,7 @@ Examples:
 			opts.Ignore = strings.Split(ignoreStr, ",")
 		}
 
-		return cli.RunTree(os.Stdout, args, opts)
+		return tree.RunTree(os.Stdout, args, opts)
 	},
 }
 

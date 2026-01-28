@@ -3,7 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/inovacc/omni/pkg/cli"
+	"github.com/inovacc/omni/pkg/cli/comm"
 	"github.com/spf13/cobra"
 )
 
@@ -41,7 +41,7 @@ Examples:
   omni comm -3 file1.txt file2.txt     # show only unique lines`,
 	Args: cobra.ExactArgs(2),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		opts := cli.CommOptions{
+		opts := comm.CommOptions{
 			Suppress1:    commSuppress1,
 			Suppress2:    commSuppress2,
 			Suppress3:    commSuppress3,
@@ -51,7 +51,7 @@ Examples:
 			ZeroTerm:     commZeroTerm,
 		}
 
-		return cli.RunComm(os.Stdout, args, opts)
+		return comm.RunComm(os.Stdout, args, opts)
 	},
 }
 

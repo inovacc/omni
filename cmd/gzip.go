@@ -3,7 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/inovacc/omni/pkg/cli"
+	"github.com/inovacc/omni/pkg/cli/gzip"
 	"github.com/spf13/cobra"
 )
 
@@ -34,7 +34,7 @@ Examples:
   omni gzip -k file.txt        # keep original
   omni gzip -c file.txt > out.gz  # write to stdout`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		opts := cli.GzipOptions{
+		opts := gzip.GzipOptions{
 			Decompress: gzipDecompress,
 			Keep:       gzipKeep,
 			Force:      gzipForce,
@@ -43,7 +43,7 @@ Examples:
 			Level:      gzipLevel,
 		}
 
-		return cli.RunGzip(os.Stdout, args, opts)
+		return gzip.RunGzip(os.Stdout, args, opts)
 	},
 }
 
@@ -58,7 +58,7 @@ Examples:
   omni gunzip file.txt.gz      # decompress
   omni gunzip -k file.txt.gz   # keep original`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		opts := cli.GzipOptions{
+		opts := gzip.GzipOptions{
 			Decompress: true,
 			Keep:       gzipKeep,
 			Force:      gzipForce,
@@ -66,7 +66,7 @@ Examples:
 			Verbose:    gzipVerbose,
 		}
 
-		return cli.RunGunzip(os.Stdout, args, opts)
+		return gzip.RunGunzip(os.Stdout, args, opts)
 	},
 }
 
@@ -81,7 +81,7 @@ Examples:
   omni zcat file.txt.gz        # print decompressed content
   omni zcat file.gz | grep x   # decompress and grep`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return cli.RunZcat(os.Stdout, args)
+		return gzip.RunZcat(os.Stdout, args)
 	},
 }
 

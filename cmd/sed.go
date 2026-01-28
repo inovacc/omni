@@ -3,7 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/inovacc/omni/pkg/cli"
+	"github.com/inovacc/omni/pkg/cli/sed"
 
 	"github.com/spf13/cobra"
 )
@@ -33,7 +33,7 @@ Examples:
   omni sed '/pattern/d' file.txt        # delete matching lines
   omni sed -n '/pattern/p' file.txt     # print only matching lines`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		opts := cli.SedOptions{}
+		opts := sed.SedOptions{}
 
 		exprs, _ := cmd.Flags().GetStringSlice("expression")
 		opts.Expression = exprs
@@ -42,7 +42,7 @@ Examples:
 		opts.Quiet, _ = cmd.Flags().GetBool("quiet")
 		opts.Extended, _ = cmd.Flags().GetBool("regexp-extended")
 
-		return cli.RunSed(os.Stdout, args, opts)
+		return sed.RunSed(os.Stdout, args, opts)
 	},
 }
 

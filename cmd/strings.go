@@ -3,7 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/inovacc/omni/pkg/cli"
+	"github.com/inovacc/omni/pkg/cli/strings"
 	"github.com/spf13/cobra"
 )
 
@@ -25,12 +25,12 @@ Examples:
   omni strings -n 8 file.bin      # strings of at least 8 chars
   omni strings -t x program       # show hex offsets`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		opts := cli.StringsOptions{
+		opts := strings.StringsOptions{
 			MinLength: stringsMinLength,
 			Offset:    stringsOffset,
 		}
 
-		return cli.RunStrings(os.Stdout, args, opts)
+		return strings.RunStrings(os.Stdout, args, opts)
 	},
 }
 

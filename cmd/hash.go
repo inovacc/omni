@@ -3,7 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/inovacc/omni/pkg/cli"
+	"github.com/inovacc/omni/pkg/cli/hash"
 
 	"github.com/spf13/cobra"
 )
@@ -31,7 +31,7 @@ Examples:
   omni hash -c checksums.txt            # verify checksums
   omni hash file1 file2 > checksums.txt # create checksum file`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		opts := cli.HashOptions{}
+		opts := hash.HashOptions{}
 
 		opts.Algorithm, _ = cmd.Flags().GetString("algorithm")
 		opts.Check, _ = cmd.Flags().GetBool("check")
@@ -41,7 +41,7 @@ Examples:
 		opts.Status, _ = cmd.Flags().GetBool("status")
 		opts.Warn, _ = cmd.Flags().GetBool("warn")
 
-		return cli.RunHash(os.Stdout, args, opts)
+		return hash.RunHash(os.Stdout, args, opts)
 	},
 }
 

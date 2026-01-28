@@ -3,7 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/inovacc/omni/pkg/cli"
+	"github.com/inovacc/omni/pkg/cli/ps"
 
 	"github.com/spf13/cobra"
 )
@@ -39,7 +39,7 @@ Examples:
   omni ps --go            # show only Go processes
   omni ps --go -j         # Go processes as JSON`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		opts := cli.PsOptions{}
+		opts := ps.Options{}
 
 		opts.All, _ = cmd.Flags().GetBool("all")
 		opts.Full, _ = cmd.Flags().GetBool("full")
@@ -59,7 +59,7 @@ Examples:
 			}
 		}
 
-		return cli.RunPs(os.Stdout, opts)
+		return ps.Run(os.Stdout, opts)
 	},
 }
 

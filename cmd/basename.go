@@ -3,7 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/inovacc/omni/pkg/cli"
+	"github.com/inovacc/omni/pkg/cli/basename"
 
 	"github.com/spf13/cobra"
 )
@@ -25,7 +25,7 @@ If specified, also remove a trailing SUFFIX.`,
 			names = args[:1]
 		}
 
-		return cli.RunBasename(os.Stdout, names, suffix)
+		return basename.RunBasename(os.Stdout, names, suffix)
 	},
 }
 

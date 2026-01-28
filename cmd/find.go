@@ -3,7 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/inovacc/omni/pkg/cli"
+	"github.com/inovacc/omni/pkg/cli/find"
 	"github.com/spf13/cobra"
 )
 
@@ -71,7 +71,7 @@ Examples:
   omni find . -maxdepth 2 -type f             # files at most 2 levels deep
   omni find . -name "*.txt" -print0           # null-separated output`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		opts := cli.FindOptions{
+		opts := find.FindOptions{
 			Name:       findName,
 			IName:      findIName,
 			Path:       findPath,
@@ -94,7 +94,7 @@ Examples:
 			Not:        findNot,
 		}
 
-		return cli.RunFind(os.Stdout, args, opts)
+		return find.RunFind(os.Stdout, args, opts)
 	},
 }
 

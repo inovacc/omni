@@ -3,7 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/inovacc/omni/pkg/cli"
+	"github.com/inovacc/omni/pkg/cli/pager"
 
 	"github.com/spf13/cobra"
 )
@@ -26,12 +26,12 @@ Examples:
   omni more -n file.txt     # with line numbers
   cat file.txt | omni more  # from stdin`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		opts := cli.PagerOptions{}
+		opts := pager.PagerOptions{}
 
 		opts.LineNumbers, _ = cmd.Flags().GetBool("line-numbers")
 		opts.Quit = true // more traditionally quits at end
 
-		return cli.RunMore(os.Stdout, args, opts)
+		return pager.RunMore(os.Stdout, args, opts)
 	},
 }
 

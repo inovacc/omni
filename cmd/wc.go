@@ -3,7 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/inovacc/omni/pkg/cli"
+	"github.com/inovacc/omni/pkg/cli/wc"
 
 	"github.com/spf13/cobra"
 )
@@ -21,7 +21,7 @@ With no FILE, or when FILE is -, read standard input.
 The options below may be used to select which counts are printed, always in
 the following order: newline, word, character, byte, maximum line length.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		opts := cli.WCOptions{}
+		opts := wc.WCOptions{}
 
 		opts.Lines, _ = cmd.Flags().GetBool("lines")
 		opts.Words, _ = cmd.Flags().GetBool("words")
@@ -29,7 +29,7 @@ the following order: newline, word, character, byte, maximum line length.`,
 		opts.Chars, _ = cmd.Flags().GetBool("chars")
 		opts.MaxLineLen, _ = cmd.Flags().GetBool("max-line-length")
 
-		return cli.RunWC(os.Stdout, args, opts)
+		return wc.RunWC(os.Stdout, args, opts)
 	},
 }
 

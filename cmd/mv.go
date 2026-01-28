@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"github.com/inovacc/omni/pkg/cli"
+	"github.com/inovacc/omni/pkg/cli/copy"
 
 	"github.com/spf13/cobra"
 )
@@ -13,7 +13,7 @@ var mvCmd = &cobra.Command{
 	Short:   "Move (rename) files",
 	Long:    `Rename SOURCE to DEST, or move SOURCE(s) to DIRECTORY.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return cli.RunMove(args)
+		return copy.RunMove(args, copy.MoveOptions{})
 	},
 }
 

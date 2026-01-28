@@ -3,7 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/inovacc/omni/pkg/cli"
+	"github.com/inovacc/omni/pkg/cli/which"
 	"github.com/spf13/cobra"
 )
 
@@ -22,11 +22,11 @@ Examples:
   omni which -a python       # show all python executables`,
 	Args: cobra.MinimumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		opts := cli.WhichOptions{
+		opts := which.WhichOptions{
 			All: whichAll,
 		}
 
-		return cli.RunWhich(os.Stdout, args, opts)
+		return which.RunWhich(os.Stdout, args, opts)
 	},
 }
 

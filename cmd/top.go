@@ -3,7 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/inovacc/omni/pkg/cli"
+	"github.com/inovacc/omni/pkg/cli/ps"
 	"github.com/spf13/cobra"
 )
 
@@ -32,7 +32,7 @@ Examples:
 		jsonOutput, _ := cmd.Flags().GetBool("json")
 		goOnly, _ := cmd.Flags().GetBool("go")
 
-		opts := cli.PsOptions{
+		opts := ps.Options{
 			All:    true,
 			JSON:   jsonOutput,
 			GoOnly: goOnly,
@@ -43,7 +43,7 @@ Examples:
 			opts.Sort = "cpu"
 		}
 
-		return cli.RunTop(os.Stdout, opts, n)
+		return ps.RunTop(os.Stdout, opts, n)
 	},
 }
 

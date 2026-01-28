@@ -3,7 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/inovacc/omni/pkg/cli"
+	"github.com/inovacc/omni/pkg/cli/base"
 
 	"github.com/spf13/cobra"
 )
@@ -24,12 +24,12 @@ Examples:
   echo "NBSWY3DP" | omni base32 -d     # decode
   omni base32 file.bin                 # encode file`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		opts := cli.BaseOptions{}
+		opts := base.BaseOptions{}
 
 		opts.Decode, _ = cmd.Flags().GetBool("decode")
 		opts.Wrap, _ = cmd.Flags().GetInt("wrap")
 
-		return cli.RunBase32(os.Stdout, args, opts)
+		return base.RunBase32(os.Stdout, args, opts)
 	},
 }
 

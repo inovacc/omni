@@ -3,7 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/inovacc/omni/pkg/cli"
+	"github.com/inovacc/omni/pkg/cli/archive"
 
 	"github.com/spf13/cobra"
 )
@@ -27,7 +27,7 @@ Examples:
 			return cmd.Help()
 		}
 
-		opts := cli.ArchiveOptions{
+		opts := archive.ArchiveOptions{
 			Create: true,
 			File:   args[0],
 		}
@@ -35,7 +35,7 @@ Examples:
 		opts.Verbose, _ = cmd.Flags().GetBool("verbose")
 		opts.Directory, _ = cmd.Flags().GetString("directory")
 
-		return cli.RunZip(os.Stdout, args[1:], opts)
+		return archive.RunZip(os.Stdout, args[1:], opts)
 	},
 }
 

@@ -3,7 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/inovacc/omni/pkg/cli"
+	"github.com/inovacc/omni/pkg/cli/cat"
 
 	"github.com/spf13/cobra"
 )
@@ -15,7 +15,7 @@ var catCmd = &cobra.Command{
 	Long: `Concatenate FILE(s) to standard output.
 With no FILE, or when FILE is -, read standard input.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		opts := cli.CatOptions{}
+		opts := cat.CatOptions{}
 
 		opts.NumberAll, _ = cmd.Flags().GetBool("number")
 		opts.NumberNonBlank, _ = cmd.Flags().GetBool("number-nonblank")
@@ -43,7 +43,7 @@ With no FILE, or when FILE is -, read standard input.`,
 			opts.ShowTabs = true
 		}
 
-		return cli.RunCat(os.Stdout, args, opts)
+		return cat.RunCat(os.Stdout, args, opts)
 	},
 }
 

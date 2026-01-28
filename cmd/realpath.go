@@ -3,7 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/inovacc/omni/pkg/cli"
+	"github.com/inovacc/omni/pkg/cli/realpath"
 
 	"github.com/spf13/cobra"
 )
@@ -15,7 +15,7 @@ var realpathCmd = &cobra.Command{
 	Long:  `Print the resolved absolute file name; all components must exist.`,
 	Args:  cobra.MinimumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return cli.RunRealpath(os.Stdout, args)
+		return realpath.RunRealpath(os.Stdout, args)
 	},
 }
 

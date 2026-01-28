@@ -3,7 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/inovacc/omni/pkg/cli"
+	"github.com/inovacc/omni/pkg/cli/text"
 
 	"github.com/spf13/cobra"
 )
@@ -20,7 +20,7 @@ With no options, matching lines are merged to the first occurrence.
 Note: 'uniq' does not detect repeated lines unless they are adjacent.
 You may want to sort the input first, or use 'sort -u' without 'uniq'.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		opts := cli.UniqOptions{}
+		opts := text.UniqOptions{}
 
 		opts.Count, _ = cmd.Flags().GetBool("count")
 		opts.Repeated, _ = cmd.Flags().GetBool("repeated")
@@ -32,7 +32,7 @@ You may want to sort the input first, or use 'sort -u' without 'uniq'.`,
 		opts.CheckChars, _ = cmd.Flags().GetInt("check-chars")
 		opts.ZeroTerminate, _ = cmd.Flags().GetBool("zero-terminated")
 
-		return cli.RunUniq(os.Stdout, args, opts)
+		return text.RunUniq(os.Stdout, args, opts)
 	},
 }
 

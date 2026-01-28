@@ -3,7 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/inovacc/omni/pkg/cli"
+	"github.com/inovacc/omni/pkg/cli/id"
 
 	"github.com/spf13/cobra"
 )
@@ -21,7 +21,7 @@ or (when USER omitted) for the current user.
   -r, --real    print the real ID instead of the effective ID, with -ugG
   -u, --user    print only the effective user ID`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		opts := cli.IDOptions{}
+		opts := id.IDOptions{}
 
 		opts.User, _ = cmd.Flags().GetBool("user")
 		opts.Group, _ = cmd.Flags().GetBool("group")
@@ -33,7 +33,7 @@ or (when USER omitted) for the current user.
 			opts.Username = args[0]
 		}
 
-		return cli.RunID(os.Stdout, opts)
+		return id.RunID(os.Stdout, opts)
 	},
 }
 

@@ -3,7 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/inovacc/omni/pkg/cli"
+	"github.com/inovacc/omni/pkg/cli/crypt"
 
 	"github.com/spf13/cobra"
 )
@@ -29,7 +29,7 @@ Examples:
   omni decrypt -P ~/.password -o file.txt secret.enc
   cat secret.enc | omni_PASSWORD=pass omni decrypt`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		opts := cli.CryptOptions{}
+		opts := crypt.CryptOptions{}
 
 		opts.Password, _ = cmd.Flags().GetString("password")
 		opts.PasswordFile, _ = cmd.Flags().GetString("password-file")
@@ -39,7 +39,7 @@ Examples:
 		opts.Base64, _ = cmd.Flags().GetBool("base64")
 		opts.Iterations, _ = cmd.Flags().GetInt("iterations")
 
-		return cli.RunDecrypt(os.Stdout, args, opts)
+		return crypt.RunDecrypt(os.Stdout, args, opts)
 	},
 }
 

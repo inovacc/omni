@@ -3,7 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/inovacc/omni/pkg/cli"
+	"github.com/inovacc/omni/pkg/cli/awk"
 
 	"github.com/spf13/cobra"
 )
@@ -30,7 +30,7 @@ Examples:
   omni awk 'BEGIN{print "start"} {print} END{print "end"}' file
   omni awk '{print $1, $NF}' file.txt     # print first and last field`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		opts := cli.AwkOptions{}
+		opts := awk.AwkOptions{}
 
 		opts.FieldSeparator, _ = cmd.Flags().GetString("field-separator")
 
@@ -49,7 +49,7 @@ Examples:
 			}
 		}
 
-		return cli.RunAwk(os.Stdout, args, opts)
+		return awk.RunAwk(os.Stdout, args, opts)
 	},
 }
 

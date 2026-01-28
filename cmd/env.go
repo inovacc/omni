@@ -3,7 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/inovacc/omni/pkg/cli"
+	"github.com/inovacc/omni/pkg/cli/env"
 
 	"github.com/spf13/cobra"
 )
@@ -15,13 +15,13 @@ var envCmd = &cobra.Command{
 	Long: `Print the values of the specified environment variables.
 If no NAME is specified, print all environment variables.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		opts := cli.EnvOptions{}
+		opts := env.EnvOptions{}
 
 		opts.NullTerminated, _ = cmd.Flags().GetBool("null")
 		opts.Unset, _ = cmd.Flags().GetString("unset")
 		opts.Ignore, _ = cmd.Flags().GetBool("ignore-environment")
 
-		return cli.RunEnv(os.Stdout, args, opts)
+		return env.RunEnv(os.Stdout, args, opts)
 	},
 }
 

@@ -3,7 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/inovacc/omni/pkg/cli"
+	"github.com/inovacc/omni/pkg/cli/archive"
 
 	"github.com/spf13/cobra"
 )
@@ -29,7 +29,7 @@ Examples:
 			return cmd.Help()
 		}
 
-		opts := cli.ArchiveOptions{
+		opts := archive.ArchiveOptions{
 			File: args[0],
 		}
 
@@ -39,11 +39,11 @@ Examples:
 		opts.StripComponents, _ = cmd.Flags().GetInt("strip-components")
 
 		if opts.List {
-			return cli.RunArchive(os.Stdout, nil, opts)
+			return archive.RunArchive(os.Stdout, nil, opts)
 		}
 
 		opts.Extract = true
-		return cli.RunUnzip(os.Stdout, args, opts)
+		return archive.RunUnzip(os.Stdout, args, opts)
 	},
 }
 

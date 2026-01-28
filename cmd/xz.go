@@ -3,7 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/inovacc/omni/pkg/cli"
+	"github.com/inovacc/omni/pkg/cli/xz"
 	"github.com/spf13/cobra"
 )
 
@@ -34,7 +34,7 @@ Examples:
   omni xz -l file.xz           # list info
   omni xz -d file.txt.xz       # decompress (requires external lib)`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		opts := cli.XzOptions{
+		opts := xz.XzOptions{
 			Decompress: xzDecompress,
 			Keep:       xzKeep,
 			Force:      xzForce,
@@ -43,7 +43,7 @@ Examples:
 			List:       xzList,
 		}
 
-		return cli.RunXz(os.Stdout, args, opts)
+		return xz.RunXz(os.Stdout, args, opts)
 	},
 }
 
@@ -56,7 +56,7 @@ Equivalent to xz -d.
 
 Note: Full decompression requires external library.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		opts := cli.XzOptions{
+		opts := xz.XzOptions{
 			Decompress: true,
 			Keep:       xzKeep,
 			Force:      xzForce,
@@ -64,7 +64,7 @@ Note: Full decompression requires external library.`,
 			Verbose:    xzVerbose,
 		}
 
-		return cli.RunUnxz(os.Stdout, args, opts)
+		return xz.RunUnxz(os.Stdout, args, opts)
 	},
 }
 
@@ -77,7 +77,7 @@ Equivalent to xz -dc.
 
 Note: Full decompression requires external library.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return cli.RunXzcat(os.Stdout, args)
+		return xz.RunXzcat(os.Stdout, args)
 	},
 }
 

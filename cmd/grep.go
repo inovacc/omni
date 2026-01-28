@@ -3,7 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/inovacc/omni/pkg/cli"
+	"github.com/inovacc/omni/pkg/cli/grep"
 
 	"github.com/spf13/cobra"
 )
@@ -17,7 +17,7 @@ When FILE is '-', read standard input.
 With no FILE, read '.' if recursive; otherwise, read standard input.`,
 	Args: cobra.MinimumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		opts := cli.GrepOptions{}
+		opts := grep.GrepOptions{}
 
 		opts.IgnoreCase, _ = cmd.Flags().GetBool("ignore-case")
 		opts.InvertMatch, _ = cmd.Flags().GetBool("invert-match")
@@ -42,7 +42,7 @@ With no FILE, read '.' if recursive; otherwise, read standard input.`,
 		pattern := args[0]
 		files := args[1:]
 
-		return cli.RunGrep(os.Stdout, pattern, files, opts)
+		return grep.RunGrep(os.Stdout, pattern, files, opts)
 	},
 }
 

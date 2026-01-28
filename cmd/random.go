@@ -3,7 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/inovacc/omni/pkg/cli"
+	"github.com/inovacc/omni/pkg/cli/random"
 
 	"github.com/spf13/cobra"
 )
@@ -41,7 +41,7 @@ Examples:
   omni random -n 5 -t int --max 10    # 5 random ints 0-9
   omni random -t custom -c "abc123"   # from custom charset`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		opts := cli.RandomOptions{}
+		opts := random.RandomOptions{}
 
 		opts.Count, _ = cmd.Flags().GetInt("count")
 		opts.Length, _ = cmd.Flags().GetInt("length")
@@ -51,7 +51,7 @@ Examples:
 		opts.Charset, _ = cmd.Flags().GetString("charset")
 		opts.Sep, _ = cmd.Flags().GetString("separator")
 
-		return cli.RunRandom(os.Stdout, opts)
+		return random.RunRandom(os.Stdout, opts)
 	},
 }
 

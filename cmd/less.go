@@ -3,7 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/inovacc/omni/pkg/cli"
+	"github.com/inovacc/omni/pkg/cli/pager"
 
 	"github.com/spf13/cobra"
 )
@@ -33,7 +33,7 @@ Examples:
   omni less -S file.txt     # chop long lines
   cat file.txt | omni less  # from stdin`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		opts := cli.PagerOptions{}
+		opts := pager.PagerOptions{}
 
 		opts.LineNumbers, _ = cmd.Flags().GetBool("LINE-NUMBERS")
 		opts.NoInit, _ = cmd.Flags().GetBool("no-init")
@@ -42,7 +42,7 @@ Examples:
 		opts.Chop, _ = cmd.Flags().GetBool("chop-long-lines")
 		opts.Raw, _ = cmd.Flags().GetBool("raw-control-chars")
 
-		return cli.RunLess(os.Stdout, args, opts)
+		return pager.RunLess(os.Stdout, args, opts)
 	},
 }
 

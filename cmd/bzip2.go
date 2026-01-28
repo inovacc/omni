@@ -3,7 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/inovacc/omni/pkg/cli"
+	"github.com/inovacc/omni/pkg/cli/bzip2"
 	"github.com/spf13/cobra"
 )
 
@@ -32,7 +32,7 @@ Examples:
   omni bzip2 -d file.txt.bz2   # decompress
   omni bzip2 -dk file.txt.bz2  # decompress, keep original`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		opts := cli.Bzip2Options{
+		opts := bzip2.Bzip2Options{
 			Decompress: bzip2Decompress,
 			Keep:       bzip2Keep,
 			Force:      bzip2Force,
@@ -40,7 +40,7 @@ Examples:
 			Verbose:    bzip2Verbose,
 		}
 
-		return cli.RunBzip2(os.Stdout, args, opts)
+		return bzip2.RunBzip2(os.Stdout, args, opts)
 	},
 }
 
@@ -55,7 +55,7 @@ Examples:
   omni bunzip2 file.txt.bz2    # decompress
   omni bunzip2 -k file.txt.bz2 # keep original`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		opts := cli.Bzip2Options{
+		opts := bzip2.Bzip2Options{
 			Decompress: true,
 			Keep:       bzip2Keep,
 			Force:      bzip2Force,
@@ -63,7 +63,7 @@ Examples:
 			Verbose:    bzip2Verbose,
 		}
 
-		return cli.RunBunzip2(os.Stdout, args, opts)
+		return bzip2.RunBunzip2(os.Stdout, args, opts)
 	},
 }
 
@@ -77,7 +77,7 @@ Equivalent to bzip2 -dc.
 Examples:
   omni bzcat file.txt.bz2      # print decompressed content`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return cli.RunBzcat(os.Stdout, args)
+		return bzip2.RunBzcat(os.Stdout, args)
 	},
 }
 

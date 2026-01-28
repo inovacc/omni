@@ -3,7 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/inovacc/omni/pkg/cli"
+	"github.com/inovacc/omni/pkg/cli/dotenv"
 
 	"github.com/spf13/cobra"
 )
@@ -34,13 +34,13 @@ Examples:
   eval $(omni dotenv -e)         # load vars into shell
   omni dotenv -x                 # expand ${VAR} references`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		opts := cli.DotenvOptions{}
+		opts := dotenv.DotenvOptions{}
 
 		opts.Export, _ = cmd.Flags().GetBool("export")
 		opts.Quiet, _ = cmd.Flags().GetBool("quiet")
 		opts.Expand, _ = cmd.Flags().GetBool("expand")
 
-		return cli.RunDotenv(os.Stdout, args, opts)
+		return dotenv.RunDotenv(os.Stdout, args, opts)
 	},
 }
 

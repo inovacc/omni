@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"github.com/inovacc/omni/pkg/cli"
+	"github.com/inovacc/omni/pkg/cli/rm"
 
 	"github.com/spf13/cobra"
 )
@@ -15,7 +15,7 @@ var rmCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		recursive, _ := cmd.Flags().GetBool("recursive")
 		force, _ := cmd.Flags().GetBool("force")
-		return cli.RunRm(args, recursive, force)
+		return rm.RunRm(args, rm.RmOptions{Recursive: recursive, Force: force})
 	},
 }
 

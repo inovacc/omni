@@ -8,7 +8,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/inovacc/omni/pkg/cli"
+	"github.com/inovacc/omni/pkg/cli/watch"
 
 	"github.com/spf13/cobra"
 )
@@ -35,7 +35,7 @@ Examples:
   omni watch -n 5 dir ./logs         # Watch a directory`,
 	Args: cobra.MinimumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		opts := cli.WatchOptions{}
+		opts := watch.WatchOptions{}
 
 		interval, _ := cmd.Flags().GetFloat64("interval")
 		opts.Interval = time.Duration(interval * float64(time.Second))
@@ -61,14 +61,14 @@ Examples:
 		if len(args) >= 2 {
 			switch args[0] {
 			case "file":
-				return cli.WatchFile(ctx, args[1], func(path string) error {
+				return watch.WatchFile(ctx, args[1], func(path string) error {
 					info, _ := os.Stat(path)
 					_, _ = fmt.Fprintf(os.Stdout, "[%s] File modified: %s (size: %d)\n",
 						time.Now().Format("15:04:05"), path, info.Size())
 					return nil
 				}, opts.Interval)
 			case "dir":
-				return cli.WatchDir(ctx, args[1], func(event, path string) error {
+				return watch.WatchDir(ctx, args[1], func(event, path string) error {
 					_, _ = fmt.Fprintf(os.Stdout, "[%s] %s: %s\n",
 						time.Now().Format("15:04:05"), event, path)
 					return nil
@@ -77,7 +77,7 @@ Examples:
 		}
 
 		// Default: just show periodic message
-		return cli.RunWatch(ctx, os.Stdout, func() (string, error) {
+		return watch.RunWatch(ctx, os.Stdout, func() (string, error) {
 			return fmt.Sprintf("Watching: %s\n", args), nil
 		}, opts)
 	},
