@@ -171,6 +171,7 @@ func TestRunUniq(t *testing.T) {
 	t.Run("count occurrences", func(t *testing.T) {
 		file := filepath.Join(tmpDir, "count.txt")
 
+		//nolint:dupword // intentional duplicate content for testing uniq
 		content := "a\na\na\nb\nb\n"
 		if err := os.WriteFile(file, []byte(content), 0644); err != nil {
 			t.Fatal(err)
@@ -192,6 +193,7 @@ func TestRunUniq(t *testing.T) {
 	t.Run("only duplicates", func(t *testing.T) {
 		file := filepath.Join(tmpDir, "onlydups.txt")
 
+		//nolint:dupword // intentional duplicate content for testing uniq -d
 		content := "unique\ndup\ndup\nanother"
 		if err := os.WriteFile(file, []byte(content), 0644); err != nil {
 			t.Fatal(err)
