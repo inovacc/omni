@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/fatih/color"
-	"github.com/inovacc/omni/pkg/tree/models"
+	"github.com/inovacc/omni/internal/twig/models"
 	"github.com/xlab/treeprint"
 )
 

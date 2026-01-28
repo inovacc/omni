@@ -1,9 +1,9 @@
-package tree
+package twig
 
 import (
-	"github.com/inovacc/omni/pkg/tree/builder"
-	"github.com/inovacc/omni/pkg/tree/formatter"
-	"github.com/inovacc/omni/pkg/tree/scanner"
+	"github.com/inovacc/omni/internal/twig/builder"
+	"github.com/inovacc/omni/internal/twig/formatter"
+	"github.com/inovacc/omni/internal/twig/scanner"
 )
 
 // TreeOption is a function that configures a Tree instance.

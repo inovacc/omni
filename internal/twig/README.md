@@ -363,11 +363,11 @@ type BuildResult struct {
 ## See Also
 
 - [Examples](../../examples/basic-usage/main.go) - Complete working examples
-- [Scanner Package](./scanner) - Low-level directory scanning
-- [Parser Package](./parser) - Tree format parsing
-- [Formatter Package](./formatter) - Tree formatting
-- [Builder Package](./builder) - Directory structure building
-- [Models Package](./models) - Data models
+- [Scanner Package](scanner) - Low-level directory scanning
+- [Parser Package](parser) - Tree format parsing
+- [Formatter Package](formatter) - Tree formatting
+- [Builder Package](builder) - Directory structure building
+- [Models Package](models) - Data models
 
 ## License
 

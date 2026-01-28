@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"github.com/inovacc/omni/internal/logger"
 	"github.com/spf13/cobra"
 )
 
@@ -9,6 +10,19 @@ var rootCmd = &cobra.Command{
 	Short: "Go-native replacement for common shell utilities",
 	Long: `omni is a cross-platform, safe, Go-native replacement for common shell utilities,
 designed for Taskfile, CI/CD, and enterprise environments.`,
+	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		log := logger.Init()
+		if log.IsActive() {
+			log.LogCommand(cmd.Name(), args)
+		}
+	},
+	PersistentPostRunE: func(cmd *cobra.Command, args []string) error {
+		log := logger.Get()
+		if log != nil {
+			return log.Close()
+		}
+		return nil
+	},
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
