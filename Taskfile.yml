@@ -50,6 +50,11 @@ tasks:
       - cmd: set GOOS=windows&& set GOARCH=amd64&& set CGO_ENABLED=0&& go build -ldflags="-s -w" -o {{.BUILD_DIR}}\{{.BINARY_NAME}}-windows-amd64.exe {{.MAIN_PACKAGE}}
         platforms: [ windows ]
 
+  install:
+    desc: Install omni to $GOPATH/bin
+    cmds:
+      - go install -ldflags="-s -w" {{.MAIN_PACKAGE}}
+
   # === TEST TASKS ===
   test:
     desc: Run all tests with coverage
