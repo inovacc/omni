@@ -11,7 +11,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/inovacc/omni/pkg/tree/models"
+	"github.com/inovacc/omni/internal/twig/models"
 )
 
 // Sentinel errors for scanner operations

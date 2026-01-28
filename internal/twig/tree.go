@@ -22,17 +22,17 @@
 //	    tree.WithShowHidden(true),
 //	    tree.WithIgnorePatterns("node_modules", ".git"),
 //	)
-package tree
+package twig
 
 import (
 	"context"
 	"io"
 
-	"github.com/inovacc/omni/pkg/tree/builder"
-	"github.com/inovacc/omni/pkg/tree/formatter"
-	"github.com/inovacc/omni/pkg/tree/models"
-	"github.com/inovacc/omni/pkg/tree/parser"
-	"github.com/inovacc/omni/pkg/tree/scanner"
+	"github.com/inovacc/omni/internal/twig/builder"
+	"github.com/inovacc/omni/internal/twig/formatter"
+	"github.com/inovacc/omni/internal/twig/models"
+	"github.com/inovacc/omni/internal/twig/parser"
+	"github.com/inovacc/omni/internal/twig/scanner"
 )
 
 // Tree provides a high-level API for directory tree operations.
