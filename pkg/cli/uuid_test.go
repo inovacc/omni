@@ -9,6 +9,7 @@ import (
 func TestRunUUID(t *testing.T) {
 	t.Run("single uuid", func(t *testing.T) {
 		var buf bytes.Buffer
+
 		err := RunUUID(&buf, UUIDOptions{})
 		if err != nil {
 			t.Fatalf("RunUUID() error = %v", err)
@@ -22,6 +23,7 @@ func TestRunUUID(t *testing.T) {
 
 	t.Run("multiple uuids", func(t *testing.T) {
 		var buf bytes.Buffer
+
 		err := RunUUID(&buf, UUIDOptions{Count: 5})
 		if err != nil {
 			t.Fatalf("RunUUID() error = %v", err)
@@ -41,6 +43,7 @@ func TestRunUUID(t *testing.T) {
 
 	t.Run("uppercase", func(t *testing.T) {
 		var buf bytes.Buffer
+
 		err := RunUUID(&buf, UUIDOptions{Upper: true})
 		if err != nil {
 			t.Fatalf("RunUUID() error = %v", err)
@@ -54,6 +57,7 @@ func TestRunUUID(t *testing.T) {
 
 	t.Run("no dashes", func(t *testing.T) {
 		var buf bytes.Buffer
+
 		err := RunUUID(&buf, UUIDOptions{NoDashes: true})
 		if err != nil {
 			t.Fatalf("RunUUID() error = %v", err)
@@ -63,6 +67,7 @@ func TestRunUUID(t *testing.T) {
 		if strings.Contains(uuid, "-") {
 			t.Errorf("RunUUID() = %v, want no dashes", uuid)
 		}
+
 		if len(uuid) != 32 {
 			t.Errorf("RunUUID() length = %d, want 32", len(uuid))
 		}
@@ -122,6 +127,7 @@ func TestNewUUID(t *testing.T) {
 	if uuid == "" {
 		t.Error("NewUUID() returned empty string")
 	}
+
 	if !IsValidUUID(uuid) {
 		t.Errorf("NewUUID() = %v, not a valid UUID", uuid)
 	}
@@ -132,6 +138,7 @@ func TestMustNewUUID(t *testing.T) {
 	if uuid == "" {
 		t.Error("MustNewUUID() returned empty string")
 	}
+
 	if !IsValidUUID(uuid) {
 		t.Errorf("MustNewUUID() = %v, not a valid UUID", uuid)
 	}
@@ -140,14 +147,17 @@ func TestMustNewUUID(t *testing.T) {
 func TestGenerateUUIDv4(t *testing.T) {
 	// Generate multiple UUIDs and verify they're unique
 	uuids := make(map[string]bool)
-	for i := 0; i < 100; i++ {
+
+	for range 100 {
 		uuid, err := generateUUIDv4()
 		if err != nil {
 			t.Fatalf("generateUUIDv4() error = %v", err)
 		}
+
 		if uuids[uuid] {
 			t.Errorf("generateUUIDv4() generated duplicate UUID: %v", uuid)
 		}
+
 		uuids[uuid] = true
 
 		// Verify version 4 format

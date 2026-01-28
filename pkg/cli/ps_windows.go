@@ -47,11 +47,13 @@ func GetProcessList(opts PsOptions) ([]ProcessInfo, error) {
 	if handle == uintptr(syscall.InvalidHandle) {
 		return nil, fmt.Errorf("CreateToolhelp32Snapshot failed: %w", err)
 	}
+
 	defer func() {
 		_, _, _ = procCloseHandle.Call(handle)
 	}()
 
 	var entry processEntry32
+
 	entry.Size = uint32(unsafe.Sizeof(entry))
 
 	// Get first process
@@ -92,6 +94,7 @@ func GetProcessList(opts PsOptions) ([]ProcessInfo, error) {
 	next:
 		// Get next process
 		entry.Size = uint32(unsafe.Sizeof(entry))
+
 		ret, _, _ = procProcess32Next.Call(handle, uintptr(unsafe.Pointer(&entry)))
 		if ret == 0 {
 			break

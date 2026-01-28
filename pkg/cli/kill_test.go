@@ -16,9 +16,11 @@ func TestListSignals(t *testing.T) {
 	if !strings.Contains(output, "INT") {
 		t.Error("listSignals() missing INT signal")
 	}
+
 	if !strings.Contains(output, "KILL") {
 		t.Error("listSignals() missing KILL signal")
 	}
+
 	if !strings.Contains(output, "TERM") {
 		t.Error("listSignals() missing TERM signal")
 	}
@@ -26,6 +28,7 @@ func TestListSignals(t *testing.T) {
 
 func TestRunKillList(t *testing.T) {
 	var buf bytes.Buffer
+
 	err := RunKill(&buf, []string{}, KillOptions{List: true})
 	if err != nil {
 		t.Fatalf("RunKill() with List error = %v", err)
@@ -39,6 +42,7 @@ func TestRunKillList(t *testing.T) {
 
 func TestRunKillNoArgs(t *testing.T) {
 	var buf bytes.Buffer
+
 	err := RunKill(&buf, []string{}, KillOptions{})
 	if err == nil {
 		t.Error("RunKill() expected error with no arguments")
@@ -47,6 +51,7 @@ func TestRunKillNoArgs(t *testing.T) {
 
 func TestRunKillInvalidPID(t *testing.T) {
 	var buf bytes.Buffer
+
 	err := RunKill(&buf, []string{"notanumber"}, KillOptions{})
 	// Should not panic, should handle gracefully
 	if err == nil {
@@ -56,6 +61,7 @@ func TestRunKillInvalidPID(t *testing.T) {
 
 func TestRunKillInvalidSignal(t *testing.T) {
 	var buf bytes.Buffer
+
 	err := RunKill(&buf, []string{"12345"}, KillOptions{Signal: "INVALID"})
 	if err == nil {
 		t.Error("RunKill() expected error with invalid signal")

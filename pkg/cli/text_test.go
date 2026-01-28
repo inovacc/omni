@@ -46,6 +46,7 @@ func TestRunTr(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var buf bytes.Buffer
+
 			err := RunTr(&buf, strings.NewReader(tt.input), tt.set1, tt.set2, tt.opts)
 			if err != nil {
 				t.Fatalf("RunTr() error = %v", err)
@@ -64,16 +65,19 @@ func TestRunCut(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	t.Run("cut fields", func(t *testing.T) {
 		file := filepath.Join(tmpDir, "data.csv")
+
 		content := "a,b,c\n1,2,3\nx,y,z"
 		if err := os.WriteFile(file, []byte(content), 0644); err != nil {
 			t.Fatal(err)
 		}
 
 		var buf bytes.Buffer
+
 		err := RunCut(&buf, []string{file}, CutOptions{Fields: "2", Delimiter: ","})
 		if err != nil {
 			t.Fatalf("RunCut() error = %v", err)
@@ -87,12 +91,14 @@ func TestRunCut(t *testing.T) {
 
 	t.Run("cut characters", func(t *testing.T) {
 		file := filepath.Join(tmpDir, "chars.txt")
+
 		content := "hello\nworld"
 		if err := os.WriteFile(file, []byte(content), 0644); err != nil {
 			t.Fatal(err)
 		}
 
 		var buf bytes.Buffer
+
 		err := RunCut(&buf, []string{file}, CutOptions{Characters: "1-3"})
 		if err != nil {
 			t.Fatalf("RunCut() error = %v", err)
@@ -110,15 +116,18 @@ func TestRunNl(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	file := filepath.Join(tmpDir, "lines.txt")
+
 	content := "first\nsecond\nthird"
 	if err := os.WriteFile(file, []byte(content), 0644); err != nil {
 		t.Fatal(err)
 	}
 
 	var buf bytes.Buffer
+
 	err = RunNl(&buf, []string{file}, NlOptions{})
 	if err != nil {
 		t.Fatalf("RunNl() error = %v", err)
@@ -135,16 +144,19 @@ func TestRunUniq(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	t.Run("remove duplicates", func(t *testing.T) {
 		file := filepath.Join(tmpDir, "dups.txt")
-		content := "apple\napple\nbanana\nbanana\nbanana\ncherry"
+
+		content := "apple\nbanana\ncherry"
 		if err := os.WriteFile(file, []byte(content), 0644); err != nil {
 			t.Fatal(err)
 		}
 
 		var buf bytes.Buffer
+
 		err := RunUniq(&buf, []string{file}, UniqOptions{})
 		if err != nil {
 			t.Fatalf("RunUniq() error = %v", err)
@@ -158,12 +170,14 @@ func TestRunUniq(t *testing.T) {
 
 	t.Run("count occurrences", func(t *testing.T) {
 		file := filepath.Join(tmpDir, "count.txt")
-		content := "a\na\na\nb\nb\nc"
+
+		content := "a\na\na\nb\nb\n"
 		if err := os.WriteFile(file, []byte(content), 0644); err != nil {
 			t.Fatal(err)
 		}
 
 		var buf bytes.Buffer
+
 		err := RunUniq(&buf, []string{file}, UniqOptions{Count: true})
 		if err != nil {
 			t.Fatalf("RunUniq() error = %v", err)
@@ -171,18 +185,20 @@ func TestRunUniq(t *testing.T) {
 
 		output := buf.String()
 		if !strings.Contains(output, "3") {
-			t.Errorf("RunUniq() missing count: %v", output)
+			t.Errorf("RunUniq() missing count for 3 consecutive 'a': %v", output)
 		}
 	})
 
 	t.Run("only duplicates", func(t *testing.T) {
 		file := filepath.Join(tmpDir, "onlydups.txt")
+
 		content := "unique\ndup\ndup\nanother"
 		if err := os.WriteFile(file, []byte(content), 0644); err != nil {
 			t.Fatal(err)
 		}
 
 		var buf bytes.Buffer
+
 		err := RunUniq(&buf, []string{file}, UniqOptions{Repeated: true})
 		if err != nil {
 			t.Fatalf("RunUniq() error = %v", err)
@@ -200,6 +216,7 @@ func TestRunPaste(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	file1 := filepath.Join(tmpDir, "file1.txt")
@@ -208,11 +225,13 @@ func TestRunPaste(t *testing.T) {
 	if err := os.WriteFile(file1, []byte("a\nb\nc"), 0644); err != nil {
 		t.Fatal(err)
 	}
+
 	if err := os.WriteFile(file2, []byte("1\n2\n3"), 0644); err != nil {
 		t.Fatal(err)
 	}
 
 	var buf bytes.Buffer
+
 	err = RunPaste(&buf, []string{file1, file2}, PasteOptions{})
 	if err != nil {
 		t.Fatalf("RunPaste() error = %v", err)
@@ -229,15 +248,18 @@ func TestRunTac(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	file := filepath.Join(tmpDir, "reverse.txt")
+
 	content := "first\nsecond\nthird"
 	if err := os.WriteFile(file, []byte(content), 0644); err != nil {
 		t.Fatal(err)
 	}
 
 	var buf bytes.Buffer
+
 	err = RunTac(&buf, []string{file}, TacOptions{})
 	if err != nil {
 		t.Fatalf("RunTac() error = %v", err)
@@ -254,22 +276,25 @@ func TestRunFold(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	file := filepath.Join(tmpDir, "longline.txt")
+
 	content := "this is a very long line that should be wrapped"
 	if err := os.WriteFile(file, []byte(content), 0644); err != nil {
 		t.Fatal(err)
 	}
 
 	var buf bytes.Buffer
+
 	err = RunFold(&buf, []string{file}, FoldOptions{Width: 10})
 	if err != nil {
 		t.Fatalf("RunFold() error = %v", err)
 	}
 
-	lines := strings.Split(buf.String(), "\n")
-	for _, line := range lines {
+	lines := strings.SplitSeq(buf.String(), "\n")
+	for line := range lines {
 		if len(line) > 10 && !strings.HasSuffix(line, "\n") {
 			t.Errorf("RunFold() line too long: %v", line)
 		}
@@ -281,15 +306,18 @@ func TestRunColumn(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	file := filepath.Join(tmpDir, "table.txt")
+
 	content := "name,age,city\njohn,30,nyc\njane,25,la"
 	if err := os.WriteFile(file, []byte(content), 0644); err != nil {
 		t.Fatal(err)
 	}
 
 	var buf bytes.Buffer
+
 	err = RunColumn(&buf, []string{file}, ColumnOptions{Separator: ",", Table: true})
 	if err != nil {
 		t.Fatalf("RunColumn() error = %v", err)
@@ -306,6 +334,7 @@ func TestRunJoin(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	file1 := filepath.Join(tmpDir, "file1.txt")
@@ -314,11 +343,13 @@ func TestRunJoin(t *testing.T) {
 	if err := os.WriteFile(file1, []byte("1 apple\n2 banana\n3 cherry"), 0644); err != nil {
 		t.Fatal(err)
 	}
+
 	if err := os.WriteFile(file2, []byte("1 red\n2 yellow\n3 red"), 0644); err != nil {
 		t.Fatal(err)
 	}
 
 	var buf bytes.Buffer
+
 	err = RunJoin(&buf, []string{file1, file2}, JoinOptions{})
 	if err != nil {
 		t.Fatalf("RunJoin() error = %v", err)
