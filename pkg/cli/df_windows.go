@@ -31,6 +31,7 @@ func getDiskInfo(path string) (DFInfo, error) {
 	}
 
 	used := totalBytes - totalFreeBytes
+
 	usePercent := 0
 	if totalBytes > 0 {
 		usePercent = int(float64(used) / float64(totalBytes) * 100)

@@ -36,8 +36,10 @@ func getWindowsUserCount() int {
 	wtsEnumerateSessions := wtsapi32.NewProc("WTSEnumerateSessionsW")
 	wtsFreeMemory := wtsapi32.NewProc("WTSFreeMemory")
 
-	var pSessionInfo uintptr
-	var count uint32
+	var (
+		pSessionInfo uintptr
+		count        uint32
+	)
 
 	ret, _, _ := wtsEnumerateSessions.Call(
 		0, // WTS_CURRENT_SERVER_HANDLE
@@ -55,21 +57,10 @@ func getWindowsUserCount() int {
 		_, _, _ = wtsFreeMemory.Call(pSessionInfo)
 	}()
 
-	// Count active sessions
-	activeCount := 0
-	const sessionInfoSize = 24 // Size of WTS_SESSION_INFO_1W on 64-bit
-	for i := uint32(0); i < count; i++ {
-		// Check session state (offset 16 is State field)
-		statePtr := pSessionInfo + uintptr(i*sessionInfoSize) + 16
-		state := *(*uint32)(unsafe.Pointer(statePtr))
-		if state == 0 { // WTSActive
-			activeCount++
-		}
+	// Return session count (at least 1)
+	if count == 0 {
+		return 1
 	}
 
-	if activeCount == 0 {
-		activeCount = 1
-	}
-
-	return activeCount
+	return int(count)
 }

@@ -13,6 +13,7 @@ func TestRunHash(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	// Create test file
@@ -51,11 +52,13 @@ func TestRunHash(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var buf bytes.Buffer
+
 			err := RunHash(&buf, tt.args, tt.opts)
 			if (err != nil) != tt.wantError {
 				t.Errorf("RunHash() error = %v, wantError %v", err, tt.wantError)
 				return
 			}
+
 			if tt.contains != "" && !strings.Contains(buf.String(), tt.contains) {
 				t.Errorf("RunHash() output = %v, want contains %v", buf.String(), tt.contains)
 			}
@@ -68,6 +71,7 @@ func TestRunMD5Sum(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	testFile := filepath.Join(tmpDir, "test.txt")
@@ -76,6 +80,7 @@ func TestRunMD5Sum(t *testing.T) {
 	}
 
 	var buf bytes.Buffer
+
 	err = RunMD5Sum(&buf, []string{testFile}, HashOptions{})
 	if err != nil {
 		t.Fatalf("RunMD5Sum() error = %v", err)
@@ -92,6 +97,7 @@ func TestRunSHA256Sum(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	testFile := filepath.Join(tmpDir, "test.txt")
@@ -100,6 +106,7 @@ func TestRunSHA256Sum(t *testing.T) {
 	}
 
 	var buf bytes.Buffer
+
 	err = RunSHA256Sum(&buf, []string{testFile}, HashOptions{})
 	if err != nil {
 		t.Fatalf("RunSHA256Sum() error = %v", err)
