@@ -76,6 +76,14 @@ func RunDd(w io.Writer, opts DdOptions) error {
 
 	if opts.InputFile == "" || opts.InputFile == "-" {
 		input = os.Stdin
+
+		// Skip input blocks by reading and discarding (stdin is not seekable)
+		if opts.Skip > 0 {
+			skipBytes := opts.Skip * opts.InputBS
+			if _, err := io.CopyN(io.Discard, input, skipBytes); err != nil && err != io.EOF {
+				return fmt.Errorf("dd: skip failed: %w", err)
+			}
+		}
 	} else {
 		f, err := os.Open(opts.InputFile)
 		if err != nil {
@@ -86,7 +94,7 @@ func RunDd(w io.Writer, opts DdOptions) error {
 
 		input = f
 
-		// Skip input blocks
+		// Skip input blocks by seeking (file is seekable)
 		if opts.Skip > 0 {
 			skipBytes := opts.Skip * opts.InputBS
 			if _, err := f.Seek(skipBytes, io.SeekStart); err != nil {
