@@ -111,16 +111,17 @@ defer func() {
 
 ## Command Categories
 
-### Implemented (82 commands)
+### Implemented (102 commands)
 
 | Category | Commands |
 |----------|----------|
-| **Core** | ls, pwd, cat, date, dirname, basename, realpath, tree |
-| **File** | cp, mv, rm, mkdir, rmdir, touch, stat, ln, readlink, chmod, chown, find, dd |
-| **Text** | grep, egrep, fgrep, head, tail, sort, uniq, wc, cut, tr, nl, paste, tac, column, fold, join, sed, awk |
+| **Core** | ls, pwd, cat, date, dirname, basename, realpath, tree, arch, sleep, seq |
+| **File** | cp, mv, rm, mkdir, rmdir, touch, stat, ln, readlink, chmod, chown, find, dd, file, which |
+| **Text** | grep, egrep, fgrep, head, tail, sort, uniq, wc, cut, tr, nl, paste, tac, column, fold, join, sed, awk, shuf, split, rev, comm, cmp, strings |
 | **System** | env, whoami, id, uname, uptime, free, df, du, ps, kill, time |
 | **Flow** | xargs, watch, yes |
 | **Archive** | tar, zip, unzip |
+| **Compression** | gzip, gunzip, zcat, bzip2, bunzip2, bzcat, xz, unxz, xzcat |
 | **Hash** | hash, sha256sum, sha512sum, md5sum |
 | **Encoding** | base64, base32, base58 |
 | **Data** | jq, yq, dotenv |
@@ -158,7 +159,8 @@ defer func() {
 | `regexp` | grep, sed pattern matching |
 | `encoding/json` | jq, JSON output |
 | `archive/tar`, `archive/zip` | tar, zip, unzip |
-| `compress/gzip` | tar -z |
+| `compress/gzip` | tar -z, gzip, gunzip, zcat |
+| `compress/bzip2` | bzip2, bunzip2, bzcat (decompress only) |
 | `crypto/*` | hash, encrypt/decrypt |
 | `syscall` | df, free, uptime, ps |
 
