@@ -14,16 +14,15 @@ A cross-platform, Go-native replacement for common shell utilities, designed for
 
 ## Installation
 
-Build from source:
+```bash
+go install github.com/inovacc/omni@latest
+```
+
+Or build from source:
 ```bash
 git clone https://github.com/inovacc/omni.git
 cd omni
 task build
-```
-
-Or manually:
-```bash
-go build -ldflags="-s -w" -o omni .
 ```
 
 ## Quick Start
@@ -180,6 +179,7 @@ omni decrypt -p mypass -a secret.enc
 | Command | Description |
 |---------|-------------|
 | `lint` | Check Taskfiles for portability |
+| `logger` | Configure command logging |
 
 ## Library Usage
 
@@ -240,6 +240,26 @@ omni/
 | `df` | ✅ | ✅ | ✅ |
 | `free` | ✅ | ✅ | ✅ |
 | `uptime` | ✅ | ✅ | ✅ |
+
+## Command Logging
+
+Enable command logging for debugging:
+
+```bash
+# Enable logging (Linux/macOS)
+eval "$(omni logger --path /tmp/omni.log)"
+
+# Enable logging (Windows PowerShell)
+Invoke-Expression (omni logger --path C:\temp\omni.log)
+
+# Check status
+omni logger --status
+
+# Disable logging
+eval "$(omni logger --disable)"
+```
+
+Log output is structured JSON with command, args, timestamp, and PID.
 
 ## Use with Taskfile
 
