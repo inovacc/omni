@@ -21,6 +21,11 @@ var psCmd = &cobra.Command{
   -p PID         show process with specified PID
   --no-headers   don't print header line
   --sort COL     sort by column (pid, cpu, mem, time)
+  -j, --json     output as JSON
+  --go           show only Go processes (detected via gops)
+
+Go processes are automatically detected and marked. Use --go to filter
+only Go processes, or -j/--json to see the is_go field in output.
 
 Note: On Linux, reads /proc filesystem. On Windows, uses Win32 API.
 
@@ -29,7 +34,10 @@ Examples:
   omni ps -a              # show all processes
   omni ps -f              # full format listing
   omni ps -p 1234         # show specific process
-  omni ps --sort cpu      # sort by CPU usage`,
+  omni ps --sort cpu      # sort by CPU usage
+  omni ps -j              # output as JSON
+  omni ps --go            # show only Go processes
+  omni ps --go -j         # Go processes as JSON`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		opts := cli.PsOptions{}
 
@@ -40,6 +48,8 @@ Examples:
 		opts.Pid, _ = cmd.Flags().GetInt("pid")
 		opts.NoHeaders, _ = cmd.Flags().GetBool("no-headers")
 		opts.Sort, _ = cmd.Flags().GetString("sort")
+		opts.JSON, _ = cmd.Flags().GetBool("json")
+		opts.GoOnly, _ = cmd.Flags().GetBool("go")
 
 		// Check for aux style (positional arg)
 		for _, arg := range args {
@@ -63,4 +73,6 @@ func init() {
 	psCmd.Flags().IntP("pid", "p", 0, "show process with specified PID")
 	psCmd.Flags().Bool("no-headers", false, "don't print header line")
 	psCmd.Flags().String("sort", "", "sort by column (pid, cpu, mem, time)")
+	psCmd.Flags().BoolP("json", "j", false, "output as JSON")
+	psCmd.Flags().Bool("go", false, "show only Go processes")
 }

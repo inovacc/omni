@@ -3,7 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/inovacc/omni/pkg/cli"
+	"github.com/inovacc/omni/pkg/cli/df"
 
 	"github.com/spf13/cobra"
 )
@@ -24,7 +24,7 @@ or all file systems by default.
   -l, --local           limit listing to local file systems
   -P, --portability     use the POSIX output format`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		opts := cli.DFOptions{}
+		opts := df.DFOptions{}
 
 		opts.HumanReadable, _ = cmd.Flags().GetBool("human-readable")
 		opts.Inodes, _ = cmd.Flags().GetBool("inodes")
@@ -35,7 +35,7 @@ or all file systems by default.
 		opts.Local, _ = cmd.Flags().GetBool("local")
 		opts.Portability, _ = cmd.Flags().GetBool("portability")
 
-		return cli.RunDF(os.Stdout, args, opts)
+		return df.RunDF(os.Stdout, args, opts)
 	},
 }
 

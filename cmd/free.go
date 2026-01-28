@@ -3,7 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/inovacc/omni/pkg/cli"
+	"github.com/inovacc/omni/pkg/cli/free"
 
 	"github.com/spf13/cobra"
 )
@@ -23,7 +23,7 @@ in the system, as well as the buffers and caches used by the kernel.
   -w, --wide          wide output
   -t, --total         show total for RAM + swap`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		opts := cli.FreeOptions{}
+		opts := free.FreeOptions{}
 
 		opts.Bytes, _ = cmd.Flags().GetBool("bytes")
 		opts.Kibibytes, _ = cmd.Flags().GetBool("kibibytes")
@@ -33,7 +33,7 @@ in the system, as well as the buffers and caches used by the kernel.
 		opts.Wide, _ = cmd.Flags().GetBool("wide")
 		opts.Total, _ = cmd.Flags().GetBool("total")
 
-		return cli.RunFree(os.Stdout, opts)
+		return free.RunFree(os.Stdout, opts)
 	},
 }
 

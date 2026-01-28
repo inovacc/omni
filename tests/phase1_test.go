@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/inovacc/omni/pkg/cli"
+	"github.com/inovacc/omni/pkg/cli/uname"
 )
 
 //nolint:maintidx // Test function has expected high complexity with many subtest cases
@@ -328,7 +329,7 @@ func TestPhase1Commands(t *testing.T) {
 	t.Run("uname", func(t *testing.T) {
 		var buf bytes.Buffer
 
-		err := cli.RunUname(&buf, cli.UnameOptions{})
+		err := uname.RunUname(&buf, uname.UnameOptions{})
 		if err != nil {
 			t.Fatalf("command failed: %v", err)
 		}
@@ -344,7 +345,7 @@ func TestPhase1Commands(t *testing.T) {
 	t.Run("uname-all", func(t *testing.T) {
 		var buf bytes.Buffer
 
-		err := cli.RunUname(&buf, cli.UnameOptions{All: true})
+		err := uname.RunUname(&buf, uname.UnameOptions{All: true})
 		if err != nil {
 			t.Fatalf("command failed: %v", err)
 		}

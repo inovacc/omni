@@ -3,7 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/inovacc/omni/pkg/cli"
+	"github.com/inovacc/omni/pkg/cli/uptime"
 
 	"github.com/spf13/cobra"
 )
@@ -19,12 +19,12 @@ for the past 1, 5, and 15 minutes.
   -p, --pretty   show uptime in pretty format
   -s, --since    system up since, in yyyy-mm-dd HH:MM:SS format`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		opts := cli.UptimeOptions{}
+		opts := uptime.UptimeOptions{}
 
 		opts.Pretty, _ = cmd.Flags().GetBool("pretty")
 		opts.Since, _ = cmd.Flags().GetBool("since")
 
-		return cli.RunUptime(os.Stdout, opts)
+		return uptime.RunUptime(os.Stdout, opts)
 	},
 }
 

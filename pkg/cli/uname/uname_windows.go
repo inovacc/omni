@@ -1,6 +1,6 @@
 //go:build windows
 
-package cli
+package uname
 
 import (
 	"os/exec"
