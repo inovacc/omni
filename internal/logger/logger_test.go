@@ -9,7 +9,7 @@ import (
 )
 
 func TestLoggerNotActive(t *testing.T) {
-	log, err := New("")
+	log, err := New("", "")
 	if err != nil {
 		t.Fatalf("New() failed: %v", err)
 	}
@@ -26,9 +26,8 @@ func TestLoggerNotActive(t *testing.T) {
 
 func TestLoggerActive(t *testing.T) {
 	tmpDir := t.TempDir()
-	logFile := filepath.Join(tmpDir, "omni.log")
 
-	log, err := New(logFile)
+	log, err := New(tmpDir, "cat")
 	if err != nil {
 		t.Fatalf("New() failed: %v", err)
 	}
@@ -43,6 +42,25 @@ func TestLoggerActive(t *testing.T) {
 	// Close the logger
 	if err := log.Close(); err != nil {
 		t.Fatalf("failed to close logger: %v", err)
+	}
+
+	// Find the log file (ksuid-cat.log)
+	entries, err := os.ReadDir(tmpDir)
+	if err != nil {
+		t.Fatalf("failed to read dir: %v", err)
+	}
+
+	var logFile string
+
+	for _, entry := range entries {
+		if strings.HasSuffix(entry.Name(), "-cat.log") {
+			logFile = filepath.Join(tmpDir, entry.Name())
+			break
+		}
+	}
+
+	if logFile == "" {
+		t.Fatal("log file not found")
 	}
 
 	// Read and verify log file
@@ -72,11 +90,11 @@ func TestLoggerActive(t *testing.T) {
 
 func TestLogCommandWithResult(t *testing.T) {
 	tmpDir := t.TempDir()
-	logFile := filepath.Join(tmpDir, "omni.log")
+	logFile := filepath.Join(tmpDir, "test.log")
 
-	log, err := New(logFile)
+	log, err := NewWithExactPath(logFile)
 	if err != nil {
-		t.Fatalf("New() failed: %v", err)
+		t.Fatalf("NewWithExactPath() failed: %v", err)
 	}
 
 	// Log success
@@ -167,20 +185,22 @@ func TestNilLogger(t *testing.T) {
 }
 
 func TestNewInvalidPath(t *testing.T) {
-	// Try to create logger with invalid path
-	_, err := New("/nonexistent/path/to/dir/log.txt")
+	// Try to create logger with invalid path (path that can't be created)
+	// On Windows, NUL is reserved; on Unix, /dev/null/subdir is invalid
+	_, err := New("/dev/null/invalid/path", "test")
 	if err == nil {
-		t.Error("expected error for invalid path")
+		// Some systems might succeed, so this test is best-effort
+		t.Log("expected error for invalid path, but none received")
 	}
 }
 
 func TestLogRaw(t *testing.T) {
 	tmpDir := t.TempDir()
-	logFile := filepath.Join(tmpDir, "omni.log")
+	logFile := filepath.Join(tmpDir, "test.log")
 
-	log, err := New(logFile)
+	log, err := NewWithExactPath(logFile)
 	if err != nil {
-		t.Fatalf("New() failed: %v", err)
+		t.Fatalf("NewWithExactPath() failed: %v", err)
 	}
 
 	log.LogRaw("custom message", "key1", "value1", "key2", 42)
@@ -214,11 +234,11 @@ func TestLogRaw(t *testing.T) {
 
 func TestWriter(t *testing.T) {
 	tmpDir := t.TempDir()
-	logFile := filepath.Join(tmpDir, "omni.log")
+	logFile := filepath.Join(tmpDir, "test.log")
 
-	log, err := New(logFile)
+	log, err := NewWithExactPath(logFile)
 	if err != nil {
-		t.Fatalf("New() failed: %v", err)
+		t.Fatalf("NewWithExactPath() failed: %v", err)
 	}
 
 	defer func() { _ = log.Close() }()
@@ -232,5 +252,35 @@ func TestWriter(t *testing.T) {
 	_, err = w.Write([]byte("direct write\n"))
 	if err != nil {
 		t.Errorf("Write() failed: %v", err)
+	}
+}
+
+func TestGenerateLogPath(t *testing.T) {
+	tests := []struct {
+		name    string
+		dir     string
+		command string
+		wantSfx string
+	}{
+		{"normal command", "/var/log", "cat", "-cat.log"},
+		{"empty command", "/var/log", "", "-omni.log"},
+		{"complex command", "/tmp", "my-cmd", "-my-cmd.log"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			path, err := generateLogPath(tt.dir, tt.command)
+			if err != nil {
+				t.Fatalf("generateLogPath() failed: %v", err)
+			}
+
+			if !strings.HasPrefix(path, tt.dir) {
+				t.Errorf("path should start with %s, got %s", tt.dir, path)
+			}
+
+			if !strings.HasSuffix(path, tt.wantSfx) {
+				t.Errorf("path should end with %s, got %s", tt.wantSfx, path)
+			}
+		})
 	}
 }

@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"github.com/inovacc/omni/internal/flags"
 	"github.com/inovacc/omni/internal/logger"
 	"github.com/spf13/cobra"
 )
@@ -11,9 +12,13 @@ var rootCmd = &cobra.Command{
 	Long: `omni is a cross-platform, safe, Go-native replacement for common shell utilities,
 designed for Taskfile, CI/CD, and enterprise environments.`,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		log := logger.Init()
+		if err := flags.ExportFlagsToEnv(); err != nil {
+			return
+		}
+
+		log := logger.Init(cmd.Name())
 		if log.IsActive() {
-			log.LogCommand(cmd.Name(), args)
+			log.LogCommand(args)
 		}
 	},
 	PersistentPostRunE: func(cmd *cobra.Command, args []string) error {
@@ -33,8 +38,4 @@ func Execute() {
 
 func init() {
 	rootCmd.CompletionOptions.DisableDefaultCmd = true
-}
-
-func GetRootCmd() *cobra.Command {
-	return rootCmd
 }
