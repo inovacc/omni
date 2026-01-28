@@ -30,13 +30,16 @@
 
 ```
 omni/
-├── cmd/           # Cobra CLI commands (thin wrappers)
-├── pkg/cli/       # Library implementations (all logic here)
-├── scripts/       # Build/generation scripts
-├── tests/         # Integration tests
-├── docs/          # Documentation
-├── Taskfile.yml   # Task automation
-└── main.go        # Entry point
+├── .github/workflows/  # CI/CD workflows
+├── cmd/                # Cobra CLI commands (thin wrappers)
+├── pkg/cli/            # Library implementations (all logic here)
+│   ├── *_test.go       # Unit tests
+│   ├── *_unix.go       # Unix-specific code
+│   └── *_windows.go    # Windows-specific code
+├── tests/              # Integration tests
+├── docs/               # Documentation
+├── Taskfile.yml        # Task automation
+└── main.go             # Entry point
 ```
 
 ### Code Patterns
@@ -161,18 +164,71 @@ defer func() {
 
 ---
 
+## CI/CD
+
+### GitHub Actions
+
+The project uses GitHub Actions for continuous integration:
+
+- **Workflow**: `.github/workflows/test.yml`
+- **Triggers**: Push/PR to non-main branches
+- **Checks**:
+  - `golangci-lint` - Code quality
+  - `gofmt` - Code formatting
+  - `govulncheck` - Security vulnerabilities
+  - `go test -race` - Unit tests with race detection
+
+### Running CI Locally
+
+```bash
+task lint      # Run golangci-lint
+task test      # Run tests with coverage
+task build     # Build binary
+```
+
+---
+
 ## Testing
 
 ### Run Tests
 
 ```bash
+# Run all tests with race detection and coverage
 go test -race -cover ./...
+
+# Run specific test
+go test -race ./pkg/cli/... -run TestRunUniq -v
+
+# Generate coverage report
+go test -race -coverprofile=coverage.out ./...
+go tool cover -html=coverage.out
 ```
+
+### Test Coverage
+
+Current coverage: ~26% (pkg/cli)
+
+### Test Files
+
+| File | Tests |
+|------|-------|
+| `pkg/cli/hash_test.go` | SHA256, SHA512, MD5 hashing |
+| `pkg/cli/base_test.go` | Base64, Base32, Base58 encoding |
+| `pkg/cli/uuid_test.go` | UUID generation |
+| `pkg/cli/random_test.go` | Random string, hex, password, int |
+| `pkg/cli/fs_test.go` | mkdir, cp, touch, stat, ln, readlink |
+| `pkg/cli/text_test.go` | tr, cut, nl, uniq, paste, tac, fold, column, join |
+| `pkg/cli/kill_test.go` | Signal listing, PID validation |
+| `pkg/cli/jq_test.go` | JSON querying |
+| `pkg/cli/yq_test.go` | YAML querying |
+| `pkg/cli/diff_test.go` | File comparison |
+| `pkg/cli/crypt_test.go` | Encrypt/decrypt |
+| `pkg/cli/path_test.go` | dirname, basename, realpath |
 
 ### Test Pattern
 
 ```go
-func TestLs(t *testing.T) {
+func TestRunLs(t *testing.T) {
     var buf bytes.Buffer
     err := cli.RunLs(&buf, []string{"."}, cli.LsOptions{})
     if err != nil {
@@ -180,6 +236,15 @@ func TestLs(t *testing.T) {
     }
     // Assert on buf.String()
 }
+```
+
+### Linter Directives
+
+Use `//nolint` for intentional patterns:
+
+```go
+//nolint:dupword // intentional duplicate content for testing uniq
+content := "a\na\na\nb\nb\n"
 ```
 
 ---

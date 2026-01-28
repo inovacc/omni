@@ -1,5 +1,7 @@
 # omni
 
+[![Test](https://github.com/inovacc/omni/actions/workflows/test.yml/badge.svg)](https://github.com/inovacc/omni/actions/workflows/test.yml)
+
 A cross-platform, Go-native replacement for common shell utilities, designed for Taskfile, CI/CD, and enterprise environments.
 
 ## Features
@@ -260,6 +262,21 @@ tasks:
   deploy:
     cmds:
       - omni tar -czvf release.tar.gz dist/
+```
+
+## Testing
+
+Run tests with race detection:
+
+```bash
+go test -race -cover ./...
+```
+
+Or use Taskfile:
+
+```bash
+task test
+task lint
 ```
 
 ## Contributing
