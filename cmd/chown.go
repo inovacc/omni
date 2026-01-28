@@ -3,7 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/inovacc/omni/pkg/cli"
+	"github.com/inovacc/omni/pkg/cli/chown"
 
 	"github.com/spf13/cobra"
 )
@@ -31,7 +31,7 @@ Options:
       --preserve-root  fail to operate recursively on '/'`,
 	Args: cobra.MinimumNArgs(2),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		opts := cli.ChownOptions{}
+		opts := chown.ChownOptions{}
 
 		opts.Recursive, _ = cmd.Flags().GetBool("recursive")
 		opts.Verbose, _ = cmd.Flags().GetBool("verbose")
@@ -41,7 +41,7 @@ Options:
 		opts.Reference, _ = cmd.Flags().GetString("reference")
 		opts.PreserveRoot, _ = cmd.Flags().GetBool("preserve-root")
 
-		return cli.RunChown(os.Stdout, args, opts)
+		return chown.RunChown(os.Stdout, args, opts)
 	},
 }
 

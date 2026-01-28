@@ -3,7 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/inovacc/omni/pkg/cli"
+	"github.com/inovacc/omni/pkg/cli/kill"
 
 	"github.com/spf13/cobra"
 )
@@ -17,6 +17,7 @@ var killCmd = &cobra.Command{
   -s, --signal=SIGNAL  specify the signal to be sent
   -l, --list           list signal names
   -v, --verbose        report successful signals
+  -j, --json           output as JSON
 
 Signal can be specified by name (e.g., HUP, KILL, TERM) or number.
 Common signals:
@@ -27,15 +28,18 @@ Examples:
   omni kill 1234           # send SIGTERM to process 1234
   omni kill -9 1234        # send SIGKILL to process 1234
   omni kill -s HUP 1234    # send SIGHUP to process 1234
-  omni kill -l             # list all signal names`,
+  omni kill -l             # list all signal names
+  omni kill -l -j          # list signals as JSON
+  omni kill -j 1234        # kill with JSON output`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		opts := cli.KillOptions{}
+		opts := kill.KillOptions{}
 
 		opts.Signal, _ = cmd.Flags().GetString("signal")
 		opts.List, _ = cmd.Flags().GetBool("list")
 		opts.Verbose, _ = cmd.Flags().GetBool("verbose")
+		opts.JSON, _ = cmd.Flags().GetBool("json")
 
-		return cli.RunKill(os.Stdout, args, opts)
+		return kill.RunKill(os.Stdout, args, opts)
 	},
 }
 
@@ -45,4 +49,5 @@ func init() {
 	killCmd.Flags().StringP("signal", "s", "", "specify the signal to be sent")
 	killCmd.Flags().BoolP("list", "l", false, "list signal names")
 	killCmd.Flags().BoolP("verbose", "v", false, "report successful signals")
+	killCmd.Flags().BoolP("json", "j", false, "output as JSON")
 }

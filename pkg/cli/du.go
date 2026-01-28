@@ -177,7 +177,7 @@ func printDUSize(w io.Writer, size int64, path string, opts DUOptions, terminato
 	var sizeStr string
 
 	if opts.HumanReadable {
-		sizeStr = formatHumanSize(size)
+		sizeStr = FormatHumanSize(size)
 	} else {
 		blocks := (size + opts.BlockSize - 1) / opts.BlockSize
 		sizeStr = fmt.Sprintf("%d", blocks)
@@ -186,8 +186,8 @@ func printDUSize(w io.Writer, size int64, path string, opts DUOptions, terminato
 	_, _ = fmt.Fprintf(w, "%s\t%s%s", sizeStr, path, terminator)
 }
 
-// formatHumanSize formats bytes into human readable form
-func formatHumanSize(bytes int64) string {
+// FormatHumanSize formats bytes into human readable form
+func FormatHumanSize(bytes int64) string {
 	const unit = 1024
 	if bytes < unit {
 		return fmt.Sprintf("%d", bytes)

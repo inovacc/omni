@@ -3,7 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/inovacc/omni/pkg/cli"
+	"github.com/inovacc/omni/pkg/cli/uname"
 
 	"github.com/spf13/cobra"
 )
@@ -25,7 +25,7 @@ var unameCmd = &cobra.Command{
   -o, --operating-system   print the operating system`,
 	Args: cobra.NoArgs,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		opts := cli.UnameOptions{}
+		opts := uname.UnameOptions{}
 
 		opts.All, _ = cmd.Flags().GetBool("all")
 		opts.KernelName, _ = cmd.Flags().GetBool("kernel-name")
@@ -37,7 +37,7 @@ var unameCmd = &cobra.Command{
 		opts.HardwarePlatform, _ = cmd.Flags().GetBool("hardware-platform")
 		opts.OperatingSystem, _ = cmd.Flags().GetBool("operating-system")
 
-		return cli.RunUname(os.Stdout, opts)
+		return uname.RunUname(os.Stdout, opts)
 	},
 }
 

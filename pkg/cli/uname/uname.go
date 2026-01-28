@@ -1,4 +1,4 @@
-package cli
+package uname
 
 import (
 	"fmt"
@@ -102,7 +102,7 @@ func GetUnameInfo() UnameInfo {
 	kernelName := mapKernelName(runtime.GOOS)
 
 	// Map Go's GOARCH to machine architecture names
-	machine := mapMachine(runtime.GOARCH)
+	machine := MapMachine(runtime.GOARCH)
 
 	return UnameInfo{
 		KernelName:       kernelName,
@@ -147,8 +147,8 @@ func mapKernelName(goos string) string {
 	}
 }
 
-// mapMachine maps GOARCH to machine architecture names
-func mapMachine(goarch string) string {
+// MapMachine maps GOARCH to machine architecture names
+func MapMachine(goarch string) string {
 	switch goarch {
 	case "amd64":
 		return "x86_64"
