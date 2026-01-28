@@ -19,7 +19,7 @@ func TestLoggerNotActive(t *testing.T) {
 	}
 
 	// These should not panic
-	log.LogCommand("test", []string{"arg1", "arg2"})
+	log.LogCommand([]string{"arg1", "arg2"})
 	log.LogCommandWithResult("test", []string{"arg1"}, nil)
 	log.LogRaw("test message")
 }
@@ -37,7 +37,7 @@ func TestLoggerActive(t *testing.T) {
 	}
 
 	// Log a command
-	log.LogCommand("cat", []string{"file.txt", "-n"})
+	log.LogCommand([]string{"file.txt", "-n"})
 
 	// Close the logger
 	if err := log.Close(); err != nil {
@@ -63,7 +63,7 @@ func TestLoggerActive(t *testing.T) {
 		t.Fatal("log file not found")
 	}
 
-	// Read and verify log file
+	// Read and verify the log file
 	content, err := os.ReadFile(logFile)
 	if err != nil {
 		t.Fatalf("failed to read log file: %v", err)
@@ -117,7 +117,7 @@ func TestLogCommandWithResult(t *testing.T) {
 		t.Fatalf("expected 2 log entries, got %d", len(lines))
 	}
 
-	// Check first entry (success)
+	// Check the first entry (success)
 	var entry1 map[string]any
 	if err := json.Unmarshal([]byte(lines[0]), &entry1); err != nil {
 		t.Fatalf("failed to parse first entry: %v", err)
@@ -127,7 +127,7 @@ func TestLogCommandWithResult(t *testing.T) {
 		t.Errorf("expected status=success, got %v", entry1["status"])
 	}
 
-	// Check second entry (error)
+	// Check the second entry (error)
 	var entry2 map[string]any
 	if err := json.Unmarshal([]byte(lines[1]), &entry2); err != nil {
 		t.Fatalf("failed to parse second entry: %v", err)
@@ -170,7 +170,7 @@ func TestNilLogger(t *testing.T) {
 	}
 
 	// These should not panic
-	log.LogCommand("test", nil)
+	log.LogCommand(nil)
 	log.LogCommandWithResult("test", nil, nil)
 	log.LogRaw("test")
 
@@ -185,7 +185,7 @@ func TestNilLogger(t *testing.T) {
 }
 
 func TestNewInvalidPath(t *testing.T) {
-	// Try to create logger with invalid path (path that can't be created)
+	// Try to create a logger with an invalid path (path that can't be created)
 	// On Windows, NUL is reserved; on Unix, /dev/null/subdir is invalid
 	_, err := New("/dev/null/invalid/path", "test")
 	if err == nil {

@@ -17,7 +17,7 @@ const (
 var (
 	appDir    string
 	initOnce  sync.Once
-	initErr   error
+	errInit   error
 	exportMu  sync.Once
 	cacheMu   sync.RWMutex
 	flagCache map[string]bool
@@ -27,18 +27,18 @@ func ensureInit() error {
 	initOnce.Do(func() {
 		dataDir, err := os.UserCacheDir()
 		if err != nil {
-			initErr = fmt.Errorf("failed to get user cache dir: %w", err)
+			errInit = fmt.Errorf("failed to get user cache dir: %w", err)
 			return
 		}
 
 		appDir = filepath.Join(dataDir, appName)
 
 		if err := os.MkdirAll(appDir, 0755); err != nil {
-			initErr = fmt.Errorf("failed to create app dir: %w", err)
+			errInit = fmt.Errorf("failed to create app dir: %w", err)
 		}
 	})
 
-	return initErr
+	return errInit
 }
 
 func LoadFeatureFlags() (map[string]bool, error) {

@@ -122,7 +122,9 @@ func isEnabled(val string) bool {
 // Format: logDir/ksuid-command.log
 // This is useful for testing or when you need a logger independent of the global instance.
 func New(logDir, command string) (*Logger, error) {
-	l := &Logger{}
+	l := &Logger{
+		command: command,
+	}
 
 	if logDir == "" {
 		return l, nil
