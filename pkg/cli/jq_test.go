@@ -141,4 +141,46 @@ func TestRunJq(t *testing.T) {
 			t.Errorf("RunJq() compact output has newlines: %v", result)
 		}
 	})
+
+	t.Run("pipe filter", func(t *testing.T) {
+		file := filepath.Join(tmpDir, "pipe.json")
+
+		content := `{"items": [1, 2, 3]}`
+		if err := os.WriteFile(file, []byte(content), 0644); err != nil {
+			t.Fatal(err)
+		}
+
+		var buf bytes.Buffer
+
+		err := RunJq(&buf, []string{".items | length", file}, JqOptions{})
+		if err != nil {
+			t.Fatalf("RunJq() error = %v", err)
+		}
+
+		result := strings.TrimSpace(buf.String())
+		if result != "3" {
+			t.Errorf("RunJq() = %v, want '3'", result)
+		}
+	})
+
+	t.Run("chained pipes", func(t *testing.T) {
+		file := filepath.Join(tmpDir, "chained.json")
+
+		content := `{"data": {"values": ["a", "b", "c"]}}`
+		if err := os.WriteFile(file, []byte(content), 0644); err != nil {
+			t.Fatal(err)
+		}
+
+		var buf bytes.Buffer
+
+		err := RunJq(&buf, []string{".data | .values | length", file}, JqOptions{})
+		if err != nil {
+			t.Fatalf("RunJq() error = %v", err)
+		}
+
+		result := strings.TrimSpace(buf.String())
+		if result != "3" {
+			t.Errorf("RunJq() = %v, want '3'", result)
+		}
+	})
 }

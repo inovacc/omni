@@ -132,6 +132,11 @@ func applyJqFilter(input any, filter string) ([]any, error) {
 		return jqIterateArray(input)
 	}
 
+	// Handle pipe (check before field access to support .field | filter)
+	if strings.Contains(filter, "|") {
+		return jqPipe(input, filter)
+	}
+
 	// Handle array index .[n]
 	if strings.HasPrefix(filter, ".[") && strings.HasSuffix(filter, "]") {
 		indexStr := filter[2 : len(filter)-1]
@@ -148,11 +153,6 @@ func applyJqFilter(input any, filter string) ([]any, error) {
 	// Handle field access .field or .field.subfield
 	if strings.HasPrefix(filter, ".") {
 		return jqFieldAccess(input, filter[1:])
-	}
-
-	// Handle pipe
-	if strings.Contains(filter, "|") {
-		return jqPipe(input, filter)
 	}
 
 	return nil, fmt.Errorf("unsupported filter: %s", filter)
