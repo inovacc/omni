@@ -111,15 +111,15 @@ defer func() {
 
 ## Command Categories
 
-### Implemented (70+ commands)
+### Implemented (82 commands)
 
 | Category | Commands |
 |----------|----------|
-| **Core** | ls, pwd, cat, date, dirname, basename, realpath |
-| **File** | cp, mv, rm, mkdir, rmdir, touch, stat, ln, readlink, chmod, chown |
+| **Core** | ls, pwd, cat, date, dirname, basename, realpath, tree |
+| **File** | cp, mv, rm, mkdir, rmdir, touch, stat, ln, readlink, chmod, chown, find, dd |
 | **Text** | grep, egrep, fgrep, head, tail, sort, uniq, wc, cut, tr, nl, paste, tac, column, fold, join, sed, awk |
 | **System** | env, whoami, id, uname, uptime, free, df, du, ps, kill, time |
-| **Flow** | xargs, watch, yes, nohup |
+| **Flow** | xargs, watch, yes |
 | **Archive** | tar, zip, unzip |
 | **Hash** | hash, sha256sum, sha512sum, md5sum |
 | **Encoding** | base64, base32, base58 |
