@@ -12,6 +12,7 @@ var (
 	fileMimeType  bool
 	fileNoDeref   bool
 	fileSeparator string
+	fileJSON      bool
 )
 
 var fileCmd = &cobra.Command{
@@ -36,6 +37,7 @@ Examples:
 			MimeType:  fileMimeType,
 			NoDeref:   fileNoDeref,
 			Separator: fileSeparator,
+			JSON:      fileJSON,
 		}
 
 		return file.RunFile(os.Stdout, args, opts)
@@ -49,4 +51,5 @@ func init() {
 	fileCmd.Flags().BoolVarP(&fileMimeType, "mime", "i", false, "output MIME type")
 	fileCmd.Flags().BoolVarP(&fileNoDeref, "no-dereference", "L", false, "don't follow symlinks")
 	fileCmd.Flags().StringVarP(&fileSeparator, "separator", "F", ":", "use string as separator")
+	fileCmd.Flags().BoolVar(&fileJSON, "json", false, "output as JSON")
 }

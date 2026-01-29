@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"encoding/binary"
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -17,6 +18,14 @@ type FileOptions struct {
 	MimeType  bool   // -i: output MIME type
 	NoDeref   bool   // -h: don't follow symlinks
 	Separator string // -F: use string as separator
+	JSON      bool   // --json: output as JSON
+}
+
+// FileResult represents file output for JSON
+type FileResult struct {
+	Path     string `json:"path"`
+	Type     string `json:"type"`
+	MimeType string `json:"mime_type"`
 }
 
 // RunFile determines file type
@@ -29,8 +38,15 @@ func RunFile(w io.Writer, args []string, opts FileOptions) error {
 		opts.Separator = ":"
 	}
 
+	var jsonResults []FileResult
+
 	for _, path := range args {
 		fileType, mimeType := detectFileType(path, opts.NoDeref)
+
+		if opts.JSON {
+			jsonResults = append(jsonResults, FileResult{Path: path, Type: fileType, MimeType: mimeType})
+			continue
+		}
 
 		var output string
 
@@ -45,6 +61,10 @@ func RunFile(w io.Writer, args []string, opts FileOptions) error {
 		} else {
 			_, _ = fmt.Fprintf(w, "%s%s %s\n", path, opts.Separator, output)
 		}
+	}
+
+	if opts.JSON {
+		return json.NewEncoder(w).Encode(jsonResults)
 	}
 
 	return nil
