@@ -2,6 +2,7 @@
 package find
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"io/fs"
@@ -34,8 +35,19 @@ type FindOptions struct {
 	Readable   bool   // -readable
 	Writable   bool   // -writable
 	Print0     bool   // -print0 (null separator)
+	JSON       bool   // --json output
 	// Logical operators
 	Not bool // -not (negate next condition)
+}
+
+// FindResult represents a found file for JSON output
+type FindResult struct {
+	Path    string    `json:"path"`
+	Name    string    `json:"name"`
+	Size    int64     `json:"size"`
+	Mode    string    `json:"mode"`
+	ModTime time.Time `json:"modTime"`
+	IsDir   bool      `json:"isDir"`
 }
 
 // RunFind searches for files matching criteria
@@ -142,6 +154,8 @@ func RunFind(w io.Writer, paths []string, opts FindOptions) error {
 		separator = "\x00"
 	}
 
+	var results []FindResult
+
 	for _, root := range paths {
 		err := filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
 			if err != nil {
@@ -240,7 +254,22 @@ func RunFind(w io.Writer, paths []string, opts FindOptions) error {
 			}
 
 			if match {
-				_, _ = fmt.Fprint(w, path, separator)
+				if opts.JSON {
+					info, _ := d.Info()
+					result := FindResult{
+						Path:  path,
+						Name:  d.Name(),
+						IsDir: d.IsDir(),
+					}
+					if info != nil {
+						result.Size = info.Size()
+						result.Mode = info.Mode().String()
+						result.ModTime = info.ModTime()
+					}
+					results = append(results, result)
+				} else {
+					_, _ = fmt.Fprint(w, path, separator)
+				}
 			}
 
 			return nil
@@ -248,6 +277,10 @@ func RunFind(w io.Writer, paths []string, opts FindOptions) error {
 		if err != nil {
 			return fmt.Errorf("find: error walking %q: %w", root, err)
 		}
+	}
+
+	if opts.JSON {
+		return json.NewEncoder(w).Encode(results)
 	}
 
 	return nil
