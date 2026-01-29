@@ -5,6 +5,7 @@ import (
 	"io"
 	"os"
 
+	"github.com/BurntSushi/toml"
 	"github.com/inovacc/omni/internal/cli/jsonfmt"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
@@ -24,6 +25,7 @@ Subcommands:
   keys      List all keys in JSON object
   toyaml    Convert JSON to YAML
   fromyaml  Convert YAML to JSON
+  fromtoml  Convert TOML to JSON
 
 Examples:
   omni json fmt file.json              # beautify JSON
@@ -32,7 +34,8 @@ Examples:
   echo '{"a":1}' | omni json fmt       # from stdin
   omni json stats file.json            # show statistics
   omni json toyaml file.json           # convert to YAML
-  omni json fromyaml file.yaml         # convert from YAML`,
+  omni json fromyaml file.yaml         # convert from YAML
+  omni json fromtoml file.toml         # convert from TOML`,
 }
 
 // jsonFmtCmd formats JSON
@@ -304,6 +307,58 @@ Examples:
 	},
 }
 
+// jsonFromTOMLCmd converts TOML to JSON
+var jsonFromTOMLCmd = &cobra.Command{
+	Use:     "fromtoml [FILE]",
+	Aliases: []string{"from-toml", "t2j"},
+	Short:   "Convert TOML to JSON",
+	Long: `Convert TOML data to JSON format.
+
+  -m, --minify    output minified JSON (no indentation)
+
+Examples:
+  omni json fromtoml file.toml
+  cat file.toml | omni json fromtoml
+  omni json fromtoml -m file.toml     # minified output
+  omni json fromtoml file.toml > output.json`,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		var data []byte
+		var err error
+
+		if len(args) == 0 || args[0] == "-" {
+			data, err = readStdin()
+		} else {
+			data, err = os.ReadFile(args[0])
+		}
+
+		if err != nil {
+			return err
+		}
+
+		var v any
+		if err := toml.Unmarshal(data, &v); err != nil {
+			return err
+		}
+
+		minify, _ := cmd.Flags().GetBool("minify")
+
+		var output []byte
+		if minify {
+			output, err = json.Marshal(v)
+		} else {
+			output, err = json.MarshalIndent(v, "", "  ")
+		}
+
+		if err != nil {
+			return err
+		}
+
+		_, _ = os.Stdout.Write(output)
+		_, _ = os.Stdout.WriteString("\n")
+		return nil
+	},
+}
+
 func readStdin() ([]byte, error) {
 	return io.ReadAll(os.Stdin)
 }
@@ -333,6 +388,7 @@ func init() {
 	jsonCmd.AddCommand(jsonKeysCmd)
 	jsonCmd.AddCommand(jsonToYAMLCmd)
 	jsonCmd.AddCommand(jsonFromYAMLCmd)
+	jsonCmd.AddCommand(jsonFromTOMLCmd)
 
 	// fmt flags
 	jsonFmtCmd.Flags().StringP("indent", "i", "  ", "indentation string")
@@ -354,4 +410,7 @@ func init() {
 
 	// fromyaml flags
 	jsonFromYAMLCmd.Flags().BoolP("minify", "m", false, "output minified JSON")
+
+	// fromtoml flags
+	jsonFromTOMLCmd.Flags().BoolP("minify", "m", false, "output minified JSON")
 }
