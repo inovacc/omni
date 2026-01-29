@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"encoding/json"
+	"io"
 	"os"
 
 	"github.com/inovacc/omni/internal/cli/jsonfmt"
@@ -22,6 +23,7 @@ Subcommands:
   stats     Show statistics about JSON data
   keys      List all keys in JSON object
   toyaml    Convert JSON to YAML
+  fromyaml  Convert YAML to JSON
 
 Examples:
   omni json fmt file.json              # beautify JSON
@@ -29,7 +31,8 @@ Examples:
   omni json validate file.json         # check if valid
   echo '{"a":1}' | omni json fmt       # from stdin
   omni json stats file.json            # show statistics
-  omni json toyaml file.json           # convert to YAML`,
+  omni json toyaml file.json           # convert to YAML
+  omni json fromyaml file.yaml         # convert from YAML`,
 }
 
 // jsonFmtCmd formats JSON
@@ -249,8 +252,60 @@ Examples:
 	},
 }
 
+// jsonFromYAMLCmd converts YAML to JSON
+var jsonFromYAMLCmd = &cobra.Command{
+	Use:     "fromyaml [FILE]",
+	Aliases: []string{"from-yaml", "y2j"},
+	Short:   "Convert YAML to JSON",
+	Long: `Convert YAML data to JSON format.
+
+  -m, --minify    output minified JSON (no indentation)
+
+Examples:
+  omni json fromyaml file.yaml
+  cat file.yaml | omni json fromyaml
+  omni json fromyaml -m file.yaml     # minified output
+  omni json fromyaml file.yaml > output.json`,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		var data []byte
+		var err error
+
+		if len(args) == 0 || args[0] == "-" {
+			data, err = readStdin()
+		} else {
+			data, err = os.ReadFile(args[0])
+		}
+
+		if err != nil {
+			return err
+		}
+
+		var v any
+		if err := yaml.Unmarshal(data, &v); err != nil {
+			return err
+		}
+
+		minify, _ := cmd.Flags().GetBool("minify")
+
+		var output []byte
+		if minify {
+			output, err = json.Marshal(v)
+		} else {
+			output, err = json.MarshalIndent(v, "", "  ")
+		}
+
+		if err != nil {
+			return err
+		}
+
+		_, _ = os.Stdout.Write(output)
+		_, _ = os.Stdout.WriteString("\n")
+		return nil
+	},
+}
+
 func readStdin() ([]byte, error) {
-	return os.ReadFile(os.Stdin.Name())
+	return io.ReadAll(os.Stdin)
 }
 
 func itoa(n int) string {
@@ -277,6 +332,7 @@ func init() {
 	jsonCmd.AddCommand(jsonStatsCmd)
 	jsonCmd.AddCommand(jsonKeysCmd)
 	jsonCmd.AddCommand(jsonToYAMLCmd)
+	jsonCmd.AddCommand(jsonFromYAMLCmd)
 
 	// fmt flags
 	jsonFmtCmd.Flags().StringP("indent", "i", "  ", "indentation string")
@@ -295,4 +351,7 @@ func init() {
 
 	// keys flags
 	jsonKeysCmd.Flags().Bool("json", false, "output as JSON")
+
+	// fromyaml flags
+	jsonFromYAMLCmd.Flags().BoolP("minify", "m", false, "output minified JSON")
 }
