@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"os"
-
 	"github.com/inovacc/omni/internal/cli/tac"
 	"github.com/spf13/cobra"
 )
@@ -26,7 +24,7 @@ With no FILE, or when FILE is -, read standard input.
 		opts.Separator, _ = cmd.Flags().GetString("separator")
 		opts.JSON, _ = cmd.Flags().GetBool("json")
 
-		return tac.RunTac(os.Stdout, args, opts)
+		return tac.RunTac(cmd.OutOrStdout(), cmd.InOrStdin(), args, opts)
 	},
 }
 

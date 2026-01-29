@@ -22,7 +22,7 @@ func TestRunColumn(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunColumn(&buf, []string{file}, ColumnOptions{Columns: 40})
+		err := RunColumn(&buf, nil, []string{file}, ColumnOptions{Columns: 40})
 		if err != nil {
 			t.Fatalf("RunColumn() error = %v", err)
 		}
@@ -39,7 +39,7 @@ func TestRunColumn(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunColumn(&buf, []string{file}, ColumnOptions{Table: true})
+		err := RunColumn(&buf, nil, []string{file}, ColumnOptions{Table: true})
 		if err != nil {
 			t.Fatalf("RunColumn() error = %v", err)
 		}
@@ -57,7 +57,7 @@ func TestRunColumn(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunColumn(&buf, []string{file}, ColumnOptions{Table: true, Separator: ","})
+		err := RunColumn(&buf, nil, []string{file}, ColumnOptions{Table: true, Separator: ","})
 		if err != nil {
 			t.Fatalf("RunColumn() error = %v", err)
 		}
@@ -74,7 +74,7 @@ func TestRunColumn(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunColumn(&buf, []string{file}, ColumnOptions{Table: true, OutputSep: " | "})
+		err := RunColumn(&buf, nil, []string{file}, ColumnOptions{Table: true, OutputSep: " | "})
 		if err != nil {
 			t.Fatalf("RunColumn() error = %v", err)
 		}
@@ -91,7 +91,7 @@ func TestRunColumn(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunColumn(&buf, []string{file}, ColumnOptions{FillRows: true, Columns: 20})
+		err := RunColumn(&buf, nil, []string{file}, ColumnOptions{FillRows: true, Columns: 20})
 		if err != nil {
 			t.Fatalf("RunColumn() error = %v", err)
 		}
@@ -108,7 +108,7 @@ func TestRunColumn(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunColumn(&buf, []string{file}, ColumnOptions{Table: true, Right: true})
+		err := RunColumn(&buf, nil, []string{file}, ColumnOptions{Table: true, Right: true})
 		if err != nil {
 			t.Fatalf("RunColumn() error = %v", err)
 		}
@@ -126,7 +126,7 @@ func TestRunColumn(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunColumn(&buf, []string{file}, ColumnOptions{Table: true, ColumnHeaders: "Name,Age"})
+		err := RunColumn(&buf, nil, []string{file}, ColumnOptions{Table: true, ColumnHeaders: "Name,Age"})
 		if err != nil {
 			t.Fatalf("RunColumn() error = %v", err)
 		}
@@ -143,7 +143,7 @@ func TestRunColumn(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunColumn(&buf, []string{file}, ColumnOptions{})
+		err := RunColumn(&buf, nil, []string{file}, ColumnOptions{})
 		if err != nil {
 			t.Fatalf("RunColumn() error = %v", err)
 		}
@@ -155,7 +155,7 @@ func TestRunColumn(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunColumn(&buf, []string{file}, ColumnOptions{Table: true, Separator: ",", NoMerge: true})
+		err := RunColumn(&buf, nil, []string{file}, ColumnOptions{Table: true, Separator: ",", NoMerge: true})
 		if err != nil {
 			t.Fatalf("RunColumn() error = %v", err)
 		}

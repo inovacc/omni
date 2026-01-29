@@ -5,7 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"os"
+
+	"github.com/inovacc/omni/internal/cli/input"
 )
 
 // RevOptions configures the rev command behavior
@@ -20,47 +21,27 @@ type RevResult struct {
 }
 
 // RunRev reverses lines character by character
-func RunRev(w io.Writer, args []string, opts RevOptions) error {
+// r is the default input reader (used when args is empty or contains "-")
+func RunRev(w io.Writer, r io.Reader, args []string, opts RevOptions) error {
+	sources, err := input.Open(args, r)
+	if err != nil {
+		return fmt.Errorf("rev: %w", err)
+	}
+	defer input.CloseAll(sources)
+
 	var allLines []string
 
-	if len(args) == 0 {
+	for _, src := range sources {
 		if opts.JSON {
-			lines, err := revReaderLines(os.Stdin)
+			lines, err := revReaderLines(src.Reader)
 			if err != nil {
 				return err
 			}
 
 			allLines = append(allLines, lines...)
 		} else {
-			return revReader(w, os.Stdin)
-		}
-	} else {
-		for _, path := range args {
-			var r io.Reader
-			if path == "-" {
-				r = os.Stdin
-			} else {
-				f, err := os.Open(path)
-				if err != nil {
-					return fmt.Errorf("rev: %w", err)
-				}
-
-				defer func() { _ = f.Close() }()
-
-				r = f
-			}
-
-			if opts.JSON {
-				lines, err := revReaderLines(r)
-				if err != nil {
-					return err
-				}
-
-				allLines = append(allLines, lines...)
-			} else {
-				if err := revReader(w, r); err != nil {
-					return err
-				}
+			if err := revReader(w, src.Reader); err != nil {
+				return err
 			}
 		}
 	}

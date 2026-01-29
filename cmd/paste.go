@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"os"
-
 	"github.com/inovacc/omni/internal/cli/paste"
 	"github.com/spf13/cobra"
 )
@@ -26,7 +24,7 @@ With no FILE, or when FILE is -, read standard input.
 		opts.Serial, _ = cmd.Flags().GetBool("serial")
 		opts.Zero, _ = cmd.Flags().GetBool("zero-terminated")
 
-		return paste.RunPaste(os.Stdout, args, opts)
+		return paste.RunPaste(cmd.OutOrStdout(), cmd.InOrStdin(), args, opts)
 	},
 }
 

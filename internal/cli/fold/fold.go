@@ -4,9 +4,10 @@ import (
 	"bufio"
 	"fmt"
 	"io"
-	"os"
 	"strings"
 	"unicode/utf8"
+
+	"github.com/inovacc/omni/internal/cli/input"
 )
 
 // FoldOptions configures the fold command behavior
@@ -17,35 +18,20 @@ type FoldOptions struct {
 }
 
 // RunFold wraps input lines to fit in specified width
-func RunFold(w io.Writer, args []string, opts FoldOptions) error {
+// r is the default input reader (used when args is empty or contains "-")
+func RunFold(w io.Writer, r io.Reader, args []string, opts FoldOptions) error {
 	if opts.Width <= 0 {
 		opts.Width = 80
 	}
 
-	if len(args) == 0 {
-		return foldReader(w, os.Stdin, opts)
+	sources, err := input.Open(args, r)
+	if err != nil {
+		return fmt.Errorf("fold: %w", err)
 	}
+	defer input.CloseAll(sources)
 
-	for _, file := range args {
-		if file == "-" {
-			if err := foldReader(w, os.Stdin, opts); err != nil {
-				return err
-			}
-
-			continue
-		}
-
-		f, err := os.Open(file)
-		if err != nil {
-			return fmt.Errorf("fold: %w", err)
-		}
-
-		err = foldReader(w, f, opts)
-		if closeErr := f.Close(); closeErr != nil && err == nil {
-			err = closeErr
-		}
-
-		if err != nil {
+	for _, src := range sources {
+		if err := foldReader(w, src.Reader, opts); err != nil {
 			return err
 		}
 	}

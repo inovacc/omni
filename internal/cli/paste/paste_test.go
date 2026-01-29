@@ -25,7 +25,7 @@ func TestRunPaste(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunPaste(&buf, []string{file1, file2}, PasteOptions{})
+		err := RunPaste(&buf, nil, []string{file1, file2}, PasteOptions{})
 		if err != nil {
 			t.Fatalf("RunPaste() error = %v", err)
 		}
@@ -45,7 +45,7 @@ func TestRunPaste(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunPaste(&buf, []string{file1, file2}, PasteOptions{Delimiters: ","})
+		err := RunPaste(&buf, nil, []string{file1, file2}, PasteOptions{Delimiters: ","})
 		if err != nil {
 			t.Fatalf("RunPaste() error = %v", err)
 		}
@@ -64,7 +64,7 @@ func TestRunPaste(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunPaste(&buf, []string{file1, file2}, PasteOptions{Serial: true})
+		err := RunPaste(&buf, nil, []string{file1, file2}, PasteOptions{Serial: true})
 		if err != nil {
 			t.Fatalf("RunPaste() error = %v", err)
 		}
@@ -89,7 +89,7 @@ func TestRunPaste(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunPaste(&buf, []string{file1, file2}, PasteOptions{})
+		err := RunPaste(&buf, nil, []string{file1, file2}, PasteOptions{})
 		if err != nil {
 			t.Fatalf("RunPaste() error = %v", err)
 		}
@@ -111,7 +111,7 @@ func TestRunPaste(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunPaste(&buf, []string{file1, file2, file3}, PasteOptions{Delimiters: ",:"})
+		err := RunPaste(&buf, nil, []string{file1, file2, file3}, PasteOptions{Delimiters: ",:"})
 		if err != nil {
 			t.Fatalf("RunPaste() error = %v", err)
 		}
@@ -132,7 +132,7 @@ func TestRunPaste(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunPaste(&buf, []string{file1, file2}, PasteOptions{})
+		err := RunPaste(&buf, nil, []string{file1, file2}, PasteOptions{})
 		if err != nil {
 			t.Fatalf("RunPaste() error = %v", err)
 		}
@@ -141,7 +141,7 @@ func TestRunPaste(t *testing.T) {
 	t.Run("nonexistent file", func(t *testing.T) {
 		var buf bytes.Buffer
 
-		err := RunPaste(&buf, []string{"/nonexistent/file.txt"}, PasteOptions{})
+		err := RunPaste(&buf, nil, []string{"/nonexistent/file.txt"}, PasteOptions{})
 		if err == nil {
 			t.Error("RunPaste() expected error for nonexistent file")
 		}
@@ -153,7 +153,7 @@ func TestRunPaste(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunPaste(&buf, []string{file}, PasteOptions{})
+		err := RunPaste(&buf, nil, []string{file}, PasteOptions{})
 		if err != nil {
 			t.Fatalf("RunPaste() error = %v", err)
 		}
