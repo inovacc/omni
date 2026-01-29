@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"strings"
+	"time"
 )
 
 // UUIDOptions configures the uuid command behavior
@@ -29,10 +30,25 @@ func RunUUID(w io.Writer, opts UUIDOptions) error {
 		opts.Count = 1
 	}
 
+	if opts.Version == 0 {
+		opts.Version = 4
+	}
+
 	var uuids []string
 
 	for i := 0; i < opts.Count; i++ {
-		uuid, err := generateUUIDv4()
+		var uuid string
+		var err error
+
+		switch opts.Version {
+		case 4:
+			uuid, err = generateUUIDv4()
+		case 7:
+			uuid, err = generateUUIDv7()
+		default:
+			return fmt.Errorf("uuid: unsupported version %d (use 4 or 7)", opts.Version)
+		}
+
 		if err != nil {
 			return fmt.Errorf("uuid: %w", err)
 		}
@@ -78,6 +94,49 @@ func generateUUIDv4() (string, error) {
 		uuid[6:8],
 		uuid[8:10],
 		uuid[10:16]), nil
+}
+
+// generateUUIDv7 generates a time-ordered UUID version 7
+// UUIDv7 uses Unix timestamp in milliseconds for the first 48 bits
+func generateUUIDv7() (string, error) {
+	uuid := make([]byte, 16)
+
+	// Get current timestamp in milliseconds
+	now := time.Now().UnixMilli()
+
+	// First 48 bits: Unix timestamp in milliseconds (big-endian)
+	uuid[0] = byte(now >> 40)
+	uuid[1] = byte(now >> 32)
+	uuid[2] = byte(now >> 24)
+	uuid[3] = byte(now >> 16)
+	uuid[4] = byte(now >> 8)
+	uuid[5] = byte(now)
+
+	// Fill remaining bytes with random data
+	_, err := rand.Read(uuid[6:])
+	if err != nil {
+		return "", err
+	}
+
+	// Set version (7) and variant (RFC 4122)
+	uuid[6] = (uuid[6] & 0x0f) | 0x70 // Version 7
+	uuid[8] = (uuid[8] & 0x3f) | 0x80 // Variant RFC 4122
+
+	return fmt.Sprintf("%08x-%04x-%04x-%04x-%012x",
+		uuid[0:4],
+		uuid[4:6],
+		uuid[6:8],
+		uuid[8:10],
+		uuid[10:16]), nil
+}
+
+// NewUUIDv7 returns a new time-ordered UUID v7 string
+func NewUUIDv7() string {
+	uuid, err := generateUUIDv7()
+	if err != nil {
+		return ""
+	}
+	return uuid
 }
 
 // NewUUID returns a new random UUID string
