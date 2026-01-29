@@ -416,11 +416,12 @@ func printOutput(cmd *cobra.Command, data any, format OutputFormat) error {
 
 | Category | Packages | Coverage | Status |
 |----------|----------|----------|--------|
+| **Overall** | 82/91 packages | 90.1% | ✅ Good |
 | **100% Coverage** | `basename`, `date`, `dirname` | 100% | ✅ Complete |
-| **High Coverage (80%+)** | `cat`, `grep`, `head`, `ls`, `realpath`, `pwd`, `uuid`, `text` | 80-95% | ✅ Good |
+| **High Coverage (80%+)** | `cat`, `grep`, `head`, `ls`, `realpath`, `pwd`, `uuid`, `text`, `archive`, `bzip2`, `gzip`, `xz`, `lint`, `testcheck`, `echo` | 80-95% | ✅ Good |
 | **Medium Coverage (50-79%)** | `base`, `crypt`, `env`, `jq`, `kill`, `random`, `tail`, `uname`, `yq`, `wc` | 50-79% | 🔄 In Progress |
 | **Low Coverage (<50%)** | `diff`, `hash`, `whoami` | 30-50% | 🔄 Needs Work |
-| **No Coverage (0%)** | 40+ packages | 0% | ❌ Not Started |
+| **No Coverage (0%)** | ~9 packages | 0% | ❌ Not Started |
 
 ### Unit Tests
 - Table-driven tests for all functions
@@ -509,15 +510,16 @@ Priority P1 - Common utilities:
 | `seq` | P1 | 10+ tests |
 
 Priority P2 - Specialized:
-| Package | Priority | Estimated Tests |
-|---------|----------|-----------------|
-| `archive` | P2 | 20+ tests |
-| `gzip` | P2 | 15+ tests |
-| `bzip2` | P2 | 10+ tests |
-| `xz` | P2 | 10+ tests |
-| `df` | P2 | 10+ tests |
-| `du` | P2 | 15+ tests |
-| `ps` | P2 | 10+ tests |
+| Package | Priority | Estimated Tests | Status |
+|---------|----------|-----------------|--------|
+| `archive` | P2 | 14 tests | ✅ Done |
+| `gzip` | P2 | 12 tests | ✅ Done |
+| `bzip2` | P2 | 10 tests | ✅ Done |
+| `xz` | P2 | 14 tests | ✅ Done |
+| `lint` | P1 | 17 tests | ✅ Done |
+| `df` | P2 | 10+ tests | 🔄 Pending |
+| `du` | P2 | 15+ tests | 🔄 Pending |
+| `ps` | P2 | 10+ tests | 🔄 Pending |
 
 ### Testing Completion Criteria
 

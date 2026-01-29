@@ -28,7 +28,7 @@ type Result struct {
 	Packages  []PackageStatus `json:"packages"`
 }
 
-// Options configures the testcheck behavior.
+// Options configure the testcheck behavior.
 type Options struct {
 	JSON    bool // Output as JSON
 	ShowAll bool // Show all packages (default shows only missing)
