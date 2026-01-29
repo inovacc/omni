@@ -42,6 +42,7 @@ func LoadCobraConfig() (*CobraConfig, string, error) {
 			if err != nil {
 				return nil, path, err
 			}
+
 			return cfg, path, nil
 		}
 	}
@@ -96,6 +97,7 @@ func DefaultConfigPath() string {
 	if err != nil {
 		return ""
 	}
+
 	return filepath.Join(home, ".cobra.yaml")
 }
 
@@ -120,5 +122,6 @@ func WriteDefaultConfig(path string, cfg *CobraConfig) error {
 #
 
 `
+
 	return os.WriteFile(path, []byte(header+string(data)), 0644)
 }

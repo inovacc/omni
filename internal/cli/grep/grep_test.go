@@ -123,7 +123,7 @@ func TestRunGrep(t *testing.T) {
 
 	t.Run("line numbers", func(t *testing.T) {
 		file := filepath.Join(tmpDir, "linenum.txt")
-		content := "no match\nmatch here\nno match\nmatch again"
+		content := "no match\nhere\nno match\nagain"
 
 		if err := os.WriteFile(file, []byte(content), 0644); err != nil {
 			t.Fatal(err)
@@ -289,7 +289,7 @@ func TestRunGrep(t *testing.T) {
 
 	t.Run("line regexp", func(t *testing.T) {
 		file := filepath.Join(tmpDir, "line.txt")
-		content := "exact\nexact match\nno exact"
+		content := "exact\nmatch\nno exact"
 
 		if err := os.WriteFile(file, []byte(content), 0644); err != nil {
 			t.Fatal(err)
@@ -528,7 +528,6 @@ func TestRunGrep(t *testing.T) {
 		var buf bytes.Buffer
 
 		err := RunGrep(&buf, "match", []string{file}, GrepOptions{Quiet: true})
-
 		if err != nil {
 			t.Errorf("RunGrep() quiet with match should not error: %v", err)
 		}
@@ -546,7 +545,6 @@ func TestRunGrep(t *testing.T) {
 		var buf bytes.Buffer
 
 		err := RunGrep(&buf, "xyz", []string{file}, GrepOptions{Quiet: true})
-
 		if err == nil {
 			t.Errorf("RunGrep() quiet without match should error")
 		}

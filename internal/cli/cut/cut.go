@@ -108,6 +108,7 @@ func RunCut(w io.Writer, args []string, opts CutOptions) error {
 
 func cutReader(w io.Writer, r io.Reader, opts CutOptions) ([]string, error) {
 	scanner := bufio.NewScanner(r)
+
 	var lines []string
 
 	for scanner.Scan() {

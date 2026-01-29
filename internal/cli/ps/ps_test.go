@@ -271,6 +271,7 @@ func TestPrintJSON(t *testing.T) {
 	}
 
 	var buf bytes.Buffer
+
 	err := printJSON(&buf, procs)
 	if err != nil {
 		t.Fatalf("printJSON() error = %v", err)
@@ -280,6 +281,7 @@ func TestPrintJSON(t *testing.T) {
 	if !strings.Contains(output, `"pid": 1`) {
 		t.Errorf("printJSON() should contain pid: %s", output)
 	}
+
 	if !strings.Contains(output, `"command": "test"`) {
 		t.Errorf("printJSON() should contain command: %s", output)
 	}

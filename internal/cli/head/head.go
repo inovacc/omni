@@ -70,7 +70,9 @@ func RunHead(w io.Writer, args []string, opts HeadOptions) error {
 			if err != nil {
 				return err
 			}
+
 			results = append(results, HeadResult{File: filename, Lines: lines})
+
 			continue
 		}
 
@@ -102,13 +104,16 @@ func RunHead(w io.Writer, args []string, opts HeadOptions) error {
 
 func headLinesJSON(r io.Reader, n int) ([]string, error) {
 	scanner := bufio.NewScanner(r)
+
 	var lines []string
+
 	count := 0
 
 	for scanner.Scan() {
 		if count >= n {
 			break
 		}
+
 		lines = append(lines, scanner.Text())
 		count++
 	}

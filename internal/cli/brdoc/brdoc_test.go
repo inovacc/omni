@@ -156,6 +156,7 @@ func TestRunCPFGenerate(t *testing.T) {
 	var buf bytes.Buffer
 
 	opts := Options{Generate: true, Count: 3}
+
 	err := RunCPF(&buf, nil, opts)
 	if err != nil {
 		t.Fatalf("RunCPF() error = %v", err)
@@ -177,6 +178,7 @@ func TestRunCPFGenerateJSON(t *testing.T) {
 	var buf bytes.Buffer
 
 	opts := Options{Generate: true, Count: 2, JSON: true}
+
 	err := RunCPF(&buf, nil, opts)
 	if err != nil {
 		t.Fatalf("RunCPF() error = %v", err)
@@ -200,6 +202,7 @@ func TestRunCPFValidate(t *testing.T) {
 	var buf bytes.Buffer
 
 	opts := Options{Validate: true}
+
 	err := RunCPF(&buf, []string{"529.982.247-25"}, opts)
 	if err != nil {
 		t.Fatalf("RunCPF() error = %v", err)
@@ -214,6 +217,7 @@ func TestRunCPFValidateInvalid(t *testing.T) {
 	var buf bytes.Buffer
 
 	opts := Options{Validate: true}
+
 	err := RunCPF(&buf, []string{"12345678900"}, opts)
 	if err == nil {
 		t.Error("RunCPF() should return error for invalid CPF")
@@ -228,6 +232,7 @@ func TestRunCNPJGenerate(t *testing.T) {
 	var buf bytes.Buffer
 
 	opts := Options{Generate: true, Count: 3}
+
 	err := RunCNPJ(&buf, nil, opts)
 	if err != nil {
 		t.Fatalf("RunCNPJ() error = %v", err)
@@ -243,6 +248,7 @@ func TestRunCNPJGenerateLegacy(t *testing.T) {
 	var buf bytes.Buffer
 
 	opts := Options{Generate: true, Count: 1, Legacy: true}
+
 	err := RunCNPJ(&buf, nil, opts)
 	if err != nil {
 		t.Fatalf("RunCNPJ() error = %v", err)
@@ -259,6 +265,7 @@ func TestRunCNPJGenerateJSON(t *testing.T) {
 	var buf bytes.Buffer
 
 	opts := Options{Generate: true, Count: 2, JSON: true}
+
 	err := RunCNPJ(&buf, nil, opts)
 	if err != nil {
 		t.Fatalf("RunCNPJ() error = %v", err)
@@ -282,6 +289,7 @@ func TestRunCNPJValidate(t *testing.T) {
 	var buf bytes.Buffer
 
 	opts := Options{Validate: true}
+
 	err := RunCNPJ(&buf, []string{"11.222.333/0001-81"}, opts)
 	if err != nil {
 		t.Fatalf("RunCNPJ() error = %v", err)
@@ -296,6 +304,7 @@ func TestRunCNPJValidateInvalid(t *testing.T) {
 	var buf bytes.Buffer
 
 	opts := Options{Validate: true}
+
 	err := RunCNPJ(&buf, []string{"11222333000100"}, opts)
 	if err == nil {
 		t.Error("RunCNPJ() should return error for invalid CNPJ")
@@ -330,6 +339,7 @@ func TestRunCPFNoArgs(t *testing.T) {
 	var buf bytes.Buffer
 
 	opts := Options{Validate: true}
+
 	err := RunCPF(&buf, nil, opts)
 	if err == nil {
 		t.Error("RunCPF() validate without args should error")
@@ -340,6 +350,7 @@ func TestRunCNPJNoArgs(t *testing.T) {
 	var buf bytes.Buffer
 
 	opts := Options{Validate: true}
+
 	err := RunCNPJ(&buf, nil, opts)
 	if err == nil {
 		t.Error("RunCNPJ() validate without args should error")
@@ -350,11 +361,12 @@ func TestCPFUniqueness(t *testing.T) {
 	seen := make(map[string]bool)
 	count := 100
 
-	for i := 0; i < count; i++ {
+	for range count {
 		cpf := GenerateCPF()
 		if seen[cpf] {
 			t.Errorf("Duplicate CPF generated: %s", cpf)
 		}
+
 		seen[cpf] = true
 	}
 }
@@ -363,11 +375,12 @@ func TestCNPJUniqueness(t *testing.T) {
 	seen := make(map[string]bool)
 	count := 100
 
-	for i := 0; i < count; i++ {
+	for range count {
 		cnpj := GenerateCNPJ()
 		if seen[cnpj] {
 			t.Errorf("Duplicate CNPJ generated: %s", cnpj)
 		}
+
 		seen[cnpj] = true
 	}
 }

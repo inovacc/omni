@@ -100,8 +100,10 @@ func RunComm(w io.Writer, args []string, opts CommOptions) error {
 		line2 = scanner2.Text()
 	}
 
-	var prevLine1, prevLine2 string
-	var result CommResult
+	var (
+		prevLine1, prevLine2 string
+		result               CommResult
+	)
 
 	for has1 || has2 {
 		// Check sort order if requested
@@ -122,6 +124,7 @@ func RunComm(w io.Writer, args []string, opts CommOptions) error {
 			} else {
 				printCommLine(w, opts, delim, 2, line2)
 			}
+
 			prevLine2 = line2
 			has2 = scanner2.Scan()
 
@@ -135,6 +138,7 @@ func RunComm(w io.Writer, args []string, opts CommOptions) error {
 			} else {
 				printCommLine(w, opts, delim, 1, line1)
 			}
+
 			prevLine1 = line1
 			has1 = scanner1.Scan()
 
@@ -148,6 +152,7 @@ func RunComm(w io.Writer, args []string, opts CommOptions) error {
 			} else {
 				printCommLine(w, opts, delim, 1, line1)
 			}
+
 			prevLine1 = line1
 			has1 = scanner1.Scan()
 
@@ -161,6 +166,7 @@ func RunComm(w io.Writer, args []string, opts CommOptions) error {
 			} else {
 				printCommLine(w, opts, delim, 2, line2)
 			}
+
 			prevLine2 = line2
 			has2 = scanner2.Scan()
 
@@ -174,6 +180,7 @@ func RunComm(w io.Writer, args []string, opts CommOptions) error {
 			} else {
 				printCommLine(w, opts, delim, 3, line1)
 			}
+
 			prevLine1 = line1
 			prevLine2 = line2
 			has1 = scanner1.Scan()

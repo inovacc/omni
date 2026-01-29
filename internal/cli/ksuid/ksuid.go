@@ -141,5 +141,6 @@ func NewString() string {
 	if err != nil {
 		return ""
 	}
+
 	return ksuid.String()
 }

@@ -19,6 +19,7 @@ func TestRunFree(t *testing.T) {
 		if !strings.Contains(output, "Mem:") {
 			t.Errorf("RunFree() should contain 'Mem:': %s", output)
 		}
+
 		if !strings.Contains(output, "Swap:") {
 			t.Errorf("RunFree() should contain 'Swap:': %s", output)
 		}

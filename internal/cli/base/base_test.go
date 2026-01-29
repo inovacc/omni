@@ -205,6 +205,7 @@ func TestRunBase64Extended(t *testing.T) {
 
 	t.Run("encode binary data", func(t *testing.T) {
 		testFile := filepath.Join(tmpDir, "binary.bin")
+
 		binaryData := []byte{0x00, 0x01, 0x02, 0xFF, 0xFE, 0xFD}
 		if err := os.WriteFile(testFile, binaryData, 0644); err != nil {
 			t.Fatal(err)
@@ -256,6 +257,7 @@ func TestRunBase64Extended(t *testing.T) {
 
 	t.Run("encode long content", func(t *testing.T) {
 		testFile := filepath.Join(tmpDir, "long.txt")
+
 		longContent := strings.Repeat("ABCDEFGHIJ", 1000)
 		if err := os.WriteFile(testFile, []byte(longContent), 0644); err != nil {
 			t.Fatal(err)
@@ -293,6 +295,7 @@ func TestRunBase64Extended(t *testing.T) {
 
 		// Encode
 		var encBuf bytes.Buffer
+
 		err := RunBase64(&encBuf, []string{inputFile}, BaseOptions{})
 		if err != nil {
 			t.Fatalf("RunBase64() encode error = %v", err)
@@ -305,6 +308,7 @@ func TestRunBase64Extended(t *testing.T) {
 
 		// Decode
 		var decBuf bytes.Buffer
+
 		err = RunBase64(&decBuf, []string{encodedFile}, BaseOptions{Decode: true})
 		if err != nil {
 			t.Fatalf("RunBase64() decode error = %v", err)
@@ -380,6 +384,7 @@ func TestRunBase32Extended(t *testing.T) {
 		}
 
 		var encBuf bytes.Buffer
+
 		_ = RunBase32(&encBuf, []string{inputFile}, BaseOptions{})
 
 		if err := os.WriteFile(encodedFile, encBuf.Bytes(), 0644); err != nil {
@@ -387,6 +392,7 @@ func TestRunBase32Extended(t *testing.T) {
 		}
 
 		var decBuf bytes.Buffer
+
 		_ = RunBase32(&decBuf, []string{encodedFile}, BaseOptions{Decode: true})
 
 		if decBuf.String() != original {
@@ -469,6 +475,7 @@ func TestWrapStringExtended(t *testing.T) {
 
 	t.Run("width 1", func(t *testing.T) {
 		result := wrapString("abc", 1)
+
 		expected := "a\nb\nc"
 		if result != expected {
 			t.Errorf("wrapString() = %v, want %v", result, expected)

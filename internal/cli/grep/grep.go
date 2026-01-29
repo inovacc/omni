@@ -46,11 +46,11 @@ type GrepResult struct {
 
 // GrepOutput represents the complete grep output for JSON
 type GrepOutput struct {
-	Pattern     string       `json:"pattern"`
-	Files       []string     `json:"files"`
-	Matches     []GrepResult `json:"matches"`
-	TotalCount  int          `json:"total_count"`
-	FilesWithMatch int       `json:"files_with_match"`
+	Pattern        string       `json:"pattern"`
+	Files          []string     `json:"files"`
+	Matches        []GrepResult `json:"matches"`
+	TotalCount     int          `json:"total_count"`
+	FilesWithMatch int          `json:"files_with_match"`
 }
 
 // RunGrep executes the grep command
@@ -77,6 +77,7 @@ func RunGrep(w io.Writer, pattern string, args []string, opts GrepOptions) error
 	totalMatches := 0
 	anyMatch := false
 	filesWithMatch := 0
+
 	var allResults []GrepResult
 
 	for _, file := range files {
@@ -133,6 +134,7 @@ func RunGrep(w io.Writer, pattern string, args []string, opts GrepOptions) error
 			TotalCount:     totalMatches,
 			FilesWithMatch: filesWithMatch,
 		}
+
 		return json.NewEncoder(w).Encode(output)
 	}
 
@@ -173,6 +175,7 @@ func grepReader(w io.Writer, r io.Reader, filename string, re *regexp.Regexp, op
 	lineNum := 0
 	matchCount := 0
 	hasMatch := false
+
 	var results []GrepResult
 
 	// Context handling
@@ -206,6 +209,7 @@ func grepReader(w io.Writer, r io.Reader, filename string, re *regexp.Regexp, op
 				if matched := re.FindString(line); matched != "" {
 					matchedPart = matched
 				}
+
 				results = append(results, GrepResult{
 					Filename:    filename,
 					LineNumber:  lineNum,
@@ -213,6 +217,7 @@ func grepReader(w io.Writer, r io.Reader, filename string, re *regexp.Regexp, op
 					HasMatch:    true,
 					MatchedPart: matchedPart,
 				})
+
 				continue
 			}
 

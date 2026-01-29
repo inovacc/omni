@@ -1,4 +1,4 @@
-//nolint:errcheck,nilerr // Borrowed code from twig
+//nolint:nilerr // Borrowed code from twig
 package scanner
 
 import (

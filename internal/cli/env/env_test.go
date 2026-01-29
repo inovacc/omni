@@ -295,7 +295,8 @@ func TestRunEnv(t *testing.T) {
 		defer func() { _ = os.Unsetenv(testVar) }()
 
 		results := make([]string, 5)
-		for i := 0; i < 5; i++ {
+
+		for i := range 5 {
 			var buf bytes.Buffer
 
 			_ = RunEnv(&buf, []string{testVar}, EnvOptions{})

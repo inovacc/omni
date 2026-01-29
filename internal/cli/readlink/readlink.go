@@ -48,6 +48,7 @@ func RunReadlink(w io.Writer, args []string, opts ReadlinkOptions) error {
 	}
 
 	hasError := false
+
 	var jsonLinks []ReadlinkResult
 
 	for _, path := range args {

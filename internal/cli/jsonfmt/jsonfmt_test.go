@@ -3,12 +3,14 @@ package jsonfmt
 import (
 	"bytes"
 	"encoding/json"
+	"slices"
 	"strings"
 	"testing"
 )
 
 func TestBeautify(t *testing.T) {
 	input := []byte(`{"name":"test","value":123}`)
+
 	output, err := Beautify(input, "  ")
 	if err != nil {
 		t.Fatalf("Beautify() error = %v", err)
@@ -25,6 +27,7 @@ func TestBeautify(t *testing.T) {
 
 func TestBeautifyWithTabs(t *testing.T) {
 	input := []byte(`{"a":1}`)
+
 	output, err := Beautify(input, "\t")
 	if err != nil {
 		t.Fatalf("Beautify() error = %v", err)
@@ -40,6 +43,7 @@ func TestMinify(t *testing.T) {
   "name": "test",
   "value": 123
 }`)
+
 	output, err := Minify(input)
 	if err != nil {
 		t.Fatalf("Minify() error = %v", err)
@@ -89,6 +93,7 @@ func TestIsValid(t *testing.T) {
 
 func TestSortKeys(t *testing.T) {
 	input := []byte(`{"z":1,"a":2,"m":3}`)
+
 	output, err := SortKeys(input)
 	if err != nil {
 		t.Fatalf("SortKeys() error = %v", err)
@@ -136,6 +141,7 @@ func TestGetType(t *testing.T) {
 
 func TestGetStats(t *testing.T) {
 	input := []byte(`{"name":"test","nested":{"key":"value"}}`)
+
 	stats, err := GetStats(input)
 	if err != nil {
 		t.Fatalf("GetStats() error = %v", err)
@@ -160,6 +166,7 @@ func TestGetStats(t *testing.T) {
 
 func TestGetStatsArray(t *testing.T) {
 	input := []byte(`[1,2,3,4,5]`)
+
 	stats, err := GetStats(input)
 	if err != nil {
 		t.Fatalf("GetStats() error = %v", err)
@@ -176,6 +183,7 @@ func TestGetStatsArray(t *testing.T) {
 
 func TestKeys(t *testing.T) {
 	input := []byte(`{"a":1,"b":{"c":2}}`)
+
 	keys, err := Keys(input)
 	if err != nil {
 		t.Fatalf("Keys() error = %v", err)
@@ -187,13 +195,8 @@ func TestKeys(t *testing.T) {
 	}
 
 	for _, exp := range expected {
-		found := false
-		for _, key := range keys {
-			if key == exp {
-				found = true
-				break
-			}
-		}
+		found := slices.Contains(keys, exp)
+
 		if !found {
 			t.Errorf("Keys() missing key %s", exp)
 		}
@@ -202,6 +205,7 @@ func TestKeys(t *testing.T) {
 
 func TestKeysWithArray(t *testing.T) {
 	input := []byte(`{"items":[{"id":1},{"id":2}]}`)
+
 	keys, err := Keys(input)
 	if err != nil {
 		t.Fatalf("Keys() error = %v", err)
@@ -221,6 +225,7 @@ func TestRunJSONFmt(t *testing.T) {
 
 	// Create a temp file-like reader
 	opts := Options{SortKeys: true}
+
 	err := processReader(&buf, reader, "<test>", opts)
 	if err != nil {
 		t.Fatalf("processReader() error = %v", err)
@@ -241,6 +246,7 @@ func TestRunJSONFmtMinify(t *testing.T) {
 	reader := strings.NewReader(input)
 
 	opts := Options{Minify: true}
+
 	err := processReader(&buf, reader, "<test>", opts)
 	if err != nil {
 		t.Fatalf("processReader() error = %v", err)
@@ -259,6 +265,7 @@ func TestRunJSONFmtValidate(t *testing.T) {
 	reader := strings.NewReader(input)
 
 	opts := Options{Validate: true}
+
 	err := processReader(&buf, reader, "<test>", opts)
 	if err != nil {
 		t.Fatalf("processReader() error = %v", err)
@@ -277,6 +284,7 @@ func TestRunJSONFmtValidateInvalid(t *testing.T) {
 	reader := strings.NewReader(input)
 
 	opts := Options{Validate: true}
+
 	err := processReader(&buf, reader, "<test>", opts)
 	if err != nil {
 		t.Fatalf("processReader() error = %v (should handle gracefully)", err)
@@ -295,6 +303,7 @@ func TestRunJSONFmtValidateJSON(t *testing.T) {
 	reader := strings.NewReader(input)
 
 	opts := Options{Validate: true, JSON: true}
+
 	err := processReader(&buf, reader, "<test>", opts)
 	if err != nil {
 		t.Fatalf("processReader() error = %v", err)
@@ -365,9 +374,11 @@ func TestUnescapeHTML(t *testing.T) {
 	if !bytes.Contains(output, []byte("<")) {
 		t.Error("unescapeHTML() should convert \\u003c to <")
 	}
+
 	if !bytes.Contains(output, []byte(">")) {
 		t.Error("unescapeHTML() should convert \\u003e to >")
 	}
+
 	if !bytes.Contains(output, []byte("&")) {
 		t.Error("unescapeHTML() should convert \\u0026 to &")
 	}

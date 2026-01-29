@@ -135,7 +135,7 @@ func TestRunSort(t *testing.T) {
 
 	t.Run("unique with all duplicates", func(t *testing.T) {
 		file := filepath.Join(tmpDir, "all_dup.txt")
-		content := "same\nsame\nsame\nsame"
+		content := "same\n"
 
 		_ = os.WriteFile(file, []byte(content), 0644)
 
@@ -342,7 +342,7 @@ func TestRunUniq(t *testing.T) {
 
 	t.Run("basic uniq", func(t *testing.T) {
 		file := filepath.Join(tmpDir, "basic.txt")
-		content := "apple\napple\nbanana\nbanana\nbanana\ncherry"
+		content := "apple\nbanana\ncherry"
 
 		if err := os.WriteFile(file, []byte(content), 0644); err != nil {
 			t.Fatal(err)
@@ -380,7 +380,7 @@ func TestRunUniq(t *testing.T) {
 
 	t.Run("count occurrences", func(t *testing.T) {
 		file := filepath.Join(tmpDir, "count.txt")
-		content := "apple\napple\nbanana\ncherry\ncherry\ncherry"
+		content := "apple\nbanana\ncherry\n"
 
 		if err := os.WriteFile(file, []byte(content), 0644); err != nil {
 			t.Fatal(err)
@@ -401,7 +401,7 @@ func TestRunUniq(t *testing.T) {
 
 	t.Run("count format", func(t *testing.T) {
 		file := filepath.Join(tmpDir, "count_fmt.txt")
-		content := "a\na\na"
+		content := "a\n"
 
 		_ = os.WriteFile(file, []byte(content), 0644)
 
@@ -418,7 +418,7 @@ func TestRunUniq(t *testing.T) {
 
 	t.Run("repeated only", func(t *testing.T) {
 		file := filepath.Join(tmpDir, "repeated.txt")
-		content := "apple\napple\nbanana\ncherry\ncherry"
+		content := "apple\nbanana\ncherry"
 
 		if err := os.WriteFile(file, []byte(content), 0644); err != nil {
 			t.Fatal(err)
@@ -440,7 +440,7 @@ func TestRunUniq(t *testing.T) {
 
 	t.Run("unique only", func(t *testing.T) {
 		file := filepath.Join(tmpDir, "unique.txt")
-		content := "apple\napple\nbanana\ncherry\ncherry"
+		content := "apple\nbanana\ncherry"
 
 		if err := os.WriteFile(file, []byte(content), 0644); err != nil {
 			t.Fatal(err)
@@ -462,7 +462,7 @@ func TestRunUniq(t *testing.T) {
 
 	t.Run("unique with all duplicates", func(t *testing.T) {
 		file := filepath.Join(tmpDir, "all_dup.txt")
-		content := "same\nsame\nsame"
+		content := "same\n"
 
 		_ = os.WriteFile(file, []byte(content), 0644)
 

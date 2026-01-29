@@ -42,6 +42,7 @@ func TestRunRm(t *testing.T) {
 		if _, err := os.Stat(file1); !os.IsNotExist(err) {
 			t.Error("RunRm() did not remove file1")
 		}
+
 		if _, err := os.Stat(file2); !os.IsNotExist(err) {
 			t.Error("RunRm() did not remove file2")
 		}

@@ -75,6 +75,7 @@ func TestRunReadlink(t *testing.T) {
 		var buf bytes.Buffer
 
 		nonexistent := filepath.Join(tmpDir, "nonexistent")
+
 		err := RunReadlink(&buf, []string{nonexistent}, ReadlinkOptions{CanonicalizeMissing: true})
 		if err != nil {
 			t.Fatalf("RunReadlink() error = %v", err)

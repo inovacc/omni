@@ -26,6 +26,7 @@ func TestRunTree(t *testing.T) {
 
 	t.Run("default tree", func(t *testing.T) {
 		var buf bytes.Buffer
+
 		err := RunTree(&buf, []string{tmpDir}, TreeOptions{})
 		if err != nil {
 			t.Fatalf("RunTree() error = %v", err)
@@ -40,6 +41,7 @@ func TestRunTree(t *testing.T) {
 
 	t.Run("show hidden", func(t *testing.T) {
 		var buf bytes.Buffer
+
 		err := RunTree(&buf, []string{tmpDir}, TreeOptions{All: true})
 		if err != nil {
 			t.Fatalf("RunTree() error = %v", err)
@@ -53,6 +55,7 @@ func TestRunTree(t *testing.T) {
 
 	t.Run("dirs only", func(t *testing.T) {
 		var buf bytes.Buffer
+
 		err := RunTree(&buf, []string{tmpDir}, TreeOptions{DirsOnly: true})
 		if err != nil {
 			t.Fatalf("RunTree() error = %v", err)
@@ -66,6 +69,7 @@ func TestRunTree(t *testing.T) {
 
 	t.Run("limited depth", func(t *testing.T) {
 		var buf bytes.Buffer
+
 		err := RunTree(&buf, []string{tmpDir}, TreeOptions{Depth: 1})
 		if err != nil {
 			t.Fatalf("RunTree() error = %v", err)
@@ -79,6 +83,7 @@ func TestRunTree(t *testing.T) {
 
 	t.Run("with stats", func(t *testing.T) {
 		var buf bytes.Buffer
+
 		err := RunTree(&buf, []string{tmpDir}, TreeOptions{Stats: true})
 		if err != nil {
 			t.Fatalf("RunTree() error = %v", err)
@@ -92,6 +97,7 @@ func TestRunTree(t *testing.T) {
 
 	t.Run("JSON output", func(t *testing.T) {
 		var buf bytes.Buffer
+
 		err := RunTree(&buf, []string{tmpDir}, TreeOptions{JSON: true})
 		if err != nil {
 			t.Fatalf("RunTree() error = %v", err)
@@ -106,6 +112,7 @@ func TestRunTree(t *testing.T) {
 
 	t.Run("ignore pattern", func(t *testing.T) {
 		var buf bytes.Buffer
+
 		err := RunTree(&buf, []string{tmpDir}, TreeOptions{Ignore: []string{"*.go"}})
 		if err != nil {
 			t.Fatalf("RunTree() error = %v", err)
@@ -121,9 +128,11 @@ func TestRunTree(t *testing.T) {
 		// Change to temp dir
 		origDir, _ := os.Getwd()
 		_ = os.Chdir(tmpDir)
+
 		defer func() { _ = os.Chdir(origDir) }()
 
 		var buf bytes.Buffer
+
 		err := RunTree(&buf, []string{}, TreeOptions{})
 		if err != nil {
 			t.Fatalf("RunTree() error = %v", err)
@@ -137,6 +146,7 @@ func TestRunTree(t *testing.T) {
 
 	t.Run("nonexistent path", func(t *testing.T) {
 		var buf bytes.Buffer
+
 		err := RunTree(&buf, []string{"/nonexistent/path/12345"}, TreeOptions{})
 		if err == nil {
 			t.Error("RunTree() expected error for nonexistent path")
@@ -145,6 +155,7 @@ func TestRunTree(t *testing.T) {
 
 	t.Run("no color", func(t *testing.T) {
 		var buf bytes.Buffer
+
 		err := RunTree(&buf, []string{tmpDir}, TreeOptions{NoColor: true})
 		if err != nil {
 			t.Fatalf("RunTree() error = %v", err)

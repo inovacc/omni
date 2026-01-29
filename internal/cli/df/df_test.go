@@ -19,6 +19,7 @@ func TestRunDF(t *testing.T) {
 		if !strings.Contains(output, "Filesystem") {
 			t.Errorf("RunDF() should contain 'Filesystem' header: %s", output)
 		}
+
 		if !strings.Contains(output, "1K-blocks") {
 			t.Errorf("RunDF() should contain '1K-blocks' header: %s", output)
 		}
@@ -145,6 +146,7 @@ func TestPrintDFInfo(t *testing.T) {
 		if !strings.Contains(output, "test") {
 			t.Errorf("printDFInfo() should contain filesystem name: %s", output)
 		}
+
 		if !strings.Contains(output, "/test") {
 			t.Errorf("printDFInfo() should contain mount point: %s", output)
 		}

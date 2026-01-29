@@ -84,3 +84,26 @@ linters:
         - goconst
         - gocyclo
         - whitespace
+        - maintidx
+        - predeclared
+
+    exclusions:
+        generated: lax
+        presets:
+            - comments
+            - std-error-handling
+        rules:
+            - path: "include/"
+              linters:
+                  - forbidigo
+                  - prealloc
+            - path: "_test\\.go$"
+              linters:
+                  - unqueryvet
+            - path: "internal/cli/sqlite/sqlite\\.go$"
+              linters:
+                  - unqueryvet
+              text: "SELECT \\*"
+            - path: "internal/logger/"
+              linters:
+                  - unqueryvet

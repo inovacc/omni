@@ -1,0 +1,40 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(del /f \"B:\\\\shared\\\\personal\\\\GolandProjects\\\\goshell\\\\coverage.out\")",
+      "Bash(\"./bin/omni.exe\" --help)",
+      "Bash(\"B:\\\\shared\\\\personal\\\\GolandProjects\\\\goshell\\\\bin\\\\omni.exe\" --help)",
+      "Bash(go test:*)",
+      "Bash(\"./bin/omni.exe\" ls)",
+      "Bash(\"./bin/omni.exe\" pwd)",
+      "Bash(task lint:*)",
+      "Bash(gh run view:*)",
+      "Bash(gh run list:*)",
+      "Bash(gh run:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push)",
+      "Bash(gh pr merge:*)",
+      "Bash(go build:*)",
+      "Bash(./omni cmdtree:*)",
+      "Bash(golangci-lint run:*)",
+      "Bash(task install:*)",
+      "Bash(omni:*)",
+      "Bash(omni cmdtree:*)",
+      "Bash(./omni jq:*)",
+      "Bash(go install:*)",
+      "Bash(twig:*)",
+      "Bash(ls:*)",
+      "Bash(./omni tree:*)",
+      "Bash(go mod tidy:*)",
+      "Bash(go run:*)",
+      "Bash(fold:*)",
+      "Bash(yes:*)",
+      "Bash(kill:*)",
+      "Bash(base32:*)",
+      "Bash(# Summary with installed binary task install echo \"\"=== SUMMARY ===\"\" echo \"\"Total commands:\"\" omni cmdtree --json 2>&1)",
+      "Bash(# Check if stderr has content omni cmdtree --json)",
+      "Bash(echo:*)"
+    ]
+  }
+}

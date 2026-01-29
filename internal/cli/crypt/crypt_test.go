@@ -438,7 +438,7 @@ func TestGenerateKeyUniqueness(t *testing.T) {
 	t.Run("multiple keys are unique", func(t *testing.T) {
 		keys := make(map[string]bool)
 
-		for i := 0; i < 100; i++ {
+		for range 100 {
 			var buf bytes.Buffer
 
 			err := GenerateKey(&buf, 32)

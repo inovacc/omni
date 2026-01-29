@@ -324,6 +324,7 @@ func TestParseCaseType(t *testing.T) {
 				t.Errorf("ParseCaseType(%s) error = %v, wantErr %v", tt.input, err, tt.wantErr)
 				return
 			}
+
 			if !tt.wantErr && got != tt.expected {
 				t.Errorf("ParseCaseType(%s) = %s, want %s", tt.input, got, tt.expected)
 			}
@@ -381,6 +382,7 @@ func TestRunCase(t *testing.T) {
 	var buf bytes.Buffer
 
 	opts := Options{Case: CaseUpper}
+
 	err := RunCase(&buf, []string{"hello world"}, opts)
 	if err != nil {
 		t.Fatalf("RunCase() error = %v", err)
@@ -396,6 +398,7 @@ func TestRunCaseJSON(t *testing.T) {
 	var buf bytes.Buffer
 
 	opts := Options{Case: CaseCamel, JSON: true}
+
 	err := RunCase(&buf, []string{"hello world"}, opts)
 	if err != nil {
 		t.Fatalf("RunCase() error = %v", err)
@@ -423,6 +426,7 @@ func TestRunCaseMultiple(t *testing.T) {
 	var buf bytes.Buffer
 
 	opts := Options{Case: CaseUpper}
+
 	err := RunCase(&buf, []string{"hello", "world"}, opts)
 	if err != nil {
 		t.Fatalf("RunCase() error = %v", err)
@@ -455,6 +459,7 @@ func TestSplitIntoWords(t *testing.T) {
 				t.Errorf("splitIntoWords(%s) = %v, want %v", tt.input, got, tt.expected)
 				return
 			}
+
 			for i, word := range got {
 				if word != tt.expected[i] {
 					t.Errorf("splitIntoWords(%s)[%d] = %s, want %s", tt.input, i, word, tt.expected[i])

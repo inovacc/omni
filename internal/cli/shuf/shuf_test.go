@@ -155,6 +155,7 @@ func TestRunShuf(t *testing.T) {
 
 	t.Run("shuffle is random", func(t *testing.T) {
 		file := filepath.Join(tmpDir, "random.txt")
+
 		content := "1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n"
 		if err := os.WriteFile(file, []byte(content), 0644); err != nil {
 			t.Fatal(err)
@@ -164,7 +165,7 @@ func TestRunShuf(t *testing.T) {
 		original := []string{"1", "2", "3", "4", "5", "6", "7", "8", "9", "10"}
 		different := false
 
-		for i := 0; i < 10; i++ {
+		for range 10 {
 			var buf bytes.Buffer
 
 			_ = RunShuf(&buf, []string{file}, ShufOptions{})

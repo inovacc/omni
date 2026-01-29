@@ -332,6 +332,7 @@ func TestRun(t *testing.T) {
 		// Output should include file size (number)
 		output := buf.String()
 		hasNumber := false
+
 		for _, r := range output {
 			if r >= '0' && r <= '9' {
 				hasNumber = true

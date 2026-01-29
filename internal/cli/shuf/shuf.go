@@ -109,10 +109,12 @@ func RunShuf(w io.Writer, args []string, opts ShufOptions) error {
 
 	if opts.JSON {
 		var output []string
+
 		if opts.Repeat {
 			if opts.HeadCount == 0 {
 				return fmt.Errorf("shuf: --repeat requires --head-count")
 			}
+
 			for i := 0; i < opts.HeadCount; i++ {
 				idx := rand.Intn(len(lines))
 				output = append(output, lines[idx])
@@ -120,6 +122,7 @@ func RunShuf(w io.Writer, args []string, opts ShufOptions) error {
 		} else {
 			output = lines[:count]
 		}
+
 		return json.NewEncoder(w).Encode(ShufResult{Lines: output, Count: len(output)})
 	}
 

@@ -346,7 +346,7 @@ func TestUUIDUniqueness(t *testing.T) {
 	t.Run("NewUUID uniqueness", func(t *testing.T) {
 		seen := make(map[string]bool)
 
-		for i := 0; i < 10000; i++ {
+		for i := range 10000 {
 			uuid := NewUUID()
 			if seen[uuid] {
 				t.Fatalf("NewUUID() collision at iteration %d", i)
@@ -359,7 +359,7 @@ func TestUUIDUniqueness(t *testing.T) {
 	t.Run("MustNewUUID uniqueness", func(t *testing.T) {
 		seen := make(map[string]bool)
 
-		for i := 0; i < 10000; i++ {
+		for i := range 10000 {
 			uuid := MustNewUUID()
 			if seen[uuid] {
 				t.Fatalf("MustNewUUID() collision at iteration %d", i)
@@ -372,8 +372,9 @@ func TestUUIDUniqueness(t *testing.T) {
 
 func TestUUIDVersion(t *testing.T) {
 	t.Run("version 4 indicator", func(t *testing.T) {
-		for i := 0; i < 100; i++ {
+		for range 100 {
 			uuid := NewUUID()
+
 			parts := strings.Split(uuid, "-")
 			if len(parts) != 5 {
 				t.Fatalf("UUID format invalid: %v", uuid)
@@ -387,8 +388,9 @@ func TestUUIDVersion(t *testing.T) {
 	})
 
 	t.Run("variant indicator", func(t *testing.T) {
-		for i := 0; i < 100; i++ {
+		for range 100 {
 			uuid := NewUUID()
+
 			parts := strings.Split(uuid, "-")
 			if len(parts) != 5 {
 				continue

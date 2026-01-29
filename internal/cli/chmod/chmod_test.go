@@ -26,6 +26,7 @@ func TestRunChmod(t *testing.T) {
 		_ = os.WriteFile(file, []byte("content"), 0644)
 
 		var buf bytes.Buffer
+
 		err := RunChmod(&buf, []string{"755", file}, ChmodOptions{})
 		if err != nil {
 			t.Fatalf("RunChmod() error = %v", err)
@@ -42,6 +43,7 @@ func TestRunChmod(t *testing.T) {
 		_ = os.WriteFile(file, []byte("content"), 0644)
 
 		var buf bytes.Buffer
+
 		err := RunChmod(&buf, []string{"u+x", file}, ChmodOptions{})
 		if err != nil {
 			t.Fatalf("RunChmod() error = %v", err)
@@ -58,6 +60,7 @@ func TestRunChmod(t *testing.T) {
 		_ = os.WriteFile(file, []byte("content"), 0666)
 
 		var buf bytes.Buffer
+
 		err := RunChmod(&buf, []string{"go-w", file}, ChmodOptions{})
 		if err != nil {
 			t.Fatalf("RunChmod() error = %v", err)
@@ -74,6 +77,7 @@ func TestRunChmod(t *testing.T) {
 		_ = os.WriteFile(file, []byte("content"), 0777)
 
 		var buf bytes.Buffer
+
 		err := RunChmod(&buf, []string{"a=r", file}, ChmodOptions{})
 		if err != nil {
 			t.Fatalf("RunChmod() error = %v", err)
@@ -90,6 +94,7 @@ func TestRunChmod(t *testing.T) {
 		_ = os.WriteFile(file, []byte("content"), 0644)
 
 		var buf bytes.Buffer
+
 		err := RunChmod(&buf, []string{"755", file}, ChmodOptions{Verbose: true})
 		if err != nil {
 			t.Fatalf("RunChmod() error = %v", err)
@@ -107,6 +112,7 @@ func TestRunChmod(t *testing.T) {
 		_ = os.WriteFile(file, []byte("content"), 0644)
 
 		var buf bytes.Buffer
+
 		err := RunChmod(&buf, []string{"700", dir}, ChmodOptions{Recursive: true})
 		if err != nil {
 			t.Fatalf("RunChmod() -R error = %v", err)
@@ -125,6 +131,7 @@ func TestRunChmod(t *testing.T) {
 		_ = os.WriteFile(target, []byte("target"), 0644)
 
 		var buf bytes.Buffer
+
 		err := RunChmod(&buf, []string{"ignored", target}, ChmodOptions{Reference: ref})
 		if err != nil {
 			t.Fatalf("RunChmod() --reference error = %v", err)
@@ -138,6 +145,7 @@ func TestRunChmod(t *testing.T) {
 
 	t.Run("missing operand", func(t *testing.T) {
 		var buf bytes.Buffer
+
 		err := RunChmod(&buf, []string{"755"}, ChmodOptions{})
 		if err == nil {
 			t.Error("RunChmod() expected error for missing operand")
@@ -149,6 +157,7 @@ func TestRunChmod(t *testing.T) {
 		_ = os.WriteFile(file, []byte("content"), 0644)
 
 		var buf bytes.Buffer
+
 		err := RunChmod(&buf, []string{"999", file}, ChmodOptions{})
 		if err == nil {
 			t.Error("RunChmod() expected error for invalid octal mode")

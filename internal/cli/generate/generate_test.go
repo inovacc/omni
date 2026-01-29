@@ -15,17 +15,18 @@ func TestRunCobraInit(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
+
 		defer func() { _ = os.RemoveAll(tmpDir) }()
 
 		appDir := filepath.Join(tmpDir, "myapp")
 
 		var buf bytes.Buffer
+
 		err = RunCobraInit(&buf, appDir, CobraInitOptions{
 			Module:      "github.com/test/myapp",
 			AppName:     "myapp",
 			Description: "Test application",
 		}, Options{})
-
 		if err != nil {
 			t.Fatalf("RunCobraInit() error = %v", err)
 		}
@@ -54,16 +55,17 @@ func TestRunCobraInit(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
+
 		defer func() { _ = os.RemoveAll(tmpDir) }()
 
 		appDir := filepath.Join(tmpDir, "viperapp")
 
 		var buf bytes.Buffer
+
 		err = RunCobraInit(&buf, appDir, CobraInitOptions{
 			Module:   "github.com/test/viperapp",
 			UseViper: true,
 		}, Options{})
-
 		if err != nil {
 			t.Fatalf("RunCobraInit() error = %v", err)
 		}
@@ -80,22 +82,24 @@ func TestRunCobraInit(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
+
 		defer func() { _ = os.RemoveAll(tmpDir) }()
 
 		appDir := filepath.Join(tmpDir, "mitapp")
 
 		var buf bytes.Buffer
+
 		err = RunCobraInit(&buf, appDir, CobraInitOptions{
 			Module:  "github.com/test/mitapp",
 			License: "MIT",
 			Author:  "Test Author",
 		}, Options{})
-
 		if err != nil {
 			t.Fatalf("RunCobraInit() error = %v", err)
 		}
 
 		licensePath := filepath.Join(appDir, "LICENSE")
+
 		content, err := os.ReadFile(licensePath)
 		if err != nil {
 			t.Fatalf("Failed to read LICENSE: %v", err)
@@ -115,22 +119,24 @@ func TestRunCobraInit(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
+
 		defer func() { _ = os.RemoveAll(tmpDir) }()
 
 		appDir := filepath.Join(tmpDir, "apacheapp")
 
 		var buf bytes.Buffer
+
 		err = RunCobraInit(&buf, appDir, CobraInitOptions{
 			Module:  "github.com/test/apacheapp",
 			License: "Apache-2.0",
 			Author:  "Apache Author",
 		}, Options{})
-
 		if err != nil {
 			t.Fatalf("RunCobraInit() error = %v", err)
 		}
 
 		licensePath := filepath.Join(appDir, "LICENSE")
+
 		content, err := os.ReadFile(licensePath)
 		if err != nil {
 			t.Fatalf("Failed to read LICENSE: %v", err)
@@ -146,15 +152,16 @@ func TestRunCobraInit(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
+
 		defer func() { _ = os.RemoveAll(tmpDir) }()
 
 		appDir := filepath.Join(tmpDir, "jsonapp")
 
 		var buf bytes.Buffer
+
 		err = RunCobraInit(&buf, appDir, CobraInitOptions{
 			Module: "github.com/test/jsonapp",
 		}, Options{JSON: true})
-
 		if err != nil {
 			t.Fatalf("RunCobraInit() error = %v", err)
 		}
@@ -179,8 +186,8 @@ func TestRunCobraInit(t *testing.T) {
 
 	t.Run("missing module", func(t *testing.T) {
 		var buf bytes.Buffer
-		err := RunCobraInit(&buf, "/tmp/test", CobraInitOptions{}, Options{})
 
+		err := RunCobraInit(&buf, "/tmp/test", CobraInitOptions{}, Options{})
 		if err == nil {
 			t.Error("Expected error for missing module")
 		}
@@ -191,15 +198,16 @@ func TestRunCobraInit(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
+
 		defer func() { _ = os.RemoveAll(tmpDir) }()
 
 		appDir := filepath.Join(tmpDir, "extracted")
 
 		var buf bytes.Buffer
+
 		err = RunCobraInit(&buf, appDir, CobraInitOptions{
 			Module: "github.com/test/extractedapp",
 		}, Options{})
-
 		if err != nil {
 			t.Fatalf("RunCobraInit() error = %v", err)
 		}
@@ -216,11 +224,13 @@ func TestRunCobraInit(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
+
 		defer func() { _ = os.RemoveAll(tmpDir) }()
 
 		appDir := filepath.Join(tmpDir, "maintest")
 
 		var buf bytes.Buffer
+
 		_ = RunCobraInit(&buf, appDir, CobraInitOptions{
 			Module: "github.com/test/maintest",
 		}, Options{})
@@ -242,11 +252,13 @@ func TestRunCobraInit(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
+
 		defer func() { _ = os.RemoveAll(tmpDir) }()
 
 		appDir := filepath.Join(tmpDir, "roottest")
 
 		var buf bytes.Buffer
+
 		_ = RunCobraInit(&buf, appDir, CobraInitOptions{
 			Module:      "github.com/test/roottest",
 			AppName:     "roottest",
@@ -281,12 +293,13 @@ func TestRunCobraAdd(t *testing.T) {
 		appDir := filepath.Join(tmpDir, "addtest")
 
 		var buf bytes.Buffer
+
 		err = RunCobraInit(&buf, appDir, CobraInitOptions{
 			Module: "github.com/test/addtest",
 		}, Options{})
-
 		if err != nil {
 			_ = os.RemoveAll(tmpDir)
+
 			t.Fatal(err)
 		}
 
@@ -298,12 +311,12 @@ func TestRunCobraAdd(t *testing.T) {
 		defer cleanup()
 
 		var buf bytes.Buffer
+
 		err := RunCobraAdd(&buf, appDir, CobraAddOptions{
 			Name:        "serve",
 			Parent:      "root",
 			Description: "Start the server",
 		}, Options{})
-
 		if err != nil {
 			t.Fatalf("RunCobraAdd() error = %v", err)
 		}
@@ -331,10 +344,10 @@ func TestRunCobraAdd(t *testing.T) {
 		defer cleanup()
 
 		var buf bytes.Buffer
+
 		err := RunCobraAdd(&buf, appDir, CobraAddOptions{
 			Name: "config",
 		}, Options{})
-
 		if err != nil {
 			t.Fatalf("RunCobraAdd() error = %v", err)
 		}
@@ -351,6 +364,7 @@ func TestRunCobraAdd(t *testing.T) {
 
 		// First add a parent command
 		var buf bytes.Buffer
+
 		_ = RunCobraAdd(&buf, appDir, CobraAddOptions{
 			Name:   "user",
 			Parent: "root",
@@ -358,11 +372,11 @@ func TestRunCobraAdd(t *testing.T) {
 
 		// Add subcommand
 		buf.Reset()
+
 		err := RunCobraAdd(&buf, appDir, CobraAddOptions{
 			Name:   "list",
 			Parent: "user",
 		}, Options{})
-
 		if err != nil {
 			t.Fatalf("RunCobraAdd() error = %v", err)
 		}
@@ -378,10 +392,10 @@ func TestRunCobraAdd(t *testing.T) {
 		defer cleanup()
 
 		var buf bytes.Buffer
+
 		err := RunCobraAdd(&buf, appDir, CobraAddOptions{
 			Name: "status",
 		}, Options{JSON: true})
-
 		if err != nil {
 			t.Fatalf("RunCobraAdd() error = %v", err)
 		}
@@ -405,8 +419,8 @@ func TestRunCobraAdd(t *testing.T) {
 		defer cleanup()
 
 		var buf bytes.Buffer
-		err := RunCobraAdd(&buf, appDir, CobraAddOptions{}, Options{})
 
+		err := RunCobraAdd(&buf, appDir, CobraAddOptions{}, Options{})
 		if err == nil {
 			t.Error("Expected error for missing command name")
 		}
@@ -417,11 +431,12 @@ func TestRunCobraAdd(t *testing.T) {
 		defer cleanup()
 
 		var buf bytes.Buffer
+
 		_ = RunCobraAdd(&buf, appDir, CobraAddOptions{Name: "duplicate"}, Options{})
 
 		buf.Reset()
-		err := RunCobraAdd(&buf, appDir, CobraAddOptions{Name: "duplicate"}, Options{})
 
+		err := RunCobraAdd(&buf, appDir, CobraAddOptions{Name: "duplicate"}, Options{})
 		if err == nil {
 			t.Error("Expected error for duplicate command")
 		}
@@ -432,11 +447,12 @@ func TestRunCobraAdd(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
+
 		defer func() { _ = os.RemoveAll(tmpDir) }()
 
 		var buf bytes.Buffer
-		err = RunCobraAdd(&buf, tmpDir, CobraAddOptions{Name: "test"}, Options{})
 
+		err = RunCobraAdd(&buf, tmpDir, CobraAddOptions{Name: "test"}, Options{})
 		if err == nil {
 			t.Error("Expected error for non-Cobra project")
 		}
@@ -449,16 +465,17 @@ func TestLicenses(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
+
 		defer func() { _ = os.RemoveAll(tmpDir) }()
 
 		appDir := filepath.Join(tmpDir, "unknownlic")
 
 		var buf bytes.Buffer
+
 		err = RunCobraInit(&buf, appDir, CobraInitOptions{
 			Module:  "github.com/test/unknownlic",
 			License: "UNKNOWN",
 		}, Options{})
-
 		if err == nil {
 			t.Error("Expected error for unknown license type")
 		}
@@ -469,17 +486,18 @@ func TestLicenses(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
+
 		defer func() { _ = os.RemoveAll(tmpDir) }()
 
 		appDir := filepath.Join(tmpDir, "bsdapp")
 
 		var buf bytes.Buffer
+
 		err = RunCobraInit(&buf, appDir, CobraInitOptions{
 			Module:  "github.com/test/bsdapp",
 			License: "BSD-3",
 			Author:  "BSD Author",
 		}, Options{})
-
 		if err != nil {
 			t.Fatalf("RunCobraInit() error = %v", err)
 		}
@@ -496,11 +514,13 @@ func TestTaskfileContent(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	appDir := filepath.Join(tmpDir, "tasktest")
 
 	var buf bytes.Buffer
+
 	_ = RunCobraInit(&buf, appDir, CobraInitOptions{
 		Module:  "github.com/test/tasktest",
 		AppName: "tasktest",
@@ -531,11 +551,13 @@ func TestGitignoreContent(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	appDir := filepath.Join(tmpDir, "ignoretest")
 
 	var buf bytes.Buffer
+
 	_ = RunCobraInit(&buf, appDir, CobraInitOptions{
 		Module:  "github.com/test/ignoretest",
 		AppName: "ignoretest",
@@ -563,17 +585,18 @@ func TestFullMode(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
+
 		defer func() { _ = os.RemoveAll(tmpDir) }()
 
 		appDir := filepath.Join(tmpDir, "fullapp")
 
 		var buf bytes.Buffer
+
 		err = RunCobraInit(&buf, appDir, CobraInitOptions{
 			Module: "github.com/test/fullapp",
 			Full:   true,
 			Author: "Test Author",
 		}, Options{})
-
 		if err != nil {
 			t.Fatalf("RunCobraInit() error = %v", err)
 		}
@@ -609,11 +632,13 @@ func TestFullMode(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
+
 		defer func() { _ = os.RemoveAll(tmpDir) }()
 
 		appDir := filepath.Join(tmpDir, "fullverapp")
 
 		var buf bytes.Buffer
+
 		_ = RunCobraInit(&buf, appDir, CobraInitOptions{
 			Module: "github.com/test/fullverapp",
 			Full:   true,
@@ -645,11 +670,13 @@ func TestFullMode(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
+
 		defer func() { _ = os.RemoveAll(tmpDir) }()
 
 		appDir := filepath.Join(tmpDir, "gorelapp")
 
 		var buf bytes.Buffer
+
 		_ = RunCobraInit(&buf, appDir, CobraInitOptions{
 			Module: "github.com/test/gorelapp",
 			Full:   true,
@@ -672,11 +699,13 @@ func TestFullMode(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
+
 		defer func() { _ = os.RemoveAll(tmpDir) }()
 
 		appDir := filepath.Join(tmpDir, "lintapp")
 
 		var buf bytes.Buffer
+
 		_ = RunCobraInit(&buf, appDir, CobraInitOptions{
 			Module: "github.com/test/lintapp",
 			Full:   true,
@@ -701,16 +730,17 @@ func TestServiceMode(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
+
 		defer func() { _ = os.RemoveAll(tmpDir) }()
 
 		appDir := filepath.Join(tmpDir, "serviceapp")
 
 		var buf bytes.Buffer
+
 		err = RunCobraInit(&buf, appDir, CobraInitOptions{
 			Module:     "github.com/test/serviceapp",
 			UseService: true,
 		}, Options{})
-
 		if err != nil {
 			t.Fatalf("RunCobraInit() error = %v", err)
 		}
@@ -738,11 +768,13 @@ func TestServiceMode(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
+
 		defer func() { _ = os.RemoveAll(tmpDir) }()
 
 		appDir := filepath.Join(tmpDir, "servicerootapp")
 
 		var buf bytes.Buffer
+
 		_ = RunCobraInit(&buf, appDir, CobraInitOptions{
 			Module:     "github.com/test/servicerootapp",
 			UseService: true,
@@ -773,11 +805,13 @@ func TestServiceMode(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
+
 		defer func() { _ = os.RemoveAll(tmpDir) }()
 
 		appDir := filepath.Join(tmpDir, "paramsapp")
 
 		var buf bytes.Buffer
+
 		_ = RunCobraInit(&buf, appDir, CobraInitOptions{
 			Module:     "github.com/test/paramsapp",
 			UseService: true,
@@ -800,11 +834,13 @@ func TestServiceMode(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
+
 		defer func() { _ = os.RemoveAll(tmpDir) }()
 
 		appDir := filepath.Join(tmpDir, "svcapp")
 
 		var buf bytes.Buffer
+
 		_ = RunCobraInit(&buf, appDir, CobraInitOptions{
 			Module:     "github.com/test/svcapp",
 			UseService: true,
@@ -831,11 +867,13 @@ func TestServiceMode(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
+
 		defer func() { _ = os.RemoveAll(tmpDir) }()
 
 		appDir := filepath.Join(tmpDir, "gomodapp")
 
 		var buf bytes.Buffer
+
 		_ = RunCobraInit(&buf, appDir, CobraInitOptions{
 			Module:     "github.com/test/gomodapp",
 			UseService: true,
@@ -855,11 +893,13 @@ func TestEditorConfigContent(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	appDir := filepath.Join(tmpDir, "editortest")
 
 	var buf bytes.Buffer
+
 	_ = RunCobraInit(&buf, appDir, CobraInitOptions{
 		Module:  "github.com/test/editortest",
 		AppName: "editortest",
@@ -887,6 +927,7 @@ func TestCobraConfig(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
+
 		defer func() { _ = os.RemoveAll(tmpDir) }()
 
 		configPath := filepath.Join(tmpDir, ".cobra.yaml")

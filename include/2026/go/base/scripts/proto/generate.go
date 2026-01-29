@@ -71,5 +71,6 @@ func checkProcInstalled() error {
 	if err != nil {
 		return fmt.Errorf("protoc not found in PATH")
 	}
+
 	return nil
 }

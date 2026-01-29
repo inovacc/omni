@@ -256,6 +256,7 @@ func RunFind(w io.Writer, paths []string, opts FindOptions) error {
 			if match {
 				if opts.JSON {
 					info, _ := d.Info()
+
 					result := FindResult{
 						Path:  path,
 						Name:  d.Name(),
@@ -266,6 +267,7 @@ func RunFind(w io.Writer, paths []string, opts FindOptions) error {
 						result.Mode = info.Mode().String()
 						result.ModTime = info.ModTime()
 					}
+
 					results = append(results, result)
 				} else {
 					_, _ = fmt.Fprint(w, path, separator)

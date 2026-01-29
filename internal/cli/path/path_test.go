@@ -29,6 +29,7 @@ func TestRealpath(t *testing.T) {
 	t.Run("relative path", func(t *testing.T) {
 		origDir, _ := os.Getwd()
 		_ = os.Chdir(tmpDir)
+
 		defer func() { _ = os.Chdir(origDir) }()
 
 		result, err := Realpath(".")
@@ -85,6 +86,7 @@ func TestDirname(t *testing.T) {
 		t.Run(tt.path, func(t *testing.T) {
 			// Normalize expected for the platform
 			expected := filepath.FromSlash(tt.expected)
+
 			got := Dirname(filepath.FromSlash(tt.path))
 			if got != expected {
 				t.Errorf("Dirname(%q) = %q, want %q", tt.path, got, expected)
@@ -129,6 +131,7 @@ func TestJoin(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.expected, func(t *testing.T) {
 			expected := filepath.FromSlash(tt.expected)
+
 			got := Join(tt.paths...)
 			if got != expected {
 				t.Errorf("Join(%v) = %q, want %q", tt.paths, got, expected)

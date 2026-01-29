@@ -91,6 +91,7 @@ func TestRunJoin(t *testing.T) {
 		}
 
 		output := buf.String()
+
 		lines := strings.Split(strings.TrimSpace(output), "\n")
 		if len(lines) < 2 {
 			t.Errorf("RunJoin() with ignore case should match, got: %s", output)
@@ -213,6 +214,7 @@ func TestJoinLineKey(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			jl := joinLine{fields: tt.fields}
+
 			result := jl.key(tt.fieldIdx)
 			if result != tt.expected {
 				t.Errorf("key(%d) = %q, want %q", tt.fieldIdx, result, tt.expected)
