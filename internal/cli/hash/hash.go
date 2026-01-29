@@ -6,6 +6,7 @@ import (
 	"crypto/sha256"
 	"crypto/sha512"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"hash"
 	"io"
@@ -24,6 +25,7 @@ type HashOptions struct {
 	Status    bool   // --status: don't output anything, status code shows success
 	Warn      bool   // -w: warn about improperly formatted checksum lines
 	Recursive bool   // -r: hash files recursively in directories
+	JSON      bool   // --json: output as JSON
 }
 
 // HashResult represents the result of hashing a file
@@ -32,6 +34,12 @@ type HashResult struct {
 	Hash      string `json:"hash"`
 	Algorithm string `json:"algorithm"`
 	Size      int64  `json:"size"`
+}
+
+// HashesResult represents the JSON output for hashes
+type HashesResult struct {
+	Hashes []HashResult `json:"hashes"`
+	Count  int          `json:"count"`
 }
 
 // RunHash computes or verifies file hashes
@@ -48,6 +56,8 @@ func RunHash(w io.Writer, args []string, opts HashOptions) error {
 }
 
 func computeHashes(w io.Writer, args []string, opts HashOptions) error {
+	var results []HashResult
+
 	if len(args) == 0 {
 		// Read from stdin
 		h := getHasher(opts.Algorithm)
@@ -55,8 +65,13 @@ func computeHashes(w io.Writer, args []string, opts HashOptions) error {
 			return fmt.Errorf("hash: %w", err)
 		}
 
-		_, _ = fmt.Fprintf(w, "%s  -\n", hex.EncodeToString(h.Sum(nil)))
+		hashStr := hex.EncodeToString(h.Sum(nil))
+		if opts.JSON {
+			results = append(results, HashResult{Path: "-", Hash: hashStr, Algorithm: opts.Algorithm})
+			return json.NewEncoder(w).Encode(HashesResult{Hashes: results, Count: len(results)})
+		}
 
+		_, _ = fmt.Fprintf(w, "%s  -\n", hashStr)
 		return nil
 	}
 
@@ -75,6 +90,13 @@ func computeHashes(w io.Writer, args []string, opts HashOptions) error {
 					}
 
 					if !d.IsDir() {
+						if opts.JSON {
+							result, hashErr := hashFileResult(p, opts)
+							if hashErr == nil {
+								results = append(results, result)
+							}
+							return nil
+						}
 						return hashFile(w, p, opts)
 					}
 
@@ -90,12 +112,50 @@ func computeHashes(w io.Writer, args []string, opts HashOptions) error {
 			continue
 		}
 
-		if err := hashFile(w, path, opts); err != nil {
-			_, _ = fmt.Fprintf(os.Stderr, "hash: %s: %v\n", path, err)
+		if opts.JSON {
+			result, hashErr := hashFileResult(path, opts)
+			if hashErr == nil {
+				results = append(results, result)
+			} else {
+				_, _ = fmt.Fprintf(os.Stderr, "hash: %s: %v\n", path, hashErr)
+			}
+		} else {
+			if err := hashFile(w, path, opts); err != nil {
+				_, _ = fmt.Fprintf(os.Stderr, "hash: %s: %v\n", path, err)
+			}
 		}
 	}
 
+	if opts.JSON {
+		return json.NewEncoder(w).Encode(HashesResult{Hashes: results, Count: len(results)})
+	}
+
 	return nil
+}
+
+func hashFileResult(path string, opts HashOptions) (HashResult, error) {
+	f, err := os.Open(path)
+	if err != nil {
+		return HashResult{}, err
+	}
+	defer func() { _ = f.Close() }()
+
+	info, err := f.Stat()
+	if err != nil {
+		return HashResult{}, err
+	}
+
+	h := getHasher(opts.Algorithm)
+	if _, err := io.Copy(h, f); err != nil {
+		return HashResult{}, err
+	}
+
+	return HashResult{
+		Path:      path,
+		Hash:      hex.EncodeToString(h.Sum(nil)),
+		Algorithm: opts.Algorithm,
+		Size:      info.Size(),
+	}, nil
 }
 
 func hashFile(w io.Writer, path string, opts HashOptions) error {

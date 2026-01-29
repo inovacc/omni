@@ -2,6 +2,7 @@ package column
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -72,7 +73,43 @@ func RunColumn(w io.Writer, args []string, opts ColumnOptions) error {
 		return columnTable(w, lines, opts)
 	}
 
+	if opts.JSON {
+		return columnJSON(w, lines, opts)
+	}
+
 	return columnFill(w, lines, opts)
+}
+
+func columnJSON(w io.Writer, lines []string, opts ColumnOptions) error {
+	var result []map[string]string
+
+	var headers []string
+	if opts.ColumnHeaders != "" {
+		headers = strings.Split(opts.ColumnHeaders, ",")
+	}
+
+	for _, line := range lines {
+		var fields []string
+		if opts.NoMerge {
+			fields = strings.Split(line, opts.Separator[:1])
+		} else {
+			fields = strings.FieldsFunc(line, func(r rune) bool {
+				return strings.ContainsRune(opts.Separator, r)
+			})
+		}
+
+		row := make(map[string]string)
+		for i, field := range fields {
+			key := fmt.Sprintf("col%d", i+1)
+			if i < len(headers) {
+				key = headers[i]
+			}
+			row[key] = field
+		}
+		result = append(result, row)
+	}
+
+	return json.NewEncoder(w).Encode(result)
 }
 
 //nolint:unparam // error kept for consistent interface

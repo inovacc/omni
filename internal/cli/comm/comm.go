@@ -2,6 +2,7 @@ package comm
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -16,6 +17,14 @@ type CommOptions struct {
 	NoCheckOrder bool   // --nocheck-order: do not check input order
 	OutputDelim  string // --output-delimiter: use STR as output delimiter
 	ZeroTerm     bool   // -z: line delimiter is NUL
+	JSON         bool   // --json: output as JSON
+}
+
+// CommResult represents the JSON output for comm
+type CommResult struct {
+	UniqueToFile1 []string `json:"uniqueToFile1"`
+	UniqueToFile2 []string `json:"uniqueToFile2"`
+	Common        []string `json:"common"`
 }
 
 // RunComm compares two sorted files line by line
@@ -92,6 +101,7 @@ func RunComm(w io.Writer, args []string, opts CommOptions) error {
 	}
 
 	var prevLine1, prevLine2 string
+	var result CommResult
 
 	for has1 || has2 {
 		// Check sort order if requested
@@ -107,7 +117,11 @@ func RunComm(w io.Writer, args []string, opts CommOptions) error {
 
 		if !has1 {
 			// Only file2 has lines
-			printCommLine(w, opts, delim, 2, line2)
+			if opts.JSON {
+				result.UniqueToFile2 = append(result.UniqueToFile2, line2)
+			} else {
+				printCommLine(w, opts, delim, 2, line2)
+			}
 			prevLine2 = line2
 			has2 = scanner2.Scan()
 
@@ -116,7 +130,11 @@ func RunComm(w io.Writer, args []string, opts CommOptions) error {
 			}
 		} else if !has2 {
 			// Only file1 has lines
-			printCommLine(w, opts, delim, 1, line1)
+			if opts.JSON {
+				result.UniqueToFile1 = append(result.UniqueToFile1, line1)
+			} else {
+				printCommLine(w, opts, delim, 1, line1)
+			}
 			prevLine1 = line1
 			has1 = scanner1.Scan()
 
@@ -125,7 +143,11 @@ func RunComm(w io.Writer, args []string, opts CommOptions) error {
 			}
 		} else if line1 < line2 {
 			// Line unique to file1
-			printCommLine(w, opts, delim, 1, line1)
+			if opts.JSON {
+				result.UniqueToFile1 = append(result.UniqueToFile1, line1)
+			} else {
+				printCommLine(w, opts, delim, 1, line1)
+			}
 			prevLine1 = line1
 			has1 = scanner1.Scan()
 
@@ -134,7 +156,11 @@ func RunComm(w io.Writer, args []string, opts CommOptions) error {
 			}
 		} else if line1 > line2 {
 			// Line unique to file2
-			printCommLine(w, opts, delim, 2, line2)
+			if opts.JSON {
+				result.UniqueToFile2 = append(result.UniqueToFile2, line2)
+			} else {
+				printCommLine(w, opts, delim, 2, line2)
+			}
 			prevLine2 = line2
 			has2 = scanner2.Scan()
 
@@ -143,7 +169,11 @@ func RunComm(w io.Writer, args []string, opts CommOptions) error {
 			}
 		} else {
 			// Lines are equal
-			printCommLine(w, opts, delim, 3, line1)
+			if opts.JSON {
+				result.Common = append(result.Common, line1)
+			} else {
+				printCommLine(w, opts, delim, 3, line1)
+			}
 			prevLine1 = line1
 			prevLine2 = line2
 			has1 = scanner1.Scan()
@@ -165,6 +195,10 @@ func RunComm(w io.Writer, args []string, opts CommOptions) error {
 
 	if err := scanner2.Err(); err != nil {
 		return fmt.Errorf("comm: %w", err)
+	}
+
+	if opts.JSON {
+		return json.NewEncoder(w).Encode(result)
 	}
 
 	return nil

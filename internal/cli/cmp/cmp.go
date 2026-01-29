@@ -1,6 +1,7 @@
 package cmp
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -14,6 +15,19 @@ type CmpOptions struct {
 	SkipBytes1 int64 // -i SKIP1: skip first SKIP1 bytes of FILE1
 	SkipBytes2 int64 // -i SKIP2: skip first SKIP2 bytes of FILE2
 	MaxBytes   int64 // -n LIMIT: compare at most LIMIT bytes
+	JSON       bool  // --json: output as JSON
+}
+
+// CmpJSONResult represents the JSON output for cmp
+type CmpJSONResult struct {
+	File1     string `json:"file1"`
+	File2     string `json:"file2"`
+	Identical bool   `json:"identical"`
+	DiffByte  int64  `json:"diffByte,omitempty"`
+	DiffLine  int64  `json:"diffLine,omitempty"`
+	Byte1     byte   `json:"byte1,omitempty"`
+	Byte2     byte   `json:"byte2,omitempty"`
+	EOF       string `json:"eof,omitempty"`
 }
 
 // CmpResult represents the result of comparison
@@ -101,6 +115,19 @@ func RunCmp(w io.Writer, args []string, opts CmpOptions) (CmpResult, error) {
 
 		for i := range minN {
 			if buf1[i] != buf2[i] {
+				if opts.JSON {
+					result := CmpJSONResult{
+						File1:     file1,
+						File2:     file2,
+						Identical: false,
+						DiffByte:  byteNum,
+						DiffLine:  lineNum,
+						Byte1:     buf1[i],
+						Byte2:     buf2[i],
+					}
+					_ = json.NewEncoder(w).Encode(result)
+					return CmpDiffer, nil
+				}
 				if !opts.Silent {
 					if opts.Verbose {
 						_, _ = fmt.Fprintf(w, "%d %o %o\n", byteNum, buf1[i], buf2[i])
@@ -130,6 +157,21 @@ func RunCmp(w io.Writer, args []string, opts CmpOptions) (CmpResult, error) {
 
 		// Check for EOF differences
 		if n1 != n2 {
+			if opts.JSON {
+				eofFile := file1
+				if n1 > n2 {
+					eofFile = file2
+				}
+				result := CmpJSONResult{
+					File1:     file1,
+					File2:     file2,
+					Identical: false,
+					DiffByte:  byteNum - 1,
+					EOF:       eofFile,
+				}
+				_ = json.NewEncoder(w).Encode(result)
+				return CmpDiffer, nil
+			}
 			if !opts.Silent {
 				if n1 < n2 {
 					_, _ = fmt.Fprintf(w, "cmp: EOF on %s after byte %d\n", file1, byteNum-1)
@@ -152,6 +194,15 @@ func RunCmp(w io.Writer, args []string, opts CmpOptions) (CmpResult, error) {
 		if err2 != nil && err2 != io.EOF {
 			return CmpError, fmt.Errorf("cmp: %s: %w", file2, err2)
 		}
+	}
+
+	if opts.JSON {
+		result := CmpJSONResult{
+			File1:     file1,
+			File2:     file2,
+			Identical: true,
+		}
+		_ = json.NewEncoder(w).Encode(result)
 	}
 
 	return CmpEqual, nil

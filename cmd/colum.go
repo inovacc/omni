@@ -31,6 +31,8 @@ With no FILE, or when FILE is -, read standard input.
 		opts.Columns, _ = cmd.Flags().GetInt("columns")
 		opts.FillRows, _ = cmd.Flags().GetBool("fillrows")
 		opts.Right, _ = cmd.Flags().GetBool("right")
+		opts.JSON, _ = cmd.Flags().GetBool("json")
+		opts.ColumnHeaders, _ = cmd.Flags().GetString("headers")
 
 		return column.RunColumn(os.Stdout, args, opts)
 	},
@@ -45,4 +47,6 @@ func init() {
 	columCmd.Flags().IntP("columns", "c", 80, "output width in characters")
 	columCmd.Flags().BoolP("fillrows", "x", false, "fill rows before columns")
 	columCmd.Flags().BoolP("right", "R", false, "right-align columns")
+	columCmd.Flags().BoolP("json", "J", false, "output as JSON")
+	columCmd.Flags().StringP("headers", "H", "", "column headers (comma-separated)")
 }

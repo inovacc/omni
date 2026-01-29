@@ -13,6 +13,7 @@ var (
 	cmpPrintBytes bool
 	cmpSkipBytes  int64
 	cmpMaxBytes   int64
+	cmpJSON       bool
 )
 
 var cmpCmd = &cobra.Command{
@@ -44,6 +45,7 @@ Examples:
 			SkipBytes1: cmpSkipBytes,
 			SkipBytes2: cmpSkipBytes,
 			MaxBytes:   cmpMaxBytes,
+			JSON:       cmpJSON,
 		}
 
 		result, err := cmp.RunCmp(os.Stdout, args, opts)
@@ -67,4 +69,5 @@ func init() {
 	cmpCmd.Flags().BoolVarP(&cmpPrintBytes, "print-bytes", "b", false, "print differing bytes")
 	cmpCmd.Flags().Int64VarP(&cmpSkipBytes, "ignore-initial", "i", 0, "skip first SKIP bytes")
 	cmpCmd.Flags().Int64VarP(&cmpMaxBytes, "bytes", "n", 0, "compare at most LIMIT bytes")
+	cmpCmd.Flags().BoolVar(&cmpJSON, "json", false, "output as JSON")
 }
