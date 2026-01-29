@@ -30,12 +30,13 @@ type Stats struct {
 
 // LanguageStats holds aggregated statistics for a language
 type LanguageStats struct {
-	Language string `json:"language"`
-	Files    int    `json:"files"`
-	Lines    int    `json:"lines"`
-	Code     int    `json:"code"`
-	Comments int    `json:"comments"`
-	Blanks   int    `json:"blanks"`
+	Language string                   `json:"language"`
+	Files    int                      `json:"files"`
+	Lines    int                      `json:"lines"`
+	Code     int                      `json:"code"`
+	Comments int                      `json:"comments"`
+	Blanks   int                      `json:"blanks"`
+	Children map[string]*LanguageStats `json:"children,omitempty"` // Embedded languages (for Markdown)
 }
 
 // Result holds the complete LOC analysis result
@@ -466,12 +467,15 @@ func RunLoc(w io.Writer, args []string, opts Options) error {
 			ls.Comments += fileStats.main.Comments
 			ls.Blanks += fileStats.main.Blanks
 
-			// Aggregate embedded language stats
+			// Aggregate embedded language stats as children (like tokei)
 			for embLang, embStats := range fileStats.embedded {
-				if langStats[embLang] == nil {
-					langStats[embLang] = &LanguageStats{Language: embLang}
+				if ls.Children == nil {
+					ls.Children = make(map[string]*LanguageStats)
 				}
-				els := langStats[embLang]
+				if ls.Children[embLang] == nil {
+					ls.Children[embLang] = &LanguageStats{Language: embLang}
+				}
+				els := ls.Children[embLang]
 				els.Lines += embStats.Lines
 				els.Code += embStats.Code
 				els.Comments += embStats.Comments
@@ -495,6 +499,13 @@ func RunLoc(w io.Writer, args []string, opts Options) error {
 		result.Total.Code += ls.Code
 		result.Total.Comments += ls.Comments
 		result.Total.Blanks += ls.Blanks
+		// Add embedded language stats to totals
+		for _, child := range ls.Children {
+			result.Total.Lines += child.Lines
+			result.Total.Code += child.Code
+			result.Total.Comments += child.Comments
+			result.Total.Blanks += child.Blanks
+		}
 	}
 	result.Total.Language = "Total"
 
@@ -530,6 +541,8 @@ func countFile(path string, lang *langDef) (*fileStats, error) {
 	}
 
 	scanner := bufio.NewScanner(f)
+	// Increase buffer size for files with very long lines (like minified XML/JSON)
+	scanner.Buffer(make([]byte, 64*1024), 10*1024*1024) // 10MB max line
 
 	if lang.literate {
 		countLiterate(scanner, lang, result)
@@ -541,7 +554,7 @@ func countFile(path string, lang *langDef) (*fileStats, error) {
 }
 
 // countLiterate handles literate languages like Markdown
-// All content is comments except code blocks which are extracted
+// Like tokei: code block content goes to embedded stats, not main
 func countLiterate(scanner *bufio.Scanner, lang *langDef, result *fileStats) {
 	inCodeBlock := false
 	var codeBlockLang string
@@ -549,15 +562,14 @@ func countLiterate(scanner *bufio.Scanner, lang *langDef, result *fileStats) {
 	for scanner.Scan() {
 		line := scanner.Text()
 		trimmed := strings.TrimSpace(line)
-		result.main.Lines++
-
-		if trimmed == "" {
-			result.main.Blanks++
-			continue
-		}
 
 		// Check for code block start
 		if !inCodeBlock {
+			result.main.Lines++
+			if trimmed == "" {
+				result.main.Blanks++
+				continue
+			}
 			if matches := codeBlockStartRegex.FindStringSubmatch(trimmed); matches != nil {
 				result.main.Comments++ // The ``` line is a comment
 				inCodeBlock = true
@@ -568,31 +580,45 @@ func countLiterate(scanner *bufio.Scanner, lang *langDef, result *fileStats) {
 				}
 				continue
 			}
+			// Regular markdown content = comment
+			result.main.Comments++
+			continue
 		}
 
 		// Check for code block end
-		if inCodeBlock && codeBlockEndRegex.MatchString(trimmed) {
+		if codeBlockEndRegex.MatchString(trimmed) {
+			result.main.Lines++
 			result.main.Comments++ // The closing ``` is a comment
 			inCodeBlock = false
 			codeBlockLang = ""
 			continue
 		}
 
-		// Inside code block - count as embedded language
-		if inCodeBlock && codeBlockLang != "" {
+		// Inside code block with known language - count in embedded stats
+		// Blank lines inside code blocks count in BOTH main.Blanks AND embedded.Blanks (like tokei)
+		if codeBlockLang != "" {
+			embLang := getLangByName(codeBlockLang)
 			embStats := result.embedded[codeBlockLang]
 			embStats.Lines++
 			if trimmed == "" {
 				embStats.Blanks++
+				result.main.Lines++  // Blank lines count in main too
+				result.main.Blanks++
+			} else if embLang != nil && isLineComment(trimmed, embLang) {
+				embStats.Comments++
 			} else {
 				embStats.Code++
 			}
 			result.embedded[codeBlockLang] = embStats
-			continue
+		} else {
+			// Unknown code blocks - count as main (prose)
+			result.main.Lines++
+			if trimmed == "" {
+				result.main.Blanks++
+			} else {
+				result.main.Comments++
+			}
 		}
-
-		// Regular markdown content = comment
-		result.main.Comments++
 	}
 }
 
@@ -766,6 +792,27 @@ func startsWithLineComment(line string, lang *langDef) bool {
 	return false
 }
 
+// isLineComment checks if a line is purely a comment (for embedded code parsing)
+func isLineComment(line string, lang *langDef) bool {
+	// Check line comments
+	for _, lc := range lang.lineComment {
+		if strings.HasPrefix(line, lc) {
+			return true
+		}
+	}
+	return false
+}
+
+// getLangByName returns a language definition by its display name
+func getLangByName(name string) *langDef {
+	for i := range languages {
+		if languages[i].name == name {
+			return &languages[i]
+		}
+	}
+	return nil
+}
+
 func isWhitespace(b byte) bool {
 	return b == ' ' || b == '\t' || b == '\r' || b == '\n'
 }
@@ -860,19 +907,51 @@ func printTable(w io.Writer, result Result) error {
 	}
 
 	// Print header
-	_, _ = fmt.Fprintf(w, "%-15s %8s %10s %10s %10s %10s\n",
+	_, _ = fmt.Fprintf(w, "%-18s %8s %10s %10s %10s %10s\n",
 		"Language", "Files", "Lines", "Code", "Comments", "Blanks")
-	_, _ = fmt.Fprintln(w, strings.Repeat("-", 67))
+	_, _ = fmt.Fprintln(w, strings.Repeat("-", 79))
 
 	// Print each language
 	for _, ls := range result.Languages {
-		_, _ = fmt.Fprintf(w, "%-15s %8d %10d %10d %10d %10d\n",
-			truncate(ls.Language, 15), ls.Files, ls.Lines, ls.Code, ls.Comments, ls.Blanks)
+		_, _ = fmt.Fprintf(w, " %-17s %8d %10d %10d %10d %10d\n",
+			truncate(ls.Language, 17), ls.Files, ls.Lines, ls.Code, ls.Comments, ls.Blanks)
+
+		// Print embedded languages as children (like tokei)
+		if len(ls.Children) > 0 {
+			// Sort children by code count
+			childNames := make([]string, 0, len(ls.Children))
+			for name := range ls.Children {
+				childNames = append(childNames, name)
+			}
+			sort.Slice(childNames, func(i, j int) bool {
+				return ls.Children[childNames[i]].Code > ls.Children[childNames[j]].Code
+			})
+
+			for _, childName := range childNames {
+				child := ls.Children[childName]
+				_, _ = fmt.Fprintf(w, " |- %-14s %8s %10d %10d %10d %10d\n",
+					truncate(child.Language, 14), "", child.Lines, child.Code, child.Comments, child.Blanks)
+			}
+
+			// Print subtotal for parent + children
+			totalLines := ls.Lines
+			totalCode := ls.Code
+			totalComments := ls.Comments
+			totalBlanks := ls.Blanks
+			for _, child := range ls.Children {
+				totalLines += child.Lines
+				totalCode += child.Code
+				totalComments += child.Comments
+				totalBlanks += child.Blanks
+			}
+			_, _ = fmt.Fprintf(w, " (Total)          %8s %10d %10d %10d %10d\n",
+				"", totalLines, totalCode, totalComments, totalBlanks)
+		}
 	}
 
 	// Print total
-	_, _ = fmt.Fprintln(w, strings.Repeat("-", 67))
-	_, _ = fmt.Fprintf(w, "%-15s %8d %10d %10d %10d %10d\n",
+	_, _ = fmt.Fprintln(w, strings.Repeat("=", 79))
+	_, _ = fmt.Fprintf(w, " %-17s %8d %10d %10d %10d %10d\n",
 		"Total", result.Total.Files, result.Total.Lines, result.Total.Code, result.Total.Comments, result.Total.Blanks)
 
 	return nil
