@@ -8,16 +8,20 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
+	"github.com/inovacc/omni/internal/logger"
 	_ "modernc.org/sqlite"
 )
 
 // Options configures sqlite command behavior
 type Options struct {
-	JSON      bool   // --json: output as JSON
-	Header    bool   // --header: show column headers
-	Separator string // --separator: column separator
-	Mode      string // --mode: output mode (column, csv, line, etc)
+	JSON      bool           // --json: output as JSON
+	Header    bool           // --header: show column headers
+	Separator string         // --separator: column separator
+	Mode      string         // --mode: output mode (column, csv, line, etc)
+	Logger    *logger.Logger // optional logger for query logging
+	LogData   bool           // --log-data: include result data in logs (careful with large results)
 }
 
 // StatsResult represents database statistics for JSON output
@@ -347,8 +351,11 @@ func RunIndexes(w io.Writer, dbPath string, opts Options) error {
 
 // RunQuery executes a SQL query and displays results
 func RunQuery(w io.Writer, dbPath, query string, opts Options) error {
+	start := time.Now()
+
 	db, err := sql.Open("sqlite", dbPath)
 	if err != nil {
+		logQueryError(opts.Logger, dbPath, query, time.Since(start), err)
 		return fmt.Errorf("sqlite: %w", err)
 	}
 
@@ -362,10 +369,17 @@ func RunQuery(w io.Writer, dbPath, query string, opts Options) error {
 		// Execute non-SELECT query
 		result, err := db.Exec(query)
 		if err != nil {
+			logQueryError(opts.Logger, dbPath, query, time.Since(start), err)
 			return fmt.Errorf("sqlite: %w", err)
 		}
 
 		rowsAffected, _ := result.RowsAffected()
+		duration := time.Since(start)
+
+		// Log the query result
+		if opts.Logger != nil && opts.Logger.IsActive() {
+			opts.Logger.LogQueryResult(dbPath, query, int(rowsAffected), duration, nil)
+		}
 
 		if opts.JSON {
 			return json.NewEncoder(w).Encode(map[string]int64{"rows_affected": rowsAffected})
@@ -379,6 +393,7 @@ func RunQuery(w io.Writer, dbPath, query string, opts Options) error {
 	// Execute SELECT query
 	rows, err := db.Query(query)
 	if err != nil {
+		logQueryError(opts.Logger, dbPath, query, time.Since(start), err)
 		return fmt.Errorf("sqlite: %w", err)
 	}
 
@@ -386,6 +401,7 @@ func RunQuery(w io.Writer, dbPath, query string, opts Options) error {
 
 	columns, err := rows.Columns()
 	if err != nil {
+		logQueryError(opts.Logger, dbPath, query, time.Since(start), err)
 		return fmt.Errorf("sqlite: %w", err)
 	}
 
@@ -409,6 +425,17 @@ func RunQuery(w io.Writer, dbPath, query string, opts Options) error {
 		}
 
 		results = append(results, row)
+	}
+
+	duration := time.Since(start)
+
+	// Log the query result
+	if opts.Logger != nil && opts.Logger.IsActive() {
+		if opts.LogData {
+			opts.Logger.LogQueryWithData(dbPath, query, columns, results, duration, nil)
+		} else {
+			opts.Logger.LogQueryResult(dbPath, query, len(results), duration, nil)
+		}
 	}
 
 	if opts.JSON {
@@ -436,6 +463,13 @@ func RunQuery(w io.Writer, dbPath, query string, opts Options) error {
 	}
 
 	return nil
+}
+
+// logQueryError logs a query error if logger is active
+func logQueryError(l *logger.Logger, dbPath, query string, duration time.Duration, err error) {
+	if l != nil && l.IsActive() {
+		l.LogQueryResult(dbPath, query, 0, duration, err)
+	}
 }
 
 // RunVacuum optimizes the database

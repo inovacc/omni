@@ -235,6 +235,121 @@ func (l *Logger) LogRaw(msg string, args ...any) {
 	l.slog.Info(msg, args...)
 }
 
+// LogQuery logs a database query before execution.
+func (l *Logger) LogQuery(database, query string) {
+	if l == nil || !l.active {
+		return
+	}
+
+	l.slog.Info("query",
+		"database", database,
+		"query", query,
+		"timestamp", time.Now().Format(time.RFC3339),
+		"pid", os.Getpid(),
+	)
+}
+
+// LogQueryResult logs a database query with its result.
+func (l *Logger) LogQueryResult(database, query string, rowCount int, duration time.Duration, err error) {
+	if l == nil || !l.active {
+		return
+	}
+
+	status := "success"
+	var errMsg string
+
+	if err != nil {
+		status = "error"
+		errMsg = err.Error()
+	}
+
+	attrs := []any{
+		"database", database,
+		"query", query,
+		"status", status,
+		"rows", rowCount,
+		"duration_ms", duration.Milliseconds(),
+		"timestamp", time.Now().Format(time.RFC3339),
+		"pid", os.Getpid(),
+	}
+
+	if errMsg != "" {
+		attrs = append(attrs, "error", errMsg)
+	}
+
+	l.slog.Info("query_result", attrs...)
+}
+
+// LogQueryWithData logs a query along with its result data (for small result sets).
+// Use this sparingly as it can produce large log entries.
+func (l *Logger) LogQueryWithData(database, query string, columns []string, rows []map[string]any, duration time.Duration, err error) {
+	if l == nil || !l.active {
+		return
+	}
+
+	status := "success"
+	var errMsg string
+
+	if err != nil {
+		status = "error"
+		errMsg = err.Error()
+	}
+
+	attrs := []any{
+		"database", database,
+		"query", query,
+		"status", status,
+		"row_count", len(rows),
+		"columns", columns,
+		"duration_ms", duration.Milliseconds(),
+		"timestamp", time.Now().Format(time.RFC3339),
+		"pid", os.Getpid(),
+	}
+
+	if errMsg != "" {
+		attrs = append(attrs, "error", errMsg)
+	}
+
+	// Only include data if there are rows and logging data is desired
+	if len(rows) > 0 && len(rows) <= 100 { // Limit to avoid huge logs
+		attrs = append(attrs, "data", rows)
+	}
+
+	l.slog.Info("query_result", attrs...)
+}
+
+// QueryLogger provides a convenient wrapper for logging database queries.
+type QueryLogger struct {
+	logger   *Logger
+	database string
+}
+
+// NewQueryLogger creates a query logger for a specific database.
+func NewQueryLogger(l *Logger, database string) *QueryLogger {
+	return &QueryLogger{
+		logger:   l,
+		database: database,
+	}
+}
+
+// Log logs a query with its result.
+func (ql *QueryLogger) Log(query string, rowCount int, duration time.Duration, err error) {
+	if ql == nil || ql.logger == nil {
+		return
+	}
+
+	ql.logger.LogQueryResult(ql.database, query, rowCount, duration, err)
+}
+
+// LogWithData logs a query with its result data.
+func (ql *QueryLogger) LogWithData(query string, columns []string, rows []map[string]any, duration time.Duration, err error) {
+	if ql == nil || ql.logger == nil {
+		return
+	}
+
+	ql.logger.LogQueryWithData(ql.database, query, columns, rows, duration, err)
+}
+
 // Close closes the log file if open.
 func (l *Logger) Close() error {
 	if l == nil || l.file == nil {

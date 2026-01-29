@@ -4,6 +4,7 @@ import (
 	"os"
 
 	"github.com/inovacc/omni/internal/cli/sqlite"
+	"github.com/inovacc/omni/internal/logger"
 	"github.com/spf13/cobra"
 )
 
@@ -95,16 +96,35 @@ var sqliteIndexesCmd = &cobra.Command{
 var sqliteQueryCmd = &cobra.Command{
 	Use:   "query <database> <sql>",
 	Short: "Execute SQL query",
-	Args:  cobra.ExactArgs(2),
+	Long: `Execute SQL query against a SQLite database.
+
+Query logging can be enabled with the omni logger command:
+  eval "$(omni logger --path /path/to/logs)"
+
+With logging enabled, queries and results are recorded to log files.
+Use --log-data to include result data in logs (use with caution for large results).
+
+Examples:
+  omni sqlite query mydb.sqlite "SELECT * FROM users"
+  omni sqlite query mydb.sqlite "SELECT * FROM users" --header
+  omni sqlite query mydb.sqlite "SELECT * FROM users" --json
+  omni sqlite query mydb.sqlite "SELECT * FROM users" --log-data`,
+	Args: cobra.ExactArgs(2),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		jsonOutput, _ := cmd.Flags().GetBool("json")
 		header, _ := cmd.Flags().GetBool("header")
 		separator, _ := cmd.Flags().GetString("separator")
+		logData, _ := cmd.Flags().GetBool("log-data")
+
+		// Get the global logger if available
+		l := logger.Get()
 
 		return sqlite.RunQuery(os.Stdout, args[0], args[1], sqlite.Options{
 			JSON:      jsonOutput,
 			Header:    header,
 			Separator: separator,
+			Logger:    l,
+			LogData:   logData,
 		})
 	},
 }
@@ -174,4 +194,5 @@ func init() {
 	// Add command-specific flags
 	sqliteQueryCmd.Flags().BoolP("header", "H", false, "show column headers")
 	sqliteQueryCmd.Flags().StringP("separator", "s", "|", "column separator")
+	sqliteQueryCmd.Flags().Bool("log-data", false, "include result data in logs (use with caution for large results)")
 }
