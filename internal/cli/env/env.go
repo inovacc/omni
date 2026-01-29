@@ -1,6 +1,7 @@
 package env
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -13,6 +14,13 @@ type EnvOptions struct {
 	NullTerminated bool   // -0: end each output line with NUL, not newline
 	Unset          string // -u: remove variable from the environment (for display only)
 	Ignore         bool   // -i: start with an empty environment
+	JSON           bool   // --json: output in JSON format
+}
+
+// EnvVar represents an environment variable for JSON output
+type EnvVar struct {
+	Name  string `json:"name"`
+	Value string `json:"value"`
 }
 
 // RunEnv prints environment variables
@@ -42,6 +50,18 @@ func RunEnv(w io.Writer, args []string, opts EnvOptions) error {
 
 	// If args provided, print only those variables
 	if len(args) > 0 {
+		if opts.JSON {
+			result := make([]EnvVar, 0, len(args))
+			for _, name := range args {
+				value := os.Getenv(name)
+				if value != "" {
+					result = append(result, EnvVar{Name: name, Value: value})
+				}
+			}
+
+			return json.NewEncoder(w).Encode(result)
+		}
+
 		for _, name := range args {
 			value := os.Getenv(name)
 			if value != "" {
@@ -58,6 +78,18 @@ func RunEnv(w io.Writer, args []string, opts EnvOptions) error {
 
 	// Sort for consistent output
 	sort.Strings(envVars)
+
+	// JSON output
+	if opts.JSON {
+		result := make([]EnvVar, 0, len(envVars))
+		for _, env := range envVars {
+			if idx := strings.Index(env, "="); idx > 0 {
+				result = append(result, EnvVar{Name: env[:idx], Value: env[idx+1:]})
+			}
+		}
+
+		return json.NewEncoder(w).Encode(result)
+	}
 
 	terminator := "\n"
 	if opts.NullTerminated {

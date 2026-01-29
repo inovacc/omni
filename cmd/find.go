@@ -28,6 +28,7 @@ var (
 	findWritable   bool
 	findPrint0     bool
 	findNot        bool
+	findJSON       bool
 )
 
 var findCmd = &cobra.Command{
@@ -92,6 +93,7 @@ Examples:
 			Writable:   findWritable,
 			Print0:     findPrint0,
 			Not:        findNot,
+			JSON:       findJSON,
 		}
 
 		return find.RunFind(os.Stdout, args, opts)
@@ -121,4 +123,5 @@ func init() {
 	findCmd.Flags().BoolVarP(&findWritable, "writable", "", false, "file is writable")
 	findCmd.Flags().BoolVarP(&findPrint0, "print0", "0", false, "print with null terminator")
 	findCmd.Flags().BoolVarP(&findNot, "not", "", false, "negate next test")
+	findCmd.Flags().BoolVarP(&findJSON, "json", "", false, "output in JSON format")
 }

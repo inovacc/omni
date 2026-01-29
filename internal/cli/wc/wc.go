@@ -2,6 +2,7 @@ package wc
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -15,6 +16,7 @@ type WCOptions struct {
 	Bytes      bool // -c: print the byte counts
 	Chars      bool // -m: print the character counts
 	MaxLineLen bool // -L: print the maximum display width
+	JSON       bool // --json: output in JSON format
 }
 
 // WCResult represents the result of a wc operation
@@ -42,6 +44,7 @@ func RunWC(w io.Writer, args []string, opts WCOptions) error {
 	}
 
 	var totals WCResult
+	var results []WCResult
 
 	totals.Filename = "total"
 
@@ -75,7 +78,11 @@ func RunWC(w io.Writer, args []string, opts WCOptions) error {
 
 		result.Filename = filename
 
-		printWCResult(w, result, opts)
+		if opts.JSON {
+			results = append(results, result)
+		} else {
+			printWCResult(w, result, opts)
+		}
 
 		// Accumulate totals
 		totals.Lines += result.Lines
@@ -86,6 +93,15 @@ func RunWC(w io.Writer, args []string, opts WCOptions) error {
 		if result.MaxLineLen > totals.MaxLineLen {
 			totals.MaxLineLen = result.MaxLineLen
 		}
+	}
+
+	// JSON output
+	if opts.JSON {
+		if len(files) > 1 {
+			results = append(results, totals)
+		}
+
+		return json.NewEncoder(w).Encode(results)
 	}
 
 	// Print totals if multiple files
