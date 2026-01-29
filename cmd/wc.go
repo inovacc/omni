@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"os"
-
 	"github.com/inovacc/omni/internal/cli/wc"
 	"github.com/spf13/cobra"
 )
@@ -29,7 +27,7 @@ the following order: newline, word, character, byte, maximum line length.`,
 		opts.MaxLineLen, _ = cmd.Flags().GetBool("max-line-length")
 		opts.JSON, _ = cmd.Flags().GetBool("json")
 
-		return wc.RunWC(os.Stdout, args, opts)
+		return wc.RunWC(cmd.OutOrStdout(), cmd.InOrStdin(), args, opts)
 	},
 }
 

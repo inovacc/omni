@@ -5,7 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"os"
+
+	"github.com/inovacc/omni/internal/cli/input"
 )
 
 // HeadOptions configures the head command behavior
@@ -27,51 +28,33 @@ type HeadResult struct {
 const DefaultHeadLines = 10
 
 // RunHead executes the head command
-func RunHead(w io.Writer, args []string, opts HeadOptions) error {
+// r is the default input reader (used when args is empty or contains "-")
+func RunHead(w io.Writer, r io.Reader, args []string, opts HeadOptions) error {
 	if opts.Lines == 0 && opts.Bytes == 0 {
 		opts.Lines = DefaultHeadLines
 	}
 
-	files := args
-	if len(files) == 0 {
-		files = []string{"-"} // stdin
+	sources, err := input.Open(args, r)
+	if err != nil {
+		return fmt.Errorf("head: %w", err)
 	}
+	defer input.CloseAll(sources)
 
-	showHeaders := len(files) > 1 || opts.Verbose
+	showHeaders := len(sources) > 1 || opts.Verbose
 	if opts.Quiet {
 		showHeaders = false
 	}
 
 	var results []HeadResult
 
-	for i, file := range files {
-		var r io.Reader
-
-		filename := file
-
-		if file == "-" {
-			r = os.Stdin
-			filename = "standard input"
-		} else {
-			f, err := os.Open(file)
-			if err != nil {
-				return fmt.Errorf("head: cannot open '%s' for reading: %w", file, err)
-			}
-
-			r = f
-
-			defer func() {
-				_ = f.Close()
-			}()
-		}
-
+	for i, src := range sources {
 		if opts.JSON {
-			lines, err := headLinesJSON(r, opts.Lines)
+			lines, err := headLinesJSON(src.Reader, opts.Lines)
 			if err != nil {
 				return err
 			}
 
-			results = append(results, HeadResult{File: filename, Lines: lines})
+			results = append(results, HeadResult{File: src.Name, Lines: lines})
 
 			continue
 		}
@@ -81,15 +64,15 @@ func RunHead(w io.Writer, args []string, opts HeadOptions) error {
 				_, _ = fmt.Fprintln(w)
 			}
 
-			_, _ = fmt.Fprintf(w, "==> %s <==\n", filename)
+			_, _ = fmt.Fprintf(w, "==> %s <==\n", src.Name)
 		}
 
 		if opts.Bytes > 0 {
-			if err := headBytes(w, r, opts.Bytes); err != nil {
+			if err := headBytes(w, src.Reader, opts.Bytes); err != nil {
 				return err
 			}
 		} else {
-			if err := headLines(w, r, opts.Lines); err != nil {
+			if err := headLines(w, src.Reader, opts.Lines); err != nil {
 				return err
 			}
 		}

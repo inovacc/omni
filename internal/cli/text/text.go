@@ -9,6 +9,8 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+
+	"github.com/inovacc/omni/internal/cli/input"
 )
 
 // SortOptions configures the sort command behavior
@@ -60,37 +62,24 @@ type UniqLine struct {
 }
 
 // RunSort executes the sort command
-func RunSort(w io.Writer, args []string, opts SortOptions) error {
+// r is the default input reader (used when args is empty or contains "-")
+func RunSort(w io.Writer, r io.Reader, args []string, opts SortOptions) error {
+	sources, err := input.Open(args, r)
+	if err != nil {
+		return fmt.Errorf("sort: %w", err)
+	}
+	defer input.CloseAll(sources)
+
 	var lines []string
 
-	if len(args) == 0 {
-		// Read from stdin
-		scanner := bufio.NewScanner(os.Stdin)
+	for _, src := range sources {
+		scanner := bufio.NewScanner(src.Reader)
 		for scanner.Scan() {
 			lines = append(lines, scanner.Text())
 		}
 
 		if err := scanner.Err(); err != nil {
 			return fmt.Errorf("sort: %w", err)
-		}
-	} else {
-		// Read from files
-		for _, file := range args {
-			f, err := os.Open(file)
-			if err != nil {
-				return fmt.Errorf("sort: cannot read: %s: %w", file, err)
-			}
-
-			scanner := bufio.NewScanner(f)
-			for scanner.Scan() {
-				lines = append(lines, scanner.Text())
-			}
-
-			_ = f.Close()
-
-			if err := scanner.Err(); err != nil {
-				return fmt.Errorf("sort: %w", err)
-			}
 		}
 	}
 
@@ -237,23 +226,15 @@ func uniqueLines(lines []string, ignoreCase bool) []string {
 }
 
 // RunUniq executes the uniq command
-func RunUniq(w io.Writer, args []string, opts UniqOptions) error {
-	var r io.Reader = os.Stdin
-
-	if len(args) > 0 && args[0] != "-" {
-		f, err := os.Open(args[0])
-		if err != nil {
-			return fmt.Errorf("uniq: %w", err)
-		}
-
-		defer func() {
-			_ = f.Close()
-		}()
-
-		r = f
+// r is the default input reader (used when args is empty or contains "-")
+func RunUniq(w io.Writer, r io.Reader, args []string, opts UniqOptions) error {
+	src, err := input.OpenOne(args, r)
+	if err != nil {
+		return fmt.Errorf("uniq: %w", err)
 	}
+	defer input.MustClose(&src)
 
-	scanner := bufio.NewScanner(r)
+	scanner := bufio.NewScanner(src.Reader)
 
 	var (
 		prevLine string

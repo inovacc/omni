@@ -27,7 +27,7 @@ age: 30`
 
 		var buf bytes.Buffer
 		// args[0] is filter, args[1:] are files
-		err := RunYq(&buf, []string{".name", file}, YqOptions{})
+		err := RunYq(&buf, nil, []string{".name", file}, YqOptions{})
 		if err != nil {
 			t.Fatalf("RunYq() error = %v", err)
 		}
@@ -51,7 +51,7 @@ age: 30`
 
 		var buf bytes.Buffer
 
-		err := RunYq(&buf, []string{".user.address.city", file}, YqOptions{})
+		err := RunYq(&buf, nil, []string{".user.address.city", file}, YqOptions{})
 		if err != nil {
 			t.Fatalf("RunYq() error = %v", err)
 		}
@@ -75,7 +75,7 @@ age: 30`
 
 		var buf bytes.Buffer
 
-		err := RunYq(&buf, []string{".items[0]", file}, YqOptions{})
+		err := RunYq(&buf, nil, []string{".items[0]", file}, YqOptions{})
 		if err != nil {
 			t.Fatalf("RunYq() error = %v", err)
 		}
@@ -97,7 +97,7 @@ another: data`
 
 		var buf bytes.Buffer
 
-		err := RunYq(&buf, []string{".", file}, YqOptions{})
+		err := RunYq(&buf, nil, []string{".", file}, YqOptions{})
 		if err != nil {
 			t.Fatalf("RunYq() error = %v", err)
 		}
@@ -119,7 +119,7 @@ value: 123`
 
 		var buf bytes.Buffer
 
-		err := RunYq(&buf, []string{".", file}, YqOptions{OutputJSON: true})
+		err := RunYq(&buf, nil, []string{".", file}, YqOptions{OutputJSON: true})
 		if err != nil {
 			t.Fatalf("RunYq() error = %v", err)
 		}
@@ -140,7 +140,7 @@ value: 123`
 
 		var buf bytes.Buffer
 
-		err := RunYq(&buf, []string{".message", file}, YqOptions{Raw: true})
+		err := RunYq(&buf, nil, []string{".message", file}, YqOptions{Raw: true})
 		if err != nil {
 			t.Fatalf("RunYq() error = %v", err)
 		}
@@ -160,7 +160,7 @@ value: 123`
 
 		var buf bytes.Buffer
 
-		err := RunYq(&buf, []string{".", file}, YqOptions{})
+		err := RunYq(&buf, nil, []string{".", file}, YqOptions{})
 		if err != nil {
 			t.Logf("RunYq() empty document: %v", err)
 		}
@@ -176,7 +176,7 @@ value: 123`
 
 		var buf bytes.Buffer
 
-		err := RunYq(&buf, []string{".key", file}, YqOptions{})
+		err := RunYq(&buf, nil, []string{".key", file}, YqOptions{})
 		if err != nil {
 			t.Fatalf("RunYq() error = %v", err)
 		}
@@ -198,7 +198,7 @@ no: false`
 
 		var buf bytes.Buffer
 
-		err := RunYq(&buf, []string{".yes", file}, YqOptions{})
+		err := RunYq(&buf, nil, []string{".yes", file}, YqOptions{})
 		if err != nil {
 			t.Fatalf("RunYq() error = %v", err)
 		}
@@ -220,7 +220,7 @@ float: 3.14`
 
 		var buf bytes.Buffer
 
-		err := RunYq(&buf, []string{".int", file}, YqOptions{})
+		err := RunYq(&buf, nil, []string{".int", file}, YqOptions{})
 		if err != nil {
 			t.Fatalf("RunYq() error = %v", err)
 		}
@@ -241,7 +241,7 @@ float: 3.14`
 
 		var buf bytes.Buffer
 
-		err := RunYq(&buf, []string{".msg", file}, YqOptions{Raw: true})
+		err := RunYq(&buf, nil, []string{".msg", file}, YqOptions{Raw: true})
 		if err != nil {
 			t.Fatalf("RunYq() error = %v", err)
 		}
@@ -263,7 +263,7 @@ float: 3.14`
 
 		var buf bytes.Buffer
 
-		err := RunYq(&buf, []string{".text", file}, YqOptions{})
+		err := RunYq(&buf, nil, []string{".text", file}, YqOptions{})
 		if err != nil {
 			t.Fatalf("RunYq() error = %v", err)
 		}
@@ -293,7 +293,7 @@ float: 3.14`
 
 		var buf bytes.Buffer
 
-		err := RunYq(&buf, []string{".people[0].name", file}, YqOptions{})
+		err := RunYq(&buf, nil, []string{".people[0].name", file}, YqOptions{})
 		if err != nil {
 			t.Fatalf("RunYq() error = %v", err)
 		}
@@ -313,7 +313,7 @@ float: 3.14`
 
 		var buf bytes.Buffer
 
-		err := RunYq(&buf, []string{".", file}, YqOptions{})
+		err := RunYq(&buf, nil, []string{".", file}, YqOptions{})
 		if err == nil {
 			t.Log("RunYq() may handle invalid YAML gracefully")
 		}
@@ -322,7 +322,7 @@ float: 3.14`
 	t.Run("nonexistent file", func(t *testing.T) {
 		var buf bytes.Buffer
 
-		err := RunYq(&buf, []string{".", "/nonexistent.yaml"}, YqOptions{})
+		err := RunYq(&buf, nil, []string{".", "/nonexistent.yaml"}, YqOptions{})
 		if err == nil {
 			t.Error("RunYq() expected error for nonexistent file")
 		}
@@ -342,7 +342,7 @@ float: 3.14`
 
 		var buf bytes.Buffer
 
-		err := RunYq(&buf, []string{".l1.l2.l3.l4.value", file}, YqOptions{})
+		err := RunYq(&buf, nil, []string{".l1.l2.l3.l4.value", file}, YqOptions{})
 		if err != nil {
 			t.Fatalf("RunYq() error = %v", err)
 		}
@@ -369,7 +369,7 @@ production:
 
 		var buf bytes.Buffer
 
-		err := RunYq(&buf, []string{".production.timeout", file}, YqOptions{})
+		err := RunYq(&buf, nil, []string{".production.timeout", file}, YqOptions{})
 		if err != nil {
 			t.Fatalf("RunYq() error = %v", err)
 		}
@@ -393,7 +393,7 @@ name: second`
 
 		var buf bytes.Buffer
 
-		err := RunYq(&buf, []string{".name", file}, YqOptions{})
+		err := RunYq(&buf, nil, []string{".name", file}, YqOptions{})
 		if err != nil {
 			t.Logf("RunYq() multi-doc: %v", err)
 		}
@@ -412,8 +412,8 @@ name: second`
 
 		var buf1, buf2 bytes.Buffer
 
-		_ = RunYq(&buf1, []string{".", file}, YqOptions{})
-		_ = RunYq(&buf2, []string{".", file}, YqOptions{})
+		_ = RunYq(&buf1, nil, []string{".", file}, YqOptions{})
+		_ = RunYq(&buf2, nil, []string{".", file}, YqOptions{})
 
 		if buf1.String() != buf2.String() {
 			t.Error("RunYq() should produce consistent output")
@@ -431,7 +431,7 @@ double: "double quoted"`
 
 		var buf bytes.Buffer
 
-		err := RunYq(&buf, []string{".single", file}, YqOptions{Raw: true})
+		err := RunYq(&buf, nil, []string{".single", file}, YqOptions{Raw: true})
 		if err != nil {
 			t.Fatalf("RunYq() error = %v", err)
 		}

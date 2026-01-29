@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"os"
-
 	"github.com/inovacc/omni/internal/cli/sed"
 	"github.com/spf13/cobra"
 )
@@ -41,7 +39,7 @@ Examples:
 		opts.Quiet, _ = cmd.Flags().GetBool("quiet")
 		opts.Extended, _ = cmd.Flags().GetBool("regexp-extended")
 
-		return sed.RunSed(os.Stdout, args, opts)
+		return sed.RunSed(cmd.OutOrStdout(), cmd.InOrStdin(), args, opts)
 	},
 }
 

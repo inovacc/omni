@@ -5,9 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"os"
 	"strconv"
 	"strings"
+
+	"github.com/inovacc/omni/internal/cli/input"
 )
 
 // CutOptions configures the cut command behavior
@@ -29,7 +30,8 @@ type CutResult struct {
 }
 
 // RunCut executes the cut command
-func RunCut(w io.Writer, args []string, opts CutOptions) error {
+// r is the default input reader (used when args is empty or contains "-")
+func RunCut(w io.Writer, r io.Reader, args []string, opts CutOptions) error {
 	// Validate options - must specify one of -b, -c, or -f
 	modes := 0
 	if opts.Bytes != "" {
@@ -64,32 +66,16 @@ func RunCut(w io.Writer, args []string, opts CutOptions) error {
 		opts.OutputDelim = opts.Delimiter
 	}
 
-	files := args
-	if len(files) == 0 {
-		files = []string{"-"}
+	sources, err := input.Open(args, r)
+	if err != nil {
+		return fmt.Errorf("cut: %w", err)
 	}
+	defer input.CloseAll(sources)
 
 	var allLines []string
 
-	for _, file := range files {
-		var r io.Reader
-		if file == "-" {
-			r = os.Stdin
-		} else {
-			f, err := os.Open(file)
-			if err != nil {
-				_, _ = fmt.Fprintf(os.Stderr, "cut: %s: %v\n", file, err)
-				continue
-			}
-
-			defer func() {
-				_ = f.Close()
-			}()
-
-			r = f
-		}
-
-		lines, err := cutReader(w, r, opts)
+	for _, src := range sources {
+		lines, err := cutReader(w, src.Reader, opts)
 		if err != nil {
 			return err
 		}

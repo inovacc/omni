@@ -37,7 +37,7 @@ func TestRunHead(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunHead(&buf, []string{file}, HeadOptions{})
+		err := RunHead(&buf, nil, []string{file}, HeadOptions{})
 		if err != nil {
 			t.Fatalf("RunHead() error = %v", err)
 		}
@@ -53,7 +53,7 @@ func TestRunHead(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunHead(&buf, []string{file}, HeadOptions{Lines: 3})
+		err := RunHead(&buf, nil, []string{file}, HeadOptions{Lines: 3})
 		if err != nil {
 			t.Fatalf("RunHead() error = %v", err)
 		}
@@ -76,7 +76,7 @@ func TestRunHead(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		_ = RunHead(&buf, []string{file}, HeadOptions{Lines: 1})
+		_ = RunHead(&buf, nil, []string{file}, HeadOptions{Lines: 1})
 
 		if strings.TrimSpace(buf.String()) != "first" {
 			t.Errorf("RunHead() Lines=1 = %v, want 'first'", buf.String())
@@ -88,7 +88,7 @@ func TestRunHead(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		_ = RunHead(&buf, []string{file}, HeadOptions{Lines: 5})
+		_ = RunHead(&buf, nil, []string{file}, HeadOptions{Lines: 5})
 
 		lines := strings.Split(strings.TrimSpace(buf.String()), "\n")
 		if len(lines) != 5 {
@@ -101,7 +101,7 @@ func TestRunHead(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunHead(&buf, []string{file}, HeadOptions{Lines: 10})
+		err := RunHead(&buf, nil, []string{file}, HeadOptions{Lines: 10})
 		if err != nil {
 			t.Fatalf("RunHead() error = %v", err)
 		}
@@ -117,7 +117,7 @@ func TestRunHead(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunHead(&buf, []string{file}, HeadOptions{Lines: 0})
+		err := RunHead(&buf, nil, []string{file}, HeadOptions{Lines: 0})
 		if err != nil {
 			t.Fatalf("RunHead() error = %v", err)
 		}
@@ -135,7 +135,7 @@ func TestRunHead(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunHead(&buf, []string{file1, file2}, HeadOptions{Lines: 2})
+		err := RunHead(&buf, nil, []string{file1, file2}, HeadOptions{Lines: 2})
 		if err != nil {
 			t.Fatalf("RunHead() error = %v", err)
 		}
@@ -156,7 +156,7 @@ func TestRunHead(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		_ = RunHead(&buf, []string{file1, file2}, HeadOptions{Lines: 1})
+		_ = RunHead(&buf, nil, []string{file1, file2}, HeadOptions{Lines: 1})
 
 		output := buf.String()
 		if !strings.Contains(output, "file1line1") || !strings.Contains(output, "file2line1") {
@@ -177,7 +177,7 @@ func TestRunHead(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		_ = RunHead(&buf, files, HeadOptions{Lines: 1})
+		_ = RunHead(&buf, nil, files, HeadOptions{Lines: 1})
 
 		output := buf.String()
 		// Should have 3 headers
@@ -193,7 +193,7 @@ func TestRunHead(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunHead(&buf, []string{file1, file2}, HeadOptions{Lines: 2, Quiet: true})
+		err := RunHead(&buf, nil, []string{file1, file2}, HeadOptions{Lines: 2, Quiet: true})
 		if err != nil {
 			t.Fatalf("RunHead() error = %v", err)
 		}
@@ -209,7 +209,7 @@ func TestRunHead(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		_ = RunHead(&buf, []string{file}, HeadOptions{Lines: 2, Verbose: true})
+		_ = RunHead(&buf, nil, []string{file}, HeadOptions{Lines: 2, Verbose: true})
 
 		output := buf.String()
 		if !strings.Contains(output, "==>") {
@@ -227,7 +227,7 @@ func TestRunHead(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunHead(&buf, []string{file}, HeadOptions{Bytes: 5})
+		err := RunHead(&buf, nil, []string{file}, HeadOptions{Bytes: 5})
 		if err != nil {
 			t.Fatalf("RunHead() error = %v", err)
 		}
@@ -245,7 +245,7 @@ func TestRunHead(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		_ = RunHead(&buf, []string{file}, HeadOptions{Bytes: 100})
+		_ = RunHead(&buf, nil, []string{file}, HeadOptions{Bytes: 100})
 
 		if buf.String() != "short" {
 			t.Errorf("RunHead() bytes more than size = %v, want 'short'", buf.String())
@@ -260,7 +260,7 @@ func TestRunHead(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		_ = RunHead(&buf, []string{file}, HeadOptions{Bytes: 5})
+		_ = RunHead(&buf, nil, []string{file}, HeadOptions{Bytes: 5})
 
 		if buf.String() != "12345" {
 			t.Errorf("RunHead() bytes exact = %v, want '12345'", buf.String())
@@ -275,7 +275,7 @@ func TestRunHead(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		_ = RunHead(&buf, []string{file}, HeadOptions{Bytes: 1})
+		_ = RunHead(&buf, nil, []string{file}, HeadOptions{Bytes: 1})
 
 		if buf.String() != "h" {
 			t.Errorf("RunHead() bytes=1 = %v, want 'h'", buf.String())
@@ -285,7 +285,7 @@ func TestRunHead(t *testing.T) {
 	t.Run("nonexistent file", func(t *testing.T) {
 		var buf bytes.Buffer
 
-		err := RunHead(&buf, []string{"/nonexistent/file.txt"}, HeadOptions{})
+		err := RunHead(&buf, nil, []string{"/nonexistent/file.txt"}, HeadOptions{})
 		if err == nil {
 			t.Error("RunHead() should return error for nonexistent file")
 		}
@@ -299,7 +299,7 @@ func TestRunHead(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunHead(&buf, []string{file}, HeadOptions{Lines: 10})
+		err := RunHead(&buf, nil, []string{file}, HeadOptions{Lines: 10})
 		if err != nil {
 			t.Fatalf("RunHead() error = %v", err)
 		}
@@ -317,7 +317,7 @@ func TestRunHead(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		_ = RunHead(&buf, []string{file}, HeadOptions{Lines: 10})
+		_ = RunHead(&buf, nil, []string{file}, HeadOptions{Lines: 10})
 
 		if strings.TrimSpace(buf.String()) != "only line" {
 			t.Errorf("RunHead() single = %v", buf.String())
@@ -332,7 +332,7 @@ func TestRunHead(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		_ = RunHead(&buf, []string{file}, HeadOptions{Lines: 2})
+		_ = RunHead(&buf, nil, []string{file}, HeadOptions{Lines: 2})
 
 		lines := strings.Split(strings.TrimSpace(buf.String()), "\n")
 		if len(lines) != 2 {
@@ -348,7 +348,7 @@ func TestRunHead(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		_ = RunHead(&buf, []string{file}, HeadOptions{Lines: 2})
+		_ = RunHead(&buf, nil, []string{file}, HeadOptions{Lines: 2})
 
 		output := buf.String()
 		if !strings.Contains(output, "Hello") || !strings.Contains(output, "世界") {
@@ -365,7 +365,7 @@ func TestRunHead(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		_ = RunHead(&buf, []string{file}, HeadOptions{Lines: 1})
+		_ = RunHead(&buf, nil, []string{file}, HeadOptions{Lines: 1})
 
 		if strings.TrimSpace(buf.String()) != longLine {
 			t.Errorf("RunHead() should handle long lines")
@@ -387,7 +387,7 @@ func TestRunHead(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunHead(&buf, []string{file}, HeadOptions{Lines: 5})
+		err := RunHead(&buf, nil, []string{file}, HeadOptions{Lines: 5})
 		if err != nil {
 			t.Fatalf("RunHead() error = %v", err)
 		}
@@ -403,7 +403,7 @@ func TestRunHead(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		_ = RunHead(&buf, []string{file}, HeadOptions{Lines: 2})
+		_ = RunHead(&buf, nil, []string{file}, HeadOptions{Lines: 2})
 
 		if !strings.HasSuffix(buf.String(), "\n") {
 			t.Error("RunHead() output should end with newline")
@@ -415,8 +415,8 @@ func TestRunHead(t *testing.T) {
 
 		var buf1, buf2 bytes.Buffer
 
-		_ = RunHead(&buf1, []string{file}, HeadOptions{Lines: 5})
-		_ = RunHead(&buf2, []string{file}, HeadOptions{Lines: 5})
+		_ = RunHead(&buf1, nil, []string{file}, HeadOptions{Lines: 5})
+		_ = RunHead(&buf2, nil, []string{file}, HeadOptions{Lines: 5})
 
 		if buf1.String() != buf2.String() {
 			t.Errorf("RunHead() should be consistent")

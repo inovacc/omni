@@ -37,7 +37,7 @@ func TestRunTail(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunTail(&buf, []string{file}, TailOptions{})
+		err := RunTail(&buf, nil, []string{file}, TailOptions{})
 		if err != nil {
 			t.Fatalf("RunTail() error = %v", err)
 		}
@@ -58,7 +58,7 @@ func TestRunTail(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunTail(&buf, []string{file}, TailOptions{Lines: 2})
+		err := RunTail(&buf, nil, []string{file}, TailOptions{Lines: 2})
 		if err != nil {
 			t.Fatalf("RunTail() error = %v", err)
 		}
@@ -81,7 +81,7 @@ func TestRunTail(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		_ = RunTail(&buf, []string{file}, TailOptions{Lines: 1})
+		_ = RunTail(&buf, nil, []string{file}, TailOptions{Lines: 1})
 
 		if strings.TrimSpace(buf.String()) != "third" {
 			t.Errorf("RunTail() Lines=1 = %v, want 'third'", buf.String())
@@ -93,7 +93,7 @@ func TestRunTail(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunTail(&buf, []string{file}, TailOptions{Lines: 10})
+		err := RunTail(&buf, nil, []string{file}, TailOptions{Lines: 10})
 		if err != nil {
 			t.Fatalf("RunTail() error = %v", err)
 		}
@@ -109,7 +109,7 @@ func TestRunTail(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunTail(&buf, []string{file}, TailOptions{Lines: 0})
+		err := RunTail(&buf, nil, []string{file}, TailOptions{Lines: 0})
 		if err != nil {
 			t.Fatalf("RunTail() error = %v", err)
 		}
@@ -127,7 +127,7 @@ func TestRunTail(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunTail(&buf, []string{file1, file2}, TailOptions{Lines: 2})
+		err := RunTail(&buf, nil, []string{file1, file2}, TailOptions{Lines: 2})
 		if err != nil {
 			t.Fatalf("RunTail() error = %v", err)
 		}
@@ -148,7 +148,7 @@ func TestRunTail(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		_ = RunTail(&buf, []string{file1, file2}, TailOptions{Lines: 1})
+		_ = RunTail(&buf, nil, []string{file1, file2}, TailOptions{Lines: 1})
 
 		output := buf.String()
 		if !strings.Contains(output, "file1line2") || !strings.Contains(output, "file2line2") {
@@ -162,7 +162,7 @@ func TestRunTail(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunTail(&buf, []string{file1, file2}, TailOptions{Lines: 2, Quiet: true})
+		err := RunTail(&buf, nil, []string{file1, file2}, TailOptions{Lines: 2, Quiet: true})
 		if err != nil {
 			t.Fatalf("RunTail() error = %v", err)
 		}
@@ -178,7 +178,7 @@ func TestRunTail(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		_ = RunTail(&buf, []string{file}, TailOptions{Lines: 2, Verbose: true})
+		_ = RunTail(&buf, nil, []string{file}, TailOptions{Lines: 2, Verbose: true})
 
 		output := buf.String()
 		if !strings.Contains(output, "==>") {
@@ -196,7 +196,7 @@ func TestRunTail(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunTail(&buf, []string{file}, TailOptions{Bytes: 5})
+		err := RunTail(&buf, nil, []string{file}, TailOptions{Bytes: 5})
 		if err != nil {
 			t.Fatalf("RunTail() error = %v", err)
 		}
@@ -214,7 +214,7 @@ func TestRunTail(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		_ = RunTail(&buf, []string{file}, TailOptions{Bytes: 100})
+		_ = RunTail(&buf, nil, []string{file}, TailOptions{Bytes: 100})
 
 		if buf.String() != "short" {
 			t.Errorf("RunTail() bytes more than size = %v, want 'short'", buf.String())
@@ -229,7 +229,7 @@ func TestRunTail(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		_ = RunTail(&buf, []string{file}, TailOptions{Bytes: 5})
+		_ = RunTail(&buf, nil, []string{file}, TailOptions{Bytes: 5})
 
 		if buf.String() != "12345" {
 			t.Errorf("RunTail() bytes exact size = %v, want '12345'", buf.String())
@@ -239,7 +239,7 @@ func TestRunTail(t *testing.T) {
 	t.Run("nonexistent file", func(t *testing.T) {
 		var buf bytes.Buffer
 
-		err := RunTail(&buf, []string{"/nonexistent/file.txt"}, TailOptions{})
+		err := RunTail(&buf, nil, []string{"/nonexistent/file.txt"}, TailOptions{})
 		if err == nil {
 			t.Error("RunTail() should return error for nonexistent file")
 		}
@@ -253,7 +253,7 @@ func TestRunTail(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunTail(&buf, []string{file}, TailOptions{Lines: 10})
+		err := RunTail(&buf, nil, []string{file}, TailOptions{Lines: 10})
 		if err != nil {
 			t.Fatalf("RunTail() error = %v", err)
 		}
@@ -273,7 +273,7 @@ func TestRunTail(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunTail(&buf, []string{file}, TailOptions{Lines: 5})
+		err := RunTail(&buf, nil, []string{file}, TailOptions{Lines: 5})
 		if err != nil {
 			t.Fatalf("RunTail() error = %v", err)
 		}
@@ -291,7 +291,7 @@ func TestRunTail(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		_ = RunTail(&buf, []string{file}, TailOptions{Lines: 2})
+		_ = RunTail(&buf, nil, []string{file}, TailOptions{Lines: 2})
 
 		lines := strings.Split(strings.TrimSpace(buf.String()), "\n")
 		if len(lines) != 2 {
@@ -311,7 +311,7 @@ func TestRunTail(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		_ = RunTail(&buf, []string{file}, TailOptions{Lines: 3})
+		_ = RunTail(&buf, nil, []string{file}, TailOptions{Lines: 3})
 
 		lines := strings.Split(buf.String(), "\n")
 		// Should have 3 empty lines (plus potential trailing from split)
@@ -336,7 +336,7 @@ func TestRunTail(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		_ = RunTail(&buf, []string{file}, TailOptions{Lines: 2})
+		_ = RunTail(&buf, nil, []string{file}, TailOptions{Lines: 2})
 
 		output := buf.String()
 		if !strings.Contains(output, "🌍") || !strings.Contains(output, "こんにちは") {
@@ -353,7 +353,7 @@ func TestRunTail(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		_ = RunTail(&buf, []string{file}, TailOptions{Lines: 1})
+		_ = RunTail(&buf, nil, []string{file}, TailOptions{Lines: 1})
 
 		if strings.TrimSpace(buf.String()) != longLine {
 			t.Errorf("RunTail() should handle long lines")
@@ -375,7 +375,7 @@ func TestRunTail(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunTail(&buf, []string{file}, TailOptions{Lines: 5})
+		err := RunTail(&buf, nil, []string{file}, TailOptions{Lines: 5})
 		if err != nil {
 			t.Fatalf("RunTail() error = %v", err)
 		}

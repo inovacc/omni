@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"os"
-
 	"github.com/inovacc/omni/internal/cli/nl"
 	"github.com/spf13/cobra"
 )
@@ -42,7 +40,7 @@ FORMAT is one of:
 		opts.NumberWidth, _ = cmd.Flags().GetInt("number-width")
 		opts.JSON, _ = cmd.Flags().GetBool("json")
 
-		return nl.RunNl(os.Stdout, args, opts)
+		return nl.RunNl(cmd.OutOrStdout(), cmd.InOrStdin(), args, opts)
 	},
 }
 

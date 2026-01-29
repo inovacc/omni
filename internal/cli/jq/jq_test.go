@@ -26,7 +26,7 @@ func TestRunJq(t *testing.T) {
 
 		var buf bytes.Buffer
 		// args[0] is filter, args[1:] are files
-		err := RunJq(&buf, []string{".name", file}, JqOptions{})
+		err := RunJq(&buf, nil, []string{".name", file}, JqOptions{})
 		if err != nil {
 			t.Fatalf("RunJq() error = %v", err)
 		}
@@ -47,7 +47,7 @@ func TestRunJq(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunJq(&buf, []string{".message", file}, JqOptions{Raw: true})
+		err := RunJq(&buf, nil, []string{".message", file}, JqOptions{Raw: true})
 		if err != nil {
 			t.Fatalf("RunJq() error = %v", err)
 		}
@@ -68,7 +68,7 @@ func TestRunJq(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunJq(&buf, []string{".items[0]", file}, JqOptions{Raw: true})
+		err := RunJq(&buf, nil, []string{".items[0]", file}, JqOptions{Raw: true})
 		if err != nil {
 			t.Fatalf("RunJq() error = %v", err)
 		}
@@ -89,7 +89,7 @@ func TestRunJq(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunJq(&buf, []string{".user.address.city", file}, JqOptions{Raw: true})
+		err := RunJq(&buf, nil, []string{".user.address.city", file}, JqOptions{Raw: true})
 		if err != nil {
 			t.Fatalf("RunJq() error = %v", err)
 		}
@@ -110,7 +110,7 @@ func TestRunJq(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunJq(&buf, []string{".", file}, JqOptions{})
+		err := RunJq(&buf, nil, []string{".", file}, JqOptions{})
 		if err != nil {
 			t.Fatalf("RunJq() error = %v", err)
 		}
@@ -130,7 +130,7 @@ func TestRunJq(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunJq(&buf, []string{".", file}, JqOptions{Compact: true})
+		err := RunJq(&buf, nil, []string{".", file}, JqOptions{Compact: true})
 		if err != nil {
 			t.Fatalf("RunJq() error = %v", err)
 		}
@@ -152,7 +152,7 @@ func TestRunJq(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunJq(&buf, []string{".items | length", file}, JqOptions{})
+		err := RunJq(&buf, nil, []string{".items | length", file}, JqOptions{})
 		if err != nil {
 			t.Fatalf("RunJq() error = %v", err)
 		}
@@ -173,7 +173,7 @@ func TestRunJq(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunJq(&buf, []string{".data | .values | length", file}, JqOptions{})
+		err := RunJq(&buf, nil, []string{".data | .values | length", file}, JqOptions{})
 		if err != nil {
 			t.Fatalf("RunJq() error = %v", err)
 		}
@@ -193,7 +193,7 @@ func TestRunJq(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunJq(&buf, []string{".", file}, JqOptions{})
+		err := RunJq(&buf, nil, []string{".", file}, JqOptions{})
 		if err != nil {
 			t.Fatalf("RunJq() error = %v", err)
 		}
@@ -212,7 +212,7 @@ func TestRunJq(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunJq(&buf, []string{".", file}, JqOptions{})
+		err := RunJq(&buf, nil, []string{".", file}, JqOptions{})
 		if err != nil {
 			t.Fatalf("RunJq() error = %v", err)
 		}
@@ -231,7 +231,7 @@ func TestRunJq(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunJq(&buf, []string{".key", file}, JqOptions{})
+		err := RunJq(&buf, nil, []string{".key", file}, JqOptions{})
 		if err != nil {
 			t.Fatalf("RunJq() error = %v", err)
 		}
@@ -251,7 +251,7 @@ func TestRunJq(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunJq(&buf, []string{".yes", file}, JqOptions{})
+		err := RunJq(&buf, nil, []string{".yes", file}, JqOptions{})
 		if err != nil {
 			t.Fatalf("RunJq() error = %v", err)
 		}
@@ -271,7 +271,7 @@ func TestRunJq(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunJq(&buf, []string{".int", file}, JqOptions{})
+		err := RunJq(&buf, nil, []string{".int", file}, JqOptions{})
 		if err != nil {
 			t.Fatalf("RunJq() error = %v", err)
 		}
@@ -291,7 +291,7 @@ func TestRunJq(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunJq(&buf, []string{".msg", file}, JqOptions{Raw: true})
+		err := RunJq(&buf, nil, []string{".msg", file}, JqOptions{Raw: true})
 		if err != nil {
 			t.Fatalf("RunJq() error = %v", err)
 		}
@@ -311,7 +311,7 @@ func TestRunJq(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunJq(&buf, []string{"keys", file}, JqOptions{})
+		err := RunJq(&buf, nil, []string{"keys", file}, JqOptions{})
 		if err != nil {
 			t.Fatalf("RunJq() error = %v", err)
 		}
@@ -331,7 +331,7 @@ func TestRunJq(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunJq(&buf, []string{".", file}, JqOptions{})
+		err := RunJq(&buf, nil, []string{".", file}, JqOptions{})
 		if err == nil {
 			t.Log("RunJq() may handle invalid JSON gracefully")
 		}
@@ -340,7 +340,7 @@ func TestRunJq(t *testing.T) {
 	t.Run("nonexistent file", func(t *testing.T) {
 		var buf bytes.Buffer
 
-		err := RunJq(&buf, []string{".", "/nonexistent.json"}, JqOptions{})
+		err := RunJq(&buf, nil, []string{".", "/nonexistent.json"}, JqOptions{})
 		if err == nil {
 			t.Error("RunJq() expected error for nonexistent file")
 		}
@@ -355,7 +355,7 @@ func TestRunJq(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunJq(&buf, []string{".invalid[[[", file}, JqOptions{})
+		err := RunJq(&buf, nil, []string{".invalid[[[", file}, JqOptions{})
 		if err == nil {
 			t.Log("RunJq() may handle invalid filter gracefully")
 		}
@@ -370,7 +370,7 @@ func TestRunJq(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunJq(&buf, []string{".[]", file}, JqOptions{})
+		err := RunJq(&buf, nil, []string{".[]", file}, JqOptions{})
 		if err != nil {
 			t.Fatalf("RunJq() error = %v", err)
 		}
@@ -390,7 +390,7 @@ func TestRunJq(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunJq(&buf, []string{". | length", file}, JqOptions{})
+		err := RunJq(&buf, nil, []string{". | length", file}, JqOptions{})
 		if err != nil {
 			t.Fatalf("RunJq() error = %v", err)
 		}
@@ -411,7 +411,7 @@ func TestRunJq(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunJq(&buf, []string{".l1.l2.l3.l4.value", file}, JqOptions{Raw: true})
+		err := RunJq(&buf, nil, []string{".l1.l2.l3.l4.value", file}, JqOptions{Raw: true})
 		if err != nil {
 			t.Fatalf("RunJq() error = %v", err)
 		}
@@ -431,8 +431,8 @@ func TestRunJq(t *testing.T) {
 
 		var buf1, buf2 bytes.Buffer
 
-		_ = RunJq(&buf1, []string{".", file}, JqOptions{})
-		_ = RunJq(&buf2, []string{".", file}, JqOptions{})
+		_ = RunJq(&buf1, nil, []string{".", file}, JqOptions{})
+		_ = RunJq(&buf2, nil, []string{".", file}, JqOptions{})
 
 		if buf1.String() != buf2.String() {
 			t.Error("RunJq() should produce consistent output")

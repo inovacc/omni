@@ -23,7 +23,7 @@ func TestRunSed(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunSed(&buf, []string{"s/world/universe/", file}, SedOptions{})
+		err := RunSed(&buf, nil, []string{"s/world/universe/", file}, SedOptions{})
 		if err != nil {
 			t.Fatalf("RunSed() error = %v", err)
 		}
@@ -39,7 +39,7 @@ func TestRunSed(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunSed(&buf, []string{"s/aaa/XXX/g", file}, SedOptions{})
+		err := RunSed(&buf, nil, []string{"s/aaa/XXX/g", file}, SedOptions{})
 		if err != nil {
 			t.Fatalf("RunSed() error = %v", err)
 		}
@@ -55,7 +55,7 @@ func TestRunSed(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunSed(&buf, []string{"/delete/d", file}, SedOptions{})
+		err := RunSed(&buf, nil, []string{"/delete/d", file}, SedOptions{})
 		if err != nil {
 			t.Fatalf("RunSed() error = %v", err)
 		}
@@ -76,7 +76,7 @@ func TestRunSed(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunSed(&buf, []string{"2d", file}, SedOptions{})
+		err := RunSed(&buf, nil, []string{"2d", file}, SedOptions{})
 		if err != nil {
 			t.Fatalf("RunSed() error = %v", err)
 		}
@@ -93,7 +93,7 @@ func TestRunSed(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunSed(&buf, []string{"2,3d", file}, SedOptions{})
+		err := RunSed(&buf, nil, []string{"2,3d", file}, SedOptions{})
 		if err != nil {
 			t.Fatalf("RunSed() error = %v", err)
 		}
@@ -114,7 +114,7 @@ func TestRunSed(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunSed(&buf, []string{"s/match/MATCH/", file}, SedOptions{Quiet: true})
+		err := RunSed(&buf, nil, []string{"s/match/MATCH/", file}, SedOptions{Quiet: true})
 		if err != nil {
 			t.Fatalf("RunSed() error = %v", err)
 		}
@@ -132,7 +132,7 @@ func TestRunSed(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunSed(&buf, []string{file}, SedOptions{Expression: []string{"s/hello/hi/"}})
+		err := RunSed(&buf, nil, []string{file}, SedOptions{Expression: []string{"s/hello/hi/"}})
 		if err != nil {
 			t.Fatalf("RunSed() error = %v", err)
 		}
@@ -148,7 +148,7 @@ func TestRunSed(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunSed(&buf, []string{"s/original/modified/", file}, SedOptions{InPlace: true})
+		err := RunSed(&buf, nil, []string{"s/original/modified/", file}, SedOptions{InPlace: true})
 		if err != nil {
 			t.Fatalf("RunSed() error = %v", err)
 		}
@@ -165,7 +165,7 @@ func TestRunSed(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunSed(&buf, []string{"s/original/modified/", file}, SedOptions{InPlace: true, InPlaceExt: ".bak"})
+		err := RunSed(&buf, nil, []string{"s/original/modified/", file}, SedOptions{InPlace: true, InPlaceExt: ".bak"})
 		if err != nil {
 			t.Fatalf("RunSed() error = %v", err)
 		}
@@ -184,7 +184,7 @@ func TestRunSed(t *testing.T) {
 	t.Run("no expression", func(t *testing.T) {
 		var buf bytes.Buffer
 
-		err := RunSed(&buf, []string{}, SedOptions{})
+		err := RunSed(&buf, nil, []string{}, SedOptions{})
 		if err == nil {
 			t.Error("RunSed() expected error for no expression")
 		}

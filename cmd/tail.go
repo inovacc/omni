@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"os"
 	"time"
 
 	"github.com/inovacc/omni/internal/cli/tail"
@@ -26,7 +25,7 @@ With no FILE, or when FILE is -, read standard input.`,
 		opts.Sleep, _ = cmd.Flags().GetDuration("sleep-interval")
 		opts.JSON, _ = cmd.Flags().GetBool("json")
 
-		return tail.RunTail(os.Stdout, args, opts)
+		return tail.RunTail(cmd.OutOrStdout(), cmd.InOrStdin(), args, opts)
 	},
 }
 
