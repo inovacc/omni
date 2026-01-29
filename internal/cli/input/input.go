@@ -18,6 +18,7 @@ func (s *Source) Close() error {
 	if s.Closer != nil {
 		return s.Closer()
 	}
+
 	return nil
 }
 
@@ -41,8 +42,10 @@ func Open(args []string, defaultReader io.Reader) ([]Source, error) {
 			for _, s := range sources {
 				_ = s.Close()
 			}
+
 			return nil, err
 		}
+
 		sources = append(sources, src)
 	}
 

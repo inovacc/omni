@@ -90,6 +90,7 @@ func TestOpenWithMixedArgs(t *testing.T) {
 	if err := os.WriteFile(tmpFile1, []byte("content1"), 0644); err != nil {
 		t.Fatalf("failed to create temp file: %v", err)
 	}
+
 	if err := os.WriteFile(tmpFile2, []byte("content2"), 0644); err != nil {
 		t.Fatalf("failed to create temp file: %v", err)
 	}
@@ -138,6 +139,7 @@ func TestOpenOne(t *testing.T) {
 	if err != nil {
 		t.Fatalf("OpenOne() error = %v", err)
 	}
+
 	if src.Name != "standard input" {
 		t.Errorf("expected name 'standard input', got %q", src.Name)
 	}
@@ -147,6 +149,7 @@ func TestOpenOne(t *testing.T) {
 	if err != nil {
 		t.Fatalf("OpenOne() error = %v", err)
 	}
+
 	if src.Name != "standard input" {
 		t.Errorf("expected name 'standard input', got %q", src.Name)
 	}
@@ -161,6 +164,7 @@ func TestSourceClose(t *testing.T) {
 
 	// Test closing a source with closer
 	closed := false
+
 	src = Source{
 		Reader: strings.NewReader("test"),
 		Name:   "test",
@@ -172,6 +176,7 @@ func TestSourceClose(t *testing.T) {
 	if err := src.Close(); err != nil {
 		t.Errorf("Close() error = %v", err)
 	}
+
 	if !closed {
 		t.Error("closer should have been called")
 	}

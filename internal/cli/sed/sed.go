@@ -50,14 +50,17 @@ func RunSed(w io.Writer, r io.Reader, args []string, opts SedOptions) error {
 		if len(args) == 0 {
 			return fmt.Errorf("sed: no input files for in-place editing")
 		}
+
 		for _, file := range args {
 			if file == "-" {
 				return fmt.Errorf("sed: cannot do in-place editing on stdin")
 			}
+
 			if err := sedProcessInPlace(file, commands, opts); err != nil {
 				return err
 			}
 		}
+
 		return nil
 	}
 
