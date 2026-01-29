@@ -4,11 +4,13 @@ import (
 	"archive/tar"
 	"archive/zip"
 	"compress/gzip"
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 )
 
 // ArchiveOptions configures the archive command behavior
@@ -21,6 +23,24 @@ type ArchiveOptions struct {
 	Directory       string // -C: change to directory before operation
 	Gzip            bool   // -z: use gzip compression
 	StripComponents int    // --strip-components: strip N leading path components
+	JSON            bool   // --json: output as JSON (for list mode)
+}
+
+// ArchiveEntry represents a file entry in an archive
+type ArchiveEntry struct {
+	Name    string    `json:"name"`
+	Size    int64     `json:"size"`
+	Mode    string    `json:"mode"`
+	ModTime time.Time `json:"modTime"`
+	IsDir   bool      `json:"isDir"`
+	Type    string    `json:"type"` // "file", "dir", "symlink", "link"
+}
+
+// ArchiveListResult represents the JSON output for archive listing
+type ArchiveListResult struct {
+	Archive string         `json:"archive"`
+	Entries []ArchiveEntry `json:"entries"`
+	Count   int            `json:"count"`
 }
 
 // RunArchive handles archive operations (tar-like interface)
@@ -473,6 +493,8 @@ func listTarArchive(w io.Writer, opts ArchiveOptions) error {
 		tr = tar.NewReader(f)
 	}
 
+	var entries []ArchiveEntry
+
 	for {
 		header, err := tr.Next()
 		if err == io.EOF {
@@ -483,7 +505,27 @@ func listTarArchive(w io.Writer, opts ArchiveOptions) error {
 			return fmt.Errorf("archive: %w", err)
 		}
 
-		if opts.Verbose {
+		if opts.JSON {
+			entryType := "file"
+			isDir := false
+			switch header.Typeflag {
+			case tar.TypeDir:
+				entryType = "dir"
+				isDir = true
+			case tar.TypeSymlink:
+				entryType = "symlink"
+			case tar.TypeLink:
+				entryType = "link"
+			}
+			entries = append(entries, ArchiveEntry{
+				Name:    header.Name,
+				Size:    header.Size,
+				Mode:    os.FileMode(header.Mode).String(),
+				ModTime: header.ModTime,
+				IsDir:   isDir,
+				Type:    entryType,
+			})
+		} else if opts.Verbose {
 			_, _ = fmt.Fprintf(w, "%s %8d %s %s\n",
 				os.FileMode(header.Mode).String(),
 				header.Size,
@@ -492,6 +534,14 @@ func listTarArchive(w io.Writer, opts ArchiveOptions) error {
 		} else {
 			_, _ = fmt.Fprintln(w, header.Name)
 		}
+	}
+
+	if opts.JSON {
+		return json.NewEncoder(w).Encode(ArchiveListResult{
+			Archive: opts.File,
+			Entries: entries,
+			Count:   len(entries),
+		})
 	}
 
 	return nil
@@ -507,8 +557,24 @@ func listZipArchive(w io.Writer, opts ArchiveOptions) error {
 		_ = r.Close()
 	}()
 
+	var entries []ArchiveEntry
+
 	for _, f := range r.File {
-		if opts.Verbose {
+		if opts.JSON {
+			entryType := "file"
+			isDir := f.FileInfo().IsDir()
+			if isDir {
+				entryType = "dir"
+			}
+			entries = append(entries, ArchiveEntry{
+				Name:    f.Name,
+				Size:    int64(f.UncompressedSize64),
+				Mode:    f.Mode().String(),
+				ModTime: f.Modified,
+				IsDir:   isDir,
+				Type:    entryType,
+			})
+		} else if opts.Verbose {
 			_, _ = fmt.Fprintf(w, "%s %8d %s %s\n",
 				f.Mode().String(),
 				f.UncompressedSize64,
@@ -517,6 +583,14 @@ func listZipArchive(w io.Writer, opts ArchiveOptions) error {
 		} else {
 			_, _ = fmt.Fprintln(w, f.Name)
 		}
+	}
+
+	if opts.JSON {
+		return json.NewEncoder(w).Encode(ArchiveListResult{
+			Archive: opts.File,
+			Entries: entries,
+			Count:   len(entries),
+		})
 	}
 
 	return nil

@@ -36,6 +36,7 @@ Examples:
 		opts.Verbose, _ = cmd.Flags().GetBool("verbose")
 		opts.Directory, _ = cmd.Flags().GetString("directory")
 		opts.StripComponents, _ = cmd.Flags().GetInt("strip-components")
+		opts.JSON, _ = cmd.Flags().GetBool("json")
 
 		if opts.List {
 			return archive.RunArchive(os.Stdout, nil, opts)
@@ -53,4 +54,5 @@ func init() {
 	unzipCmd.Flags().BoolP("verbose", "v", false, "verbose output")
 	unzipCmd.Flags().StringP("directory", "d", "", "extract files into directory")
 	unzipCmd.Flags().Int("strip-components", 0, "strip N leading path components")
+	unzipCmd.Flags().Bool("json", false, "output as JSON (for list mode)")
 }
