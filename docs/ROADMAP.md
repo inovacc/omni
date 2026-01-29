@@ -286,6 +286,39 @@ Integration, documentation, and developer experience.
 | Diff | Text and JSON diff | P2 |
 | Documentation | Full command reference + examples | P0 |
 | Benchmarks | Compare vs GNU tools | P2 |
+| Test coverage check | List packages with/without tests | P1 |
+| Lua runner | Execute Lua scripts natively | P2 |
+| Python runner | Execute Python scripts natively | P2 |
+
+### Test Coverage Check
+
+```bash
+# List all packages and their test status
+omni testcheck ./pkg/cli/
+```
+
+Output:
+```
+basename: HAS TEST
+cat: HAS TEST
+chmod: HAS TEST
+chown: NO TEST
+...
+```
+
+Implementation using `os.ReadDir()` to scan directories for `*_test.go` files.
+
+### Script Runners
+
+```bash
+# Execute Lua scripts
+omni lua script.lua
+
+# Execute Python scripts
+omni python script.py
+```
+
+Uses embedded interpreters (gopher-lua for Lua, potentially starlark for Python subset) to maintain the "no exec" principle.
 
 ### Taskfile Linter
 

@@ -16,6 +16,11 @@ designed for Taskfile, CI/CD, and enterprise environments.`,
 			return
 		}
 
+		// Skip logging for commands that shouldn't create log files
+		if flags.ShouldIgnoreCommand(cmd.Name()) {
+			return
+		}
+
 		log := logger.Init(cmd.Name())
 		if log.IsActive() {
 			log.LogCommand(args)

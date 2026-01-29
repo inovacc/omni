@@ -10,18 +10,14 @@ import (
 	"sync"
 	"time"
 
+	"github.com/inovacc/omni/internal/flags"
 	"github.com/segmentio/ksuid"
 )
 
 const (
 	// EnvLogEnabled is the environment variable that enables logging.
 	// Set to "true" or "1" to enable command logging.
-	EnvLogEnabled = "OMNI_LOG_ENABLED"
-
-	// EnvLogPath is the environment variable that specifies the log directory path.
-	// When OMNI_LOG_ENABLED is set, commands will be logged to files in this directory.
-	// Log files are named: ksuid-command.log
-	EnvLogPath = "OMNI_LOG_PATH"
+	EnvLogEnabled = "OMNI_LOGGER_ENABLED"
 )
 
 var (
@@ -55,14 +51,14 @@ func initLogger(command string) *Logger {
 		command: command,
 	}
 
-	enabled := os.Getenv(EnvLogEnabled)
-	if !isEnabled(enabled) {
+	enabled := flags.IsFeatureEnabled("logger")
+	if !enabled {
 		return l
 	}
 
-	logDir := os.Getenv(EnvLogPath)
+	logDir := flags.GetFeatureData("logger")
 	if logDir == "" {
-		_, _ = os.Stderr.WriteString("omni: OMNI_LOG_ENABLED set but OMNI_LOG_PATH not set\n")
+		_, _ = os.Stderr.WriteString("omni: OMNI_LOGGER_ENABLED set but empty logger path\n")
 		return l
 	}
 
@@ -109,12 +105,6 @@ func generateLogPath(logDir, command string) (string, error) {
 	filename := fmt.Sprintf("%s-%s.log", id.String(), command)
 
 	return filepath.Join(logDir, filename), nil
-}
-
-// isEnabled checks if the value represents an enabled state.
-func isEnabled(val string) bool {
-	v := strings.ToLower(strings.TrimSpace(val))
-	return v == "true" || v == "1" || v == "yes"
 }
 
 // New creates a new logger that writes to a unique file in the specified directory.
