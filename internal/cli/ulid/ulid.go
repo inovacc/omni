@@ -18,8 +18,6 @@ const (
 	encodedSize = 26
 	// TimestampSize is the size of the timestamp component
 	timestampSize = 6
-	// RandomnessSize is the size of the randomness component
-	randomnessSize = 10
 )
 
 // Crockford's Base32 alphabet (excludes I, L, O, U to avoid confusion)
@@ -144,6 +142,7 @@ func (u ULID) String() string {
 func (u ULID) Timestamp() time.Time {
 	ms := uint64(u[0])<<40 | uint64(u[1])<<32 | uint64(u[2])<<24 |
 		uint64(u[3])<<16 | uint64(u[4])<<8 | uint64(u[5])
+
 	return time.UnixMilli(int64(ms))
 }
 
@@ -153,5 +152,6 @@ func NewString() string {
 	if err != nil {
 		return ""
 	}
+
 	return ulid.String()
 }

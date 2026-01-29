@@ -9,6 +9,9 @@ import (
 	"os"
 	"strings"
 	"unicode"
+
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 // CaseType represents the case convention
@@ -59,6 +62,7 @@ func RunCase(w io.Writer, args []string, opts Options) error {
 		for scanner.Scan() {
 			inputs = append(inputs, scanner.Text())
 		}
+
 		if err := scanner.Err(); err != nil {
 			return err
 		}
@@ -76,6 +80,7 @@ func RunCase(w io.Writer, args []string, opts Options) error {
 				Case:   string(opts.Case),
 			})
 		}
+
 		return json.NewEncoder(w).Encode(result)
 	}
 
@@ -133,7 +138,7 @@ func ToLower(s string) string {
 
 // ToTitle converts to Title Case
 func ToTitle(s string) string {
-	return strings.Title(strings.ToLower(s))
+	return cases.Title(language.English).String(strings.ToLower(s))
 }
 
 // ToSentence converts to Sentence case
@@ -141,9 +146,11 @@ func ToSentence(s string) string {
 	if len(s) == 0 {
 		return s
 	}
+
 	lower := strings.ToLower(s)
 	runes := []rune(lower)
 	runes[0] = unicode.ToUpper(runes[0])
+
 	return string(runes)
 }
 
@@ -154,80 +161,97 @@ func ToCamel(s string) string {
 		return ""
 	}
 
-	result := strings.ToLower(words[0])
+	var result strings.Builder
+	result.WriteString(strings.ToLower(words[0]))
+
 	for _, word := range words[1:] {
 		if len(word) > 0 {
-			result += strings.ToUpper(string(word[0])) + strings.ToLower(word[1:])
+			result.WriteString(strings.ToUpper(string(word[0])) + strings.ToLower(word[1:]))
 		}
 	}
-	return result
+
+	return result.String()
 }
 
 // ToPascal converts to PascalCase
 func ToPascal(s string) string {
 	words := splitIntoWords(s)
-	var result string
+
+	var result strings.Builder
+
 	for _, word := range words {
 		if len(word) > 0 {
-			result += strings.ToUpper(string(word[0])) + strings.ToLower(word[1:])
+			result.WriteString(strings.ToUpper(string(word[0])) + strings.ToLower(word[1:]))
 		}
 	}
-	return result
+
+	return result.String()
 }
 
 // ToSnake converts to snake_case
 func ToSnake(s string) string {
 	words := splitIntoWords(s)
-	var result []string
+	result := make([]string, 0, len(words))
+
 	for _, word := range words {
 		result = append(result, strings.ToLower(word))
 	}
+
 	return strings.Join(result, "_")
 }
 
 // ToKebab converts to kebab-case
 func ToKebab(s string) string {
 	words := splitIntoWords(s)
-	var result []string
+	result := make([]string, 0, len(words))
+
 	for _, word := range words {
 		result = append(result, strings.ToLower(word))
 	}
+
 	return strings.Join(result, "-")
 }
 
 // ToConstant converts to CONSTANT_CASE
 func ToConstant(s string) string {
 	words := splitIntoWords(s)
-	var result []string
+	result := make([]string, 0, len(words))
+
 	for _, word := range words {
 		result = append(result, strings.ToUpper(word))
 	}
+
 	return strings.Join(result, "_")
 }
 
 // ToDot converts to dot.case
 func ToDot(s string) string {
 	words := splitIntoWords(s)
-	var result []string
+	result := make([]string, 0, len(words))
+
 	for _, word := range words {
 		result = append(result, strings.ToLower(word))
 	}
+
 	return strings.Join(result, ".")
 }
 
 // ToPath converts to path/case
 func ToPath(s string) string {
 	words := splitIntoWords(s)
-	var result []string
+	result := make([]string, 0, len(words))
+
 	for _, word := range words {
 		result = append(result, strings.ToLower(word))
 	}
+
 	return strings.Join(result, "/")
 }
 
 // ToSwap swaps case of each character
 func ToSwap(s string) string {
 	var result strings.Builder
+
 	for _, r := range s {
 		if unicode.IsUpper(r) {
 			result.WriteRune(unicode.ToLower(r))
@@ -237,6 +261,7 @@ func ToSwap(s string) string {
 			result.WriteRune(r)
 		}
 	}
+
 	return result.String()
 }
 
@@ -245,12 +270,14 @@ func ToToggle(s string) string {
 	if len(s) == 0 {
 		return s
 	}
+
 	runes := []rune(s)
 	if unicode.IsUpper(runes[0]) {
 		runes[0] = unicode.ToLower(runes[0])
 	} else {
 		runes[0] = unicode.ToUpper(runes[0])
 	}
+
 	return string(runes)
 }
 
@@ -263,8 +290,10 @@ func splitIntoWords(s string) []string {
 	s = strings.ReplaceAll(s, "/", " ")
 
 	// Handle PascalCase and camelCase
-	var words []string
-	var current strings.Builder
+	var (
+		words   []string
+		current strings.Builder
+	)
 
 	for i, r := range s {
 		if r == ' ' {
@@ -272,6 +301,7 @@ func splitIntoWords(s string) []string {
 				words = append(words, current.String())
 				current.Reset()
 			}
+
 			continue
 		}
 
@@ -312,18 +342,23 @@ func DetectCase(s string) CaseType {
 		if unicode.IsUpper(r) {
 			hasUpper = true
 		}
+
 		if unicode.IsLower(r) {
 			hasLower = true
 		}
+
 		if r == '_' {
 			hasUnderscore = true
 		}
+
 		if r == '-' {
 			hasDash = true
 		}
+
 		if r == '.' {
 			hasDot = true
 		}
+
 		if r == '/' {
 			hasSlash = true
 		}
@@ -333,30 +368,38 @@ func DetectCase(s string) CaseType {
 	if hasUnderscore && hasUpper && !hasLower {
 		return CaseConstant
 	}
+
 	if hasUnderscore {
 		return CaseSnake
 	}
+
 	if hasDash {
 		return CaseKebab
 	}
+
 	if hasDot {
 		return CaseDot
 	}
+
 	if hasSlash {
 		return CasePath
 	}
+
 	if hasUpper && !hasLower {
 		return CaseUpper
 	}
+
 	if hasLower && !hasUpper {
 		return CaseLower
 	}
+
 	if hasUpper && hasLower {
 		// Check first character
 		firstRune := []rune(s)[0]
 		if unicode.IsUpper(firstRune) {
 			return CasePascal
 		}
+
 		return CaseCamel
 	}
 
@@ -422,5 +465,6 @@ func ConvertAll(s string) map[CaseType]string {
 	for _, ct := range ValidCaseTypes() {
 		result[ct] = Convert(s, ct)
 	}
+
 	return result
 }

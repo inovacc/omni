@@ -1003,6 +1003,54 @@ Reference: https://github.com/sigstore/cosign
 | `dns lookup` | DNS lookup | P2 |
 | `port check` | Check if port is open | P2 |
 
+### HTTP Client (curlie-inspired)
+
+Reference: https://github.com/rs/curlie
+
+| Command | Description | Priority |
+|---------|-------------|----------|
+| `curl` | HTTP client with httpie-like output | P1 |
+| `curl GET` | HTTP GET request | P1 |
+| `curl POST` | HTTP POST with body | P1 |
+| `curl PUT` | HTTP PUT request | P1 |
+| `curl DELETE` | HTTP DELETE request | P1 |
+| `curl HEAD` | HTTP HEAD request | P2 |
+| `curl PATCH` | HTTP PATCH request | P2 |
+
+```bash
+# Simple GET request
+omni curl https://api.example.com/users
+
+# POST with JSON body
+omni curl POST https://api.example.com/users name=John email=john@example.com
+
+# With headers
+omni curl https://api.example.com/users Authorization:"Bearer token"
+
+# Form data
+omni curl -f POST https://api.example.com/upload file@./data.txt
+
+# JSON output (raw response)
+omni curl --json https://api.example.com/users
+
+# Verbose mode
+omni curl -v https://api.example.com/users
+
+# Custom headers
+omni curl -H "Accept: application/xml" https://api.example.com/data
+```
+
+Features:
+- [ ] httpie-like syntax for headers and data (key:value, key=value)
+- [ ] Colored/formatted output for JSON responses
+- [ ] Support for file uploads (@file syntax)
+- [ ] Cookie handling
+- [ ] Follow redirects
+- [ ] Timeout configuration
+- [ ] Proxy support
+- [ ] TLS/SSL options
+- [ ] Pure Go implementation (no exec)
+
 ### Number Converters
 
 | Command | Description | Priority |
