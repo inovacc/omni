@@ -1,8 +1,7 @@
 package cmd
 
 import (
-	"os"
-
+	"github.com/inovacc/omni/internal/cli/yaml2struct"
 	"github.com/inovacc/omni/internal/cli/yamlutil"
 	"github.com/spf13/cobra"
 )
@@ -15,10 +14,12 @@ var yamlCmd = &cobra.Command{
 Subcommands:
   validate    Validate YAML syntax
   fmt         Format/beautify YAML
+  tostruct    Convert YAML to Go struct definition
 
 Examples:
   omni yaml validate config.yaml
-  omni yaml fmt config.yaml`,
+  omni yaml fmt config.yaml
+  omni yaml tostruct config.yaml`,
 }
 
 var yamlValidateCmd = &cobra.Command{
@@ -39,7 +40,7 @@ Examples:
 		opts.JSON, _ = cmd.Flags().GetBool("json")
 		opts.Strict, _ = cmd.Flags().GetBool("strict")
 
-		return yamlutil.RunValidate(os.Stdout, args, opts)
+		return yamlutil.RunValidate(cmd.OutOrStdout(), args, opts)
 	},
 }
 
@@ -59,7 +60,35 @@ Examples:
 		opts.Indent, _ = cmd.Flags().GetInt("indent")
 		opts.JSON, _ = cmd.Flags().GetBool("json")
 
-		return yamlutil.RunFormat(os.Stdout, args, opts)
+		return yamlutil.RunFormat(cmd.OutOrStdout(), args, opts)
+	},
+}
+
+var yamlToStructCmd = &cobra.Command{
+	Use:     "tostruct [FILE]",
+	Aliases: []string{"2struct", "gostruct"},
+	Short:   "Convert YAML to Go struct definition",
+	Long: `Convert YAML data to a Go struct definition.
+
+  -n, --name=NAME      struct name (default "Root")
+  -p, --package=PKG    package name (default "main")
+  --inline             inline nested structs
+  --omitempty          add omitempty to all fields
+
+Examples:
+  omni yaml tostruct config.yaml
+  cat config.yaml | omni yaml tostruct
+  omni yaml tostruct -n Config -p models config.yaml
+  omni yaml tostruct --omitempty config.yaml`,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		opts := yaml2struct.Options{}
+
+		opts.Name, _ = cmd.Flags().GetString("name")
+		opts.Package, _ = cmd.Flags().GetString("package")
+		opts.Inline, _ = cmd.Flags().GetBool("inline")
+		opts.OmitEmpty, _ = cmd.Flags().GetBool("omitempty")
+
+		return yaml2struct.RunYAML2Struct(cmd.OutOrStdout(), cmd.InOrStdin(), args, opts)
 	},
 }
 
@@ -67,10 +96,17 @@ func init() {
 	rootCmd.AddCommand(yamlCmd)
 	yamlCmd.AddCommand(yamlValidateCmd)
 	yamlCmd.AddCommand(yamlFmtCmd)
+	yamlCmd.AddCommand(yamlToStructCmd)
 
 	yamlValidateCmd.Flags().Bool("json", false, "output as JSON")
 	yamlValidateCmd.Flags().Bool("strict", false, "fail on unknown fields")
 
 	yamlFmtCmd.Flags().IntP("indent", "i", 2, "indentation width")
 	yamlFmtCmd.Flags().Bool("json", false, "output as JSON instead of YAML")
+
+	// tostruct flags
+	yamlToStructCmd.Flags().StringP("name", "n", "Root", "struct name")
+	yamlToStructCmd.Flags().StringP("package", "p", "main", "package name")
+	yamlToStructCmd.Flags().Bool("inline", false, "inline nested structs")
+	yamlToStructCmd.Flags().Bool("omitempty", false, "add omitempty to all fields")
 }

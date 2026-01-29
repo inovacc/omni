@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/BurntSushi/toml"
+	"github.com/inovacc/omni/internal/cli/json2struct"
 	"github.com/inovacc/omni/internal/cli/jsonfmt"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
@@ -26,6 +27,7 @@ Subcommands:
   toyaml    Convert JSON to YAML
   fromyaml  Convert YAML to JSON
   fromtoml  Convert TOML to JSON
+  tostruct  Convert JSON to Go struct definition
 
 Examples:
   omni json fmt file.json              # beautify JSON
@@ -35,7 +37,8 @@ Examples:
   omni json stats file.json            # show statistics
   omni json toyaml file.json           # convert to YAML
   omni json fromyaml file.yaml         # convert from YAML
-  omni json fromtoml file.toml         # convert from TOML`,
+  omni json fromtoml file.toml         # convert from TOML
+  omni json tostruct file.json         # convert to Go struct`,
 }
 
 // jsonFmtCmd formats JSON
@@ -359,6 +362,35 @@ Examples:
 	},
 }
 
+// jsonToStructCmd converts JSON to Go struct
+var jsonToStructCmd = &cobra.Command{
+	Use:     "tostruct [FILE]",
+	Aliases: []string{"2struct", "gostruct"},
+	Short:   "Convert JSON to Go struct definition",
+	Long: `Convert JSON data to a Go struct definition.
+
+  -n, --name=NAME      struct name (default "Root")
+  -p, --package=PKG    package name (default "main")
+  --inline             inline nested structs
+  --omitempty          add omitempty to all fields
+
+Examples:
+  omni json tostruct file.json
+  echo '{"name":"test","count":1}' | omni json tostruct
+  omni json tostruct -n User -p models file.json
+  omni json tostruct --omitempty file.json`,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		opts := json2struct.Options{}
+
+		opts.Name, _ = cmd.Flags().GetString("name")
+		opts.Package, _ = cmd.Flags().GetString("package")
+		opts.Inline, _ = cmd.Flags().GetBool("inline")
+		opts.OmitEmpty, _ = cmd.Flags().GetBool("omitempty")
+
+		return json2struct.RunJSON2Struct(cmd.OutOrStdout(), cmd.InOrStdin(), args, opts)
+	},
+}
+
 func readStdin() ([]byte, error) {
 	return io.ReadAll(os.Stdin)
 }
@@ -389,6 +421,7 @@ func init() {
 	jsonCmd.AddCommand(jsonToYAMLCmd)
 	jsonCmd.AddCommand(jsonFromYAMLCmd)
 	jsonCmd.AddCommand(jsonFromTOMLCmd)
+	jsonCmd.AddCommand(jsonToStructCmd)
 
 	// fmt flags
 	jsonFmtCmd.Flags().StringP("indent", "i", "  ", "indentation string")
@@ -413,4 +446,10 @@ func init() {
 
 	// fromtoml flags
 	jsonFromTOMLCmd.Flags().BoolP("minify", "m", false, "output minified JSON")
+
+	// tostruct flags
+	jsonToStructCmd.Flags().StringP("name", "n", "Root", "struct name")
+	jsonToStructCmd.Flags().StringP("package", "p", "main", "package name")
+	jsonToStructCmd.Flags().Bool("inline", false, "inline nested structs")
+	jsonToStructCmd.Flags().Bool("omitempty", false, "add omitempty to all fields")
 }
