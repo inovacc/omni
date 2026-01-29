@@ -1,0 +1,13 @@
+defaults: &defaults
+  timeout: 30
+  retries: 3
+  debug: false
+
+development:
+  <<: *defaults
+  debug: true
+  host: localhost
+
+production:
+  <<: *defaults
+  host: prod.example.com
