@@ -177,7 +177,7 @@ func TestRunBasename(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			var buf bytes.Buffer
 
-			err := RunBasename(&buf, tt.args, tt.suffix)
+			err := RunBasename(&buf, tt.args, BasenameOptions{Suffix: tt.suffix})
 
 			if (err != nil) != tt.wantErr {
 				t.Errorf("RunBasename() error = %v, wantErr %v", err, tt.wantErr)
@@ -198,7 +198,7 @@ func TestRunBasename_OutputFormat(t *testing.T) {
 	t.Run("ends with newline", func(t *testing.T) {
 		var buf bytes.Buffer
 
-		_ = RunBasename(&buf, []string{"file.txt"}, "")
+		_ = RunBasename(&buf, []string{"file.txt"}, BasenameOptions{})
 
 		if !strings.HasSuffix(buf.String(), "\n") {
 			t.Error("RunBasename() output should end with newline")
@@ -208,7 +208,7 @@ func TestRunBasename_OutputFormat(t *testing.T) {
 	t.Run("multiple outputs each on new line", func(t *testing.T) {
 		var buf bytes.Buffer
 
-		_ = RunBasename(&buf, []string{"a.txt", "b.txt", "c.txt"}, "")
+		_ = RunBasename(&buf, []string{"a.txt", "b.txt", "c.txt"}, BasenameOptions{})
 
 		lines := strings.Split(strings.TrimSpace(buf.String()), "\n")
 		if len(lines) != 3 {
@@ -219,7 +219,7 @@ func TestRunBasename_OutputFormat(t *testing.T) {
 	t.Run("error message format", func(t *testing.T) {
 		var buf bytes.Buffer
 
-		err := RunBasename(&buf, []string{}, "")
+		err := RunBasename(&buf, []string{}, BasenameOptions{})
 
 		if err == nil {
 			t.Error("RunBasename() should return error for no args")
@@ -234,7 +234,7 @@ func TestRunBasename_OutputFormat(t *testing.T) {
 	t.Run("no extra whitespace", func(t *testing.T) {
 		var buf bytes.Buffer
 
-		_ = RunBasename(&buf, []string{"file.txt"}, "")
+		_ = RunBasename(&buf, []string{"file.txt"}, BasenameOptions{})
 
 		output := buf.String()
 		if strings.HasPrefix(output, " ") || strings.HasPrefix(output, "\t") {
@@ -247,7 +247,7 @@ func TestRunBasename_EdgeCases(t *testing.T) {
 	t.Run("unicode filename", func(t *testing.T) {
 		var buf bytes.Buffer
 
-		_ = RunBasename(&buf, []string{filepath.Join("path", "文件.txt")}, ".txt")
+		_ = RunBasename(&buf, []string{filepath.Join("path", "文件.txt")}, BasenameOptions{Suffix: ".txt"})
 
 		got := strings.TrimSpace(buf.String())
 		if got != "文件" {
@@ -258,7 +258,7 @@ func TestRunBasename_EdgeCases(t *testing.T) {
 	t.Run("filename with special characters", func(t *testing.T) {
 		var buf bytes.Buffer
 
-		_ = RunBasename(&buf, []string{"file-name_v1.2.3.txt"}, ".txt")
+		_ = RunBasename(&buf, []string{"file-name_v1.2.3.txt"}, BasenameOptions{Suffix: ".txt"})
 
 		got := strings.TrimSpace(buf.String())
 		if got != "file-name_v1.2.3" {
@@ -271,7 +271,7 @@ func TestRunBasename_EdgeCases(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		_ = RunBasename(&buf, []string{filepath.Join("path", longName)}, ".txt")
+		_ = RunBasename(&buf, []string{filepath.Join("path", longName)}, BasenameOptions{Suffix: ".txt"})
 
 		got := strings.TrimSpace(buf.String())
 		expected := strings.Repeat("a", 200)
@@ -285,7 +285,7 @@ func TestRunBasename_EdgeCases(t *testing.T) {
 		var buf bytes.Buffer
 
 		// Suffix should be treated literally, not as regex
-		_ = RunBasename(&buf, []string{"file.a+b.txt"}, ".a+b.txt")
+		_ = RunBasename(&buf, []string{"file.a+b.txt"}, BasenameOptions{Suffix: ".a+b.txt"})
 
 		got := strings.TrimSpace(buf.String())
 		if got != "file" {

@@ -516,11 +516,12 @@ func splitIntoWords(s string) []string {
 	s = strings.ReplaceAll(s, "_", " ")
 	s = strings.ReplaceAll(s, "-", " ")
 
-	// Handle PascalCase and camelCase
+	// Handle PascalCase and camelCase, including acronyms like HTTP, ID
 	var words []string
 	var current strings.Builder
+	runes := []rune(s)
 
-	for i, r := range s {
+	for i, r := range runes {
 		if r == ' ' {
 			if current.Len() > 0 {
 				words = append(words, current.String())
@@ -530,8 +531,15 @@ func splitIntoWords(s string) []string {
 		}
 
 		if unicode.IsUpper(r) && i > 0 {
-			prev := rune(s[i-1])
-			if !unicode.IsUpper(prev) && prev != ' ' {
+			prev := runes[i-1]
+			// Split when transitioning from lowercase to uppercase
+			if unicode.IsLower(prev) {
+				if current.Len() > 0 {
+					words = append(words, current.String())
+					current.Reset()
+				}
+			} else if unicode.IsUpper(prev) && i+1 < len(runes) && unicode.IsLower(runes[i+1]) {
+				// Split before the start of a new word after an acronym (e.g., HTTPServer -> HTTP + Server)
 				if current.Len() > 0 {
 					words = append(words, current.String())
 					current.Reset()

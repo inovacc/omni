@@ -11,7 +11,7 @@ func TestRunArch(t *testing.T) {
 	t.Run("returns architecture", func(t *testing.T) {
 		var buf bytes.Buffer
 
-		err := RunArch(&buf)
+		err := RunArch(&buf, ArchOptions{})
 		if err != nil {
 			t.Fatalf("RunArch() error = %v", err)
 		}
@@ -25,7 +25,7 @@ func TestRunArch(t *testing.T) {
 	t.Run("output ends with newline", func(t *testing.T) {
 		var buf bytes.Buffer
 
-		_ = RunArch(&buf)
+		_ = RunArch(&buf, ArchOptions{})
 
 		if !strings.HasSuffix(buf.String(), "\n") {
 			t.Error("RunArch() output should end with newline")
@@ -35,8 +35,8 @@ func TestRunArch(t *testing.T) {
 	t.Run("consistent output", func(t *testing.T) {
 		var buf1, buf2 bytes.Buffer
 
-		_ = RunArch(&buf1)
-		_ = RunArch(&buf2)
+		_ = RunArch(&buf1, ArchOptions{})
+		_ = RunArch(&buf2, ArchOptions{})
 
 		if buf1.String() != buf2.String() {
 			t.Error("RunArch() should be consistent")
@@ -46,7 +46,7 @@ func TestRunArch(t *testing.T) {
 	t.Run("relates to GOARCH", func(t *testing.T) {
 		var buf bytes.Buffer
 
-		_ = RunArch(&buf)
+		_ = RunArch(&buf, ArchOptions{})
 
 		output := strings.ToLower(strings.TrimSpace(buf.String()))
 		goarch := strings.ToLower(runtime.GOARCH)
@@ -77,7 +77,7 @@ func TestRunArch(t *testing.T) {
 	t.Run("no error", func(t *testing.T) {
 		var buf bytes.Buffer
 
-		err := RunArch(&buf)
+		err := RunArch(&buf, ArchOptions{})
 		if err != nil {
 			t.Errorf("RunArch() should not error: %v", err)
 		}
