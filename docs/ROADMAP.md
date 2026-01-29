@@ -853,17 +853,26 @@ Comprehensive data conversion, validation, and developer utilities inspired by C
 
 ### String Utilities
 
-| Command | Description | Priority |
-|---------|-------------|----------|
-| `case upper` | Convert to UPPERCASE | P1 |
-| `case lower` | Convert to lowercase | P1 |
-| `case camel` | Convert to camelCase | P1 |
-| `case pascal` | Convert to PascalCase | P1 |
-| `case snake` | Convert to snake_case | P1 |
-| `case kebab` | Convert to kebab-case | P1 |
-| `text reverse` | Reverse text | P2 |
-| `text dedup` | Remove duplicate lines | P2 |
-| `text trim` | Remove empty lines/spaces | P2 |
+| Command | Description | Priority | Status |
+|---------|-------------|----------|--------|
+| `case upper` | Convert to UPPERCASE | P1 | ✅ Done |
+| `case lower` | Convert to lowercase | P1 | ✅ Done |
+| `case title` | Convert to Title Case | P1 | ✅ Done |
+| `case sentence` | Convert to Sentence case | P1 | ✅ Done |
+| `case camel` | Convert to camelCase | P1 | ✅ Done |
+| `case pascal` | Convert to PascalCase | P1 | ✅ Done |
+| `case snake` | Convert to snake_case | P1 | ✅ Done |
+| `case kebab` | Convert to kebab-case | P1 | ✅ Done |
+| `case constant` | Convert to CONSTANT_CASE | P1 | ✅ Done |
+| `case dot` | Convert to dot.case | P1 | ✅ Done |
+| `case path` | Convert to path/case | P1 | ✅ Done |
+| `case swap` | Swap case (Hello → hELLO) | P1 | ✅ Done |
+| `case toggle` | Toggle first char case | P1 | ✅ Done |
+| `case detect` | Detect case type | P1 | ✅ Done |
+| `case all` | Show all conversions | P1 | ✅ Done |
+| `text reverse` | Reverse text | P2 | |
+| `text dedup` | Remove duplicate lines | P2 | |
+| `text trim` | Remove empty lines/spaces | P2 | |
 
 ### Hash & Cryptography (Extended)
 
@@ -897,29 +906,32 @@ Comprehensive data conversion, validation, and developer utilities inspired by C
 
 ### Brazilian Document Tools (brdoc integration)
 
-| Command | Description | Priority |
-|---------|-------------|----------|
-| `brdoc cpf generate` | Generate valid CPF | P1 |
-| `brdoc cpf validate` | Validate CPF | P1 |
-| `brdoc cpf format` | Format CPF (XXX.XXX.XXX-XX) | P1 |
-| `brdoc cnpj generate` | Generate valid CNPJ (alphanumeric) | P1 |
-| `brdoc cnpj validate` | Validate CNPJ | P1 |
-| `brdoc cnpj format` | Format CNPJ | P1 |
+| Command | Description | Priority | Status |
+|---------|-------------|----------|--------|
+| `brdoc cpf generate` | Generate valid CPF | P1 | ✅ Done |
+| `brdoc cpf validate` | Validate CPF | P1 | ✅ Done |
+| `brdoc cpf format` | Format CPF (XXX.XXX.XXX-XX) | P1 | ✅ Done |
+| `brdoc cnpj generate` | Generate valid CNPJ (alphanumeric) | P1 | ✅ Done |
+| `brdoc cnpj validate` | Validate CNPJ | P1 | ✅ Done |
+| `brdoc cnpj format` | Format CNPJ | P1 | ✅ Done |
 
 Reference: https://github.com/inovacc/brdoc
 
 ### Go Struct Tag Tools (tagfixer integration)
 
-| Command | Description | Priority |
-|---------|-------------|----------|
-| `tagfixer` | Fix struct tags in Go files | P1 |
-| `tagfixer analyze` | Analyze tag usage patterns | P1 |
-| `tagfixer --case camel` | Convert to camelCase | P1 |
-| `tagfixer --case snake` | Convert to snake_case | P1 |
-| `tagfixer --case kebab` | Convert to kebab-case | P1 |
-| `tagfixer --tags json,yaml` | Fix multiple tag types | P1 |
+| Command | Description | Priority | Status |
+|---------|-------------|----------|--------|
+| `tagfixer` | Fix struct tags in Go files | P1 | ✅ Done |
+| `tagfixer analyze` | Analyze tag usage patterns | P1 | ✅ Done |
+| `tagfixer --case camel` | Convert to camelCase | P1 | ✅ Done |
+| `tagfixer --case snake` | Convert to snake_case | P1 | ✅ Done |
+| `tagfixer --case kebab` | Convert to kebab-case | P1 | ✅ Done |
+| `tagfixer --case pascal` | Convert to PascalCase | P1 | ✅ Done |
+| `tagfixer --tags json,yaml` | Fix multiple tag types | P1 | ✅ Done |
+| `tagfixer --dry-run` | Preview changes | P1 | ✅ Done |
+| `tagfixer --json` | JSON output | P1 | ✅ Done |
 
-Reference: https://github.com/inovacc/tagfixer
+Implemented directly in omni (not external dependency)
 
 ### Container Signing (cosign-inspired)
 
