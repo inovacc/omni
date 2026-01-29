@@ -43,7 +43,7 @@ func TestEnableFeature(t *testing.T) {
 	}
 
 	// Enable a new feature
-	if err := EnableFeature(feature); err != nil {
+	if err := EnableFeature(feature, ""); err != nil {
 		t.Fatalf("EnableFeature() failed: %v", err)
 	}
 
@@ -86,7 +86,7 @@ func TestEnableDisableToggle(t *testing.T) {
 	disabledPath := filepath.Join(appDir, prefix+strings.ToUpper(feature)+"_DISABLED")
 
 	// Start by enabling
-	if err := EnableFeature(feature); err != nil {
+	if err := EnableFeature(feature, ""); err != nil {
 		t.Fatalf("EnableFeature() failed: %v", err)
 	}
 
@@ -108,7 +108,7 @@ func TestEnableDisableToggle(t *testing.T) {
 	}
 
 	// Re-enable (should rename back)
-	if err := EnableFeature(feature); err != nil {
+	if err := EnableFeature(feature, ""); err != nil {
 		t.Fatalf("EnableFeature() failed on re-enable: %v", err)
 	}
 
@@ -130,7 +130,7 @@ func TestLoadFeatureFlags(t *testing.T) {
 	})
 
 	// Create one enabled and one disabled feature
-	if err := EnableFeature(feature1); err != nil {
+	if err := EnableFeature(feature1, ""); err != nil {
 		t.Fatalf("EnableFeature() failed: %v", err)
 	}
 
@@ -167,7 +167,7 @@ func TestIsFeatureEnabled(t *testing.T) {
 	}
 
 	// Enable it
-	if err := EnableFeature(feature); err != nil {
+	if err := EnableFeature(feature, ""); err != nil {
 		t.Fatalf("EnableFeature() failed: %v", err)
 	}
 
@@ -211,7 +211,7 @@ func TestIsFeatureSet(t *testing.T) {
 	}
 
 	// Enable it (now it's set)
-	if err := EnableFeature(feature); err != nil {
+	if err := EnableFeature(feature, ""); err != nil {
 		t.Fatalf("EnableFeature() failed: %v", err)
 	}
 
@@ -228,7 +228,7 @@ func TestGetCachedFlags(t *testing.T) {
 	t.Cleanup(func() { cleanupFeature(t, feature) })
 
 	// Enable a feature and load to populate cache
-	if err := EnableFeature(feature); err != nil {
+	if err := EnableFeature(feature, ""); err != nil {
 		t.Fatalf("EnableFeature() failed: %v", err)
 	}
 
@@ -260,7 +260,7 @@ func TestFeatureNameCaseInsensitive(t *testing.T) {
 	t.Cleanup(func() { cleanupFeature(t, feature) })
 
 	// Enable with lowercase
-	if err := EnableFeature(strings.ToLower(feature)); err != nil {
+	if err := EnableFeature(strings.ToLower(feature), ""); err != nil {
 		t.Fatalf("EnableFeature() failed: %v", err)
 	}
 
@@ -342,6 +342,29 @@ func TestIgnoresDirectories(t *testing.T) {
 
 	if _, exists := flags["TESTDIR"]; exists {
 		t.Error("directories should be ignored")
+	}
+}
+
+func TestShouldIgnoreCommand(t *testing.T) {
+	// logger is pre-registered as ignored
+	if !ShouldIgnoreCommand("logger") {
+		t.Error("expected logger to be ignored")
+	}
+
+	if !ShouldIgnoreCommand("LOGGER") {
+		t.Error("expected LOGGER to be ignored (case insensitive)")
+	}
+
+	// Random command should not be ignored
+	if ShouldIgnoreCommand("cat") {
+		t.Error("cat should not be ignored")
+	}
+
+	// Add a new ignored command
+	_ = IgnoreCommand("myCustomCmd")
+
+	if !ShouldIgnoreCommand("mycustomcmd") {
+		t.Error("expected mycustomcmd to be ignored after IgnoreCommand")
 	}
 }
 
