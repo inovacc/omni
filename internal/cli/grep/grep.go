@@ -74,6 +74,7 @@ func RunGrep(w io.Writer, r io.Reader, pattern string, args []string, opts GrepO
 		if !opts.Quiet {
 			_, _ = fmt.Fprintf(os.Stderr, "grep: %v\n", err)
 		}
+
 		return err
 	}
 	defer input.CloseAll(sources)
