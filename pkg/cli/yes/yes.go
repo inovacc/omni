@@ -17,7 +17,7 @@ func RunYes(ctx context.Context, w io.Writer, args []string) error {
 		output = strings.Join(args, " ")
 	}
 
-	// Handle signals for graceful shutdown
+	// Handle signals for a graceful shutdown
 	sigCh := make(chan os.Signal, 1)
 	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM, syscall.SIGPIPE)
 
