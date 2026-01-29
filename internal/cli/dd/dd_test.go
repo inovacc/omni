@@ -23,6 +23,7 @@ func TestRunDd(t *testing.T) {
 		_ = os.WriteFile(src, content, 0644)
 
 		var buf bytes.Buffer
+
 		err := RunDd(&buf, DdOptions{
 			InputFile:    src,
 			OutputFile:   dst,
@@ -46,6 +47,7 @@ func TestRunDd(t *testing.T) {
 		_ = os.WriteFile(src, content, 0644)
 
 		var buf bytes.Buffer
+
 		err := RunDd(&buf, DdOptions{
 			InputFile:    src,
 			OutputFile:   dst,
@@ -70,6 +72,7 @@ func TestRunDd(t *testing.T) {
 		_ = os.WriteFile(src, content, 0644)
 
 		var buf bytes.Buffer
+
 		err := RunDd(&buf, DdOptions{
 			InputFile:    src,
 			OutputFile:   dst,
@@ -95,6 +98,7 @@ func TestRunDd(t *testing.T) {
 		_ = os.WriteFile(src, content, 0644)
 
 		var buf bytes.Buffer
+
 		err := RunDd(&buf, DdOptions{
 			InputFile:    src,
 			OutputFile:   dst,
@@ -120,6 +124,7 @@ func TestRunDd(t *testing.T) {
 		_ = os.WriteFile(src, content, 0644)
 
 		var buf bytes.Buffer
+
 		err := RunDd(&buf, DdOptions{
 			InputFile:    src,
 			OutputFile:   dst,
@@ -144,6 +149,7 @@ func TestRunDd(t *testing.T) {
 		_ = os.WriteFile(src, content, 0644)
 
 		var buf bytes.Buffer
+
 		err := RunDd(&buf, DdOptions{
 			InputFile:    src,
 			OutputFile:   dst,
@@ -167,6 +173,7 @@ func TestRunDd(t *testing.T) {
 		_ = os.WriteFile(src, content, 0644)
 
 		var buf bytes.Buffer
+
 		err := RunDd(&buf, DdOptions{
 			InputFile:    src,
 			Status:       "none",
@@ -188,6 +195,7 @@ func TestRunDd(t *testing.T) {
 		_ = os.WriteFile(src, content, 0644)
 
 		var buf, statusBuf bytes.Buffer
+
 		err := RunDd(&buf, DdOptions{
 			InputFile:    src,
 			OutputFile:   dst,
@@ -205,6 +213,7 @@ func TestRunDd(t *testing.T) {
 
 	t.Run("nonexistent input", func(t *testing.T) {
 		var buf bytes.Buffer
+
 		err := RunDd(&buf, DdOptions{
 			InputFile:    "/nonexistent/file.txt",
 			Status:       "none",
@@ -242,6 +251,7 @@ func TestParseDdSize(t *testing.T) {
 				if err == nil {
 					t.Errorf("ParseDdSize(%q) expected error", tt.input)
 				}
+
 				return
 			}
 
@@ -259,6 +269,7 @@ func TestParseDdSize(t *testing.T) {
 func TestApplyDdConversions(t *testing.T) {
 	t.Run("lcase", func(t *testing.T) {
 		data := []byte("HELLO")
+
 		result := applyDdConversions(data, map[string]bool{"lcase": true})
 		if string(result) != "hello" {
 			t.Errorf("applyDdConversions lcase = %q, want 'hello'", result)
@@ -267,6 +278,7 @@ func TestApplyDdConversions(t *testing.T) {
 
 	t.Run("ucase", func(t *testing.T) {
 		data := []byte("hello")
+
 		result := applyDdConversions(data, map[string]bool{"ucase": true})
 		if string(result) != "HELLO" {
 			t.Errorf("applyDdConversions ucase = %q, want 'HELLO'", result)
@@ -275,6 +287,7 @@ func TestApplyDdConversions(t *testing.T) {
 
 	t.Run("swab", func(t *testing.T) {
 		data := []byte("abcd")
+
 		result := applyDdConversions(data, map[string]bool{"swab": true})
 		if string(result) != "badc" {
 			t.Errorf("applyDdConversions swab = %q, want 'badc'", result)

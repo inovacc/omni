@@ -21,6 +21,7 @@ func TestRunDotenv(t *testing.T) {
 		_ = os.WriteFile(file, []byte("KEY1=value1\nKEY2=value2\n"), 0644)
 
 		var buf bytes.Buffer
+
 		err := RunDotenv(&buf, []string{file}, DotenvOptions{})
 		if err != nil {
 			t.Fatalf("RunDotenv() error = %v", err)
@@ -30,6 +31,7 @@ func TestRunDotenv(t *testing.T) {
 		if !strings.Contains(output, "KEY1=value1") {
 			t.Errorf("RunDotenv() missing KEY1: %s", output)
 		}
+
 		if !strings.Contains(output, "KEY2=value2") {
 			t.Errorf("RunDotenv() missing KEY2: %s", output)
 		}
@@ -40,6 +42,7 @@ func TestRunDotenv(t *testing.T) {
 		_ = os.WriteFile(file, []byte("KEY=value\n"), 0644)
 
 		var buf bytes.Buffer
+
 		err := RunDotenv(&buf, []string{file}, DotenvOptions{Export: true})
 		if err != nil {
 			t.Fatalf("RunDotenv() error = %v", err)
@@ -55,11 +58,13 @@ func TestRunDotenv(t *testing.T) {
 		// Change to temp dir
 		origDir, _ := os.Getwd()
 		_ = os.Chdir(tmpDir)
+
 		defer func() { _ = os.Chdir(origDir) }()
 
 		_ = os.WriteFile(".env", []byte("DEFAULT=yes\n"), 0644)
 
 		var buf bytes.Buffer
+
 		err := RunDotenv(&buf, []string{}, DotenvOptions{})
 		if err != nil {
 			t.Fatalf("RunDotenv() error = %v", err)
@@ -72,6 +77,7 @@ func TestRunDotenv(t *testing.T) {
 
 	t.Run("quiet mode on missing file", func(t *testing.T) {
 		var buf bytes.Buffer
+
 		err := RunDotenv(&buf, []string{"/nonexistent/.env"}, DotenvOptions{Quiet: true})
 		if err != nil {
 			t.Fatalf("RunDotenv() quiet error = %v", err)
@@ -82,6 +88,7 @@ func TestRunDotenv(t *testing.T) {
 func TestParseDotenv(t *testing.T) {
 	t.Run("basic key=value", func(t *testing.T) {
 		input := strings.NewReader("KEY=value\n")
+
 		vars, err := ParseDotenv(input, DotenvOptions{})
 		if err != nil {
 			t.Fatalf("ParseDotenv() error = %v", err)
@@ -194,6 +201,7 @@ func TestParseDotenvLine(t *testing.T) {
 				if key != tt.wantKey {
 					t.Errorf("parseDotenvLine() key = %q, want %q", key, tt.wantKey)
 				}
+
 				if value != tt.wantValue {
 					t.Errorf("parseDotenvLine() value = %q, want %q", value, tt.wantValue)
 				}
@@ -240,6 +248,7 @@ func TestLoadDotenv(t *testing.T) {
 	// Change to temp dir
 	origDir, _ := os.Getwd()
 	_ = os.Chdir(tmpDir)
+
 	defer func() { _ = os.Chdir(origDir) }()
 
 	// Clear any existing var
@@ -271,6 +280,7 @@ func TestLoadDotenvOverride(t *testing.T) {
 
 	origDir, _ := os.Getwd()
 	_ = os.Chdir(tmpDir)
+
 	defer func() { _ = os.Chdir(origDir) }()
 
 	// Set existing value

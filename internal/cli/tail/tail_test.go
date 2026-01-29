@@ -18,11 +18,12 @@ func TestRunTail(t *testing.T) {
 
 	createTestFile := func(name string, numLines int) string {
 		file := filepath.Join(tmpDir, name)
+
 		var content strings.Builder
 
 		for i := 1; i <= numLines; i++ {
 			content.WriteString("line")
-			content.WriteString(string(rune('0' + i%10)))
+			content.WriteRune(rune('0' + i%10))
 			content.WriteString("\n")
 		}
 
@@ -315,6 +316,7 @@ func TestRunTail(t *testing.T) {
 		lines := strings.Split(buf.String(), "\n")
 		// Should have 3 empty lines (plus potential trailing from split)
 		count := 0
+
 		for _, l := range lines {
 			if l == "" {
 				count++
@@ -360,11 +362,12 @@ func TestRunTail(t *testing.T) {
 
 	t.Run("large file", func(t *testing.T) {
 		file := filepath.Join(tmpDir, "large.txt")
+
 		var content strings.Builder
 
-		for i := 0; i < 10000; i++ {
+		for i := range 10000 {
 			content.WriteString("line")
-			content.WriteString(string(rune('0' + i%10)))
+			content.WriteRune(rune('0' + i%10))
 			content.WriteString("\n")
 		}
 

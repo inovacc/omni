@@ -2,6 +2,7 @@ package date
 
 import (
 	"bytes"
+	"slices"
 	"strings"
 	"testing"
 	"time"
@@ -17,8 +18,8 @@ func TestRunDate(t *testing.T) {
 		}
 
 		output := strings.TrimSpace(buf.String())
-		_, err = time.Parse(time.RFC3339, output)
 
+		_, err = time.Parse(time.RFC3339, output)
 		if err != nil {
 			t.Errorf("RunDate() output not RFC3339: %v, error: %v", output, err)
 		}
@@ -68,8 +69,8 @@ func TestRunDate(t *testing.T) {
 		}
 
 		output := strings.TrimSpace(buf.String())
-		_, err = time.Parse("2006-01-02", output)
 
+		_, err = time.Parse("2006-01-02", output)
 		if err != nil {
 			t.Errorf("RunDate() custom format failed: %v, error: %v", output, err)
 		}
@@ -84,8 +85,8 @@ func TestRunDate(t *testing.T) {
 		}
 
 		output := strings.TrimSpace(buf.String())
-		_, err = time.Parse("15:04:05", output)
 
+		_, err = time.Parse("15:04:05", output)
 		if err != nil {
 			t.Errorf("RunDate() time format failed: %v, error: %v", output, err)
 		}
@@ -118,13 +119,7 @@ func TestRunDate(t *testing.T) {
 		output := strings.TrimSpace(buf.String())
 		weekdays := []string{"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"}
 
-		found := false
-		for _, day := range weekdays {
-			if output == day {
-				found = true
-				break
-			}
-		}
+		found := slices.Contains(weekdays, output)
 
 		if !found {
 			t.Errorf("RunDate() weekday = %v, not a valid weekday", output)
@@ -143,13 +138,7 @@ func TestRunDate(t *testing.T) {
 		months := []string{"January", "February", "March", "April", "May", "June",
 			"July", "August", "September", "October", "November", "December"}
 
-		found := false
-		for _, month := range months {
-			if output == month {
-				found = true
-				break
-			}
-		}
+		found := slices.Contains(months, output)
 
 		if !found {
 			t.Errorf("RunDate() month = %v, not a valid month", output)
@@ -255,14 +244,15 @@ func TestRunDate(t *testing.T) {
 		var buf bytes.Buffer
 
 		format := "Mon, 02 Jan 2006 15:04:05 -0700"
+
 		err := RunDate(&buf, DateOptions{Format: format})
 		if err != nil {
 			t.Fatalf("RunDate() error = %v", err)
 		}
 
 		output := strings.TrimSpace(buf.String())
-		_, err = time.Parse(format, output)
 
+		_, err = time.Parse(format, output)
 		if err != nil {
 			t.Errorf("RunDate() RFC2822-like format failed: %v", output)
 		}

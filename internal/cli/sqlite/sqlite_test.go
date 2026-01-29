@@ -21,10 +21,11 @@ func createTestDB(t *testing.T) (string, func()) {
 	}
 
 	dbPath := filepath.Join(tmpDir, "test.db")
-	db, err := sql.Open("sqlite", dbPath)
 
+	db, err := sql.Open("sqlite", dbPath)
 	if err != nil {
 		_ = os.RemoveAll(tmpDir)
+
 		t.Fatal(err)
 	}
 
@@ -52,10 +53,10 @@ func createTestDB(t *testing.T) (string, func()) {
 
 		CREATE VIEW active_users AS SELECT * FROM users WHERE id > 0;
 	`)
-
 	if err != nil {
 		_ = db.Close()
 		_ = os.RemoveAll(tmpDir)
+
 		t.Fatal(err)
 	}
 
@@ -463,8 +464,8 @@ INSERT INTO test VALUES (1, 'test');`
 
 		// Verify data was imported
 		var verifyBuf bytes.Buffer
-		err = RunQuery(&verifyBuf, dbPath, "SELECT name FROM test", Options{})
 
+		err = RunQuery(&verifyBuf, dbPath, "SELECT name FROM test", Options{})
 		if err != nil {
 			t.Fatalf("Verify query error = %v", err)
 		}

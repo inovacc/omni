@@ -55,6 +55,7 @@ func RunID(w io.Writer, opts IDOptions) error {
 			Username: u.Username,
 			Groups:   groups,
 		}
+
 		return json.NewEncoder(w).Encode(info)
 	}
 

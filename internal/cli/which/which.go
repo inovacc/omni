@@ -38,10 +38,12 @@ func RunWhich(w io.Writer, args []string, opts WhichOptions) error {
 	paths := strings.Split(pathEnv, pathSep)
 
 	exitCode := 0
+
 	var jsonResults []WhichResult
 
 	for _, cmd := range args {
 		found := false
+
 		var foundPaths []string
 
 		for _, dir := range paths {
@@ -54,6 +56,7 @@ func RunWhich(w io.Writer, args []string, opts WhichOptions) error {
 				} else {
 					_, _ = fmt.Fprintln(w, match)
 				}
+
 				found = true
 
 				if !opts.All {

@@ -39,9 +39,9 @@ type CobraAddOptions struct {
 
 // InitResult represents the result of initialization
 type InitResult struct {
-	Status      string   `json:"status"`
-	Path        string   `json:"path"`
-	Module      string   `json:"module"`
+	Status       string   `json:"status"`
+	Path         string   `json:"path"`
+	Module       string   `json:"module"`
 	FilesCreated []string `json:"files_created"`
 }
 
@@ -114,6 +114,7 @@ func RunCobraInit(w io.Writer, dir string, opts CobraInitOptions, genOpts Option
 	if err := writeTemplate(mainPath, cobratpl.MainTemplate, tplData); err != nil {
 		return fmt.Errorf("generate: failed to create main.go: %w", err)
 	}
+
 	filesCreated = append(filesCreated, "main.go")
 
 	// Generate cmd/root.go
@@ -121,6 +122,7 @@ func RunCobraInit(w io.Writer, dir string, opts CobraInitOptions, genOpts Option
 	if err := writeTemplate(rootPath, cobratpl.RootTemplate, tplData); err != nil {
 		return fmt.Errorf("generate: failed to create cmd/root.go: %w", err)
 	}
+
 	filesCreated = append(filesCreated, "cmd/root.go")
 
 	// Generate cmd/version.go
@@ -128,6 +130,7 @@ func RunCobraInit(w io.Writer, dir string, opts CobraInitOptions, genOpts Option
 	if err := writeTemplate(versionPath, cobratpl.VersionTemplate, tplData); err != nil {
 		return fmt.Errorf("generate: failed to create cmd/version.go: %w", err)
 	}
+
 	filesCreated = append(filesCreated, "cmd/version.go")
 
 	// Generate go.mod
@@ -135,6 +138,7 @@ func RunCobraInit(w io.Writer, dir string, opts CobraInitOptions, genOpts Option
 	if err := writeTemplate(goModPath, cobratpl.GoModTemplate, tplData); err != nil {
 		return fmt.Errorf("generate: failed to create go.mod: %w", err)
 	}
+
 	filesCreated = append(filesCreated, "go.mod")
 
 	// Generate config if viper is enabled (without service pattern)
@@ -143,6 +147,7 @@ func RunCobraInit(w io.Writer, dir string, opts CobraInitOptions, genOpts Option
 		if err := writeTemplate(configPath, cobratpl.ConfigTemplate, tplData); err != nil {
 			return fmt.Errorf("generate: failed to create config.go: %w", err)
 		}
+
 		filesCreated = append(filesCreated, "internal/config/config.go")
 	}
 
@@ -153,6 +158,7 @@ func RunCobraInit(w io.Writer, dir string, opts CobraInitOptions, genOpts Option
 		if err := writeTemplate(paramsPath, cobratpl.ParametersTemplate, tplData); err != nil {
 			return fmt.Errorf("generate: failed to create parameters/config.go: %w", err)
 		}
+
 		filesCreated = append(filesCreated, "internal/parameters/config.go")
 
 		// internal/service/service.go
@@ -160,6 +166,7 @@ func RunCobraInit(w io.Writer, dir string, opts CobraInitOptions, genOpts Option
 		if err := writeTemplate(servicePath, cobratpl.ServiceTemplate, tplData); err != nil {
 			return fmt.Errorf("generate: failed to create service/service.go: %w", err)
 		}
+
 		filesCreated = append(filesCreated, "internal/service/service.go")
 	}
 
@@ -169,6 +176,7 @@ func RunCobraInit(w io.Writer, dir string, opts CobraInitOptions, genOpts Option
 		if err := writeLicense(licensePath, opts.License, opts.Author); err != nil {
 			return fmt.Errorf("generate: failed to create LICENSE: %w", err)
 		}
+
 		filesCreated = append(filesCreated, "LICENSE")
 	}
 
@@ -177,6 +185,7 @@ func RunCobraInit(w io.Writer, dir string, opts CobraInitOptions, genOpts Option
 	if err := writeTemplate(readmePath, cobratpl.ReadmeTemplate, tplData); err != nil {
 		return fmt.Errorf("generate: failed to create README.md: %w", err)
 	}
+
 	filesCreated = append(filesCreated, "README.md")
 
 	// Generate Taskfile.yml
@@ -184,6 +193,7 @@ func RunCobraInit(w io.Writer, dir string, opts CobraInitOptions, genOpts Option
 	if err := writeTemplate(taskfilePath, cobratpl.TaskfileTemplate, tplData); err != nil {
 		return fmt.Errorf("generate: failed to create Taskfile.yml: %w", err)
 	}
+
 	filesCreated = append(filesCreated, "Taskfile.yml")
 
 	// Generate .gitignore
@@ -191,6 +201,7 @@ func RunCobraInit(w io.Writer, dir string, opts CobraInitOptions, genOpts Option
 	if err := writeTemplate(gitignorePath, cobratpl.GitignoreTemplate, tplData); err != nil {
 		return fmt.Errorf("generate: failed to create .gitignore: %w", err)
 	}
+
 	filesCreated = append(filesCreated, ".gitignore")
 
 	// Generate .editorconfig
@@ -198,6 +209,7 @@ func RunCobraInit(w io.Writer, dir string, opts CobraInitOptions, genOpts Option
 	if err := writeTemplate(editorconfigPath, cobratpl.EditorConfigTemplate, tplData); err != nil {
 		return fmt.Errorf("generate: failed to create .editorconfig: %w", err)
 	}
+
 	filesCreated = append(filesCreated, ".editorconfig")
 
 	// Generate full project files if requested
@@ -207,6 +219,7 @@ func RunCobraInit(w io.Writer, dir string, opts CobraInitOptions, genOpts Option
 		if err := writeTemplate(goreleaserPath, cobratpl.GoreleaserTemplate, tplData); err != nil {
 			return fmt.Errorf("generate: failed to create .goreleaser.yaml: %w", err)
 		}
+
 		filesCreated = append(filesCreated, ".goreleaser.yaml")
 
 		// .golangci.yml
@@ -214,6 +227,7 @@ func RunCobraInit(w io.Writer, dir string, opts CobraInitOptions, genOpts Option
 		if err := writeTemplate(golangciPath, cobratpl.GolangciLintTemplate, tplData); err != nil {
 			return fmt.Errorf("generate: failed to create .golangci.yml: %w", err)
 		}
+
 		filesCreated = append(filesCreated, ".golangci.yml")
 
 		// tools.go
@@ -221,6 +235,7 @@ func RunCobraInit(w io.Writer, dir string, opts CobraInitOptions, genOpts Option
 		if err := writeTemplate(toolsPath, cobratpl.ToolsTemplate, tplData); err != nil {
 			return fmt.Errorf("generate: failed to create tools.go: %w", err)
 		}
+
 		filesCreated = append(filesCreated, "tools.go")
 
 		// GitHub workflows
@@ -228,18 +243,21 @@ func RunCobraInit(w io.Writer, dir string, opts CobraInitOptions, genOpts Option
 		if err := writeTemplate(buildWorkflowPath, cobratpl.WorkflowBuildTemplate, tplData); err != nil {
 			return fmt.Errorf("generate: failed to create build.yml: %w", err)
 		}
+
 		filesCreated = append(filesCreated, ".github/workflows/build.yml")
 
 		testWorkflowPath := filepath.Join(dir, ".github", "workflows", "test.yml")
 		if err := writeTemplate(testWorkflowPath, cobratpl.WorkflowTestTemplate, tplData); err != nil {
 			return fmt.Errorf("generate: failed to create test.yml: %w", err)
 		}
+
 		filesCreated = append(filesCreated, ".github/workflows/test.yml")
 
 		releaseWorkflowPath := filepath.Join(dir, ".github", "workflows", "release.yaml")
 		if err := writeTemplate(releaseWorkflowPath, cobratpl.WorkflowReleaseTemplate, tplData); err != nil {
 			return fmt.Errorf("generate: failed to create release.yaml: %w", err)
 		}
+
 		filesCreated = append(filesCreated, ".github/workflows/release.yaml")
 	}
 
@@ -250,32 +268,39 @@ func RunCobraInit(w io.Writer, dir string, opts CobraInitOptions, genOpts Option
 			Module:       opts.Module,
 			FilesCreated: filesCreated,
 		}
+
 		return json.NewEncoder(w).Encode(result)
 	}
 
 	_, _ = fmt.Fprintf(w, "Created Cobra CLI application: %s\n", opts.AppName)
 	_, _ = fmt.Fprintf(w, "Module: %s\n", opts.Module)
+
 	_, _ = fmt.Fprintf(w, "Path: %s\n", dir)
 	if opts.Full {
 		_, _ = fmt.Fprintln(w, "Mode: Full (includes goreleaser, linting, GitHub workflows)")
 	}
+
 	if opts.UseService {
 		_, _ = fmt.Fprintln(w, "Config: Service pattern (inovacc/config)")
 	} else if opts.UseViper {
 		_, _ = fmt.Fprintln(w, "Config: Viper")
 	}
+
 	_, _ = fmt.Fprintln(w, "\nFiles created:")
 	for _, f := range filesCreated {
 		_, _ = fmt.Fprintf(w, "  - %s\n", f)
 	}
+
 	_, _ = fmt.Fprintln(w, "\nNext steps:")
 	_, _ = fmt.Fprintf(w, "  cd %s\n", dir)
+
 	_, _ = fmt.Fprintln(w, "  go mod tidy")
 	if opts.Full {
 		_, _ = fmt.Fprintln(w, "  task build")
 	} else {
 		_, _ = fmt.Fprintln(w, "  go build")
 	}
+
 	_, _ = fmt.Fprintf(w, "  ./%s --help\n", opts.AppName)
 
 	return nil
@@ -330,6 +355,7 @@ func RunCobraAdd(w io.Writer, dir string, opts CobraAddOptions, genOpts Options)
 			Parent:  opts.Parent,
 			File:    filepath.Join("cmd", opts.Name+".go"),
 		}
+
 		return json.NewEncoder(w).Encode(result)
 	}
 
@@ -350,6 +376,7 @@ func writeTemplate(path string, tmpl string, data any) error {
 	if err != nil {
 		return err
 	}
+
 	defer func() { _ = f.Close() }()
 
 	return t.Execute(f, data)
@@ -359,6 +386,7 @@ func writeLicense(path, licenseType, author string) error {
 	year := time.Now().Year()
 
 	var content string
+
 	switch strings.ToLower(licenseType) {
 	case "mit":
 		content = fmt.Sprintf(cobratpl.MITLicense, year, author)
@@ -372,4 +400,3 @@ func writeLicense(path, licenseType, author string) error {
 
 	return os.WriteFile(path, []byte(content), 0644)
 }
-

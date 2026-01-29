@@ -89,6 +89,7 @@ func RunSeq(w io.Writer, args []string, opts SeqOptions) error {
 		for i := first; (increment > 0 && i <= last) || (increment < 0 && i >= last); i += increment {
 			numbers = append(numbers, i)
 		}
+
 		return json.NewEncoder(w).Encode(SeqResult{Numbers: numbers, Count: len(numbers)})
 	}
 

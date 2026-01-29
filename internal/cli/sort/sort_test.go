@@ -52,6 +52,7 @@ func TestPipeline(t *testing.T) {
 		if len(result) != 3 {
 			t.Errorf("Pipeline() grep+sort = %v, want 3 items", result)
 		}
+
 		if result[0] != "cap" || result[1] != "car" || result[2] != "cat" {
 			t.Errorf("Pipeline() grep+sort = %v, want [cap car cat]", result)
 		}
@@ -64,6 +65,7 @@ func TestPipeline(t *testing.T) {
 		if len(result) != 3 {
 			t.Errorf("Pipeline() sort+uniq = %v, want 3 items", result)
 		}
+
 		if result[0] != "a" || result[1] != "b" || result[2] != "c" {
 			t.Errorf("Pipeline() sort+uniq = %v, want [a b c]", result)
 		}
@@ -76,6 +78,7 @@ func TestPipeline(t *testing.T) {
 		if len(result) != 2 {
 			t.Errorf("Pipeline() all = %v, want 2 items", result)
 		}
+
 		if result[0] != "hello" || result[1] != "help" {
 			t.Errorf("Pipeline() all = %v, want [hello help]", result)
 		}

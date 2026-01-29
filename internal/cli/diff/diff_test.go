@@ -216,7 +216,7 @@ func TestRunDiff(t *testing.T) {
 		file2 := filepath.Join(tmpDir, "large2.txt")
 
 		var content1, content2 strings.Builder
-		for i := 0; i < 1000; i++ {
+		for i := range 1000 {
 			content1.WriteString("line " + string(rune('0'+i%10)) + "\n")
 			content2.WriteString("line " + string(rune('0'+i%10)) + "\n")
 		}

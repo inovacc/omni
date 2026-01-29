@@ -43,8 +43,10 @@ func RunWC(w io.Writer, args []string, opts WCOptions) error {
 		files = []string{"-"} // stdin
 	}
 
-	var totals WCResult
-	var results []WCResult
+	var (
+		totals  WCResult
+		results []WCResult
+	)
 
 	totals.Filename = "total"
 

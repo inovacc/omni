@@ -22,7 +22,7 @@ func TestNanoIDUniqueness(t *testing.T) {
 	seen := make(map[string]bool)
 	count := 1000
 
-	for i := 0; i < count; i++ {
+	for range count {
 		nanoid, err := New()
 		if err != nil {
 			t.Fatalf("New() error = %v", err)
@@ -31,6 +31,7 @@ func TestNanoIDUniqueness(t *testing.T) {
 		if seen[nanoid] {
 			t.Errorf("Duplicate NanoID generated: %s", nanoid)
 		}
+
 		seen[nanoid] = true
 	}
 }
@@ -52,6 +53,7 @@ func TestGenerateCustomLength(t *testing.T) {
 
 func TestGenerateCustomAlphabet(t *testing.T) {
 	alphabet := "abc123"
+
 	nanoid, err := Generate(alphabet, 100)
 	if err != nil {
 		t.Fatalf("Generate() error = %v", err)
@@ -68,6 +70,7 @@ func TestRunNanoID(t *testing.T) {
 	var buf bytes.Buffer
 
 	opts := Options{Count: 3}
+
 	err := RunNanoID(&buf, opts)
 	if err != nil {
 		t.Fatalf("RunNanoID() error = %v", err)
@@ -89,6 +92,7 @@ func TestRunNanoIDCustomLength(t *testing.T) {
 	var buf bytes.Buffer
 
 	opts := Options{Count: 1, Length: 10}
+
 	err := RunNanoID(&buf, opts)
 	if err != nil {
 		t.Fatalf("RunNanoID() error = %v", err)
@@ -104,6 +108,7 @@ func TestRunNanoIDJSON(t *testing.T) {
 	var buf bytes.Buffer
 
 	opts := Options{Count: 2, JSON: true}
+
 	err := RunNanoID(&buf, opts)
 	if err != nil {
 		t.Fatalf("RunNanoID() error = %v", err)

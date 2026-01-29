@@ -1,4 +1,4 @@
-//nolint:errcheck,forbidigo // Borrowed code from twig
+//nolint:forbidigo // Borrowed code from twig
 package builder
 
 import (

@@ -36,6 +36,7 @@ func RunWhoami(w io.Writer, opts WhoamiOptions) error {
 			Name:     u.Name,
 			HomeDir:  u.HomeDir,
 		}
+
 		return json.NewEncoder(w).Encode(result)
 	}
 

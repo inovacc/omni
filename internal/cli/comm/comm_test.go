@@ -53,8 +53,8 @@ func TestRunComm(t *testing.T) {
 
 		output := buf.String()
 		// 'a' should not appear (unique to file1)
-		lines := strings.Split(strings.TrimSpace(output), "\n")
-		for _, line := range lines {
+		lines := strings.SplitSeq(strings.TrimSpace(output), "\n")
+		for line := range lines {
 			if strings.TrimSpace(line) == "a" {
 				t.Errorf("RunComm() -1 should not show 'a'")
 			}

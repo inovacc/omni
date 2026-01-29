@@ -48,10 +48,10 @@ type Result struct {
 
 // Generator generates Snowflake IDs
 type Generator struct {
-	mu        sync.Mutex
-	workerID  int64
-	sequence  int64
-	lastTime  int64
+	mu       sync.Mutex
+	workerID int64
+	sequence int64
+	lastTime int64
 }
 
 var defaultGenerator *Generator
@@ -135,6 +135,7 @@ func New() (int64, error) {
 	once.Do(func() {
 		defaultGenerator = NewGenerator(0)
 	})
+
 	return defaultGenerator.Generate()
 }
 
@@ -144,6 +145,7 @@ func NewString() string {
 	if err != nil {
 		return ""
 	}
+
 	return fmt.Sprintf("%d", id)
 }
 
@@ -152,5 +154,6 @@ func Parse(id int64) (timestamp time.Time, workerID int64, sequence int64) {
 	timestamp = time.UnixMilli((id >> timestampShift) + epoch)
 	workerID = (id >> workerIDShift) & maxWorkerID
 	sequence = id & maxSequence
+
 	return
 }

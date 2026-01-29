@@ -69,6 +69,7 @@ func TestRunCopy(t *testing.T) {
 		if _, err := os.Stat(filepath.Join(destDir, "multi1.txt")); os.IsNotExist(err) {
 			t.Error("RunCopy() did not copy first file")
 		}
+
 		if _, err := os.Stat(filepath.Join(destDir, "multi2.txt")); os.IsNotExist(err) {
 			t.Error("RunCopy() did not copy second file")
 		}

@@ -23,6 +23,7 @@ func TestRunChown(t *testing.T) {
 
 	t.Run("missing operand", func(t *testing.T) {
 		var buf bytes.Buffer
+
 		err := RunChown(&buf, []string{"1000"}, ChownOptions{})
 		if err == nil {
 			t.Error("RunChown() expected error for missing operand")
@@ -34,6 +35,7 @@ func TestRunChown(t *testing.T) {
 		_ = os.WriteFile(file, []byte("content"), 0644)
 
 		var buf bytes.Buffer
+
 		err := RunChown(&buf, []string{"nonexistent_user_12345", file}, ChownOptions{})
 		if err == nil {
 			t.Error("RunChown() expected error for invalid user")
@@ -45,6 +47,7 @@ func TestRunChown(t *testing.T) {
 		_ = os.WriteFile(file, []byte("content"), 0644)
 
 		var buf bytes.Buffer
+
 		err := RunChown(&buf, []string{":nonexistent_group_12345", file}, ChownOptions{})
 		if err == nil {
 			t.Error("RunChown() expected error for invalid group")
@@ -53,6 +56,7 @@ func TestRunChown(t *testing.T) {
 
 	t.Run("preserve root", func(t *testing.T) {
 		var buf bytes.Buffer
+
 		err := RunChown(&buf, []string{"0", "/"}, ChownOptions{Recursive: true, PreserveRoot: true})
 		if err == nil {
 			t.Error("RunChown() expected error for recursive on root with preserve-root")
@@ -64,6 +68,7 @@ func TestRunChown(t *testing.T) {
 		_ = os.WriteFile(file, []byte("content"), 0644)
 
 		var buf bytes.Buffer
+
 		err := RunChown(&buf, []string{"ignored", file}, ChownOptions{Reference: "/nonexistent/ref"})
 		if err == nil {
 			t.Error("RunChown() expected error for nonexistent reference file")

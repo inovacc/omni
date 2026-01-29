@@ -33,6 +33,7 @@ func TestRunStrings(t *testing.T) {
 		if !strs.Contains(output, "hello") {
 			t.Errorf("RunStrings() should find 'hello'")
 		}
+
 		if !strs.Contains(output, "world") {
 			t.Errorf("RunStrings() should find 'world'")
 		}
@@ -55,6 +56,7 @@ func TestRunStrings(t *testing.T) {
 		if strs.Contains(output, "ab") {
 			t.Errorf("RunStrings() should not include strings shorter than min length")
 		}
+
 		if !strs.Contains(output, "xyzw") {
 			t.Errorf("RunStrings() should include 'xyzw'")
 		}
@@ -77,6 +79,7 @@ func TestRunStrings(t *testing.T) {
 		if strs.Contains(output, "abc") {
 			t.Errorf("RunStrings() default min length should be 4")
 		}
+
 		if !strs.Contains(output, "defg") {
 			t.Errorf("RunStrings() should include 'defg'")
 		}
@@ -177,6 +180,7 @@ func TestRunStrings(t *testing.T) {
 		if !strs.Contains(output, "first") {
 			t.Errorf("RunStrings() missing 'first'")
 		}
+
 		if !strs.Contains(output, "second") {
 			t.Errorf("RunStrings() missing 'second'")
 		}

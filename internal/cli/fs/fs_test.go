@@ -16,6 +16,7 @@ func TestCd(t *testing.T) {
 	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	origDir, _ := os.Getwd()
+
 	defer func() { _ = os.Chdir(origDir) }()
 
 	err = Cd(tmpDir)
@@ -67,6 +68,7 @@ func TestMkdir(t *testing.T) {
 
 	t.Run("simple mkdir", func(t *testing.T) {
 		dir := filepath.Join(tmpDir, "newdir")
+
 		err := Mkdir(dir, 0755, false)
 		if err != nil {
 			t.Fatalf("Mkdir() error = %v", err)
@@ -76,6 +78,7 @@ func TestMkdir(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Mkdir() directory not created")
 		}
+
 		if !info.IsDir() {
 			t.Error("Mkdir() should create directory")
 		}
@@ -83,6 +86,7 @@ func TestMkdir(t *testing.T) {
 
 	t.Run("mkdir with parents", func(t *testing.T) {
 		dir := filepath.Join(tmpDir, "parent", "child", "grandchild")
+
 		err := Mkdir(dir, 0755, true)
 		if err != nil {
 			t.Fatalf("Mkdir() -p error = %v", err)
@@ -95,6 +99,7 @@ func TestMkdir(t *testing.T) {
 
 	t.Run("mkdir without parents fails for nested", func(t *testing.T) {
 		dir := filepath.Join(tmpDir, "noparent", "child")
+
 		err := Mkdir(dir, 0755, false)
 		if err == nil {
 			t.Error("Mkdir() without -p should fail for nested directory")
@@ -133,6 +138,7 @@ func TestTouch(t *testing.T) {
 
 	t.Run("create new file", func(t *testing.T) {
 		file := filepath.Join(tmpDir, "new.txt")
+
 		err := Touch(file)
 		if err != nil {
 			t.Fatalf("Touch() error = %v", err)
@@ -310,6 +316,7 @@ func TestStat(t *testing.T) {
 	if info.Name() != "test.txt" {
 		t.Errorf("Stat() name = %q, want 'test.txt'", info.Name())
 	}
+
 	if info.Size() != 7 {
 		t.Errorf("Stat() size = %d, want 7", info.Size())
 	}

@@ -316,9 +316,12 @@ func runCaseDetectStdin(w *os.File, jsonOutput bool) error {
 			Input: input,
 			Case:  string(caseType),
 		}
+
 		return json.NewEncoder(w).Encode(result)
 	}
+
 	_, _ = w.WriteString(string(caseType) + "\n")
+
 	return nil
 }
 
@@ -340,14 +343,17 @@ func runCaseAllStdin(w *os.File, jsonOutput bool) error {
 		for ct, val := range conversions {
 			result.Conversions[string(ct)] = val
 		}
+
 		return json.NewEncoder(w).Encode(result)
 	}
 
 	_, _ = w.WriteString("Input: " + input + "\n")
+
 	_, _ = w.WriteString("───────────────────────────\n")
 	for _, ct := range caseconv.ValidCaseTypes() {
 		_, _ = w.WriteString(padRight(string(ct), 12) + conversions[ct] + "\n")
 	}
+
 	return nil
 }
 
@@ -355,6 +361,7 @@ func padRight(s string, length int) string {
 	if len(s) >= length {
 		return s
 	}
+
 	return s + strings.Repeat(" ", length-len(s))
 }
 

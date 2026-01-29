@@ -14,6 +14,7 @@ import (
 func TestRunWatch(t *testing.T) {
 	t.Run("basic watch", func(t *testing.T) {
 		var buf bytes.Buffer
+
 		ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
 		defer cancel()
 
@@ -34,6 +35,7 @@ func TestRunWatch(t *testing.T) {
 
 	t.Run("no title", func(t *testing.T) {
 		var buf bytes.Buffer
+
 		ctx, cancel := context.WithTimeout(context.Background(), 50*time.Millisecond)
 		defer cancel()
 
@@ -49,6 +51,7 @@ func TestRunWatch(t *testing.T) {
 
 	t.Run("exit on error", func(t *testing.T) {
 		var buf bytes.Buffer
+
 		ctx, cancel := context.WithTimeout(context.Background(), 200*time.Millisecond)
 		defer cancel()
 
@@ -64,6 +67,7 @@ func TestRunWatch(t *testing.T) {
 
 	t.Run("beep on error", func(t *testing.T) {
 		var buf bytes.Buffer
+
 		ctx, cancel := context.WithTimeout(context.Background(), 50*time.Millisecond)
 		defer cancel()
 
@@ -80,6 +84,7 @@ func TestRunWatch(t *testing.T) {
 
 func TestRunWatchCommand(t *testing.T) {
 	var buf bytes.Buffer
+
 	ctx, cancel := context.WithTimeout(context.Background(), 50*time.Millisecond)
 	defer cancel()
 
@@ -103,12 +108,14 @@ func TestWatchFile(t *testing.T) {
 	_ = os.WriteFile(file, []byte("initial"), 0644)
 
 	callCount := 0
+
 	ctx, cancel := context.WithTimeout(context.Background(), 200*time.Millisecond)
 	defer cancel()
 
 	go func() {
 		// Wait a bit then modify the file
 		time.Sleep(50 * time.Millisecond)
+
 		_ = os.WriteFile(file, []byte("modified"), 0644)
 	}()
 
@@ -133,7 +140,6 @@ func TestWatchFile_NonExistent(t *testing.T) {
 	err := WatchFile(ctx, "/nonexistent/file.txt", func(path string) error {
 		return nil
 	}, 20*time.Millisecond)
-
 	if err == nil {
 		t.Error("WatchFile() expected error for nonexistent file")
 	}
@@ -148,20 +154,24 @@ func TestWatchDir(t *testing.T) {
 	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	events := make([]string, 0)
+
 	ctx, cancel := context.WithTimeout(context.Background(), 300*time.Millisecond)
 	defer cancel()
 
 	go func() {
 		// Wait then create a new file
 		time.Sleep(50 * time.Millisecond)
+
 		_ = os.WriteFile(filepath.Join(tmpDir, "new.txt"), []byte("new"), 0644)
 
 		// Wait then modify it
 		time.Sleep(50 * time.Millisecond)
+
 		_ = os.WriteFile(filepath.Join(tmpDir, "new.txt"), []byte("modified"), 0644)
 
 		// Wait then delete it
 		time.Sleep(50 * time.Millisecond)
+
 		_ = os.Remove(filepath.Join(tmpDir, "new.txt"))
 	}()
 
@@ -185,7 +195,6 @@ func TestWatchDir_NonExistent(t *testing.T) {
 	err := WatchDir(ctx, "/nonexistent/dir", func(event, path string) error {
 		return nil
 	}, 20*time.Millisecond)
-
 	if err == nil {
 		t.Error("WatchDir() expected error for nonexistent directory")
 	}
@@ -197,7 +206,6 @@ func TestRunWatchIteration(t *testing.T) {
 	err := runWatchIteration(&buf, func() (string, error) {
 		return "test output\n", nil
 	}, WatchOptions{})
-
 	if err != nil {
 		t.Fatalf("runWatchIteration() error = %v", err)
 	}
@@ -206,6 +214,7 @@ func TestRunWatchIteration(t *testing.T) {
 	if !strings.Contains(output, "test output") {
 		t.Errorf("runWatchIteration() should contain output: %s", output)
 	}
+
 	if !strings.Contains(output, "Every") {
 		t.Errorf("runWatchIteration() should contain header: %s", output)
 	}

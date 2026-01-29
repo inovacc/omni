@@ -16,7 +16,6 @@ func TestRunTime(t *testing.T) {
 			time.Sleep(10 * time.Millisecond)
 			return nil
 		})
-
 		if err != nil {
 			t.Fatalf("RunTime() error = %v", err)
 		}
@@ -33,9 +32,11 @@ func TestRunTime(t *testing.T) {
 		if !strings.Contains(output, "real") {
 			t.Errorf("RunTime() should output 'real': %s", output)
 		}
+
 		if !strings.Contains(output, "user") {
 			t.Errorf("RunTime() should output 'user': %s", output)
 		}
+
 		if !strings.Contains(output, "sys") {
 			t.Errorf("RunTime() should output 'sys': %s", output)
 		}
@@ -86,6 +87,7 @@ func TestStopwatch(t *testing.T) {
 		sw := NewStopwatch()
 
 		time.Sleep(10 * time.Millisecond)
+
 		lap1 := sw.Lap()
 
 		if lap1 < 10*time.Millisecond {
@@ -93,6 +95,7 @@ func TestStopwatch(t *testing.T) {
 		}
 
 		time.Sleep(10 * time.Millisecond)
+
 		elapsed := sw.Elapsed()
 
 		if elapsed < 20*time.Millisecond {
@@ -153,7 +156,9 @@ func TestStopwatch(t *testing.T) {
 
 func TestSleep(t *testing.T) {
 	start := time.Now()
+
 	Sleep(10 * time.Millisecond)
+
 	elapsed := time.Since(start)
 
 	if elapsed < 10*time.Millisecond {
@@ -163,7 +168,9 @@ func TestSleep(t *testing.T) {
 
 func TestSleepSeconds(t *testing.T) {
 	start := time.Now()
+
 	SleepSeconds(0.01) // 10ms
+
 	elapsed := time.Since(start)
 
 	if elapsed < 10*time.Millisecond {

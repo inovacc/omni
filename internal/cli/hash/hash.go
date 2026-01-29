@@ -72,6 +72,7 @@ func computeHashes(w io.Writer, args []string, opts HashOptions) error {
 		}
 
 		_, _ = fmt.Fprintf(w, "%s  -\n", hashStr)
+
 		return nil
 	}
 
@@ -95,8 +96,10 @@ func computeHashes(w io.Writer, args []string, opts HashOptions) error {
 							if hashErr == nil {
 								results = append(results, result)
 							}
+
 							return nil
 						}
+
 						return hashFile(w, p, opts)
 					}
 
@@ -138,6 +141,7 @@ func hashFileResult(path string, opts HashOptions) (HashResult, error) {
 	if err != nil {
 		return HashResult{}, err
 	}
+
 	defer func() { _ = f.Close() }()
 
 	info, err := f.Stat()

@@ -39,6 +39,7 @@ func TestRunSplit(t *testing.T) {
 		if _, err := os.Stat("xaa"); os.IsNotExist(err) {
 			t.Error("RunSplit() did not create xaa")
 		}
+
 		if _, err := os.Stat("xab"); os.IsNotExist(err) {
 			t.Error("RunSplit() did not create xab")
 		}
@@ -134,10 +135,12 @@ func TestRunSplit(t *testing.T) {
 	t.Run("default 1000 lines", func(t *testing.T) {
 		// Create file with 10 lines (less than default 1000)
 		input := filepath.Join(tmpDir, "default.txt")
+
 		var content strings.Builder
-		for i := 0; i < 10; i++ {
+		for range 10 {
 			content.WriteString("line\n")
 		}
+
 		_ = os.WriteFile(input, []byte(content.String()), 0644)
 
 		var buf bytes.Buffer
@@ -151,6 +154,7 @@ func TestRunSplit(t *testing.T) {
 		if _, err := os.Stat("xaa"); os.IsNotExist(err) {
 			t.Error("RunSplit() did not create xaa")
 		}
+
 		if _, err := os.Stat("xab"); !os.IsNotExist(err) {
 			t.Error("RunSplit() should not create xab for small file")
 		}

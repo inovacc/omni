@@ -18,6 +18,7 @@ func TestRunFold(t *testing.T) {
 
 	t.Run("fold long line", func(t *testing.T) {
 		file := filepath.Join(tmpDir, "long.txt")
+
 		longLine := strings.Repeat("a", 100) + "\n"
 		if err := os.WriteFile(file, []byte(longLine), 0644); err != nil {
 			t.Fatal(err)
@@ -71,6 +72,7 @@ func TestRunFold(t *testing.T) {
 		if len(lines) != 2 {
 			t.Errorf("RunFold() got %d lines, want 2", len(lines))
 		}
+
 		if lines[0] != "12345" {
 			t.Errorf("RunFold() first line = %q, want '12345'", lines[0])
 		}
@@ -177,6 +179,7 @@ func TestRunFold(t *testing.T) {
 
 	t.Run("default width is 80", func(t *testing.T) {
 		file := filepath.Join(tmpDir, "default.txt")
+
 		line := strings.Repeat("x", 85) + "\n"
 		if err := os.WriteFile(file, []byte(line), 0644); err != nil {
 			t.Fatal(err)

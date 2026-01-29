@@ -30,6 +30,7 @@ func Pipeline(
 
 func grepLines(lines []string, pattern string) []string {
 	var result []string
+
 	for _, l := range lines {
 		if strings.Contains(l, pattern) {
 			result = append(result, l)
