@@ -104,6 +104,26 @@ Prioritized items for future development phases.
 - [ ] `less` / `more` - TUI pagers (consider bubbletea)
 - [ ] `nohup` - Background execution (limited in Go)
 
+### AI Code Generation
+- [ ] `ai generate` - AI assistant for code generation with system prompts
+  - Configurable system prompts for different code styles/patterns
+  - Support for multiple AI providers (OpenAI, Anthropic, local models)
+  - Template-based prompt management
+  - Context-aware code generation (reads project structure)
+  - Examples:
+    ```bash
+    omni ai generate handler --name UserHandler
+    omni ai generate test ./pkg/user.go
+    omni ai generate struct --from json api_response.json
+    omni ai --prompt "Add error handling to this function" file.go
+    ```
+  - Features:
+    - [ ] System prompt configuration (`~/.omni/ai-prompts/`)
+    - [ ] Project-specific prompts (`.omni/prompts/`)
+    - [ ] Code review mode (`omni ai review file.go`)
+    - [ ] Explain code mode (`omni ai explain file.go:10-50`)
+    - [ ] Refactor suggestions (`omni ai refactor --style clean file.go`)
+
 ---
 
 ## Technical Debt
