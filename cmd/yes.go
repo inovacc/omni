@@ -6,8 +6,7 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/inovacc/omni/pkg/cli/yes"
-
+	"github.com/inovacc/omni/internal/cli/yes"
 	"github.com/spf13/cobra"
 )
 

@@ -8,8 +8,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/inovacc/omni/pkg/cli/watch"
-
+	"github.com/inovacc/omni/internal/cli/watch"
 	"github.com/spf13/cobra"
 )
 

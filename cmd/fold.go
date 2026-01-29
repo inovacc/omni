@@ -3,8 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/inovacc/omni/pkg/cli/fold"
-
+	"github.com/inovacc/omni/internal/cli/fold"
 	"github.com/spf13/cobra"
 )
 

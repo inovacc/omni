@@ -3,8 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/inovacc/omni/pkg/cli/kill"
-
+	"github.com/inovacc/omni/internal/cli/kill"
 	"github.com/spf13/cobra"
 )
 

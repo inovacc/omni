@@ -1,8 +1,7 @@
 package cmd
 
 import (
-	"github.com/inovacc/omni/pkg/cli/rm"
-
+	"github.com/inovacc/omni/internal/cli/rm"
 	"github.com/spf13/cobra"
 )
 

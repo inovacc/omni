@@ -3,8 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/inovacc/omni/pkg/cli/pager"
-
+	"github.com/inovacc/omni/internal/cli/pager"
 	"github.com/spf13/cobra"
 )
 

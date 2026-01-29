@@ -4,7 +4,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/inovacc/omni/pkg/cli/tree"
+	"github.com/inovacc/omni/internal/cli/tree"
 	"github.com/spf13/cobra"
 )
 

@@ -4,8 +4,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/inovacc/omni/pkg/cli/date"
-
+	"github.com/inovacc/omni/internal/cli/date"
 	"github.com/spf13/cobra"
 )
 

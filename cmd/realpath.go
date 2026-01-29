@@ -3,8 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/inovacc/omni/pkg/cli/realpath"
-
+	"github.com/inovacc/omni/internal/cli/realpath"
 	"github.com/spf13/cobra"
 )
 

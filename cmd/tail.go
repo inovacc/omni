@@ -4,8 +4,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/inovacc/omni/pkg/cli/tail"
-
+	"github.com/inovacc/omni/internal/cli/tail"
 	"github.com/spf13/cobra"
 )
 

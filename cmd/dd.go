@@ -5,7 +5,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/inovacc/omni/pkg/cli/dd"
+	"github.com/inovacc/omni/internal/cli/dd"
 	"github.com/spf13/cobra"
 )
 

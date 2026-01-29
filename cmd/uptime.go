@@ -3,8 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/inovacc/omni/pkg/cli/uptime"
-
+	"github.com/inovacc/omni/internal/cli/uptime"
 	"github.com/spf13/cobra"
 )
 

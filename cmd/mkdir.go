@@ -1,8 +1,7 @@
 package cmd
 
 import (
-	"github.com/inovacc/omni/pkg/cli/mkdir"
-
+	"github.com/inovacc/omni/internal/cli/mkdir"
 	"github.com/spf13/cobra"
 )
 

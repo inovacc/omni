@@ -5,7 +5,7 @@ import (
 	"io"
 	"runtime"
 
-	"github.com/inovacc/omni/pkg/cli/uname"
+	"github.com/inovacc/omni/internal/cli/uname"
 )
 
 // RunArch prints machine architecture

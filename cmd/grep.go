@@ -3,8 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/inovacc/omni/pkg/cli/grep"
-
+	"github.com/inovacc/omni/internal/cli/grep"
 	"github.com/spf13/cobra"
 )
 
