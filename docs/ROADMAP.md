@@ -274,24 +274,64 @@ Integration, documentation, and developer experience.
 
 ### Features
 
-| Feature | Description | Priority |
-|---------|-------------|----------|
-| Taskfile linter | Validate Taskfile.yml uses portable commands | P1 |
-| .env loader | Parse and load .env files | P1 ✅ |
-| Config handling | Read JSON/YAML configs | P2 |
-| Hash/checksum | `sha256sum`, `md5sum`, `sha512sum` | P1 ✅ |
-| Archive | `tar`/`zip`/`unzip` using `archive/*` | P1 ✅ |
-| Base encoding | `base64`, `base32`, `base58` | P1 ✅ |
-| UUID | UUID v4 generation | P1 ✅ |
-| JSON/YAML | `jq`, `yq` processors | P1 ✅ |
-| Encryption | `encrypt`, `decrypt` (AES-256-GCM) | P1 ✅ |
-| Random | Random numbers, strings, passwords | P1 ✅ |
-| Diff | Text and JSON diff | P2 |
-| Documentation | Full command reference + examples | P0 |
-| Benchmarks | Compare vs GNU tools | P2 |
-| Test coverage check | List packages with/without tests | P1 |
-| Lua runner | Execute Lua scripts natively | P2 |
-| Python runner | Execute Python scripts natively | P2 |
+| Feature | Description | Priority | Status |
+|---------|-------------|----------|--------|
+| Taskfile linter | Validate Taskfile.yml uses portable commands | P1 | |
+| .env loader | Parse and load .env files | P1 | ✅ |
+| Config handling | Read JSON/YAML configs | P2 | |
+| Hash/checksum | `sha256sum`, `md5sum`, `sha512sum` | P1 | ✅ |
+| Archive | `tar`/`zip`/`unzip` using `archive/*` | P1 | ✅ |
+| Base encoding | `base64`, `base32`, `base58` | P1 | ✅ |
+| UUID | UUID v4 generation | P1 | ✅ |
+| JSON/YAML | `jq`, `yq` processors | P1 | ✅ |
+| Encryption | `encrypt`, `decrypt` (AES-256-GCM) | P1 | ✅ |
+| Random | Random numbers, strings, passwords | P1 | ✅ |
+| Diff | Text and JSON diff | P2 | ✅ |
+| Documentation | Full command reference + examples | P0 | |
+| Benchmarks | Compare vs GNU tools | P2 | |
+| Test coverage check | List packages with/without tests | P1 | |
+| Lua runner | Execute Lua scripts natively | P2 | |
+| Python runner | Execute Python scripts natively | P2 | |
+
+### New Features (Added January 2026)
+
+| Feature | Description | Priority | Status |
+|---------|-------------|----------|--------|
+| ID generators | ksuid, ulid, uuid7, nanoid, Snowflake ID | P0 | |
+| JSON beautify | JSON formatter and minifier | P0 | |
+| Enhanced jq | Replace jq with gojq for full compatibility | P1 | |
+| Template render | Render Go/JSON/YAML templates | P1 | |
+| Unified output | text/json/table output formatter | P0 | |
+| --json flag | JSON output for all commands | P0 | ✅ Mostly done |
+
+### ID Generation Commands
+
+```bash
+omni ksuid              # Generate KSUID
+omni ulid               # Generate ULID
+omni uuid -v 4          # UUID v4 (existing)
+omni uuid -v 7          # UUID v7 (time-ordered)
+omni nanoid             # Generate NanoID
+omni nanoid -l 10       # Custom length
+omni snowflake          # Generate Snowflake ID
+```
+
+### JSON Beautify/Minify
+
+```bash
+omni json fmt file.json           # Beautify JSON
+omni json minify file.json        # Minify JSON
+omni json validate file.json      # Validate JSON
+echo '{"a":1}' | omni json fmt    # From stdin
+```
+
+### Template Rendering
+
+```bash
+omni template render template.tmpl data.json
+omni template render template.tmpl data.yaml
+omni template render -e 'NAME=World' 'Hello {{.NAME}}'
+```
 
 ### Test Coverage Check
 
@@ -348,6 +388,110 @@ omni archive extract out.zip
 omni hash file.bin
 omni hash dir/ --recursive
 omni hash --verify checksums.txt
+```
+
+---
+
+## Phase 7 – Developer Productivity & Infrastructure
+
+Code generation, data conversion, and internal improvements.
+
+### Data Conversion Commands
+
+| Command | Description | Priority |
+|---------|-------------|----------|
+| `json2struct` | Convert JSON to Go struct definition | P0 |
+| `struct2json` | Generate JSON from Go struct (with tags) | P1 |
+| `yaml2struct` | Convert YAML to Go struct definition | P0 |
+| `struct2yaml` | Generate YAML from Go struct | P1 |
+
+```bash
+omni json2struct api_response.json -p Response
+omni yaml2struct config.yaml -p Config
+echo '{"name":"test","count":1}' | omni json2struct
+```
+
+### Formatters
+
+| Command | Description | Priority |
+|---------|-------------|----------|
+| `cron` | Parse and format cron expressions | P1 |
+| `cron next` | Show next N execution times | P1 |
+| `cron explain` | Human-readable cron explanation | P1 |
+| `datefmt` | Extended date formatting and parsing | P2 |
+
+```bash
+omni cron next "0 9 * * 1-5" -n 5    # Next 5 weekday 9am runs
+omni cron explain "*/15 * * * *"     # "Every 15 minutes"
+omni datefmt -i "2024-01-15" -f "Jan 2, 2006"
+```
+
+### Code Statistics (tokei-like)
+
+| Command | Description | Priority |
+|---------|-------------|----------|
+| `loc` | Count lines of code by language | P1 |
+| `loc --json` | JSON output for CI integration | P1 |
+
+```bash
+omni loc .                    # Count LOC in current directory
+omni loc --json ./src         # JSON output
+omni loc --exclude vendor     # Exclude directories
+```
+
+Output:
+```
+Language        Files    Lines     Code  Comments    Blanks
+Go                 98    15234    12456      1234      1544
+Markdown           12      890      890         0         0
+YAML                5      234      200        20        14
+─────────────────────────────────────────────────────────
+Total             115    16358    13546      1254      1558
+```
+
+### Infrastructure Improvements
+
+| Feature | Description | Priority | Effort |
+|---------|-------------|----------|--------|
+| Unified input package | `internal/cli/input` - file/stdin handling | P0 | 2-3 hrs |
+| Logger JSON export | Export logs to file/stdout in JSON | P1 | 1-2 hrs |
+| Missing tests | twig/builder, twig/parser tests | P1 | 1-2 hrs |
+| Command interface | Define unified Command interface contract | P2 | 2-3 hrs |
+
+### Unified Input Package
+
+```go
+// internal/cli/input/input.go
+package input
+
+// Reader handles file or stdin input uniformly
+func Reader(args []string) (io.Reader, func(), error)
+
+// Lines reads all lines from files or stdin
+func Lines(args []string) ([]string, error)
+
+// ForEach processes each file/stdin with callback
+func ForEach(args []string, fn func(r io.Reader, name string) error) error
+```
+
+Benefits:
+- Reduces ~400 lines of duplicated code across 27+ packages
+- Consistent `-` for stdin handling
+- Uniform error messages
+
+### Logger JSON Export
+
+```go
+// Current
+logger.Info("message", "key", value)
+
+// With JSON export
+logger.SetFormat(logger.FormatJSON)
+logger.SetOutput(file)
+```
+
+```bash
+omni --log-format=json --log-file=omni.log ls
 ```
 
 ---
@@ -565,32 +709,51 @@ Priority P2 - Specialized:
 
 ## Release Plan
 
-### v0.1.0 - MVP
-- [ ] Phase 1 commands complete
-- [ ] JSON output mode
-- [ ] Basic documentation
-- [ ] CI/CD pipeline
+### v0.1.0 - MVP ✅
+- [x] Phase 1 commands complete
+- [x] JSON output mode (partial)
+- [x] Basic documentation
+- [x] CI/CD pipeline
 
-### v0.2.0 - File Operations
-- [ ] Phase 2 commands
-- [ ] Safe rm with dry-run
-- [ ] Improved error messages
+### v0.2.0 - File Operations ✅
+- [x] Phase 2 commands
+- [x] Safe rm with dry-run
+- [x] Improved error messages
 
-### v0.3.0 - Text Processing
-- [ ] Phase 3 commands
-- [ ] Pipeline engine
-- [ ] grep with regex support
+### v0.3.0 - Text Processing ✅
+- [x] Phase 3 commands
+- [x] grep with regex support
+- [x] sort, uniq, cut, etc.
 
-### v0.4.0 - System Info
-- [ ] Phase 4 commands
-- [ ] Cross-platform df/du
-- [ ] Process utilities
+### v0.4.0 - System Info ✅
+- [x] Phase 4 commands
+- [x] Cross-platform df/du
+- [x] Process utilities (ps, kill)
+
+### v0.5.0 - Advanced Utilities ✅
+- [x] Phase 5 commands
+- [x] xargs, watch, yes
+- [x] Archive operations
+
+### v0.6.0 - Ecosystem (Current)
+- [x] --json flag for most commands
+- [ ] ID generators (ksuid, ulid, uuid7, nanoid, Snowflake)
+- [ ] JSON beautify/minify
+- [ ] Enhanced jq with gojq
+- [ ] Template rendering
+
+### v0.7.0 - Developer Productivity
+- [ ] json2struct / yaml2struct
+- [ ] cron formatter
+- [ ] Code statistics (loc)
+- [ ] Unified input package
 
 ### v1.0.0 - Production Ready
 - [ ] All phases complete
 - [ ] Full documentation
 - [ ] Taskfile linter
 - [ ] Comprehensive tests
+- [ ] 95%+ test coverage
 
 ---
 
