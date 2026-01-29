@@ -26,7 +26,7 @@ func TestRunWC(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunWC(&buf, []string{file}, WCOptions{Lines: true})
+		err := RunWC(&buf, nil, []string{file}, WCOptions{Lines: true})
 		if err != nil {
 			t.Fatalf("RunWC() error = %v", err)
 		}
@@ -44,7 +44,7 @@ func TestRunWC(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		_ = RunWC(&buf, []string{file}, WCOptions{Lines: true})
+		_ = RunWC(&buf, nil, []string{file}, WCOptions{Lines: true})
 
 		// wc counts newlines, so "line1\nline2" has 1 newline
 		if !strings.Contains(buf.String(), "1") {
@@ -62,7 +62,7 @@ func TestRunWC(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunWC(&buf, []string{file}, WCOptions{Words: true})
+		err := RunWC(&buf, nil, []string{file}, WCOptions{Words: true})
 		if err != nil {
 			t.Fatalf("RunWC() error = %v", err)
 		}
@@ -80,7 +80,7 @@ func TestRunWC(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		_ = RunWC(&buf, []string{file}, WCOptions{Words: true})
+		_ = RunWC(&buf, nil, []string{file}, WCOptions{Words: true})
 
 		if !strings.Contains(buf.String(), "3") {
 			t.Errorf("RunWC() words with spaces = %v, want 3", buf.String())
@@ -95,7 +95,7 @@ func TestRunWC(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		_ = RunWC(&buf, []string{file}, WCOptions{Words: true})
+		_ = RunWC(&buf, nil, []string{file}, WCOptions{Words: true})
 
 		if !strings.Contains(buf.String(), "3") {
 			t.Errorf("RunWC() words with tabs = %v, want 3", buf.String())
@@ -112,7 +112,7 @@ func TestRunWC(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunWC(&buf, []string{file}, WCOptions{Bytes: true})
+		err := RunWC(&buf, nil, []string{file}, WCOptions{Bytes: true})
 		if err != nil {
 			t.Fatalf("RunWC() error = %v", err)
 		}
@@ -130,7 +130,7 @@ func TestRunWC(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		_ = RunWC(&buf, []string{file}, WCOptions{Bytes: true})
+		_ = RunWC(&buf, nil, []string{file}, WCOptions{Bytes: true})
 
 		if !strings.Contains(buf.String(), "6") {
 			t.Errorf("RunWC() bytes with newline = %v, want 6", buf.String())
@@ -147,7 +147,7 @@ func TestRunWC(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunWC(&buf, []string{file}, WCOptions{Chars: true})
+		err := RunWC(&buf, nil, []string{file}, WCOptions{Chars: true})
 		if err != nil {
 			t.Fatalf("RunWC() error = %v", err)
 		}
@@ -165,7 +165,7 @@ func TestRunWC(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		_ = RunWC(&buf, []string{file}, WCOptions{Chars: true})
+		_ = RunWC(&buf, nil, []string{file}, WCOptions{Chars: true})
 
 		if !strings.Contains(buf.String(), "3") {
 			t.Errorf("RunWC() chars unicode = %v, want 3", buf.String())
@@ -180,8 +180,8 @@ func TestRunWC(t *testing.T) {
 
 		var bufChars, bufBytes bytes.Buffer
 
-		_ = RunWC(&bufChars, []string{file}, WCOptions{Chars: true})
-		_ = RunWC(&bufBytes, []string{file}, WCOptions{Bytes: true})
+		_ = RunWC(&bufChars, nil, []string{file}, WCOptions{Chars: true})
+		_ = RunWC(&bufBytes, nil, []string{file}, WCOptions{Bytes: true})
 
 		// Chars should be 3, bytes should be 9
 		if !strings.Contains(bufChars.String(), "3") {
@@ -203,7 +203,7 @@ func TestRunWC(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunWC(&buf, []string{file}, WCOptions{})
+		err := RunWC(&buf, nil, []string{file}, WCOptions{})
 		if err != nil {
 			t.Fatalf("RunWC() error = %v", err)
 		}
@@ -229,7 +229,7 @@ func TestRunWC(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunWC(&buf, []string{file1, file2}, WCOptions{Lines: true})
+		err := RunWC(&buf, nil, []string{file1, file2}, WCOptions{Lines: true})
 		if err != nil {
 			t.Fatalf("RunWC() error = %v", err)
 		}
@@ -250,7 +250,7 @@ func TestRunWC(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		_ = RunWC(&buf, []string{file1, file2}, WCOptions{Lines: true})
+		_ = RunWC(&buf, nil, []string{file1, file2}, WCOptions{Lines: true})
 
 		output := buf.String()
 		// Total should be 5 lines
@@ -272,7 +272,7 @@ func TestRunWC(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		_ = RunWC(&buf, files, WCOptions{Lines: true})
+		_ = RunWC(&buf, nil, files, WCOptions{Lines: true})
 
 		output := buf.String()
 		lines := strings.Split(strings.TrimSpace(output), "\n")
@@ -292,7 +292,7 @@ func TestRunWC(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunWC(&buf, []string{file}, WCOptions{Lines: true})
+		err := RunWC(&buf, nil, []string{file}, WCOptions{Lines: true})
 		if err != nil {
 			t.Fatalf("RunWC() error = %v", err)
 		}
@@ -309,7 +309,7 @@ func TestRunWC(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		_ = RunWC(&buf, []string{file}, WCOptions{})
+		_ = RunWC(&buf, nil, []string{file}, WCOptions{})
 
 		output := buf.String()
 		// Should have 0 for all counts
@@ -328,7 +328,7 @@ func TestRunWC(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunWC(&buf, []string{file}, WCOptions{MaxLineLen: true})
+		err := RunWC(&buf, nil, []string{file}, WCOptions{MaxLineLen: true})
 		if err != nil {
 			t.Fatalf("RunWC() error = %v", err)
 		}
@@ -347,7 +347,7 @@ func TestRunWC(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		_ = RunWC(&buf, []string{file}, WCOptions{MaxLineLen: true})
+		_ = RunWC(&buf, nil, []string{file}, WCOptions{MaxLineLen: true})
 
 		if !strings.Contains(buf.String(), "11") {
 			t.Errorf("RunWC() max line single = %v, want 11", buf.String())
@@ -358,7 +358,7 @@ func TestRunWC(t *testing.T) {
 		var buf bytes.Buffer
 
 		// Implementation prints error to stderr and continues, doesn't return error
-		err := RunWC(&buf, []string{"/nonexistent/file.txt"}, WCOptions{})
+		err := RunWC(&buf, nil, []string{"/nonexistent/file.txt"}, WCOptions{})
 		if err != nil {
 			t.Logf("RunWC() error = %v (implementation may vary)", err)
 		}
@@ -374,7 +374,7 @@ func TestRunWC(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunWC(&buf, []string{file}, WCOptions{Lines: true})
+		err := RunWC(&buf, nil, []string{file}, WCOptions{Lines: true})
 		if err != nil {
 			t.Fatalf("RunWC() error = %v", err)
 		}
@@ -393,7 +393,7 @@ func TestRunWC(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		_ = RunWC(&buf, []string{file}, WCOptions{Words: true})
+		_ = RunWC(&buf, nil, []string{file}, WCOptions{Words: true})
 
 		if !strings.Contains(buf.String(), "1") {
 			t.Errorf("RunWC() single word = %v, want 1", buf.String())
@@ -408,7 +408,7 @@ func TestRunWC(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		_ = RunWC(&buf, []string{file}, WCOptions{Words: true})
+		_ = RunWC(&buf, nil, []string{file}, WCOptions{Words: true})
 
 		if !strings.Contains(buf.String(), "0") {
 			t.Errorf("RunWC() whitespace only = %v, want 0 words", buf.String())
@@ -423,7 +423,7 @@ func TestRunWC(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		_ = RunWC(&buf, []string{file}, WCOptions{Lines: true, Words: true, Bytes: true})
+		_ = RunWC(&buf, nil, []string{file}, WCOptions{Lines: true, Words: true, Bytes: true})
 
 		output := buf.String()
 		// Should have 2 lines, 5 words, and byte count

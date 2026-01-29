@@ -26,7 +26,7 @@ func TestRunCat(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunCat(&buf, []string{file}, CatOptions{})
+		err := RunCat(&buf, nil, []string{file}, CatOptions{})
 		if err != nil {
 			t.Fatalf("RunCat() error = %v", err)
 		}
@@ -50,7 +50,7 @@ func TestRunCat(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunCat(&buf, []string{file1, file2}, CatOptions{})
+		err := RunCat(&buf, nil, []string{file1, file2}, CatOptions{})
 		if err != nil {
 			t.Fatalf("RunCat() error = %v", err)
 		}
@@ -72,7 +72,7 @@ func TestRunCat(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		_ = RunCat(&buf, []string{file1, file2, file3}, CatOptions{})
+		_ = RunCat(&buf, nil, []string{file1, file2, file3}, CatOptions{})
 
 		output := buf.String()
 		aPos := strings.Index(output, "AAA")
@@ -93,7 +93,7 @@ func TestRunCat(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunCat(&buf, []string{file}, CatOptions{NumberAll: true})
+		err := RunCat(&buf, nil, []string{file}, CatOptions{NumberAll: true})
 		if err != nil {
 			t.Fatalf("RunCat() error = %v", err)
 		}
@@ -113,7 +113,7 @@ func TestRunCat(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		_ = RunCat(&buf, []string{file}, CatOptions{NumberAll: true})
+		_ = RunCat(&buf, nil, []string{file}, CatOptions{NumberAll: true})
 
 		lines := strings.Split(strings.TrimRight(buf.String(), "\n"), "\n")
 		if len(lines) != 3 {
@@ -135,7 +135,7 @@ func TestRunCat(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunCat(&buf, []string{file}, CatOptions{NumberNonBlank: true})
+		err := RunCat(&buf, nil, []string{file}, CatOptions{NumberNonBlank: true})
 		if err != nil {
 			t.Fatalf("RunCat() error = %v", err)
 		}
@@ -163,7 +163,7 @@ func TestRunCat(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		_ = RunCat(&buf, []string{file}, CatOptions{NumberNonBlank: true})
+		_ = RunCat(&buf, nil, []string{file}, CatOptions{NumberNonBlank: true})
 
 		// Should have numbers 1, 2, 3 for non-blank lines
 		output := buf.String()
@@ -181,7 +181,7 @@ func TestRunCat(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunCat(&buf, []string{file}, CatOptions{ShowEnds: true})
+		err := RunCat(&buf, nil, []string{file}, CatOptions{ShowEnds: true})
 		if err != nil {
 			t.Fatalf("RunCat() error = %v", err)
 		}
@@ -200,7 +200,7 @@ func TestRunCat(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		_ = RunCat(&buf, []string{file}, CatOptions{ShowEnds: true})
+		_ = RunCat(&buf, nil, []string{file}, CatOptions{ShowEnds: true})
 
 		lines := strings.Split(strings.TrimRight(buf.String(), "\n"), "\n")
 		// Empty line should just be "$"
@@ -218,7 +218,7 @@ func TestRunCat(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunCat(&buf, []string{file}, CatOptions{ShowTabs: true})
+		err := RunCat(&buf, nil, []string{file}, CatOptions{ShowTabs: true})
 		if err != nil {
 			t.Fatalf("RunCat() error = %v", err)
 		}
@@ -237,7 +237,7 @@ func TestRunCat(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		_ = RunCat(&buf, []string{file}, CatOptions{ShowTabs: true})
+		_ = RunCat(&buf, nil, []string{file}, CatOptions{ShowTabs: true})
 
 		count := strings.Count(buf.String(), "^I")
 		if count != 2 {
@@ -254,7 +254,7 @@ func TestRunCat(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunCat(&buf, []string{file}, CatOptions{SqueezeBlank: true})
+		err := RunCat(&buf, nil, []string{file}, CatOptions{SqueezeBlank: true})
 		if err != nil {
 			t.Fatalf("RunCat() error = %v", err)
 		}
@@ -282,7 +282,7 @@ func TestRunCat(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		_ = RunCat(&buf, []string{file}, CatOptions{SqueezeBlank: true})
+		_ = RunCat(&buf, nil, []string{file}, CatOptions{SqueezeBlank: true})
 
 		// Should have exactly one blank line between line1 and line2
 		lines := strings.Split(strings.TrimRight(buf.String(), "\n"), "\n")
@@ -301,7 +301,7 @@ func TestRunCat(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		_ = RunCat(&buf, []string{file}, CatOptions{ShowNonPrint: true})
+		_ = RunCat(&buf, nil, []string{file}, CatOptions{ShowNonPrint: true})
 
 		// Control char 0x07 should be displayed as ^G
 		if !strings.Contains(buf.String(), "^G") {
@@ -318,7 +318,7 @@ func TestRunCat(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		_ = RunCat(&buf, []string{file}, CatOptions{
+		_ = RunCat(&buf, nil, []string{file}, CatOptions{
 			NumberAll:    true,
 			ShowEnds:     true,
 			ShowTabs:     true,
@@ -343,7 +343,7 @@ func TestRunCat(t *testing.T) {
 	t.Run("file not found", func(t *testing.T) {
 		var buf bytes.Buffer
 
-		err := RunCat(&buf, []string{"/nonexistent/file.txt"}, CatOptions{})
+		err := RunCat(&buf, nil, []string{"/nonexistent/file.txt"}, CatOptions{})
 		if err == nil {
 			t.Error("RunCat() should return error for nonexistent file")
 		}
@@ -358,7 +358,7 @@ func TestRunCat(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunCat(&buf, []string{file}, CatOptions{})
+		err := RunCat(&buf, nil, []string{file}, CatOptions{})
 		if err != nil {
 			t.Fatalf("RunCat() error = %v", err)
 		}
@@ -377,7 +377,7 @@ func TestRunCat(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		_ = RunCat(&buf, []string{file}, CatOptions{})
+		_ = RunCat(&buf, nil, []string{file}, CatOptions{})
 
 		lines := strings.Split(buf.String(), "\n")
 		if len(lines) < 3 {
@@ -395,7 +395,7 @@ func TestRunCat(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunCat(&buf, []string{file}, CatOptions{})
+		err := RunCat(&buf, nil, []string{file}, CatOptions{})
 		// Should not error on binary content
 		if err != nil {
 			t.Fatalf("RunCat() error = %v", err)
@@ -412,7 +412,7 @@ func TestRunCat(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunCat(&buf, []string{file}, CatOptions{})
+		err := RunCat(&buf, nil, []string{file}, CatOptions{})
 		if err != nil {
 			t.Fatalf("RunCat() error = %v", err)
 		}
@@ -432,7 +432,7 @@ func TestRunCat(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunCat(&buf, []string{file}, CatOptions{})
+		err := RunCat(&buf, nil, []string{file}, CatOptions{})
 		if err != nil {
 			t.Fatalf("RunCat() error = %v", err)
 		}

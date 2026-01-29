@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"os"
-
 	"github.com/inovacc/omni/internal/cli/jq"
 	"github.com/spf13/cobra"
 )
@@ -44,7 +42,7 @@ Examples:
 		opts.Tab, _ = cmd.Flags().GetBool("tab")
 		opts.Sort, _ = cmd.Flags().GetBool("sort-keys")
 
-		return jq.RunJq(os.Stdout, args, opts)
+		return jq.RunJq(cmd.OutOrStdout(), cmd.InOrStdin(), args, opts)
 	},
 }
 

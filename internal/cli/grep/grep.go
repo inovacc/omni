@@ -8,6 +8,8 @@ import (
 	"os"
 	"regexp"
 	"strings"
+
+	"github.com/inovacc/omni/internal/cli/input"
 )
 
 // GrepOptions configures the grep command behavior
@@ -54,7 +56,8 @@ type GrepOutput struct {
 }
 
 // RunGrep executes the grep command
-func RunGrep(w io.Writer, pattern string, args []string, opts GrepOptions) error {
+// r is the default input reader (used when args is empty or contains "-")
+func RunGrep(w io.Writer, r io.Reader, pattern string, args []string, opts GrepOptions) error {
 	if pattern == "" {
 		return fmt.Errorf("grep: no pattern specified")
 	}
@@ -66,13 +69,17 @@ func RunGrep(w io.Writer, pattern string, args []string, opts GrepOptions) error
 	}
 
 	// Determine input sources
-	files := args
-	if len(files) == 0 {
-		files = []string{"-"} // stdin
+	sources, err := input.Open(args, r)
+	if err != nil {
+		if !opts.Quiet {
+			_, _ = fmt.Fprintf(os.Stderr, "grep: %v\n", err)
+		}
+		return err
 	}
+	defer input.CloseAll(sources)
 
-	// Auto-enable filename display for multiple files
-	showFilename := opts.WithFilename || (len(files) > 1 && !opts.NoFilename)
+	// Auto-enable filename display for multiple sources
+	showFilename := opts.WithFilename || (len(sources) > 1 && !opts.NoFilename)
 
 	totalMatches := 0
 	anyMatch := false
@@ -80,32 +87,13 @@ func RunGrep(w io.Writer, pattern string, args []string, opts GrepOptions) error
 
 	var allResults []GrepResult
 
-	for _, file := range files {
-		var r io.Reader
-
-		filename := file
-
-		if file == "-" {
-			r = os.Stdin
+	for _, src := range sources {
+		filename := src.Name
+		if filename == "standard input" {
 			filename = "(standard input)"
-		} else {
-			f, err := os.Open(file)
-			if err != nil {
-				if !opts.Quiet {
-					_, _ = fmt.Fprintf(os.Stderr, "grep: %s: %v\n", file, err)
-				}
-
-				continue
-			}
-
-			r = f
-
-			defer func() {
-				_ = f.Close()
-			}()
 		}
 
-		matches, hasMatch, results, err := grepReader(w, r, filename, re, opts, showFilename)
+		matches, hasMatch, results, err := grepReader(w, src.Reader, filename, re, opts, showFilename)
 		if err != nil {
 			return err
 		}
@@ -127,9 +115,15 @@ func RunGrep(w io.Writer, pattern string, args []string, opts GrepOptions) error
 	}
 
 	if opts.JSON {
+		// Build file list for JSON output
+		fileList := make([]string, len(sources))
+		for i, src := range sources {
+			fileList[i] = src.Name
+		}
+
 		output := GrepOutput{
 			Pattern:        pattern,
-			Files:          files,
+			Files:          fileList,
 			Matches:        allResults,
 			TotalCount:     totalMatches,
 			FilesWithMatch: filesWithMatch,

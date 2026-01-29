@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"os"
-
 	"github.com/inovacc/omni/internal/cli/grep"
 	"github.com/spf13/cobra"
 )
@@ -42,7 +40,7 @@ With no FILE, read '.' if recursive; otherwise, read standard input.`,
 		pattern := args[0]
 		files := args[1:]
 
-		return grep.RunGrep(os.Stdout, pattern, files, opts)
+		return grep.RunGrep(cmd.OutOrStdout(), cmd.InOrStdin(), pattern, files, opts)
 	},
 }
 

@@ -8,6 +8,8 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/inovacc/omni/internal/cli/input"
 )
 
 // SedOptions configures the sed command behavior
@@ -20,7 +22,8 @@ type SedOptions struct {
 }
 
 // RunSed performs stream editing on input
-func RunSed(w io.Writer, args []string, opts SedOptions) error {
+// r is the default input reader (used when args is empty or contains "-")
+func RunSed(w io.Writer, r io.Reader, args []string, opts SedOptions) error {
 	if len(opts.Expression) == 0 && len(args) > 0 {
 		opts.Expression = []string{args[0]}
 		args = args[1:]
@@ -42,38 +45,32 @@ func RunSed(w io.Writer, args []string, opts SedOptions) error {
 		commands = append(commands, cmd)
 	}
 
-	// If no files, read from stdin
-	if len(args) == 0 {
-		return sedProcessReader(w, os.Stdin, commands, opts)
-	}
-
-	for _, file := range args {
-		if file == "-" {
-			if err := sedProcessReader(w, os.Stdin, commands, opts); err != nil {
-				return err
-			}
-
-			continue
+	// Handle in-place editing separately (requires file paths)
+	if opts.InPlace {
+		if len(args) == 0 {
+			return fmt.Errorf("sed: no input files for in-place editing")
 		}
-
-		if opts.InPlace {
+		for _, file := range args {
+			if file == "-" {
+				return fmt.Errorf("sed: cannot do in-place editing on stdin")
+			}
 			if err := sedProcessInPlace(file, commands, opts); err != nil {
 				return err
 			}
-		} else {
-			f, err := os.Open(file)
-			if err != nil {
-				return fmt.Errorf("sed: %w", err)
-			}
+		}
+		return nil
+	}
 
-			err = sedProcessReader(w, f, commands, opts)
-			if closeErr := f.Close(); closeErr != nil && err == nil {
-				err = closeErr
-			}
+	// Use input package for reading
+	sources, err := input.Open(args, r)
+	if err != nil {
+		return fmt.Errorf("sed: %w", err)
+	}
+	defer input.CloseAll(sources)
 
-			if err != nil {
-				return err
-			}
+	for _, src := range sources {
+		if err := sedProcessReader(w, src.Reader, commands, opts); err != nil {
+			return err
 		}
 	}
 

@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"os"
-
 	"github.com/inovacc/omni/internal/cli/cat"
 	"github.com/spf13/cobra"
 )
@@ -44,7 +42,7 @@ With no FILE, or when FILE is -, read standard input.`,
 
 		opts.JSON, _ = cmd.Flags().GetBool("json")
 
-		return cat.RunCat(os.Stdout, args, opts)
+		return cat.RunCat(cmd.OutOrStdout(), cmd.InOrStdin(), args, opts)
 	},
 }
 

@@ -22,7 +22,7 @@ func TestRunAwk(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunAwk(&buf, []string{"{print}", file}, AwkOptions{})
+		err := RunAwk(&buf, nil, []string{"{print}", file}, AwkOptions{})
 		if err != nil {
 			t.Fatalf("RunAwk() error = %v", err)
 		}
@@ -39,7 +39,7 @@ func TestRunAwk(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunAwk(&buf, []string{"{print $1}", file}, AwkOptions{})
+		err := RunAwk(&buf, nil, []string{"{print $1}", file}, AwkOptions{})
 		if err != nil {
 			t.Fatalf("RunAwk() error = %v", err)
 		}
@@ -60,7 +60,7 @@ func TestRunAwk(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunAwk(&buf, []string{"{print $1, $3}", file}, AwkOptions{})
+		err := RunAwk(&buf, nil, []string{"{print $1, $3}", file}, AwkOptions{})
 		if err != nil {
 			t.Fatalf("RunAwk() error = %v", err)
 		}
@@ -77,7 +77,7 @@ func TestRunAwk(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunAwk(&buf, []string{"{print $2}", file}, AwkOptions{FieldSeparator: ":"})
+		err := RunAwk(&buf, nil, []string{"{print $2}", file}, AwkOptions{FieldSeparator: ":"})
 		if err != nil {
 			t.Fatalf("RunAwk() error = %v", err)
 		}
@@ -94,7 +94,7 @@ func TestRunAwk(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunAwk(&buf, []string{"/^a/{print}", file}, AwkOptions{})
+		err := RunAwk(&buf, nil, []string{"/^a/{print}", file}, AwkOptions{})
 		if err != nil {
 			t.Fatalf("RunAwk() error = %v", err)
 		}
@@ -115,7 +115,7 @@ func TestRunAwk(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunAwk(&buf, []string{`BEGIN{print "header"}{print}`, file}, AwkOptions{})
+		err := RunAwk(&buf, nil, []string{`BEGIN{print "header"}{print}`, file}, AwkOptions{})
 		if err != nil {
 			t.Fatalf("RunAwk() error = %v", err)
 		}
@@ -132,7 +132,7 @@ func TestRunAwk(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunAwk(&buf, []string{`{print}END{print "footer"}`, file}, AwkOptions{})
+		err := RunAwk(&buf, nil, []string{`{print}END{print "footer"}`, file}, AwkOptions{})
 		if err != nil {
 			t.Fatalf("RunAwk() error = %v", err)
 		}
@@ -149,7 +149,7 @@ func TestRunAwk(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunAwk(&buf, []string{"{print $0}", file}, AwkOptions{})
+		err := RunAwk(&buf, nil, []string{"{print $0}", file}, AwkOptions{})
 		if err != nil {
 			t.Fatalf("RunAwk() error = %v", err)
 		}
@@ -166,7 +166,7 @@ func TestRunAwk(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunAwk(&buf, []string{`{print "prefix", $1}`, file}, AwkOptions{})
+		err := RunAwk(&buf, nil, []string{`{print "prefix", $1}`, file}, AwkOptions{})
 		if err != nil {
 			t.Fatalf("RunAwk() error = %v", err)
 		}
@@ -183,7 +183,7 @@ func TestRunAwk(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunAwk(&buf, []string{"{print NF}", file}, AwkOptions{})
+		err := RunAwk(&buf, nil, []string{"{print NF}", file}, AwkOptions{})
 		if err != nil {
 			t.Fatalf("RunAwk() error = %v", err)
 		}
@@ -197,7 +197,7 @@ func TestRunAwk(t *testing.T) {
 	t.Run("no program", func(t *testing.T) {
 		var buf bytes.Buffer
 
-		err := RunAwk(&buf, []string{}, AwkOptions{})
+		err := RunAwk(&buf, nil, []string{}, AwkOptions{})
 		if err == nil {
 			t.Error("RunAwk() expected error for no program")
 		}

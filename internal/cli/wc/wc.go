@@ -7,6 +7,8 @@ import (
 	"io"
 	"os"
 	"unicode/utf8"
+
+	"github.com/inovacc/omni/internal/cli/input"
 )
 
 // WCOptions configures the wc command behavior
@@ -30,7 +32,8 @@ type WCResult struct {
 }
 
 // RunWC executes the wc command
-func RunWC(w io.Writer, args []string, opts WCOptions) error {
+// r is the default input reader (used when args is empty or contains "-")
+func RunWC(w io.Writer, r io.Reader, args []string, opts WCOptions) error {
 	// If no flags specified, default to -lwc
 	if !opts.Lines && !opts.Words && !opts.Bytes && !opts.Chars && !opts.MaxLineLen {
 		opts.Lines = true
@@ -38,10 +41,12 @@ func RunWC(w io.Writer, args []string, opts WCOptions) error {
 		opts.Bytes = true
 	}
 
-	files := args
-	if len(files) == 0 {
-		files = []string{"-"} // stdin
+	sources, err := input.Open(args, r)
+	if err != nil {
+		_, _ = fmt.Fprintf(os.Stderr, "wc: %v\n", err)
+		return err
 	}
+	defer input.CloseAll(sources)
 
 	var (
 		totals  WCResult
@@ -50,35 +55,19 @@ func RunWC(w io.Writer, args []string, opts WCOptions) error {
 
 	totals.Filename = "total"
 
-	for _, file := range files {
-		var r io.Reader
-
-		filename := file
-
-		if file == "-" {
-			r = os.Stdin
-			filename = ""
-		} else {
-			f, err := os.Open(file)
-			if err != nil {
-				_, _ = fmt.Fprintf(os.Stderr, "wc: %s: %v\n", file, err)
-				continue
-			}
-
-			r = f
-
-			defer func() {
-				_ = f.Close()
-			}()
-		}
-
-		result, err := countReader(r, opts)
+	for _, src := range sources {
+		result, err := countReader(src.Reader, opts)
 		if err != nil {
-			_, _ = fmt.Fprintf(os.Stderr, "wc: %s: %v\n", file, err)
+			_, _ = fmt.Fprintf(os.Stderr, "wc: %s: %v\n", src.Name, err)
 			continue
 		}
 
-		result.Filename = filename
+		// For stdin, leave filename empty to match traditional wc behavior
+		if src.Name == "standard input" {
+			result.Filename = ""
+		} else {
+			result.Filename = src.Name
+		}
 
 		if opts.JSON {
 			results = append(results, result)
@@ -99,7 +88,7 @@ func RunWC(w io.Writer, args []string, opts WCOptions) error {
 
 	// JSON output
 	if opts.JSON {
-		if len(files) > 1 {
+		if len(sources) > 1 {
 			results = append(results, totals)
 		}
 
@@ -107,7 +96,7 @@ func RunWC(w io.Writer, args []string, opts WCOptions) error {
 	}
 
 	// Print totals if multiple files
-	if len(files) > 1 {
+	if len(sources) > 1 {
 		printWCResult(w, totals, opts)
 	}
 

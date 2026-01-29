@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"os"
-
 	"github.com/inovacc/omni/internal/cli/yq"
 	"github.com/spf13/cobra"
 )
@@ -46,7 +44,7 @@ Examples:
 			opts.OutputYAML = true
 		}
 
-		return yq.RunYq(os.Stdout, args, opts)
+		return yq.RunYq(cmd.OutOrStdout(), cmd.InOrStdin(), args, opts)
 	},
 }
 

@@ -26,7 +26,7 @@ func TestRunSort(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunSort(&buf, []string{file}, SortOptions{})
+		err := RunSort(&buf, nil, []string{file}, SortOptions{})
 		if err != nil {
 			t.Fatalf("RunSort() error = %v", err)
 		}
@@ -45,7 +45,7 @@ func TestRunSort(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		_ = RunSort(&buf, []string{file}, SortOptions{})
+		_ = RunSort(&buf, nil, []string{file}, SortOptions{})
 
 		lines := strings.Split(strings.TrimSpace(buf.String()), "\n")
 		if lines[0] != "apple" || lines[1] != "banana" || lines[2] != "cherry" {
@@ -63,7 +63,7 @@ func TestRunSort(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunSort(&buf, []string{file}, SortOptions{Reverse: true})
+		err := RunSort(&buf, nil, []string{file}, SortOptions{Reverse: true})
 		if err != nil {
 			t.Fatalf("RunSort() error = %v", err)
 		}
@@ -84,7 +84,7 @@ func TestRunSort(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunSort(&buf, []string{file}, SortOptions{Numeric: true})
+		err := RunSort(&buf, nil, []string{file}, SortOptions{Numeric: true})
 		if err != nil {
 			t.Fatalf("RunSort() error = %v", err)
 		}
@@ -103,7 +103,7 @@ func TestRunSort(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		_ = RunSort(&buf, []string{file}, SortOptions{Numeric: true})
+		_ = RunSort(&buf, nil, []string{file}, SortOptions{Numeric: true})
 
 		lines := strings.Split(strings.TrimSpace(buf.String()), "\n")
 		// Should be: -10, -5, 0, 5, 10
@@ -122,7 +122,7 @@ func TestRunSort(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunSort(&buf, []string{file}, SortOptions{Unique: true})
+		err := RunSort(&buf, nil, []string{file}, SortOptions{Unique: true})
 		if err != nil {
 			t.Fatalf("RunSort() error = %v", err)
 		}
@@ -141,7 +141,7 @@ func TestRunSort(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		_ = RunSort(&buf, []string{file}, SortOptions{Unique: true})
+		_ = RunSort(&buf, nil, []string{file}, SortOptions{Unique: true})
 
 		lines := strings.Split(strings.TrimSpace(buf.String()), "\n")
 		if len(lines) != 1 {
@@ -159,7 +159,7 @@ func TestRunSort(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunSort(&buf, []string{file}, SortOptions{IgnoreCase: true})
+		err := RunSort(&buf, nil, []string{file}, SortOptions{IgnoreCase: true})
 		if err != nil {
 			t.Fatalf("RunSort() error = %v", err)
 		}
@@ -181,7 +181,7 @@ func TestRunSort(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunSort(&buf, []string{file}, SortOptions{IgnoreLeading: true})
+		err := RunSort(&buf, nil, []string{file}, SortOptions{IgnoreLeading: true})
 		if err != nil {
 			t.Fatalf("RunSort() error = %v", err)
 		}
@@ -202,7 +202,7 @@ func TestRunSort(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunSort(&buf, []string{file}, SortOptions{Stable: true})
+		err := RunSort(&buf, nil, []string{file}, SortOptions{Stable: true})
 		if err != nil {
 			t.Fatalf("RunSort() error = %v", err)
 		}
@@ -223,7 +223,7 @@ func TestRunSort(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunSort(&buf, []string{file}, SortOptions{Check: true})
+		err := RunSort(&buf, nil, []string{file}, SortOptions{Check: true})
 		// Should not error for sorted input
 		if err != nil {
 			t.Errorf("RunSort() check sorted file error = %v", err)
@@ -240,7 +240,7 @@ func TestRunSort(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunSort(&buf, []string{file}, SortOptions{Check: true})
+		err := RunSort(&buf, nil, []string{file}, SortOptions{Check: true})
 		// Should error for unsorted input
 		if err == nil {
 			t.Error("RunSort() check unsorted should error")
@@ -256,7 +256,7 @@ func TestRunSort(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunSort(&buf, []string{file}, SortOptions{})
+		err := RunSort(&buf, nil, []string{file}, SortOptions{})
 		if err != nil {
 			t.Fatalf("RunSort() error = %v", err)
 		}
@@ -274,7 +274,7 @@ func TestRunSort(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		_ = RunSort(&buf, []string{file}, SortOptions{})
+		_ = RunSort(&buf, nil, []string{file}, SortOptions{})
 
 		if strings.TrimSpace(buf.String()) != "only" {
 			t.Errorf("RunSort() single line = %v", buf.String())
@@ -289,7 +289,7 @@ func TestRunSort(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunSort(&buf, []string{file}, SortOptions{})
+		err := RunSort(&buf, nil, []string{file}, SortOptions{})
 		if err != nil {
 			t.Fatalf("RunSort() error = %v", err)
 		}
@@ -308,7 +308,7 @@ func TestRunSort(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		_ = RunSort(&buf, []string{file}, SortOptions{Numeric: true, Reverse: true})
+		_ = RunSort(&buf, nil, []string{file}, SortOptions{Numeric: true, Reverse: true})
 
 		lines := strings.Split(strings.TrimSpace(buf.String()), "\n")
 		if lines[0] != "20" || lines[3] != "1" {
@@ -324,7 +324,7 @@ func TestRunSort(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		_ = RunSort(&buf, []string{file}, SortOptions{})
+		_ = RunSort(&buf, nil, []string{file}, SortOptions{})
 
 		if !strings.HasSuffix(buf.String(), "\n") {
 			t.Error("RunSort() output should end with newline")
@@ -350,7 +350,7 @@ func TestRunUniq(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunUniq(&buf, []string{file}, UniqOptions{})
+		err := RunUniq(&buf, nil, []string{file}, UniqOptions{})
 		if err != nil {
 			t.Fatalf("RunUniq() error = %v", err)
 		}
@@ -369,7 +369,7 @@ func TestRunUniq(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		_ = RunUniq(&buf, []string{file}, UniqOptions{})
+		_ = RunUniq(&buf, nil, []string{file}, UniqOptions{})
 
 		lines := strings.Split(strings.TrimSpace(buf.String()), "\n")
 		// uniq only removes consecutive duplicates
@@ -389,7 +389,7 @@ func TestRunUniq(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunUniq(&buf, []string{file}, UniqOptions{Count: true})
+		err := RunUniq(&buf, nil, []string{file}, UniqOptions{Count: true})
 		if err != nil {
 			t.Fatalf("RunUniq() error = %v", err)
 		}
@@ -409,7 +409,7 @@ func TestRunUniq(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		_ = RunUniq(&buf, []string{file}, UniqOptions{Count: true})
+		_ = RunUniq(&buf, nil, []string{file}, UniqOptions{Count: true})
 
 		output := strings.TrimSpace(buf.String())
 		// Should show count 3 for 'a'
@@ -429,7 +429,7 @@ func TestRunUniq(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunUniq(&buf, []string{file}, UniqOptions{Repeated: true})
+		err := RunUniq(&buf, nil, []string{file}, UniqOptions{Repeated: true})
 		if err != nil {
 			t.Fatalf("RunUniq() error = %v", err)
 		}
@@ -452,7 +452,7 @@ func TestRunUniq(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunUniq(&buf, []string{file}, UniqOptions{Unique: true})
+		err := RunUniq(&buf, nil, []string{file}, UniqOptions{Unique: true})
 		if err != nil {
 			t.Fatalf("RunUniq() error = %v", err)
 		}
@@ -473,7 +473,7 @@ func TestRunUniq(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		_ = RunUniq(&buf, []string{file}, UniqOptions{Unique: true})
+		_ = RunUniq(&buf, nil, []string{file}, UniqOptions{Unique: true})
 
 		output := strings.TrimSpace(buf.String())
 		// No unique lines (same appears twice)
@@ -492,7 +492,7 @@ func TestRunUniq(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunUniq(&buf, []string{file}, UniqOptions{IgnoreCase: true})
+		err := RunUniq(&buf, nil, []string{file}, UniqOptions{IgnoreCase: true})
 		if err != nil {
 			t.Fatalf("RunUniq() error = %v", err)
 		}
@@ -511,7 +511,7 @@ func TestRunUniq(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunUniq(&buf, []string{file}, UniqOptions{})
+		err := RunUniq(&buf, nil, []string{file}, UniqOptions{})
 		if err != nil {
 			t.Fatalf("RunUniq() error = %v", err)
 		}
@@ -529,7 +529,7 @@ func TestRunUniq(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		_ = RunUniq(&buf, []string{file}, UniqOptions{})
+		_ = RunUniq(&buf, nil, []string{file}, UniqOptions{})
 
 		if strings.TrimSpace(buf.String()) != "only" {
 			t.Errorf("RunUniq() single = %v", buf.String())
@@ -544,7 +544,7 @@ func TestRunUniq(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		_ = RunUniq(&buf, []string{file}, UniqOptions{})
+		_ = RunUniq(&buf, nil, []string{file}, UniqOptions{})
 
 		if !strings.HasSuffix(buf.String(), "\n") {
 			t.Error("RunUniq() output should end with newline")

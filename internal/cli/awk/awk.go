@@ -4,10 +4,11 @@ import (
 	"bufio"
 	"fmt"
 	"io"
-	"os"
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/inovacc/omni/internal/cli/input"
 )
 
 // AwkOptions configures the awk command behavior
@@ -23,7 +24,8 @@ type AwkOptions struct {
 // - Print statements
 // - Pattern matching (BEGIN, END, /regex/)
 // - Basic string operations
-func RunAwk(w io.Writer, args []string, opts AwkOptions) error {
+// r is the default input reader (used when args is empty or contains "-")
+func RunAwk(w io.Writer, r io.Reader, args []string, opts AwkOptions) error {
 	if opts.Program == "" && len(args) > 0 {
 		opts.Program = args[0]
 		args = args[1:]
@@ -50,33 +52,15 @@ func RunAwk(w io.Writer, args []string, opts AwkOptions) error {
 	}
 
 	// Process files or stdin
-	if len(args) == 0 {
-		if err := awkProcessReader(w, os.Stdin, program, opts); err != nil {
+	sources, err := input.Open(args, r)
+	if err != nil {
+		return fmt.Errorf("awk: %w", err)
+	}
+	defer input.CloseAll(sources)
+
+	for _, src := range sources {
+		if err := awkProcessReader(w, src.Reader, program, opts); err != nil {
 			return err
-		}
-	} else {
-		for _, file := range args {
-			if file == "-" {
-				if err := awkProcessReader(w, os.Stdin, program, opts); err != nil {
-					return err
-				}
-
-				continue
-			}
-
-			f, err := os.Open(file)
-			if err != nil {
-				return fmt.Errorf("awk: %w", err)
-			}
-
-			err = awkProcessReader(w, f, program, opts)
-			if closeErr := f.Close(); closeErr != nil && err == nil {
-				err = closeErr
-			}
-
-			if err != nil {
-				return err
-			}
 		}
 	}
 

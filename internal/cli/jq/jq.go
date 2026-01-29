@@ -22,7 +22,8 @@ type JqOptions struct {
 }
 
 // RunJq executes jq-like JSON processing
-func RunJq(w io.Writer, args []string, opts JqOptions) error {
+// r is the default input reader (used when no files are specified)
+func RunJq(w io.Writer, r io.Reader, args []string, opts JqOptions) error {
 	filter := "."
 
 	var files []string
@@ -37,8 +38,8 @@ func RunJq(w io.Writer, args []string, opts JqOptions) error {
 	if opts.NullInput {
 		inputs = []any{nil}
 	} else if len(files) == 0 {
-		// Read from stdin
-		data, err := io.ReadAll(os.Stdin)
+		// Read from provided reader (typically stdin)
+		data, err := io.ReadAll(r)
 		if err != nil {
 			return fmt.Errorf("jq: %w", err)
 		}
@@ -70,7 +71,14 @@ func RunJq(w io.Writer, args []string, opts JqOptions) error {
 		}
 	} else {
 		for _, file := range files {
-			data, err := os.ReadFile(file)
+			var data []byte
+			var err error
+
+			if file == "-" {
+				data, err = io.ReadAll(r)
+			} else {
+				data, err = os.ReadFile(file)
+			}
 			if err != nil {
 				return fmt.Errorf("jq: %w", err)
 			}

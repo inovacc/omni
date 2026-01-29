@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"os"
-
 	"github.com/inovacc/omni/internal/cli/text"
 	"github.com/spf13/cobra"
 )
@@ -32,7 +30,7 @@ You may want to sort the input first, or use 'sort -u' without 'uniq'.`,
 		opts.ZeroTerminate, _ = cmd.Flags().GetBool("zero-terminated")
 		opts.JSON, _ = cmd.Flags().GetBool("json")
 
-		return text.RunUniq(os.Stdout, args, opts)
+		return text.RunUniq(cmd.OutOrStdout(), cmd.InOrStdin(), args, opts)
 	},
 }
 

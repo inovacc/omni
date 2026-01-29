@@ -7,6 +7,8 @@ import (
 	"io"
 	"os"
 	"time"
+
+	"github.com/inovacc/omni/internal/cli/input"
 )
 
 // TailOptions configures the tail command behavior
@@ -30,7 +32,8 @@ type TailResult struct {
 const DefaultTailLines = 10
 
 // RunTail executes the tail command
-func RunTail(w io.Writer, args []string, opts TailOptions) error {
+// r is the default input reader (used when args is empty or contains "-")
+func RunTail(w io.Writer, r io.Reader, args []string, opts TailOptions) error {
 	if opts.Lines == 0 && opts.Bytes == 0 {
 		opts.Lines = DefaultTailLines
 	}
@@ -39,76 +42,61 @@ func RunTail(w io.Writer, args []string, opts TailOptions) error {
 		opts.Sleep = time.Second
 	}
 
-	files := args
-	if len(files) == 0 {
-		files = []string{"-"} // stdin
+	sources, err := input.Open(args, r)
+	if err != nil {
+		return fmt.Errorf("tail: %w", err)
 	}
+	defer input.CloseAll(sources)
 
-	showHeaders := len(files) > 1 || opts.Verbose
+	showHeaders := len(sources) > 1 || opts.Verbose
 	if opts.Quiet {
 		showHeaders = false
 	}
 
-	for i, file := range files {
-		var r io.Reader
+	var results []TailResult
 
-		filename := file
-
-		var f *os.File
-
-		if file == "-" {
-			r = os.Stdin
-			filename = "standard input"
-		} else {
-			var err error
-
-			f, err = os.Open(file)
-			if err != nil {
-				return fmt.Errorf("tail: cannot open '%s' for reading: %w", file, err)
-			}
-
-			r = f
-
-			defer func() {
-				_ = f.Close()
-			}()
-		}
-
+	for i, src := range sources {
 		if showHeaders {
 			if i > 0 {
 				_, _ = fmt.Fprintln(w)
 			}
 
-			_, _ = fmt.Fprintf(w, "==> %s <==\n", filename)
+			_, _ = fmt.Fprintf(w, "==> %s <==\n", src.Name)
 		}
 
 		if opts.JSON {
-			lines, err := tailLinesJSON(r, opts.Lines)
+			lines, err := tailLinesJSON(src.Reader, opts.Lines)
 			if err != nil {
 				return err
 			}
 
-			result := TailResult{File: filename, Lines: lines}
+			results = append(results, TailResult{File: src.Name, Lines: lines})
 
-			return json.NewEncoder(w).Encode([]TailResult{result})
+			continue
 		}
 
 		if opts.Bytes > 0 {
-			if err := tailBytes(w, r, opts.Bytes); err != nil {
+			if err := tailBytes(w, src.Reader, opts.Bytes); err != nil {
 				return err
 			}
 		} else {
-			if err := tailLines(w, r, opts.Lines); err != nil {
+			if err := tailLines(w, src.Reader, opts.Lines); err != nil {
 				return err
 			}
 		}
 
-		// Handle -f (follow) mode
-		if opts.Follow && f != nil {
-			if err := followFile(w, f, opts.Sleep); err != nil {
-				return err
+		// Handle -f (follow) mode - only works with files, not stdin
+		if opts.Follow {
+			if f, ok := src.Reader.(*os.File); ok {
+				if err := followFile(w, f, opts.Sleep); err != nil {
+					return err
+				}
 			}
 		}
+	}
+
+	if opts.JSON {
+		return json.NewEncoder(w).Encode(results)
 	}
 
 	return nil

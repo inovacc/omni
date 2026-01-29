@@ -26,7 +26,7 @@ func TestRunGrep(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunGrep(&buf, "hello", []string{file}, GrepOptions{})
+		err := RunGrep(&buf, nil, "hello", []string{file}, GrepOptions{})
 		if err != nil {
 			t.Fatalf("RunGrep() error = %v", err)
 		}
@@ -47,7 +47,7 @@ func TestRunGrep(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunGrep(&buf, "test[0-9]", []string{file}, GrepOptions{})
+		err := RunGrep(&buf, nil, "test[0-9]", []string{file}, GrepOptions{})
 		if err != nil {
 			t.Fatalf("RunGrep() error = %v", err)
 		}
@@ -68,7 +68,7 @@ func TestRunGrep(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunGrep(&buf, "hello", []string{file}, GrepOptions{IgnoreCase: true})
+		err := RunGrep(&buf, nil, "hello", []string{file}, GrepOptions{IgnoreCase: true})
 		if err != nil {
 			t.Fatalf("RunGrep() error = %v", err)
 		}
@@ -89,7 +89,7 @@ func TestRunGrep(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunGrep(&buf, "hello", []string{file}, GrepOptions{})
+		err := RunGrep(&buf, nil, "hello", []string{file}, GrepOptions{})
 		if err != nil {
 			t.Fatalf("RunGrep() error = %v", err)
 		}
@@ -110,7 +110,7 @@ func TestRunGrep(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunGrep(&buf, "match", []string{file}, GrepOptions{InvertMatch: true})
+		err := RunGrep(&buf, nil, "match", []string{file}, GrepOptions{InvertMatch: true})
 		if err != nil {
 			t.Fatalf("RunGrep() error = %v", err)
 		}
@@ -131,7 +131,7 @@ func TestRunGrep(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunGrep(&buf, "here", []string{file}, GrepOptions{LineNumber: true})
+		err := RunGrep(&buf, nil, "here", []string{file}, GrepOptions{LineNumber: true})
 		if err != nil {
 			t.Fatalf("RunGrep() error = %v", err)
 		}
@@ -152,7 +152,7 @@ func TestRunGrep(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		_ = RunGrep(&buf, "match", []string{file}, GrepOptions{LineNumber: true})
+		_ = RunGrep(&buf, nil, "match", []string{file}, GrepOptions{LineNumber: true})
 
 		output := buf.String()
 		if !strings.Contains(output, "1:") || !strings.Contains(output, "3:") || !strings.Contains(output, "5:") {
@@ -170,7 +170,7 @@ func TestRunGrep(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunGrep(&buf, "match[0-9]", []string{file}, GrepOptions{Count: true})
+		err := RunGrep(&buf, nil, "match[0-9]", []string{file}, GrepOptions{Count: true})
 		if err != nil {
 			t.Fatalf("RunGrep() error = %v", err)
 		}
@@ -190,7 +190,7 @@ func TestRunGrep(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		_ = RunGrep(&buf, "xyz", []string{file}, GrepOptions{Count: true})
+		_ = RunGrep(&buf, nil, "xyz", []string{file}, GrepOptions{Count: true})
 
 		if !strings.Contains(buf.String(), "0") {
 			t.Errorf("RunGrep() Count should show 0: %v", buf.String())
@@ -211,7 +211,7 @@ func TestRunGrep(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunGrep(&buf, "pattern", []string{file1, file2}, GrepOptions{FilesWithMatch: true})
+		err := RunGrep(&buf, nil, "pattern", []string{file1, file2}, GrepOptions{FilesWithMatch: true})
 		if err != nil {
 			t.Fatalf("RunGrep() error = %v", err)
 		}
@@ -235,7 +235,7 @@ func TestRunGrep(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		_ = RunGrep(&buf, "pattern", []string{file1, file2}, GrepOptions{FilesNoMatch: true})
+		_ = RunGrep(&buf, nil, "pattern", []string{file1, file2}, GrepOptions{FilesNoMatch: true})
 
 		output := strings.TrimSpace(buf.String())
 		if strings.Contains(output, "has_match2.txt") {
@@ -257,7 +257,7 @@ func TestRunGrep(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunGrep(&buf, "test", []string{file}, GrepOptions{WordRegexp: true})
+		err := RunGrep(&buf, nil, "test", []string{file}, GrepOptions{WordRegexp: true})
 		if err != nil {
 			t.Fatalf("RunGrep() error = %v", err)
 		}
@@ -279,7 +279,7 @@ func TestRunGrep(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		_ = RunGrep(&buf, "test", []string{file}, GrepOptions{WordRegexp: true})
+		_ = RunGrep(&buf, nil, "test", []string{file}, GrepOptions{WordRegexp: true})
 
 		// None of these contain "test" as a whole word
 		if strings.TrimSpace(buf.String()) != "" {
@@ -297,7 +297,7 @@ func TestRunGrep(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		_ = RunGrep(&buf, "exact", []string{file}, GrepOptions{LineRegexp: true})
+		_ = RunGrep(&buf, nil, "exact", []string{file}, GrepOptions{LineRegexp: true})
 
 		lines := strings.Split(strings.TrimSpace(buf.String()), "\n")
 		if len(lines) != 1 || lines[0] != "exact" {
@@ -315,7 +315,7 @@ func TestRunGrep(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunGrep(&buf, "foo.bar", []string{file}, GrepOptions{FixedStrings: true})
+		err := RunGrep(&buf, nil, "foo.bar", []string{file}, GrepOptions{FixedStrings: true})
 		if err != nil {
 			t.Fatalf("RunGrep() error = %v", err)
 		}
@@ -336,7 +336,7 @@ func TestRunGrep(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		_ = RunGrep(&buf, "a+b", []string{file}, GrepOptions{FixedStrings: true})
+		_ = RunGrep(&buf, nil, "a+b", []string{file}, GrepOptions{FixedStrings: true})
 
 		lines := strings.Split(strings.TrimSpace(buf.String()), "\n")
 		if len(lines) != 1 || lines[0] != "a+b" {
@@ -354,7 +354,7 @@ func TestRunGrep(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunGrep(&buf, "match", []string{file}, GrepOptions{MaxCount: 2})
+		err := RunGrep(&buf, nil, "match", []string{file}, GrepOptions{MaxCount: 2})
 		if err != nil {
 			t.Fatalf("RunGrep() error = %v", err)
 		}
@@ -375,7 +375,7 @@ func TestRunGrep(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		_ = RunGrep(&buf, "[0-9]+", []string{file}, GrepOptions{OnlyMatching: true})
+		_ = RunGrep(&buf, nil, "[0-9]+", []string{file}, GrepOptions{OnlyMatching: true})
 
 		lines := strings.Split(strings.TrimSpace(buf.String()), "\n")
 		if len(lines) != 2 {
@@ -396,7 +396,7 @@ func TestRunGrep(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		_ = RunGrep(&buf, "match", []string{file1, file2}, GrepOptions{})
+		_ = RunGrep(&buf, nil, "match", []string{file1, file2}, GrepOptions{})
 
 		output := buf.String()
 		// Multiple files should show filenames
@@ -412,7 +412,7 @@ func TestRunGrep(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		_ = RunGrep(&buf, "match", []string{file}, GrepOptions{})
+		_ = RunGrep(&buf, nil, "match", []string{file}, GrepOptions{})
 
 		output := buf.String()
 		// Single file should not show filename by default
@@ -428,7 +428,7 @@ func TestRunGrep(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		_ = RunGrep(&buf, "match", []string{file}, GrepOptions{WithFilename: true})
+		_ = RunGrep(&buf, nil, "match", []string{file}, GrepOptions{WithFilename: true})
 
 		output := buf.String()
 		if !strings.Contains(output, "withname.txt") {
@@ -445,7 +445,7 @@ func TestRunGrep(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		_ = RunGrep(&buf, "match", []string{file1, file2}, GrepOptions{NoFilename: true})
+		_ = RunGrep(&buf, nil, "match", []string{file1, file2}, GrepOptions{NoFilename: true})
 
 		output := buf.String()
 		if strings.Contains(output, "noname1.txt") || strings.Contains(output, "noname2.txt") {
@@ -463,7 +463,7 @@ func TestRunGrep(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		_ = RunGrep(&buf, "match", []string{file}, GrepOptions{Context: 1})
+		_ = RunGrep(&buf, nil, "match", []string{file}, GrepOptions{Context: 1})
 
 		output := buf.String()
 		if !strings.Contains(output, "line2") || !strings.Contains(output, "line4") {
@@ -479,7 +479,7 @@ func TestRunGrep(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		_ = RunGrep(&buf, "match", []string{file}, GrepOptions{BeforeContext: 2})
+		_ = RunGrep(&buf, nil, "match", []string{file}, GrepOptions{BeforeContext: 2})
 
 		output := buf.String()
 		if !strings.Contains(output, "line1") || !strings.Contains(output, "line2") {
@@ -495,7 +495,7 @@ func TestRunGrep(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		_ = RunGrep(&buf, "match", []string{file}, GrepOptions{AfterContext: 2})
+		_ = RunGrep(&buf, nil, "match", []string{file}, GrepOptions{AfterContext: 2})
 
 		output := buf.String()
 		if !strings.Contains(output, "line2") || !strings.Contains(output, "line3") {
@@ -513,7 +513,7 @@ func TestRunGrep(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunGrep(&buf, "xyz123", []string{file}, GrepOptions{})
+		err := RunGrep(&buf, nil, "xyz123", []string{file}, GrepOptions{})
 		// Non-quiet mode should not return error for no matches
 		if err != nil {
 			t.Errorf("RunGrep() should not error on no match: %v", err)
@@ -527,7 +527,7 @@ func TestRunGrep(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunGrep(&buf, "match", []string{file}, GrepOptions{Quiet: true})
+		err := RunGrep(&buf, nil, "match", []string{file}, GrepOptions{Quiet: true})
 		if err != nil {
 			t.Errorf("RunGrep() quiet with match should not error: %v", err)
 		}
@@ -544,7 +544,7 @@ func TestRunGrep(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunGrep(&buf, "xyz", []string{file}, GrepOptions{Quiet: true})
+		err := RunGrep(&buf, nil, "xyz", []string{file}, GrepOptions{Quiet: true})
 		if err == nil {
 			t.Errorf("RunGrep() quiet without match should error")
 		}
@@ -553,7 +553,7 @@ func TestRunGrep(t *testing.T) {
 	t.Run("empty pattern", func(t *testing.T) {
 		var buf bytes.Buffer
 
-		err := RunGrep(&buf, "", []string{"file.txt"}, GrepOptions{})
+		err := RunGrep(&buf, nil, "", []string{"file.txt"}, GrepOptions{})
 		if err == nil {
 			t.Error("RunGrep() should return error for empty pattern")
 		}
@@ -562,7 +562,7 @@ func TestRunGrep(t *testing.T) {
 	t.Run("invalid regex pattern", func(t *testing.T) {
 		var buf bytes.Buffer
 
-		err := RunGrep(&buf, "[invalid", []string{"file.txt"}, GrepOptions{})
+		err := RunGrep(&buf, nil, "[invalid", []string{"file.txt"}, GrepOptions{})
 		if err == nil {
 			t.Error("RunGrep() should return error for invalid regex")
 		}
@@ -572,7 +572,7 @@ func TestRunGrep(t *testing.T) {
 		var buf bytes.Buffer
 
 		// Non-quiet mode continues on file errors
-		err := RunGrep(&buf, "pattern", []string{"/nonexistent/file.txt"}, GrepOptions{})
+		err := RunGrep(&buf, nil, "pattern", []string{"/nonexistent/file.txt"}, GrepOptions{})
 		if err != nil {
 			t.Logf("RunGrep() nonexistent file: %v", err)
 		}
@@ -585,7 +585,7 @@ func TestRunGrep(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunGrep(&buf, "pattern", []string{file}, GrepOptions{})
+		err := RunGrep(&buf, nil, "pattern", []string{file}, GrepOptions{})
 		if err != nil {
 			t.Fatalf("RunGrep() error = %v", err)
 		}
@@ -603,7 +603,7 @@ func TestRunGrep(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		_ = RunGrep(&buf, "世界", []string{file}, GrepOptions{})
+		_ = RunGrep(&buf, nil, "世界", []string{file}, GrepOptions{})
 
 		if !strings.Contains(buf.String(), "世界") {
 			t.Errorf("RunGrep() should match unicode: %v", buf.String())
