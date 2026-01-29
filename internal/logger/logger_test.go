@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 )
 
 func TestLoggerNotActive(t *testing.T) {
@@ -285,4 +286,217 @@ func TestGenerateLogPath(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestLogQuery(t *testing.T) {
+	tmpDir := t.TempDir()
+	logFile := filepath.Join(tmpDir, "test.log")
+
+	log, err := NewWithExactPath(logFile)
+	if err != nil {
+		t.Fatalf("NewWithExactPath() failed: %v", err)
+	}
+
+	log.LogQuery("/path/to/db.sqlite", "SELECT * FROM users")
+
+	if err := log.Close(); err != nil {
+		t.Fatalf("failed to close logger: %v", err)
+	}
+
+	content, err := os.ReadFile(logFile)
+	if err != nil {
+		t.Fatalf("failed to read log file: %v", err)
+	}
+
+	var entry map[string]any
+	if err := json.Unmarshal(content, &entry); err != nil {
+		t.Fatalf("failed to parse entry: %v", err)
+	}
+
+	if entry["msg"] != "query" {
+		t.Errorf("expected msg='query', got %v", entry["msg"])
+	}
+
+	if entry["database"] != "/path/to/db.sqlite" {
+		t.Errorf("expected database='/path/to/db.sqlite', got %v", entry["database"])
+	}
+
+	if entry["query"] != "SELECT * FROM users" {
+		t.Errorf("expected query='SELECT * FROM users', got %v", entry["query"])
+	}
+}
+
+func TestLogQueryResult(t *testing.T) {
+	tmpDir := t.TempDir()
+	logFile := filepath.Join(tmpDir, "test.log")
+
+	log, err := NewWithExactPath(logFile)
+	if err != nil {
+		t.Fatalf("NewWithExactPath() failed: %v", err)
+	}
+
+	// Log success
+	log.LogQueryResult("/path/to/db.sqlite", "SELECT * FROM users", 10, 50*time.Millisecond, nil)
+
+	// Log error
+	log.LogQueryResult("/path/to/db.sqlite", "SELECT * FROM invalid", 0, 5*time.Millisecond, os.ErrNotExist)
+
+	if err := log.Close(); err != nil {
+		t.Fatalf("failed to close logger: %v", err)
+	}
+
+	content, err := os.ReadFile(logFile)
+	if err != nil {
+		t.Fatalf("failed to read log file: %v", err)
+	}
+
+	lines := strings.Split(strings.TrimSpace(string(content)), "\n")
+	if len(lines) != 2 {
+		t.Fatalf("expected 2 log entries, got %d", len(lines))
+	}
+
+	// Check success entry
+	var entry1 map[string]any
+	if err := json.Unmarshal([]byte(lines[0]), &entry1); err != nil {
+		t.Fatalf("failed to parse first entry: %v", err)
+	}
+
+	if entry1["msg"] != "query_result" {
+		t.Errorf("expected msg='query_result', got %v", entry1["msg"])
+	}
+
+	if entry1["status"] != "success" {
+		t.Errorf("expected status='success', got %v", entry1["status"])
+	}
+
+	if entry1["rows"] != float64(10) {
+		t.Errorf("expected rows=10, got %v", entry1["rows"])
+	}
+
+	// Check error entry
+	var entry2 map[string]any
+	if err := json.Unmarshal([]byte(lines[1]), &entry2); err != nil {
+		t.Fatalf("failed to parse second entry: %v", err)
+	}
+
+	if entry2["status"] != "error" {
+		t.Errorf("expected status='error', got %v", entry2["status"])
+	}
+
+	if entry2["error"] == nil {
+		t.Error("expected error field to be present")
+	}
+}
+
+func TestLogQueryWithData(t *testing.T) {
+	tmpDir := t.TempDir()
+	logFile := filepath.Join(tmpDir, "test.log")
+
+	log, err := NewWithExactPath(logFile)
+	if err != nil {
+		t.Fatalf("NewWithExactPath() failed: %v", err)
+	}
+
+	columns := []string{"id", "name", "email"}
+	rows := []map[string]any{
+		{"id": 1, "name": "Alice", "email": "alice@example.com"},
+		{"id": 2, "name": "Bob", "email": "bob@example.com"},
+	}
+
+	log.LogQueryWithData("/path/to/db.sqlite", "SELECT * FROM users", columns, rows, 25*time.Millisecond, nil)
+
+	if err := log.Close(); err != nil {
+		t.Fatalf("failed to close logger: %v", err)
+	}
+
+	content, err := os.ReadFile(logFile)
+	if err != nil {
+		t.Fatalf("failed to read log file: %v", err)
+	}
+
+	var entry map[string]any
+	if err := json.Unmarshal(content, &entry); err != nil {
+		t.Fatalf("failed to parse entry: %v", err)
+	}
+
+	if entry["msg"] != "query_result" {
+		t.Errorf("expected msg='query_result', got %v", entry["msg"])
+	}
+
+	if entry["row_count"] != float64(2) {
+		t.Errorf("expected row_count=2, got %v", entry["row_count"])
+	}
+
+	cols, ok := entry["columns"].([]any)
+	if !ok {
+		t.Fatalf("expected columns to be array, got %T", entry["columns"])
+	}
+
+	if len(cols) != 3 {
+		t.Errorf("expected 3 columns, got %d", len(cols))
+	}
+
+	data, ok := entry["data"].([]any)
+	if !ok {
+		t.Fatalf("expected data to be array, got %T", entry["data"])
+	}
+
+	if len(data) != 2 {
+		t.Errorf("expected 2 data rows, got %d", len(data))
+	}
+}
+
+func TestQueryLogger(t *testing.T) {
+	tmpDir := t.TempDir()
+	logFile := filepath.Join(tmpDir, "test.log")
+
+	log, err := NewWithExactPath(logFile)
+	if err != nil {
+		t.Fatalf("NewWithExactPath() failed: %v", err)
+	}
+
+	ql := NewQueryLogger(log, "/path/to/db.sqlite")
+
+	ql.Log("SELECT 1", 1, time.Millisecond, nil)
+
+	if err := log.Close(); err != nil {
+		t.Fatalf("failed to close logger: %v", err)
+	}
+
+	content, err := os.ReadFile(logFile)
+	if err != nil {
+		t.Fatalf("failed to read log file: %v", err)
+	}
+
+	var entry map[string]any
+	if err := json.Unmarshal(content, &entry); err != nil {
+		t.Fatalf("failed to parse entry: %v", err)
+	}
+
+	if entry["database"] != "/path/to/db.sqlite" {
+		t.Errorf("expected database='/path/to/db.sqlite', got %v", entry["database"])
+	}
+}
+
+func TestNilQueryLogger(t *testing.T) {
+	// Test nil QueryLogger
+	var ql *QueryLogger
+
+	// Should not panic
+	ql.Log("SELECT 1", 1, time.Millisecond, nil)
+	ql.LogWithData("SELECT 1", nil, nil, time.Millisecond, nil)
+
+	// Test QueryLogger with nil Logger
+	ql = NewQueryLogger(nil, "test.db")
+	ql.Log("SELECT 1", 1, time.Millisecond, nil)
+	ql.LogWithData("SELECT 1", nil, nil, time.Millisecond, nil)
+}
+
+func TestNilLoggerQueryMethods(t *testing.T) {
+	var log *Logger
+
+	// All query methods should be safe to call on nil
+	log.LogQuery("test.db", "SELECT 1")
+	log.LogQueryResult("test.db", "SELECT 1", 0, time.Millisecond, nil)
+	log.LogQueryWithData("test.db", "SELECT 1", nil, nil, time.Millisecond, nil)
 }
