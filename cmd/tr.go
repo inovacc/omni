@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"os"
-
 	"github.com/inovacc/omni/internal/cli/tr"
 	"github.com/spf13/cobra"
 )
@@ -57,7 +55,7 @@ Interpreted sequences are:
 			set2 = args[1]
 		}
 
-		return tr.RunTr(os.Stdout, os.Stdin, set1, set2, opts)
+		return tr.RunTr(cmd.OutOrStdout(), cmd.InOrStdin(), set1, set2, opts)
 	},
 }
 

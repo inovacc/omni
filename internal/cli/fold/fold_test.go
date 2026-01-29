@@ -26,7 +26,7 @@ func TestRunFold(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunFold(&buf, []string{file}, FoldOptions{Width: 80})
+		err := RunFold(&buf, nil, []string{file}, FoldOptions{Width: 80})
 		if err != nil {
 			t.Fatalf("RunFold() error = %v", err)
 		}
@@ -45,7 +45,7 @@ func TestRunFold(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunFold(&buf, []string{file}, FoldOptions{Width: 80})
+		err := RunFold(&buf, nil, []string{file}, FoldOptions{Width: 80})
 		if err != nil {
 			t.Fatalf("RunFold() error = %v", err)
 		}
@@ -63,7 +63,7 @@ func TestRunFold(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunFold(&buf, []string{file}, FoldOptions{Width: 5})
+		err := RunFold(&buf, nil, []string{file}, FoldOptions{Width: 5})
 		if err != nil {
 			t.Fatalf("RunFold() error = %v", err)
 		}
@@ -86,7 +86,7 @@ func TestRunFold(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunFold(&buf, []string{file}, FoldOptions{Width: 12, Spaces: true})
+		err := RunFold(&buf, nil, []string{file}, FoldOptions{Width: 12, Spaces: true})
 		if err != nil {
 			t.Fatalf("RunFold() error = %v", err)
 		}
@@ -106,7 +106,7 @@ func TestRunFold(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunFold(&buf, []string{file}, FoldOptions{Width: 5, Bytes: true})
+		err := RunFold(&buf, nil, []string{file}, FoldOptions{Width: 5, Bytes: true})
 		if err != nil {
 			t.Fatalf("RunFold() error = %v", err)
 		}
@@ -125,7 +125,7 @@ func TestRunFold(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunFold(&buf, []string{file}, FoldOptions{})
+		err := RunFold(&buf, nil, []string{file}, FoldOptions{})
 		if err != nil {
 			t.Fatalf("RunFold() error = %v", err)
 		}
@@ -139,7 +139,7 @@ func TestRunFold(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunFold(&buf, []string{file}, FoldOptions{})
+		err := RunFold(&buf, nil, []string{file}, FoldOptions{})
 		if err != nil {
 			t.Fatalf("RunFold() error = %v", err)
 		}
@@ -158,7 +158,7 @@ func TestRunFold(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunFold(&buf, []string{file1, file2}, FoldOptions{})
+		err := RunFold(&buf, nil, []string{file1, file2}, FoldOptions{})
 		if err != nil {
 			t.Fatalf("RunFold() error = %v", err)
 		}
@@ -171,7 +171,7 @@ func TestRunFold(t *testing.T) {
 	t.Run("nonexistent file", func(t *testing.T) {
 		var buf bytes.Buffer
 
-		err := RunFold(&buf, []string{"/nonexistent/file.txt"}, FoldOptions{})
+		err := RunFold(&buf, nil, []string{"/nonexistent/file.txt"}, FoldOptions{})
 		if err == nil {
 			t.Error("RunFold() expected error for nonexistent file")
 		}
@@ -187,7 +187,7 @@ func TestRunFold(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunFold(&buf, []string{file}, FoldOptions{})
+		err := RunFold(&buf, nil, []string{file}, FoldOptions{})
 		if err != nil {
 			t.Fatalf("RunFold() error = %v", err)
 		}
@@ -207,7 +207,7 @@ func TestRunFold(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunFold(&buf, []string{file}, FoldOptions{Width: 3})
+		err := RunFold(&buf, nil, []string{file}, FoldOptions{Width: 3})
 		if err != nil {
 			t.Fatalf("RunFold() error = %v", err)
 		}

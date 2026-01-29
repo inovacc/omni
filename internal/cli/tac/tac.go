@@ -5,8 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"os"
 	"strings"
+
+	"github.com/inovacc/omni/internal/cli/input"
 )
 
 // TacOptions configures the tac command behavior
@@ -24,41 +25,26 @@ type TacResult struct {
 }
 
 // RunTac concatenates and prints files in reverse
-func RunTac(w io.Writer, args []string, opts TacOptions) error {
-	files := args
-	if len(files) == 0 {
-		files = []string{"-"}
+// r is the default input reader (used when args is empty or contains "-")
+func RunTac(w io.Writer, r io.Reader, args []string, opts TacOptions) error {
+	sources, err := input.Open(args, r)
+	if err != nil {
+		return fmt.Errorf("tac: %w", err)
 	}
+	defer input.CloseAll(sources)
 
 	var allLines []string
 
-	for _, file := range files {
-		var r io.Reader
-		if file == "-" {
-			r = os.Stdin
-		} else {
-			f, err := os.Open(file)
-			if err != nil {
-				_, _ = fmt.Fprintf(os.Stderr, "tac: %s: %v\n", file, err)
-				continue
-			}
-
-			defer func() {
-				_ = f.Close()
-			}()
-
-			r = f
-		}
-
+	for _, src := range sources {
 		if opts.JSON {
-			lines, err := tacReaderLines(r, opts)
+			lines, err := tacReaderLines(src.Reader, opts)
 			if err != nil {
 				return err
 			}
 
 			allLines = append(allLines, lines...)
 		} else {
-			if err := tacReader(w, r, opts); err != nil {
+			if err := tacReader(w, src.Reader, opts); err != nil {
 				return err
 			}
 		}

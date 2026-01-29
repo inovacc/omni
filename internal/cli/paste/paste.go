@@ -4,8 +4,9 @@ import (
 	"bufio"
 	"fmt"
 	"io"
-	"os"
 	"strings"
+
+	"github.com/inovacc/omni/internal/cli/input"
 )
 
 // PasteOptions configures the paste command behavior
@@ -16,7 +17,8 @@ type PasteOptions struct {
 }
 
 // RunPaste merges lines of files
-func RunPaste(w io.Writer, args []string, opts PasteOptions) error {
+// r is the default input reader (used when args is empty or contains "-")
+func RunPaste(w io.Writer, r io.Reader, args []string, opts PasteOptions) error {
 	if len(args) == 0 {
 		args = []string{"-"}
 	}
@@ -36,33 +38,23 @@ func RunPaste(w io.Writer, args []string, opts PasteOptions) error {
 	}
 
 	if opts.Serial {
-		return pasteSerial(w, args, delimiters, lineTerminator)
+		return pasteSerial(w, r, args, delimiters, lineTerminator)
 	}
 
-	return pasteParallel(w, args, delimiters, lineTerminator)
+	return pasteParallel(w, r, args, delimiters, lineTerminator)
 }
 
-func pasteParallel(w io.Writer, files []string, delimiters, lineTerminator string) error {
-	// Open all files
-	readers := make([]*bufio.Scanner, len(files))
-	for i, file := range files {
-		var r io.Reader
-		if file == "-" {
-			r = os.Stdin
-		} else {
-			f, err := os.Open(file)
-			if err != nil {
-				return fmt.Errorf("paste: %s: %w", file, err)
-			}
+func pasteParallel(w io.Writer, defaultReader io.Reader, files []string, delimiters, lineTerminator string) error {
+	// Open all files using input package
+	sources, err := input.Open(files, defaultReader)
+	if err != nil {
+		return fmt.Errorf("paste: %w", err)
+	}
+	defer input.CloseAll(sources)
 
-			defer func() {
-				_ = f.Close()
-			}()
-
-			r = f
-		}
-
-		readers[i] = bufio.NewScanner(r)
+	readers := make([]*bufio.Scanner, len(sources))
+	for i, src := range sources {
+		readers[i] = bufio.NewScanner(src.Reader)
 	}
 
 	delimIdx := 0
@@ -107,25 +99,15 @@ func pasteParallel(w io.Writer, files []string, delimiters, lineTerminator strin
 	return nil
 }
 
-func pasteSerial(w io.Writer, files []string, delimiters, lineTerminator string) error {
-	for _, file := range files {
-		var r io.Reader
-		if file == "-" {
-			r = os.Stdin
-		} else {
-			f, err := os.Open(file)
-			if err != nil {
-				return fmt.Errorf("paste: %s: %w", file, err)
-			}
+func pasteSerial(w io.Writer, defaultReader io.Reader, files []string, delimiters, lineTerminator string) error {
+	sources, err := input.Open(files, defaultReader)
+	if err != nil {
+		return fmt.Errorf("paste: %w", err)
+	}
+	defer input.CloseAll(sources)
 
-			defer func() {
-				_ = f.Close()
-			}()
-
-			r = f
-		}
-
-		scanner := bufio.NewScanner(r)
+	for _, src := range sources {
+		scanner := bufio.NewScanner(src.Reader)
 
 		var parts []string
 		for scanner.Scan() {
