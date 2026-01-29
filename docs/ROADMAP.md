@@ -434,27 +434,41 @@ omni cron explain "*/15 * * * *"     # "Every 15 minutes"
 omni datefmt -i "2024-01-15" -f "Jan 2, 2006"
 ```
 
-### Code Statistics (tokei-like)
+### Code Statistics (tokei-like) ✅ DONE
 
-| Command | Description | Priority |
-|---------|-------------|----------|
-| `loc` | Count lines of code by language | P1 |
-| `loc --json` | JSON output for CI integration | P1 |
+| Command | Description | Status |
+|---------|-------------|--------|
+| `loc` | Count lines of code by language | ✅ Done |
+| `loc --json` | JSON output for CI integration | ✅ Done |
+| `loc --exclude` | Exclude directories from counting | ✅ Done |
+| `loc --hidden` | Include hidden files | ✅ Done |
+
+**Features:**
+- 40+ language definitions with proper syntax awareness
+- String literal tracking (URLs in strings not counted as comments)
+- Block comment support (including nested for Rust, Haskell, etc.)
+- Literate mode for Markdown (extracts embedded code blocks)
+- Embedded code displayed as subtotals (`|- Shell`, `|- Go`, etc.)
+- Parses embedded code with language syntax for accurate comment detection
 
 ```bash
 omni loc .                    # Count LOC in current directory
 omni loc --json ./src         # JSON output
 omni loc --exclude vendor     # Exclude directories
+omni loc --hidden             # Include hidden files
 ```
 
 Output:
 ```
-Language        Files    Lines     Code  Comments    Blanks
-Go                 98    15234    12456      1234      1544
-Markdown           12      890      890         0         0
-YAML                5      234      200        20        14
-─────────────────────────────────────────────────────────
-Total             115    16358    13546      1254      1558
+Language              Files      Lines       Code   Comments     Blanks
+-------------------------------------------------------------------------------
+ Go                     380      74056      56744       3060      14252
+ Markdown                 6       2878          0       2141        737
+ |- Shell                          808        710         57         41
+ |- Go                             280        200         40         40
+ (Total)                         4007        948       2238        821
+===============================================================================
+ Total                  414      93411      72990       5310      15111
 ```
 
 ### Infrastructure Improvements

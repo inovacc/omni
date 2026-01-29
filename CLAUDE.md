@@ -111,24 +111,25 @@ defer func() {
 
 ## Command Categories
 
-### Implemented (102 commands)
+### Implemented (110+ commands)
 
 | Category | Commands |
 |----------|----------|
-| **Core** | ls, pwd, cat, date, dirname, basename, realpath, tree, arch, sleep, seq |
+| **Core** | ls, pwd, cat, date, dirname, basename, realpath, tree, arch, sleep, seq, printf, for |
 | **File** | cp, mv, rm, mkdir, rmdir, touch, stat, ln, readlink, chmod, chown, find, dd, file, which |
 | **Text** | grep, egrep, fgrep, head, tail, sort, uniq, wc, cut, tr, nl, paste, tac, column, fold, join, sed, awk, shuf, split, rev, comm, cmp, strings |
 | **System** | env, whoami, id, uname, uptime, free, df, du, ps, kill, time |
-| **Flow** | xargs, watch, yes |
+| **Flow** | xargs, watch, yes, pipe |
 | **Archive** | tar, zip, unzip |
 | **Compression** | gzip, gunzip, zcat, bzip2, bunzip2, bzcat, xz, unxz, xzcat |
 | **Hash** | hash, sha256sum, sha512sum, md5sum |
-| **Encoding** | base64, base32, base58 |
-| **Data** | jq, yq, dotenv |
-| **Security** | encrypt, decrypt, uuid, random |
+| **Encoding** | base64, base32, base58, url encode/decode, html encode/decode, hex encode/decode |
+| **Data** | jq, yq, dotenv, json tostruct, yaml tostruct, yaml validate, toml validate, xml validate |
+| **Security** | encrypt, decrypt, uuid, random, jwt decode |
 | **Pagers** | less, more |
 | **Comparison** | diff |
-| **Tooling** | lint, cmdtree |
+| **Tooling** | lint, cmdtree, loc, cron |
+| **Network** | curl |
 
 ### Backlog
 
