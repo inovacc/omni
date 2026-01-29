@@ -2,6 +2,7 @@ package shuf
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
 	"io"
 	"math/rand"
@@ -17,6 +18,13 @@ type ShufOptions struct {
 	HeadCount  int    // -n: output at most COUNT lines
 	Repeat     bool   // -r: output lines can be repeated
 	ZeroTerm   bool   // -z: line delimiter is NUL
+	JSON       bool   // --json: output as JSON
+}
+
+// ShufResult represents shuf output for JSON
+type ShufResult struct {
+	Lines []string `json:"lines"`
+	Count int      `json:"count"`
 }
 
 // RunShuf shuffles input lines randomly
@@ -97,6 +105,22 @@ func RunShuf(w io.Writer, args []string, opts ShufOptions) error {
 	count := len(lines)
 	if opts.HeadCount > 0 && opts.HeadCount < count {
 		count = opts.HeadCount
+	}
+
+	if opts.JSON {
+		var output []string
+		if opts.Repeat {
+			if opts.HeadCount == 0 {
+				return fmt.Errorf("shuf: --repeat requires --head-count")
+			}
+			for i := 0; i < opts.HeadCount; i++ {
+				idx := rand.Intn(len(lines))
+				output = append(output, lines[idx])
+			}
+		} else {
+			output = lines[:count]
+		}
+		return json.NewEncoder(w).Encode(ShufResult{Lines: output, Count: len(output)})
 	}
 
 	if opts.Repeat {

@@ -2,6 +2,7 @@ package nl
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -19,6 +20,19 @@ type NlOptions struct {
 	StartingNumber  int    // -v: starting line number
 	Increment       int    // -i: line number increment
 	NoRenumber      bool   // -p: do not reset line numbers at sections
+	JSON            bool   // --json: output as JSON
+}
+
+// NlLine represents a numbered line for JSON output
+type NlLine struct {
+	Number int    `json:"number,omitempty"`
+	Text   string `json:"text"`
+}
+
+// NlResult represents nl output for JSON
+type NlResult struct {
+	Lines []NlLine `json:"lines"`
+	Count int      `json:"count"`
 }
 
 // RunNl numbers lines of files
@@ -62,6 +76,7 @@ func RunNl(w io.Writer, args []string, opts NlOptions) error {
 	}
 
 	lineNum := opts.StartingNumber
+	var jsonLines []NlLine
 
 	for _, file := range files {
 		var r io.Reader
@@ -97,18 +112,31 @@ func RunNl(w io.Writer, args []string, opts NlOptions) error {
 				shouldNumber = false
 			}
 
-			if shouldNumber {
-				numStr := formatLineNumber(lineNum, opts.NumberFormat, opts.NumberWidth)
-				_, _ = fmt.Fprintf(w, "%s%s%s\n", numStr, opts.NumberSep, line)
-				lineNum += opts.Increment
+			if opts.JSON {
+				if shouldNumber {
+					jsonLines = append(jsonLines, NlLine{Number: lineNum, Text: line})
+					lineNum += opts.Increment
+				} else {
+					jsonLines = append(jsonLines, NlLine{Number: 0, Text: line})
+				}
 			} else {
-				_, _ = fmt.Fprintf(w, "%s%s\n", strings.Repeat(" ", opts.NumberWidth), line)
+				if shouldNumber {
+					numStr := formatLineNumber(lineNum, opts.NumberFormat, opts.NumberWidth)
+					_, _ = fmt.Fprintf(w, "%s%s%s\n", numStr, opts.NumberSep, line)
+					lineNum += opts.Increment
+				} else {
+					_, _ = fmt.Fprintf(w, "%s%s\n", strings.Repeat(" ", opts.NumberWidth), line)
+				}
 			}
 		}
 
 		if err := scanner.Err(); err != nil {
 			return err
 		}
+	}
+
+	if opts.JSON {
+		return json.NewEncoder(w).Encode(NlResult{Lines: jsonLines, Count: len(jsonLines)})
 	}
 
 	return nil

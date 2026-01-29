@@ -1,6 +1,7 @@
 package df
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 
@@ -17,6 +18,7 @@ type DFOptions struct {
 	ExcludeType   string // -x: exclude file systems of given TYPE
 	Local         bool   // -l: limit listing to local file systems
 	Portability   bool   // -P: use POSIX output format
+	JSON          bool   // --json: output as JSON
 }
 
 // DFInfo represents disk free space information
@@ -48,6 +50,20 @@ func RunDF(w io.Writer, args []string, opts DFOptions) error {
 	paths := args
 	if len(paths) == 0 {
 		paths = []string{"/"}
+	}
+
+	var jsonResults []DFInfo
+
+	if opts.JSON {
+		// Skip header for JSON output, collect results
+		for _, path := range paths {
+			info, err := getDiskInfo(path)
+			if err != nil {
+				continue
+			}
+			jsonResults = append(jsonResults, info)
+		}
+		return json.NewEncoder(w).Encode(jsonResults)
 	}
 
 	// Print header

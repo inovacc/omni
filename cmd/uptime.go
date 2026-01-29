@@ -22,6 +22,7 @@ for the past 1, 5, and 15 minutes.
 
 		opts.Pretty, _ = cmd.Flags().GetBool("pretty")
 		opts.Since, _ = cmd.Flags().GetBool("since")
+		opts.JSON, _ = cmd.Flags().GetBool("json")
 
 		return uptime.RunUptime(os.Stdout, opts)
 	},
@@ -32,4 +33,5 @@ func init() {
 
 	uptimeCmd.Flags().BoolP("pretty", "p", false, "show uptime in pretty format")
 	uptimeCmd.Flags().BoolP("since", "s", false, "system up since")
+	uptimeCmd.Flags().Bool("json", false, "output as JSON")
 }

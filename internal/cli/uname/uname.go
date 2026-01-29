@@ -1,6 +1,7 @@
 package uname
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -19,6 +20,7 @@ type UnameOptions struct {
 	Processor        bool // -p: print the processor type
 	HardwarePlatform bool // -i: print the hardware platform
 	OperatingSystem  bool // -o: print the operating system
+	JSON             bool // --json: output as JSON
 }
 
 // UnameInfo contains system information
@@ -87,6 +89,10 @@ func RunUname(w io.Writer, opts UnameOptions) error {
 
 	if opts.OperatingSystem {
 		parts = append(parts, info.OperatingSystem)
+	}
+
+	if opts.JSON {
+		return json.NewEncoder(w).Encode(info)
 	}
 
 	_, _ = fmt.Fprintln(w, strings.Join(parts, " "))

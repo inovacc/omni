@@ -1,6 +1,7 @@
 package id
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"os/user"
@@ -16,6 +17,7 @@ type IDOptions struct {
 	Name     bool   // -n: print name instead of number (requires -u, -g, or -G)
 	Real     bool   // -r: print real ID instead of effective ID
 	Username string // username to look up (optional)
+	JSON     bool   // --json: output as JSON
 }
 
 // IDInfo contains user identity information
@@ -45,6 +47,16 @@ func RunID(w io.Writer, opts IDOptions) error {
 
 	// Get group info
 	groups, _ := u.GroupIds()
+
+	if opts.JSON {
+		info := IDInfo{
+			UID:      u.Uid,
+			GID:      u.Gid,
+			Username: u.Username,
+			Groups:   groups,
+		}
+		return json.NewEncoder(w).Encode(info)
+	}
 
 	// Single value modes
 	if opts.User {

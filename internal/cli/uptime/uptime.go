@@ -1,6 +1,7 @@
 package uptime
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"strings"
@@ -11,6 +12,7 @@ import (
 type UptimeOptions struct {
 	Pretty bool // -p: show uptime in pretty format
 	Since  bool // -s: system up since
+	JSON   bool // --json: output as JSON
 }
 
 // UptimeInfo contains system uptime information
@@ -28,6 +30,10 @@ func RunUptime(w io.Writer, opts UptimeOptions) error {
 	info, err := getUptimeInfo()
 	if err != nil {
 		return fmt.Errorf("uptime: %w", err)
+	}
+
+	if opts.JSON {
+		return json.NewEncoder(w).Encode(info)
 	}
 
 	if opts.Since {

@@ -1,6 +1,7 @@
 package du
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"io/fs"
@@ -21,12 +22,19 @@ type DUOptions struct {
 	OneFileSystem  bool  // -x: skip directories on different file systems
 	ApparentSize   bool  // --apparent-size: print apparent sizes rather than disk usage
 	NullTerminator bool  // -0: end each output line with NUL, not newline
+	JSON           bool  // --json: output as JSON
 }
 
 // DUResult represents the result of a du operation
 type DUResult struct {
 	Path string `json:"path"`
 	Size int64  `json:"size"`
+}
+
+// DUOutput represents the complete du output for JSON
+type DUOutput struct {
+	Entries    []DUResult `json:"entries"`
+	GrandTotal int64      `json:"grand_total,omitempty"`
 }
 
 // RunDU executes the du command
@@ -46,6 +54,7 @@ func RunDU(w io.Writer, args []string, opts DUOptions) error {
 	}
 
 	var grandTotal int64
+	var jsonEntries []DUResult
 
 	terminator := "\n"
 	if opts.NullTerminator {
@@ -53,13 +62,24 @@ func RunDU(w io.Writer, args []string, opts DUOptions) error {
 	}
 
 	for _, path := range paths {
-		total, err := duPath(w, path, opts, 0, terminator)
+		total, entries, err := duPath(w, path, opts, 0, terminator)
 		if err != nil {
 			_, _ = fmt.Fprintf(os.Stderr, "du: %s: %v\n", path, err)
 			continue
 		}
 
 		grandTotal += total
+		if opts.JSON {
+			jsonEntries = append(jsonEntries, entries...)
+		}
+	}
+
+	if opts.JSON {
+		output := DUOutput{Entries: jsonEntries}
+		if opts.Total && len(paths) > 1 {
+			output.GrandTotal = grandTotal
+		}
+		return json.NewEncoder(w).Encode(output)
 	}
 
 	if opts.Total && len(paths) > 1 {
@@ -69,20 +89,25 @@ func RunDU(w io.Writer, args []string, opts DUOptions) error {
 	return nil
 }
 
-func duPath(w io.Writer, path string, opts DUOptions, _ int, terminator string) (int64, error) {
+func duPath(w io.Writer, path string, opts DUOptions, _ int, terminator string) (int64, []DUResult, error) {
+	var results []DUResult
 	info, err := os.Lstat(path)
 	if err != nil {
-		return 0, err
+		return 0, nil, err
 	}
 
 	// If it's a file, just return its size
 	if !info.IsDir() {
 		size := info.Size()
 		if opts.All || opts.SummarizeOnly {
-			printDUSize(w, size, path, opts, terminator)
+			if opts.JSON {
+				results = append(results, DUResult{Path: path, Size: size})
+			} else {
+				printDUSize(w, size, path, opts, terminator)
+			}
 		}
 
-		return size, nil
+		return size, results, nil
 	}
 
 	// It's a directory - walk it
@@ -118,14 +143,18 @@ func duPath(w io.Writer, path string, opts DUOptions, _ int, terminator string) 
 
 			relDepth := len(filepath.SplitList(rel))
 			if opts.MaxDepth == 0 || relDepth <= opts.MaxDepth {
-				printDUSize(w, size, p, opts, terminator)
+				if opts.JSON {
+					results = append(results, DUResult{Path: p, Size: size})
+				} else {
+					printDUSize(w, size, p, opts, terminator)
+				}
 			}
 		}
 
 		return nil
 	})
 	if err != nil {
-		return 0, err
+		return 0, nil, err
 	}
 
 	// Calculate and print directory sizes if not summarize-only
@@ -144,15 +173,23 @@ func duPath(w io.Writer, path string, opts DUOptions, _ int, terminator string) 
 
 			relDepth := len(filepath.SplitList(rel))
 			if opts.MaxDepth == 0 || relDepth <= opts.MaxDepth {
-				printDUSize(w, dirSize, dir, opts, terminator)
+				if opts.JSON {
+					results = append(results, DUResult{Path: dir, Size: dirSize})
+				} else {
+					printDUSize(w, dirSize, dir, opts, terminator)
+				}
 			}
 		}
 	}
 
-	// Always print the root path
-	printDUSize(w, totalSize, path, opts, terminator)
+	// Always print/record the root path
+	if opts.JSON {
+		results = append(results, DUResult{Path: path, Size: totalSize})
+	} else {
+		printDUSize(w, totalSize, path, opts, terminator)
+	}
 
-	return totalSize, nil
+	return totalSize, results, nil
 }
 
 func calculateDirSize(path string) int64 {

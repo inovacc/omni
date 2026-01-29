@@ -1,6 +1,7 @@
 package seq
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"math"
@@ -13,6 +14,13 @@ type SeqOptions struct {
 	Separator  string // -s: use STRING to separate numbers
 	Format     string // -f: use printf style FORMAT
 	EqualWidth bool   // -w: equalize width by padding with leading zeros
+	JSON       bool   // --json: output as JSON
+}
+
+// SeqResult represents seq output for JSON
+type SeqResult struct {
+	Numbers []float64 `json:"numbers"`
+	Count   int       `json:"count"`
 }
 
 // RunSeq prints a sequence of numbers
@@ -76,6 +84,14 @@ func RunSeq(w io.Writer, args []string, opts SeqOptions) error {
 	}
 
 	// Generate sequence
+	if opts.JSON {
+		var numbers []float64
+		for i := first; (increment > 0 && i <= last) || (increment < 0 && i >= last); i += increment {
+			numbers = append(numbers, i)
+		}
+		return json.NewEncoder(w).Encode(SeqResult{Numbers: numbers, Count: len(numbers)})
+	}
+
 	isFirst := true
 
 	for i := first; (increment > 0 && i <= last) || (increment < 0 && i >= last); i += increment {
