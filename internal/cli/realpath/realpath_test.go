@@ -25,7 +25,7 @@ func TestRunRealpath(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunRealpath(&buf, []string{file})
+		err := RunRealpath(&buf, []string{file}, RealpathOptions{})
 		if err != nil {
 			t.Fatalf("RunRealpath() error = %v", err)
 		}
@@ -47,7 +47,7 @@ func TestRunRealpath(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunRealpath(&buf, []string{file})
+		err := RunRealpath(&buf, []string{file}, RealpathOptions{})
 		if err != nil {
 			t.Fatalf("RunRealpath() error = %v", err)
 		}
@@ -66,7 +66,7 @@ func TestRunRealpath(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunRealpath(&buf, []string{dir})
+		err := RunRealpath(&buf, []string{dir}, RealpathOptions{})
 		if err != nil {
 			t.Fatalf("RunRealpath() error = %v", err)
 		}
@@ -88,7 +88,7 @@ func TestRunRealpath(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunRealpath(&buf, []string{dir})
+		err := RunRealpath(&buf, []string{dir}, RealpathOptions{})
 		if err != nil {
 			t.Fatalf("RunRealpath() error = %v", err)
 		}
@@ -116,7 +116,7 @@ func TestRunRealpath(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunRealpath(&buf, []string{file1, file2})
+		err := RunRealpath(&buf, []string{file1, file2}, RealpathOptions{})
 		if err != nil {
 			t.Fatalf("RunRealpath() error = %v", err)
 		}
@@ -147,7 +147,7 @@ func TestRunRealpath(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		_ = RunRealpath(&buf, files)
+		_ = RunRealpath(&buf, files, RealpathOptions{})
 
 		lines := strings.Split(strings.TrimSpace(buf.String()), "\n")
 		if len(lines) != 3 {
@@ -158,7 +158,7 @@ func TestRunRealpath(t *testing.T) {
 	t.Run("nonexistent file", func(t *testing.T) {
 		var buf bytes.Buffer
 
-		err := RunRealpath(&buf, []string{filepath.Join(tmpDir, "nonexistent.txt")})
+		err := RunRealpath(&buf, []string{filepath.Join(tmpDir, "nonexistent.txt")}, RealpathOptions{})
 		if err == nil {
 			t.Error("RunRealpath() should return error for nonexistent file")
 		}
@@ -167,7 +167,7 @@ func TestRunRealpath(t *testing.T) {
 	t.Run("no arguments", func(t *testing.T) {
 		var buf bytes.Buffer
 
-		err := RunRealpath(&buf, []string{})
+		err := RunRealpath(&buf, []string{}, RealpathOptions{})
 		if err == nil {
 			t.Error("RunRealpath() should return error with no arguments")
 		}
@@ -186,7 +186,7 @@ func TestRunRealpath(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunRealpath(&buf, []string{"."})
+		err := RunRealpath(&buf, []string{"."}, RealpathOptions{})
 		if err != nil {
 			t.Fatalf("RunRealpath() error = %v", err)
 		}
@@ -212,7 +212,7 @@ func TestRunRealpath(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunRealpath(&buf, []string{".."})
+		err := RunRealpath(&buf, []string{".."}, RealpathOptions{})
 		if err != nil {
 			t.Fatalf("RunRealpath() error = %v", err)
 		}
@@ -241,7 +241,7 @@ func TestRunRealpath(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunRealpath(&buf, []string{filepath.Join("..", "relative_test.txt")})
+		err := RunRealpath(&buf, []string{filepath.Join("..", "relative_test.txt")}, RealpathOptions{})
 		if err != nil {
 			t.Fatalf("RunRealpath() error = %v", err)
 		}
@@ -268,7 +268,7 @@ func TestRunRealpath(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunRealpath(&buf, []string{linkFile})
+		err := RunRealpath(&buf, []string{linkFile}, RealpathOptions{})
 		if err != nil {
 			t.Fatalf("RunRealpath() error = %v", err)
 		}
@@ -287,7 +287,7 @@ func TestRunRealpath(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		_ = RunRealpath(&buf, []string{file})
+		_ = RunRealpath(&buf, []string{file}, RealpathOptions{})
 
 		if !strings.HasSuffix(buf.String(), "\n") {
 			t.Error("RunRealpath() output should end with newline")
@@ -300,8 +300,8 @@ func TestRunRealpath(t *testing.T) {
 
 		var buf1, buf2 bytes.Buffer
 
-		_ = RunRealpath(&buf1, []string{file})
-		_ = RunRealpath(&buf2, []string{file})
+		_ = RunRealpath(&buf1, []string{file}, RealpathOptions{})
+		_ = RunRealpath(&buf2, []string{file}, RealpathOptions{})
 
 		if buf1.String() != buf2.String() {
 			t.Errorf("RunRealpath() should be consistent: %v vs %v", buf1.String(), buf2.String())
@@ -314,7 +314,7 @@ func TestRunRealpath(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunRealpath(&buf, []string{file})
+		err := RunRealpath(&buf, []string{file}, RealpathOptions{})
 		if err != nil {
 			t.Fatalf("RunRealpath() error = %v", err)
 		}
@@ -331,7 +331,7 @@ func TestRunRealpath(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunRealpath(&buf, []string{file})
+		err := RunRealpath(&buf, []string{file}, RealpathOptions{})
 		if err != nil {
 			t.Fatalf("RunRealpath() error = %v", err)
 		}
@@ -348,7 +348,7 @@ func TestRunRealpath(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunRealpath(&buf, []string{file})
+		err := RunRealpath(&buf, []string{file}, RealpathOptions{})
 		if err != nil {
 			t.Fatalf("RunRealpath() error = %v", err)
 		}

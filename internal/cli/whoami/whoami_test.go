@@ -11,7 +11,7 @@ func TestRunWhoami(t *testing.T) {
 	t.Run("returns current user", func(t *testing.T) {
 		var buf bytes.Buffer
 
-		err := RunWhoami(&buf)
+		err := RunWhoami(&buf, WhoamiOptions{})
 		if err != nil {
 			t.Fatalf("RunWhoami() error = %v", err)
 		}
@@ -25,7 +25,7 @@ func TestRunWhoami(t *testing.T) {
 	t.Run("returns non-empty string", func(t *testing.T) {
 		var buf bytes.Buffer
 
-		err := RunWhoami(&buf)
+		err := RunWhoami(&buf, WhoamiOptions{})
 		if err != nil {
 			t.Fatalf("RunWhoami() error = %v", err)
 		}
@@ -39,7 +39,7 @@ func TestRunWhoami(t *testing.T) {
 	t.Run("matches os/user", func(t *testing.T) {
 		var buf bytes.Buffer
 
-		err := RunWhoami(&buf)
+		err := RunWhoami(&buf, WhoamiOptions{})
 		if err != nil {
 			t.Fatalf("RunWhoami() error = %v", err)
 		}
@@ -68,7 +68,7 @@ func TestRunWhoami(t *testing.T) {
 	t.Run("output ends with newline", func(t *testing.T) {
 		var buf bytes.Buffer
 
-		err := RunWhoami(&buf)
+		err := RunWhoami(&buf, WhoamiOptions{})
 		if err != nil {
 			t.Fatalf("RunWhoami() error = %v", err)
 		}
@@ -81,7 +81,7 @@ func TestRunWhoami(t *testing.T) {
 	t.Run("single line output", func(t *testing.T) {
 		var buf bytes.Buffer
 
-		err := RunWhoami(&buf)
+		err := RunWhoami(&buf, WhoamiOptions{})
 		if err != nil {
 			t.Fatalf("RunWhoami() error = %v", err)
 		}
@@ -95,7 +95,7 @@ func TestRunWhoami(t *testing.T) {
 	t.Run("no special characters", func(t *testing.T) {
 		var buf bytes.Buffer
 
-		err := RunWhoami(&buf)
+		err := RunWhoami(&buf, WhoamiOptions{})
 		if err != nil {
 			t.Fatalf("RunWhoami() error = %v", err)
 		}
@@ -113,7 +113,7 @@ func TestRunWhoami(t *testing.T) {
 	t.Run("no leading whitespace", func(t *testing.T) {
 		var buf bytes.Buffer
 
-		_ = RunWhoami(&buf)
+		_ = RunWhoami(&buf, WhoamiOptions{})
 
 		output := buf.String()
 		if len(output) > 0 && (output[0] == ' ' || output[0] == '\t') {
@@ -124,7 +124,7 @@ func TestRunWhoami(t *testing.T) {
 	t.Run("no trailing whitespace except newline", func(t *testing.T) {
 		var buf bytes.Buffer
 
-		_ = RunWhoami(&buf)
+		_ = RunWhoami(&buf, WhoamiOptions{})
 
 		output := buf.String()
 		trimmed := strings.TrimRight(output, "\n")
@@ -137,12 +137,12 @@ func TestRunWhoami(t *testing.T) {
 	t.Run("consistent output", func(t *testing.T) {
 		var buf1, buf2 bytes.Buffer
 
-		err := RunWhoami(&buf1)
+		err := RunWhoami(&buf1, WhoamiOptions{})
 		if err != nil {
 			t.Fatalf("RunWhoami() error = %v", err)
 		}
 
-		err = RunWhoami(&buf2)
+		err = RunWhoami(&buf2, WhoamiOptions{})
 		if err != nil {
 			t.Fatalf("RunWhoami() second call error = %v", err)
 		}
@@ -158,7 +158,7 @@ func TestRunWhoami(t *testing.T) {
 		for i := 0; i < 5; i++ {
 			var buf bytes.Buffer
 
-			_ = RunWhoami(&buf)
+			_ = RunWhoami(&buf, WhoamiOptions{})
 			results[i] = buf.String()
 		}
 
@@ -172,7 +172,7 @@ func TestRunWhoami(t *testing.T) {
 	t.Run("no error", func(t *testing.T) {
 		var buf bytes.Buffer
 
-		err := RunWhoami(&buf)
+		err := RunWhoami(&buf, WhoamiOptions{})
 
 		if err != nil {
 			t.Errorf("RunWhoami() should not error in normal conditions: %v", err)
@@ -182,7 +182,7 @@ func TestRunWhoami(t *testing.T) {
 	t.Run("reasonable length", func(t *testing.T) {
 		var buf bytes.Buffer
 
-		_ = RunWhoami(&buf)
+		_ = RunWhoami(&buf, WhoamiOptions{})
 
 		output := strings.TrimSpace(buf.String())
 		// Username should be reasonable length (1-256 characters)
@@ -194,7 +194,7 @@ func TestRunWhoami(t *testing.T) {
 	t.Run("printable characters", func(t *testing.T) {
 		var buf bytes.Buffer
 
-		_ = RunWhoami(&buf)
+		_ = RunWhoami(&buf, WhoamiOptions{})
 
 		output := strings.TrimSpace(buf.String())
 

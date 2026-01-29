@@ -262,9 +262,9 @@ func TestGenerateLogPath(t *testing.T) {
 		command string
 		wantSfx string
 	}{
-		{"normal command", "/var/log", "cat", "-cat.log"},
-		{"empty command", "/var/log", "", "-omni.log"},
-		{"complex command", "/tmp", "my-cmd", "-my-cmd.log"},
+		{"normal command", filepath.Join("var", "log"), "cat", "-cat.log"},
+		{"empty command", filepath.Join("var", "log"), "", "-omni.log"},
+		{"complex command", "tmp", "my-cmd", "-my-cmd.log"},
 	}
 
 	for _, tt := range tests {
@@ -274,8 +274,10 @@ func TestGenerateLogPath(t *testing.T) {
 				t.Fatalf("generateLogPath() failed: %v", err)
 			}
 
-			if !strings.HasPrefix(path, tt.dir) {
-				t.Errorf("path should start with %s, got %s", tt.dir, path)
+			// Use filepath.Clean to normalize paths for comparison
+			expectedPrefix := filepath.Clean(tt.dir)
+			if !strings.HasPrefix(filepath.Clean(path), expectedPrefix) {
+				t.Errorf("path should start with %s, got %s", expectedPrefix, path)
 			}
 
 			if !strings.HasSuffix(path, tt.wantSfx) {

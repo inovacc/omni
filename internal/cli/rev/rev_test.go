@@ -24,7 +24,7 @@ func TestRunRev(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunRev(&buf, []string{file})
+		err := RunRev(&buf, []string{file}, RevOptions{})
 		if err != nil {
 			t.Fatalf("RunRev() error = %v", err)
 		}
@@ -43,7 +43,7 @@ func TestRunRev(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunRev(&buf, []string{file})
+		err := RunRev(&buf, []string{file}, RevOptions{})
 		if err != nil {
 			t.Fatalf("RunRev() error = %v", err)
 		}
@@ -66,7 +66,7 @@ func TestRunRev(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunRev(&buf, []string{file})
+		err := RunRev(&buf, []string{file}, RevOptions{})
 		if err != nil {
 			t.Fatalf("RunRev() error = %v", err)
 		}
@@ -84,7 +84,7 @@ func TestRunRev(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunRev(&buf, []string{file})
+		err := RunRev(&buf, []string{file}, RevOptions{})
 		if err != nil {
 			t.Fatalf("RunRev() error = %v", err)
 		}
@@ -104,7 +104,7 @@ func TestRunRev(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunRev(&buf, []string{file1, file2})
+		err := RunRev(&buf, []string{file1, file2}, RevOptions{})
 		if err != nil {
 			t.Fatalf("RunRev() error = %v", err)
 		}
@@ -122,7 +122,7 @@ func TestRunRev(t *testing.T) {
 	t.Run("nonexistent file", func(t *testing.T) {
 		var buf bytes.Buffer
 
-		err := RunRev(&buf, []string{"/nonexistent/file.txt"})
+		err := RunRev(&buf, []string{"/nonexistent/file.txt"}, RevOptions{})
 		if err == nil {
 			t.Error("RunRev() expected error for nonexistent file")
 		}
@@ -136,7 +136,7 @@ func TestRunRev(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		_ = RunRev(&buf, []string{file})
+		_ = RunRev(&buf, []string{file}, RevOptions{})
 
 		output := strings.TrimSpace(buf.String())
 		if output != "racecar" {
@@ -152,7 +152,7 @@ func TestRunRev(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		_ = RunRev(&buf, []string{file})
+		_ = RunRev(&buf, []string{file}, RevOptions{})
 
 		output := strings.TrimSpace(buf.String())
 		if output != "dlrow olleh" {

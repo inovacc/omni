@@ -114,22 +114,22 @@ func base62Encode(data []byte) string {
 	// and then to base62
 	result := make([]byte, encodedSize)
 	for i := range result {
-		result[i] = '0'
+		result[i] = 0 // Store numeric values (0-61) initially
 	}
 
 	// Process each byte
 	for _, b := range data {
 		carry := int(b)
 		for j := encodedSize - 1; j >= 0; j-- {
-			carry += 256 * int(result[j]-'0')
-			if result[j] >= 'A' && result[j] <= 'Z' {
-				carry += 256 * (int(result[j]-'A') + 10 - int('0'))
-			} else if result[j] >= 'a' && result[j] <= 'z' {
-				carry += 256 * (int(result[j]-'a') + 36 - int('0'))
-			}
-			result[j] = base62Chars[carry%62]
+			carry += 256 * int(result[j])
+			result[j] = byte(carry % 62)
 			carry /= 62
 		}
+	}
+
+	// Convert numeric values to base62 characters
+	for i := range result {
+		result[i] = base62Chars[result[i]]
 	}
 
 	return string(result)

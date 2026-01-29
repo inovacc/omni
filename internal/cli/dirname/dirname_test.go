@@ -120,7 +120,7 @@ func TestRunDirname(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			var buf bytes.Buffer
 
-			err := RunDirname(&buf, tt.args)
+			err := RunDirname(&buf, tt.args, DirnameOptions{})
 
 			if (err != nil) != tt.wantErr {
 				t.Errorf("RunDirname() error = %v, wantErr %v", err, tt.wantErr)
@@ -141,7 +141,7 @@ func TestRunDirname_OutputFormat(t *testing.T) {
 	t.Run("ends with newline", func(t *testing.T) {
 		var buf bytes.Buffer
 
-		_ = RunDirname(&buf, []string{filepath.Join("path", "file.txt")})
+		_ = RunDirname(&buf, []string{filepath.Join("path", "file.txt")}, DirnameOptions{})
 
 		if !strings.HasSuffix(buf.String(), "\n") {
 			t.Error("RunDirname() output should end with newline")
@@ -155,7 +155,7 @@ func TestRunDirname_OutputFormat(t *testing.T) {
 			filepath.Join("a", "1.txt"),
 			filepath.Join("b", "2.txt"),
 			filepath.Join("c", "3.txt"),
-		})
+		}, DirnameOptions{})
 
 		lines := strings.Split(strings.TrimSpace(buf.String()), "\n")
 		if len(lines) != 3 {
@@ -166,7 +166,7 @@ func TestRunDirname_OutputFormat(t *testing.T) {
 	t.Run("error message format", func(t *testing.T) {
 		var buf bytes.Buffer
 
-		err := RunDirname(&buf, []string{})
+		err := RunDirname(&buf, []string{}, DirnameOptions{})
 
 		if err == nil {
 			t.Error("RunDirname() should return error for no args")
@@ -181,7 +181,7 @@ func TestRunDirname_OutputFormat(t *testing.T) {
 	t.Run("no extra whitespace", func(t *testing.T) {
 		var buf bytes.Buffer
 
-		_ = RunDirname(&buf, []string{filepath.Join("path", "file.txt")})
+		_ = RunDirname(&buf, []string{filepath.Join("path", "file.txt")}, DirnameOptions{})
 
 		output := buf.String()
 		if strings.HasPrefix(output, " ") || strings.HasPrefix(output, "\t") {
@@ -194,7 +194,7 @@ func TestRunDirname_EdgeCases(t *testing.T) {
 	t.Run("unicode path", func(t *testing.T) {
 		var buf bytes.Buffer
 
-		_ = RunDirname(&buf, []string{filepath.Join("путь", "файл.txt")})
+		_ = RunDirname(&buf, []string{filepath.Join("путь", "файл.txt")}, DirnameOptions{})
 
 		got := strings.TrimSpace(buf.String())
 		if got != "путь" {
@@ -205,7 +205,7 @@ func TestRunDirname_EdgeCases(t *testing.T) {
 	t.Run("path with special characters", func(t *testing.T) {
 		var buf bytes.Buffer
 
-		_ = RunDirname(&buf, []string{filepath.Join("dir-name_v1", "file.txt")})
+		_ = RunDirname(&buf, []string{filepath.Join("dir-name_v1", "file.txt")}, DirnameOptions{})
 
 		got := strings.TrimSpace(buf.String())
 		if got != "dir-name_v1" {
@@ -219,7 +219,7 @@ func TestRunDirname_EdgeCases(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		_ = RunDirname(&buf, []string{path})
+		_ = RunDirname(&buf, []string{path}, DirnameOptions{})
 
 		got := strings.TrimSpace(buf.String())
 		if got != longDir {
@@ -237,7 +237,7 @@ func TestRunDirname_EdgeCases(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		_ = RunDirname(&buf, []string{path})
+		_ = RunDirname(&buf, []string{path}, DirnameOptions{})
 
 		got := strings.TrimSpace(buf.String())
 		expected := filepath.Join(parts[:19]...)

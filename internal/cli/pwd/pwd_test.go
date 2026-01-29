@@ -12,7 +12,7 @@ func TestRunPwd(t *testing.T) {
 	t.Run("returns current directory", func(t *testing.T) {
 		var buf bytes.Buffer
 
-		err := RunPwd(&buf)
+		err := RunPwd(&buf, PwdOptions{})
 		if err != nil {
 			t.Fatalf("RunPwd() error = %v", err)
 		}
@@ -28,7 +28,7 @@ func TestRunPwd(t *testing.T) {
 	t.Run("returns absolute path", func(t *testing.T) {
 		var buf bytes.Buffer
 
-		err := RunPwd(&buf)
+		err := RunPwd(&buf, PwdOptions{})
 		if err != nil {
 			t.Fatalf("RunPwd() error = %v", err)
 		}
@@ -56,7 +56,7 @@ func TestRunPwd(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err = RunPwd(&buf)
+		err = RunPwd(&buf, PwdOptions{})
 		if err != nil {
 			t.Fatalf("RunPwd() error = %v", err)
 		}
@@ -76,7 +76,7 @@ func TestRunPwd(t *testing.T) {
 	t.Run("output ends with newline", func(t *testing.T) {
 		var buf bytes.Buffer
 
-		err := RunPwd(&buf)
+		err := RunPwd(&buf, PwdOptions{})
 		if err != nil {
 			t.Fatalf("RunPwd() error = %v", err)
 		}
@@ -90,8 +90,8 @@ func TestRunPwd(t *testing.T) {
 	t.Run("consistent results", func(t *testing.T) {
 		var buf1, buf2 bytes.Buffer
 
-		_ = RunPwd(&buf1)
-		_ = RunPwd(&buf2)
+		_ = RunPwd(&buf1, PwdOptions{})
+		_ = RunPwd(&buf2, PwdOptions{})
 
 		if buf1.String() != buf2.String() {
 			t.Errorf("RunPwd() should be consistent: %v vs %v", buf1.String(), buf2.String())
@@ -101,7 +101,7 @@ func TestRunPwd(t *testing.T) {
 	t.Run("single line output", func(t *testing.T) {
 		var buf bytes.Buffer
 
-		_ = RunPwd(&buf)
+		_ = RunPwd(&buf, PwdOptions{})
 
 		lines := strings.Split(strings.TrimSpace(buf.String()), "\n")
 		if len(lines) != 1 {
@@ -112,7 +112,7 @@ func TestRunPwd(t *testing.T) {
 	t.Run("no extra whitespace", func(t *testing.T) {
 		var buf bytes.Buffer
 
-		_ = RunPwd(&buf)
+		_ = RunPwd(&buf, PwdOptions{})
 
 		output := buf.String()
 		trimmed := strings.TrimRight(output, "\n")
@@ -130,7 +130,7 @@ func TestRunPwd(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		_ = RunPwd(&buf)
+		_ = RunPwd(&buf, PwdOptions{})
 
 		got := strings.TrimSpace(buf.String())
 		if got != expected {
@@ -156,14 +156,14 @@ func TestRunPwd(t *testing.T) {
 
 		var buf1 bytes.Buffer
 
-		_ = RunPwd(&buf1)
+		_ = RunPwd(&buf1, PwdOptions{})
 
 		// Second chdir
 		_ = os.Chdir(tmpDir2)
 
 		var buf2 bytes.Buffer
 
-		_ = RunPwd(&buf2)
+		_ = RunPwd(&buf2, PwdOptions{})
 
 		got1 := strings.TrimSpace(buf1.String())
 		got2 := strings.TrimSpace(buf2.String())
