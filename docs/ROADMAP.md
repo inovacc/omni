@@ -37,19 +37,27 @@ Foundation commands using Go standard library.
 
 ```
 omni/
-├── cmd/                    # Cobra CLI commands (98 commands)
+├── cmd/                    # Cobra CLI commands (100+ commands)
 │   ├── root.go
 │   ├── ls.go
 │   ├── pwd.go
+│   ├── sqlite.go          # SQLite database management
+│   ├── bbolt.go           # BoltDB key-value store
+│   ├── generate.go        # Code generation tools
 │   └── ...
 ├── internal/
-│   ├── cli/               # Library implementations (79 packages)
+│   ├── cli/               # Library implementations (80+ packages)
 │   │   ├── ls/
 │   │   ├── pwd/
+│   │   ├── sqlite/        # SQLite operations
+│   │   ├── bbolt/         # BoltDB operations
+│   │   ├── generate/      # Code generation with templates
 │   │   └── ...
 │   ├── flags/             # Feature flags system
-│   ├── logger/            # KSUID-based logging
+│   ├── logger/            # KSUID-based logging with query support
 │   └── twig/              # Tree visualization module
+├── include/               # Template reference files
+│   └── cobra/             # Cobra app templates
 └── main.go
 ```
 
@@ -494,6 +502,46 @@ logger.SetOutput(file)
 omni --log-format=json --log-file=omni.log ls
 ```
 
+### Query Logging (Implemented)
+
+Database queries can be logged with timing and result information:
+
+```go
+// Log query with result
+logger.LogQueryResult(database, query, rowCount, duration, err)
+
+// Log query with result data (for debugging)
+logger.LogQueryWithData(database, query, columns, rows, duration, err)
+
+// Use QueryLogger for convenience
+ql := logger.NewQueryLogger(l, "/path/to/db.sqlite")
+ql.Log(query, rowCount, duration, err)
+```
+
+```bash
+# Enable query logging
+eval "$(omni logger --path /tmp/omni-logs)"
+
+# Run query with logging
+omni sqlite query mydb.sqlite "SELECT * FROM users"
+
+# Include result data in logs (use with caution)
+omni sqlite query mydb.sqlite "SELECT * FROM users" --log-data
+```
+
+Log entry example:
+```json
+{
+  "msg": "query_result",
+  "database": "mydb.sqlite",
+  "query": "SELECT * FROM users",
+  "status": "success",
+  "rows": 10,
+  "duration_ms": 25,
+  "timestamp": "2026-01-29T12:00:00Z"
+}
+```
+
 ---
 
 ## Library API Summary
@@ -572,6 +620,7 @@ func printOutput(cmd *cobra.Command, data any, format OutputFormat) error {
 - **Total Test Cases:** 700+
 - **CLI Packages with Tests:** 79/79 (100%)
 - **Internal Packages with Tests:** 86/88 (97.7%)
+- **Query Logging Tests:** Comprehensive coverage for LogQuery, LogQueryResult, LogQueryWithData, QueryLogger
 
 ### Unit Tests
 - Table-driven tests for all functions
@@ -1134,14 +1183,16 @@ omni generate test ./handlers/user.go
 ### Cobra Generator Features
 
 - [x] Project initialization with go.mod
-- [ ] Command scaffolding with parent/child relationships
-- [ ] Viper integration for configuration
-- [ ] Persistent and local flags setup
-- [ ] License file generation (MIT, Apache-2.0, BSD-3)
-- [ ] README generation with usage examples
-- [ ] Makefile / Taskfile generation
-- [ ] GitHub Actions CI workflow
-- [ ] goreleaser configuration
+- [x] Command scaffolding with parent/child relationships
+- [x] Viper integration for configuration
+- [x] Persistent and local flags setup
+- [x] License file generation (MIT, Apache-2.0, BSD-3)
+- [x] README generation with usage examples
+- [x] Makefile / Taskfile generation
+- [x] GitHub Actions CI workflow
+- [x] goreleaser configuration
+- [x] Config file support (~/.cobra.yaml) compatible with cobra-cli
+- [x] Service pattern with inovacc/config integration
 
 ### Generator Template System
 

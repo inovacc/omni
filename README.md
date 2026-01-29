@@ -175,11 +175,107 @@ omni decrypt -p mypass -a secret.enc
 |---------|-------------|
 | `diff` | Compare files line by line |
 
+### Database Tools
+| Command | Description |
+|---------|-------------|
+| `sqlite` | SQLite database management (pure Go) |
+| `bbolt` | BoltDB key-value store management |
+
+### Code Generation
+| Command | Description |
+|---------|-------------|
+| `generate cobra` | Generate Cobra CLI applications |
+
 ### Tooling
 | Command | Description |
 |---------|-------------|
 | `lint` | Check Taskfiles for portability |
 | `logger` | Configure command logging |
+
+## Database Tools
+
+### SQLite CLI
+
+Pure Go SQLite management (no CGO required):
+
+```bash
+# Database info
+omni sqlite stats mydb.sqlite
+omni sqlite tables mydb.sqlite
+omni sqlite schema mydb.sqlite users
+omni sqlite columns mydb.sqlite users
+omni sqlite indexes mydb.sqlite
+
+# Query execution
+omni sqlite query mydb.sqlite "SELECT * FROM users"
+omni sqlite query mydb.sqlite "SELECT * FROM users" --json
+omni sqlite query mydb.sqlite "SELECT * FROM users" --header
+
+# Maintenance
+omni sqlite vacuum mydb.sqlite
+omni sqlite check mydb.sqlite
+omni sqlite dump mydb.sqlite > backup.sql
+omni sqlite import mydb.sqlite backup.sql
+```
+
+### BBolt CLI
+
+BoltDB key-value store management:
+
+```bash
+# Database info
+omni bbolt stats mydb.bolt
+omni bbolt buckets mydb.bolt
+omni bbolt keys mydb.bolt mybucket
+
+# Key-value operations
+omni bbolt get mydb.bolt mybucket mykey
+omni bbolt put mydb.bolt mybucket mykey "value"
+omni bbolt delete mydb.bolt mybucket mykey
+
+# Maintenance
+omni bbolt compact mydb.bolt compacted.bolt
+omni bbolt check mydb.bolt
+omni bbolt dump mydb.bolt
+```
+
+## Code Generation
+
+### Cobra CLI Generator
+
+Generate production-ready Cobra CLI applications:
+
+```bash
+# Basic project
+omni generate cobra init myapp --module github.com/user/myapp
+
+# With Viper configuration
+omni generate cobra init myapp --module github.com/user/myapp --viper
+
+# Full project with CI/CD (goreleaser, workflows, linting)
+omni generate cobra init myapp --module github.com/user/myapp --full
+
+# With service pattern (inovacc/config)
+omni generate cobra init myapp --module github.com/user/myapp --service
+
+# Add new command to existing project
+omni generate cobra add serve
+omni generate cobra add config --parent root
+```
+
+**Configuration file** (`~/.cobra.yaml`):
+```yaml
+author: Your Name <email@example.com>
+license: MIT
+useViper: true
+full: true
+```
+
+Manage config:
+```bash
+omni generate cobra config --show
+omni generate cobra config --init --author "John Doe" --license MIT
+```
 
 ## Library Usage
 
@@ -218,25 +314,34 @@ jq.RunJq(os.Stdout, []string{".name", "data.json"}, &jq.Options{Raw: true})
 
 ```
 omni/
-├── cmd/                    # Cobra CLI commands (98 commands)
+├── cmd/                    # Cobra CLI commands (100+ commands)
 │   ├── root.go
 │   ├── ls.go
 │   ├── grep.go
+│   ├── sqlite.go
+│   ├── bbolt.go
+│   ├── generate.go
 │   └── ...
 ├── internal/
-│   ├── cli/               # Library implementations (79 packages)
+│   ├── cli/               # Library implementations (80+ packages)
 │   │   ├── ls/
 │   │   ├── grep/
 │   │   ├── jq/
+│   │   ├── sqlite/        # SQLite operations
+│   │   ├── bbolt/         # BoltDB operations
+│   │   ├── generate/      # Code generation
+│   │   │   └── templates/ # Cobra templates
 │   │   └── ...
 │   ├── flags/             # Feature flags system
-│   ├── logger/            # KSUID-based logging
+│   ├── logger/            # KSUID-based logging with query support
 │   └── twig/              # Tree visualization module
 │       ├── scanner/       # Directory scanning
 │       ├── formatter/     # Output formatting
 │       ├── builder/       # Structure creation
 │       ├── parser/        # Tree parsing
 │       └── models/        # Data models
+├── include/               # Template reference files
+│   └── cobra/             # Cobra app templates
 ├── docs/                  # Documentation
 │   ├── ROADMAP.md
 │   ├── COMMANDS.md
@@ -268,19 +373,47 @@ Enable command logging for debugging:
 
 ```bash
 # Enable logging (Linux/macOS)
-eval "$(omni logger --path /tmp/omni.log)"
+eval "$(omni logger --path /tmp/omni-logs)"
 
 # Enable logging (Windows PowerShell)
-Invoke-Expression (omni logger --path C:\temp\omni.log)
+Invoke-Expression (omni logger --path C:\temp\omni-logs)
 
 # Check status
 omni logger --status
+
+# View all logs
+omni logger --viewer
 
 # Disable logging
 eval "$(omni logger --disable)"
 ```
 
 Log output is structured JSON with command, args, timestamp, and PID.
+
+### Query Logging
+
+With logging enabled, SQLite queries are automatically logged:
+
+```bash
+# Queries logged with timing and row counts
+omni sqlite query mydb.sqlite "SELECT * FROM users"
+
+# Include result data in logs (use with caution)
+omni sqlite query mydb.sqlite "SELECT * FROM users" --log-data
+```
+
+Log entry example:
+```json
+{
+  "msg": "query_result",
+  "database": "mydb.sqlite",
+  "query": "SELECT * FROM users",
+  "status": "success",
+  "rows": 10,
+  "duration_ms": 25,
+  "timestamp": "2026-01-29T12:00:00Z"
+}
+```
 
 ## Use with Taskfile
 
