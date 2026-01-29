@@ -2,6 +2,7 @@ package grep
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -30,16 +31,26 @@ type GrepOptions struct {
 	AfterContext   int  // -A: print NUM lines of trailing context
 	MaxCount       int  // -m: stop after NUM matches
 	Recursive      bool // -r/-R: search recursively
+	JSON           bool // --json: output as JSON
 }
 
 // GrepResult represents the result of a grep operation
 type GrepResult struct {
-	Filename    string
-	LineNumber  int
-	Line        string
-	MatchCount  int
-	HasMatch    bool
-	MatchedPart string
+	Filename    string `json:"filename,omitempty"`
+	LineNumber  int    `json:"line_number,omitempty"`
+	Line        string `json:"line,omitempty"`
+	MatchCount  int    `json:"match_count,omitempty"`
+	HasMatch    bool   `json:"has_match"`
+	MatchedPart string `json:"matched_part,omitempty"`
+}
+
+// GrepOutput represents the complete grep output for JSON
+type GrepOutput struct {
+	Pattern     string       `json:"pattern"`
+	Files       []string     `json:"files"`
+	Matches     []GrepResult `json:"matches"`
+	TotalCount  int          `json:"total_count"`
+	FilesWithMatch int       `json:"files_with_match"`
 }
 
 // RunGrep executes the grep command
@@ -65,6 +76,8 @@ func RunGrep(w io.Writer, pattern string, args []string, opts GrepOptions) error
 
 	totalMatches := 0
 	anyMatch := false
+	filesWithMatch := 0
+	var allResults []GrepResult
 
 	for _, file := range files {
 		var r io.Reader
@@ -91,7 +104,7 @@ func RunGrep(w io.Writer, pattern string, args []string, opts GrepOptions) error
 			}()
 		}
 
-		matches, hasMatch, err := grepReader(w, r, filename, re, opts, showFilename)
+		matches, hasMatch, results, err := grepReader(w, r, filename, re, opts, showFilename)
 		if err != nil {
 			return err
 		}
@@ -100,11 +113,27 @@ func RunGrep(w io.Writer, pattern string, args []string, opts GrepOptions) error
 
 		if hasMatch {
 			anyMatch = true
+			filesWithMatch++
+		}
+
+		if opts.JSON {
+			allResults = append(allResults, results...)
 		}
 
 		if opts.Quiet && anyMatch {
 			return nil // Exit immediately on match in quiet mode
 		}
+	}
+
+	if opts.JSON {
+		output := GrepOutput{
+			Pattern:        pattern,
+			Files:          files,
+			Matches:        allResults,
+			TotalCount:     totalMatches,
+			FilesWithMatch: filesWithMatch,
+		}
+		return json.NewEncoder(w).Encode(output)
 	}
 
 	if opts.Quiet {
@@ -139,11 +168,12 @@ func compilePattern(pattern string, opts GrepOptions) (*regexp.Regexp, error) {
 	return regexp.Compile(flags + pattern)
 }
 
-func grepReader(w io.Writer, r io.Reader, filename string, re *regexp.Regexp, opts GrepOptions, showFilename bool) (int, bool, error) {
+func grepReader(w io.Writer, r io.Reader, filename string, re *regexp.Regexp, opts GrepOptions, showFilename bool) (int, bool, []GrepResult, error) {
 	scanner := bufio.NewScanner(r)
 	lineNum := 0
 	matchCount := 0
 	hasMatch := false
+	var results []GrepResult
 
 	// Context handling
 	var beforeLines []string
@@ -168,7 +198,22 @@ func grepReader(w io.Writer, r io.Reader, filename string, re *regexp.Regexp, op
 			}
 
 			if opts.Quiet {
-				return matchCount, true, nil
+				return matchCount, true, results, nil
+			}
+
+			if opts.JSON {
+				matchedPart := ""
+				if matched := re.FindString(line); matched != "" {
+					matchedPart = matched
+				}
+				results = append(results, GrepResult{
+					Filename:    filename,
+					LineNumber:  lineNum,
+					Line:        line,
+					HasMatch:    true,
+					MatchedPart: matchedPart,
+				})
+				continue
 			}
 
 			if opts.Count || opts.FilesWithMatch || opts.FilesNoMatch {
@@ -232,7 +277,7 @@ func grepReader(w io.Writer, r io.Reader, filename string, re *regexp.Regexp, op
 		}
 	}
 
-	return matchCount, hasMatch, scanner.Err()
+	return matchCount, hasMatch, results, scanner.Err()
 }
 
 func printGrepLine(w io.Writer, filename string, lineNum int, line string, opts GrepOptions, showFilename bool, isContext bool) {

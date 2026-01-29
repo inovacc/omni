@@ -14,10 +14,14 @@ var dirnameCmd = &cobra.Command{
 	Long:  `Output each NAME with its last non-slash component and trailing slashes removed.`,
 	Args:  cobra.MinimumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return dirname.RunDirname(os.Stdout, args)
+		opts := dirname.DirnameOptions{}
+		opts.JSON, _ = cmd.Flags().GetBool("json")
+		return dirname.RunDirname(os.Stdout, args, opts)
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(dirnameCmd)
+
+	dirnameCmd.Flags().Bool("json", false, "output as JSON")
 }

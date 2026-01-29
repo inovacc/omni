@@ -2,6 +2,7 @@ package cat
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -16,13 +17,22 @@ type CatOptions struct {
 	ShowTabs       bool // -T: display TAB characters as ^I
 	SqueezeBlank   bool // -s: suppress repeated empty output lines
 	ShowNonPrint   bool // -v: use ^ and M- notation, except for LFD and TAB
+	JSON           bool // --json: output as JSON array of lines
+}
+
+// CatLine represents a line for JSON output
+type CatLine struct {
+	Number  int    `json:"number,omitempty"`
+	Content string `json:"content"`
 }
 
 // RunCat executes the cat command with the given options
 func RunCat(w io.Writer, args []string, opts CatOptions) error {
 	if len(args) == 0 {
-		return catReader(w, os.Stdin, "-", opts)
+		args = []string{"-"}
 	}
+
+	var allLines []CatLine
 
 	for _, path := range args {
 		var r io.Reader
@@ -41,12 +51,61 @@ func RunCat(w io.Writer, args []string, opts CatOptions) error {
 			}()
 		}
 
-		if err := catReader(w, r, path, opts); err != nil {
-			return err
+		if opts.JSON {
+			lines, err := catReaderJSON(r, opts)
+			if err != nil {
+				return err
+			}
+			allLines = append(allLines, lines...)
+		} else {
+			if err := catReader(w, r, path, opts); err != nil {
+				return err
+			}
 		}
 	}
 
+	if opts.JSON {
+		return json.NewEncoder(w).Encode(allLines)
+	}
+
 	return nil
+}
+
+func catReaderJSON(r io.Reader, opts CatOptions) ([]CatLine, error) {
+	scanner := bufio.NewScanner(r)
+	lineNum := 0
+	prevBlank := false
+	var lines []CatLine
+
+	for scanner.Scan() {
+		line := scanner.Text()
+		isBlank := len(strings.TrimSpace(line)) == 0
+
+		if opts.SqueezeBlank && isBlank && prevBlank {
+			continue
+		}
+		prevBlank = isBlank
+
+		output := line
+		if opts.ShowTabs {
+			output = strings.ReplaceAll(output, "\t", "^I")
+		}
+		if opts.ShowNonPrint {
+			output = showNonPrintable(output)
+		}
+		if opts.ShowEnds {
+			output += "$"
+		}
+
+		catLine := CatLine{Content: output}
+		if opts.NumberAll || (opts.NumberNonBlank && !isBlank) {
+			lineNum++
+			catLine.Number = lineNum
+		}
+		lines = append(lines, catLine)
+	}
+
+	return lines, scanner.Err()
 }
 
 func catReader(w io.Writer, r io.Reader, _ string, opts CatOptions) error {

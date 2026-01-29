@@ -14,10 +14,14 @@ var whoamiCmd = &cobra.Command{
 	Long:  `Print the user name associated with the current effective user ID.`,
 	Args:  cobra.NoArgs,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return whoami.RunWhoami(os.Stdout)
+		opts := whoami.WhoamiOptions{}
+		opts.JSON, _ = cmd.Flags().GetBool("json")
+		return whoami.RunWhoami(os.Stdout, opts)
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(whoamiCmd)
+
+	whoamiCmd.Flags().Bool("json", false, "output as JSON")
 }

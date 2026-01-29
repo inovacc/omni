@@ -2,6 +2,7 @@ package cut
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -18,6 +19,13 @@ type CutOptions struct {
 	OnlyDelim   bool   // -s: do not print lines not containing delimiters
 	OutputDelim string // --output-delimiter: use STRING as the output delimiter
 	Complement  bool   // --complement: complement the set of selected bytes/chars/fields
+	JSON        bool   // --json: output as JSON
+}
+
+// CutResult represents cut output for JSON
+type CutResult struct {
+	Lines []string `json:"lines"`
+	Count int      `json:"count"`
 }
 
 // RunCut executes the cut command
@@ -61,6 +69,8 @@ func RunCut(w io.Writer, args []string, opts CutOptions) error {
 		files = []string{"-"}
 	}
 
+	var allLines []string
+
 	for _, file := range files {
 		var r io.Reader
 		if file == "-" {
@@ -79,16 +89,26 @@ func RunCut(w io.Writer, args []string, opts CutOptions) error {
 			r = f
 		}
 
-		if err := cutReader(w, r, opts); err != nil {
+		lines, err := cutReader(w, r, opts)
+		if err != nil {
 			return err
 		}
+
+		if opts.JSON {
+			allLines = append(allLines, lines...)
+		}
+	}
+
+	if opts.JSON {
+		return json.NewEncoder(w).Encode(CutResult{Lines: allLines, Count: len(allLines)})
 	}
 
 	return nil
 }
 
-func cutReader(w io.Writer, r io.Reader, opts CutOptions) error {
+func cutReader(w io.Writer, r io.Reader, opts CutOptions) ([]string, error) {
 	scanner := bufio.NewScanner(r)
+	var lines []string
 
 	for scanner.Scan() {
 		line := scanner.Text()
@@ -108,15 +128,19 @@ func cutReader(w io.Writer, r io.Reader, opts CutOptions) error {
 		}
 
 		if err != nil {
-			return err
+			return nil, err
 		}
 
 		if result != "" || !opts.OnlyDelim {
-			_, _ = fmt.Fprintln(w, result)
+			if opts.JSON {
+				lines = append(lines, result)
+			} else {
+				_, _ = fmt.Fprintln(w, result)
+			}
 		}
 	}
 
-	return scanner.Err()
+	return lines, scanner.Err()
 }
 
 func cutFields(line string, opts CutOptions) (string, error) {

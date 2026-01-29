@@ -1,6 +1,7 @@
 package echo
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"strings"
@@ -11,6 +12,13 @@ type EchoOptions struct {
 	NoNewline      bool // -n: do not output trailing newline
 	EnableEscapes  bool // -e: enable interpretation of backslash escapes
 	DisableEscapes bool // -E: disable interpretation of backslash escapes (default)
+	JSON           bool // --json: output as JSON
+}
+
+// EchoResult represents echo output for JSON
+type EchoResult struct {
+	Output string   `json:"output"`
+	Args   []string `json:"args"`
 }
 
 // RunEcho writes the arguments to the writer.
@@ -19,6 +27,10 @@ func RunEcho(w io.Writer, args []string, opts EchoOptions) error {
 
 	if opts.EnableEscapes && !opts.DisableEscapes {
 		output = interpretEscapes(output)
+	}
+
+	if opts.JSON {
+		return json.NewEncoder(w).Encode(EchoResult{Output: output, Args: args})
 	}
 
 	if opts.NoNewline {

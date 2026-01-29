@@ -1,6 +1,7 @@
 package readlink
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -17,6 +18,18 @@ type ReadlinkOptions struct {
 	Silent               bool // -s: silent mode (same as -q)
 	Verbose              bool // -v: verbose mode
 	Zero                 bool // -z: end each output line with NUL, not newline
+	JSON                 bool // --json: output as JSON
+}
+
+// ReadlinkResult represents readlink output for JSON
+type ReadlinkResult struct {
+	Original string `json:"original"`
+	Target   string `json:"target"`
+}
+
+// ReadlinkOutput represents the complete readlink output for JSON
+type ReadlinkOutput struct {
+	Links []ReadlinkResult `json:"links"`
 }
 
 // RunReadlink prints symbolic link targets or canonical file names
@@ -35,6 +48,7 @@ func RunReadlink(w io.Writer, args []string, opts ReadlinkOptions) error {
 	}
 
 	hasError := false
+	var jsonLinks []ReadlinkResult
 
 	for _, path := range args {
 		var (
@@ -59,7 +73,15 @@ func RunReadlink(w io.Writer, args []string, opts ReadlinkOptions) error {
 			continue
 		}
 
-		_, _ = fmt.Fprint(w, result+terminator)
+		if opts.JSON {
+			jsonLinks = append(jsonLinks, ReadlinkResult{Original: path, Target: result})
+		} else {
+			_, _ = fmt.Fprint(w, result+terminator)
+		}
+	}
+
+	if opts.JSON {
+		return json.NewEncoder(w).Encode(ReadlinkOutput{Links: jsonLinks})
 	}
 
 	if hasError {

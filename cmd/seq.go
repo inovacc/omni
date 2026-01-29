@@ -11,6 +11,7 @@ var (
 	seqSeparator  string
 	seqFormat     string
 	seqEqualWidth bool
+	seqJSON       bool
 )
 
 var seqCmd = &cobra.Command{
@@ -35,6 +36,7 @@ Examples:
 			Separator:  seqSeparator,
 			Format:     seqFormat,
 			EqualWidth: seqEqualWidth,
+			JSON:       seqJSON,
 		}
 
 		return seq.RunSeq(os.Stdout, args, opts)
@@ -47,4 +49,5 @@ func init() {
 	seqCmd.Flags().StringVarP(&seqSeparator, "separator", "s", "", "use STRING to separate numbers")
 	seqCmd.Flags().StringVarP(&seqFormat, "format", "f", "", "use printf style FORMAT")
 	seqCmd.Flags().BoolVarP(&seqEqualWidth, "equal-width", "w", false, "equalize width with leading zeros")
+	seqCmd.Flags().BoolVar(&seqJSON, "json", false, "output as JSON")
 }

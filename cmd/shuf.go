@@ -13,6 +13,7 @@ var (
 	shufHeadCount  int
 	shufRepeat     bool
 	shufZeroTerm   bool
+	shufJSON       bool
 )
 
 var shufCmd = &cobra.Command{
@@ -39,6 +40,7 @@ Examples:
 			HeadCount:  shufHeadCount,
 			Repeat:     shufRepeat,
 			ZeroTerm:   shufZeroTerm,
+			JSON:       shufJSON,
 		}
 
 		return shuf.RunShuf(os.Stdout, args, opts)
@@ -53,4 +55,5 @@ func init() {
 	shufCmd.Flags().IntVarP(&shufHeadCount, "head-count", "n", 0, "output at most COUNT lines")
 	shufCmd.Flags().BoolVarP(&shufRepeat, "repeat", "r", false, "output lines can be repeated")
 	shufCmd.Flags().BoolVarP(&shufZeroTerm, "zero-terminated", "z", false, "line delimiter is NUL")
+	shufCmd.Flags().BoolVar(&shufJSON, "json", false, "output as JSON")
 }

@@ -2,6 +2,7 @@ package tail
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -16,6 +17,13 @@ type TailOptions struct {
 	Quiet   bool          // -q: never print headers
 	Verbose bool          // -v: always print headers
 	Sleep   time.Duration // --sleep-interval: sleep interval for -f
+	JSON    bool          // --json: output as JSON
+}
+
+// TailResult represents tail output for JSON
+type TailResult struct {
+	File  string   `json:"file,omitempty"`
+	Lines []string `json:"lines"`
 }
 
 // DefaultTailLines is the default number of lines for tail
@@ -74,6 +82,15 @@ func RunTail(w io.Writer, args []string, opts TailOptions) error {
 			_, _ = fmt.Fprintf(w, "==> %s <==\n", filename)
 		}
 
+		if opts.JSON {
+			lines, err := tailLinesJSON(r, opts.Lines)
+			if err != nil {
+				return err
+			}
+			result := TailResult{File: filename, Lines: lines}
+			return json.NewEncoder(w).Encode([]TailResult{result})
+		}
+
 		if opts.Bytes > 0 {
 			if err := tailBytes(w, r, opts.Bytes); err != nil {
 				return err
@@ -93,6 +110,20 @@ func RunTail(w io.Writer, args []string, opts TailOptions) error {
 	}
 
 	return nil
+}
+
+func tailLinesJSON(r io.Reader, n int) ([]string, error) {
+	scanner := bufio.NewScanner(r)
+	lines := make([]string, 0, n)
+
+	for scanner.Scan() {
+		lines = append(lines, scanner.Text())
+		if len(lines) > n {
+			lines = lines[1:]
+		}
+	}
+
+	return lines, scanner.Err()
 }
 
 func tailLines(w io.Writer, r io.Reader, n int) error {

@@ -2,6 +2,7 @@ package head
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -13,6 +14,13 @@ type HeadOptions struct {
 	Bytes   int  // -c: number of bytes to print
 	Quiet   bool // -q: never print headers
 	Verbose bool // -v: always print headers
+	JSON    bool // --json: output as JSON
+}
+
+// HeadResult represents head output for JSON
+type HeadResult struct {
+	File  string   `json:"file,omitempty"`
+	Lines []string `json:"lines"`
 }
 
 // DefaultHeadLines is the default number of lines for head
@@ -33,6 +41,8 @@ func RunHead(w io.Writer, args []string, opts HeadOptions) error {
 	if opts.Quiet {
 		showHeaders = false
 	}
+
+	var results []HeadResult
 
 	for i, file := range files {
 		var r io.Reader
@@ -55,6 +65,15 @@ func RunHead(w io.Writer, args []string, opts HeadOptions) error {
 			}()
 		}
 
+		if opts.JSON {
+			lines, err := headLinesJSON(r, opts.Lines)
+			if err != nil {
+				return err
+			}
+			results = append(results, HeadResult{File: filename, Lines: lines})
+			continue
+		}
+
 		if showHeaders {
 			if i > 0 {
 				_, _ = fmt.Fprintln(w)
@@ -74,7 +93,27 @@ func RunHead(w io.Writer, args []string, opts HeadOptions) error {
 		}
 	}
 
+	if opts.JSON {
+		return json.NewEncoder(w).Encode(results)
+	}
+
 	return nil
+}
+
+func headLinesJSON(r io.Reader, n int) ([]string, error) {
+	scanner := bufio.NewScanner(r)
+	var lines []string
+	count := 0
+
+	for scanner.Scan() {
+		if count >= n {
+			break
+		}
+		lines = append(lines, scanner.Text())
+		count++
+	}
+
+	return lines, scanner.Err()
 }
 
 func headLines(w io.Writer, r io.Reader, n int) error {

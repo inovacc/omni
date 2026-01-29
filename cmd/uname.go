@@ -35,6 +35,7 @@ var unameCmd = &cobra.Command{
 		opts.Processor, _ = cmd.Flags().GetBool("processor")
 		opts.HardwarePlatform, _ = cmd.Flags().GetBool("hardware-platform")
 		opts.OperatingSystem, _ = cmd.Flags().GetBool("operating-system")
+		opts.JSON, _ = cmd.Flags().GetBool("json")
 
 		return uname.RunUname(os.Stdout, opts)
 	},
@@ -52,4 +53,5 @@ func init() {
 	unameCmd.Flags().BoolP("processor", "p", false, "print the processor type")
 	unameCmd.Flags().BoolP("hardware-platform", "i", false, "print the hardware platform")
 	unameCmd.Flags().BoolP("operating-system", "o", false, "print the operating system")
+	unameCmd.Flags().Bool("json", false, "output as JSON")
 }

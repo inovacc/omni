@@ -42,6 +42,8 @@ With no FILE, or when FILE is -, read standard input.`,
 			opts.ShowTabs = true
 		}
 
+		opts.JSON, _ = cmd.Flags().GetBool("json")
+
 		return cat.RunCat(os.Stdout, args, opts)
 	},
 }
@@ -58,4 +60,5 @@ func init() {
 	catCmd.Flags().BoolP("show-all", "A", false, "equivalent to -vET")
 	catCmd.Flags().BoolP("e", "e", false, "equivalent to -vE")
 	catCmd.Flags().BoolP("t", "t", false, "equivalent to -vT")
+	catCmd.Flags().Bool("json", false, "output as JSON array of lines")
 }

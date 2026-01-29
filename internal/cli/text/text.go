@@ -2,6 +2,7 @@ package text
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -23,6 +24,13 @@ type SortOptions struct {
 	Check         bool   // -c: check for sorted input
 	Stable        bool   // -s: stabilize sort by disabling last-resort comparison
 	Output        string // -o: write result to FILE
+	JSON          bool   // --json: output as JSON
+}
+
+// SortResult represents sort output for JSON
+type SortResult struct {
+	Lines []string `json:"lines"`
+	Count int      `json:"count"`
 }
 
 // UniqOptions configures the uniq command behavior
@@ -36,6 +44,19 @@ type UniqOptions struct {
 	SkipChars     int  // -s: avoid comparing the first N characters
 	CheckChars    int  // -w: compare no more than N characters
 	ZeroTerminate bool // -z: line delimiter is NUL, not newline
+	JSON          bool // --json: output as JSON
+}
+
+// UniqResult represents uniq output for JSON
+type UniqResult struct {
+	Lines []UniqLine `json:"lines"`
+	Count int        `json:"count"`
+}
+
+// UniqLine represents a line with its count for JSON
+type UniqLine struct {
+	Line  string `json:"line"`
+	Count int    `json:"count"`
 }
 
 // RunSort executes the sort command
@@ -84,6 +105,10 @@ func RunSort(w io.Writer, args []string, opts SortOptions) error {
 	// Remove duplicates if -u
 	if opts.Unique {
 		lines = uniqueLines(lines, opts.IgnoreCase)
+	}
+
+	if opts.JSON {
+		return json.NewEncoder(w).Encode(SortResult{Lines: lines, Count: len(lines)})
 	}
 
 	// Write output
@@ -237,6 +262,7 @@ func RunUniq(w io.Writer, args []string, opts UniqOptions) error {
 
 	count := 0
 	first := true
+	var jsonLines []UniqLine
 
 	outputLine := func(line string, cnt int) {
 		if opts.Unique && cnt > 1 {
@@ -244,6 +270,11 @@ func RunUniq(w io.Writer, args []string, opts UniqOptions) error {
 		}
 
 		if opts.Repeated && cnt <= 1 {
+			return
+		}
+
+		if opts.JSON {
+			jsonLines = append(jsonLines, UniqLine{Line: line, Count: cnt})
 			return
 		}
 
@@ -270,7 +301,7 @@ func RunUniq(w io.Writer, args []string, opts UniqOptions) error {
 		if keysEqual(prevKey, key, opts) {
 			count++
 
-			if opts.AllRepeated {
+			if opts.AllRepeated && !opts.JSON {
 				_, _ = fmt.Fprintln(w, line)
 			}
 		} else {
@@ -284,6 +315,10 @@ func RunUniq(w io.Writer, args []string, opts UniqOptions) error {
 	// Output last line
 	if !first {
 		outputLine(prevLine, count)
+	}
+
+	if opts.JSON {
+		return json.NewEncoder(w).Encode(UniqResult{Lines: jsonLines, Count: len(jsonLines)})
 	}
 
 	return scanner.Err()

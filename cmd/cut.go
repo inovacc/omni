@@ -40,6 +40,7 @@ range, or many ranges separated by commas.  Each range is one of:
 		opts.OnlyDelim, _ = cmd.Flags().GetBool("only-delimited")
 		opts.OutputDelim, _ = cmd.Flags().GetString("output-delimiter")
 		opts.Complement, _ = cmd.Flags().GetBool("complement")
+		opts.JSON, _ = cmd.Flags().GetBool("json")
 
 		return cut.RunCut(os.Stdout, args, opts)
 	},
@@ -55,4 +56,5 @@ func init() {
 	cutCmd.Flags().BoolP("only-delimited", "s", false, "do not print lines not containing delimiters")
 	cutCmd.Flags().String("output-delimiter", "", "use STRING as the output delimiter")
 	cutCmd.Flags().Bool("complement", false, "complement the set of selected bytes, characters or fields")
+	cutCmd.Flags().Bool("json", false, "output as JSON")
 }

@@ -2,6 +2,7 @@ package uuid
 
 import (
 	"crypto/rand"
+	"encoding/json"
 	"fmt"
 	"io"
 	"strings"
@@ -13,6 +14,13 @@ type UUIDOptions struct {
 	Upper    bool // -u: output in uppercase
 	NoDashes bool // -x: output without dashes
 	Version  int  // -v: UUID version (4 = random, default)
+	JSON     bool // --json: output as JSON
+}
+
+// UUIDResult represents uuid output for JSON
+type UUIDResult struct {
+	UUIDs []string `json:"uuids"`
+	Count int      `json:"count"`
 }
 
 // RunUUID generates random UUIDs
@@ -20,6 +28,8 @@ func RunUUID(w io.Writer, opts UUIDOptions) error {
 	if opts.Count <= 0 {
 		opts.Count = 1
 	}
+
+	var uuids []string
 
 	for i := 0; i < opts.Count; i++ {
 		uuid, err := generateUUIDv4()
@@ -35,7 +45,15 @@ func RunUUID(w io.Writer, opts UUIDOptions) error {
 			uuid = strings.ToUpper(uuid)
 		}
 
-		_, _ = fmt.Fprintln(w, uuid)
+		if opts.JSON {
+			uuids = append(uuids, uuid)
+		} else {
+			_, _ = fmt.Fprintln(w, uuid)
+		}
+	}
+
+	if opts.JSON {
+		return json.NewEncoder(w).Encode(UUIDResult{UUIDs: uuids, Count: len(uuids)})
 	}
 
 	return nil
