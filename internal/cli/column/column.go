@@ -5,8 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"os"
 	"strings"
+
+	"github.com/inovacc/omni/internal/cli/input"
 )
 
 // ColumnOptions configures the column command behavior
@@ -24,7 +25,8 @@ type ColumnOptions struct {
 }
 
 // RunColumn columnates lists
-func RunColumn(w io.Writer, args []string, opts ColumnOptions) error {
+// r is the default input reader (used when args is empty or contains "-")
+func RunColumn(w io.Writer, r io.Reader, args []string, opts ColumnOptions) error {
 	if opts.Columns == 0 {
 		opts.Columns = 80
 	}
@@ -37,35 +39,23 @@ func RunColumn(w io.Writer, args []string, opts ColumnOptions) error {
 		opts.OutputSep = "  "
 	}
 
-	files := args
-	if len(files) == 0 {
-		files = []string{"-"}
+	sources, err := input.Open(args, r)
+	if err != nil {
+		return fmt.Errorf("column: %w", err)
 	}
+	defer input.CloseAll(sources)
 
 	// Read all lines
 	var lines []string
 
-	for _, file := range files {
-		var r io.Reader
-		if file == "-" {
-			r = os.Stdin
-		} else {
-			f, err := os.Open(file)
-			if err != nil {
-				_, _ = fmt.Fprintf(os.Stderr, "column: %s: %v\n", file, err)
-				continue
-			}
-
-			defer func() {
-				_ = f.Close()
-			}()
-
-			r = f
-		}
-
-		scanner := bufio.NewScanner(r)
+	for _, src := range sources {
+		scanner := bufio.NewScanner(src.Reader)
 		for scanner.Scan() {
 			lines = append(lines, scanner.Text())
+		}
+
+		if err := scanner.Err(); err != nil {
+			return fmt.Errorf("column: %s: %w", src.Name, err)
 		}
 	}
 

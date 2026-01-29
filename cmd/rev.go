@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"os"
-
 	"github.com/inovacc/omni/internal/cli/rev"
 	"github.com/spf13/cobra"
 )
@@ -18,7 +16,7 @@ Examples:
 	RunE: func(cmd *cobra.Command, args []string) error {
 		opts := rev.RevOptions{}
 		opts.JSON, _ = cmd.Flags().GetBool("json")
-		return rev.RunRev(os.Stdout, args, opts)
+		return rev.RunRev(cmd.OutOrStdout(), cmd.InOrStdin(), args, opts)
 	},
 }
 

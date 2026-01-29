@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"os"
-
 	"github.com/inovacc/omni/internal/cli/fold"
 	"github.com/spf13/cobra"
 )
@@ -29,7 +27,7 @@ Examples:
 		opts.Bytes, _ = cmd.Flags().GetBool("bytes")
 		opts.Spaces, _ = cmd.Flags().GetBool("spaces")
 
-		return fold.RunFold(os.Stdout, args, opts)
+		return fold.RunFold(cmd.OutOrStdout(), cmd.InOrStdin(), args, opts)
 	},
 }
 

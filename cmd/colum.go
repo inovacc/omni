@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"os"
-
 	"github.com/inovacc/omni/internal/cli/column"
 	"github.com/spf13/cobra"
 )
@@ -34,7 +32,7 @@ With no FILE, or when FILE is -, read standard input.
 		opts.JSON, _ = cmd.Flags().GetBool("json")
 		opts.ColumnHeaders, _ = cmd.Flags().GetString("headers")
 
-		return column.RunColumn(os.Stdout, args, opts)
+		return column.RunColumn(cmd.OutOrStdout(), cmd.InOrStdin(), args, opts)
 	},
 }
 
