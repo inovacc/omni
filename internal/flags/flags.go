@@ -208,6 +208,7 @@ func EnableFeature(feature string, data string) error {
 				if err := f.Close(); err != nil {
 					return err
 				}
+
 				return err
 			}
 		}

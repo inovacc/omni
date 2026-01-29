@@ -2,6 +2,10 @@ package cmd
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
+	"sort"
+	"strings"
 
 	"github.com/inovacc/omni/internal/flags"
 	"github.com/spf13/cobra"
@@ -18,6 +22,9 @@ Usage with eval to set environment variables:
 To disable logging:
   eval "$(omni logger --disable)"
 
+To view all log files:
+  omni logger --viewer
+
 Environment variables set:
   OMNI_LOG_ENABLED - Set to "true" to enable logging
   OMNI_LOG_PATH    - Path to the log file`,
@@ -25,9 +32,14 @@ Environment variables set:
 		logPath, _ := cmd.Flags().GetString("path")
 		disable, _ := cmd.Flags().GetBool("disable")
 		status, _ := cmd.Flags().GetBool("status")
+		viewer, _ := cmd.Flags().GetBool("viewer")
 
 		if err := flags.IgnoreCommand("logger"); err != nil {
 			return err
+		}
+
+		if viewer {
+			return viewLogs(cmd)
 		}
 
 		if status {
@@ -60,10 +72,105 @@ func printStatus(cmd *cobra.Command) error {
 	return nil
 }
 
+func viewLogs(cmd *cobra.Command) error {
+	logDir := flags.GetFeatureData("logger")
+
+	if logDir == "" {
+		_, _ = fmt.Fprintln(cmd.OutOrStdout(), "Logging is not configured. Use --path to set log directory.")
+		return nil
+	}
+
+	// Check if directory exists
+	info, err := os.Stat(logDir)
+	if os.IsNotExist(err) {
+		_, _ = fmt.Fprintf(cmd.OutOrStdout(), "Log directory does not exist: %s\n", logDir)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("failed to access log directory: %w", err)
+	}
+
+	if !info.IsDir() {
+		return fmt.Errorf("log path is not a directory: %s", logDir)
+	}
+
+	// Read log files
+	entries, err := os.ReadDir(logDir)
+	if err != nil {
+		return fmt.Errorf("failed to read log directory: %w", err)
+	}
+
+	// Filter and collect .log files
+	var logFiles []string
+
+	for _, entry := range entries {
+		if entry.IsDir() {
+			continue
+		}
+
+		if strings.HasSuffix(entry.Name(), ".log") {
+			logFiles = append(logFiles, entry.Name())
+		}
+	}
+
+	if len(logFiles) == 0 {
+		_, _ = fmt.Fprintf(cmd.OutOrStdout(), "No log files found in: %s\n", logDir)
+		return nil
+	}
+
+	// Sort by filename (KSUID prefix ensures chronological order)
+	sort.Strings(logFiles)
+
+	_, _ = fmt.Fprintf(cmd.OutOrStdout(), "Log files in %s (%d files):\n", logDir, len(logFiles))
+	_, _ = fmt.Fprintln(cmd.OutOrStdout(), strings.Repeat("=", 60))
+
+	for _, filename := range logFiles {
+		filePath := filepath.Join(logDir, filename)
+
+		// Extract command name from filename (format: ksuid-command.log)
+		cmdName := extractCommandName(filename)
+
+		_, _ = fmt.Fprintf(cmd.OutOrStdout(), "\n[%s] %s\n", cmdName, filename)
+		_, _ = fmt.Fprintln(cmd.OutOrStdout(), strings.Repeat("-", 60))
+
+		content, err := os.ReadFile(filePath)
+		if err != nil {
+			_, _ = fmt.Fprintf(cmd.OutOrStdout(), "  Error reading file: %v\n", err)
+			continue
+		}
+
+		if len(content) == 0 {
+			_, _ = fmt.Fprintln(cmd.OutOrStdout(), "  (empty)")
+			continue
+		}
+
+		_, _ = fmt.Fprintln(cmd.OutOrStdout(), string(content))
+	}
+
+	return nil
+}
+
+// extractCommandName extracts the command name from a log filename.
+// Format: ksuid-command.log -> command
+func extractCommandName(filename string) string {
+	// Remove .log extension
+	name := strings.TrimSuffix(filename, ".log")
+
+	// Find first dash (after KSUID)
+	idx := strings.Index(name, "-")
+	if idx == -1 || idx >= len(name)-1 {
+		return "unknown"
+	}
+
+	return name[idx+1:]
+}
+
 func init() {
 	rootCmd.AddCommand(loggerCmd)
 
 	loggerCmd.Flags().StringP("path", "p", "", "Path to the log file")
 	loggerCmd.Flags().BoolP("disable", "d", false, "Disable logging (unset environment variables)")
 	loggerCmd.Flags().BoolP("status", "s", false, "Show current logging status")
+	loggerCmd.Flags().BoolP("viewer", "v", false, "View all log files sorted by time")
 }
