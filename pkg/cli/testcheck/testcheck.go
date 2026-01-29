@@ -78,7 +78,7 @@ func Check(dir string) (*Result, error) {
 			relDir = pkgDir
 		}
 
-		// Initialize package if not seen
+		// Initialize the package if not seen
 		if _, exists := packages[pkgDir]; !exists {
 			packages[pkgDir] = &PackageStatus{
 				Name: filepath.Base(pkgDir),

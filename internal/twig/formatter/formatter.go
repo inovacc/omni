@@ -18,7 +18,7 @@ type TreeFormatter interface {
 	FormatJSON(root *models.Node, stats *models.TreeStats) (string, error)
 }
 
-// FormatConfig holds formatting configuration
+// FormatConfig holds the formatting configuration
 type FormatConfig struct {
 	ShowColors       bool
 	ShowSize         bool
@@ -39,7 +39,7 @@ func DefaultFormatConfig() *FormatConfig {
 	}
 }
 
-// Formatter formats node tree to string representation
+// Formatter formats a node tree to string representation
 type Formatter struct {
 	config *FormatConfig
 }
@@ -84,7 +84,7 @@ func (f *Formatter) FormatSimple(root *models.Node) string {
 		return ""
 	}
 
-	// If FlattenFilesHash is enabled, use flattened format
+	// If FlattenFilesHash is enabled, use a flattened format
 	if f.config.FlattenFilesHash {
 		return f.formatFlattened(root)
 	}
