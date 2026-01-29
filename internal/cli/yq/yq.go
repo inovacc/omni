@@ -56,14 +56,17 @@ func RunYq(w io.Writer, r io.Reader, args []string, opts YqOptions) error {
 		inputs = docs
 	} else {
 		for _, file := range files {
-			var data []byte
-			var err error
+			var (
+				data []byte
+				err  error
+			)
 
 			if file == "-" {
 				data, err = io.ReadAll(r)
 			} else {
 				data, err = os.ReadFile(file)
 			}
+
 			if err != nil {
 				return fmt.Errorf("yq: %w", err)
 			}

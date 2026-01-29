@@ -346,6 +346,7 @@ func executeCommand(registry *CommandRegistry, cmdParts []string, stdin io.Reade
 	if stdin != nil {
 		cmd.SetIn(stdin)
 	}
+
 	cmd.SetOut(stdout)
 	cmd.SetErr(stdout)
 
