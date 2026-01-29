@@ -790,6 +790,198 @@ files, _ := fs.Ls(".", fs.LsOptions{})
 
 ---
 
+## Phase 8 – Data Conversion & Validation Tools
+
+Comprehensive data conversion, validation, and developer utilities inspired by CodeBeautify and specialized tools.
+
+### Format Converters
+
+| Command | Description | Priority | Status |
+|---------|-------------|----------|--------|
+| `json toyaml` | Convert JSON to YAML | P0 | ✅ Done |
+| `json fromyaml` | Convert YAML to JSON | P0 | ✅ Done |
+| `json fromtoml` | Convert TOML to JSON | P0 | ✅ Done |
+| `json toxml` | Convert JSON to XML | P1 | |
+| `json fromxml` | Convert XML to JSON | P1 | |
+| `json tocsv` | Convert JSON array to CSV | P1 | |
+| `json fromcsv` | Convert CSV to JSON | P1 | |
+| `yaml toml` | Convert YAML to TOML | P2 | |
+| `yaml xml` | Convert YAML to XML | P2 | |
+| `xml yaml` | Convert XML to YAML | P2 | |
+| `csv sql` | Generate SQL INSERT from CSV | P2 | |
+
+### Formatters & Beautifiers
+
+| Command | Description | Priority | Status |
+|---------|-------------|----------|--------|
+| `json fmt` | Beautify/format JSON | P0 | ✅ Done |
+| `json minify` | Minify JSON | P0 | ✅ Done |
+| `json validate` | Validate JSON syntax | P0 | ✅ Done |
+| `json stats` | Show JSON statistics | P0 | ✅ Done |
+| `json keys` | List all JSON keys | P0 | ✅ Done |
+| `xml fmt` | Beautify XML | P1 | |
+| `xml minify` | Minify XML | P1 | |
+| `xml validate` | Validate XML | P1 | |
+| `sql fmt` | Format SQL queries | P2 | |
+| `html fmt` | Format HTML | P2 | |
+| `css fmt` | Format CSS | P2 | |
+| `css minify` | Minify CSS | P2 | |
+
+### Validators
+
+| Command | Description | Priority |
+|---------|-------------|----------|
+| `json validate` | Validate JSON | ✅ Done |
+| `yaml validate` | Validate YAML | P1 |
+| `toml validate` | Validate TOML | P1 |
+| `xml validate` | Validate XML | P1 |
+| `email validate` | Validate email format | P2 |
+| `url validate` | Validate URL format | P2 |
+| `ip validate` | Validate IP address | P2 |
+
+### Encode/Decode Utilities
+
+| Command | Description | Priority | Status |
+|---------|-------------|----------|--------|
+| `base64` | Base64 encode/decode | P0 | ✅ Done |
+| `base32` | Base32 encode/decode | P0 | ✅ Done |
+| `base58` | Base58 encode/decode | P0 | ✅ Done |
+| `url encode/decode` | URL encoding | P1 | |
+| `html encode/decode` | HTML entity encoding | P1 | |
+| `hex encode/decode` | Hex encoding | P1 | |
+| `jwt decode` | Decode JWT tokens | P1 | |
+
+### String Utilities
+
+| Command | Description | Priority |
+|---------|-------------|----------|
+| `case upper` | Convert to UPPERCASE | P1 |
+| `case lower` | Convert to lowercase | P1 |
+| `case camel` | Convert to camelCase | P1 |
+| `case pascal` | Convert to PascalCase | P1 |
+| `case snake` | Convert to snake_case | P1 |
+| `case kebab` | Convert to kebab-case | P1 |
+| `text reverse` | Reverse text | P2 |
+| `text dedup` | Remove duplicate lines | P2 |
+| `text trim` | Remove empty lines/spaces | P2 |
+
+### Hash & Cryptography (Extended)
+
+| Command | Description | Priority | Status |
+|---------|-------------|----------|--------|
+| `hash md5` | MD5 hash | P0 | ✅ Done |
+| `hash sha1` | SHA1 hash | P0 | ✅ Done |
+| `hash sha256` | SHA256 hash | P0 | ✅ Done |
+| `hash sha512` | SHA512 hash | P0 | ✅ Done |
+| `hash blake2b` | BLAKE2b hash | P1 | |
+| `hash blake3` | BLAKE3 hash | P1 | |
+| `hmac` | HMAC generation | P2 | |
+| `encrypt aes` | AES encryption | P0 | ✅ Done |
+| `decrypt aes` | AES decryption | P0 | ✅ Done |
+
+### Random Generators (Extended)
+
+| Command | Description | Priority | Status |
+|---------|-------------|----------|--------|
+| `random number` | Random numbers | P0 | ✅ Done |
+| `random string` | Random strings | P0 | ✅ Done |
+| `random uuid` | UUID v4/v7 | P0 | ✅ Done |
+| `random ulid` | ULID | P0 | ✅ Done |
+| `random ksuid` | KSUID | P0 | ✅ Done |
+| `random nanoid` | NanoID | P0 | ✅ Done |
+| `random snowflake` | Snowflake ID | P0 | ✅ Done |
+| `random password` | Password generation | P1 | |
+| `random color` | Random hex color | P2 | |
+| `random date` | Random date | P2 | |
+| `random name` | Random names | P3 | |
+
+### Brazilian Document Tools (brdoc integration)
+
+| Command | Description | Priority |
+|---------|-------------|----------|
+| `brdoc cpf generate` | Generate valid CPF | P1 |
+| `brdoc cpf validate` | Validate CPF | P1 |
+| `brdoc cpf format` | Format CPF (XXX.XXX.XXX-XX) | P1 |
+| `brdoc cnpj generate` | Generate valid CNPJ (alphanumeric) | P1 |
+| `brdoc cnpj validate` | Validate CNPJ | P1 |
+| `brdoc cnpj format` | Format CNPJ | P1 |
+
+Reference: https://github.com/inovacc/brdoc
+
+### Go Struct Tag Tools (tagfixer integration)
+
+| Command | Description | Priority |
+|---------|-------------|----------|
+| `tagfixer` | Fix struct tags in Go files | P1 |
+| `tagfixer analyze` | Analyze tag usage patterns | P1 |
+| `tagfixer --case camel` | Convert to camelCase | P1 |
+| `tagfixer --case snake` | Convert to snake_case | P1 |
+| `tagfixer --case kebab` | Convert to kebab-case | P1 |
+| `tagfixer --tags json,yaml` | Fix multiple tag types | P1 |
+
+Reference: https://github.com/inovacc/tagfixer
+
+### Container Signing (cosign-inspired)
+
+| Command | Description | Priority |
+|---------|-------------|----------|
+| `sign` | Sign files/artifacts | P2 |
+| `sign verify` | Verify signatures | P2 |
+| `sign keypair` | Generate signing keypairs | P2 |
+| `sign blob` | Sign arbitrary blobs | P2 |
+
+Reference: https://github.com/sigstore/cosign
+
+### IP & Network Tools
+
+| Command | Description | Priority |
+|---------|-------------|----------|
+| `ip info` | Get IP info (local/public) | P2 |
+| `ip tohex` | IP to hex conversion | P2 |
+| `ip tobin` | IP to binary | P2 |
+| `dns lookup` | DNS lookup | P2 |
+| `port check` | Check if port is open | P2 |
+
+### Number Converters
+
+| Command | Description | Priority |
+|---------|-------------|----------|
+| `num tobin` | Decimal to binary | P2 |
+| `num tohex` | Decimal to hex | P2 |
+| `num tooct` | Decimal to octal | P2 |
+| `num frombin` | Binary to decimal | P2 |
+| `num fromhex` | Hex to decimal | P2 |
+| `num words` | Number to words | P3 |
+
+### Color Converters
+
+| Command | Description | Priority |
+|---------|-------------|----------|
+| `color hex2rgb` | HEX to RGB | P3 |
+| `color rgb2hex` | RGB to HEX | P3 |
+| `color hex2hsl` | HEX to HSL | P3 |
+| `color random` | Random color | P3 |
+
+### Diff & Compare Tools
+
+| Command | Description | Priority | Status |
+|---------|-------------|----------|--------|
+| `diff` | Text file diff | P1 | ✅ Done |
+| `diff json` | JSON diff | P1 | ✅ Done |
+| `diff yaml` | YAML diff | P2 | |
+| `cmp` | Binary file compare | P1 | ✅ Done |
+
+### Misc Utilities
+
+| Command | Description | Priority |
+|---------|-------------|----------|
+| `lorem` | Lorem ipsum generator | P3 |
+| `qr generate` | Generate QR codes | P3 |
+| `qr decode` | Decode QR codes | P3 |
+| `barcode` | Generate barcodes | P3 |
+
+---
+
 ## Go stdlib Equivalents Reference
 
 | Linux Command | Go stdlib |
