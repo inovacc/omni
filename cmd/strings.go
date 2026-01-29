@@ -25,9 +25,11 @@ Examples:
   omni strings -n 8 file.bin      # strings of at least 8 chars
   omni strings -t x program       # show hex offsets`,
 	RunE: func(cmd *cobra.Command, args []string) error {
+		jsonOutput, _ := cmd.Flags().GetBool("json")
 		opts := strings.StringsOptions{
 			MinLength: stringsMinLength,
 			Offset:    stringsOffset,
+			JSON:      jsonOutput,
 		}
 
 		return strings.RunStrings(os.Stdout, args, opts)
@@ -39,4 +41,5 @@ func init() {
 
 	stringsCmd.Flags().IntVarP(&stringsMinLength, "bytes", "n", 4, "minimum string length")
 	stringsCmd.Flags().StringVarP(&stringsOffset, "radix", "t", "", "print offset (d/o/x)")
+	stringsCmd.Flags().Bool("json", false, "output as JSON")
 }

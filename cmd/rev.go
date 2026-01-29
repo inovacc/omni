@@ -16,10 +16,14 @@ Examples:
   echo "hello" | omni rev     # olleh
   omni rev file.txt           # reverse each line in file`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return rev.RunRev(os.Stdout, args)
+		opts := rev.RevOptions{}
+		opts.JSON, _ = cmd.Flags().GetBool("json")
+		return rev.RunRev(os.Stdout, args, opts)
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(revCmd)
+
+	revCmd.Flags().Bool("json", false, "output as JSON")
 }

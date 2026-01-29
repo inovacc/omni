@@ -24,6 +24,7 @@ With no FILE, or when FILE is -, read standard input.
 		opts.Before, _ = cmd.Flags().GetBool("before")
 		opts.Regex, _ = cmd.Flags().GetBool("regex")
 		opts.Separator, _ = cmd.Flags().GetString("separator")
+		opts.JSON, _ = cmd.Flags().GetBool("json")
 
 		return tac.RunTac(os.Stdout, args, opts)
 	},
@@ -35,4 +36,5 @@ func init() {
 	tacCmd.Flags().BoolP("before", "b", false, "attach the separator before instead of after")
 	tacCmd.Flags().BoolP("regex", "r", false, "interpret the separator as a regular expression")
 	tacCmd.Flags().StringP("separator", "s", "", "use STRING as the separator instead of newline")
+	tacCmd.Flags().Bool("json", false, "output as JSON")
 }
