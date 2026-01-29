@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/inovacc/omni/internal/cli/aicontext"
+	"github.com/inovacc/omni/internal/flags"
 	"github.com/spf13/cobra"
 )
 
@@ -45,6 +46,10 @@ Examples:
 		opts.Compact, _ = cmd.Flags().GetBool("compact")
 		opts.Category, _ = cmd.Flags().GetString("category")
 		outputFile, _ := cmd.Flags().GetString("output")
+
+		if err := flags.IgnoreCommand("aicontext"); err != nil {
+			return err
+		}
 
 		var w = os.Stdout
 
