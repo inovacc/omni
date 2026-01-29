@@ -29,6 +29,7 @@ func TestRunFind(t *testing.T) {
 
 	t.Run("default find all", func(t *testing.T) {
 		var buf bytes.Buffer
+
 		err := RunFind(&buf, []string{tmpDir}, FindOptions{})
 		if err != nil {
 			t.Fatalf("RunFind() error = %v", err)
@@ -42,6 +43,7 @@ func TestRunFind(t *testing.T) {
 
 	t.Run("find by name", func(t *testing.T) {
 		var buf bytes.Buffer
+
 		err := RunFind(&buf, []string{tmpDir}, FindOptions{Name: "*.txt"})
 		if err != nil {
 			t.Fatalf("RunFind() error = %v", err)
@@ -51,6 +53,7 @@ func TestRunFind(t *testing.T) {
 		if !strings.Contains(output, "file1.txt") {
 			t.Errorf("RunFind() -name should find txt files: %s", output)
 		}
+
 		if strings.Contains(output, "file2.go") {
 			t.Errorf("RunFind() -name should not find go files: %s", output)
 		}
@@ -58,6 +61,7 @@ func TestRunFind(t *testing.T) {
 
 	t.Run("find by iname", func(t *testing.T) {
 		var buf bytes.Buffer
+
 		err := RunFind(&buf, []string{tmpDir}, FindOptions{IName: "*.TXT"})
 		if err != nil {
 			t.Fatalf("RunFind() error = %v", err)
@@ -71,6 +75,7 @@ func TestRunFind(t *testing.T) {
 
 	t.Run("find by type file", func(t *testing.T) {
 		var buf bytes.Buffer
+
 		err := RunFind(&buf, []string{tmpDir}, FindOptions{Type: "f"})
 		if err != nil {
 			t.Fatalf("RunFind() error = %v", err)
@@ -85,6 +90,7 @@ func TestRunFind(t *testing.T) {
 
 	t.Run("find by type directory", func(t *testing.T) {
 		var buf bytes.Buffer
+
 		err := RunFind(&buf, []string{tmpDir}, FindOptions{Type: "d"})
 		if err != nil {
 			t.Fatalf("RunFind() error = %v", err)
@@ -98,6 +104,7 @@ func TestRunFind(t *testing.T) {
 
 	t.Run("find empty files", func(t *testing.T) {
 		var buf bytes.Buffer
+
 		err := RunFind(&buf, []string{tmpDir}, FindOptions{Empty: true, Type: "f"})
 		if err != nil {
 			t.Fatalf("RunFind() error = %v", err)
@@ -111,6 +118,7 @@ func TestRunFind(t *testing.T) {
 
 	t.Run("find empty directories", func(t *testing.T) {
 		var buf bytes.Buffer
+
 		err := RunFind(&buf, []string{tmpDir}, FindOptions{Empty: true, Type: "d"})
 		if err != nil {
 			t.Fatalf("RunFind() error = %v", err)
@@ -124,6 +132,7 @@ func TestRunFind(t *testing.T) {
 
 	t.Run("maxdepth", func(t *testing.T) {
 		var buf bytes.Buffer
+
 		err := RunFind(&buf, []string{tmpDir}, FindOptions{MaxDepth: 1})
 		if err != nil {
 			t.Fatalf("RunFind() error = %v", err)
@@ -137,6 +146,7 @@ func TestRunFind(t *testing.T) {
 
 	t.Run("mindepth", func(t *testing.T) {
 		var buf bytes.Buffer
+
 		err := RunFind(&buf, []string{tmpDir}, FindOptions{MinDepth: 2})
 		if err != nil {
 			t.Fatalf("RunFind() error = %v", err)
@@ -150,6 +160,7 @@ func TestRunFind(t *testing.T) {
 
 	t.Run("print0", func(t *testing.T) {
 		var buf bytes.Buffer
+
 		err := RunFind(&buf, []string{tmpDir}, FindOptions{Print0: true})
 		if err != nil {
 			t.Fatalf("RunFind() error = %v", err)
@@ -163,6 +174,7 @@ func TestRunFind(t *testing.T) {
 
 	t.Run("regex", func(t *testing.T) {
 		var buf bytes.Buffer
+
 		err := RunFind(&buf, []string{tmpDir}, FindOptions{Regex: ".*\\.go$"})
 		if err != nil {
 			t.Fatalf("RunFind() error = %v", err)
@@ -176,6 +188,7 @@ func TestRunFind(t *testing.T) {
 
 	t.Run("readable", func(t *testing.T) {
 		var buf bytes.Buffer
+
 		err := RunFind(&buf, []string{tmpDir}, FindOptions{Readable: true, Type: "f"})
 		if err != nil {
 			t.Fatalf("RunFind() error = %v", err)
@@ -191,9 +204,11 @@ func TestRunFind(t *testing.T) {
 		// Change to temp dir
 		origDir, _ := os.Getwd()
 		_ = os.Chdir(tmpDir)
+
 		defer func() { _ = os.Chdir(origDir) }()
 
 		var buf bytes.Buffer
+
 		err := RunFind(&buf, []string{}, FindOptions{})
 		if err != nil {
 			t.Fatalf("RunFind() error = %v", err)
@@ -247,6 +262,7 @@ func TestGlobToRegexCaseInsensitive(t *testing.T) {
 	if !re.MatchString("file.txt") {
 		t.Error("globToRegex with caseInsensitive should match lowercase")
 	}
+
 	if !re.MatchString("FILE.TXT") {
 		t.Error("globToRegex with caseInsensitive should match uppercase")
 	}
@@ -349,6 +365,7 @@ func TestIsEmpty(t *testing.T) {
 					if got != tt.want {
 						t.Errorf("isEmpty(%q) = %v, want %v", tt.path, got, tt.want)
 					}
+
 					break
 				}
 			}

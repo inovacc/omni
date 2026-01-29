@@ -96,6 +96,7 @@ func TestRunUname(t *testing.T) {
 
 		if names, ok := validNames[goos]; ok {
 			found := false
+
 			for _, name := range names {
 				if strings.Contains(output, name) {
 					found = true
@@ -182,6 +183,7 @@ func TestRunUname(t *testing.T) {
 		validArchs := []string{"amd64", "x86_64", "arm64", "aarch64", "386", "i686", "i386", "arm", goarch}
 
 		found := false
+
 		for _, arch := range validArchs {
 			if strings.Contains(strings.ToLower(output), strings.ToLower(arch)) {
 				found = true
@@ -236,6 +238,7 @@ func TestRunUname(t *testing.T) {
 
 		if names, ok := validOS[goos]; ok {
 			found := false
+
 			for _, name := range names {
 				if strings.Contains(output, name) {
 					found = true

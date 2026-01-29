@@ -96,6 +96,7 @@ func TestHighlightSearchMatches(t *testing.T) {
 
 func TestHighlightSearchMatches_caseInsensitive(t *testing.T) {
 	style := lipgloss.NewStyle().Background(lipgloss.Color("226"))
+
 	result := highlightSearchMatches("Hello World", "world", true, style)
 	if result == "" {
 		t.Error("highlightSearchMatches() case-insensitive returned empty string")
@@ -104,6 +105,7 @@ func TestHighlightSearchMatches_caseInsensitive(t *testing.T) {
 
 func TestPagerModel_Init(t *testing.T) {
 	model := pagerModel{}
+
 	cmd := model.Init()
 	if cmd != nil {
 		t.Error("Init() should return nil")
@@ -172,6 +174,7 @@ func TestPagerOptions(t *testing.T) {
 	if !opts.LineNumbers {
 		t.Error("LineNumbers should be true")
 	}
+
 	if !opts.Quit {
 		t.Error("Quit should be true")
 	}
@@ -190,8 +193,7 @@ func BenchmarkFindMatches(b *testing.B) {
 		opts:        PagerOptions{},
 	}
 
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		model.matches = nil
 		model.findMatches()
 	}

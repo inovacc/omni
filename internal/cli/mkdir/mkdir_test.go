@@ -39,6 +39,7 @@ func TestRunMkdir(t *testing.T) {
 		if _, err := os.Stat(dir1); os.IsNotExist(err) {
 			t.Error("RunMkdir() did not create dir1")
 		}
+
 		if _, err := os.Stat(dir2); os.IsNotExist(err) {
 			t.Error("RunMkdir() did not create dir2")
 		}
@@ -131,6 +132,7 @@ func TestRunRmdir(t *testing.T) {
 		if _, err := os.Stat(dir1); !os.IsNotExist(err) {
 			t.Error("RunRmdir() did not remove dir1")
 		}
+
 		if _, err := os.Stat(dir2); !os.IsNotExist(err) {
 			t.Error("RunRmdir() did not remove dir2")
 		}

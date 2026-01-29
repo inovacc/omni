@@ -33,9 +33,11 @@ func TestRunStat(t *testing.T) {
 		if !strings.Contains(output, "File:") {
 			t.Errorf("RunStat() output missing File:")
 		}
+
 		if !strings.Contains(output, "Size:") {
 			t.Errorf("RunStat() output missing Size:")
 		}
+
 		if !strings.Contains(output, "regular file") {
 			t.Errorf("RunStat() should indicate regular file")
 		}
@@ -180,6 +182,7 @@ func TestRunTouch(t *testing.T) {
 		if _, err := os.Stat(file1); os.IsNotExist(err) {
 			t.Error("RunTouch() did not create file1")
 		}
+
 		if _, err := os.Stat(file2); os.IsNotExist(err) {
 			t.Error("RunTouch() did not create file2")
 		}

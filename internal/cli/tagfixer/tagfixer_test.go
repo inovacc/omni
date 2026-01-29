@@ -136,6 +136,7 @@ func TestParseCaseType(t *testing.T) {
 				t.Errorf("ParseCaseType(%s) error = %v, wantErr %v", tt.input, err, tt.wantErr)
 				return
 			}
+
 			if !tt.wantErr && got != tt.expected {
 				t.Errorf("ParseCaseType(%s) = %s, want %s", tt.input, got, tt.expected)
 			}
@@ -163,6 +164,7 @@ func TestSplitIntoWords(t *testing.T) {
 				t.Errorf("splitIntoWords(%s) = %v, want %v", tt.input, got, tt.expected)
 				return
 			}
+
 			for i, word := range got {
 				if word != tt.expected[i] {
 					t.Errorf("splitIntoWords(%s)[%d] = %s, want %s", tt.input, i, word, tt.expected[i])
@@ -249,6 +251,7 @@ func TestFixTag(t *testing.T) {
 			if got != tt.expected {
 				t.Errorf("fixTag() = %s, want %s", got, tt.expected)
 			}
+
 			if len(changes) != tt.changes {
 				t.Errorf("fixTag() changes = %d, want %d", len(changes), tt.changes)
 			}
@@ -262,9 +265,11 @@ func TestRunTagFixerDryRun(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	testFile := filepath.Join(tmpDir, "test.go")
+
 	content := `package test
 
 type User struct {
@@ -277,6 +282,7 @@ type User struct {
 	}
 
 	var buf bytes.Buffer
+
 	opts := Options{
 		Path:   tmpDir,
 		Case:   CaseCamel,
@@ -306,9 +312,11 @@ func TestRunTagFixerAnalyze(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	testFile := filepath.Join(tmpDir, "test.go")
+
 	content := `package test
 
 type User struct {
@@ -321,6 +329,7 @@ type User struct {
 	}
 
 	var buf bytes.Buffer
+
 	opts := Options{
 		Path:    tmpDir,
 		Tags:    []string{"json"},
@@ -335,6 +344,7 @@ type User struct {
 	if !strings.Contains(output, "Analysis Report") {
 		t.Errorf("Expected analysis report, got: %s", output)
 	}
+
 	if !strings.Contains(output, "json:") {
 		t.Errorf("Expected json stats, got: %s", output)
 	}
@@ -346,9 +356,11 @@ func TestRunTagFixerJSON(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	testFile := filepath.Join(tmpDir, "test.go")
+
 	content := `package test
 
 type User struct {
@@ -360,6 +372,7 @@ type User struct {
 	}
 
 	var buf bytes.Buffer
+
 	opts := Options{
 		Path:   tmpDir,
 		Case:   CaseCamel,
@@ -390,6 +403,7 @@ func TestGetSortedTags(t *testing.T) {
 	if len(tags) == 0 {
 		t.Error("GetSortedTags() returned empty")
 	}
+
 	if tags[0] != "json" {
 		t.Errorf("GetSortedTags()[0] = %s, want json", tags[0])
 	}
@@ -401,6 +415,7 @@ func TestCollectGoFiles(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	// Create files
@@ -432,31 +447,31 @@ func TestCollectGoFiles(t *testing.T) {
 
 func TestCalculateConsistency(t *testing.T) {
 	tests := []struct {
-		name       string
-		caseStats  map[string]int
-		minScore   float64
-		maxScore   float64
+		name        string
+		caseStats   map[string]int
+		minScore    float64
+		maxScore    float64
 		recommended CaseType
 	}{
 		{
-			name:       "all camel",
-			caseStats:  map[string]int{"camelCase": 10},
-			minScore:   1.0,
-			maxScore:   1.0,
+			name:        "all camel",
+			caseStats:   map[string]int{"camelCase": 10},
+			minScore:    1.0,
+			maxScore:    1.0,
 			recommended: CaseCamel,
 		},
 		{
-			name:       "mostly snake",
-			caseStats:  map[string]int{"snake_case": 8, "camelCase": 2},
-			minScore:   0.7,
-			maxScore:   0.9,
+			name:        "mostly snake",
+			caseStats:   map[string]int{"snake_case": 8, "camelCase": 2},
+			minScore:    0.7,
+			maxScore:    0.9,
 			recommended: CaseSnake,
 		},
 		{
-			name:       "empty",
-			caseStats:  map[string]int{},
-			minScore:   1.0,
-			maxScore:   1.0,
+			name:        "empty",
+			caseStats:   map[string]int{},
+			minScore:    1.0,
+			maxScore:    1.0,
 			recommended: CaseCamel,
 		},
 	}
@@ -467,6 +482,7 @@ func TestCalculateConsistency(t *testing.T) {
 			if score < tt.minScore || score > tt.maxScore {
 				t.Errorf("calculateConsistency() score = %f, want [%f, %f]", score, tt.minScore, tt.maxScore)
 			}
+
 			if recommended != tt.recommended {
 				t.Errorf("calculateConsistency() recommended = %s, want %s", recommended, tt.recommended)
 			}

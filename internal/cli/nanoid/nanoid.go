@@ -83,6 +83,7 @@ func Generate(alphabet string, length int) (string, error) {
 		if err != nil {
 			return "", err
 		}
+
 		result[i] = alphabet[idx.Int64()]
 	}
 
@@ -100,6 +101,7 @@ func NewString() string {
 	if err != nil {
 		return ""
 	}
+
 	return nanoid
 }
 
@@ -109,5 +111,6 @@ func MustNew() string {
 	if err != nil {
 		panic(fmt.Sprintf("nanoid: %v", err))
 	}
+
 	return nanoid
 }

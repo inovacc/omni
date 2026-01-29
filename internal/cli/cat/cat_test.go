@@ -446,6 +446,7 @@ func TestRunCat(t *testing.T) {
 func TestCat(t *testing.T) {
 	t.Run("simple copy", func(t *testing.T) {
 		input := bytes.NewBufferString("test content")
+
 		var output bytes.Buffer
 
 		err := Cat(&output, input)
@@ -460,6 +461,7 @@ func TestCat(t *testing.T) {
 
 	t.Run("empty input", func(t *testing.T) {
 		input := bytes.NewBufferString("")
+
 		var output bytes.Buffer
 
 		err := Cat(&output, input)
@@ -475,6 +477,7 @@ func TestCat(t *testing.T) {
 	t.Run("large input", func(t *testing.T) {
 		largeContent := strings.Repeat("data", 10000)
 		input := bytes.NewBufferString(largeContent)
+
 		var output bytes.Buffer
 
 		err := Cat(&output, input)
@@ -549,6 +552,7 @@ func TestReadFrom(t *testing.T) {
 func TestWriteTo(t *testing.T) {
 	t.Run("write lines", func(t *testing.T) {
 		var buf bytes.Buffer
+
 		lines := []string{"line1", "line2", "line3"}
 
 		err := WriteTo(&buf, lines)

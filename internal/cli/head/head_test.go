@@ -18,11 +18,12 @@ func TestRunHead(t *testing.T) {
 
 	createTestFile := func(name string, numLines int) string {
 		file := filepath.Join(tmpDir, name)
+
 		var content strings.Builder
 
 		for i := 1; i <= numLines; i++ {
 			content.WriteString("line")
-			content.WriteString(string(rune('0' + i%10)))
+			content.WriteRune(rune('0' + i%10))
 			content.WriteString("\n")
 		}
 
@@ -373,11 +374,12 @@ func TestRunHead(t *testing.T) {
 
 	t.Run("large file", func(t *testing.T) {
 		file := filepath.Join(tmpDir, "large.txt")
+
 		var content strings.Builder
 
-		for i := 0; i < 10000; i++ {
+		for i := range 10000 {
 			content.WriteString("line")
-			content.WriteString(string(rune('0' + i%10)))
+			content.WriteRune(rune('0' + i%10))
 			content.WriteString("\n")
 		}
 

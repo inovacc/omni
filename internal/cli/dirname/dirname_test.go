@@ -167,7 +167,6 @@ func TestRunDirname_OutputFormat(t *testing.T) {
 		var buf bytes.Buffer
 
 		err := RunDirname(&buf, []string{}, DirnameOptions{})
-
 		if err == nil {
 			t.Error("RunDirname() should return error for no args")
 			return

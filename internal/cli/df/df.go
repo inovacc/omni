@@ -61,8 +61,10 @@ func RunDF(w io.Writer, args []string, opts DFOptions) error {
 			if err != nil {
 				continue
 			}
+
 			jsonResults = append(jsonResults, info)
 		}
+
 		return json.NewEncoder(w).Encode(jsonResults)
 	}
 

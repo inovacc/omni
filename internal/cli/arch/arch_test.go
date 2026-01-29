@@ -61,6 +61,7 @@ func TestRunArch(t *testing.T) {
 
 		if archs, ok := validMappings[goarch]; ok {
 			found := false
+
 			for _, arch := range archs {
 				if strings.Contains(output, arch) {
 					found = true

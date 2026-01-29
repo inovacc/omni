@@ -256,6 +256,7 @@ func (l *Logger) LogQueryResult(database, query string, rowCount int, duration t
 	}
 
 	status := "success"
+
 	var errMsg string
 
 	if err != nil {
@@ -288,6 +289,7 @@ func (l *Logger) LogQueryWithData(database, query string, columns []string, rows
 	}
 
 	status := "success"
+
 	var errMsg string
 
 	if err != nil {

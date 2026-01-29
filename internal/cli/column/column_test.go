@@ -172,6 +172,7 @@ func TestRunColumn(t *testing.T) {
 func TestColumnTable(t *testing.T) {
 	t.Run("empty input", func(t *testing.T) {
 		var buf bytes.Buffer
+
 		err := columnTable(&buf, []string{}, ColumnOptions{})
 		if err != nil {
 			t.Errorf("columnTable() error = %v", err)
@@ -180,10 +181,12 @@ func TestColumnTable(t *testing.T) {
 
 	t.Run("single line", func(t *testing.T) {
 		var buf bytes.Buffer
+
 		err := columnTable(&buf, []string{"a b c"}, ColumnOptions{})
 		if err != nil {
 			t.Errorf("columnTable() error = %v", err)
 		}
+
 		if !strings.Contains(buf.String(), "a") {
 			t.Errorf("columnTable() output = %q", buf.String())
 		}
@@ -193,6 +196,7 @@ func TestColumnTable(t *testing.T) {
 func TestColumnFill(t *testing.T) {
 	t.Run("empty input", func(t *testing.T) {
 		var buf bytes.Buffer
+
 		err := columnFill(&buf, []string{}, ColumnOptions{Columns: 80})
 		if err != nil {
 			t.Errorf("columnFill() error = %v", err)
@@ -201,6 +205,7 @@ func TestColumnFill(t *testing.T) {
 
 	t.Run("few items", func(t *testing.T) {
 		var buf bytes.Buffer
+
 		err := columnFill(&buf, []string{"a", "b", "c"}, ColumnOptions{Columns: 80})
 		if err != nil {
 			t.Errorf("columnFill() error = %v", err)

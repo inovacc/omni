@@ -59,6 +59,7 @@ func TestRunDU(t *testing.T) {
 		}
 
 		output := buf.String()
+
 		lines := strings.Split(strings.TrimSpace(output), "\n")
 		if len(lines) != 1 {
 			t.Errorf("RunDU() -s should output only one line, got %d", len(lines))
@@ -135,6 +136,7 @@ func TestRunDU(t *testing.T) {
 		_ = os.WriteFile(file, []byte("test content"), 0644)
 
 		var buf bytes.Buffer
+
 		err := RunDU(&buf, []string{file}, DUOptions{All: true})
 		if err != nil {
 			t.Fatalf("RunDU() error = %v", err)
@@ -149,9 +151,11 @@ func TestRunDU(t *testing.T) {
 		// Change to temp dir
 		origDir, _ := os.Getwd()
 		_ = os.Chdir(tmpDir)
+
 		defer func() { _ = os.Chdir(origDir) }()
 
 		var buf bytes.Buffer
+
 		err := RunDU(&buf, []string{}, DUOptions{})
 		if err != nil {
 			t.Fatalf("RunDU() error = %v", err)

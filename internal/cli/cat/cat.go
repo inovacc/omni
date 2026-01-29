@@ -56,6 +56,7 @@ func RunCat(w io.Writer, args []string, opts CatOptions) error {
 			if err != nil {
 				return err
 			}
+
 			allLines = append(allLines, lines...)
 		} else {
 			if err := catReader(w, r, path, opts); err != nil {
@@ -75,6 +76,7 @@ func catReaderJSON(r io.Reader, opts CatOptions) ([]CatLine, error) {
 	scanner := bufio.NewScanner(r)
 	lineNum := 0
 	prevBlank := false
+
 	var lines []CatLine
 
 	for scanner.Scan() {
@@ -84,24 +86,29 @@ func catReaderJSON(r io.Reader, opts CatOptions) ([]CatLine, error) {
 		if opts.SqueezeBlank && isBlank && prevBlank {
 			continue
 		}
+
 		prevBlank = isBlank
 
 		output := line
 		if opts.ShowTabs {
 			output = strings.ReplaceAll(output, "\t", "^I")
 		}
+
 		if opts.ShowNonPrint {
 			output = showNonPrintable(output)
 		}
+
 		if opts.ShowEnds {
 			output += "$"
 		}
 
 		catLine := CatLine{Content: output}
+
 		if opts.NumberAll || (opts.NumberNonBlank && !isBlank) {
 			lineNum++
 			catLine.Number = lineNum
 		}
+
 		lines = append(lines, catLine)
 	}
 

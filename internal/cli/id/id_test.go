@@ -19,6 +19,7 @@ func TestRunID(t *testing.T) {
 		if !strings.Contains(output, "uid=") {
 			t.Errorf("RunID() should contain 'uid=': %s", output)
 		}
+
 		if !strings.Contains(output, "gid=") {
 			t.Errorf("RunID() should contain 'gid=': %s", output)
 		}

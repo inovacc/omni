@@ -220,7 +220,6 @@ func TestRunBasename_OutputFormat(t *testing.T) {
 		var buf bytes.Buffer
 
 		err := RunBasename(&buf, []string{}, BasenameOptions{})
-
 		if err == nil {
 			t.Error("RunBasename() should return error for no args")
 			return

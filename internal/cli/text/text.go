@@ -262,6 +262,7 @@ func RunUniq(w io.Writer, args []string, opts UniqOptions) error {
 
 	count := 0
 	first := true
+
 	var jsonLines []UniqLine
 
 	outputLine := func(line string, cnt int) {

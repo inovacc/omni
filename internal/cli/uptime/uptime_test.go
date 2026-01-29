@@ -21,6 +21,7 @@ func TestRunUptime(t *testing.T) {
 		if !strings.Contains(output, "up") {
 			t.Errorf("RunUptime() output should contain 'up': %s", output)
 		}
+
 		if !strings.Contains(output, "load average") {
 			t.Errorf("RunUptime() output should contain 'load average': %s", output)
 		}

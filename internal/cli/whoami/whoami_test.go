@@ -155,7 +155,7 @@ func TestRunWhoami(t *testing.T) {
 	t.Run("multiple calls consistent", func(t *testing.T) {
 		results := make([]string, 5)
 
-		for i := 0; i < 5; i++ {
+		for i := range 5 {
 			var buf bytes.Buffer
 
 			_ = RunWhoami(&buf, WhoamiOptions{})
@@ -173,7 +173,6 @@ func TestRunWhoami(t *testing.T) {
 		var buf bytes.Buffer
 
 		err := RunWhoami(&buf, WhoamiOptions{})
-
 		if err != nil {
 			t.Errorf("RunWhoami() should not error in normal conditions: %v", err)
 		}

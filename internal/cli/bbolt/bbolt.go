@@ -14,8 +14,8 @@ import (
 
 // Options configures bbolt command behavior
 type Options struct {
-	JSON   bool // --json: output as JSON
-	Hex    bool // --hex: display values in hex
+	JSON   bool   // --json: output as JSON
+	Hex    bool   // --hex: display values in hex
 	Prefix string // --prefix: filter keys by prefix
 }
 
@@ -117,7 +117,6 @@ func RunBuckets(w io.Writer, dbPath string, opts Options) error {
 			return nil
 		})
 	})
-
 	if err != nil {
 		return fmt.Errorf("bbolt: %w", err)
 	}
@@ -159,7 +158,6 @@ func RunKeys(w io.Writer, dbPath, bucket string, opts Options) error {
 			return nil
 		})
 	})
-
 	if err != nil {
 		return fmt.Errorf("bbolt: %w", err)
 	}
@@ -199,7 +197,6 @@ func RunGet(w io.Writer, dbPath, bucket, key string, opts Options) error {
 
 		return nil
 	})
-
 	if err != nil {
 		return fmt.Errorf("bbolt: %w", err)
 	}
@@ -240,7 +237,6 @@ func RunPut(w io.Writer, dbPath, bucket, key, value string, opts Options) error 
 
 		return b.Put([]byte(key), []byte(value))
 	})
-
 	if err != nil {
 		return fmt.Errorf("bbolt: %w", err)
 	}
@@ -277,7 +273,6 @@ func RunDelete(w io.Writer, dbPath, bucket, key string, opts Options) error {
 
 		return b.Delete([]byte(key))
 	})
-
 	if err != nil {
 		return fmt.Errorf("bbolt: %w", err)
 	}
@@ -326,7 +321,6 @@ func RunDump(w io.Writer, dbPath, bucket string, opts Options) error {
 			return nil
 		})
 	})
-
 	if err != nil {
 		return fmt.Errorf("bbolt: %w", err)
 	}
@@ -368,12 +362,12 @@ func RunCompact(w io.Writer, srcPath, dstPath string, opts Options) error {
 
 	if opts.JSON {
 		result := map[string]any{
-			"status":       "ok",
-			"source":       srcPath,
-			"destination":  dstPath,
-			"source_size":  srcInfo.Size(),
-			"dest_size":    dstInfo.Size(),
-			"savings_pct":  float64(srcInfo.Size()-dstInfo.Size()) / float64(srcInfo.Size()) * 100,
+			"status":      "ok",
+			"source":      srcPath,
+			"destination": dstPath,
+			"source_size": srcInfo.Size(),
+			"dest_size":   dstInfo.Size(),
+			"savings_pct": float64(srcInfo.Size()-dstInfo.Size()) / float64(srcInfo.Size()) * 100,
 		}
 
 		return json.NewEncoder(w).Encode(result)
@@ -410,7 +404,6 @@ func RunCheck(w io.Writer, dbPath string, opts Options) error {
 			})
 		})
 	})
-
 	if err != nil {
 		return fmt.Errorf("bbolt: %w", err)
 	}
@@ -451,7 +444,6 @@ func RunCreateBucket(w io.Writer, dbPath, bucket string, opts Options) error {
 		_, err := tx.CreateBucketIfNotExists([]byte(bucket))
 		return err
 	})
-
 	if err != nil {
 		return fmt.Errorf("bbolt: %w", err)
 	}
@@ -482,7 +474,6 @@ func RunDeleteBucket(w io.Writer, dbPath, bucket string, opts Options) error {
 	err = db.Update(func(tx *bolt.Tx) error {
 		return tx.DeleteBucket([]byte(bucket))
 	})
-
 	if err != nil {
 		return fmt.Errorf("bbolt: %w", err)
 	}
@@ -551,8 +542,8 @@ func RunPages(w io.Writer, dbPath string, opts Options) error {
 	// Read the page size from the meta page
 	// The page size is at offset 12 in the meta page (after magic + version)
 	buf := make([]byte, 4096) // Read first page
-	_, err = f.Read(buf)
 
+	_, err = f.Read(buf)
 	if err != nil {
 		return fmt.Errorf("bbolt: %w", err)
 	}
@@ -584,6 +575,7 @@ func RunPages(w io.Writer, dbPath string, opts Options) error {
 		overflow := int(pageBuf[8]) | int(pageBuf[9])<<8 | int(pageBuf[10])<<16 | int(pageBuf[11])<<24
 
 		var pageType string
+
 		switch {
 		case flags&0x01 != 0:
 			pageType = "branch"
@@ -628,8 +620,8 @@ func RunPageDump(w io.Writer, dbPath string, pageID int, opts Options) error {
 
 	// Read page size from meta
 	buf := make([]byte, 4096)
-	_, err = f.Read(buf)
 
+	_, err = f.Read(buf)
 	if err != nil {
 		return fmt.Errorf("bbolt: %w", err)
 	}
@@ -647,8 +639,8 @@ func RunPageDump(w io.Writer, dbPath string, pageID int, opts Options) error {
 
 	// Read the page
 	pageBuf := make([]byte, pageSize)
-	n, err := f.Read(pageBuf)
 
+	n, err := f.Read(pageBuf)
 	if err != nil {
 		return fmt.Errorf("bbolt: %w", err)
 	}
@@ -670,7 +662,7 @@ func RunPageDump(w io.Writer, dbPath string, pageID int, opts Options) error {
 		_, _ = fmt.Fprintf(w, "%08x  ", i)
 
 		// Hex
-		for j := 0; j < 16; j++ {
+		for j := range 16 {
 			if i+j < n {
 				_, _ = fmt.Fprintf(w, "%02x ", pageBuf[i+j])
 			} else {

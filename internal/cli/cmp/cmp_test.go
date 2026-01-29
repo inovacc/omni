@@ -157,6 +157,7 @@ func TestRunCmp(t *testing.T) {
 		if err == nil {
 			t.Error("RunCmp() expected error for missing operand")
 		}
+
 		if result != CmpError {
 			t.Errorf("RunCmp() = %v, want CmpError", result)
 		}
@@ -169,6 +170,7 @@ func TestRunCmp(t *testing.T) {
 		if err == nil {
 			t.Error("RunCmp() expected error when both files are stdin")
 		}
+
 		if result != CmpError {
 			t.Errorf("RunCmp() = %v, want CmpError", result)
 		}
@@ -184,6 +186,7 @@ func TestRunCmp(t *testing.T) {
 		if err == nil {
 			t.Error("RunCmp() expected error for nonexistent file")
 		}
+
 		if result != CmpError {
 			t.Errorf("RunCmp() = %v, want CmpError", result)
 		}

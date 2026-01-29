@@ -262,6 +262,7 @@ func TestRunHashExtended(t *testing.T) {
 
 	t.Run("large file", func(t *testing.T) {
 		testFile := filepath.Join(tmpDir, "large.txt")
+
 		largeContent := strings.Repeat("x", 100000)
 		if err := os.WriteFile(testFile, []byte(largeContent), 0644); err != nil {
 			t.Fatal(err)
@@ -335,6 +336,7 @@ func TestRunSHA512Sum(t *testing.T) {
 
 	// SHA512 hash should be 128 hex characters
 	output := buf.String()
+
 	parts := strings.Fields(output)
 	if len(parts) > 0 && len(parts[0]) != 128 {
 		t.Logf("SHA512 hash length: %d (expected 128)", len(parts[0]))

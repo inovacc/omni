@@ -43,6 +43,7 @@ func RunStrings(w io.Writer, args []string, opts StringsOptions) error {
 			if err != nil {
 				return err
 			}
+
 			allStrings = append(allStrings, entries...)
 		} else {
 			return stringsReader(w, os.Stdin, "<stdin>", opts)
@@ -57,7 +58,9 @@ func RunStrings(w io.Writer, args []string, opts StringsOptions) error {
 				if err != nil {
 					return fmt.Errorf("strings: %w", err)
 				}
+
 				defer func() { _ = f.Close() }()
+
 				r = f
 			}
 
@@ -66,6 +69,7 @@ func RunStrings(w io.Writer, args []string, opts StringsOptions) error {
 				if err != nil {
 					return err
 				}
+
 				allStrings = append(allStrings, entries...)
 			} else {
 				if err := stringsReader(w, r, path, opts); err != nil {
@@ -84,8 +88,11 @@ func RunStrings(w io.Writer, args []string, opts StringsOptions) error {
 
 func stringsReaderJSON(r io.Reader, opts StringsOptions) ([]StringEntry, error) {
 	var entries []StringEntry
+
 	buf := make([]byte, 4096)
+
 	var current strings.Builder
+
 	offset := int64(0)
 	stringStart := int64(0)
 
@@ -98,6 +105,7 @@ func stringsReaderJSON(r io.Reader, opts StringsOptions) ([]StringEntry, error) 
 					if current.Len() == 0 {
 						stringStart = offset + int64(i)
 					}
+
 					current.WriteByte(b)
 				} else {
 					if current.Len() >= opts.MinLength {
@@ -105,17 +113,21 @@ func stringsReaderJSON(r io.Reader, opts StringsOptions) ([]StringEntry, error) 
 						if opts.Offset != "" {
 							entry.Offset = stringStart
 						}
+
 						entries = append(entries, entry)
 					}
+
 					current.Reset()
 				}
 			}
+
 			offset += int64(n)
 		}
 
 		if err == io.EOF {
 			break
 		}
+
 		if err != nil {
 			return nil, fmt.Errorf("strings: %w", err)
 		}
@@ -126,6 +138,7 @@ func stringsReaderJSON(r io.Reader, opts StringsOptions) ([]StringEntry, error) 
 		if opts.Offset != "" {
 			entry.Offset = stringStart
 		}
+
 		entries = append(entries, entry)
 	}
 

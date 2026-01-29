@@ -87,7 +87,9 @@ func RunTail(w io.Writer, args []string, opts TailOptions) error {
 			if err != nil {
 				return err
 			}
+
 			result := TailResult{File: filename, Lines: lines}
+
 			return json.NewEncoder(w).Encode([]TailResult{result})
 		}
 

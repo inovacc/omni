@@ -37,8 +37,10 @@ func RunUUID(w io.Writer, opts UUIDOptions) error {
 	var uuids []string
 
 	for i := 0; i < opts.Count; i++ {
-		var uuid string
-		var err error
+		var (
+			uuid string
+			err  error
+		)
 
 		switch opts.Version {
 		case 4:
@@ -136,6 +138,7 @@ func NewUUIDv7() string {
 	if err != nil {
 		return ""
 	}
+
 	return uuid
 }
 

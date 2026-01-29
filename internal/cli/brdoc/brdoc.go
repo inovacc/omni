@@ -13,12 +13,12 @@ import (
 
 // Options configures brdoc command behavior
 type Options struct {
-	Generate bool   // Generate a new document
-	Validate bool   // Validate a document
-	Format   bool   // Format a document
-	Count    int    // Number of documents to generate
-	Legacy   bool   // Use legacy numeric-only CNPJ format
-	JSON     bool   // Output as JSON
+	Generate bool // Generate a new document
+	Validate bool // Validate a document
+	Format   bool // Format a document
+	Count    int  // Number of documents to generate
+	Legacy   bool // Use legacy numeric-only CNPJ format
+	JSON     bool // Output as JSON
 }
 
 // CPFResult represents CPF operation result
@@ -69,6 +69,7 @@ func RunCPF(w io.Writer, args []string, opts Options) error {
 
 	// Default: generate one
 	opts.Count = 1
+
 	return generateCPF(w, opts)
 }
 
@@ -88,6 +89,7 @@ func RunCNPJ(w io.Writer, args []string, opts Options) error {
 
 	// Default: generate one
 	opts.Count = 1
+
 	return generateCNPJ(w, opts)
 }
 
@@ -108,6 +110,7 @@ func generateCPF(w io.Writer, opts Options) error {
 				State: state,
 			})
 		}
+
 		return json.NewEncoder(w).Encode(result)
 	}
 
@@ -116,6 +119,7 @@ func generateCPF(w io.Writer, opts Options) error {
 		formatted, _ := cpfHandler.Format(cpf)
 		_, _ = fmt.Fprintln(w, formatted)
 	}
+
 	return nil
 }
 
@@ -126,6 +130,7 @@ func validateCPF(w io.Writer, args []string, opts Options) error {
 
 	if opts.JSON {
 		var results []CPFResult
+
 		for _, arg := range args {
 			result := CPFResult{CPF: arg}
 			if cpfHandler.Validate(arg) {
@@ -135,16 +140,19 @@ func validateCPF(w io.Writer, args []string, opts Options) error {
 				result.Valid = false
 				result.Error = "invalid CPF"
 			}
+
 			results = append(results, result)
 		}
 
 		if len(results) == 1 {
 			return json.NewEncoder(w).Encode(results[0])
 		}
+
 		return json.NewEncoder(w).Encode(CPFListResult{Count: len(results), CPFs: results})
 	}
 
 	allValid := true
+
 	for _, arg := range args {
 		if cpfHandler.Validate(arg) {
 			state := cpfHandler.CheckOrigin(arg)
@@ -158,6 +166,7 @@ func validateCPF(w io.Writer, args []string, opts Options) error {
 	if !allValid {
 		return fmt.Errorf("one or more CPFs are invalid")
 	}
+
 	return nil
 }
 
@@ -168,6 +177,7 @@ func formatCPF(w io.Writer, args []string, opts Options) error {
 
 	if opts.JSON {
 		var results []CPFResult
+
 		for _, arg := range args {
 			clean := cleanDoc(arg)
 			formatted, _ := cpfHandler.Format(clean)
@@ -177,6 +187,7 @@ func formatCPF(w io.Writer, args []string, opts Options) error {
 		if len(results) == 1 {
 			return json.NewEncoder(w).Encode(results[0])
 		}
+
 		return json.NewEncoder(w).Encode(CPFListResult{Count: len(results), CPFs: results})
 	}
 
@@ -185,6 +196,7 @@ func formatCPF(w io.Writer, args []string, opts Options) error {
 		formatted, _ := cpfHandler.Format(clean)
 		_, _ = fmt.Fprintln(w, formatted)
 	}
+
 	return nil
 }
 
@@ -203,11 +215,13 @@ func generateCNPJ(w io.Writer, opts Options) error {
 			} else {
 				cnpj = cnpjHandler.Generate()
 			}
+
 			formatted, _ := cnpjHandler.Format(cnpj)
 			result.CNPJs = append(result.CNPJs, CNPJResult{
 				CNPJ: formatted,
 			})
 		}
+
 		return json.NewEncoder(w).Encode(result)
 	}
 
@@ -218,9 +232,11 @@ func generateCNPJ(w io.Writer, opts Options) error {
 		} else {
 			cnpj = cnpjHandler.Generate()
 		}
+
 		formatted, _ := cnpjHandler.Format(cnpj)
 		_, _ = fmt.Fprintln(w, formatted)
 	}
+
 	return nil
 }
 
@@ -231,6 +247,7 @@ func validateCNPJ(w io.Writer, args []string, opts Options) error {
 
 	if opts.JSON {
 		var results []CNPJResult
+
 		for _, arg := range args {
 			result := CNPJResult{CNPJ: arg}
 			if cnpjHandler.Validate(arg) {
@@ -239,16 +256,19 @@ func validateCNPJ(w io.Writer, args []string, opts Options) error {
 				result.Valid = false
 				result.Error = "invalid CNPJ"
 			}
+
 			results = append(results, result)
 		}
 
 		if len(results) == 1 {
 			return json.NewEncoder(w).Encode(results[0])
 		}
+
 		return json.NewEncoder(w).Encode(CNPJListResult{Count: len(results), CNPJs: results})
 	}
 
 	allValid := true
+
 	for _, arg := range args {
 		if cnpjHandler.Validate(arg) {
 			_, _ = fmt.Fprintf(w, "%s: valid\n", arg)
@@ -261,6 +281,7 @@ func validateCNPJ(w io.Writer, args []string, opts Options) error {
 	if !allValid {
 		return fmt.Errorf("one or more CNPJs are invalid")
 	}
+
 	return nil
 }
 
@@ -271,6 +292,7 @@ func formatCNPJ(w io.Writer, args []string, opts Options) error {
 
 	if opts.JSON {
 		var results []CNPJResult
+
 		for _, arg := range args {
 			clean := cleanDoc(arg)
 			formatted, _ := cnpjHandler.Format(clean)
@@ -280,6 +302,7 @@ func formatCNPJ(w io.Writer, args []string, opts Options) error {
 		if len(results) == 1 {
 			return json.NewEncoder(w).Encode(results[0])
 		}
+
 		return json.NewEncoder(w).Encode(CNPJListResult{Count: len(results), CNPJs: results})
 	}
 
@@ -288,6 +311,7 @@ func formatCNPJ(w io.Writer, args []string, opts Options) error {
 		formatted, _ := cnpjHandler.Format(clean)
 		_, _ = fmt.Fprintln(w, formatted)
 	}
+
 	return nil
 }
 
@@ -297,6 +321,7 @@ func cleanDoc(doc string) string {
 	doc = strings.ReplaceAll(doc, "-", "")
 	doc = strings.ReplaceAll(doc, "/", "")
 	doc = strings.ReplaceAll(doc, " ", "")
+
 	return doc
 }
 

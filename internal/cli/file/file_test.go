@@ -283,6 +283,7 @@ func TestCheckMagic(t *testing.T) {
 			if ok != tt.wantOK {
 				t.Errorf("checkMagic() ok = %v, want %v", ok, tt.wantOK)
 			}
+
 			if ok && !strings.Contains(fileType, tt.wantType) {
 				t.Errorf("checkMagic() type = %q, want to contain %q", fileType, tt.wantType)
 			}

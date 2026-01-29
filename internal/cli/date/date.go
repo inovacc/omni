@@ -61,6 +61,7 @@ func RunDate(w io.Writer, opts DateOptions) error {
 			Timezone:  zone,
 			UTC:       opts.UTC,
 		}
+
 		return json.NewEncoder(w).Encode(result)
 	}
 

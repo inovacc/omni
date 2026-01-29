@@ -27,6 +27,7 @@ func TestRunLn(t *testing.T) {
 		_ = os.WriteFile(target, []byte("content"), 0644)
 
 		var buf bytes.Buffer
+
 		err := RunLn(&buf, []string{target, link}, LnOptions{})
 		if err != nil {
 			t.Fatalf("RunLn() error = %v", err)
@@ -43,6 +44,7 @@ func TestRunLn(t *testing.T) {
 		_ = os.WriteFile(target, []byte("content"), 0644)
 
 		var buf bytes.Buffer
+
 		err := RunLn(&buf, []string{target, link}, LnOptions{Symbolic: true})
 		if err != nil {
 			t.Fatalf("RunLn() error = %v", err)
@@ -65,6 +67,7 @@ func TestRunLn(t *testing.T) {
 		_ = os.WriteFile(link, []byte("existing"), 0644)
 
 		var buf bytes.Buffer
+
 		err := RunLn(&buf, []string{target, link}, LnOptions{Symbolic: true, Force: true})
 		if err != nil {
 			t.Fatalf("RunLn() -f error = %v", err)
@@ -78,6 +81,7 @@ func TestRunLn(t *testing.T) {
 		_ = os.WriteFile(link, []byte("existing"), 0644)
 
 		var buf bytes.Buffer
+
 		err := RunLn(&buf, []string{target, link}, LnOptions{Symbolic: true, Backup: true})
 		if err != nil {
 			t.Fatalf("RunLn() -b error = %v", err)
@@ -94,6 +98,7 @@ func TestRunLn(t *testing.T) {
 		_ = os.WriteFile(target, []byte("content"), 0644)
 
 		var buf bytes.Buffer
+
 		err := RunLn(&buf, []string{target, link}, LnOptions{Symbolic: true, Verbose: true})
 		if err != nil {
 			t.Fatalf("RunLn() -v error = %v", err)
@@ -114,6 +119,7 @@ func TestRunLn(t *testing.T) {
 		_ = os.Mkdir(destDir, 0755)
 
 		var buf bytes.Buffer
+
 		err := RunLn(&buf, []string{target1, target2, destDir}, LnOptions{Symbolic: true})
 		if err != nil {
 			t.Fatalf("RunLn() multiple error = %v", err)
@@ -122,6 +128,7 @@ func TestRunLn(t *testing.T) {
 		if _, err := os.Lstat(filepath.Join(destDir, "multi1.txt")); os.IsNotExist(err) {
 			t.Error("RunLn() did not create first link")
 		}
+
 		if _, err := os.Lstat(filepath.Join(destDir, "multi2.txt")); os.IsNotExist(err) {
 			t.Error("RunLn() did not create second link")
 		}
@@ -134,6 +141,7 @@ func TestRunLn(t *testing.T) {
 		_ = os.WriteFile(link, []byte("existing"), 0644)
 
 		var buf bytes.Buffer
+
 		err := RunLn(&buf, []string{target, link}, LnOptions{Symbolic: true})
 		if err == nil {
 			t.Error("RunLn() expected error for existing file")
@@ -142,6 +150,7 @@ func TestRunLn(t *testing.T) {
 
 	t.Run("missing operand", func(t *testing.T) {
 		var buf bytes.Buffer
+
 		err := RunLn(&buf, []string{"single"}, LnOptions{})
 		if err == nil {
 			t.Error("RunLn() expected error for missing operand")
@@ -158,6 +167,7 @@ func TestRunLn(t *testing.T) {
 		_ = os.WriteFile(notDir, []byte("file"), 0644)
 
 		var buf bytes.Buffer
+
 		err := RunLn(&buf, []string{target1, target2, notDir}, LnOptions{})
 		if err == nil {
 			t.Error("RunLn() expected error for non-directory target")
@@ -174,6 +184,7 @@ func TestSymlink(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	target := filepath.Join(tmpDir, "target")
@@ -200,6 +211,7 @@ func TestLink(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	target := filepath.Join(tmpDir, "target")

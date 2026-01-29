@@ -53,8 +53,10 @@ func RunDU(w io.Writer, args []string, opts DUOptions) error {
 		paths = []string{"."}
 	}
 
-	var grandTotal int64
-	var jsonEntries []DUResult
+	var (
+		grandTotal  int64
+		jsonEntries []DUResult
+	)
 
 	terminator := "\n"
 	if opts.NullTerminator {
@@ -69,6 +71,7 @@ func RunDU(w io.Writer, args []string, opts DUOptions) error {
 		}
 
 		grandTotal += total
+
 		if opts.JSON {
 			jsonEntries = append(jsonEntries, entries...)
 		}
@@ -79,6 +82,7 @@ func RunDU(w io.Writer, args []string, opts DUOptions) error {
 		if opts.Total && len(paths) > 1 {
 			output.GrandTotal = grandTotal
 		}
+
 		return json.NewEncoder(w).Encode(output)
 	}
 
@@ -91,6 +95,7 @@ func RunDU(w io.Writer, args []string, opts DUOptions) error {
 
 func duPath(w io.Writer, path string, opts DUOptions, _ int, terminator string) (int64, []DUResult, error) {
 	var results []DUResult
+
 	info, err := os.Lstat(path)
 	if err != nil {
 		return 0, nil, err
@@ -99,6 +104,7 @@ func duPath(w io.Writer, path string, opts DUOptions, _ int, terminator string) 
 	// If it's a file, just return its size
 	if !info.IsDir() {
 		size := info.Size()
+
 		if opts.All || opts.SummarizeOnly {
 			if opts.JSON {
 				results = append(results, DUResult{Path: path, Size: size})

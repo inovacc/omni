@@ -21,6 +21,7 @@ func TestRunAwk(t *testing.T) {
 		_ = os.WriteFile(file, []byte("line1\nline2\nline3\n"), 0644)
 
 		var buf bytes.Buffer
+
 		err := RunAwk(&buf, []string{"{print}", file}, AwkOptions{})
 		if err != nil {
 			t.Fatalf("RunAwk() error = %v", err)
@@ -37,6 +38,7 @@ func TestRunAwk(t *testing.T) {
 		_ = os.WriteFile(file, []byte("one two three\nfour five six\n"), 0644)
 
 		var buf bytes.Buffer
+
 		err := RunAwk(&buf, []string{"{print $1}", file}, AwkOptions{})
 		if err != nil {
 			t.Fatalf("RunAwk() error = %v", err)
@@ -46,6 +48,7 @@ func TestRunAwk(t *testing.T) {
 		if !strings.Contains(output, "one") || !strings.Contains(output, "four") {
 			t.Errorf("RunAwk() print $1 = %q", output)
 		}
+
 		if strings.Contains(output, "two") || strings.Contains(output, "five") {
 			t.Errorf("RunAwk() print $1 should not contain $2: %q", output)
 		}
@@ -56,6 +59,7 @@ func TestRunAwk(t *testing.T) {
 		_ = os.WriteFile(file, []byte("a b c\n"), 0644)
 
 		var buf bytes.Buffer
+
 		err := RunAwk(&buf, []string{"{print $1, $3}", file}, AwkOptions{})
 		if err != nil {
 			t.Fatalf("RunAwk() error = %v", err)
@@ -72,6 +76,7 @@ func TestRunAwk(t *testing.T) {
 		_ = os.WriteFile(file, []byte("one:two:three\n"), 0644)
 
 		var buf bytes.Buffer
+
 		err := RunAwk(&buf, []string{"{print $2}", file}, AwkOptions{FieldSeparator: ":"})
 		if err != nil {
 			t.Fatalf("RunAwk() error = %v", err)
@@ -88,6 +93,7 @@ func TestRunAwk(t *testing.T) {
 		_ = os.WriteFile(file, []byte("apple\nbanana\napricot\n"), 0644)
 
 		var buf bytes.Buffer
+
 		err := RunAwk(&buf, []string{"/^a/{print}", file}, AwkOptions{})
 		if err != nil {
 			t.Fatalf("RunAwk() error = %v", err)
@@ -97,6 +103,7 @@ func TestRunAwk(t *testing.T) {
 		if !strings.Contains(output, "apple") || !strings.Contains(output, "apricot") {
 			t.Errorf("RunAwk() pattern should match lines starting with 'a': %q", output)
 		}
+
 		if strings.Contains(output, "banana") {
 			t.Errorf("RunAwk() pattern should not match 'banana': %q", output)
 		}
@@ -107,6 +114,7 @@ func TestRunAwk(t *testing.T) {
 		_ = os.WriteFile(file, []byte("data\n"), 0644)
 
 		var buf bytes.Buffer
+
 		err := RunAwk(&buf, []string{`BEGIN{print "header"}{print}`, file}, AwkOptions{})
 		if err != nil {
 			t.Fatalf("RunAwk() error = %v", err)
@@ -123,6 +131,7 @@ func TestRunAwk(t *testing.T) {
 		_ = os.WriteFile(file, []byte("data\n"), 0644)
 
 		var buf bytes.Buffer
+
 		err := RunAwk(&buf, []string{`{print}END{print "footer"}`, file}, AwkOptions{})
 		if err != nil {
 			t.Fatalf("RunAwk() error = %v", err)
@@ -139,6 +148,7 @@ func TestRunAwk(t *testing.T) {
 		_ = os.WriteFile(file, []byte("entire line\n"), 0644)
 
 		var buf bytes.Buffer
+
 		err := RunAwk(&buf, []string{"{print $0}", file}, AwkOptions{})
 		if err != nil {
 			t.Fatalf("RunAwk() error = %v", err)
@@ -155,6 +165,7 @@ func TestRunAwk(t *testing.T) {
 		_ = os.WriteFile(file, []byte("data\n"), 0644)
 
 		var buf bytes.Buffer
+
 		err := RunAwk(&buf, []string{`{print "prefix", $1}`, file}, AwkOptions{})
 		if err != nil {
 			t.Fatalf("RunAwk() error = %v", err)
@@ -171,6 +182,7 @@ func TestRunAwk(t *testing.T) {
 		_ = os.WriteFile(file, []byte("a b c d\n"), 0644)
 
 		var buf bytes.Buffer
+
 		err := RunAwk(&buf, []string{"{print NF}", file}, AwkOptions{})
 		if err != nil {
 			t.Fatalf("RunAwk() error = %v", err)
@@ -184,6 +196,7 @@ func TestRunAwk(t *testing.T) {
 
 	t.Run("no program", func(t *testing.T) {
 		var buf bytes.Buffer
+
 		err := RunAwk(&buf, []string{}, AwkOptions{})
 		if err == nil {
 			t.Error("RunAwk() expected error for no program")
@@ -212,6 +225,7 @@ func TestParseAwkProgram(t *testing.T) {
 		if prog.begin == nil {
 			t.Error("parseAwkProgram() should have BEGIN")
 		}
+
 		if prog.end == nil {
 			t.Error("parseAwkProgram() should have END")
 		}
@@ -226,6 +240,7 @@ func TestParseAwkProgram(t *testing.T) {
 		if len(prog.rules) == 0 {
 			t.Error("parseAwkProgram() should have rules")
 		}
+
 		if prog.rules[0].pattern == nil {
 			t.Error("parseAwkProgram() rule should have pattern")
 		}

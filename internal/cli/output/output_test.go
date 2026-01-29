@@ -48,8 +48,8 @@ func TestFormatter_PrintJSON(t *testing.T) {
 	f := NewJSON(&buf)
 
 	data := map[string]string{"key": "value"}
-	err := f.Print(data)
 
+	err := f.Print(data)
 	if err != nil {
 		t.Fatalf("Print() error = %v", err)
 	}

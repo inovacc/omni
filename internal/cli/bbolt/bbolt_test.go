@@ -20,10 +20,11 @@ func createTestDB(t *testing.T) (string, func()) {
 	}
 
 	dbPath := filepath.Join(tmpDir, "test.db")
-	db, err := bolt.Open(dbPath, 0600, nil)
 
+	db, err := bolt.Open(dbPath, 0600, nil)
 	if err != nil {
 		_ = os.RemoveAll(tmpDir)
+
 		t.Fatal(err)
 	}
 
@@ -48,10 +49,10 @@ func createTestDB(t *testing.T) (string, func()) {
 
 		return nil
 	})
-
 	if err != nil {
 		_ = db.Close()
 		_ = os.RemoveAll(tmpDir)
+
 		t.Fatal(err)
 	}
 
@@ -294,6 +295,7 @@ func TestRunPut(t *testing.T) {
 
 		// Verify key was set
 		var getBuf bytes.Buffer
+
 		err = RunGet(&getBuf, dbPath, "users", "user4", Options{})
 		if err != nil {
 			t.Fatalf("RunGet() after put error = %v", err)
@@ -346,6 +348,7 @@ func TestRunDelete(t *testing.T) {
 
 		// Verify key was deleted
 		var getBuf bytes.Buffer
+
 		err = RunGet(&getBuf, dbPath, "users", "user1", Options{})
 		if err == nil {
 			t.Error("RunDelete() key should be deleted")
@@ -418,6 +421,7 @@ func TestRunCompact(t *testing.T) {
 
 	t.Run("compact database", func(t *testing.T) {
 		dstPath := dbPath + ".compact"
+
 		defer func() { _ = os.Remove(dstPath) }()
 
 		var buf bytes.Buffer
@@ -435,6 +439,7 @@ func TestRunCompact(t *testing.T) {
 
 	t.Run("json output", func(t *testing.T) {
 		dstPath := dbPath + ".compact2"
+
 		defer func() { _ = os.Remove(dstPath) }()
 
 		var buf bytes.Buffer
@@ -505,6 +510,7 @@ func TestRunCreateBucket(t *testing.T) {
 
 		// Verify bucket was created
 		var listBuf bytes.Buffer
+
 		_ = RunBuckets(&listBuf, dbPath, Options{})
 
 		if !strings.Contains(listBuf.String(), "newbucket") {
@@ -545,6 +551,7 @@ func TestRunDeleteBucket(t *testing.T) {
 
 		// Verify bucket was deleted
 		var listBuf bytes.Buffer
+
 		_ = RunBuckets(&listBuf, dbPath, Options{})
 
 		if strings.Contains(listBuf.String(), "config") {

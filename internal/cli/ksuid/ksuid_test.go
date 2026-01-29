@@ -24,7 +24,7 @@ func TestKSUIDUniqueness(t *testing.T) {
 	seen := make(map[string]bool)
 	count := 1000
 
-	for i := 0; i < count; i++ {
+	for range count {
 		ksuid, err := New()
 		if err != nil {
 			t.Fatalf("New() error = %v", err)
@@ -34,16 +34,19 @@ func TestKSUIDUniqueness(t *testing.T) {
 		if seen[str] {
 			t.Errorf("Duplicate KSUID generated: %s", str)
 		}
+
 		seen[str] = true
 	}
 }
 
 func TestKSUIDTimestamp(t *testing.T) {
 	before := time.Now()
+
 	ksuid, err := New()
 	if err != nil {
 		t.Fatalf("New() error = %v", err)
 	}
+
 	after := time.Now()
 
 	ts := ksuid.Timestamp()
@@ -56,6 +59,7 @@ func TestRunKSUID(t *testing.T) {
 	var buf bytes.Buffer
 
 	opts := Options{Count: 3}
+
 	err := RunKSUID(&buf, opts)
 	if err != nil {
 		t.Fatalf("RunKSUID() error = %v", err)
@@ -77,6 +81,7 @@ func TestRunKSUIDJSON(t *testing.T) {
 	var buf bytes.Buffer
 
 	opts := Options{Count: 2, JSON: true}
+
 	err := RunKSUID(&buf, opts)
 	if err != nil {
 		t.Fatalf("RunKSUID() error = %v", err)

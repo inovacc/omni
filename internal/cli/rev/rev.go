@@ -29,6 +29,7 @@ func RunRev(w io.Writer, args []string, opts RevOptions) error {
 			if err != nil {
 				return err
 			}
+
 			allLines = append(allLines, lines...)
 		} else {
 			return revReader(w, os.Stdin)
@@ -43,7 +44,9 @@ func RunRev(w io.Writer, args []string, opts RevOptions) error {
 				if err != nil {
 					return fmt.Errorf("rev: %w", err)
 				}
+
 				defer func() { _ = f.Close() }()
+
 				r = f
 			}
 
@@ -52,6 +55,7 @@ func RunRev(w io.Writer, args []string, opts RevOptions) error {
 				if err != nil {
 					return err
 				}
+
 				allLines = append(allLines, lines...)
 			} else {
 				if err := revReader(w, r); err != nil {
@@ -70,10 +74,12 @@ func RunRev(w io.Writer, args []string, opts RevOptions) error {
 
 func revReaderLines(r io.Reader) ([]string, error) {
 	var lines []string
+
 	scanner := bufio.NewScanner(r)
 	for scanner.Scan() {
 		lines = append(lines, reverseString(scanner.Text()))
 	}
+
 	return lines, scanner.Err()
 }
 

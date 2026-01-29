@@ -10,9 +10,11 @@ import (
 func TestRunXargs(t *testing.T) {
 	t.Run("basic execution", func(t *testing.T) {
 		var buf bytes.Buffer
+
 		input := strings.NewReader("a b c")
 
 		var received []string
+
 		worker := func(args []string) error {
 			received = args
 			return nil
@@ -30,9 +32,11 @@ func TestRunXargs(t *testing.T) {
 
 	t.Run("with initial args", func(t *testing.T) {
 		var buf bytes.Buffer
+
 		input := strings.NewReader("file1 file2")
 
 		var received []string
+
 		worker := func(args []string) error {
 			received = args
 			return nil
@@ -50,14 +54,17 @@ func TestRunXargs(t *testing.T) {
 
 	t.Run("max args batching", func(t *testing.T) {
 		var buf bytes.Buffer
+
 		input := strings.NewReader("a b c d e")
 
 		callCount := 0
 		worker := func(args []string) error {
 			callCount++
+
 			if len(args) > 2 {
 				t.Errorf("RunXargs() batch has %d args, want <= 2", len(args))
 			}
+
 			return nil
 		}
 
@@ -73,9 +80,11 @@ func TestRunXargs(t *testing.T) {
 
 	t.Run("null input delimiter", func(t *testing.T) {
 		var buf bytes.Buffer
+
 		input := strings.NewReader("file1\x00file2\x00file3")
 
 		var received []string
+
 		worker := func(args []string) error {
 			received = args
 			return nil
@@ -93,9 +102,11 @@ func TestRunXargs(t *testing.T) {
 
 	t.Run("custom delimiter", func(t *testing.T) {
 		var buf bytes.Buffer
+
 		input := strings.NewReader("a,b,c")
 
 		var received []string
+
 		worker := func(args []string) error {
 			received = args
 			return nil
@@ -113,9 +124,11 @@ func TestRunXargs(t *testing.T) {
 
 	t.Run("replace string", func(t *testing.T) {
 		var buf bytes.Buffer
+
 		input := strings.NewReader("file1 file2")
 
 		var receivedBatches [][]string
+
 		worker := func(args []string) error {
 			receivedBatches = append(receivedBatches, args)
 			return nil
@@ -134,6 +147,7 @@ func TestRunXargs(t *testing.T) {
 
 	t.Run("no run empty", func(t *testing.T) {
 		var buf bytes.Buffer
+
 		input := strings.NewReader("")
 
 		called := false
@@ -154,6 +168,7 @@ func TestRunXargs(t *testing.T) {
 
 	t.Run("worker error", func(t *testing.T) {
 		var buf bytes.Buffer
+
 		input := strings.NewReader("a b c")
 
 		expectedErr := errors.New("worker error")
@@ -169,6 +184,7 @@ func TestRunXargs(t *testing.T) {
 
 	t.Run("nil worker prints args", func(t *testing.T) {
 		var buf bytes.Buffer
+
 		input := strings.NewReader("a b c")
 
 		err := RunXargs(&buf, input, nil, XargsOptions{}, nil)
@@ -183,6 +199,7 @@ func TestRunXargs(t *testing.T) {
 
 	t.Run("parallel execution", func(t *testing.T) {
 		var buf bytes.Buffer
+
 		input := strings.NewReader("a b c d")
 
 		callCount := 0
@@ -205,10 +222,12 @@ func TestRunXargs(t *testing.T) {
 func TestParseXargsInput(t *testing.T) {
 	t.Run("whitespace separated", func(t *testing.T) {
 		input := strings.NewReader("  a   b   c  ")
+
 		args, err := parseXargsInput(input, XargsOptions{})
 		if err != nil {
 			t.Fatalf("parseXargsInput() error = %v", err)
 		}
+
 		if len(args) != 3 {
 			t.Errorf("parseXargsInput() = %v, want 3 args", args)
 		}
@@ -216,10 +235,12 @@ func TestParseXargsInput(t *testing.T) {
 
 	t.Run("newlines as whitespace", func(t *testing.T) {
 		input := strings.NewReader("a\nb\nc")
+
 		args, err := parseXargsInput(input, XargsOptions{})
 		if err != nil {
 			t.Fatalf("parseXargsInput() error = %v", err)
 		}
+
 		if len(args) != 3 {
 			t.Errorf("parseXargsInput() = %v, want 3 args", args)
 		}
@@ -227,13 +248,16 @@ func TestParseXargsInput(t *testing.T) {
 
 	t.Run("null terminated", func(t *testing.T) {
 		input := strings.NewReader("path with spaces\x00another path\x00")
+
 		args, err := parseXargsInput(input, XargsOptions{NullInput: true})
 		if err != nil {
 			t.Fatalf("parseXargsInput() error = %v", err)
 		}
+
 		if len(args) != 2 {
 			t.Errorf("parseXargsInput() = %v, want 2 args", args)
 		}
+
 		if args[0] != "path with spaces" {
 			t.Errorf("parseXargsInput() first arg = %q", args[0])
 		}
@@ -241,10 +265,12 @@ func TestParseXargsInput(t *testing.T) {
 
 	t.Run("custom delimiter", func(t *testing.T) {
 		input := strings.NewReader("a:b:c")
+
 		args, err := parseXargsInput(input, XargsOptions{Delimiter: ":"})
 		if err != nil {
 			t.Fatalf("parseXargsInput() error = %v", err)
 		}
+
 		if len(args) != 3 {
 			t.Errorf("parseXargsInput() = %v, want 3 args", args)
 		}
@@ -252,10 +278,12 @@ func TestParseXargsInput(t *testing.T) {
 
 	t.Run("empty input", func(t *testing.T) {
 		input := strings.NewReader("")
+
 		args, err := parseXargsInput(input, XargsOptions{})
 		if err != nil {
 			t.Fatalf("parseXargsInput() error = %v", err)
 		}
+
 		if len(args) != 0 {
 			t.Errorf("parseXargsInput() = %v, want empty", args)
 		}
@@ -264,6 +292,7 @@ func TestParseXargsInput(t *testing.T) {
 
 func TestRunXargsWithPrint(t *testing.T) {
 	var buf bytes.Buffer
+
 	input := strings.NewReader("hello world")
 
 	err := RunXargsWithPrint(&buf, input, XargsOptions{})

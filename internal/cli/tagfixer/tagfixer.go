@@ -41,10 +41,10 @@ type Options struct {
 
 // FileResult represents the result of processing a file
 type FileResult struct {
-	Path     string       `json:"path"`
-	Modified bool         `json:"modified"`
-	Changes  []TagChange  `json:"changes,omitempty"`
-	Error    string       `json:"error,omitempty"`
+	Path     string      `json:"path"`
+	Modified bool        `json:"modified"`
+	Changes  []TagChange `json:"changes,omitempty"`
+	Error    string      `json:"error,omitempty"`
 }
 
 // TagChange represents a single tag change
@@ -58,14 +58,14 @@ type TagChange struct {
 
 // AnalysisResult represents the analysis of a codebase
 type AnalysisResult struct {
-	TotalFiles   int                  `json:"total_files"`
-	TotalStructs int                  `json:"total_structs"`
-	TotalFields  int                  `json:"total_fields"`
-	TagStats     map[string]TagStats  `json:"tag_stats"`
-	CaseStats    map[string]int       `json:"case_stats"`
-	Consistency  float64              `json:"consistency_score"`
-	Recommended  CaseType             `json:"recommended_case"`
-	Files        []FileAnalysis       `json:"files,omitempty"`
+	TotalFiles   int                 `json:"total_files"`
+	TotalStructs int                 `json:"total_structs"`
+	TotalFields  int                 `json:"total_fields"`
+	TagStats     map[string]TagStats `json:"tag_stats"`
+	CaseStats    map[string]int      `json:"case_stats"`
+	Consistency  float64             `json:"consistency_score"`
+	Recommended  CaseType            `json:"recommended_case"`
+	Files        []FileAnalysis      `json:"files,omitempty"`
 }
 
 // TagStats holds statistics for a tag type
@@ -76,7 +76,7 @@ type TagStats struct {
 
 // FileAnalysis represents analysis of a single file
 type FileAnalysis struct {
-	Path    string         `json:"path"`
+	Path    string           `json:"path"`
 	Structs []StructAnalysis `json:"structs"`
 }
 
@@ -94,8 +94,8 @@ type FieldAnalysis struct {
 
 // Result represents the overall result
 type Result struct {
-	Files    []FileResult `json:"files"`
-	Summary  Summary      `json:"summary"`
+	Files   []FileResult `json:"files"`
+	Summary Summary      `json:"summary"`
 }
 
 // Summary provides an overview of changes
@@ -144,6 +144,7 @@ func runAnalyze(w io.Writer, opts Options) error {
 			if opts.Verbose {
 				_, _ = fmt.Fprintf(w, "Error analyzing %s: %v\n", file, err)
 			}
+
 			continue
 		}
 
@@ -159,6 +160,7 @@ func runAnalyze(w io.Writer, opts Options) error {
 					if !ok {
 						stats = TagStats{CaseCounts: make(map[string]int)}
 					}
+
 					stats.Count++
 
 					caseType := detectCase(tagValue)
@@ -224,6 +226,7 @@ func runFix(w io.Writer, opts Options) error {
 		if fileResult.Modified {
 			result.Summary.FilesModified++
 		}
+
 		result.Summary.TotalChanges += len(fileResult.Changes)
 		if fileResult.Error != "" {
 			result.Summary.Errors++
@@ -274,6 +277,7 @@ func collectGoFiles(path string, recursive bool) ([]string, error) {
 		if strings.HasSuffix(path, ".go") && !strings.HasSuffix(path, "_test.go") {
 			return []string{path}, nil
 		}
+
 		return nil, nil
 	}
 
@@ -290,15 +294,18 @@ func collectGoFiles(path string, recursive bool) ([]string, error) {
 			if name == "vendor" || name == ".git" || name == "node_modules" {
 				return filepath.SkipDir
 			}
+
 			if !recursive && p != path {
 				return filepath.SkipDir
 			}
+
 			return nil
 		}
 
 		if strings.HasSuffix(p, ".go") && !strings.HasSuffix(p, "_test.go") {
 			files = append(files, p)
 		}
+
 		return nil
 	}
 
@@ -313,6 +320,7 @@ func processFile(path string, opts Options) FileResult {
 	result := FileResult{Path: path}
 
 	fset := token.NewFileSet()
+
 	file, err := parser.ParseFile(fset, path, nil, parser.ParseComments)
 	if err != nil {
 		result.Error = err.Error()
@@ -349,6 +357,7 @@ func processFile(path string, opts Options) FileResult {
 					field.Tag.Value = newTag
 					modified = true
 				}
+
 				result.Changes = append(result.Changes, changes...)
 			}
 		}
@@ -363,12 +372,14 @@ func processFile(path string, opts Options) FileResult {
 			result.Error = err.Error()
 			return result
 		}
+
 		defer func() { _ = f.Close() }()
 
 		if err := format.Node(f, fset, file); err != nil {
 			result.Error = err.Error()
 			return result
 		}
+
 		result.Modified = true
 	} else if len(result.Changes) > 0 {
 		result.Modified = true // Would be modified
@@ -379,6 +390,7 @@ func processFile(path string, opts Options) FileResult {
 
 func analyzeFile(path string, tags []string) (*FileAnalysis, error) {
 	fset := token.NewFileSet()
+
 	file, err := parser.ParseFile(fset, path, nil, parser.ParseComments)
 	if err != nil {
 		return nil, err
@@ -437,6 +449,7 @@ var tagRegex = regexp.MustCompile(`(\w+):"([^"]*)"`)
 
 func fixTag(tag, fieldName, structName string, targetTags []string, targetCase CaseType) (string, []TagChange) {
 	var changes []TagChange
+
 	newTag := tag
 
 	for _, tagName := range targetTags {
@@ -448,6 +461,7 @@ func fixTag(tag, fieldName, structName string, targetTags []string, targetCase C
 		// Parse the tag value (may have options like omitempty)
 		parts := strings.Split(oldValue, ",")
 		name := parts[0]
+
 		options := ""
 		if len(parts) > 1 {
 			options = "," + strings.Join(parts[1:], ",")
@@ -490,6 +504,7 @@ func extractTagValue(tag, key string) string {
 			return match[2]
 		}
 	}
+
 	return ""
 }
 
@@ -517,8 +532,11 @@ func splitIntoWords(s string) []string {
 	s = strings.ReplaceAll(s, "-", " ")
 
 	// Handle PascalCase and camelCase, including acronyms like HTTP, ID
-	var words []string
-	var current strings.Builder
+	var (
+		words   []string
+		current strings.Builder
+	)
+
 	runes := []rune(s)
 
 	for i, r := range runes {
@@ -527,6 +545,7 @@ func splitIntoWords(s string) []string {
 				words = append(words, current.String())
 				current.Reset()
 			}
+
 			continue
 		}
 
@@ -562,38 +581,45 @@ func toCamelCase(words []string) string {
 		return ""
 	}
 
-	result := strings.ToLower(words[0])
+	var result strings.Builder
+	result.WriteString(strings.ToLower(words[0]))
+
 	for _, word := range words[1:] {
 		if len(word) > 0 {
-			result += strings.ToUpper(string(word[0])) + strings.ToLower(word[1:])
+			result.WriteString(strings.ToUpper(string(word[0])) + strings.ToLower(word[1:]))
 		}
 	}
-	return result
+
+	return result.String()
 }
 
 func toPascalCase(words []string) string {
-	var result string
+	var result strings.Builder
+
 	for _, word := range words {
 		if len(word) > 0 {
-			result += strings.ToUpper(string(word[0])) + strings.ToLower(word[1:])
+			result.WriteString(strings.ToUpper(string(word[0])) + strings.ToLower(word[1:]))
 		}
 	}
-	return result
+
+	return result.String()
 }
 
 func toSnakeCase(words []string) string {
-	var result []string
+	result := make([]string, 0, len(words))
 	for _, word := range words {
 		result = append(result, strings.ToLower(word))
 	}
+
 	return strings.Join(result, "_")
 }
 
 func toKebabCase(words []string) string {
-	var result []string
+	result := make([]string, 0, len(words))
 	for _, word := range words {
 		result = append(result, strings.ToLower(word))
 	}
+
 	return strings.Join(result, "-")
 }
 
@@ -601,20 +627,25 @@ func detectCase(s string) string {
 	if strings.Contains(s, "_") {
 		return "snake_case"
 	}
+
 	if strings.Contains(s, "-") {
 		return "kebab-case"
 	}
+
 	if len(s) > 0 && unicode.IsUpper(rune(s[0])) {
 		return "PascalCase"
 	}
+
 	if len(s) > 0 && unicode.IsLower(rune(s[0])) {
 		for _, r := range s[1:] {
 			if unicode.IsUpper(r) {
 				return "camelCase"
 			}
 		}
+
 		return "lowercase"
 	}
+
 	return "unknown"
 }
 
@@ -625,6 +656,7 @@ func calculateConsistency(caseStats map[string]int) (float64, CaseType) {
 
 	total := 0
 	maxCount := 0
+
 	var maxCase string
 
 	for caseType, count := range caseStats {
@@ -643,6 +675,7 @@ func calculateConsistency(caseStats map[string]int) (float64, CaseType) {
 
 	// Map detected case to CaseType
 	recommended := CaseCamel
+
 	switch maxCase {
 	case "camelCase":
 		recommended = CaseCamel
@@ -719,6 +752,7 @@ func AnalyzePath(path string, tags []string, recursive bool) (*AnalysisResult, e
 					if !ok {
 						stats = TagStats{CaseCounts: make(map[string]int)}
 					}
+
 					stats.Count++
 
 					caseType := detectCase(tagValue)
@@ -767,6 +801,7 @@ func GetSortedTags() []string {
 // ListStructTags lists all struct tags found in a Go file
 func ListStructTags(path string) ([]string, error) {
 	fset := token.NewFileSet()
+
 	file, err := parser.ParseFile(fset, path, nil, parser.ParseComments)
 	if err != nil {
 		return nil, err
@@ -805,6 +840,7 @@ func ListStructTags(path string) ([]string, error) {
 	for tag := range tagSet {
 		tags = append(tags, tag)
 	}
+
 	sort.Strings(tags)
 
 	return tags, nil

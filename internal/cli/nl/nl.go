@@ -76,6 +76,7 @@ func RunNl(w io.Writer, args []string, opts NlOptions) error {
 	}
 
 	lineNum := opts.StartingNumber
+
 	var jsonLines []NlLine
 
 	for _, file := range files {

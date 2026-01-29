@@ -508,6 +508,7 @@ func listTarArchive(w io.Writer, opts ArchiveOptions) error {
 		if opts.JSON {
 			entryType := "file"
 			isDir := false
+
 			switch header.Typeflag {
 			case tar.TypeDir:
 				entryType = "dir"
@@ -517,6 +518,7 @@ func listTarArchive(w io.Writer, opts ArchiveOptions) error {
 			case tar.TypeLink:
 				entryType = "link"
 			}
+
 			entries = append(entries, ArchiveEntry{
 				Name:    header.Name,
 				Size:    header.Size,
@@ -562,10 +564,12 @@ func listZipArchive(w io.Writer, opts ArchiveOptions) error {
 	for _, f := range r.File {
 		if opts.JSON {
 			entryType := "file"
+
 			isDir := f.FileInfo().IsDir()
 			if isDir {
 				entryType = "dir"
 			}
+
 			entries = append(entries, ArchiveEntry{
 				Name:    f.Name,
 				Size:    int64(f.UncompressedSize64),

@@ -9,6 +9,7 @@ import (
 func TestRunTr(t *testing.T) {
 	t.Run("simple translation", func(t *testing.T) {
 		var buf bytes.Buffer
+
 		input := strings.NewReader("hello")
 
 		err := RunTr(&buf, input, "el", "ip", TrOptions{})
@@ -23,6 +24,7 @@ func TestRunTr(t *testing.T) {
 
 	t.Run("lowercase to uppercase", func(t *testing.T) {
 		var buf bytes.Buffer
+
 		input := strings.NewReader("hello world")
 
 		err := RunTr(&buf, input, "a-z", "A-Z", TrOptions{})
@@ -37,6 +39,7 @@ func TestRunTr(t *testing.T) {
 
 	t.Run("delete characters", func(t *testing.T) {
 		var buf bytes.Buffer
+
 		input := strings.NewReader("hello world")
 
 		err := RunTr(&buf, input, "aeiou", "", TrOptions{Delete: true})
@@ -51,6 +54,7 @@ func TestRunTr(t *testing.T) {
 
 	t.Run("squeeze repeated characters", func(t *testing.T) {
 		var buf bytes.Buffer
+
 		input := strings.NewReader("heeelllo")
 
 		err := RunTr(&buf, input, "el", "el", TrOptions{Squeeze: true})
@@ -65,6 +69,7 @@ func TestRunTr(t *testing.T) {
 
 	t.Run("complement set", func(t *testing.T) {
 		var buf bytes.Buffer
+
 		input := strings.NewReader("hello123")
 
 		err := RunTr(&buf, input, "0-9", "", TrOptions{Delete: true, Complement: true})
@@ -79,6 +84,7 @@ func TestRunTr(t *testing.T) {
 
 	t.Run("escape sequences", func(t *testing.T) {
 		var buf bytes.Buffer
+
 		input := strings.NewReader("hello\tworld")
 
 		err := RunTr(&buf, input, "\\t", " ", TrOptions{})
@@ -93,6 +99,7 @@ func TestRunTr(t *testing.T) {
 
 	t.Run("truncate mode", func(t *testing.T) {
 		var buf bytes.Buffer
+
 		input := strings.NewReader("abcde")
 
 		err := RunTr(&buf, input, "abcde", "xy", TrOptions{Truncate: true})
@@ -108,6 +115,7 @@ func TestRunTr(t *testing.T) {
 
 	t.Run("extend set2 with last char", func(t *testing.T) {
 		var buf bytes.Buffer
+
 		input := strings.NewReader("abcde")
 
 		err := RunTr(&buf, input, "abcde", "xy", TrOptions{Truncate: false})
@@ -123,6 +131,7 @@ func TestRunTr(t *testing.T) {
 
 	t.Run("empty input", func(t *testing.T) {
 		var buf bytes.Buffer
+
 		input := strings.NewReader("")
 
 		err := RunTr(&buf, input, "a", "b", TrOptions{})
@@ -137,6 +146,7 @@ func TestRunTr(t *testing.T) {
 
 	t.Run("unicode characters", func(t *testing.T) {
 		var buf bytes.Buffer
+
 		input := strings.NewReader("héllo")
 
 		err := RunTr(&buf, input, "é", "e", TrOptions{})
@@ -219,6 +229,7 @@ func TestBuildTransMap(t *testing.T) {
 		if m['a'] != 'x' || m['b'] != 'y' {
 			t.Errorf("buildTransMap() truncate: a/b should map to x/y")
 		}
+
 		if _, ok := m['c']; ok {
 			t.Errorf("buildTransMap() truncate: c should not be mapped")
 		}

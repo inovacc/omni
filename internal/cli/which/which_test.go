@@ -32,6 +32,7 @@ func TestRunWhich(t *testing.T) {
 
 	// Save original PATH and restore after test
 	origPath := os.Getenv("PATH")
+
 	defer func() { _ = os.Setenv("PATH", origPath) }()
 
 	t.Run("find command in PATH", func(t *testing.T) {
@@ -92,6 +93,7 @@ func TestRunWhich(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
+
 		defer func() { _ = os.RemoveAll(tmpDir2) }()
 
 		execPath2 := filepath.Join(tmpDir2, execName)
@@ -105,6 +107,7 @@ func TestRunWhich(t *testing.T) {
 		var buf bytes.Buffer
 
 		cmdName := "testcmd"
+
 		err = RunWhich(&buf, []string{cmdName}, WhichOptions{All: true})
 		if err != nil {
 			t.Fatalf("RunWhich() error = %v", err)
