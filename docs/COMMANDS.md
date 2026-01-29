@@ -66,6 +66,46 @@ omni basename NAME [SUFFIX] [flags]
 omni realpath [path...]
 ```
 
+### echo - Display a line of text
+```bash
+omni echo [OPTION]... [STRING]... [flags]
+  -n                       do not output trailing newline
+  -e                       enable interpretation of backslash escapes
+  -E                       disable interpretation of backslash escapes (default)
+```
+
+**Escape sequences (with -e):**
+- `\\` - backslash
+- `\n` - newline
+- `\t` - tab
+- `\r` - carriage return
+- `\0NNN` - octal value
+
+**Examples:**
+```bash
+omni echo "Hello World"           # simple output
+omni echo -n "No newline"         # no trailing newline
+omni echo -e "Line1\nLine2"       # interpret escapes
+```
+
+### testcheck - Check test coverage for Go packages
+```bash
+omni testcheck [OPTION]... [DIRECTORY] [flags]
+  -j, --json               output as JSON
+  -a, --all                show all packages (default shows only missing)
+  -s, --summary            show only summary
+  -v, --verbose            show test file names
+```
+
+**Examples:**
+```bash
+omni testcheck .                  # check current directory
+omni testcheck ./pkg/cli/         # check specific directory
+omni testcheck --all ./pkg/       # show all packages
+omni testcheck --summary ./pkg/   # show only summary
+omni testcheck --json ./pkg/      # output as JSON
+```
+
 ---
 
 ## File Operations
@@ -989,6 +1029,23 @@ omni lint -q Taskfile.yml            # only show errors
 ### cmdtree - Display command tree visualization
 ```bash
 omni cmdtree
+```
+
+### logger - Manage omni command logging
+```bash
+omni logger [OPTION]... [flags]
+  --enable                 enable command logging
+  --disable                disable command logging
+  --status                 show current logging status
+  --viewer                 view all logged commands
+```
+
+**Examples:**
+```bash
+omni logger --enable              # enable logging
+omni logger --disable             # disable logging
+omni logger --status              # show current status
+omni logger --viewer              # view all logged commands
 ```
 
 ### version - Print version information
