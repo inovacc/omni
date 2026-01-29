@@ -2,6 +2,7 @@ package xmlfmt
 
 import (
 	"bytes"
+	"encoding/json"
 	"strings"
 	"testing"
 )
@@ -205,5 +206,115 @@ func TestRoundTrip(t *testing.T) {
 	// Should be equivalent to original (without whitespace)
 	if minified != original {
 		t.Errorf("Round trip failed:\ngot:  %q\nwant: %q", minified, original)
+	}
+}
+
+func TestRunValidate(t *testing.T) {
+	tests := []struct {
+		name    string
+		input   string
+		opts    ValidateOptions
+		wantErr bool
+	}{
+		{
+			name:    "valid simple xml",
+			input:   "<root><item>value</item></root>",
+			opts:    ValidateOptions{},
+			wantErr: false,
+		},
+		{
+			name:    "valid with attributes",
+			input:   `<root attr="value"><item id="1">text</item></root>`,
+			opts:    ValidateOptions{},
+			wantErr: false,
+		},
+		{
+			name:    "valid with declaration",
+			input:   `<?xml version="1.0"?><root/>`,
+			opts:    ValidateOptions{},
+			wantErr: false,
+		},
+		{
+			name:    "valid with namespace",
+			input:   `<root xmlns="http://example.com"><item>value</item></root>`,
+			opts:    ValidateOptions{},
+			wantErr: false,
+		},
+		{
+			name:    "invalid - unclosed tag",
+			input:   "<root><item>value</root>",
+			opts:    ValidateOptions{},
+			wantErr: true,
+		},
+		{
+			name:    "invalid - mismatched tags",
+			input:   "<root><item>value</other></root>",
+			opts:    ValidateOptions{},
+			wantErr: true,
+		},
+		{
+			name:    "invalid - bad attribute",
+			input:   `<root attr=value></root>`,
+			opts:    ValidateOptions{},
+			wantErr: true,
+		},
+		{
+			name:    "empty input",
+			input:   "",
+			opts:    ValidateOptions{},
+			wantErr: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var buf bytes.Buffer
+
+			err := RunValidate(&buf, []string{tt.input}, tt.opts)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("RunValidate() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestRunValidateJSON(t *testing.T) {
+	var buf bytes.Buffer
+
+	opts := ValidateOptions{JSON: true}
+
+	err := RunValidate(&buf, []string{"<root><item>value</item></root>"}, opts)
+	if err != nil {
+		t.Fatalf("RunValidate() error = %v", err)
+	}
+
+	var result ValidateResult
+	if err := json.Unmarshal(buf.Bytes(), &result); err != nil {
+		t.Fatalf("Failed to parse JSON: %v", err)
+	}
+
+	if !result.Valid {
+		t.Errorf("Valid = false, want true")
+	}
+}
+
+func TestRunValidateJSONInvalid(t *testing.T) {
+	var buf bytes.Buffer
+
+	opts := ValidateOptions{JSON: true}
+
+	_ = RunValidate(&buf, []string{"<root><item>value</root>"}, opts)
+
+	var result ValidateResult
+	if err := json.Unmarshal(buf.Bytes(), &result); err != nil {
+		t.Fatalf("Failed to parse JSON: %v", err)
+	}
+
+	if result.Valid {
+		t.Errorf("Valid = true, want false")
+	}
+
+	if result.Error == "" {
+		t.Errorf("Error should not be empty")
 	}
 }
