@@ -49,6 +49,7 @@ Examples:
 		opts.Max, _ = cmd.Flags().GetInt64("max")
 		opts.Charset, _ = cmd.Flags().GetString("charset")
 		opts.Sep, _ = cmd.Flags().GetString("separator")
+		opts.JSON, _ = cmd.Flags().GetBool("json")
 
 		return random.RunRandom(os.Stdout, opts)
 	},
@@ -64,4 +65,5 @@ func init() {
 	randomCmd.Flags().Int64("max", 100, "maximum value for integers")
 	randomCmd.Flags().StringP("charset", "c", "", "custom character set")
 	randomCmd.Flags().StringP("separator", "s", "\n", "separator between values")
+	randomCmd.Flags().Bool("json", false, "output as JSON")
 }

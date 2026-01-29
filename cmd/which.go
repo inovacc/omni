@@ -7,7 +7,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var whichAll bool
+var (
+	whichAll  bool
+	whichJSON bool
+)
 
 var whichCmd = &cobra.Command{
 	Use:   "which [OPTION]... COMMAND...",
@@ -23,7 +26,8 @@ Examples:
 	Args: cobra.MinimumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		opts := which.WhichOptions{
-			All: whichAll,
+			All:  whichAll,
+			JSON: whichJSON,
 		}
 
 		return which.RunWhich(os.Stdout, args, opts)
@@ -34,4 +38,5 @@ func init() {
 	rootCmd.AddCommand(whichCmd)
 
 	whichCmd.Flags().BoolVarP(&whichAll, "all", "a", false, "print all matches")
+	whichCmd.Flags().BoolVar(&whichJSON, "json", false, "output as JSON")
 }

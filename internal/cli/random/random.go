@@ -2,6 +2,7 @@ package random
 
 import (
 	"crypto/rand"
+	"encoding/json"
 	"fmt"
 	"io"
 	"math/big"
@@ -17,6 +18,14 @@ type RandomOptions struct {
 	Type    string // -t: type (int, float, string, hex, alpha, alnum, bytes)
 	Charset string // -c: custom character set
 	Sep     string // -s: separator between values
+	JSON    bool   // --json: output as JSON
+}
+
+// RandomResult represents random output for JSON
+type RandomResult struct {
+	Type   string   `json:"type"`
+	Values []string `json:"values"`
+	Count  int      `json:"count"`
 }
 
 const (
@@ -86,6 +95,10 @@ func RunRandom(w io.Writer, opts RandomOptions) error {
 		}
 
 		results = append(results, result)
+	}
+
+	if opts.JSON {
+		return json.NewEncoder(w).Encode(RandomResult{Type: opts.Type, Values: results, Count: len(results)})
 	}
 
 	_, _ = fmt.Fprintln(w, strings.Join(results, opts.Sep))

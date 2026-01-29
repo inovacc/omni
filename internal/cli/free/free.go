@@ -1,6 +1,7 @@
 package free
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 )
@@ -16,6 +17,7 @@ type FreeOptions struct {
 	Total     bool // -t: show total for RAM + swap
 	Seconds   int  // -s: continuously display every N seconds
 	Count     int  // -c: display N times, then exit
+	JSON      bool // --json: output as JSON
 }
 
 // MemInfo contains memory information
@@ -34,6 +36,10 @@ func RunFree(w io.Writer, opts FreeOptions) error {
 	info, err := getMemInfo()
 	if err != nil {
 		return fmt.Errorf("free: %w", err)
+	}
+
+	if opts.JSON {
+		return json.NewEncoder(w).Encode(info)
 	}
 
 	// Determine unit divisor and suffix

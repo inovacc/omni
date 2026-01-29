@@ -7,6 +7,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var archJSON bool
+
 var archCmd = &cobra.Command{
 	Use:   "arch",
 	Short: "Print machine architecture",
@@ -16,10 +18,13 @@ Examples:
   omni arch    # x86_64, aarch64, etc.`,
 	Args: cobra.NoArgs,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return arch.RunArch(os.Stdout)
+		opts := arch.ArchOptions{JSON: archJSON}
+		return arch.RunArch(os.Stdout, opts)
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(archCmd)
+
+	archCmd.Flags().BoolVar(&archJSON, "json", false, "output as JSON")
 }

@@ -1,6 +1,7 @@
 package which
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -11,7 +12,15 @@ import (
 
 // WhichOptions configures the which command behavior
 type WhichOptions struct {
-	All bool // -a: print all matches
+	All  bool // -a: print all matches
+	JSON bool // --json: output as JSON
+}
+
+// WhichResult represents which output for JSON
+type WhichResult struct {
+	Command string   `json:"command"`
+	Paths   []string `json:"paths"`
+	Found   bool     `json:"found"`
 }
 
 // RunWhich locates a command
@@ -29,16 +38,22 @@ func RunWhich(w io.Writer, args []string, opts WhichOptions) error {
 	paths := strings.Split(pathEnv, pathSep)
 
 	exitCode := 0
+	var jsonResults []WhichResult
 
 	for _, cmd := range args {
 		found := false
+		var foundPaths []string
 
 		for _, dir := range paths {
 			fullPath := filepath.Join(dir, cmd)
 			matches := findExecutable(fullPath)
 
 			for _, match := range matches {
-				_, _ = fmt.Fprintln(w, match)
+				if opts.JSON {
+					foundPaths = append(foundPaths, match)
+				} else {
+					_, _ = fmt.Fprintln(w, match)
+				}
 				found = true
 
 				if !opts.All {
@@ -51,9 +66,17 @@ func RunWhich(w io.Writer, args []string, opts WhichOptions) error {
 			}
 		}
 
+		if opts.JSON {
+			jsonResults = append(jsonResults, WhichResult{Command: cmd, Paths: foundPaths, Found: found})
+		}
+
 		if !found {
 			exitCode = 1
 		}
+	}
+
+	if opts.JSON {
+		return json.NewEncoder(w).Encode(jsonResults)
 	}
 
 	if exitCode != 0 {

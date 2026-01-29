@@ -31,6 +31,7 @@ in the system, as well as the buffers and caches used by the kernel.
 		opts.Human, _ = cmd.Flags().GetBool("human")
 		opts.Wide, _ = cmd.Flags().GetBool("wide")
 		opts.Total, _ = cmd.Flags().GetBool("total")
+		opts.JSON, _ = cmd.Flags().GetBool("json")
 
 		return free.RunFree(os.Stdout, opts)
 	},
@@ -46,4 +47,5 @@ func init() {
 	freeCmd.Flags().BoolP("human", "H", false, "show human-readable output")
 	freeCmd.Flags().BoolP("wide", "w", false, "wide output")
 	freeCmd.Flags().BoolP("total", "t", false, "show total for RAM + swap")
+	freeCmd.Flags().Bool("json", false, "output as JSON")
 }
