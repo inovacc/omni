@@ -8,6 +8,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"strings"
 )
@@ -43,62 +44,346 @@ type Result struct {
 	Total     LanguageStats   `json:"total"`
 }
 
-// Language definition
+// Language definition with string awareness
 type langDef struct {
-	name       string
-	extensions []string
-	lineComment string
-	blockStart  string
-	blockEnd    string
+	name        string
+	extensions  []string
+	lineComment []string            // line comment starters (e.g., "//", "#")
+	blockStart  string              // block comment start
+	blockEnd    string              // block comment end
+	quotes      [][2]string         // string quote pairs (start, end)
+	literate    bool                // literate mode (like Markdown)
+	nested      bool                // supports nested block comments
 }
 
 var languages = []langDef{
-	{"Go", []string{".go"}, "//", "/*", "*/"},
-	{"Rust", []string{".rs"}, "//", "/*", "*/"},
-	{"JavaScript", []string{".js", ".mjs", ".cjs"}, "//", "/*", "*/"},
-	{"TypeScript", []string{".ts", ".tsx"}, "//", "/*", "*/"},
-	{"Python", []string{".py", ".pyw"}, "#", `"""`, `"""`},
-	{"Java", []string{".java"}, "//", "/*", "*/"},
-	{"C", []string{".c", ".h"}, "//", "/*", "*/"},
-	{"C++", []string{".cpp", ".cc", ".cxx", ".hpp", ".hxx"}, "//", "/*", "*/"},
-	{"C#", []string{".cs"}, "//", "/*", "*/"},
-	{"Ruby", []string{".rb"}, "#", "=begin", "=end"},
-	{"PHP", []string{".php"}, "//", "/*", "*/"},
-	{"Swift", []string{".swift"}, "//", "/*", "*/"},
-	{"Kotlin", []string{".kt", ".kts"}, "//", "/*", "*/"},
-	{"Scala", []string{".scala"}, "//", "/*", "*/"},
-	{"Shell", []string{".sh", ".bash", ".zsh"}, "#", "", ""},
-	{"PowerShell", []string{".ps1", ".psm1"}, "#", "<#", "#>"},
-	{"Lua", []string{".lua"}, "--", "--[[", "]]"},
-	{"Perl", []string{".pl", ".pm"}, "#", "=pod", "=cut"},
-	{"R", []string{".r", ".R"}, "#", "", ""},
-	{"SQL", []string{".sql"}, "--", "/*", "*/"},
-	{"HTML", []string{".html", ".htm"}, "", "<!--", "-->"},
-	{"CSS", []string{".css"}, "", "/*", "*/"},
-	{"SCSS", []string{".scss", ".sass"}, "//", "/*", "*/"},
-	{"XML", []string{".xml", ".xsl", ".xslt"}, "", "<!--", "-->"},
-	{"JSON", []string{".json"}, "", "", ""},
-	{"YAML", []string{".yaml", ".yml"}, "#", "", ""},
-	{"TOML", []string{".toml"}, "#", "", ""},
-	{"Markdown", []string{".md", ".markdown"}, "", "", ""},
-	{"Makefile", []string{"Makefile", "makefile", ".mk"}, "#", "", ""},
-	{"Dockerfile", []string{"Dockerfile"}, "#", "", ""},
-	{"Protobuf", []string{".proto"}, "//", "/*", "*/"},
-	{"GraphQL", []string{".graphql", ".gql"}, "#", "", ""},
-	{"Terraform", []string{".tf", ".tfvars"}, "#", "/*", "*/"},
-	{"Zig", []string{".zig"}, "//", "", ""},
-	{"Elixir", []string{".ex", ".exs"}, "#", "", ""},
-	{"Erlang", []string{".erl", ".hrl"}, "%", "", ""},
-	{"Haskell", []string{".hs"}, "--", "{-", "-}"},
-	{"OCaml", []string{".ml", ".mli"}, "", "(*", "*)"},
-	{"F#", []string{".fs", ".fsi", ".fsx"}, "//", "(*", "*)"},
-	{"Clojure", []string{".clj", ".cljs", ".cljc"}, ";", "", ""},
-	{"Nim", []string{".nim"}, "#", "#[", "]#"},
-	{"V", []string{".v"}, "//", "/*", "*/"},
-	{"Assembly", []string{".asm", ".s", ".S"}, ";", "", ""},
+	{
+		name:        "Go",
+		extensions:  []string{".go"},
+		lineComment: []string{"//"},
+		blockStart:  "/*",
+		blockEnd:    "*/",
+		quotes:      [][2]string{{`"`, `"`}, {"`", "`"}},
+	},
+	{
+		name:        "Rust",
+		extensions:  []string{".rs"},
+		lineComment: []string{"//"},
+		blockStart:  "/*",
+		blockEnd:    "*/",
+		quotes:      [][2]string{{`"`, `"`}},
+		nested:      true,
+	},
+	{
+		name:        "JavaScript",
+		extensions:  []string{".js", ".mjs", ".cjs", ".jsx"},
+		lineComment: []string{"//"},
+		blockStart:  "/*",
+		blockEnd:    "*/",
+		quotes:      [][2]string{{`"`, `"`}, {"'", "'"}, {"`", "`"}},
+	},
+	{
+		name:        "TypeScript",
+		extensions:  []string{".ts", ".tsx"},
+		lineComment: []string{"//"},
+		blockStart:  "/*",
+		blockEnd:    "*/",
+		quotes:      [][2]string{{`"`, `"`}, {"'", "'"}, {"`", "`"}},
+	},
+	{
+		name:        "Python",
+		extensions:  []string{".py", ".pyw"},
+		lineComment: []string{"#"},
+		blockStart:  `"""`,
+		blockEnd:    `"""`,
+		quotes:      [][2]string{{`"`, `"`}, {"'", "'"}},
+	},
+	{
+		name:        "Java",
+		extensions:  []string{".java"},
+		lineComment: []string{"//"},
+		blockStart:  "/*",
+		blockEnd:    "*/",
+		quotes:      [][2]string{{`"`, `"`}},
+	},
+	{
+		name:        "C",
+		extensions:  []string{".c", ".h"},
+		lineComment: []string{"//"},
+		blockStart:  "/*",
+		blockEnd:    "*/",
+		quotes:      [][2]string{{`"`, `"`}, {"'", "'"}},
+	},
+	{
+		name:        "C++",
+		extensions:  []string{".cpp", ".cc", ".cxx", ".hpp", ".hxx", ".hh"},
+		lineComment: []string{"//"},
+		blockStart:  "/*",
+		blockEnd:    "*/",
+		quotes:      [][2]string{{`"`, `"`}, {"'", "'"}},
+	},
+	{
+		name:        "C#",
+		extensions:  []string{".cs"},
+		lineComment: []string{"//"},
+		blockStart:  "/*",
+		blockEnd:    "*/",
+		quotes:      [][2]string{{`"`, `"`}, {"@\"", `"`}},
+	},
+	{
+		name:        "Ruby",
+		extensions:  []string{".rb"},
+		lineComment: []string{"#"},
+		blockStart:  "=begin",
+		blockEnd:    "=end",
+		quotes:      [][2]string{{`"`, `"`}, {"'", "'"}},
+	},
+	{
+		name:        "PHP",
+		extensions:  []string{".php"},
+		lineComment: []string{"//", "#"},
+		blockStart:  "/*",
+		blockEnd:    "*/",
+		quotes:      [][2]string{{`"`, `"`}, {"'", "'"}},
+	},
+	{
+		name:        "Swift",
+		extensions:  []string{".swift"},
+		lineComment: []string{"//"},
+		blockStart:  "/*",
+		blockEnd:    "*/",
+		quotes:      [][2]string{{`"`, `"`}},
+		nested:      true,
+	},
+	{
+		name:        "Kotlin",
+		extensions:  []string{".kt", ".kts"},
+		lineComment: []string{"//"},
+		blockStart:  "/*",
+		blockEnd:    "*/",
+		quotes:      [][2]string{{`"`, `"`}, {`"""`, `"""`}},
+		nested:      true,
+	},
+	{
+		name:        "Scala",
+		extensions:  []string{".scala"},
+		lineComment: []string{"//"},
+		blockStart:  "/*",
+		blockEnd:    "*/",
+		quotes:      [][2]string{{`"`, `"`}, {`"""`, `"""`}},
+		nested:      true,
+	},
+	{
+		name:        "Shell",
+		extensions:  []string{".sh", ".bash", ".zsh"},
+		lineComment: []string{"#"},
+		quotes:      [][2]string{{`"`, `"`}, {"'", "'"}},
+	},
+	{
+		name:        "PowerShell",
+		extensions:  []string{".ps1", ".psm1"},
+		lineComment: []string{"#"},
+		blockStart:  "<#",
+		blockEnd:    "#>",
+		quotes:      [][2]string{{`"`, `"`}, {"'", "'"}},
+	},
+	{
+		name:        "Lua",
+		extensions:  []string{".lua"},
+		lineComment: []string{"--"},
+		blockStart:  "--[[",
+		blockEnd:    "]]",
+		quotes:      [][2]string{{`"`, `"`}, {"'", "'"}},
+	},
+	{
+		name:        "Perl",
+		extensions:  []string{".pl", ".pm"},
+		lineComment: []string{"#"},
+		blockStart:  "=pod",
+		blockEnd:    "=cut",
+		quotes:      [][2]string{{`"`, `"`}, {"'", "'"}},
+	},
+	{
+		name:        "R",
+		extensions:  []string{".r", ".R"},
+		lineComment: []string{"#"},
+		quotes:      [][2]string{{`"`, `"`}, {"'", "'"}},
+	},
+	{
+		name:        "SQL",
+		extensions:  []string{".sql"},
+		lineComment: []string{"--"},
+		blockStart:  "/*",
+		blockEnd:    "*/",
+		quotes:      [][2]string{{"'", "'"}},
+	},
+	{
+		name:        "HTML",
+		extensions:  []string{".html", ".htm"},
+		blockStart:  "<!--",
+		blockEnd:    "-->",
+		quotes:      [][2]string{{`"`, `"`}, {"'", "'"}},
+	},
+	{
+		name:        "CSS",
+		extensions:  []string{".css"},
+		blockStart:  "/*",
+		blockEnd:    "*/",
+		quotes:      [][2]string{{`"`, `"`}, {"'", "'"}},
+	},
+	{
+		name:        "SCSS",
+		extensions:  []string{".scss", ".sass"},
+		lineComment: []string{"//"},
+		blockStart:  "/*",
+		blockEnd:    "*/",
+		quotes:      [][2]string{{`"`, `"`}, {"'", "'"}},
+	},
+	{
+		name:       "XML",
+		extensions: []string{".xml", ".xsl", ".xslt", ".xsd", ".svg"},
+		blockStart: "<!--",
+		blockEnd:   "-->",
+		quotes:     [][2]string{{`"`, `"`}, {"'", "'"}},
+	},
+	{
+		name:       "JSON",
+		extensions: []string{".json"},
+		quotes:     [][2]string{{`"`, `"`}},
+	},
+	{
+		name:        "YAML",
+		extensions:  []string{".yaml", ".yml"},
+		lineComment: []string{"#"},
+		quotes:      [][2]string{{`"`, `"`}, {"'", "'"}},
+	},
+	{
+		name:        "TOML",
+		extensions:  []string{".toml"},
+		lineComment: []string{"#"},
+		quotes:      [][2]string{{`"`, `"`}, {"'", "'"}, {`"""`, `"""`}, {"'''", "'''"}},
+	},
+	{
+		name:       "Markdown",
+		extensions: []string{".md", ".markdown"},
+		literate:   true, // All content is comments, code blocks extracted
+	},
+	{
+		name:        "Makefile",
+		extensions:  []string{"Makefile", "makefile", ".mk"},
+		lineComment: []string{"#"},
+	},
+	{
+		name:        "Dockerfile",
+		extensions:  []string{"Dockerfile"},
+		lineComment: []string{"#"},
+	},
+	{
+		name:        "Protobuf",
+		extensions:  []string{".proto"},
+		lineComment: []string{"//"},
+		blockStart:  "/*",
+		blockEnd:    "*/",
+		quotes:      [][2]string{{`"`, `"`}},
+	},
+	{
+		name:        "GraphQL",
+		extensions:  []string{".graphql", ".gql"},
+		lineComment: []string{"#"},
+		quotes:      [][2]string{{`"`, `"`}, {`"""`, `"""`}},
+	},
+	{
+		name:        "Terraform",
+		extensions:  []string{".tf", ".tfvars"},
+		lineComment: []string{"#", "//"},
+		blockStart:  "/*",
+		blockEnd:    "*/",
+		quotes:      [][2]string{{`"`, `"`}},
+	},
+	{
+		name:        "Zig",
+		extensions:  []string{".zig"},
+		lineComment: []string{"//"},
+		quotes:      [][2]string{{`"`, `"`}},
+	},
+	{
+		name:        "Elixir",
+		extensions:  []string{".ex", ".exs"},
+		lineComment: []string{"#"},
+		quotes:      [][2]string{{`"`, `"`}, {`"""`, `"""`}},
+	},
+	{
+		name:        "Erlang",
+		extensions:  []string{".erl", ".hrl"},
+		lineComment: []string{"%"},
+		quotes:      [][2]string{{`"`, `"`}},
+	},
+	{
+		name:        "Haskell",
+		extensions:  []string{".hs"},
+		lineComment: []string{"--"},
+		blockStart:  "{-",
+		blockEnd:    "-}",
+		quotes:      [][2]string{{`"`, `"`}},
+		nested:      true,
+	},
+	{
+		name:       "OCaml",
+		extensions: []string{".ml", ".mli"},
+		blockStart: "(*",
+		blockEnd:   "*)",
+		quotes:     [][2]string{{`"`, `"`}},
+		nested:     true,
+	},
+	{
+		name:        "F#",
+		extensions:  []string{".fs", ".fsi", ".fsx"},
+		lineComment: []string{"//"},
+		blockStart:  "(*",
+		blockEnd:    "*)",
+		quotes:      [][2]string{{`"`, `"`}},
+	},
+	{
+		name:        "Clojure",
+		extensions:  []string{".clj", ".cljs", ".cljc"},
+		lineComment: []string{";"},
+		quotes:      [][2]string{{`"`, `"`}},
+	},
+	{
+		name:        "Nim",
+		extensions:  []string{".nim"},
+		lineComment: []string{"#"},
+		blockStart:  "#[",
+		blockEnd:    "]#",
+		quotes:      [][2]string{{`"`, `"`}},
+	},
+	{
+		name:        "V",
+		extensions:  []string{".v", ".vv"},
+		lineComment: []string{"//"},
+		blockStart:  "/*",
+		blockEnd:    "*/",
+		quotes:      [][2]string{{`"`, `"`}, {"'", "'"}},
+	},
+	{
+		name:        "Assembly",
+		extensions:  []string{".asm"},
+		lineComment: []string{";"},
+	},
+	{
+		name:        "AssemblyGAS",
+		extensions:  []string{".s", ".S"},
+		lineComment: []string{"//", "#"},
+		blockStart:  "/*",
+		blockEnd:    "*/",
+	},
 }
 
 var extToLang = make(map[string]*langDef)
+
+// codeBlockRegex matches markdown code fences with language
+var codeBlockStartRegex = regexp.MustCompile("^```(\\w+)?\\s*$")
+var codeBlockEndRegex = regexp.MustCompile("^```\\s*$")
 
 func init() {
 	for i := range languages {
@@ -165,21 +450,33 @@ func RunLoc(w io.Writer, args []string, opts Options) error {
 			}
 
 			// Count lines
-			stats, err := countFile(path, lang)
+			fileStats, err := countFile(path, lang)
 			if err != nil {
 				return nil // Skip files we can't read
 			}
 
-			// Aggregate
+			// Aggregate main language stats
 			if langStats[lang.name] == nil {
 				langStats[lang.name] = &LanguageStats{Language: lang.name}
 			}
 			ls := langStats[lang.name]
 			ls.Files++
-			ls.Lines += stats.Lines
-			ls.Code += stats.Code
-			ls.Comments += stats.Comments
-			ls.Blanks += stats.Blanks
+			ls.Lines += fileStats.main.Lines
+			ls.Code += fileStats.main.Code
+			ls.Comments += fileStats.main.Comments
+			ls.Blanks += fileStats.main.Blanks
+
+			// Aggregate embedded language stats
+			for embLang, embStats := range fileStats.embedded {
+				if langStats[embLang] == nil {
+					langStats[embLang] = &LanguageStats{Language: embLang}
+				}
+				els := langStats[embLang]
+				els.Lines += embStats.Lines
+				els.Code += embStats.Code
+				els.Comments += embStats.Comments
+				els.Blanks += embStats.Blanks
+			}
 
 			return nil
 		})
@@ -215,56 +512,345 @@ func RunLoc(w io.Writer, args []string, opts Options) error {
 	return printTable(w, result)
 }
 
-func countFile(path string, lang *langDef) (*Stats, error) {
+// fileStats holds stats for main language and embedded languages
+type fileStats struct {
+	main     Stats
+	embedded map[string]Stats
+}
+
+func countFile(path string, lang *langDef) (*fileStats, error) {
 	f, err := os.Open(path)
 	if err != nil {
 		return nil, err
 	}
 	defer func() { _ = f.Close() }()
 
-	stats := &Stats{}
-	scanner := bufio.NewScanner(f)
-	inBlockComment := false
-
-	for scanner.Scan() {
-		line := strings.TrimSpace(scanner.Text())
-		stats.Lines++
-
-		if line == "" {
-			stats.Blanks++
-			continue
-		}
-
-		// Handle block comments
-		if lang.blockStart != "" && lang.blockEnd != "" {
-			if inBlockComment {
-				stats.Comments++
-				if strings.Contains(line, lang.blockEnd) {
-					inBlockComment = false
-				}
-				continue
-			}
-
-			if strings.HasPrefix(line, lang.blockStart) {
-				stats.Comments++
-				if !strings.Contains(line, lang.blockEnd) ||
-				   strings.Index(line, lang.blockEnd) < strings.Index(line, lang.blockStart)+len(lang.blockStart) {
-					inBlockComment = true
-				}
-				continue
-			}
-		}
-
-		// Handle line comments
-		if lang.lineComment != "" && strings.HasPrefix(line, lang.lineComment) {
-			stats.Comments++
-			continue
-		}
-
-		stats.Code++
+	result := &fileStats{
+		embedded: make(map[string]Stats),
 	}
 
-	return stats, scanner.Err()
+	scanner := bufio.NewScanner(f)
+
+	if lang.literate {
+		countLiterate(scanner, lang, result)
+	} else {
+		countStandard(scanner, lang, result)
+	}
+
+	return result, scanner.Err()
+}
+
+// countLiterate handles literate languages like Markdown
+// All content is comments except code blocks which are extracted
+func countLiterate(scanner *bufio.Scanner, lang *langDef, result *fileStats) {
+	inCodeBlock := false
+	var codeBlockLang string
+
+	for scanner.Scan() {
+		line := scanner.Text()
+		trimmed := strings.TrimSpace(line)
+		result.main.Lines++
+
+		if trimmed == "" {
+			result.main.Blanks++
+			continue
+		}
+
+		// Check for code block start
+		if !inCodeBlock {
+			if matches := codeBlockStartRegex.FindStringSubmatch(trimmed); matches != nil {
+				result.main.Comments++ // The ``` line is a comment
+				inCodeBlock = true
+				if len(matches) > 1 && matches[1] != "" {
+					codeBlockLang = detectLanguageName(matches[1])
+				} else {
+					codeBlockLang = ""
+				}
+				continue
+			}
+		}
+
+		// Check for code block end
+		if inCodeBlock && codeBlockEndRegex.MatchString(trimmed) {
+			result.main.Comments++ // The closing ``` is a comment
+			inCodeBlock = false
+			codeBlockLang = ""
+			continue
+		}
+
+		// Inside code block - count as embedded language
+		if inCodeBlock && codeBlockLang != "" {
+			embStats := result.embedded[codeBlockLang]
+			embStats.Lines++
+			if trimmed == "" {
+				embStats.Blanks++
+			} else {
+				embStats.Code++
+			}
+			result.embedded[codeBlockLang] = embStats
+			continue
+		}
+
+		// Regular markdown content = comment
+		result.main.Comments++
+	}
+}
+
+// countStandard handles normal programming languages with state machine
+func countStandard(scanner *bufio.Scanner, lang *langDef, result *fileStats) {
+	inBlockComment := false
+	blockDepth := 0
+
+	for scanner.Scan() {
+		line := scanner.Text()
+		trimmed := strings.TrimSpace(line)
+		result.main.Lines++
+
+		if trimmed == "" {
+			result.main.Blanks++
+			continue
+		}
+
+		// Use state machine to parse the line
+		lineType := parseLine(trimmed, lang, &inBlockComment, &blockDepth)
+
+		switch lineType {
+		case lineCode:
+			result.main.Code++
+		case lineComment:
+			result.main.Comments++
+		}
+	}
+}
+
+type lineClass int
+
+const (
+	lineCode lineClass = iota
+	lineComment
+)
+
+// parseLine determines if a line is code or comment using a state machine
+// that handles strings, block comments, and line comments
+func parseLine(line string, lang *langDef, inBlockComment *bool, blockDepth *int) lineClass {
+	// If we're continuing a block comment from previous line
+	if *inBlockComment {
+		// Look for block end
+		if lang.blockEnd != "" {
+			if idx := strings.Index(line, lang.blockEnd); idx >= 0 {
+				if lang.nested {
+					*blockDepth--
+					if *blockDepth == 0 {
+						*inBlockComment = false
+					}
+				} else {
+					*inBlockComment = false
+				}
+				// Check if there's code after the comment ends
+				afterComment := strings.TrimSpace(line[idx+len(lang.blockEnd):])
+				if afterComment != "" && !startsWithLineComment(afterComment, lang) {
+					return lineCode
+				}
+			}
+		}
+		return lineComment
+	}
+
+	// State machine for parsing the line
+	inString := false
+	var stringEnd string
+	hasCode := false
+
+	for i := 0; i < len(line); {
+		remaining := line[i:]
+
+		// If in string, look for string end
+		if inString {
+			if strings.HasPrefix(remaining, stringEnd) {
+				// Check for escape
+				if i > 0 && line[i-1] == '\\' {
+					i++
+					continue
+				}
+				inString = false
+				i += len(stringEnd)
+				continue
+			}
+			i++
+			continue
+		}
+
+		// Check for string start
+		for _, q := range lang.quotes {
+			if strings.HasPrefix(remaining, q[0]) {
+				inString = true
+				stringEnd = q[1]
+				hasCode = true
+				i += len(q[0])
+				break
+			}
+		}
+		if inString {
+			continue
+		}
+
+		// Check for block comment start
+		if lang.blockStart != "" && strings.HasPrefix(remaining, lang.blockStart) {
+			// If we had code before this, it's a code line
+			if hasCode {
+				// Find block end on same line
+				afterStart := remaining[len(lang.blockStart):]
+				if endIdx := strings.Index(afterStart, lang.blockEnd); endIdx >= 0 {
+					// Block comment ends on same line, continue parsing
+					i += len(lang.blockStart) + endIdx + len(lang.blockEnd)
+					continue
+				}
+				*inBlockComment = true
+				if lang.nested {
+					*blockDepth = 1
+				}
+				return lineCode
+			}
+
+			// Check if block comment ends on same line
+			afterStart := remaining[len(lang.blockStart):]
+			if endIdx := strings.Index(afterStart, lang.blockEnd); endIdx >= 0 {
+				// Entire comment on one line, check what's after
+				afterComment := strings.TrimSpace(afterStart[endIdx+len(lang.blockEnd):])
+				if afterComment == "" {
+					return lineComment
+				}
+				// There's content after the comment
+				i += len(lang.blockStart) + endIdx + len(lang.blockEnd)
+				continue
+			}
+
+			// Block comment continues to next line
+			*inBlockComment = true
+			if lang.nested {
+				*blockDepth = 1
+			}
+			return lineComment
+		}
+
+		// Check for line comment
+		for _, lc := range lang.lineComment {
+			if strings.HasPrefix(remaining, lc) {
+				// If we had code before this comment, it's code
+				if hasCode {
+					return lineCode
+				}
+				return lineComment
+			}
+		}
+
+		// Regular character - it's code
+		if !isWhitespace(remaining[0]) {
+			hasCode = true
+		}
+		i++
+	}
+
+	if hasCode {
+		return lineCode
+	}
+	return lineComment
+}
+
+func startsWithLineComment(line string, lang *langDef) bool {
+	for _, lc := range lang.lineComment {
+		if strings.HasPrefix(line, lc) {
+			return true
+		}
+	}
+	return false
+}
+
+func isWhitespace(b byte) bool {
+	return b == ' ' || b == '\t' || b == '\r' || b == '\n'
+}
+
+// detectLanguageName maps code block language hints to our language names
+func detectLanguageName(hint string) string {
+	hint = strings.ToLower(hint)
+	mapping := map[string]string{
+		"go":         "Go",
+		"golang":     "Go",
+		"rust":       "Rust",
+		"rs":         "Rust",
+		"javascript": "JavaScript",
+		"js":         "JavaScript",
+		"typescript": "TypeScript",
+		"ts":         "TypeScript",
+		"python":     "Python",
+		"py":         "Python",
+		"java":       "Java",
+		"c":          "C",
+		"cpp":        "C++",
+		"c++":        "C++",
+		"csharp":     "C#",
+		"cs":         "C#",
+		"ruby":       "Ruby",
+		"rb":         "Ruby",
+		"php":        "PHP",
+		"swift":      "Swift",
+		"kotlin":     "Kotlin",
+		"kt":         "Kotlin",
+		"scala":      "Scala",
+		"shell":      "Shell",
+		"bash":       "Shell",
+		"sh":         "Shell",
+		"zsh":        "Shell",
+		"powershell": "PowerShell",
+		"ps1":        "PowerShell",
+		"lua":        "Lua",
+		"perl":       "Perl",
+		"r":          "R",
+		"sql":        "SQL",
+		"html":       "HTML",
+		"css":        "CSS",
+		"scss":       "SCSS",
+		"sass":       "SCSS",
+		"xml":        "XML",
+		"json":       "JSON",
+		"yaml":       "YAML",
+		"yml":        "YAML",
+		"toml":       "TOML",
+		"makefile":   "Makefile",
+		"make":       "Makefile",
+		"dockerfile": "Dockerfile",
+		"docker":     "Dockerfile",
+		"protobuf":   "Protobuf",
+		"proto":      "Protobuf",
+		"graphql":    "GraphQL",
+		"gql":        "GraphQL",
+		"terraform":  "Terraform",
+		"tf":         "Terraform",
+		"hcl":        "Terraform",
+		"zig":        "Zig",
+		"elixir":     "Elixir",
+		"ex":         "Elixir",
+		"erlang":     "Erlang",
+		"erl":        "Erlang",
+		"haskell":    "Haskell",
+		"hs":         "Haskell",
+		"ocaml":      "OCaml",
+		"ml":         "OCaml",
+		"fsharp":     "F#",
+		"fs":         "F#",
+		"clojure":    "Clojure",
+		"clj":        "Clojure",
+		"nim":        "Nim",
+		"v":          "V",
+		"asm":        "Assembly",
+		"assembly":   "Assembly",
+		"nasm":       "Assembly",
+	}
+
+	if name, ok := mapping[hint]; ok {
+		return name
+	}
+	return ""
 }
 
 func printTable(w io.Writer, result Result) error {

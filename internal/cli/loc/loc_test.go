@@ -22,7 +22,7 @@ func TestRunLoc(t *testing.T) {
 
 // This is a comment
 func main() {
-	// Another comment
+	url := "http://example.com" // inline comment
 	fmt.Println("Hello")
 }
 `
@@ -100,84 +100,205 @@ hello()
 	})
 }
 
-func TestCountFile(t *testing.T) {
-	tmpDir, err := os.MkdirTemp("", "loc_count_test")
-	if err != nil {
-		t.Fatal(err)
+func TestParseLine(t *testing.T) {
+	goLang := &langDef{
+		lineComment: []string{"//"},
+		blockStart:  "/*",
+		blockEnd:    "*/",
+		quotes:      [][2]string{{`"`, `"`}, {"`", "`"}},
 	}
-	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	tests := []struct {
 		name     string
-		content  string
-		lang     *langDef
-		wantCode int
-		wantComm int
-		wantBlnk int
+		line     string
+		want     lineClass
+		inBlock  bool
+		wantBlock bool
 	}{
 		{
-			name: "go file",
-			content: `package main
-
-// Comment
-func main() {
-}
-`,
-			lang:     &langDef{lineComment: "//", blockStart: "/*", blockEnd: "*/"},
-			wantCode: 3,
-			wantComm: 1,
-			wantBlnk: 1,
+			name: "pure code",
+			line: "x := 1",
+			want: lineCode,
 		},
 		{
-			name: "block comment",
-			content: `package main
-
-/*
-Multi-line
-comment
-*/
-func main() {}
-`,
-			lang:     &langDef{lineComment: "//", blockStart: "/*", blockEnd: "*/"},
-			wantCode: 2,
-			wantComm: 4,
-			wantBlnk: 1,
+			name: "pure line comment",
+			line: "// this is a comment",
+			want: lineComment,
 		},
 		{
-			name: "python",
-			content: `# Comment
-def hello():
-    pass
-`,
-			lang:     &langDef{lineComment: "#"},
-			wantCode: 2,
-			wantComm: 1,
-			wantBlnk: 0,
+			name: "code with inline comment",
+			line: "x := 1 // comment",
+			want: lineCode,
+		},
+		{
+			name: "url in string not comment",
+			line: `url := "http://example.com"`,
+			want: lineCode,
+		},
+		{
+			name: "comment marker in string",
+			line: `s := "// not a comment"`,
+			want: lineCode,
+		},
+		{
+			name: "block comment single line",
+			line: "/* comment */",
+			want: lineComment,
+		},
+		{
+			name: "code before block comment",
+			line: "x := 1 /* comment */",
+			want: lineCode,
+		},
+		{
+			name: "block comment start",
+			line: "/* start of block",
+			want: lineComment,
+			wantBlock: true,
+		},
+		{
+			name: "inside block comment",
+			line: "still in block",
+			inBlock: true,
+			want: lineComment,
+			wantBlock: true,
+		},
+		{
+			name: "block comment end",
+			line: "end of block */",
+			inBlock: true,
+			want: lineComment,
+			wantBlock: false,
+		},
+		{
+			name: "block end with code after",
+			line: "end */ x := 1",
+			inBlock: true,
+			want: lineCode,
+			wantBlock: false,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			file := filepath.Join(tmpDir, "test.txt")
-			if err := os.WriteFile(file, []byte(tt.content), 0644); err != nil {
-				t.Fatal(err)
+			inBlock := tt.inBlock
+			depth := 0
+			if inBlock {
+				depth = 1
 			}
 
-			stats, err := countFile(file, tt.lang)
-			if err != nil {
-				t.Fatalf("countFile() error = %v", err)
-			}
+			got := parseLine(tt.line, goLang, &inBlock, &depth)
 
-			if stats.Code != tt.wantCode {
-				t.Errorf("Code = %d, want %d", stats.Code, tt.wantCode)
+			if got != tt.want {
+				t.Errorf("parseLine(%q) = %v, want %v", tt.line, got, tt.want)
 			}
-			if stats.Comments != tt.wantComm {
-				t.Errorf("Comments = %d, want %d", stats.Comments, tt.wantComm)
-			}
-			if stats.Blanks != tt.wantBlnk {
-				t.Errorf("Blanks = %d, want %d", stats.Blanks, tt.wantBlnk)
+			if inBlock != tt.wantBlock {
+				t.Errorf("parseLine(%q) inBlock = %v, want %v", tt.line, inBlock, tt.wantBlock)
 			}
 		})
+	}
+}
+
+func TestMarkdownLiterate(t *testing.T) {
+	tmpDir, err := os.MkdirTemp("", "loc_md_test")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = os.RemoveAll(tmpDir) }()
+
+	mdFile := filepath.Join(tmpDir, "README.md")
+	mdContent := `# Title
+
+Some text here.
+
+` + "```go" + `
+package main
+
+func main() {
+    fmt.Println("Hello")
+}
+` + "```" + `
+
+More text.
+
+` + "```bash" + `
+echo "hello"
+` + "```" + `
+`
+	if err := os.WriteFile(mdFile, []byte(mdContent), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	var buf bytes.Buffer
+	err = RunLoc(&buf, []string{tmpDir}, Options{JSON: true})
+	if err != nil {
+		t.Fatalf("RunLoc() error = %v", err)
+	}
+
+	output := buf.String()
+
+	// Markdown content should be comments
+	if !strings.Contains(output, `"Markdown"`) {
+		t.Error("output missing Markdown language")
+	}
+
+	// Embedded Go code should be extracted
+	if !strings.Contains(output, `"Go"`) {
+		t.Error("output missing embedded Go code")
+	}
+
+	// Embedded Shell code should be extracted
+	if !strings.Contains(output, `"Shell"`) {
+		t.Error("output missing embedded Shell code")
+	}
+}
+
+func TestCountFileWithStrings(t *testing.T) {
+	tmpDir, err := os.MkdirTemp("", "loc_strings_test")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = os.RemoveAll(tmpDir) }()
+
+	goFile := filepath.Join(tmpDir, "test.go")
+	goContent := `package main
+
+func main() {
+	// real comment
+	url := "http://example.com"
+	pattern := "// not a comment"
+	code := 1 // inline comment
+}
+`
+	if err := os.WriteFile(goFile, []byte(goContent), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	lang := extToLang[".go"]
+	stats, err := countFile(goFile, lang)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Line counts:
+	// 1. package main - code
+	// 2. blank
+	// 3. func main() { - code
+	// 4. // real comment - comment
+	// 5. url := "http://example.com" - code (not comment!)
+	// 6. pattern := "// not a comment" - code (not comment!)
+	// 7. code := 1 // inline comment - code (has code before comment)
+	// 8. } - code
+	// Total: 6 code, 1 comment, 1 blank
+
+	if stats.main.Code != 6 {
+		t.Errorf("Code = %d, want 6", stats.main.Code)
+	}
+	if stats.main.Comments != 1 {
+		t.Errorf("Comments = %d, want 1", stats.main.Comments)
+	}
+	if stats.main.Blanks != 1 {
+		t.Errorf("Blanks = %d, want 1", stats.main.Blanks)
 	}
 }
 
@@ -217,5 +338,34 @@ func TestEmptyDirectory(t *testing.T) {
 
 	if !strings.Contains(buf.String(), "No files found") {
 		t.Errorf("expected 'No files found' message")
+	}
+}
+
+func TestDetectLanguageName(t *testing.T) {
+	tests := []struct {
+		hint string
+		want string
+	}{
+		{"go", "Go"},
+		{"golang", "Go"},
+		{"Go", "Go"},
+		{"javascript", "JavaScript"},
+		{"js", "JavaScript"},
+		{"typescript", "TypeScript"},
+		{"ts", "TypeScript"},
+		{"python", "Python"},
+		{"py", "Python"},
+		{"bash", "Shell"},
+		{"sh", "Shell"},
+		{"unknown", ""},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.hint, func(t *testing.T) {
+			got := detectLanguageName(tt.hint)
+			if got != tt.want {
+				t.Errorf("detectLanguageName(%q) = %q, want %q", tt.hint, got, tt.want)
+			}
+		})
 	}
 }
