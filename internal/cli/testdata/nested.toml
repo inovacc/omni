@@ -1,0 +1,11 @@
+[user]
+name = "John"
+age = 30
+
+[user.address]
+city = "NYC"
+country = "USA"
+
+[settings]
+theme = "dark"
+notifications = true

@@ -1,0 +1,28 @@
+# Application configuration
+title = "My App"
+version = "1.0.0"
+
+[server]
+host = "localhost"
+port = 8080
+timeout = 30
+
+[database]
+driver = "postgres"
+host = "localhost"
+port = 5432
+name = "mydb"
+user = "admin"
+
+[logging]
+level = "info"
+format = "json"
+output = ["stdout", "file"]
+
+[[servers]]
+name = "primary"
+host = "192.168.1.1"
+
+[[servers]]
+name = "secondary"
+host = "192.168.1.2"

@@ -1,0 +1,16 @@
+# TOML types example
+string = "hello"
+number = 42
+float = 3.14
+boolean_true = true
+boolean_false = false
+
+array = [1, 2, 3]
+inline_table = { key = "value" }
+
+[object]
+key = "value"
+
+# Dates
+date = 2024-01-15
+datetime = 2024-01-15T10:30:00Z

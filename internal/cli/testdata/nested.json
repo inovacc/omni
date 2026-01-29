@@ -1,0 +1,14 @@
+{
+  "user": {
+    "name": "John",
+    "age": 30,
+    "address": {
+      "city": "NYC",
+      "country": "USA"
+    }
+  },
+  "settings": {
+    "theme": "dark",
+    "notifications": true
+  }
+}

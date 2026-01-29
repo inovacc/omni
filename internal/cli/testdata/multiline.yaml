@@ -1,0 +1,8 @@
+description: |
+  This is a multiline
+  string that preserves
+  line breaks.
+folded: >
+  This is a folded
+  string that joins
+  lines with spaces.
