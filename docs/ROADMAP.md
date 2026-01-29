@@ -37,15 +37,19 @@ Foundation commands using Go standard library.
 
 ```
 omni/
-├── cmd/                    # Cobra CLI commands
+├── cmd/                    # Cobra CLI commands (98 commands)
 │   ├── root.go
 │   ├── ls.go
 │   ├── pwd.go
 │   └── ...
-├── pkg/cli/               # Library implementations
-│   ├── ls.go
-│   ├── pwd.go
-│   └── ...
+├── internal/
+│   ├── cli/               # Library implementations (79 packages)
+│   │   ├── ls/
+│   │   ├── pwd/
+│   │   └── ...
+│   ├── flags/             # Feature flags system
+│   ├── logger/            # KSUID-based logging
+│   └── twig/              # Tree visualization module
 └── main.go
 ```
 
@@ -93,13 +97,12 @@ type RMOptions struct {
 ### Library API
 
 ```go
-import "github.com/inovacc/omni/pkg/fs"
+import "github.com/inovacc/omni/internal/cli/fs"
 
-fs.Copy("src", "dst", fs.CopyOptions{Recursive: true})
-fs.Move("src", "dst")
-fs.Remove("path", fs.RMOptions{DryRun: true})
+fs.Copy("src", "dst", &fs.CopyOptions{Recursive: true})
+fs.Move("src", "dst", &fs.MoveOptions{})
+fs.Remove("path", &fs.RmOptions{DryRun: true})
 fs.Mkdir("path", 0755)
-fs.Stat("path")
 ```
 
 ---
@@ -355,17 +358,17 @@ All commands are available as importable Go packages:
 
 ```go
 import (
-    "github.com/inovacc/omni/pkg/fs"      // File system operations
-    "github.com/inovacc/omni/pkg/text"    // Text processing
-    "github.com/inovacc/omni/pkg/sys"     // System information
-    "github.com/inovacc/omni/pkg/hash"    // Hashing utilities
-    "github.com/inovacc/omni/pkg/archive" // Archive operations
+    "github.com/inovacc/omni/internal/cli/fs"       // File system operations
+    "github.com/inovacc/omni/internal/cli/text"     // Text processing
+    "github.com/inovacc/omni/internal/cli/df"       // Disk usage
+    "github.com/inovacc/omni/internal/cli/hash"     // Hashing utilities
+    "github.com/inovacc/omni/internal/cli/archive"  // Archive operations
 )
 
 // Examples
-files, _ := fs.Ls(".", fs.LsOptions{All: true})
-lines, _ := text.Grep(content, "pattern", text.GrepOptions{IgnoreCase: true})
-usage, _ := sys.DF("/")
+fs.Copy("src", "dst", &fs.CopyOptions{Recursive: true})
+text.Sort(lines, &text.SortOptions{Reverse: true})
+usage, _ := df.RunDf(os.Stdout, []string{"/"}, &df.Options{})
 sum, _ := hash.SHA256File("file.bin")
 ```
 
@@ -416,12 +419,15 @@ func printOutput(cmd *cobra.Command, data any, format OutputFormat) error {
 
 | Category | Packages | Coverage | Status |
 |----------|----------|----------|--------|
-| **Overall** | 86/90 packages | 95.6% | ✅ Excellent |
-| **100% Coverage** | `basename`, `date`, `dirname` | 100% | ✅ Complete |
-| **High Coverage (80%+)** | `cat`, `grep`, `head`, `ls`, `realpath`, `pwd`, `uuid`, `text`, `archive`, `bzip2`, `gzip`, `xz`, `lint`, `testcheck`, `echo`, `twig/*` | 80-95% | ✅ Good |
-| **Medium Coverage (50-79%)** | `base`, `crypt`, `env`, `jq`, `kill`, `random`, `tail`, `uname`, `yq`, `wc` | 50-79% | 🔄 In Progress |
-| **Low Coverage (<50%)** | `diff`, `hash`, `whoami` | 30-50% | 🔄 Needs Work |
-| **No Coverage (0%)** | 4 packages (main, cmd, builder, parser) | 0% | ⚠️ CLI/Integration Only |
+| **Overall** | 86/88 packages | 97.7% | ✅ Excellent |
+| **CLI Packages** | 79/79 packages | 100% | ✅ Complete |
+| **Infrastructure** | `flags`, `logger`, `twig/*` | 85%+ | ✅ Good |
+| **No Coverage (0%)** | 2 packages (`twig/builder`, `twig/parser`) | 0% | ⚠️ Integration Only |
+
+### Test Statistics
+- **Total Test Cases:** 700+
+- **CLI Packages with Tests:** 79/79 (100%)
+- **Internal Packages with Tests:** 86/88 (97.7%)
 
 ### Unit Tests
 - Table-driven tests for all functions
@@ -612,6 +618,12 @@ files, _ := fs.Ls(".", fs.LsOptions{})
 - Cobra CLI: https://github.com/spf13/cobra
 - twig (tree replacement): https://github.com/inovacc/twig
 - fsnotify: https://github.com/fsnotify/fsnotify
+
+## Related Documents
+
+- [BACKLOG.md](BACKLOG.md) - Future work and technical debt
+- [COMMANDS.md](COMMANDS.md) - Full command reference
+- [REUSABILITY.md](REUSABILITY.md) - Code consolidation analysis
 
 ---
 
