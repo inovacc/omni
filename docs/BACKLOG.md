@@ -108,11 +108,15 @@ Prioritized items for future development phases.
 
 ## Technical Debt
 
-- [ ] Refactor pkg/cli to proper pkg/* structure
+- [ ] Refactor duplicated file reading patterns (see [REUSABILITY.md](REUSABILITY.md))
+- [ ] Create `internal/cli/input` package for shared input handling
+- [ ] Create `internal/cli/output` package for consistent JSON output
+- [ ] Create `internal/cli/pipeline` package for text processing chains
 - [ ] Add context.Context to all long-running operations
 - [ ] Improve error messages with actionable suggestions
 - [ ] Standardize flag naming across commands
 - [ ] Add request/response logging for debugging
+- [ ] Split large packages (archive.go ~500 lines)
 
 ---
 
@@ -120,8 +124,9 @@ Prioritized items for future development phases.
 
 ### Current Status (January 2026)
 - **Total Test Cases:** ~700+ tests across all packages
-- **Packages with Tests:** 86/90 (95.6%)
-- **Packages at 100%:** basename, date, dirname
+- **Packages with Tests:** 86/88 (97.7%)
+- **CLI Packages with Tests:** 79/79 (100%)
+- **Packages without Tests:** 2 (twig/builder, twig/parser)
 - **Recently Added Tests:**
   - Compression: archive (14), bzip2 (10), gzip (12), xz (14)
   - Tooling: lint (17), testcheck (8), echo (9)
@@ -143,8 +148,8 @@ Prioritized items for future development phases.
 - [ ] Large file (>1GB) handling tests
 
 ### Unit Tests - Pending ❌
-- [ ] Tests for 40+ uncovered packages
-- [ ] Error path coverage
+- [ ] Tests for 2 uncovered packages (twig/builder, twig/parser)
+- [ ] Error path coverage for edge cases
 - [ ] Timeout/context cancellation tests
 - [ ] Concurrent access tests
 
@@ -232,16 +237,17 @@ Prioritized items for future development phases.
 
 ### v0.5.0 - Test Coverage Milestone ✅ (Achieved)
 **Goal:** Achieve 90%+ coverage for tested packages, 60%+ overall
-**Result:** 90.1% package coverage (82/91 packages have tests)
+**Result:** 97.7% package coverage (86/88 packages have tests)
 
 | Milestone | Target | Status |
 |-----------|--------|--------|
 | 7.1 Core Coverage | 95% for core packages | ✅ Achieved |
 | 7.2 Utility Coverage | 80% for utility packages | ✅ Achieved |
-| 7.3 Uncovered Packages | 60% for remaining packages | ✅ Achieved (90.1%) |
+| 7.3 Uncovered Packages | 60% for remaining packages | ✅ Exceeded (97.7%) |
+| 7.4 CLI Coverage | 100% for CLI packages | ✅ Achieved (79/79) |
 
 **Completed:**
-- [x] Expanded tests for 82 packages (~650+ test cases)
+- [x] Expanded tests for 86 packages (~700+ test cases)
 - [x] Fixed platform-specific test failures
 - [x] Added edge case tests (unicode, binary, large files)
 - [x] Added consistency and output format tests
@@ -249,10 +255,11 @@ Prioritized items for future development phases.
 - [x] Added lint package tests (17 tests)
 - [x] Added testcheck command with tests
 - [x] Added echo command with tests
+- [x] Added twig module tests (twig, models, formatter, scanner, expander)
 
 **Remaining:**
-- [ ] Add tests for remaining ~9 uncovered packages
-- [ ] Increase coverage in low-coverage packages
+- [ ] Add tests for twig/builder (integration tests)
+- [ ] Add tests for twig/parser (integration tests)
 - [ ] Add platform-specific test variants
 - [ ] Set up CI coverage enforcement
 

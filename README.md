@@ -186,48 +186,69 @@ omni decrypt -p mypass -a secret.enc
 All commands are available as importable Go packages:
 
 ```go
-import "github.com/inovacc/omni/pkg/cli"
+import (
+    "github.com/inovacc/omni/internal/cli/ls"
+    "github.com/inovacc/omni/internal/cli/hash"
+    "github.com/inovacc/omni/internal/cli/uuid"
+    "github.com/inovacc/omni/internal/cli/random"
+    "github.com/inovacc/omni/internal/cli/dotenv"
+    "github.com/inovacc/omni/internal/cli/jq"
+)
 
 // List files
-cli.RunLs(os.Stdout, []string{"."}, cli.LsOptions{All: true, Long: true})
+ls.RunLs(os.Stdout, []string{"."}, &ls.Options{All: true, Long: true})
 
 // Hash a file
-cli.RunSHA256Sum(os.Stdout, []string{"file.bin"}, cli.HashOptions{})
+hash.RunSHA256Sum(os.Stdout, []string{"file.bin"}, &hash.Options{})
 
 // Generate UUID
-uuid := cli.NewUUID()
+u := uuid.NewUUID()
 
 // Generate random password
-password := cli.RandomPassword(20)
+password := random.Password(20)
 
 // Load .env file
-cli.LoadDotenv(".env")
+dotenv.Load(".env")
 
 // Parse JSON
-cli.RunJq(os.Stdout, []string{".name", "data.json"}, cli.JqOptions{Raw: true})
+jq.RunJq(os.Stdout, []string{".name", "data.json"}, &jq.Options{Raw: true})
 ```
 
 ## Project Structure
 
 ```
 omni/
-├── cmd/                    # Cobra CLI commands
+├── cmd/                    # Cobra CLI commands (98 commands)
 │   ├── root.go
 │   ├── ls.go
 │   ├── grep.go
 │   └── ...
-├── pkg/cli/               # Library implementations
-│   ├── ls.go
-│   ├── grep.go
-│   ├── jq.go
-│   └── ...
-├── tests/                 # Integration tests
+├── internal/
+│   ├── cli/               # Library implementations (79 packages)
+│   │   ├── ls/
+│   │   ├── grep/
+│   │   ├── jq/
+│   │   └── ...
+│   ├── flags/             # Feature flags system
+│   ├── logger/            # KSUID-based logging
+│   └── twig/              # Tree visualization module
+│       ├── scanner/       # Directory scanning
+│       ├── formatter/     # Output formatting
+│       ├── builder/       # Structure creation
+│       ├── parser/        # Tree parsing
+│       └── models/        # Data models
 ├── docs/                  # Documentation
 │   ├── ROADMAP.md
 │   ├── COMMANDS.md
 │   └── BACKLOG.md
 └── main.go
 ```
+
+### Test Coverage
+
+- **Overall Coverage:** 97.7% (86/88 packages have tests)
+- **CLI Packages:** 100% (79/79 packages)
+- **Total Test Cases:** 700+
 
 ## Platform Support
 
@@ -301,7 +322,12 @@ task lint
 
 ## Contributing
 
-Contributions are welcome! Please see [ROADMAP.md](docs/ROADMAP.md) for planned features.
+Contributions are welcome! See the documentation in `docs/`:
+
+- [ROADMAP.md](docs/ROADMAP.md) - Implementation phases and planned features
+- [BACKLOG.md](docs/BACKLOG.md) - Future work and technical debt
+- [REUSABILITY.md](docs/REUSABILITY.md) - Code consolidation opportunities
+- [COMMANDS.md](docs/COMMANDS.md) - Full command reference
 
 ## License
 
