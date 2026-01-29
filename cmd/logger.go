@@ -2,10 +2,8 @@ package cmd
 
 import (
 	"fmt"
-	"os"
-	"runtime"
 
-	"github.com/inovacc/omni/internal/logger"
+	"github.com/inovacc/omni/internal/flags"
 	"github.com/spf13/cobra"
 )
 
@@ -28,79 +26,38 @@ Environment variables set:
 		disable, _ := cmd.Flags().GetBool("disable")
 		status, _ := cmd.Flags().GetBool("status")
 
+		if err := flags.IgnoreCommand("logger"); err != nil {
+			return err
+		}
+
 		if status {
 			return printStatus(cmd)
 		}
 
 		if disable {
-			return printDisable(cmd)
+			return flags.DisableFeature("logger")
 		}
 
 		if logPath == "" {
 			return fmt.Errorf("--path is required (or use --disable to turn off logging)")
 		}
 
-		return printEnable(cmd, logPath)
+		return flags.EnableFeature("logger", logPath)
 	},
 }
 
-func printEnable(cmd *cobra.Command, logPath string) error {
-	if runtime.GOOS == "windows" {
-		// PowerShell format
-		_, _ = fmt.Fprintf(cmd.OutOrStdout(), "$env:%s = \"true\"\n", logger.EnvLogEnabled)
-		_, _ = fmt.Fprintf(cmd.OutOrStdout(), "$env:%s = \"%s\"\n", logger.EnvLogPath, logPath)
-	} else {
-		// Bash/Zsh format
-		_, _ = fmt.Fprintf(cmd.OutOrStdout(), "export %s=true\n", logger.EnvLogEnabled)
-		_, _ = fmt.Fprintf(cmd.OutOrStdout(), "export %s=%s\n", logger.EnvLogPath, logPath)
-	}
-
-	return nil
-}
-
-func printDisable(cmd *cobra.Command) error {
-	if runtime.GOOS == "windows" {
-		// PowerShell format
-		_, _ = fmt.Fprintf(cmd.OutOrStdout(), "Remove-Item Env:%s -ErrorAction SilentlyContinue\n", logger.EnvLogEnabled)
-		_, _ = fmt.Fprintf(cmd.OutOrStdout(), "Remove-Item Env:%s -ErrorAction SilentlyContinue\n", logger.EnvLogPath)
-	} else {
-		// Bash/Zsh format
-		_, _ = fmt.Fprintf(cmd.OutOrStdout(), "unset %s\n", logger.EnvLogEnabled)
-		_, _ = fmt.Fprintf(cmd.OutOrStdout(), "unset %s\n", logger.EnvLogPath)
-	}
-
-	return nil
-}
-
 func printStatus(cmd *cobra.Command) error {
-	enabled := os.Getenv(logger.EnvLogEnabled)
-	logPath := os.Getenv(logger.EnvLogPath)
+	logPath := flags.GetFeatureData("logger")
 
-	if enabled == "" && logPath == "" {
+	if logPath == "" {
 		_, _ = fmt.Fprintln(cmd.OutOrStdout(), "Logging: disabled (not configured)")
 		return nil
 	}
 
-	_, _ = fmt.Fprintf(cmd.OutOrStdout(), "Logging: %s\n", enabledStr(enabled))
-	_, _ = fmt.Fprintf(cmd.OutOrStdout(), "Log path: %s\n", valueOrNone(logPath))
+	_, _ = fmt.Fprintf(cmd.OutOrStdout(), "Logging: Enabled\n")
+	_, _ = fmt.Fprintf(cmd.OutOrStdout(), "Log path: %s\n", logPath)
 
 	return nil
-}
-
-func enabledStr(val string) string {
-	if val == "true" || val == "1" || val == "yes" {
-		return "enabled"
-	}
-
-	return "disabled"
-}
-
-func valueOrNone(val string) string {
-	if val == "" {
-		return "(not set)"
-	}
-
-	return val
 }
 
 func init() {

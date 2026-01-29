@@ -15,12 +15,15 @@ const (
 )
 
 var (
-	appDir    string
-	initOnce  sync.Once
-	errInit   error
-	exportMu  sync.Once
-	cacheMu   sync.RWMutex
-	flagCache map[string]bool
+	appDir          string
+	initOnce        sync.Once
+	errInit         error
+	exportMu        sync.Once
+	cacheMu         sync.RWMutex
+	flagCache       map[string]bool
+	ignoredCommands = map[string]bool{
+		"logger": true, // logger command should not create log files
+	}
 )
 
 func ensureInit() error {
@@ -87,7 +90,7 @@ func LoadFeatureFlags() (map[string]bool, error) {
 	return flags, nil
 }
 
-// GetCachedFlags returns cached flags without reading from disk.
+// GetCachedFlags returns cached flags without reading from the disk.
 // Returns nil if the cache is not populated. Call LoadFeatureFlags first.
 func GetCachedFlags() map[string]bool {
 	cacheMu.RLock()
@@ -123,7 +126,7 @@ func exportFlagsToEnv() error {
 	var errs []string
 
 	for feature, enabled := range flags {
-		envKey := prefix + strings.ToUpper(feature)
+		envKey := fmt.Sprintf("%s%s", prefix, strings.ToUpper(feature))
 
 		value := "0"
 		if enabled {
@@ -187,17 +190,26 @@ func IsFeatureEnabled(feature string) bool {
 	return flags[strings.ToUpper(feature)]
 }
 
-func EnableFeature(feature string) error {
+func EnableFeature(feature string, data string) error {
 	feature = strings.ToUpper(feature)
 
-	disabled := filepath.Join(appDir, fmt.Sprintf("%s%s_DISABLED", prefix, feature))
-	enabled := filepath.Join(appDir, fmt.Sprintf("%s%s_ENABLED", prefix, feature))
+	disabled := filepath.Join(appDir, fixDisableName(feature))
+	enabled := filepath.Join(appDir, fixEnableName(feature))
 
 	// si no existe ninguno, creamos ENABLED
 	if _, err := os.Stat(disabled); os.IsNotExist(err) {
 		f, err := os.Create(enabled)
 		if err != nil {
 			return err
+		}
+
+		if data != "" {
+			if _, err = f.WriteString(data); err != nil {
+				if err := f.Close(); err != nil {
+					return err
+				}
+				return err
+			}
 		}
 
 		return f.Close()
@@ -209,8 +221,8 @@ func EnableFeature(feature string) error {
 func DisableFeature(feature string) error {
 	feature = strings.ToUpper(feature)
 
-	enabled := filepath.Join(appDir, fmt.Sprintf("%s%s_ENABLED", prefix, feature))
-	disabled := filepath.Join(appDir, fmt.Sprintf("%s%s_DISABLED", prefix, feature))
+	enabled := filepath.Join(appDir, fixEnableName(feature))
+	disabled := filepath.Join(appDir, fixDisableName(feature))
 
 	if _, err := os.Stat(enabled); os.IsNotExist(err) {
 		f, err := os.Create(disabled)
@@ -222,4 +234,39 @@ func DisableFeature(feature string) error {
 	}
 
 	return os.Rename(enabled, disabled)
+}
+
+func GetFeatureData(feature string) string {
+	enabled := filepath.Join(appDir, fixEnableName(feature))
+
+	if _, err := os.Stat(enabled); os.IsNotExist(err) {
+		return ""
+	}
+
+	out, err := os.ReadFile(enabled)
+	if err != nil {
+		return ""
+	}
+
+	return strings.TrimSuffix(strings.TrimPrefix(string(out), "\n"), "\n")
+}
+
+func fixEnableName(name string) string {
+	return fmt.Sprintf("%s%s_ENABLED", prefix, strings.ToUpper(name))
+}
+
+func fixDisableName(name string) string {
+	return fmt.Sprintf("%s%s_DISABLED", prefix, strings.ToUpper(name))
+}
+
+// IgnoreCommand adds a command to the ignore list for logging.
+// Commands in this list will not trigger log file creation.
+func IgnoreCommand(command string) error {
+	ignoredCommands[strings.ToLower(command)] = true
+	return nil
+}
+
+// ShouldIgnoreCommand returns true if the command should skip logging.
+func ShouldIgnoreCommand(command string) bool {
+	return ignoredCommands[strings.ToLower(command)]
 }
