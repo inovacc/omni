@@ -40,6 +40,7 @@ Examples:
 		opts.Gzip, _ = cmd.Flags().GetBool("gzip")
 		opts.Directory, _ = cmd.Flags().GetString("directory")
 		opts.StripComponents, _ = cmd.Flags().GetInt("strip-components")
+		opts.JSON, _ = cmd.Flags().GetBool("json")
 
 		return archive.RunTar(os.Stdout, args, opts)
 	},
@@ -56,4 +57,5 @@ func init() {
 	tarCmd.Flags().BoolP("gzip", "z", false, "filter through gzip")
 	tarCmd.Flags().StringP("directory", "C", "", "change to directory DIR")
 	tarCmd.Flags().Int("strip-components", 0, "strip N leading path components")
+	tarCmd.Flags().Bool("json", false, "output as JSON (for list mode)")
 }
