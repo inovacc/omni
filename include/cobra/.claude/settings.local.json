@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git mv:*)",
+      "Bash(go test:*)",
+      "Bash(tree:*)",
+      "Bash(go build:*)",
+      "Bash(go tool cover:*)",
+      "Bash(task lint:*)"
+    ]
+  }
+}
