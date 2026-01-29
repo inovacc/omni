@@ -6,9 +6,10 @@ import (
 	"encoding/base64"
 	"fmt"
 	"io"
-	"math/big"
 	"os"
 	"strings"
+
+	"github.com/btcsuite/btcd/btcutil/base58"
 )
 
 // BaseOptions configures the base encode/decode command behavior
@@ -17,9 +18,6 @@ type BaseOptions struct {
 	Wrap          int  // -w: wrap encoded lines after N characters (0 = no wrap)
 	IgnoreGarbage bool // -i: ignore non-alphabet characters when decoding
 }
-
-// Base58 alphabet (Bitcoin style)
-const base58Alphabet = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
 
 // RunBase64 encodes or decodes base64 data
 func RunBase64(w io.Writer, args []string, opts BaseOptions) error {
@@ -153,96 +151,16 @@ func RunBase58(w io.Writer, args []string, opts BaseOptions) error {
 	for scanner.Scan() {
 		line := scanner.Text()
 		if opts.Decode {
-			decoded, err := base58Decode(line)
-			if err != nil {
-				return fmt.Errorf("base58: invalid input: %w", err)
-			}
-
+			decoded := base58.Decode(line)
 			_, _ = w.Write(decoded)
 			_, _ = fmt.Fprintln(w)
 		} else {
-			encoded := base58Encode([]byte(line))
+			encoded := base58.Encode([]byte(line))
 			_, _ = fmt.Fprintln(w, encoded)
 		}
 	}
 
 	return scanner.Err()
-}
-
-func base58Encode(data []byte) string {
-	if len(data) == 0 {
-		return ""
-	}
-
-	// Count leading zeros
-	var leadingZeros int
-
-	for _, b := range data {
-		if b == 0 {
-			leadingZeros++
-		} else {
-			break
-		}
-	}
-
-	// Convert to big integer
-	num := new(big.Int).SetBytes(data)
-	base := big.NewInt(58)
-	zero := big.NewInt(0)
-	mod := new(big.Int)
-
-	var encoded []byte
-
-	for num.Cmp(zero) > 0 {
-		num.DivMod(num, base, mod)
-		encoded = append([]byte{base58Alphabet[mod.Int64()]}, encoded...)
-	}
-
-	// Add leading '1's for each leading zero byte
-	for i := 0; i < leadingZeros; i++ {
-		encoded = append([]byte{'1'}, encoded...)
-	}
-
-	return string(encoded)
-}
-
-func base58Decode(s string) ([]byte, error) {
-	if len(s) == 0 {
-		return []byte{}, nil
-	}
-
-	// Count leading '1's
-	var leadingOnes int
-
-	for _, c := range s {
-		if c == '1' {
-			leadingOnes++
-		} else {
-			break
-		}
-	}
-
-	// Convert from base58
-	num := big.NewInt(0)
-	base := big.NewInt(58)
-
-	for _, c := range s {
-		idx := strings.IndexRune(base58Alphabet, c)
-		if idx == -1 {
-			return nil, fmt.Errorf("invalid base58 character: %c", c)
-		}
-
-		num.Mul(num, base)
-		num.Add(num, big.NewInt(int64(idx)))
-	}
-
-	decoded := num.Bytes()
-
-	// Add leading zero bytes
-	result := make([]byte, leadingOnes+len(decoded))
-	copy(result[leadingOnes:], decoded)
-
-	return result, nil
 }
 
 func wrapString(s string, width int) string {

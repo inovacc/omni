@@ -994,6 +994,146 @@ Reference: https://github.com/sigstore/cosign
 
 ---
 
+## Phase 9 – Database & Code Generation Tools
+
+Database management CLIs and code scaffolding utilities.
+
+### Database Tools
+
+| Command | Description | Priority | Status |
+|---------|-------------|----------|--------|
+| `bbolt info` | Display database page size | P0 | ✅ Done |
+| `bbolt stats` | Show database statistics | P0 | ✅ Done |
+| `bbolt buckets` | List all buckets | P0 | ✅ Done |
+| `bbolt keys` | List keys in bucket | P0 | ✅ Done |
+| `bbolt get` | Get value for key | P0 | ✅ Done |
+| `bbolt put` | Store key-value pair | P0 | ✅ Done |
+| `bbolt delete` | Delete key | P0 | ✅ Done |
+| `bbolt dump` | Dump bucket contents | P0 | ✅ Done |
+| `bbolt compact` | Compact database | P0 | ✅ Done |
+| `bbolt check` | Verify integrity | P0 | ✅ Done |
+| `bbolt pages` | List database pages | P1 | ✅ Done |
+| `bbolt page` | Hex dump of page | P1 | ✅ Done |
+| `bbolt create-bucket` | Create new bucket | P0 | ✅ Done |
+| `bbolt delete-bucket` | Delete bucket | P0 | ✅ Done |
+| `sqlite stats` | Show database statistics | P0 | ✅ Done |
+| `sqlite tables` | List all tables | P0 | ✅ Done |
+| `sqlite schema` | Show table schema | P0 | ✅ Done |
+| `sqlite columns` | Show table columns | P0 | ✅ Done |
+| `sqlite indexes` | List all indexes | P0 | ✅ Done |
+| `sqlite query` | Execute SQL query | P0 | ✅ Done |
+| `sqlite vacuum` | Optimize database | P0 | ✅ Done |
+| `sqlite check` | Verify integrity | P0 | ✅ Done |
+| `sqlite dump` | Export as SQL | P0 | ✅ Done |
+| `sqlite import` | Import SQL file | P0 | ✅ Done |
+
+### BoltDB CLI Examples
+
+```bash
+omni bbolt stats mydb.bolt
+omni bbolt buckets mydb.bolt
+omni bbolt keys mydb.bolt users
+omni bbolt get mydb.bolt users user1
+omni bbolt put mydb.bolt config version 1.0.0
+omni bbolt compact mydb.bolt mydb-compact.bolt
+```
+
+### SQLite CLI Examples
+
+```bash
+omni sqlite stats mydb.sqlite
+omni sqlite tables mydb.sqlite
+omni sqlite query mydb.sqlite "SELECT * FROM users"
+omni sqlite dump mydb.sqlite > backup.sql
+omni sqlite import mydb.sqlite backup.sql
+```
+
+### Code Generation Tools
+
+| Command | Description | Priority | Status |
+|---------|-------------|----------|--------|
+| `generate cobra init` | Generate Cobra CLI scaffold | P0 | ✅ Done |
+| `generate cobra add` | Add new command to Cobra app | P0 | ✅ Done |
+| `generate handler` | Generate HTTP handler boilerplate | P1 | |
+| `generate grpc` | Generate gRPC service scaffold | P1 | |
+| `generate repository` | Generate repository pattern code | P1 | |
+| `generate test` | Generate test file scaffold | P1 | |
+| `generate mock` | Generate mock implementations | P2 | |
+
+### Generator CLI Examples
+
+```bash
+# Generate new Cobra CLI application
+omni generate cobra init myapp --module github.com/user/myapp
+
+# Add command to existing Cobra app
+omni generate cobra add serve --parent root
+omni generate cobra add user --parent root
+omni generate cobra add list --parent user
+
+# Generate with options
+omni generate cobra init myapp --module github.com/user/myapp --viper --license MIT
+
+# Generate handler with test
+omni generate handler --name UserHandler --path ./handlers
+omni generate test ./handlers/user.go
+```
+
+### Cobra Generator Features
+
+- [x] Project initialization with go.mod
+- [ ] Command scaffolding with parent/child relationships
+- [ ] Viper integration for configuration
+- [ ] Persistent and local flags setup
+- [ ] License file generation (MIT, Apache-2.0, BSD-3)
+- [ ] README generation with usage examples
+- [ ] Makefile / Taskfile generation
+- [ ] GitHub Actions CI workflow
+- [ ] goreleaser configuration
+
+### Generator Template System
+
+```go
+// internal/cli/generate/template.go
+type CobraAppConfig struct {
+    ModuleName  string   // github.com/user/myapp
+    AppName     string   // myapp
+    Description string   // App description
+    Author      string   // Author name
+    License     string   // MIT, Apache-2.0, BSD-3
+    UseViper    bool     // Include viper for config
+    Commands    []string // Initial commands to generate
+}
+
+func GenerateCobraApp(dir string, cfg CobraAppConfig) error
+func AddCommand(dir string, name, parent string) error
+```
+
+### Generated Project Structure
+
+```
+myapp/
+├── cmd/
+│   ├── root.go          # Root command
+│   ├── serve.go         # Generated subcommand
+│   └── version.go       # Version command
+├── internal/
+│   └── config/
+│       └── config.go    # Viper configuration (optional)
+├── main.go              # Entry point
+├── go.mod               # Go module
+├── go.sum
+├── Taskfile.yml         # Task runner
+├── Makefile             # Make targets
+├── README.md            # Documentation
+├── LICENSE              # License file
+└── .github/
+    └── workflows/
+        └── ci.yml       # GitHub Actions
+```
+
+---
+
 ## Go stdlib Equivalents Reference
 
 | Linux Command | Go stdlib |

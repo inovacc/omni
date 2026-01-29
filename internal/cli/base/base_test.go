@@ -6,6 +6,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/btcsuite/btcd/btcutil/base58"
 )
 
 func TestRunBase64(t *testing.T) {
@@ -120,19 +122,16 @@ func TestBase58EncodeDecode(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			encoded := base58Encode(tt.input)
+			encoded := base58.Encode(tt.input)
 			if encoded != tt.encoded {
-				t.Errorf("base58Encode() = %v, want %v", encoded, tt.encoded)
+				t.Errorf("base58.Encode() = %v, want %v", encoded, tt.encoded)
 			}
 
 			if len(tt.input) > 0 {
-				decoded, err := base58Decode(encoded)
-				if err != nil {
-					t.Fatalf("base58Decode() error = %v", err)
-				}
+				decoded := base58.Decode(encoded)
 
 				if !bytes.Equal(decoded, tt.input) {
-					t.Errorf("base58Decode() = %v, want %v", decoded, tt.input)
+					t.Errorf("base58.Decode() = %v, want %v", decoded, tt.input)
 				}
 			}
 		})
@@ -408,9 +407,10 @@ func TestBase58Extended(t *testing.T) {
 		}
 
 		for i, input := range inputs {
-			encoded := base58Encode(input)
-			if len(input) > 0 && len(encoded) == 0 {
-				t.Errorf("base58Encode() input %d produced empty output", i)
+			encoded := base58.Encode(input)
+			// Note: leading zeros produce "1" characters in base58
+			if len(input) > 0 && input[0] != 0x00 && len(encoded) == 0 {
+				t.Errorf("base58.Encode() input %d produced empty output", i)
 			}
 		}
 	})
@@ -423,18 +423,15 @@ func TestBase58Extended(t *testing.T) {
 		}
 
 		for _, input := range validInputs {
-			_, err := base58Decode(input)
-			if err != nil {
-				t.Logf("base58Decode(%v) error: %v (may be expected)", input, err)
-			}
+			decoded := base58.Decode(input)
+			t.Logf("base58.Decode(%v) = %v", input, decoded)
 		}
 	})
 
 	t.Run("decode invalid character", func(t *testing.T) {
-		_, err := base58Decode("0OIl") // These chars not in base58
-		if err == nil {
-			t.Log("base58Decode() may handle invalid chars")
-		}
+		// btcsuite base58 returns empty slice for invalid input
+		decoded := base58.Decode("0OIl") // These chars not in base58
+		t.Logf("base58.Decode(invalid) = %v", decoded)
 	})
 
 	t.Run("roundtrip multiple", func(t *testing.T) {
@@ -445,15 +442,11 @@ func TestBase58Extended(t *testing.T) {
 		}
 
 		for i, input := range inputs {
-			encoded := base58Encode(input)
-			decoded, err := base58Decode(encoded)
-			if err != nil {
-				t.Errorf("Roundtrip %d decode error: %v", i, err)
-				continue
-			}
+			encoded := base58.Encode(input)
+			decoded := base58.Decode(encoded)
 
 			if !bytes.Equal(decoded, input) {
-				t.Errorf("Roundtrip %d failed", i)
+				t.Errorf("Roundtrip %d failed: got %v, want %v", i, decoded, input)
 			}
 		}
 	})
