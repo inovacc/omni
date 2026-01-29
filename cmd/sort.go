@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"os"
-
 	"github.com/inovacc/omni/internal/cli/text"
 	"github.com/spf13/cobra"
 )
@@ -30,7 +28,7 @@ With no FILE, or when FILE is -, read standard input.`,
 		opts.Output, _ = cmd.Flags().GetString("output")
 		opts.JSON, _ = cmd.Flags().GetBool("json")
 
-		return text.RunSort(os.Stdout, args, opts)
+		return text.RunSort(cmd.OutOrStdout(), cmd.InOrStdin(), args, opts)
 	},
 }
 

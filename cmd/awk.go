@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"os"
-
 	"github.com/inovacc/omni/internal/cli/awk"
 	"github.com/spf13/cobra"
 )
@@ -48,7 +46,7 @@ Examples:
 			}
 		}
 
-		return awk.RunAwk(os.Stdout, args, opts)
+		return awk.RunAwk(cmd.OutOrStdout(), cmd.InOrStdin(), args, opts)
 	},
 }
 

@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"os"
 	"slices"
 	"strings"
 
@@ -325,7 +324,7 @@ func parseCommandLine(cmdLine string) []string {
 	return parts
 }
 
-// executeCommand executes a single omni command using temp files for stdin
+// executeCommand executes a single omni command using cmd.SetIn for stdin
 func executeCommand(registry *CommandRegistry, cmdParts []string, stdin io.Reader, stdout io.Writer) error {
 	if registry == nil || registry.RootCmd == nil {
 		return fmt.Errorf("command registry not initialized")
@@ -342,51 +341,11 @@ func executeCommand(registry *CommandRegistry, cmdParts []string, stdin io.Reade
 		return fmt.Errorf("unknown command: %s", cmdParts[0])
 	}
 
-	// Read stdin content if available
-	var stdinContent []byte
-
+	// Set up input/output using Cobra's built-in methods
+	// Commands now use cmd.InOrStdin() which will return this reader
 	if stdin != nil {
-		stdinContent, _ = io.ReadAll(stdin)
+		cmd.SetIn(stdin)
 	}
-
-	// Check if command already has a file argument
-	hasInputFile := false
-
-	for _, arg := range args {
-		if !strings.HasPrefix(arg, "-") && arg != "" {
-			hasInputFile = true
-
-			break
-		}
-	}
-
-	// If we have stdin content but no file argument, write to temp file
-	var tmpFile *os.File
-
-	if len(stdinContent) > 0 && !hasInputFile {
-		var err error
-
-		tmpFile, err = os.CreateTemp("", "omni-pipe-*")
-		if err != nil {
-			return fmt.Errorf("creating temp file: %w", err)
-		}
-
-		defer func() {
-			_ = tmpFile.Close()
-			_ = os.Remove(tmpFile.Name())
-		}()
-
-		if _, err := tmpFile.Write(stdinContent); err != nil {
-			return fmt.Errorf("writing temp file: %w", err)
-		}
-
-		_ = tmpFile.Close()
-
-		// Add temp file as first argument
-		args = append([]string{tmpFile.Name()}, args...)
-	}
-
-	// Set up output
 	cmd.SetOut(stdout)
 	cmd.SetErr(stdout)
 

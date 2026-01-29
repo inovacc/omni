@@ -5,8 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"os"
 	"strings"
+
+	"github.com/inovacc/omni/internal/cli/input"
 )
 
 // NlOptions configures the nl command behavior
@@ -36,7 +37,8 @@ type NlResult struct {
 }
 
 // RunNl numbers lines of files
-func RunNl(w io.Writer, args []string, opts NlOptions) error {
+// r is the default input reader (used when args is empty or contains "-")
+func RunNl(w io.Writer, r io.Reader, args []string, opts NlOptions) error {
 	// Set defaults
 	if opts.BodyNumbering == "" {
 		opts.BodyNumbering = "t" // number non-empty lines by default
@@ -70,34 +72,18 @@ func RunNl(w io.Writer, args []string, opts NlOptions) error {
 		opts.Increment = 1
 	}
 
-	files := args
-	if len(files) == 0 {
-		files = []string{"-"}
+	sources, err := input.Open(args, r)
+	if err != nil {
+		return fmt.Errorf("nl: %w", err)
 	}
+	defer input.CloseAll(sources)
 
 	lineNum := opts.StartingNumber
 
 	var jsonLines []NlLine
 
-	for _, file := range files {
-		var r io.Reader
-		if file == "-" {
-			r = os.Stdin
-		} else {
-			f, err := os.Open(file)
-			if err != nil {
-				_, _ = fmt.Fprintf(os.Stderr, "nl: %s: %v\n", file, err)
-				continue
-			}
-
-			defer func() {
-				_ = f.Close()
-			}()
-
-			r = f
-		}
-
-		scanner := bufio.NewScanner(r)
+	for _, src := range sources {
+		scanner := bufio.NewScanner(src.Reader)
 		for scanner.Scan() {
 			line := scanner.Text()
 

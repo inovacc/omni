@@ -24,7 +24,7 @@ func TestRunNl(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunNl(&buf, []string{file}, NlOptions{})
+		err := RunNl(&buf, nil, []string{file}, NlOptions{})
 		if err != nil {
 			t.Fatalf("RunNl() error = %v", err)
 		}
@@ -43,7 +43,7 @@ func TestRunNl(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		_ = RunNl(&buf, []string{file}, NlOptions{})
+		_ = RunNl(&buf, nil, []string{file}, NlOptions{})
 
 		lines := strings.Split(strings.TrimSpace(buf.String()), "\n")
 		// Empty line should not be numbered
@@ -60,7 +60,7 @@ func TestRunNl(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		_ = RunNl(&buf, []string{file}, NlOptions{BodyNumbering: "a"})
+		_ = RunNl(&buf, nil, []string{file}, NlOptions{BodyNumbering: "a"})
 
 		output := buf.String()
 		lines := strings.Split(strings.TrimSpace(output), "\n")
@@ -78,7 +78,7 @@ func TestRunNl(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		_ = RunNl(&buf, []string{file}, NlOptions{BodyNumbering: "n"})
+		_ = RunNl(&buf, nil, []string{file}, NlOptions{BodyNumbering: "n"})
 
 		output := buf.String()
 		// Lines should not have numbers (just spaces)
@@ -95,7 +95,7 @@ func TestRunNl(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		_ = RunNl(&buf, []string{file}, NlOptions{NumberWidth: 3})
+		_ = RunNl(&buf, nil, []string{file}, NlOptions{NumberWidth: 3})
 
 		output := buf.String()
 		// Number should be 3 characters wide
@@ -112,7 +112,7 @@ func TestRunNl(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		_ = RunNl(&buf, []string{file}, NlOptions{NumberSep: ": "})
+		_ = RunNl(&buf, nil, []string{file}, NlOptions{NumberSep: ": "})
 
 		output := buf.String()
 		if !strings.Contains(output, ": ") {
@@ -128,7 +128,7 @@ func TestRunNl(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		_ = RunNl(&buf, []string{file}, NlOptions{StartingNumber: 10})
+		_ = RunNl(&buf, nil, []string{file}, NlOptions{StartingNumber: 10})
 
 		output := buf.String()
 		if !strings.Contains(output, "10") {
@@ -144,7 +144,7 @@ func TestRunNl(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		_ = RunNl(&buf, []string{file}, NlOptions{Increment: 5, StartingNumber: 1})
+		_ = RunNl(&buf, nil, []string{file}, NlOptions{Increment: 5, StartingNumber: 1})
 
 		output := buf.String()
 		if !strings.Contains(output, "1") || !strings.Contains(output, "6") || !strings.Contains(output, "11") {
@@ -160,7 +160,7 @@ func TestRunNl(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		_ = RunNl(&buf, []string{file}, NlOptions{NumberFormat: "ln"})
+		_ = RunNl(&buf, nil, []string{file}, NlOptions{NumberFormat: "ln"})
 
 		output := buf.String()
 		// Left justified: number followed by spaces
@@ -177,7 +177,7 @@ func TestRunNl(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		_ = RunNl(&buf, []string{file}, NlOptions{NumberFormat: "rz"})
+		_ = RunNl(&buf, nil, []string{file}, NlOptions{NumberFormat: "rz"})
 
 		output := buf.String()
 		if !strings.Contains(output, "000001") {

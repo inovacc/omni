@@ -5,8 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"os"
 	"strings"
+
+	"github.com/inovacc/omni/internal/cli/input"
 )
 
 // CatOptions configures the cat command behavior
@@ -27,39 +28,26 @@ type CatLine struct {
 }
 
 // RunCat executes the cat command with the given options
-func RunCat(w io.Writer, args []string, opts CatOptions) error {
-	if len(args) == 0 {
-		args = []string{"-"}
+// r is the default input reader (used when args is empty or contains "-")
+func RunCat(w io.Writer, r io.Reader, args []string, opts CatOptions) error {
+	sources, err := input.Open(args, r)
+	if err != nil {
+		return fmt.Errorf("cat: %w", err)
 	}
+	defer input.CloseAll(sources)
 
 	var allLines []CatLine
 
-	for _, path := range args {
-		var r io.Reader
-		if path == "-" {
-			r = os.Stdin
-		} else {
-			f, err := os.Open(path)
-			if err != nil {
-				return fmt.Errorf("cat: %s: %w", path, err)
-			}
-
-			r = f
-
-			defer func() {
-				_ = f.Close()
-			}()
-		}
-
+	for _, src := range sources {
 		if opts.JSON {
-			lines, err := catReaderJSON(r, opts)
+			lines, err := catReaderJSON(src.Reader, opts)
 			if err != nil {
 				return err
 			}
 
 			allLines = append(allLines, lines...)
 		} else {
-			if err := catReader(w, r, path, opts); err != nil {
+			if err := catReader(w, src.Reader, src.Name, opts); err != nil {
 				return err
 			}
 		}
@@ -199,7 +187,7 @@ func Cat(w io.Writer, r io.Reader) error {
 
 // CatFiles concatenates multiple files to writer (simple version)
 func CatFiles(w io.Writer, paths []string) error {
-	return RunCat(w, paths, CatOptions{})
+	return RunCat(w, nil, paths, CatOptions{})
 }
 
 // ReadFrom reads all lines from a reader

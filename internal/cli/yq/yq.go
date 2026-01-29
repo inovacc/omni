@@ -22,7 +22,8 @@ type YqOptions struct {
 }
 
 // RunYq executes yq-like YAML processing
-func RunYq(w io.Writer, args []string, opts YqOptions) error {
+// r is the default input reader (used when no files are specified)
+func RunYq(w io.Writer, r io.Reader, args []string, opts YqOptions) error {
 	filter := "."
 
 	var files []string
@@ -41,8 +42,8 @@ func RunYq(w io.Writer, args []string, opts YqOptions) error {
 	if opts.NullInput {
 		inputs = []any{nil}
 	} else if len(files) == 0 {
-		// Read from stdin
-		data, err := io.ReadAll(os.Stdin)
+		// Read from provided reader (typically stdin)
+		data, err := io.ReadAll(r)
 		if err != nil {
 			return fmt.Errorf("yq: %w", err)
 		}
@@ -55,7 +56,14 @@ func RunYq(w io.Writer, args []string, opts YqOptions) error {
 		inputs = docs
 	} else {
 		for _, file := range files {
-			data, err := os.ReadFile(file)
+			var data []byte
+			var err error
+
+			if file == "-" {
+				data, err = io.ReadAll(r)
+			} else {
+				data, err = os.ReadFile(file)
+			}
 			if err != nil {
 				return fmt.Errorf("yq: %w", err)
 			}

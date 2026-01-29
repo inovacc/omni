@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"os"
-
 	"github.com/inovacc/omni/internal/cli/cut"
 	"github.com/spf13/cobra"
 )
@@ -42,7 +40,7 @@ range, or many ranges separated by commas.  Each range is one of:
 		opts.Complement, _ = cmd.Flags().GetBool("complement")
 		opts.JSON, _ = cmd.Flags().GetBool("json")
 
-		return cut.RunCut(os.Stdout, args, opts)
+		return cut.RunCut(cmd.OutOrStdout(), cmd.InOrStdin(), args, opts)
 	},
 }
 

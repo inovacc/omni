@@ -23,7 +23,7 @@ func TestRunCut(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunCut(&buf, []string{file}, CutOptions{Fields: "2"})
+		err := RunCut(&buf, nil, []string{file}, CutOptions{Fields: "2"})
 		if err != nil {
 			t.Fatalf("RunCut() error = %v", err)
 		}
@@ -41,7 +41,7 @@ func TestRunCut(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunCut(&buf, []string{file}, CutOptions{Fields: "1,3", Delimiter: ","})
+		err := RunCut(&buf, nil, []string{file}, CutOptions{Fields: "1,3", Delimiter: ","})
 		if err != nil {
 			t.Fatalf("RunCut() error = %v", err)
 		}
@@ -59,7 +59,7 @@ func TestRunCut(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunCut(&buf, []string{file}, CutOptions{Bytes: "1-5"})
+		err := RunCut(&buf, nil, []string{file}, CutOptions{Bytes: "1-5"})
 		if err != nil {
 			t.Fatalf("RunCut() error = %v", err)
 		}
@@ -77,7 +77,7 @@ func TestRunCut(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunCut(&buf, []string{file}, CutOptions{Characters: "2,4"})
+		err := RunCut(&buf, nil, []string{file}, CutOptions{Characters: "2,4"})
 		if err != nil {
 			t.Fatalf("RunCut() error = %v", err)
 		}
@@ -95,7 +95,7 @@ func TestRunCut(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunCut(&buf, []string{file}, CutOptions{Fields: "2-4", Delimiter: ","})
+		err := RunCut(&buf, nil, []string{file}, CutOptions{Fields: "2-4", Delimiter: ","})
 		if err != nil {
 			t.Fatalf("RunCut() error = %v", err)
 		}
@@ -113,7 +113,7 @@ func TestRunCut(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunCut(&buf, []string{file}, CutOptions{Fields: "2", Delimiter: ",", Complement: true})
+		err := RunCut(&buf, nil, []string{file}, CutOptions{Fields: "2", Delimiter: ",", Complement: true})
 		if err != nil {
 			t.Fatalf("RunCut() error = %v", err)
 		}
@@ -131,7 +131,7 @@ func TestRunCut(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunCut(&buf, []string{file}, CutOptions{Fields: "2", Delimiter: ",", OnlyDelim: true})
+		err := RunCut(&buf, nil, []string{file}, CutOptions{Fields: "2", Delimiter: ",", OnlyDelim: true})
 		if err != nil {
 			t.Fatalf("RunCut() error = %v", err)
 		}
@@ -149,7 +149,7 @@ func TestRunCut(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunCut(&buf, []string{file}, CutOptions{Fields: "1-3", Delimiter: ",", OutputDelim: ":"})
+		err := RunCut(&buf, nil, []string{file}, CutOptions{Fields: "1-3", Delimiter: ",", OutputDelim: ":"})
 		if err != nil {
 			t.Fatalf("RunCut() error = %v", err)
 		}
@@ -162,7 +162,7 @@ func TestRunCut(t *testing.T) {
 	t.Run("no selection specified", func(t *testing.T) {
 		var buf bytes.Buffer
 
-		err := RunCut(&buf, []string{}, CutOptions{})
+		err := RunCut(&buf, nil, []string{}, CutOptions{})
 		if err == nil {
 			t.Error("RunCut() expected error for no selection")
 		}
@@ -171,7 +171,7 @@ func TestRunCut(t *testing.T) {
 	t.Run("multiple selection types", func(t *testing.T) {
 		var buf bytes.Buffer
 
-		err := RunCut(&buf, []string{}, CutOptions{Fields: "1", Bytes: "1"})
+		err := RunCut(&buf, nil, []string{}, CutOptions{Fields: "1", Bytes: "1"})
 		if err == nil {
 			t.Error("RunCut() expected error for multiple selection types")
 		}
@@ -180,7 +180,7 @@ func TestRunCut(t *testing.T) {
 	t.Run("delimiter too long", func(t *testing.T) {
 		var buf bytes.Buffer
 
-		err := RunCut(&buf, []string{}, CutOptions{Fields: "1", Delimiter: "ab"})
+		err := RunCut(&buf, nil, []string{}, CutOptions{Fields: "1", Delimiter: "ab"})
 		if err == nil {
 			t.Error("RunCut() expected error for delimiter > 1 char")
 		}
@@ -190,7 +190,7 @@ func TestRunCut(t *testing.T) {
 		var buf bytes.Buffer
 
 		// Implementation prints to stderr but continues
-		_ = RunCut(&buf, []string{"/nonexistent/file.txt"}, CutOptions{Fields: "1"})
+		_ = RunCut(&buf, nil, []string{"/nonexistent/file.txt"}, CutOptions{Fields: "1"})
 	})
 }
 

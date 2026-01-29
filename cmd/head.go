@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"os"
-
 	"github.com/inovacc/omni/internal/cli/head"
 	"github.com/spf13/cobra"
 )
@@ -23,7 +21,7 @@ With no FILE, or when FILE is -, read standard input.`,
 		opts.Verbose, _ = cmd.Flags().GetBool("verbose")
 		opts.JSON, _ = cmd.Flags().GetBool("json")
 
-		return head.RunHead(os.Stdout, args, opts)
+		return head.RunHead(cmd.OutOrStdout(), cmd.InOrStdin(), args, opts)
 	},
 }
 
