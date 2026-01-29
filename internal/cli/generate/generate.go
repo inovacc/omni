@@ -9,6 +9,8 @@ import (
 	"strings"
 	"text/template"
 	"time"
+
+	cobratpl "github.com/inovacc/omni/internal/cli/generate/templates/cobra"
 )
 
 // Options configures the generate command behavior
@@ -24,6 +26,8 @@ type CobraInitOptions struct {
 	Author      string // Author name
 	License     string // License type (MIT, Apache-2.0, BSD-3)
 	UseViper    bool   // Include viper for configuration
+	UseService  bool   // Include service pattern with inovacc/config
+	Full        bool   // Full project with goreleaser, workflows, etc.
 }
 
 // CobraAddOptions configures adding a new command
@@ -65,14 +69,36 @@ func RunCobraInit(w io.Writer, dir string, opts CobraInitOptions, genOpts Option
 		opts.Description = fmt.Sprintf("%s is a CLI application", opts.AppName)
 	}
 
+	// Create template data
+	tplData := cobratpl.TemplateData{
+		Module:      opts.Module,
+		AppName:     opts.AppName,
+		Description: opts.Description,
+		Author:      opts.Author,
+		License:     opts.License,
+		UseViper:    opts.UseViper,
+		UseService:  opts.UseService,
+		Full:        opts.Full,
+		Year:        time.Now().Year(),
+	}
+
 	// Create directory structure
 	dirs := []string{
 		filepath.Join(dir, "cmd"),
 		filepath.Join(dir, "internal"),
 	}
 
-	if opts.UseViper {
+	if opts.UseViper && !opts.UseService {
 		dirs = append(dirs, filepath.Join(dir, "internal", "config"))
+	}
+
+	if opts.UseService {
+		dirs = append(dirs, filepath.Join(dir, "internal", "parameters"))
+		dirs = append(dirs, filepath.Join(dir, "internal", "service"))
+	}
+
+	if opts.Full {
+		dirs = append(dirs, filepath.Join(dir, ".github", "workflows"))
 	}
 
 	for _, d := range dirs {
@@ -85,39 +111,56 @@ func RunCobraInit(w io.Writer, dir string, opts CobraInitOptions, genOpts Option
 
 	// Generate main.go
 	mainPath := filepath.Join(dir, "main.go")
-	if err := writeTemplate(mainPath, mainTemplate, opts); err != nil {
+	if err := writeTemplate(mainPath, cobratpl.MainTemplate, tplData); err != nil {
 		return fmt.Errorf("generate: failed to create main.go: %w", err)
 	}
 	filesCreated = append(filesCreated, "main.go")
 
 	// Generate cmd/root.go
 	rootPath := filepath.Join(dir, "cmd", "root.go")
-	if err := writeTemplate(rootPath, rootTemplate, opts); err != nil {
+	if err := writeTemplate(rootPath, cobratpl.RootTemplate, tplData); err != nil {
 		return fmt.Errorf("generate: failed to create cmd/root.go: %w", err)
 	}
 	filesCreated = append(filesCreated, "cmd/root.go")
 
 	// Generate cmd/version.go
 	versionPath := filepath.Join(dir, "cmd", "version.go")
-	if err := writeTemplate(versionPath, versionTemplate, opts); err != nil {
+	if err := writeTemplate(versionPath, cobratpl.VersionTemplate, tplData); err != nil {
 		return fmt.Errorf("generate: failed to create cmd/version.go: %w", err)
 	}
 	filesCreated = append(filesCreated, "cmd/version.go")
 
 	// Generate go.mod
 	goModPath := filepath.Join(dir, "go.mod")
-	if err := writeTemplate(goModPath, goModTemplate, opts); err != nil {
+	if err := writeTemplate(goModPath, cobratpl.GoModTemplate, tplData); err != nil {
 		return fmt.Errorf("generate: failed to create go.mod: %w", err)
 	}
 	filesCreated = append(filesCreated, "go.mod")
 
-	// Generate config if viper is enabled
-	if opts.UseViper {
+	// Generate config if viper is enabled (without service pattern)
+	if opts.UseViper && !opts.UseService {
 		configPath := filepath.Join(dir, "internal", "config", "config.go")
-		if err := writeTemplate(configPath, configTemplate, opts); err != nil {
+		if err := writeTemplate(configPath, cobratpl.ConfigTemplate, tplData); err != nil {
 			return fmt.Errorf("generate: failed to create config.go: %w", err)
 		}
 		filesCreated = append(filesCreated, "internal/config/config.go")
+	}
+
+	// Generate service pattern files if enabled
+	if opts.UseService {
+		// internal/parameters/config.go
+		paramsPath := filepath.Join(dir, "internal", "parameters", "config.go")
+		if err := writeTemplate(paramsPath, cobratpl.ParametersTemplate, tplData); err != nil {
+			return fmt.Errorf("generate: failed to create parameters/config.go: %w", err)
+		}
+		filesCreated = append(filesCreated, "internal/parameters/config.go")
+
+		// internal/service/service.go
+		servicePath := filepath.Join(dir, "internal", "service", "service.go")
+		if err := writeTemplate(servicePath, cobratpl.ServiceTemplate, tplData); err != nil {
+			return fmt.Errorf("generate: failed to create service/service.go: %w", err)
+		}
+		filesCreated = append(filesCreated, "internal/service/service.go")
 	}
 
 	// Generate LICENSE
@@ -131,24 +174,74 @@ func RunCobraInit(w io.Writer, dir string, opts CobraInitOptions, genOpts Option
 
 	// Generate README.md
 	readmePath := filepath.Join(dir, "README.md")
-	if err := writeTemplate(readmePath, readmeTemplate, opts); err != nil {
+	if err := writeTemplate(readmePath, cobratpl.ReadmeTemplate, tplData); err != nil {
 		return fmt.Errorf("generate: failed to create README.md: %w", err)
 	}
 	filesCreated = append(filesCreated, "README.md")
 
 	// Generate Taskfile.yml
 	taskfilePath := filepath.Join(dir, "Taskfile.yml")
-	if err := writeTemplate(taskfilePath, taskfileTemplate, opts); err != nil {
+	if err := writeTemplate(taskfilePath, cobratpl.TaskfileTemplate, tplData); err != nil {
 		return fmt.Errorf("generate: failed to create Taskfile.yml: %w", err)
 	}
 	filesCreated = append(filesCreated, "Taskfile.yml")
 
 	// Generate .gitignore
 	gitignorePath := filepath.Join(dir, ".gitignore")
-	if err := writeTemplate(gitignorePath, gitignoreTemplate, opts); err != nil {
+	if err := writeTemplate(gitignorePath, cobratpl.GitignoreTemplate, tplData); err != nil {
 		return fmt.Errorf("generate: failed to create .gitignore: %w", err)
 	}
 	filesCreated = append(filesCreated, ".gitignore")
+
+	// Generate .editorconfig
+	editorconfigPath := filepath.Join(dir, ".editorconfig")
+	if err := writeTemplate(editorconfigPath, cobratpl.EditorConfigTemplate, tplData); err != nil {
+		return fmt.Errorf("generate: failed to create .editorconfig: %w", err)
+	}
+	filesCreated = append(filesCreated, ".editorconfig")
+
+	// Generate full project files if requested
+	if opts.Full {
+		// .goreleaser.yaml
+		goreleaserPath := filepath.Join(dir, ".goreleaser.yaml")
+		if err := writeTemplate(goreleaserPath, cobratpl.GoreleaserTemplate, tplData); err != nil {
+			return fmt.Errorf("generate: failed to create .goreleaser.yaml: %w", err)
+		}
+		filesCreated = append(filesCreated, ".goreleaser.yaml")
+
+		// .golangci.yml
+		golangciPath := filepath.Join(dir, ".golangci.yml")
+		if err := writeTemplate(golangciPath, cobratpl.GolangciLintTemplate, tplData); err != nil {
+			return fmt.Errorf("generate: failed to create .golangci.yml: %w", err)
+		}
+		filesCreated = append(filesCreated, ".golangci.yml")
+
+		// tools.go
+		toolsPath := filepath.Join(dir, "tools.go")
+		if err := writeTemplate(toolsPath, cobratpl.ToolsTemplate, tplData); err != nil {
+			return fmt.Errorf("generate: failed to create tools.go: %w", err)
+		}
+		filesCreated = append(filesCreated, "tools.go")
+
+		// GitHub workflows
+		buildWorkflowPath := filepath.Join(dir, ".github", "workflows", "build.yml")
+		if err := writeTemplate(buildWorkflowPath, cobratpl.WorkflowBuildTemplate, tplData); err != nil {
+			return fmt.Errorf("generate: failed to create build.yml: %w", err)
+		}
+		filesCreated = append(filesCreated, ".github/workflows/build.yml")
+
+		testWorkflowPath := filepath.Join(dir, ".github", "workflows", "test.yml")
+		if err := writeTemplate(testWorkflowPath, cobratpl.WorkflowTestTemplate, tplData); err != nil {
+			return fmt.Errorf("generate: failed to create test.yml: %w", err)
+		}
+		filesCreated = append(filesCreated, ".github/workflows/test.yml")
+
+		releaseWorkflowPath := filepath.Join(dir, ".github", "workflows", "release.yaml")
+		if err := writeTemplate(releaseWorkflowPath, cobratpl.WorkflowReleaseTemplate, tplData); err != nil {
+			return fmt.Errorf("generate: failed to create release.yaml: %w", err)
+		}
+		filesCreated = append(filesCreated, ".github/workflows/release.yaml")
+	}
 
 	if genOpts.JSON {
 		result := InitResult{
@@ -163,6 +256,14 @@ func RunCobraInit(w io.Writer, dir string, opts CobraInitOptions, genOpts Option
 	_, _ = fmt.Fprintf(w, "Created Cobra CLI application: %s\n", opts.AppName)
 	_, _ = fmt.Fprintf(w, "Module: %s\n", opts.Module)
 	_, _ = fmt.Fprintf(w, "Path: %s\n", dir)
+	if opts.Full {
+		_, _ = fmt.Fprintln(w, "Mode: Full (includes goreleaser, linting, GitHub workflows)")
+	}
+	if opts.UseService {
+		_, _ = fmt.Fprintln(w, "Config: Service pattern (inovacc/config)")
+	} else if opts.UseViper {
+		_, _ = fmt.Fprintln(w, "Config: Viper")
+	}
 	_, _ = fmt.Fprintln(w, "\nFiles created:")
 	for _, f := range filesCreated {
 		_, _ = fmt.Fprintf(w, "  - %s\n", f)
@@ -170,7 +271,11 @@ func RunCobraInit(w io.Writer, dir string, opts CobraInitOptions, genOpts Option
 	_, _ = fmt.Fprintln(w, "\nNext steps:")
 	_, _ = fmt.Fprintf(w, "  cd %s\n", dir)
 	_, _ = fmt.Fprintln(w, "  go mod tidy")
-	_, _ = fmt.Fprintln(w, "  go build")
+	if opts.Full {
+		_, _ = fmt.Fprintln(w, "  task build")
+	} else {
+		_, _ = fmt.Fprintln(w, "  go build")
+	}
 	_, _ = fmt.Fprintf(w, "  ./%s --help\n", opts.AppName)
 
 	return nil
@@ -211,10 +316,10 @@ func RunCobraAdd(w io.Writer, dir string, opts CobraAddOptions, genOpts Options)
 		Name:        opts.Name,
 		Parent:      opts.Parent,
 		Description: opts.Description,
-		NameTitle:   strings.Title(opts.Name),
+		NameTitle:   strings.Title(opts.Name), //nolint:staticcheck
 	}
 
-	if err := writeTemplate(cmdPath, commandTemplate, data); err != nil {
+	if err := writeTemplate(cmdPath, cobratpl.CommandTemplate, data); err != nil {
 		return fmt.Errorf("generate: failed to create %s.go: %w", opts.Name, err)
 	}
 
@@ -256,11 +361,11 @@ func writeLicense(path, licenseType, author string) error {
 	var content string
 	switch strings.ToLower(licenseType) {
 	case "mit":
-		content = fmt.Sprintf(mitLicense, year, author)
+		content = fmt.Sprintf(cobratpl.MITLicense, year, author)
 	case "apache-2.0", "apache":
-		content = fmt.Sprintf(apacheLicense, year, author)
+		content = fmt.Sprintf(cobratpl.ApacheLicense, year, author)
 	case "bsd-3", "bsd":
-		content = fmt.Sprintf(bsdLicense, year, author)
+		content = fmt.Sprintf(cobratpl.BSDLicense, year, author)
 	default:
 		return fmt.Errorf("unknown license type: %s", licenseType)
 	}
@@ -268,383 +373,3 @@ func writeLicense(path, licenseType, author string) error {
 	return os.WriteFile(path, []byte(content), 0644)
 }
 
-// Templates
-
-var mainTemplate = `package main
-
-import "{{.Module}}/cmd"
-
-func main() {
-	cmd.Execute()
-}
-`
-
-var rootTemplate = `package cmd
-
-import (
-	"fmt"
-	"os"
-{{if .UseViper}}
-	"{{.Module}}/internal/config"
-
-	"github.com/spf13/viper"
-{{end}}
-	"github.com/spf13/cobra"
-)
-
-var rootCmd = &cobra.Command{
-	Use:   "{{.AppName}}",
-	Short: "{{.Description}}",
-	Long: ` + "`" + `{{.Description}}
-
-This is a CLI application built with Cobra.` + "`" + `,
-}
-
-func Execute() {
-	if err := rootCmd.Execute(); err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
-	}
-}
-
-func init() {
-{{if .UseViper}}
-	cobra.OnInitialize(initConfig)
-
-	rootCmd.PersistentFlags().StringVar(&config.CfgFile, "config", "", "config file (default is $HOME/.{{.AppName}}.yaml)")
-{{end}}
-	rootCmd.PersistentFlags().BoolP("verbose", "v", false, "verbose output")
-}
-{{if .UseViper}}
-func initConfig() {
-	config.InitConfig("{{.AppName}}")
-}
-{{end}}
-`
-
-var versionTemplate = `package cmd
-
-import (
-	"fmt"
-
-	"github.com/spf13/cobra"
-)
-
-var (
-	Version   = "dev"
-	Commit    = "none"
-	BuildDate = "unknown"
-)
-
-var versionCmd = &cobra.Command{
-	Use:   "version",
-	Short: "Print version information",
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Printf("{{.AppName}} version %s\n", Version)
-		fmt.Printf("  Commit: %s\n", Commit)
-		fmt.Printf("  Built:  %s\n", BuildDate)
-	},
-}
-
-func init() {
-	rootCmd.AddCommand(versionCmd)
-}
-`
-
-var goModTemplate = `module {{.Module}}
-
-go 1.21
-
-require github.com/spf13/cobra v1.8.0
-{{if .UseViper}}
-require github.com/spf13/viper v1.18.0
-{{end}}
-`
-
-var configTemplate = `package config
-
-import (
-	"fmt"
-	"os"
-	"path/filepath"
-
-	"github.com/spf13/viper"
-)
-
-var CfgFile string
-
-func InitConfig(appName string) {
-	if CfgFile != "" {
-		viper.SetConfigFile(CfgFile)
-	} else {
-		home, err := os.UserHomeDir()
-		if err != nil {
-			fmt.Fprintln(os.Stderr, err)
-			os.Exit(1)
-		}
-
-		viper.AddConfigPath(home)
-		viper.AddConfigPath(".")
-		viper.SetConfigType("yaml")
-		viper.SetConfigName("." + appName)
-	}
-
-	viper.AutomaticEnv()
-
-	if err := viper.ReadInConfig(); err == nil {
-		fmt.Fprintln(os.Stderr, "Using config file:", viper.ConfigFileUsed())
-	}
-}
-
-func GetString(key string) string {
-	return viper.GetString(key)
-}
-
-func GetInt(key string) int {
-	return viper.GetInt(key)
-}
-
-func GetBool(key string) bool {
-	return viper.GetBool(key)
-}
-
-func ConfigPath(appName string) string {
-	home, _ := os.UserHomeDir()
-	return filepath.Join(home, "."+appName+".yaml")
-}
-`
-
-var readmeTemplate = `# {{.AppName}}
-
-{{.Description}}
-
-## Installation
-
-` + "```" + `bash
-go install {{.Module}}@latest
-` + "```" + `
-
-## Usage
-
-` + "```" + `bash
-{{.AppName}} --help
-` + "```" + `
-
-## Commands
-
-| Command | Description |
-|---------|-------------|
-| ` + "`" + `version` + "`" + ` | Print version information |
-
-## Development
-
-` + "```" + `bash
-# Build
-go build -o {{.AppName}}
-
-# Run
-./{{.AppName}} --help
-
-# Test
-go test ./...
-` + "```" + `
-
-## License
-
-{{if .License}}{{.License}}{{else}}See LICENSE file{{end}}
-`
-
-var taskfileTemplate = `version: '3'
-
-vars:
-  APP_NAME: {{.AppName}}
-  VERSION:
-    sh: git describe --tags --always --dirty 2>/dev/null || echo "dev"
-  COMMIT:
-    sh: git rev-parse --short HEAD 2>/dev/null || echo "none"
-  BUILD_DATE:
-    sh: date -u +"%Y-%m-%dT%H:%M:%SZ"
-
-tasks:
-  default:
-    cmds:
-      - task --list
-
-  build:
-    desc: Build the application
-    cmds:
-      - go build -ldflags "-X {{.Module}}/cmd.Version=$VERSION -X {{.Module}}/cmd.Commit=$COMMIT -X {{.Module}}/cmd.BuildDate=$BUILD_DATE" -o $APP_NAME
-    vars:
-      VERSION: "{{"{{"}} .VERSION {{"}}"}}"
-      COMMIT: "{{"{{"}} .COMMIT {{"}}"}}"
-      BUILD_DATE: "{{"{{"}} .BUILD_DATE {{"}}"}}"
-      APP_NAME: "{{"{{"}} .APP_NAME {{"}}"}}"
-
-  run:
-    desc: Run the application
-    cmds:
-      - go run . $CLI_ARGS
-    vars:
-      CLI_ARGS: "{{"{{"}} .CLI_ARGS {{"}}"}}"
-
-  test:
-    desc: Run tests
-    cmds:
-      - go test -v ./...
-
-  lint:
-    desc: Run linter
-    cmds:
-      - golangci-lint run ./...
-
-  clean:
-    desc: Clean build artifacts
-    cmds:
-      - rm -f $APP_NAME
-    vars:
-      APP_NAME: "{{"{{"}} .APP_NAME {{"}}"}}"
-
-  tidy:
-    desc: Tidy go modules
-    cmds:
-      - go mod tidy
-
-  install:
-    desc: Install the application
-    cmds:
-      - go install -ldflags "-X {{.Module}}/cmd.Version=$VERSION -X {{.Module}}/cmd.Commit=$COMMIT -X {{.Module}}/cmd.BuildDate=$BUILD_DATE"
-    vars:
-      VERSION: "{{"{{"}} .VERSION {{"}}"}}"
-      COMMIT: "{{"{{"}} .COMMIT {{"}}"}}"
-      BUILD_DATE: "{{"{{"}} .BUILD_DATE {{"}}"}}"
-`
-
-var gitignoreTemplate = `# Binaries
-{{.AppName}}
-*.exe
-*.exe~
-*.dll
-*.so
-*.dylib
-
-# Test binary
-*.test
-
-# Output of go coverage
-*.out
-
-# Go workspace
-go.work
-
-# IDE
-.idea/
-.vscode/
-*.swp
-*.swo
-
-# OS
-.DS_Store
-Thumbs.db
-
-# Build
-dist/
-bin/
-`
-
-var commandTemplate = `package cmd
-
-import (
-	"fmt"
-
-	"github.com/spf13/cobra"
-)
-
-var {{.Name}}Cmd = &cobra.Command{
-	Use:   "{{.Name}}",
-	Short: "{{.Description}}",
-	Long: ` + "`" + `{{.Description}}
-
-Add more detailed description here.` + "`" + `,
-	RunE: func(cmd *cobra.Command, args []string) error {
-		fmt.Println("{{.Name}} called")
-		return nil
-	},
-}
-
-func init() {
-	{{.Parent}}Cmd.AddCommand({{.Name}}Cmd)
-
-	// Add flags here
-	// {{.Name}}Cmd.Flags().StringP("example", "e", "", "example flag")
-}
-`
-
-// License templates
-var mitLicense = `MIT License
-
-Copyright (c) %d %s
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-`
-
-var apacheLicense = `Copyright %d %s
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-`
-
-var bsdLicense = `BSD 3-Clause License
-
-Copyright (c) %d, %s
-All rights reserved.
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met:
-
-1. Redistributions of source code must retain the above copyright notice, this
-   list of conditions and the following disclaimer.
-
-2. Redistributions in binary form must reproduce the above copyright notice,
-   this list of conditions and the following disclaimer in the documentation
-   and/or other materials provided with the distribution.
-
-3. Neither the name of the copyright holder nor the names of its
-   contributors may be used to endorse or promote products derived from
-   this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
-FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
-OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-`

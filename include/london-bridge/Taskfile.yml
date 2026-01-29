@@ -1,0 +1,42 @@
+# https://taskfile.dev
+
+version: '3'
+
+tasks:
+  prepare:
+    desc: "Prepare local dev environment after first clone (submodules, deps, codegen)"
+    cmds:
+      - git submodule sync --recursive
+      - git submodule update --init --recursive
+      - go mod download
+      - go generate ./...
+
+  test:
+    cmds:
+      - golangci-lint fmt
+      - golangci-lint run
+      - go test -race -p=1 ./...
+      - go test -race -v -bench=. -benchmem ./...
+
+  upgrade:
+    cmds:
+      - go get -u ./...
+      - go mod tidy -v
+
+  build-dev:
+    cmds:
+      - goreleaser build --snapshot --clean
+
+  build-prod:
+    cmds:
+      - goreleaser --snapshot --skip-publish --rm-dist
+
+  lint:
+    desc: Run golangci-lint
+    cmds:
+      - golangci-lint run ./...
+
+  lint:fix:
+    desc: Run linter and auto-fix issues
+    cmds:
+      - golangci-lint run --fix ./... --timeout=5m

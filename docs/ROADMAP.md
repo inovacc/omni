@@ -1060,6 +1060,58 @@ omni sqlite import mydb.sqlite backup.sql
 | `generate test` | Generate test file scaffold | P1 | |
 | `generate mock` | Generate mock implementations | P2 | |
 
+### Protocol Buffer Tools (buf integration)
+
+Reference: https://github.com/bufbuild/buf
+
+| Command | Description | Priority | Status |
+|---------|-------------|----------|--------|
+| `buf lint` | Lint protobuf files for best practices | P0 | |
+| `buf format` | Format protobuf files | P0 | |
+| `buf breaking` | Detect breaking changes in protobuf | P0 | |
+| `buf build` | Build/compile protobuf files | P0 | |
+| `buf generate` | Generate code from protobuf | P1 | |
+| `buf mod init` | Initialize buf module | P1 | |
+| `buf mod update` | Update buf dependencies | P1 | |
+| `buf export` | Export protobuf files | P2 | |
+| `buf convert` | Convert between protobuf formats | P2 | |
+
+### Buf CLI Examples
+
+```bash
+# Lint protobuf files
+omni buf lint proto/
+
+# Format protobuf files
+omni buf format proto/ --write
+
+# Check for breaking changes
+omni buf breaking proto/ --against .git#branch=main
+
+# Build protobuf
+omni buf build proto/
+
+# Generate code
+omni buf generate proto/
+
+# Initialize buf module
+omni buf mod init
+
+# Update dependencies
+omni buf mod update
+```
+
+### Buf Features
+
+- [ ] Protobuf linting with 40+ configurable rules
+- [ ] Breaking change detection (source and wire level)
+- [ ] Code generation with plugin support
+- [ ] File formatting and standardization
+- [ ] buf.yaml / buf.gen.yaml configuration support
+- [ ] Remote module/dependency support
+- [ ] JSON, MSVS, JUnit output formats
+- [ ] Integration with Buf Schema Registry (BSR)
+
 ### Generator CLI Examples
 
 ```bash
