@@ -3,8 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/inovacc/omni/pkg/cli/df"
-
+	"github.com/inovacc/omni/internal/cli/df"
 	"github.com/spf13/cobra"
 )
 

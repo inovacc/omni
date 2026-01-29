@@ -3,8 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/inovacc/omni/pkg/cli/awk"
-
+	"github.com/inovacc/omni/internal/cli/awk"
 	"github.com/spf13/cobra"
 )
 

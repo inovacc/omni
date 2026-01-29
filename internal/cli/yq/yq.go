@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/inovacc/omni/pkg/cli/jq"
+	"github.com/inovacc/omni/internal/cli/jq"
 )
 
 // YqOptions configures the yq command behavior

@@ -416,12 +416,12 @@ func printOutput(cmd *cobra.Command, data any, format OutputFormat) error {
 
 | Category | Packages | Coverage | Status |
 |----------|----------|----------|--------|
-| **Overall** | 82/91 packages | 90.1% | ✅ Good |
+| **Overall** | 86/90 packages | 95.6% | ✅ Excellent |
 | **100% Coverage** | `basename`, `date`, `dirname` | 100% | ✅ Complete |
-| **High Coverage (80%+)** | `cat`, `grep`, `head`, `ls`, `realpath`, `pwd`, `uuid`, `text`, `archive`, `bzip2`, `gzip`, `xz`, `lint`, `testcheck`, `echo` | 80-95% | ✅ Good |
+| **High Coverage (80%+)** | `cat`, `grep`, `head`, `ls`, `realpath`, `pwd`, `uuid`, `text`, `archive`, `bzip2`, `gzip`, `xz`, `lint`, `testcheck`, `echo`, `twig/*` | 80-95% | ✅ Good |
 | **Medium Coverage (50-79%)** | `base`, `crypt`, `env`, `jq`, `kill`, `random`, `tail`, `uname`, `yq`, `wc` | 50-79% | 🔄 In Progress |
 | **Low Coverage (<50%)** | `diff`, `hash`, `whoami` | 30-50% | 🔄 Needs Work |
-| **No Coverage (0%)** | ~9 packages | 0% | ❌ Not Started |
+| **No Coverage (0%)** | 4 packages (main, cmd, builder, parser) | 0% | ⚠️ CLI/Integration Only |
 
 ### Unit Tests
 - Table-driven tests for all functions

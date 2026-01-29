@@ -3,8 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/inovacc/omni/pkg/cli/readlink"
-
+	"github.com/inovacc/omni/internal/cli/readlink"
 	"github.com/spf13/cobra"
 )
 

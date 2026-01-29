@@ -119,11 +119,14 @@ Prioritized items for future development phases.
 ## Testing
 
 ### Current Status (January 2026)
-- **Total Test Cases:** ~650+ tests across pkg/cli
-- **Packages with Tests:** 82/91 (90.1%)
+- **Total Test Cases:** ~700+ tests across all packages
+- **Packages with Tests:** 86/90 (95.6%)
 - **Packages at 100%:** basename, date, dirname
-- **Recently Added Tests:** archive (14), bzip2 (10), gzip (12), xz (14), lint (17), testcheck (8), echo (9)
-- **Average Coverage (tested packages):** ~85%
+- **Recently Added Tests:**
+  - Compression: archive (14), bzip2 (10), gzip (12), xz (14)
+  - Tooling: lint (17), testcheck (8), echo (9)
+  - Internal/twig: twig (25), models (17), formatter (14), scanner (15)
+- **Average Coverage (tested packages):** ~90%
 
 ### Unit Tests - Completed ✅
 - [x] Table-driven tests for core functions

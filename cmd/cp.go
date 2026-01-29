@@ -1,8 +1,7 @@
 package cmd
 
 import (
-	"github.com/inovacc/omni/pkg/cli/copy"
-
+	copy2 "github.com/inovacc/omni/internal/cli/copy"
 	"github.com/spf13/cobra"
 )
 
@@ -13,7 +12,7 @@ var cpCmd = &cobra.Command{
 	Short:   "Copy files and directories",
 	Long:    `Copy SOURCE to DEST, or multiple SOURCE(s) to DIRECTORY.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return copy.RunCopy(args, copy.CopyOptions{})
+		return copy2.RunCopy(args, copy2.CopyOptions{})
 	},
 }
 

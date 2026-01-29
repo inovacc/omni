@@ -3,7 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/inovacc/omni/pkg/cli/testcheck"
+	"github.com/inovacc/omni/internal/cli/testcheck"
 	"github.com/spf13/cobra"
 )
 

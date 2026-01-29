@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"github.com/inovacc/omni/pkg/cli/sleep"
+	"github.com/inovacc/omni/internal/cli/sleep"
 	"github.com/spf13/cobra"
 )
 

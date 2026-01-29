@@ -3,8 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/inovacc/omni/pkg/cli/crypt"
-
+	"github.com/inovacc/omni/internal/cli/crypt"
 	"github.com/spf13/cobra"
 )
 

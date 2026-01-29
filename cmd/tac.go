@@ -3,8 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/inovacc/omni/pkg/cli/tac"
-
+	"github.com/inovacc/omni/internal/cli/tac"
 	"github.com/spf13/cobra"
 )
 

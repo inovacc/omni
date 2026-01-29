@@ -3,8 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/inovacc/omni/pkg/cli/paste"
-
+	"github.com/inovacc/omni/internal/cli/paste"
 	"github.com/spf13/cobra"
 )
 

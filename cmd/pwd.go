@@ -3,8 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/inovacc/omni/pkg/cli/pwd"
-
+	"github.com/inovacc/omni/internal/cli/pwd"
 	"github.com/spf13/cobra"
 )
 

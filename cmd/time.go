@@ -5,8 +5,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/inovacc/omni/pkg/cli/timecmd"
-
+	"github.com/inovacc/omni/internal/cli/timecmd"
 	"github.com/spf13/cobra"
 )
 

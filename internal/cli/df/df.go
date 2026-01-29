@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/inovacc/omni/pkg/cli/du"
+	"github.com/inovacc/omni/internal/cli/du"
 )
 
 // DFOptions configures the df command behavior

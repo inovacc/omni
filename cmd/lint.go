@@ -3,8 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/inovacc/omni/pkg/cli/lint"
-
+	"github.com/inovacc/omni/internal/cli/lint"
 	"github.com/spf13/cobra"
 )
 
