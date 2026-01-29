@@ -6,6 +6,7 @@ import (
 
 	"github.com/inovacc/omni/internal/cli/jsonfmt"
 	"github.com/spf13/cobra"
+	"gopkg.in/yaml.v3"
 )
 
 // jsonCmd represents the json command
@@ -20,13 +21,15 @@ Subcommands:
   validate  Check if input is valid JSON
   stats     Show statistics about JSON data
   keys      List all keys in JSON object
+  toyaml    Convert JSON to YAML
 
 Examples:
   omni json fmt file.json              # beautify JSON
   omni json minify file.json           # compact JSON
   omni json validate file.json         # check if valid
   echo '{"a":1}' | omni json fmt       # from stdin
-  omni json stats file.json            # show statistics`,
+  omni json stats file.json            # show statistics
+  omni json toyaml file.json           # convert to YAML`,
 }
 
 // jsonFmtCmd formats JSON
@@ -206,6 +209,46 @@ Examples:
 	},
 }
 
+// jsonToYAMLCmd converts JSON to YAML
+var jsonToYAMLCmd = &cobra.Command{
+	Use:     "toyaml [FILE]",
+	Aliases: []string{"yaml", "to-yaml"},
+	Short:   "Convert JSON to YAML",
+	Long: `Convert JSON data to YAML format.
+
+Examples:
+  omni json toyaml file.json
+  echo '{"name":"test"}' | omni json toyaml
+  omni json toyaml file.json > output.yaml`,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		var data []byte
+		var err error
+
+		if len(args) == 0 || args[0] == "-" {
+			data, err = readStdin()
+		} else {
+			data, err = os.ReadFile(args[0])
+		}
+
+		if err != nil {
+			return err
+		}
+
+		var v any
+		if err := json.Unmarshal(data, &v); err != nil {
+			return err
+		}
+
+		output, err := yaml.Marshal(v)
+		if err != nil {
+			return err
+		}
+
+		_, _ = os.Stdout.Write(output)
+		return nil
+	},
+}
+
 func readStdin() ([]byte, error) {
 	return os.ReadFile(os.Stdin.Name())
 }
@@ -233,6 +276,7 @@ func init() {
 	jsonCmd.AddCommand(jsonValidateCmd)
 	jsonCmd.AddCommand(jsonStatsCmd)
 	jsonCmd.AddCommand(jsonKeysCmd)
+	jsonCmd.AddCommand(jsonToYAMLCmd)
 
 	// fmt flags
 	jsonFmtCmd.Flags().StringP("indent", "i", "  ", "indentation string")
