@@ -24,7 +24,7 @@ func TestULIDUniqueness(t *testing.T) {
 	seen := make(map[string]bool)
 	count := 1000
 
-	for i := 0; i < count; i++ {
+	for range count {
 		ulid, err := New()
 		if err != nil {
 			t.Fatalf("New() error = %v", err)
@@ -34,16 +34,19 @@ func TestULIDUniqueness(t *testing.T) {
 		if seen[str] {
 			t.Errorf("Duplicate ULID generated: %s", str)
 		}
+
 		seen[str] = true
 	}
 }
 
 func TestULIDTimestamp(t *testing.T) {
 	before := time.Now()
+
 	ulid, err := New()
 	if err != nil {
 		t.Fatalf("New() error = %v", err)
 	}
+
 	after := time.Now()
 
 	ts := ulid.Timestamp()
@@ -53,14 +56,16 @@ func TestULIDTimestamp(t *testing.T) {
 }
 
 func TestULIDSortable(t *testing.T) {
-	var ulids []string
+	ulids := make([]string, 0, 10)
 
-	for i := 0; i < 10; i++ {
+	for range 10 {
 		ulid, err := New()
 		if err != nil {
 			t.Fatalf("New() error = %v", err)
 		}
+
 		ulids = append(ulids, ulid.String())
+
 		time.Sleep(time.Millisecond)
 	}
 
@@ -76,6 +81,7 @@ func TestRunULID(t *testing.T) {
 	var buf bytes.Buffer
 
 	opts := Options{Count: 3}
+
 	err := RunULID(&buf, opts)
 	if err != nil {
 		t.Fatalf("RunULID() error = %v", err)
@@ -97,6 +103,7 @@ func TestRunULIDLower(t *testing.T) {
 	var buf bytes.Buffer
 
 	opts := Options{Count: 1, Lower: true}
+
 	err := RunULID(&buf, opts)
 	if err != nil {
 		t.Fatalf("RunULID() error = %v", err)
@@ -112,6 +119,7 @@ func TestRunULIDJSON(t *testing.T) {
 	var buf bytes.Buffer
 
 	opts := Options{Count: 2, JSON: true}
+
 	err := RunULID(&buf, opts)
 	if err != nil {
 		t.Fatalf("RunULID() error = %v", err)

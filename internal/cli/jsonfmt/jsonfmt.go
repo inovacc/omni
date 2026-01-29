@@ -53,9 +53,12 @@ func RunJSONFmt(w io.Writer, args []string, opts Options) error {
 				if opts.Validate && opts.JSON {
 					return json.NewEncoder(w).Encode(Result{Valid: false, Error: err.Error(), File: file})
 				}
+
 				return fmt.Errorf("json: %w", err)
 			}
+
 			defer func() { _ = f.Close() }()
+
 			r = f
 		}
 
@@ -73,6 +76,7 @@ func processReader(w io.Writer, r io.Reader, filename string, opts Options) erro
 		if opts.Validate && opts.JSON {
 			return json.NewEncoder(w).Encode(Result{Valid: false, Error: err.Error(), File: filename})
 		}
+
 		return fmt.Errorf("json: %w", err)
 	}
 
@@ -83,9 +87,12 @@ func processReader(w io.Writer, r io.Reader, filename string, opts Options) erro
 			if opts.JSON {
 				return json.NewEncoder(w).Encode(Result{Valid: false, Error: err.Error(), File: filename})
 			}
+
 			_, _ = fmt.Fprintf(w, "%s: invalid JSON: %v\n", filename, err)
+
 			return nil
 		}
+
 		return fmt.Errorf("json: invalid JSON: %w", err)
 	}
 
@@ -94,7 +101,9 @@ func processReader(w io.Writer, r io.Reader, filename string, opts Options) erro
 		if opts.JSON {
 			return json.NewEncoder(w).Encode(Result{Valid: true, File: filename})
 		}
+
 		_, _ = fmt.Fprintf(w, "%s: valid JSON\n", filename)
+
 		return nil
 	}
 
@@ -134,12 +143,14 @@ func sortKeys(v any) any {
 		for k, v := range val {
 			sorted[k] = sortKeys(v)
 		}
+
 		return sorted
 	case []any:
 		result := make([]any, len(val))
 		for i, item := range val {
 			result[i] = sortKeys(item)
 		}
+
 		return result
 	default:
 		return v
@@ -151,6 +162,7 @@ func unescapeHTML(data []byte) []byte {
 	data = bytes.ReplaceAll(data, []byte("\\u003c"), []byte("<"))
 	data = bytes.ReplaceAll(data, []byte("\\u003e"), []byte(">"))
 	data = bytes.ReplaceAll(data, []byte("\\u0026"), []byte("&"))
+
 	return data
 }
 
@@ -197,6 +209,7 @@ func SortKeys(data []byte) ([]byte, error) {
 	}
 
 	sorted := sortKeys(v)
+
 	return json.MarshalIndent(sorted, "", "  ")
 }
 
@@ -241,6 +254,7 @@ func MustBeautify(data []byte) []byte {
 	if err != nil {
 		panic(err)
 	}
+
 	return result
 }
 
@@ -250,6 +264,7 @@ func MustMinify(data []byte) []byte {
 	if err != nil {
 		panic(err)
 	}
+
 	return result
 }
 
@@ -275,6 +290,7 @@ func GetType(data []byte) string {
 		if (data[0] >= '0' && data[0] <= '9') || data[0] == '-' {
 			return "number"
 		}
+
 		return "unknown"
 	}
 }
@@ -296,7 +312,10 @@ func GetStats(data []byte) (*Stats, error) {
 		return nil, err
 	}
 
-	minified, _ := json.Marshal(v)
+	minified, err := json.Marshal(v)
+	if err != nil {
+		return nil, fmt.Errorf("marshal for stats: %w", err)
+	}
 
 	stats := &Stats{
 		Type:        GetType(data),
@@ -345,6 +364,7 @@ func countKeys(obj map[string]any) int {
 			count += countKeys(nested)
 		}
 	}
+
 	return count
 }
 
@@ -357,6 +377,7 @@ func Keys(data []byte) ([]string, error) {
 
 	keys := collectKeys(v, "")
 	sort.Strings(keys)
+
 	return keys, nil
 }
 
@@ -370,6 +391,7 @@ func collectKeys(v any, prefix string) []string {
 			if prefix != "" {
 				path = prefix + "." + k
 			}
+
 			keys = append(keys, path)
 			keys = append(keys, collectKeys(item, path)...)
 		}

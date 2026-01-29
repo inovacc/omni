@@ -125,9 +125,14 @@ func RunCmp(w io.Writer, args []string, opts CmpOptions) (CmpResult, error) {
 						Byte1:     buf1[i],
 						Byte2:     buf2[i],
 					}
-					_ = json.NewEncoder(w).Encode(result)
+
+					if err := json.NewEncoder(w).Encode(result); err != nil {
+						return CmpError, fmt.Errorf("cmp: json encode: %w", err)
+					}
+
 					return CmpDiffer, nil
 				}
+
 				if !opts.Silent {
 					if opts.Verbose {
 						_, _ = fmt.Fprintf(w, "%d %o %o\n", byteNum, buf1[i], buf2[i])
@@ -162,6 +167,7 @@ func RunCmp(w io.Writer, args []string, opts CmpOptions) (CmpResult, error) {
 				if n1 > n2 {
 					eofFile = file2
 				}
+
 				result := CmpJSONResult{
 					File1:     file1,
 					File2:     file2,
@@ -169,9 +175,14 @@ func RunCmp(w io.Writer, args []string, opts CmpOptions) (CmpResult, error) {
 					DiffByte:  byteNum - 1,
 					EOF:       eofFile,
 				}
-				_ = json.NewEncoder(w).Encode(result)
+
+				if err := json.NewEncoder(w).Encode(result); err != nil {
+					return CmpError, fmt.Errorf("cmp: json encode: %w", err)
+				}
+
 				return CmpDiffer, nil
 			}
+
 			if !opts.Silent {
 				if n1 < n2 {
 					_, _ = fmt.Fprintf(w, "cmp: EOF on %s after byte %d\n", file1, byteNum-1)
@@ -202,7 +213,10 @@ func RunCmp(w io.Writer, args []string, opts CmpOptions) (CmpResult, error) {
 			File2:     file2,
 			Identical: true,
 		}
-		_ = json.NewEncoder(w).Encode(result)
+
+		if err := json.NewEncoder(w).Encode(result); err != nil {
+			return CmpError, fmt.Errorf("cmp: json encode: %w", err)
+		}
 	}
 
 	return CmpEqual, nil

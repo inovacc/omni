@@ -81,7 +81,7 @@ func RunColumn(w io.Writer, args []string, opts ColumnOptions) error {
 }
 
 func columnJSON(w io.Writer, lines []string, opts ColumnOptions) error {
-	var result []map[string]string
+	result := make([]map[string]string, 0, len(lines))
 
 	var headers []string
 	if opts.ColumnHeaders != "" {
@@ -99,13 +99,16 @@ func columnJSON(w io.Writer, lines []string, opts ColumnOptions) error {
 		}
 
 		row := make(map[string]string)
+
 		for i, field := range fields {
 			key := fmt.Sprintf("col%d", i+1)
 			if i < len(headers) {
 				key = headers[i]
 			}
+
 			row[key] = field
 		}
+
 		result = append(result, row)
 	}
 

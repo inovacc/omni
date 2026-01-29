@@ -65,9 +65,11 @@ func (f *Formatter) Print(data any) error {
 		return f.printJSON(data)
 	case FormatTable:
 		return f.printTable(data)
-	default:
+	case FormatText:
 		return f.printText(data)
 	}
+
+	return f.printText(data)
 }
 
 // PrintLines outputs lines with optional line numbers

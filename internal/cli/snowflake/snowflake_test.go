@@ -23,7 +23,7 @@ func TestSnowflakeUniqueness(t *testing.T) {
 	seen := make(map[int64]bool)
 	count := 10000
 
-	for i := 0; i < count; i++ {
+	for range count {
 		id, err := New()
 		if err != nil {
 			t.Fatalf("New() error = %v", err)
@@ -32,19 +32,22 @@ func TestSnowflakeUniqueness(t *testing.T) {
 		if seen[id] {
 			t.Errorf("Duplicate Snowflake ID generated: %d", id)
 		}
+
 		seen[id] = true
 	}
 }
 
 func TestSnowflakeSortable(t *testing.T) {
-	var ids []int64
+	ids := make([]int64, 0, 10)
 
-	for i := 0; i < 10; i++ {
+	for range 10 {
 		id, err := New()
 		if err != nil {
 			t.Fatalf("New() error = %v", err)
 		}
+
 		ids = append(ids, id)
+
 		time.Sleep(time.Millisecond)
 	}
 
@@ -85,10 +88,12 @@ func TestGeneratorWorkerID(t *testing.T) {
 
 func TestParse(t *testing.T) {
 	before := time.Now()
+
 	id, err := New()
 	if err != nil {
 		t.Fatalf("New() error = %v", err)
 	}
+
 	after := time.Now()
 
 	ts, workerID, sequence := Parse(id)
@@ -113,6 +118,7 @@ func TestRunSnowflake(t *testing.T) {
 	var buf bytes.Buffer
 
 	opts := Options{Count: 3}
+
 	err := RunSnowflake(&buf, opts)
 	if err != nil {
 		t.Fatalf("RunSnowflake() error = %v", err)
@@ -128,6 +134,7 @@ func TestRunSnowflakeWorkerID(t *testing.T) {
 	var buf bytes.Buffer
 
 	opts := Options{Count: 1, WorkerID: 42}
+
 	err := RunSnowflake(&buf, opts)
 	if err != nil {
 		t.Fatalf("RunSnowflake() error = %v", err)
@@ -138,6 +145,7 @@ func TestRunSnowflakeInvalidWorkerID(t *testing.T) {
 	var buf bytes.Buffer
 
 	opts := Options{Count: 1, WorkerID: 2000}
+
 	err := RunSnowflake(&buf, opts)
 	if err == nil {
 		t.Error("RunSnowflake() should error with invalid worker ID")
@@ -148,6 +156,7 @@ func TestRunSnowflakeJSON(t *testing.T) {
 	var buf bytes.Buffer
 
 	opts := Options{Count: 2, JSON: true}
+
 	err := RunSnowflake(&buf, opts)
 	if err != nil {
 		t.Fatalf("RunSnowflake() error = %v", err)

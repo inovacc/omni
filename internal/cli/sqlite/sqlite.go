@@ -86,6 +86,7 @@ func RunStats(w io.Writer, dbPath string, opts Options) error {
 
 	// Count tables, views, indexes, triggers
 	var count int64
+
 	_ = db.QueryRow("SELECT count(*) FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'").Scan(&count)
 	result.Tables = int(count)
 
@@ -106,6 +107,7 @@ func RunStats(w io.Writer, dbPath string, opts Options) error {
 	_ = db.QueryRow("PRAGMA user_version").Scan(&result.UserVer)
 
 	var journalMode string
+
 	_ = db.QueryRow("PRAGMA journal_mode").Scan(&journalMode)
 	result.WALEnabled = journalMode == "wal"
 
@@ -161,6 +163,10 @@ func RunTables(w io.Writer, dbPath string, opts Options) error {
 		tables = append(tables, t)
 	}
 
+	if err := rows.Err(); err != nil {
+		return fmt.Errorf("sqlite: rows iteration: %w", err)
+	}
+
 	if opts.JSON {
 		return json.NewEncoder(w).Encode(tables)
 	}
@@ -205,6 +211,10 @@ func RunSchema(w io.Writer, dbPath, table string, opts Options) error {
 			schemas = append(schemas, s)
 		}
 
+		if err := rows.Err(); err != nil {
+			return fmt.Errorf("sqlite: rows iteration: %w", err)
+		}
+
 		if opts.JSON {
 			return json.NewEncoder(w).Encode(schemas)
 		}
@@ -218,8 +228,8 @@ func RunSchema(w io.Writer, dbPath, table string, opts Options) error {
 
 	// Show specific table schema
 	var sqlStr string
-	err = db.QueryRow("SELECT sql FROM sqlite_master WHERE name = ? AND sql IS NOT NULL", table).Scan(&sqlStr)
 
+	err = db.QueryRow("SELECT sql FROM sqlite_master WHERE name = ? AND sql IS NOT NULL", table).Scan(&sqlStr)
 	if err != nil {
 		return fmt.Errorf("sqlite: table %q not found", table)
 	}
@@ -257,9 +267,11 @@ func RunColumns(w io.Writer, dbPath, table string, opts Options) error {
 	var columns []ColumnInfo
 
 	for rows.Next() {
-		var c ColumnInfo
-		var notNull, pk int
-		var dflt sql.NullString
+		var (
+			c           ColumnInfo
+			notNull, pk int
+			dflt        sql.NullString
+		)
 
 		if err := rows.Scan(&c.CID, &c.Name, &c.Type, &notNull, &dflt, &pk); err != nil {
 			continue
@@ -273,6 +285,10 @@ func RunColumns(w io.Writer, dbPath, table string, opts Options) error {
 		}
 
 		columns = append(columns, c)
+	}
+
+	if err := rows.Err(); err != nil {
+		return fmt.Errorf("sqlite: rows iteration: %w", err)
 	}
 
 	if len(columns) == 0 {
@@ -316,8 +332,10 @@ func RunIndexes(w io.Writer, dbPath string, opts Options) error {
 	var indexes []IndexInfo
 
 	for rows.Next() {
-		var idx IndexInfo
-		var sqlStr string
+		var (
+			idx    IndexInfo
+			sqlStr string
+		)
 
 		if err := rows.Scan(&idx.Name, &idx.Table, &sqlStr); err != nil {
 			continue
@@ -334,6 +352,10 @@ func RunIndexes(w io.Writer, dbPath string, opts Options) error {
 		}
 
 		indexes = append(indexes, idx)
+	}
+
+	if err := rows.Err(); err != nil {
+		return fmt.Errorf("sqlite: rows iteration: %w", err)
 	}
 
 	if opts.JSON {
@@ -425,6 +447,11 @@ func RunQuery(w io.Writer, dbPath, query string, opts Options) error {
 		}
 
 		results = append(results, row)
+	}
+
+	if err := rows.Err(); err != nil {
+		logQueryError(opts.Logger, dbPath, query, time.Since(start), err)
+		return fmt.Errorf("sqlite: rows iteration: %w", err)
 	}
 
 	duration := time.Since(start)
@@ -540,6 +567,10 @@ func RunCheck(w io.Writer, dbPath string, opts Options) error {
 		results = append(results, s)
 	}
 
+	if err := rows.Err(); err != nil {
+		return fmt.Errorf("sqlite: rows iteration: %w", err)
+	}
+
 	isOK := len(results) == 1 && results[0] == "ok"
 
 	if opts.JSON {
@@ -587,6 +618,8 @@ func RunDump(w io.Writer, dbPath, table string, opts Options) error {
 			return fmt.Errorf("sqlite: %w", err)
 		}
 
+		defer func() { _ = rows.Close() }()
+
 		for rows.Next() {
 			var name string
 			if err := rows.Scan(&name); err != nil {
@@ -596,7 +629,9 @@ func RunDump(w io.Writer, dbPath, table string, opts Options) error {
 			tables = append(tables, name)
 		}
 
-		_ = rows.Close()
+		if err := rows.Err(); err != nil {
+			return fmt.Errorf("sqlite: rows iteration: %w", err)
+		}
 	}
 
 	_, _ = fmt.Fprintln(w, "BEGIN TRANSACTION;")
@@ -604,51 +639,57 @@ func RunDump(w io.Writer, dbPath, table string, opts Options) error {
 	for _, t := range tables {
 		// Get CREATE statement
 		var sqlStr string
-		err := db.QueryRow("SELECT sql FROM sqlite_master WHERE name = ? AND sql IS NOT NULL", t).Scan(&sqlStr)
 
+		err := db.QueryRow("SELECT sql FROM sqlite_master WHERE name = ? AND sql IS NOT NULL", t).Scan(&sqlStr)
 		if err == nil {
 			_, _ = fmt.Fprintf(w, "%s;\n", sqlStr)
 		}
 
-		// Get data
-		rows, err := db.Query(fmt.Sprintf("SELECT * FROM %q", t))
-		if err != nil {
-			continue
-		}
-
-		columns, _ := rows.Columns()
-
-		for rows.Next() {
-			values := make([]any, len(columns))
-			valuePtrs := make([]any, len(columns))
-
-			for i := range values {
-				valuePtrs[i] = &values[i]
+		// Get data - use closure to ensure proper defer cleanup
+		func() {
+			rows, err := db.Query(fmt.Sprintf("SELECT * FROM %q", t))
+			if err != nil {
+				return
 			}
 
-			if err := rows.Scan(valuePtrs...); err != nil {
-				continue
-			}
+			defer func() { _ = rows.Close() }()
 
-			var vals []string
+			columns, _ := rows.Columns()
 
-			for _, v := range values {
-				switch val := v.(type) {
-				case nil:
-					vals = append(vals, "NULL")
-				case []byte:
-					vals = append(vals, fmt.Sprintf("'%s'", strings.ReplaceAll(string(val), "'", "''")))
-				case string:
-					vals = append(vals, fmt.Sprintf("'%s'", strings.ReplaceAll(val, "'", "''")))
-				default:
-					vals = append(vals, fmt.Sprintf("%v", val))
+			for rows.Next() {
+				values := make([]any, len(columns))
+				valuePtrs := make([]any, len(columns))
+
+				for i := range values {
+					valuePtrs[i] = &values[i]
 				}
+
+				if err := rows.Scan(valuePtrs...); err != nil {
+					continue
+				}
+
+				var vals []string
+
+				for _, v := range values {
+					switch val := v.(type) {
+					case nil:
+						vals = append(vals, "NULL")
+					case []byte:
+						vals = append(vals, fmt.Sprintf("'%s'", strings.ReplaceAll(string(val), "'", "''")))
+					case string:
+						vals = append(vals, fmt.Sprintf("'%s'", strings.ReplaceAll(val, "'", "''")))
+					default:
+						vals = append(vals, fmt.Sprintf("%v", val))
+					}
+				}
+
+				_, _ = fmt.Fprintf(w, "INSERT INTO %q VALUES(%s);\n", t, strings.Join(vals, ","))
 			}
 
-			_, _ = fmt.Fprintf(w, "INSERT INTO %q VALUES(%s);\n", t, strings.Join(vals, ","))
-		}
-
-		_ = rows.Close()
+			if err := rows.Err(); err != nil {
+				_, _ = fmt.Fprintf(w, "-- Error iterating rows: %v\n", err)
+			}
+		}()
 	}
 
 	_, _ = fmt.Fprintln(w, "COMMIT;")

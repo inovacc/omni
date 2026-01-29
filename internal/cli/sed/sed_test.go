@@ -22,6 +22,7 @@ func TestRunSed(t *testing.T) {
 		_ = os.WriteFile(file, []byte("hello world\n"), 0644)
 
 		var buf bytes.Buffer
+
 		err := RunSed(&buf, []string{"s/world/universe/", file}, SedOptions{})
 		if err != nil {
 			t.Fatalf("RunSed() error = %v", err)
@@ -37,6 +38,7 @@ func TestRunSed(t *testing.T) {
 		_ = os.WriteFile(file, []byte("aaa bbb aaa\n"), 0644)
 
 		var buf bytes.Buffer
+
 		err := RunSed(&buf, []string{"s/aaa/XXX/g", file}, SedOptions{})
 		if err != nil {
 			t.Fatalf("RunSed() error = %v", err)
@@ -52,6 +54,7 @@ func TestRunSed(t *testing.T) {
 		_ = os.WriteFile(file, []byte("line1\ndelete this\nline3\n"), 0644)
 
 		var buf bytes.Buffer
+
 		err := RunSed(&buf, []string{"/delete/d", file}, SedOptions{})
 		if err != nil {
 			t.Fatalf("RunSed() error = %v", err)
@@ -61,6 +64,7 @@ func TestRunSed(t *testing.T) {
 		if strings.Contains(output, "delete this") {
 			t.Errorf("RunSed() should delete matching line: %q", output)
 		}
+
 		if !strings.Contains(output, "line1") || !strings.Contains(output, "line3") {
 			t.Errorf("RunSed() should keep other lines: %q", output)
 		}
@@ -71,6 +75,7 @@ func TestRunSed(t *testing.T) {
 		_ = os.WriteFile(file, []byte("line1\nline2\nline3\n"), 0644)
 
 		var buf bytes.Buffer
+
 		err := RunSed(&buf, []string{"2d", file}, SedOptions{})
 		if err != nil {
 			t.Fatalf("RunSed() error = %v", err)
@@ -87,6 +92,7 @@ func TestRunSed(t *testing.T) {
 		_ = os.WriteFile(file, []byte("line1\nline2\nline3\nline4\n"), 0644)
 
 		var buf bytes.Buffer
+
 		err := RunSed(&buf, []string{"2,3d", file}, SedOptions{})
 		if err != nil {
 			t.Fatalf("RunSed() error = %v", err)
@@ -96,6 +102,7 @@ func TestRunSed(t *testing.T) {
 		if strings.Contains(output, "line2") || strings.Contains(output, "line3") {
 			t.Errorf("RunSed() should delete lines 2-3: %q", output)
 		}
+
 		if !strings.Contains(output, "line1") || !strings.Contains(output, "line4") {
 			t.Errorf("RunSed() should keep other lines: %q", output)
 		}
@@ -106,6 +113,7 @@ func TestRunSed(t *testing.T) {
 		_ = os.WriteFile(file, []byte("line1\nmatch this\nline3\n"), 0644)
 
 		var buf bytes.Buffer
+
 		err := RunSed(&buf, []string{"s/match/MATCH/", file}, SedOptions{Quiet: true})
 		if err != nil {
 			t.Fatalf("RunSed() error = %v", err)
@@ -123,6 +131,7 @@ func TestRunSed(t *testing.T) {
 		_ = os.WriteFile(file, []byte("hello world\n"), 0644)
 
 		var buf bytes.Buffer
+
 		err := RunSed(&buf, []string{file}, SedOptions{Expression: []string{"s/hello/hi/"}})
 		if err != nil {
 			t.Fatalf("RunSed() error = %v", err)
@@ -138,6 +147,7 @@ func TestRunSed(t *testing.T) {
 		_ = os.WriteFile(file, []byte("original content\n"), 0644)
 
 		var buf bytes.Buffer
+
 		err := RunSed(&buf, []string{"s/original/modified/", file}, SedOptions{InPlace: true})
 		if err != nil {
 			t.Fatalf("RunSed() error = %v", err)
@@ -154,6 +164,7 @@ func TestRunSed(t *testing.T) {
 		_ = os.WriteFile(file, []byte("original content\n"), 0644)
 
 		var buf bytes.Buffer
+
 		err := RunSed(&buf, []string{"s/original/modified/", file}, SedOptions{InPlace: true, InPlaceExt: ".bak"})
 		if err != nil {
 			t.Fatalf("RunSed() error = %v", err)
@@ -172,6 +183,7 @@ func TestRunSed(t *testing.T) {
 
 	t.Run("no expression", func(t *testing.T) {
 		var buf bytes.Buffer
+
 		err := RunSed(&buf, []string{}, SedOptions{})
 		if err == nil {
 			t.Error("RunSed() expected error for no expression")
@@ -201,6 +213,7 @@ func TestParseSubstitute(t *testing.T) {
 				if err == nil {
 					t.Errorf("parseSubstitute(%q) expected error", tt.expr)
 				}
+
 				return
 			}
 
@@ -259,13 +272,13 @@ func TestSedDelete_execute(t *testing.T) {
 	t.Run("pattern match", func(t *testing.T) {
 		del := &sedDelete{pattern: regexp.MustCompile("delete")}
 
-		_, print := del.execute("delete this", 1)
-		if print {
+		_, shouldPrint := del.execute("delete this", 1)
+		if shouldPrint {
 			t.Error("delete should suppress matching line")
 		}
 
-		_, print = del.execute("keep this", 1)
-		if !print {
+		_, shouldPrint = del.execute("keep this", 1)
+		if !shouldPrint {
 			t.Error("delete should keep non-matching line")
 		}
 	})
@@ -273,13 +286,13 @@ func TestSedDelete_execute(t *testing.T) {
 	t.Run("line number", func(t *testing.T) {
 		del := &sedDelete{addressStart: 2}
 
-		_, print := del.execute("line", 1)
-		if !print {
+		_, shouldPrint := del.execute("line", 1)
+		if !shouldPrint {
 			t.Error("delete should keep line 1")
 		}
 
-		_, print = del.execute("line", 2)
-		if print {
+		_, shouldPrint = del.execute("line", 2)
+		if shouldPrint {
 			t.Error("delete should suppress line 2")
 		}
 	})
