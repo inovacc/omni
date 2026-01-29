@@ -199,9 +199,12 @@ func TestRunWhoami(t *testing.T) {
 
 		for _, r := range output {
 			// Allow alphanumeric, underscore, hyphen, and backslash (for Windows domain)
-			if !((r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') ||
-				(r >= '0' && r <= '9') || r == '_' || r == '-' ||
-				r == '\\' || r == '.' || r == '@' || r == ' ') {
+			isLower := r >= 'a' && r <= 'z'
+			isUpper := r >= 'A' && r <= 'Z'
+			isDigit := r >= '0' && r <= '9'
+			isAllowed := r == '_' || r == '-' || r == '\\' || r == '.' || r == '@' || r == ' '
+
+			if !isLower && !isUpper && !isDigit && !isAllowed {
 				t.Logf("RunWhoami() contains character: %q (may be valid)", r)
 			}
 		}
