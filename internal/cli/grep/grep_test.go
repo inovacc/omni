@@ -123,7 +123,7 @@ func TestRunGrep(t *testing.T) {
 
 	t.Run("line numbers", func(t *testing.T) {
 		file := filepath.Join(tmpDir, "linenum.txt")
-		content := "no match\nhere\nno match\nagain"
+		content := "no match\nfind here\nno match\nagain"
 
 		if err := os.WriteFile(file, []byte(content), 0644); err != nil {
 			t.Fatal(err)
@@ -131,7 +131,7 @@ func TestRunGrep(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunGrep(&buf, "match here", []string{file}, GrepOptions{LineNumber: true})
+		err := RunGrep(&buf, "here", []string{file}, GrepOptions{LineNumber: true})
 		if err != nil {
 			t.Fatalf("RunGrep() error = %v", err)
 		}

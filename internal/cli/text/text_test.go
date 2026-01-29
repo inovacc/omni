@@ -380,7 +380,8 @@ func TestRunUniq(t *testing.T) {
 
 	t.Run("count occurrences", func(t *testing.T) {
 		file := filepath.Join(tmpDir, "count.txt")
-		content := "apple\nbanana\ncherry\n"
+		// uniq counts consecutive duplicates
+		content := "apple\napple\nbanana\nbanana\nbanana\ncherry\n"
 
 		if err := os.WriteFile(file, []byte(content), 0644); err != nil {
 			t.Fatal(err)
@@ -394,14 +395,15 @@ func TestRunUniq(t *testing.T) {
 		}
 
 		output := buf.String()
-		if !strings.Contains(output, "2") && !strings.Contains(output, "3") {
-			t.Errorf("RunUniq() count should show numbers: %v", output)
+		// Should show count 2 for apple, 3 for banana, 1 for cherry
+		if !strings.Contains(output, "2") || !strings.Contains(output, "3") {
+			t.Errorf("RunUniq() count should show numbers 2 and 3: %v", output)
 		}
 	})
 
 	t.Run("count format", func(t *testing.T) {
 		file := filepath.Join(tmpDir, "count_fmt.txt")
-		content := "a\n"
+		content := "a\na\na\n"
 
 		_ = os.WriteFile(file, []byte(content), 0644)
 
@@ -410,15 +412,16 @@ func TestRunUniq(t *testing.T) {
 		_ = RunUniq(&buf, []string{file}, UniqOptions{Count: true})
 
 		output := strings.TrimSpace(buf.String())
-		// Should contain count
+		// Should show count 3 for 'a'
 		if !strings.Contains(output, "3") {
-			t.Errorf("RunUniq() count format = %v", output)
+			t.Errorf("RunUniq() count format = %v, want count of 3", output)
 		}
 	})
 
 	t.Run("repeated only", func(t *testing.T) {
 		file := filepath.Join(tmpDir, "repeated.txt")
-		content := "apple\nbanana\ncherry"
+		// apple appears twice (consecutive), banana once, cherry twice (consecutive)
+		content := "apple\napple\nbanana\ncherry\ncherry"
 
 		if err := os.WriteFile(file, []byte(content), 0644); err != nil {
 			t.Fatal(err)
@@ -432,15 +435,16 @@ func TestRunUniq(t *testing.T) {
 		}
 
 		lines := strings.Split(strings.TrimSpace(buf.String()), "\n")
-		// Only apple and cherry are repeated
+		// apple and cherry are repeated (appear >1 consecutively)
 		if len(lines) != 2 {
-			t.Errorf("RunUniq() repeated got %d lines, want 2", len(lines))
+			t.Errorf("RunUniq() repeated got %d lines, want 2: %v", len(lines), lines)
 		}
 	})
 
 	t.Run("unique only", func(t *testing.T) {
 		file := filepath.Join(tmpDir, "unique.txt")
-		content := "apple\nbanana\ncherry"
+		// apple appears twice, banana once, cherry twice
+		content := "apple\napple\nbanana\ncherry\ncherry"
 
 		if err := os.WriteFile(file, []byte(content), 0644); err != nil {
 			t.Fatal(err)
@@ -454,7 +458,7 @@ func TestRunUniq(t *testing.T) {
 		}
 
 		lines := strings.Split(strings.TrimSpace(buf.String()), "\n")
-		// Only banana is unique
+		// Only banana is unique (appears exactly once)
 		if len(lines) != 1 || lines[0] != "banana" {
 			t.Errorf("RunUniq() unique = %v, want [banana]", lines)
 		}
@@ -462,7 +466,8 @@ func TestRunUniq(t *testing.T) {
 
 	t.Run("unique with all duplicates", func(t *testing.T) {
 		file := filepath.Join(tmpDir, "all_dup.txt")
-		content := "same\n"
+		// All lines are duplicated consecutively
+		content := "same\nsame\n"
 
 		_ = os.WriteFile(file, []byte(content), 0644)
 
@@ -471,7 +476,7 @@ func TestRunUniq(t *testing.T) {
 		_ = RunUniq(&buf, []string{file}, UniqOptions{Unique: true})
 
 		output := strings.TrimSpace(buf.String())
-		// No unique lines
+		// No unique lines (same appears twice)
 		if output != "" {
 			t.Errorf("RunUniq() all duplicates unique = %v, want empty", output)
 		}
