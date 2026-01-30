@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"os"
-
 	"github.com/inovacc/omni/internal/cli/echo"
 	"github.com/spf13/cobra"
 )
@@ -20,7 +18,7 @@ Examples:
   omni echo -n "no newline" # outputs without trailing newline
   omni echo -e "tab\there"  # outputs with tab character`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return echo.RunEcho(os.Stdout, args, echoOpts)
+		return echo.RunEcho(cmd.OutOrStdout(), args, echoOpts)
 	},
 }
 
