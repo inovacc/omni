@@ -38,7 +38,7 @@ Examples:
 		opts.Base64, _ = cmd.Flags().GetBool("base64")
 		opts.Iterations, _ = cmd.Flags().GetInt("iterations")
 
-		return crypt.RunDecrypt(os.Stdout, args, opts)
+		return crypt.RunDecrypt(cmd.OutOrStdout(), args, opts)
 	},
 }
 

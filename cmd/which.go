@@ -30,7 +30,7 @@ Examples:
 			JSON: whichJSON,
 		}
 
-		return which.RunWhich(os.Stdout, args, opts)
+		return which.RunWhich(cmd.OutOrStdout(), args, opts)
 	},
 }
 

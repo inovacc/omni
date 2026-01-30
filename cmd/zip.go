@@ -34,7 +34,7 @@ Examples:
 		opts.Verbose, _ = cmd.Flags().GetBool("verbose")
 		opts.Directory, _ = cmd.Flags().GetString("directory")
 
-		return archive.RunZip(os.Stdout, args[1:], opts)
+		return archive.RunZip(cmd.OutOrStdout(), args[1:], opts)
 	},
 }
 

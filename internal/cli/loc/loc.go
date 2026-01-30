@@ -30,12 +30,12 @@ type Stats struct {
 
 // LanguageStats holds aggregated statistics for a language
 type LanguageStats struct {
-	Language string                   `json:"language"`
-	Files    int                      `json:"files"`
-	Lines    int                      `json:"lines"`
-	Code     int                      `json:"code"`
-	Comments int                      `json:"comments"`
-	Blanks   int                      `json:"blanks"`
+	Language string                    `json:"language"`
+	Files    int                       `json:"files"`
+	Lines    int                       `json:"lines"`
+	Code     int                       `json:"code"`
+	Comments int                       `json:"comments"`
+	Blanks   int                       `json:"blanks"`
 	Children map[string]*LanguageStats `json:"children,omitempty"` // Embedded languages (for Markdown)
 }
 
@@ -49,12 +49,12 @@ type Result struct {
 type langDef struct {
 	name        string
 	extensions  []string
-	lineComment []string            // line comment starters (e.g., "//", "#")
-	blockStart  string              // block comment start
-	blockEnd    string              // block comment end
-	quotes      [][2]string         // string quote pairs (start, end)
-	literate    bool                // literate mode (like Markdown)
-	nested      bool                // supports nested block comments
+	lineComment []string    // line comment starters (e.g., "//", "#")
+	blockStart  string      // block comment start
+	blockEnd    string      // block comment end
+	quotes      [][2]string // string quote pairs (start, end)
+	literate    bool        // literate mode (like Markdown)
+	nested      bool        // supports nested block comments
 }
 
 var languages = []langDef{
@@ -219,18 +219,18 @@ var languages = []langDef{
 		quotes:      [][2]string{{"'", "'"}},
 	},
 	{
-		name:        "HTML",
-		extensions:  []string{".html", ".htm"},
-		blockStart:  "<!--",
-		blockEnd:    "-->",
-		quotes:      [][2]string{{`"`, `"`}, {"'", "'"}},
+		name:       "HTML",
+		extensions: []string{".html", ".htm"},
+		blockStart: "<!--",
+		blockEnd:   "-->",
+		quotes:     [][2]string{{`"`, `"`}, {"'", "'"}},
 	},
 	{
-		name:        "CSS",
-		extensions:  []string{".css"},
-		blockStart:  "/*",
-		blockEnd:    "*/",
-		quotes:      [][2]string{{`"`, `"`}, {"'", "'"}},
+		name:       "CSS",
+		extensions: []string{".css"},
+		blockStart: "/*",
+		blockEnd:   "*/",
+		quotes:     [][2]string{{`"`, `"`}, {"'", "'"}},
 	},
 	{
 		name:        "SCSS",
@@ -402,10 +402,12 @@ func RunLoc(w io.Writer, args []string, opts Options) error {
 
 	// Build exclude map
 	excludeMap := make(map[string]bool)
+
 	defaultExcludes := []string{".git", "node_modules", "vendor", "__pycache__", ".idea", ".vscode", "target", "build", "dist"}
 	for _, e := range defaultExcludes {
 		excludeMap[e] = true
 	}
+
 	for _, e := range opts.Exclude {
 		excludeMap[e] = true
 	}
@@ -426,6 +428,7 @@ func RunLoc(w io.Writer, args []string, opts Options) error {
 				if d.IsDir() {
 					return filepath.SkipDir
 				}
+
 				return nil
 			}
 
@@ -434,6 +437,7 @@ func RunLoc(w io.Writer, args []string, opts Options) error {
 				if excludeMap[name] {
 					return filepath.SkipDir
 				}
+
 				return nil
 			}
 
@@ -460,6 +464,7 @@ func RunLoc(w io.Writer, args []string, opts Options) error {
 			if langStats[lang.name] == nil {
 				langStats[lang.name] = &LanguageStats{Language: lang.name}
 			}
+
 			ls := langStats[lang.name]
 			ls.Files++
 			ls.Lines += fileStats.main.Lines
@@ -472,9 +477,11 @@ func RunLoc(w io.Writer, args []string, opts Options) error {
 				if ls.Children == nil {
 					ls.Children = make(map[string]*LanguageStats)
 				}
+
 				if ls.Children[embLang] == nil {
 					ls.Children[embLang] = &LanguageStats{Language: embLang}
 				}
+
 				els := ls.Children[embLang]
 				els.Lines += embStats.Lines
 				els.Code += embStats.Code
@@ -484,7 +491,6 @@ func RunLoc(w io.Writer, args []string, opts Options) error {
 
 			return nil
 		})
-
 		if err != nil {
 			return fmt.Errorf("loc: %w", err)
 		}
@@ -507,6 +513,7 @@ func RunLoc(w io.Writer, args []string, opts Options) error {
 			result.Total.Blanks += child.Blanks
 		}
 	}
+
 	result.Total.Language = "Total"
 
 	// Sort by code lines (descending)
@@ -517,6 +524,7 @@ func RunLoc(w io.Writer, args []string, opts Options) error {
 	if opts.JSON {
 		enc := json.NewEncoder(w)
 		enc.SetIndent("", "  ")
+
 		return enc.Encode(result)
 	}
 
@@ -534,6 +542,7 @@ func countFile(path string, lang *langDef) (*fileStats, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	defer func() { _ = f.Close() }()
 
 	result := &fileStats{
@@ -557,6 +566,7 @@ func countFile(path string, lang *langDef) (*fileStats, error) {
 // Like tokei: code block content goes to embedded stats, not main
 func countLiterate(scanner *bufio.Scanner, lang *langDef, result *fileStats) {
 	inCodeBlock := false
+
 	var codeBlockLang string
 
 	for scanner.Scan() {
@@ -570,18 +580,22 @@ func countLiterate(scanner *bufio.Scanner, lang *langDef, result *fileStats) {
 				result.main.Blanks++
 				continue
 			}
+
 			if matches := codeBlockStartRegex.FindStringSubmatch(trimmed); matches != nil {
 				result.main.Comments++ // The ``` line is a comment
 				inCodeBlock = true
+
 				if len(matches) > 1 && matches[1] != "" {
 					codeBlockLang = detectLanguageName(matches[1])
 				} else {
 					codeBlockLang = ""
 				}
+
 				continue
 			}
 			// Regular markdown content = comment
 			result.main.Comments++
+
 			continue
 		}
 
@@ -591,6 +605,7 @@ func countLiterate(scanner *bufio.Scanner, lang *langDef, result *fileStats) {
 			result.main.Comments++ // The closing ``` is a comment
 			inCodeBlock = false
 			codeBlockLang = ""
+
 			continue
 		}
 
@@ -599,16 +614,18 @@ func countLiterate(scanner *bufio.Scanner, lang *langDef, result *fileStats) {
 		if codeBlockLang != "" {
 			embLang := getLangByName(codeBlockLang)
 			embStats := result.embedded[codeBlockLang]
+
 			embStats.Lines++
 			if trimmed == "" {
 				embStats.Blanks++
-				result.main.Lines++  // Blank lines count in main too
+				result.main.Lines++ // Blank lines count in main too
 				result.main.Blanks++
 			} else if embLang != nil && isLineComment(trimmed, embLang) {
 				embStats.Comments++
 			} else {
 				embStats.Code++
 			}
+
 			result.embedded[codeBlockLang] = embStats
 		} else {
 			// Unknown code blocks - count as main (prose)
@@ -679,12 +696,15 @@ func parseLine(line string, lang *langDef, inBlockComment *bool, blockDepth *int
 				}
 			}
 		}
+
 		return lineComment
 	}
 
 	// State machine for parsing the line
 	inString := false
+
 	var stringEnd string
+
 	hasCode := false
 
 	for i := 0; i < len(line); {
@@ -698,11 +718,15 @@ func parseLine(line string, lang *langDef, inBlockComment *bool, blockDepth *int
 					i++
 					continue
 				}
+
 				inString = false
 				i += len(stringEnd)
+
 				continue
 			}
+
 			i++
+
 			continue
 		}
 
@@ -713,9 +737,11 @@ func parseLine(line string, lang *langDef, inBlockComment *bool, blockDepth *int
 				stringEnd = q[1]
 				hasCode = true
 				i += len(q[0])
+
 				break
 			}
 		}
+
 		if inString {
 			continue
 		}
@@ -731,10 +757,13 @@ func parseLine(line string, lang *langDef, inBlockComment *bool, blockDepth *int
 					i += len(lang.blockStart) + endIdx + len(lang.blockEnd)
 					continue
 				}
+
 				*inBlockComment = true
+
 				if lang.nested {
 					*blockDepth = 1
 				}
+
 				return lineCode
 			}
 
@@ -748,14 +777,17 @@ func parseLine(line string, lang *langDef, inBlockComment *bool, blockDepth *int
 				}
 				// There's content after the comment
 				i += len(lang.blockStart) + endIdx + len(lang.blockEnd)
+
 				continue
 			}
 
 			// Block comment continues to next line
 			*inBlockComment = true
+
 			if lang.nested {
 				*blockDepth = 1
 			}
+
 			return lineComment
 		}
 
@@ -766,6 +798,7 @@ func parseLine(line string, lang *langDef, inBlockComment *bool, blockDepth *int
 				if hasCode {
 					return lineCode
 				}
+
 				return lineComment
 			}
 		}
@@ -774,12 +807,14 @@ func parseLine(line string, lang *langDef, inBlockComment *bool, blockDepth *int
 		if !isWhitespace(remaining[0]) {
 			hasCode = true
 		}
+
 		i++
 	}
 
 	if hasCode {
 		return lineCode
 	}
+
 	return lineComment
 }
 
@@ -789,6 +824,7 @@ func startsWithLineComment(line string, lang *langDef) bool {
 			return true
 		}
 	}
+
 	return false
 }
 
@@ -800,6 +836,7 @@ func isLineComment(line string, lang *langDef) bool {
 			return true
 		}
 	}
+
 	return false
 }
 
@@ -810,6 +847,7 @@ func getLangByName(name string) *langDef {
 			return &languages[i]
 		}
 	}
+
 	return nil
 }
 
@@ -897,6 +935,7 @@ func detectLanguageName(hint string) string {
 	if name, ok := mapping[hint]; ok {
 		return name
 	}
+
 	return ""
 }
 
@@ -923,6 +962,7 @@ func printTable(w io.Writer, result Result) error {
 			for name := range ls.Children {
 				childNames = append(childNames, name)
 			}
+
 			sort.Slice(childNames, func(i, j int) bool {
 				return ls.Children[childNames[i]].Code > ls.Children[childNames[j]].Code
 			})
@@ -937,6 +977,7 @@ func printTable(w io.Writer, result Result) error {
 			totalLines := ls.Lines
 			totalCode := ls.Code
 			totalComments := ls.Comments
+
 			totalBlanks := ls.Blanks
 			for _, child := range ls.Children {
 				totalLines += child.Lines
@@ -944,6 +985,7 @@ func printTable(w io.Writer, result Result) error {
 				totalComments += child.Comments
 				totalBlanks += child.Blanks
 			}
+
 			_, _ = fmt.Fprintf(w, " (Total)          %8s %10d %10d %10d %10d\n",
 				"", totalLines, totalCode, totalComments, totalBlanks)
 		}
@@ -961,5 +1003,6 @@ func truncate(s string, max int) string {
 	if len(s) <= max {
 		return s
 	}
+
 	return s[:max-1] + "."
 }

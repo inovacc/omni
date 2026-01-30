@@ -42,7 +42,7 @@ Examples:
 		opts.Payload, _ = cmd.Flags().GetBool("payload")
 		opts.Raw, _ = cmd.Flags().GetBool("raw")
 
-		return jwt.RunDecode(os.Stdout, args, opts)
+		return jwt.RunDecode(cmd.OutOrStdout(), args, opts)
 	},
 }
 

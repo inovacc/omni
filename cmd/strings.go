@@ -32,7 +32,7 @@ Examples:
 			JSON:      jsonOutput,
 		}
 
-		return strings.RunStrings(os.Stdout, args, opts)
+		return strings.RunStrings(cmd.OutOrStdout(), args, opts)
 	},
 }
 

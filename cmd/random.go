@@ -51,7 +51,7 @@ Examples:
 		opts.Sep, _ = cmd.Flags().GetString("separator")
 		opts.JSON, _ = cmd.Flags().GetBool("json")
 
-		return random.RunRandom(os.Stdout, opts)
+		return random.RunRandom(cmd.OutOrStdout(), opts)
 	},
 }
 

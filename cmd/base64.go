@@ -31,7 +31,7 @@ Examples:
 		opts.Wrap, _ = cmd.Flags().GetInt("wrap")
 		opts.IgnoreGarbage, _ = cmd.Flags().GetBool("ignore-garbage")
 
-		return base.RunBase64(os.Stdout, args, opts)
+		return base.RunBase64(cmd.OutOrStdout(), args, opts)
 	},
 }
 

@@ -16,7 +16,7 @@ var whoamiCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		opts := whoami.WhoamiOptions{}
 		opts.JSON, _ = cmd.Flags().GetBool("json")
-		return whoami.RunWhoami(os.Stdout, opts)
+		return whoami.RunWhoami(cmd.OutOrStdout(), opts)
 	},
 }
 

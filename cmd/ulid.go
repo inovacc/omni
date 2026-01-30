@@ -37,7 +37,7 @@ Examples:
 		opts.Lower, _ = cmd.Flags().GetBool("lower")
 		opts.JSON, _ = cmd.Flags().GetBool("json")
 
-		return ulid.RunULID(os.Stdout, opts)
+		return ulid.RunULID(cmd.OutOrStdout(), opts)
 	},
 }
 

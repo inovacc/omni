@@ -43,7 +43,7 @@ Examples:
 			List:       xzList,
 		}
 
-		return xz.RunXz(os.Stdout, args, opts)
+		return xz.RunXz(cmd.OutOrStdout(), args, opts)
 	},
 }
 
@@ -64,7 +64,7 @@ Note: Full decompression requires external library.`,
 			Verbose:    xzVerbose,
 		}
 
-		return xz.RunUnxz(os.Stdout, args, opts)
+		return xz.RunUnxz(cmd.OutOrStdout(), args, opts)
 	},
 }
 
@@ -77,7 +77,7 @@ Equivalent to xz -dc.
 
 Note: Full decompression requires external library.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return xz.RunXzcat(os.Stdout, args)
+		return xz.RunXzcat(cmd.OutOrStdout(), args)
 	},
 }
 

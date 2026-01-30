@@ -51,7 +51,7 @@ Examples:
 			return err
 		}
 
-		var w = os.Stdout
+		var w = cmd.OutOrStdout()
 
 		if outputFile != "" {
 			f, err := os.Create(outputFile)

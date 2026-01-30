@@ -41,7 +41,7 @@ Examples:
 		opts.Warn, _ = cmd.Flags().GetBool("warn")
 		opts.JSON, _ = cmd.Flags().GetBool("json")
 
-		return hash.RunHash(os.Stdout, args, opts)
+		return hash.RunHash(cmd.OutOrStdout(), args, opts)
 	},
 }
 

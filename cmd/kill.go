@@ -38,7 +38,7 @@ Examples:
 		opts.Verbose, _ = cmd.Flags().GetBool("verbose")
 		opts.JSON, _ = cmd.Flags().GetBool("json")
 
-		return kill.RunKill(os.Stdout, args, opts)
+		return kill.RunKill(cmd.OutOrStdout(), args, opts)
 	},
 }
 

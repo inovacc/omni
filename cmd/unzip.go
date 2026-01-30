@@ -39,11 +39,11 @@ Examples:
 		opts.JSON, _ = cmd.Flags().GetBool("json")
 
 		if opts.List {
-			return archive.RunArchive(os.Stdout, nil, opts)
+			return archive.RunArchive(cmd.OutOrStdout(), nil, opts)
 		}
 
 		opts.Extract = true
-		return archive.RunUnzip(os.Stdout, args, opts)
+		return archive.RunUnzip(cmd.OutOrStdout(), args, opts)
 	},
 }
 

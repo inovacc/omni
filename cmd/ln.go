@@ -31,7 +31,7 @@ Create hard links by default, symbolic links with --symbolic.
 		opts.Backup, _ = cmd.Flags().GetBool("backup")
 		opts.Relative, _ = cmd.Flags().GetBool("relative")
 
-		return ln.RunLn(os.Stdout, args, opts)
+		return ln.RunLn(cmd.OutOrStdout(), args, opts)
 	},
 }
 

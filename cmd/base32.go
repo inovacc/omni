@@ -28,7 +28,7 @@ Examples:
 		opts.Decode, _ = cmd.Flags().GetBool("decode")
 		opts.Wrap, _ = cmd.Flags().GetInt("wrap")
 
-		return base.RunBase32(os.Stdout, args, opts)
+		return base.RunBase32(cmd.OutOrStdout(), args, opts)
 	},
 }
 

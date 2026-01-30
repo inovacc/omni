@@ -81,10 +81,10 @@ Supported commands include all omni commands:
 				input += "\n"
 			}
 
-			return pipe.RunWithInput(os.Stdout, input, args, opts, registry)
+			return pipe.RunWithInput(cmd.OutOrStdout(), input, args, opts, registry)
 		}
 
-		return pipe.Run(os.Stdout, args, opts, registry)
+		return pipe.Run(cmd.OutOrStdout(), args, opts, registry)
 	},
 }
 

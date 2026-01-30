@@ -81,7 +81,7 @@ Examples:
 			}
 		}
 
-		return curl.Run(os.Stdout, args, opts)
+		return curl.Run(cmd.OutOrStdout(), args, opts)
 	},
 }
 

@@ -58,7 +58,7 @@ Examples:
 			}
 		}
 
-		return ps.Run(os.Stdout, opts)
+		return ps.Run(cmd.OutOrStdout(), opts)
 	},
 }
 

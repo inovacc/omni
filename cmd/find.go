@@ -96,7 +96,7 @@ Examples:
 			JSON:       findJSON,
 		}
 
-		return find.RunFind(os.Stdout, args, opts)
+		return find.RunFind(cmd.OutOrStdout(), args, opts)
 	},
 }
 

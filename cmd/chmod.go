@@ -38,7 +38,7 @@ Options:
 		opts.Silent, _ = cmd.Flags().GetBool("silent")
 		opts.Reference, _ = cmd.Flags().GetString("reference")
 
-		return chmod.RunChmod(os.Stdout, args, opts)
+		return chmod.RunChmod(cmd.OutOrStdout(), args, opts)
 	},
 }
 

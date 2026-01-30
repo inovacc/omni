@@ -13,7 +13,7 @@ var pipelineCmd = &cobra.Command{
 	Short: "Internal streaming pipeline engine",
 	Long:  `Internal streaming pipeline engine for chaining commands.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		_, _ = fmt.Fprintln(os.Stdout, "pipeline: not yet implemented")
+		_, _ = fmt.Fprintln(cmd.OutOrStdout(), "pipeline: not yet implemented")
 		return nil
 	},
 }

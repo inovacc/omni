@@ -43,7 +43,7 @@ var sqliteStatsCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		jsonOutput, _ := cmd.Flags().GetBool("json")
-		return sqlite.RunStats(os.Stdout, args[0], sqlite.Options{JSON: jsonOutput})
+		return sqlite.RunStats(cmd.OutOrStdout(), args[0], sqlite.Options{JSON: jsonOutput})
 	},
 }
 
@@ -53,7 +53,7 @@ var sqliteTablesCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		jsonOutput, _ := cmd.Flags().GetBool("json")
-		return sqlite.RunTables(os.Stdout, args[0], sqlite.Options{JSON: jsonOutput})
+		return sqlite.RunTables(cmd.OutOrStdout(), args[0], sqlite.Options{JSON: jsonOutput})
 	},
 }
 
@@ -69,7 +69,7 @@ var sqliteSchemaCmd = &cobra.Command{
 			table = args[1]
 		}
 
-		return sqlite.RunSchema(os.Stdout, args[0], table, sqlite.Options{JSON: jsonOutput})
+		return sqlite.RunSchema(cmd.OutOrStdout(), args[0], table, sqlite.Options{JSON: jsonOutput})
 	},
 }
 
@@ -79,7 +79,7 @@ var sqliteColumnsCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(2),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		jsonOutput, _ := cmd.Flags().GetBool("json")
-		return sqlite.RunColumns(os.Stdout, args[0], args[1], sqlite.Options{JSON: jsonOutput})
+		return sqlite.RunColumns(cmd.OutOrStdout(), args[0], args[1], sqlite.Options{JSON: jsonOutput})
 	},
 }
 
@@ -89,7 +89,7 @@ var sqliteIndexesCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		jsonOutput, _ := cmd.Flags().GetBool("json")
-		return sqlite.RunIndexes(os.Stdout, args[0], sqlite.Options{JSON: jsonOutput})
+		return sqlite.RunIndexes(cmd.OutOrStdout(), args[0], sqlite.Options{JSON: jsonOutput})
 	},
 }
 
@@ -119,7 +119,7 @@ Examples:
 		// Get the global logger if available
 		l := logger.Get()
 
-		return sqlite.RunQuery(os.Stdout, args[0], args[1], sqlite.Options{
+		return sqlite.RunQuery(cmd.OutOrStdout(), args[0], args[1], sqlite.Options{
 			JSON:      jsonOutput,
 			Header:    header,
 			Separator: separator,
@@ -135,7 +135,7 @@ var sqliteVacuumCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		jsonOutput, _ := cmd.Flags().GetBool("json")
-		return sqlite.RunVacuum(os.Stdout, args[0], sqlite.Options{JSON: jsonOutput})
+		return sqlite.RunVacuum(cmd.OutOrStdout(), args[0], sqlite.Options{JSON: jsonOutput})
 	},
 }
 
@@ -145,7 +145,7 @@ var sqliteCheckCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		jsonOutput, _ := cmd.Flags().GetBool("json")
-		return sqlite.RunCheck(os.Stdout, args[0], sqlite.Options{JSON: jsonOutput})
+		return sqlite.RunCheck(cmd.OutOrStdout(), args[0], sqlite.Options{JSON: jsonOutput})
 	},
 }
 
@@ -159,7 +159,7 @@ var sqliteDumpCmd = &cobra.Command{
 			table = args[1]
 		}
 
-		return sqlite.RunDump(os.Stdout, args[0], table, sqlite.Options{})
+		return sqlite.RunDump(cmd.OutOrStdout(), args[0], table, sqlite.Options{})
 	},
 }
 
@@ -169,7 +169,7 @@ var sqliteImportCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(2),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		jsonOutput, _ := cmd.Flags().GetBool("json")
-		return sqlite.RunImport(os.Stdout, args[0], args[1], sqlite.Options{JSON: jsonOutput})
+		return sqlite.RunImport(cmd.OutOrStdout(), args[0], args[1], sqlite.Options{JSON: jsonOutput})
 	},
 }
 

@@ -27,9 +27,9 @@ Examples:
 		if len(args) == 0 {
 			// Just print current time
 			now := time.Now()
-			_, _ = fmt.Fprintf(os.Stdout, "Current time: %s\n", now.Format(time.RFC3339))
-			_, _ = fmt.Fprintf(os.Stdout, "Unix timestamp: %d\n", now.Unix())
-			_, _ = fmt.Fprintf(os.Stdout, "Unix nano: %d\n", now.UnixNano())
+			_, _ = fmt.Fprintf(cmd.OutOrStdout(), "Current time: %s\n", now.Format(time.RFC3339))
+			_, _ = fmt.Fprintf(cmd.OutOrStdout(), "Unix timestamp: %d\n", now.Unix())
+			_, _ = fmt.Fprintf(cmd.OutOrStdout(), "Unix nano: %d\n", now.UnixNano())
 			return nil
 		}
 
@@ -43,7 +43,7 @@ Examples:
 				}
 			}
 
-			_, err = timecmd.RunTime(os.Stderr, func() error {
+			_, err = timecmd.RunTime(cmd.ErrOrStderr(), func() error {
 				time.Sleep(duration)
 				return nil
 			})

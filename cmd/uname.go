@@ -37,7 +37,7 @@ var unameCmd = &cobra.Command{
 		opts.OperatingSystem, _ = cmd.Flags().GetBool("operating-system")
 		opts.JSON, _ = cmd.Flags().GetBool("json")
 
-		return uname.RunUname(os.Stdout, opts)
+		return uname.RunUname(cmd.OutOrStdout(), opts)
 	},
 }
 

@@ -39,7 +39,7 @@ Examples:
 		opts.JSON, _ = cmd.Flags().GetBool("json")
 		opts.Uppercase, _ = cmd.Flags().GetBool("upper")
 
-		return hexenc.RunEncode(os.Stdout, args, opts)
+		return hexenc.RunEncode(cmd.OutOrStdout(), args, opts)
 	},
 }
 
@@ -59,7 +59,7 @@ Examples:
 		opts := hexenc.Options{}
 		opts.JSON, _ = cmd.Flags().GetBool("json")
 
-		return hexenc.RunDecode(os.Stdout, args, opts)
+		return hexenc.RunDecode(cmd.OutOrStdout(), args, opts)
 	},
 }
 

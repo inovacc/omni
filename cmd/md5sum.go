@@ -36,7 +36,7 @@ Examples:
 		opts.Status, _ = cmd.Flags().GetBool("status")
 		opts.Warn, _ = cmd.Flags().GetBool("warn")
 
-		return hash.RunMD5Sum(os.Stdout, args, opts)
+		return hash.RunMD5Sum(cmd.OutOrStdout(), args, opts)
 	},
 }
 

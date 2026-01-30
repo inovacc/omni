@@ -33,7 +33,7 @@ or (when USER omitted) for the current user.
 			opts.Username = args[0]
 		}
 
-		return id.RunID(os.Stdout, opts)
+		return id.RunID(cmd.OutOrStdout(), opts)
 	},
 }
 

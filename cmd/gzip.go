@@ -43,7 +43,7 @@ Examples:
 			Level:      gzipLevel,
 		}
 
-		return gzip.RunGzip(os.Stdout, args, opts)
+		return gzip.RunGzip(cmd.OutOrStdout(), args, opts)
 	},
 }
 
@@ -66,7 +66,7 @@ Examples:
 			Verbose:    gzipVerbose,
 		}
 
-		return gzip.RunGunzip(os.Stdout, args, opts)
+		return gzip.RunGunzip(cmd.OutOrStdout(), args, opts)
 	},
 }
 
@@ -81,7 +81,7 @@ Examples:
   omni zcat file.txt.gz        # print decompressed content
   omni zcat file.gz | grep x   # decompress and grep`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return gzip.RunZcat(os.Stdout, args)
+		return gzip.RunZcat(cmd.OutOrStdout(), args)
 	},
 }
 
