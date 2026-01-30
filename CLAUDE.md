@@ -111,7 +111,7 @@ defer func() {
 
 ## Command Categories
 
-### Implemented (110+ commands)
+### Implemented (120+ commands)
 
 | Category | Commands |
 |----------|----------|
@@ -124,7 +124,10 @@ defer func() {
 | **Compression** | gzip, gunzip, zcat, bzip2, bunzip2, bzcat, xz, unxz, xzcat |
 | **Hash** | hash, sha256sum, sha512sum, md5sum |
 | **Encoding** | base64, base32, base58, url encode/decode, html encode/decode, hex encode/decode |
-| **Data** | jq, yq, dotenv, json tostruct, yaml tostruct, yaml validate, toml validate, xml validate |
+| **Data** | jq, yq, dotenv, json (tostruct, tocsv, fromcsv, toxml, fromxml), yaml tostruct, yaml validate, toml validate, xml (validate, tojson, fromjson) |
+| **Formatting** | sql fmt/minify/validate, html fmt/minify/validate, css fmt/minify/validate |
+| **Protobuf** | buf lint, buf format, buf compile, buf breaking, buf generate, buf mod init/update, buf ls-files |
+| **Code Gen** | generate handler, generate repository, generate test |
 | **Security** | encrypt, decrypt, uuid, random, jwt decode |
 | **Pagers** | less, more |
 | **Comparison** | diff |
@@ -158,12 +161,16 @@ defer func() {
 | `os`, `io`, `io/fs` | All file operations |
 | `path/filepath` | Path manipulation |
 | `regexp` | grep, sed pattern matching |
-| `encoding/json` | jq, JSON output |
+| `encoding/json` | jq, JSON output, json tocsv/fromcsv |
+| `encoding/csv` | csv/json conversions |
+| `encoding/xml` | xml operations, json toxml/fromxml |
 | `archive/tar`, `archive/zip` | tar, zip, unzip |
 | `compress/gzip` | tar -z, gzip, gunzip, zcat |
 | `compress/bzip2` | bzip2, bunzip2, bzcat (decompress only) |
 | `crypto/*` | hash, encrypt/decrypt |
 | `syscall` | df, free, uptime, ps |
+| `go/parser`, `go/ast` | generate test |
+| `text/template` | code generators |
 
 ---
 
