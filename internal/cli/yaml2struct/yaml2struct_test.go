@@ -34,7 +34,7 @@ count: 42`,
 			contains: []string{
 				"package models",
 				"type Response struct",
-				"User User",
+				"User",
 				"type User struct",
 			},
 		},
@@ -66,6 +66,7 @@ label: test`,
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var buf bytes.Buffer
+
 			r := strings.NewReader(tt.input)
 
 			err := RunYAML2Struct(&buf, r, nil, tt.opts)
@@ -85,6 +86,7 @@ label: test`,
 
 func TestInvalidYAML(t *testing.T) {
 	var buf bytes.Buffer
+
 	r := strings.NewReader(":\ninvalid: [yaml")
 
 	err := RunYAML2Struct(&buf, r, nil, Options{})

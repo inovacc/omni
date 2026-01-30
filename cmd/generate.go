@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/inovacc/omni/internal/cli/generate"
 	"github.com/spf13/cobra"
@@ -19,6 +20,9 @@ Subcommands:
   cobra init    Initialize a new Cobra CLI application
   cobra add     Add a new command to an existing Cobra application
   cobra config  Manage cobra generator configuration
+  handler       Generate HTTP handler
+  repository    Generate database repository
+  test          Generate tests for a Go source file
 
 Configuration:
   Default values can be set in ~/.cobra.yaml (compatible with cobra-cli).
@@ -27,7 +31,10 @@ Configuration:
 Examples:
   omni generate cobra init myapp --module github.com/user/myapp
   omni generate cobra add serve --parent root
-  omni generate cobra config --show`,
+  omni generate cobra config --show
+  omni generate handler user --method GET,POST --framework chi
+  omni generate repository user --entity User --table users
+  omni generate test internal/cli/foo/foo.go`,
 }
 
 var generateCobraCmd = &cobra.Command{
@@ -253,9 +260,139 @@ Examples:
 	},
 }
 
+var generateHandlerCmd = &cobra.Command{
+	Use:   "handler <name>",
+	Short: "Generate HTTP handler",
+	Long: `Generate an HTTP handler with the specified name.
+
+Supports multiple frameworks: stdlib, chi, gin, echo
+
+  -p, --package      Package name (default: "handler")
+  -d, --dir          Output directory (default: "internal/handler")
+  -m, --method       HTTP methods: GET,POST,PUT,DELETE,PATCH (default: GET,POST,PUT,DELETE)
+  --path             URL path pattern
+  --middleware       Include middleware support
+  -f, --framework    Framework: stdlib, chi, gin, echo (default: stdlib)
+
+Examples:
+  omni generate handler user
+  omni generate handler user --method GET,POST --framework chi
+  omni generate handler user --dir handlers --package handlers
+  omni generate handler product --middleware --framework gin`,
+	Args: cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		jsonOutput, _ := cmd.Flags().GetBool("json")
+		pkg, _ := cmd.Flags().GetString("package")
+		dir, _ := cmd.Flags().GetString("dir")
+		methodsStr, _ := cmd.Flags().GetString("method")
+		path, _ := cmd.Flags().GetString("path")
+		middleware, _ := cmd.Flags().GetBool("middleware")
+		framework, _ := cmd.Flags().GetString("framework")
+
+		var methods []string
+		if methodsStr != "" {
+			methods = strings.Split(methodsStr, ",")
+		}
+
+		opts := generate.HandlerOptions{
+			Package:    pkg,
+			Dir:        dir,
+			Methods:    methods,
+			Path:       path,
+			Middleware: middleware,
+			Framework:  framework,
+		}
+
+		return generate.RunHandlerInit(os.Stdout, args[0], opts, generate.Options{JSON: jsonOutput})
+	},
+}
+
+var generateRepositoryCmd = &cobra.Command{
+	Use:   "repository <name>",
+	Short: "Generate database repository",
+	Long: `Generate a database repository with the specified name.
+
+  -p, --package      Package name (default: "repository")
+  -d, --dir          Output directory (default: "internal/repository")
+  -e, --entity       Entity struct name (default: capitalized name)
+  -t, --table        Database table name (default: lowercase name + "s")
+  --db               Database type: postgres, mysql, sqlite (default: postgres)
+  --interface        Generate interface (default: true)
+
+Examples:
+  omni generate repository user
+  omni generate repository user --entity User --table users
+  omni generate repository product --db mysql
+  omni generate repository order --interface=false`,
+	Args: cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		jsonOutput, _ := cmd.Flags().GetBool("json")
+		pkg, _ := cmd.Flags().GetString("package")
+		dir, _ := cmd.Flags().GetString("dir")
+		entity, _ := cmd.Flags().GetString("entity")
+		table, _ := cmd.Flags().GetString("table")
+		db, _ := cmd.Flags().GetString("db")
+		iface, _ := cmd.Flags().GetBool("interface")
+
+		opts := generate.RepositoryOptions{
+			Package:   pkg,
+			Dir:       dir,
+			Entity:    entity,
+			Table:     table,
+			DB:        db,
+			Interface: iface,
+		}
+
+		return generate.RunRepositoryInit(os.Stdout, args[0], opts, generate.Options{JSON: jsonOutput})
+	},
+}
+
+var generateTestCmd = &cobra.Command{
+	Use:   "test <file.go>",
+	Short: "Generate tests for a Go source file",
+	Long: `Generate test stubs for exported functions in a Go source file.
+
+Parses the input file and generates test functions for all exported
+functions and methods.
+
+  --table           Generate table-driven tests (default: true)
+  --parallel        Add t.Parallel() calls
+  --mock            Generate mock setup
+  --benchmark       Include benchmark tests
+  --fuzz            Include fuzz tests (Go 1.18+)
+
+Examples:
+  omni generate test internal/cli/foo/foo.go
+  omni generate test pkg/service/user.go --parallel
+  omni generate test handler.go --table=false
+  omni generate test service.go --benchmark --mock`,
+	Args: cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		jsonOutput, _ := cmd.Flags().GetBool("json")
+		table, _ := cmd.Flags().GetBool("table")
+		parallel, _ := cmd.Flags().GetBool("parallel")
+		mock, _ := cmd.Flags().GetBool("mock")
+		benchmark, _ := cmd.Flags().GetBool("benchmark")
+		fuzz, _ := cmd.Flags().GetBool("fuzz")
+
+		opts := generate.TestOptions{
+			Table:     table,
+			Parallel:  parallel,
+			Mock:      mock,
+			Benchmark: benchmark,
+			Fuzz:      fuzz,
+		}
+
+		return generate.RunTestInit(os.Stdout, args[0], opts, generate.Options{JSON: jsonOutput})
+	},
+}
+
 func init() {
 	rootCmd.AddCommand(generateCmd)
 	generateCmd.AddCommand(generateCobraCmd)
+	generateCmd.AddCommand(generateHandlerCmd)
+	generateCmd.AddCommand(generateRepositoryCmd)
+	generateCmd.AddCommand(generateTestCmd)
 	generateCobraCmd.AddCommand(generateCobraInitCmd)
 	generateCobraCmd.AddCommand(generateCobraAddCmd)
 	generateCobraCmd.AddCommand(generateCobraConfigCmd)
@@ -287,4 +424,27 @@ func init() {
 	generateCobraConfigCmd.Flags().Bool("viper", false, "set useViper in config")
 	generateCobraConfigCmd.Flags().Bool("service", false, "set useService in config")
 	generateCobraConfigCmd.Flags().Bool("full", false, "set full in config")
+
+	// Flags for handler
+	generateHandlerCmd.Flags().StringP("package", "p", "handler", "package name")
+	generateHandlerCmd.Flags().StringP("dir", "d", "internal/handler", "output directory")
+	generateHandlerCmd.Flags().StringP("method", "m", "GET,POST,PUT,DELETE", "HTTP methods (comma-separated)")
+	generateHandlerCmd.Flags().String("path", "", "URL path pattern")
+	generateHandlerCmd.Flags().Bool("middleware", false, "include middleware support")
+	generateHandlerCmd.Flags().StringP("framework", "f", "stdlib", "framework: stdlib, chi, gin, echo")
+
+	// Flags for repository
+	generateRepositoryCmd.Flags().StringP("package", "p", "repository", "package name")
+	generateRepositoryCmd.Flags().StringP("dir", "d", "internal/repository", "output directory")
+	generateRepositoryCmd.Flags().StringP("entity", "e", "", "entity struct name")
+	generateRepositoryCmd.Flags().StringP("table", "t", "", "database table name")
+	generateRepositoryCmd.Flags().String("db", "postgres", "database type: postgres, mysql, sqlite")
+	generateRepositoryCmd.Flags().Bool("interface", true, "generate interface")
+
+	// Flags for test
+	generateTestCmd.Flags().Bool("table", true, "generate table-driven tests")
+	generateTestCmd.Flags().Bool("parallel", false, "add t.Parallel() calls")
+	generateTestCmd.Flags().Bool("mock", false, "generate mock setup")
+	generateTestCmd.Flags().Bool("benchmark", false, "include benchmark tests")
+	generateTestCmd.Flags().Bool("fuzz", false, "include fuzz tests")
 }
