@@ -1,0 +1,8 @@
+version: v1
+name: buf.build/test/proto
+lint:
+  use:
+    - STANDARD
+breaking:
+  use:
+    - FILE
