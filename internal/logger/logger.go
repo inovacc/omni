@@ -1,6 +1,7 @@
 package logger
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"log/slog"
@@ -18,6 +19,9 @@ const (
 	// EnvLogEnabled is the environment variable that enables logging.
 	// Set to "true" or "1" to enable command logging.
 	EnvLogEnabled = "OMNI_LOGGER_ENABLED"
+
+	// MaxOutputSize is the maximum output size to log (1MB)
+	MaxOutputSize = 1024 * 1024
 )
 
 var (
@@ -27,10 +31,108 @@ var (
 
 // Logger handles command logging for omni.
 type Logger struct {
-	slog    *slog.Logger
-	file    *os.File
-	active  bool
-	command string
+	slog      *slog.Logger
+	file      *os.File
+	active    bool
+	command   string
+	execution *CommandExecution
+	mu        sync.Mutex
+}
+
+// CommandExecution tracks a single command execution.
+type CommandExecution struct {
+	Command   string
+	Args      []string
+	StartTime time.Time
+	Stdout    *LoggingWriter
+	Stderr    *LoggingWriter
+}
+
+// LoggingWriter wraps an io.Writer to capture output while passing it through.
+type LoggingWriter struct {
+	underlying io.Writer
+	buffer     bytes.Buffer
+	mu         sync.Mutex
+	maxSize    int
+	truncated  bool
+}
+
+// NewLoggingWriter creates a writer that captures output while passing it through.
+func NewLoggingWriter(w io.Writer) *LoggingWriter {
+	return &LoggingWriter{
+		underlying: w,
+		maxSize:    MaxOutputSize,
+	}
+}
+
+// Write implements io.Writer, capturing output while passing it through.
+func (lw *LoggingWriter) Write(p []byte) (n int, err error) {
+	lw.mu.Lock()
+	defer lw.mu.Unlock()
+
+	// Write to underlying writer first
+	n, err = lw.underlying.Write(p)
+	if err != nil {
+		return n, err
+	}
+
+	// Capture to buffer if not truncated
+	if !lw.truncated {
+		if lw.buffer.Len()+len(p) > lw.maxSize {
+			// Write what we can and mark as truncated
+			remaining := lw.maxSize - lw.buffer.Len()
+			if remaining > 0 {
+				_, _ = lw.buffer.Write(p[:remaining])
+			}
+
+			lw.truncated = true
+		} else {
+			_, _ = lw.buffer.Write(p)
+		}
+	}
+
+	return n, nil
+}
+
+// String returns the captured output.
+func (lw *LoggingWriter) String() string {
+	lw.mu.Lock()
+	defer lw.mu.Unlock()
+
+	return lw.buffer.String()
+}
+
+// Bytes returns the captured output as bytes.
+func (lw *LoggingWriter) Bytes() []byte {
+	lw.mu.Lock()
+	defer lw.mu.Unlock()
+
+	return lw.buffer.Bytes()
+}
+
+// Len returns the length of captured output.
+func (lw *LoggingWriter) Len() int {
+	lw.mu.Lock()
+	defer lw.mu.Unlock()
+
+	return lw.buffer.Len()
+}
+
+// IsTruncated returns true if output was truncated due to size limits.
+func (lw *LoggingWriter) IsTruncated() bool {
+	lw.mu.Lock()
+	defer lw.mu.Unlock()
+
+	return lw.truncated
+}
+
+// Reset clears the captured output.
+func (lw *LoggingWriter) Reset() {
+	lw.mu.Lock()
+	defer lw.mu.Unlock()
+
+	lw.buffer.Reset()
+	lw.truncated = false
 }
 
 // Init initializes the global logger instance with the command name.
@@ -193,7 +295,128 @@ func (l *Logger) LogCommand(args []string) {
 		return
 	}
 
-	l.slog.Info("command", "cmd", l.command, "args", args, "timestamp", time.Now().Format(time.RFC3339), "pid", os.Getpid())
+	l.slog.Info("command_start",
+		"cmd", l.command,
+		"args", args,
+		"timestamp", time.Now().Format(time.RFC3339),
+		"pid", os.Getpid(),
+	)
+}
+
+// StartExecution begins tracking a command execution.
+// Returns wrapped stdout and stderr writers that capture output.
+func (l *Logger) StartExecution(command string, args []string, stdout, stderr io.Writer) (io.Writer, io.Writer) {
+	if l == nil || !l.active {
+		return stdout, stderr
+	}
+
+	l.mu.Lock()
+	defer l.mu.Unlock()
+
+	l.execution = &CommandExecution{
+		Command:   command,
+		Args:      args,
+		StartTime: time.Now(),
+		Stdout:    NewLoggingWriter(stdout),
+		Stderr:    NewLoggingWriter(stderr),
+	}
+
+	l.slog.Info("command_start",
+		"cmd", command,
+		"args", args,
+		"timestamp", l.execution.StartTime.Format(time.RFC3339),
+		"pid", os.Getpid(),
+	)
+
+	return l.execution.Stdout, l.execution.Stderr
+}
+
+// EndExecution completes tracking and logs the full execution result.
+func (l *Logger) EndExecution(err error) {
+	if l == nil || !l.active {
+		return
+	}
+
+	l.mu.Lock()
+	defer l.mu.Unlock()
+
+	if l.execution == nil {
+		return
+	}
+
+	endTime := time.Now()
+	duration := endTime.Sub(l.execution.StartTime)
+
+	status := "success"
+
+	var errMsg string
+
+	if err != nil {
+		status = "error"
+		errMsg = err.Error()
+	}
+
+	// Prepare output for logging
+	stdout := l.execution.Stdout.String()
+	stderr := l.execution.Stderr.String()
+	stdoutTruncated := l.execution.Stdout.IsTruncated()
+	stderrTruncated := l.execution.Stderr.IsTruncated()
+
+	attrs := []any{
+		"cmd", l.execution.Command,
+		"args", l.execution.Args,
+		"status", status,
+		"duration_ms", duration.Milliseconds(),
+		"start_time", l.execution.StartTime.Format(time.RFC3339),
+		"end_time", endTime.Format(time.RFC3339),
+		"pid", os.Getpid(),
+	}
+
+	if errMsg != "" {
+		attrs = append(attrs, "error", errMsg)
+	}
+
+	// Add stdout if present
+	if len(stdout) > 0 {
+		attrs = append(attrs, "stdout", stdout)
+
+		if stdoutTruncated {
+			attrs = append(attrs, "stdout_truncated", true)
+		}
+	}
+
+	// Add stderr if present
+	if len(stderr) > 0 {
+		attrs = append(attrs, "stderr", stderr)
+
+		if stderrTruncated {
+			attrs = append(attrs, "stderr_truncated", true)
+		}
+	}
+
+	attrs = append(attrs, "stdout_bytes", l.execution.Stdout.Len())
+	attrs = append(attrs, "stderr_bytes", l.execution.Stderr.Len())
+
+	l.slog.Info("command_end", attrs...)
+
+	l.execution = nil
+}
+
+// GetWrappedWriters returns the current wrapped writers if execution is active.
+// Returns nil, nil if no execution is active.
+func (l *Logger) GetWrappedWriters() (stdout, stderr io.Writer) {
+	if l == nil || !l.active {
+		return nil, nil
+	}
+
+	l.mu.Lock()
+	defer l.mu.Unlock()
+
+	if l.execution == nil {
+		return nil, nil
+	}
+
+	return l.execution.Stdout, l.execution.Stderr
 }
 
 // LogCommandWithResult logs a command execution including its result.

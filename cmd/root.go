@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"os"
+
 	"github.com/inovacc/omni/internal/flags"
 	"github.com/inovacc/omni/internal/logger"
 	"github.com/spf13/cobra"
@@ -23,22 +25,27 @@ designed for Taskfile, CI/CD, and enterprise environments.`,
 
 		log := logger.Init(cmd.Name())
 		if log.IsActive() {
-			log.LogCommand(args)
+			// Wrap stdout/stderr to capture output
+			stdout, stderr := log.StartExecution(cmd.Name(), args, os.Stdout, os.Stderr)
+			cmd.SetOut(stdout)
+			cmd.SetErr(stderr)
 		}
-	},
-	PersistentPostRunE: func(cmd *cobra.Command, args []string) error {
-		log := logger.Get()
-		if log != nil {
-			return log.Close()
-		}
-		return nil
 	},
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
-	cobra.CheckErr(rootCmd.Execute())
+	err := rootCmd.Execute()
+
+	// Finalize logging with the actual command error
+	log := logger.Get()
+	if log != nil && log.IsActive() {
+		log.EndExecution(err)
+		_ = log.Close()
+	}
+
+	cobra.CheckErr(err)
 }
 
 func init() {
