@@ -2,13 +2,13 @@ package handler
 
 // TemplateData contains all data needed for handler template rendering
 type TemplateData struct {
-	Name        string   // Handler name (e.g., "User")
-	NameLower   string   // Lowercase name (e.g., "user")
-	Package     string   // Package name
-	Methods     []string // HTTP methods (GET, POST, PUT, DELETE, PATCH)
-	Path        string   // URL path pattern
-	Middleware  bool     // Include middleware support
-	Framework   string   // Framework: stdlib, chi, gin, echo
+	Name       string   // Handler name (e.g., "User")
+	NameLower  string   // Lowercase name (e.g., "user")
+	Package    string   // Package name
+	Methods    []string // HTTP methods (GET, POST, PUT, DELETE, PATCH)
+	Path       string   // URL path pattern
+	Middleware bool     // Include middleware support
+	Framework  string   // Framework: stdlib, chi, gin, echo
 }
 
 // StdlibHandlerTemplate generates a net/http handler

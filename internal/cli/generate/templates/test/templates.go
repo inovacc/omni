@@ -3,7 +3,7 @@ package test
 // FuncInfo contains information about a function to generate tests for
 type FuncInfo struct {
 	Name       string
-	Receiver   string   // Empty for functions, type name for methods
+	Receiver   string // Empty for functions, type name for methods
 	Params     []Param
 	Results    []string
 	IsExported bool
