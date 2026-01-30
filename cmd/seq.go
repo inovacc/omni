@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"os"
-
 	"github.com/inovacc/omni/internal/cli/seq"
 	"github.com/spf13/cobra"
 )
@@ -39,7 +37,7 @@ Examples:
 			JSON:       seqJSON,
 		}
 
-		return seq.RunSeq(os.Stdout, args, opts)
+		return seq.RunSeq(cmd.OutOrStdout(), args, opts)
 	},
 }
 

@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"os"
 	"strings"
 
 	"github.com/inovacc/omni/internal/cli/date"
@@ -33,7 +32,7 @@ FORMAT controls the output. Interpreted sequences are:
 			opts.Format = convertDateFormat(args[0][1:])
 		}
 
-		return date.RunDate(os.Stdout, opts)
+		return date.RunDate(cmd.OutOrStdout(), opts)
 	},
 }
 
