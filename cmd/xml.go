@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"os"
-
 	"github.com/inovacc/omni/internal/cli/xmlfmt"
 	"github.com/inovacc/omni/internal/cli/xmlutil"
 	"github.com/spf13/cobra"

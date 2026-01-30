@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"os"
-
 	"github.com/inovacc/omni/internal/cli/htmlenc"
 	"github.com/inovacc/omni/internal/cli/htmlfmt"
 	"github.com/spf13/cobra"
