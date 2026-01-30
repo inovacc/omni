@@ -3,6 +3,9 @@ package generate
 import (
 	"encoding/json"
 	"fmt"
+	"go/ast"
+	"go/parser"
+	"go/token"
 	"io"
 	"os"
 	"path/filepath"
@@ -11,6 +14,9 @@ import (
 	"time"
 
 	cobratpl "github.com/inovacc/omni/internal/cli/generate/templates/cobra"
+	handlertpl "github.com/inovacc/omni/internal/cli/generate/templates/handler"
+	repotpl "github.com/inovacc/omni/internal/cli/generate/templates/repository"
+	testtpl "github.com/inovacc/omni/internal/cli/generate/templates/test"
 )
 
 // Options configures the generate command behavior
@@ -399,4 +405,455 @@ func writeLicense(path, licenseType, author string) error {
 	}
 
 	return os.WriteFile(path, []byte(content), 0644)
+}
+
+// HandlerOptions configures handler generation
+type HandlerOptions struct {
+	Package    string   // Package name (default: "handler")
+	Dir        string   // Output directory (default: "internal/handler")
+	Methods    []string // HTTP methods: GET, POST, PUT, DELETE, PATCH
+	Path       string   // URL path pattern
+	Middleware bool     // Include middleware support
+	Framework  string   // chi, gin, echo, stdlib (default: stdlib)
+}
+
+// HandlerResult represents the result of handler generation
+type HandlerResult struct {
+	Status       string   `json:"status"`
+	Name         string   `json:"name"`
+	Package      string   `json:"package"`
+	Framework    string   `json:"framework"`
+	FilesCreated []string `json:"files_created"`
+}
+
+// RunHandlerInit generates a new handler
+func RunHandlerInit(w io.Writer, name string, opts HandlerOptions, genOpts Options) error {
+	if name == "" {
+		return fmt.Errorf("generate: handler name is required")
+	}
+
+	// Set defaults
+	if opts.Package == "" {
+		opts.Package = "handler"
+	}
+
+	if opts.Dir == "" {
+		opts.Dir = filepath.Join("internal", "handler")
+	}
+
+	if len(opts.Methods) == 0 {
+		opts.Methods = []string{"GET", "POST", "PUT", "DELETE"}
+	}
+
+	if opts.Framework == "" {
+		opts.Framework = "stdlib"
+	}
+
+	// Normalize methods to uppercase
+	for i, m := range opts.Methods {
+		opts.Methods[i] = strings.ToUpper(m)
+	}
+
+	// Create directory
+	if err := os.MkdirAll(opts.Dir, 0755); err != nil {
+		return fmt.Errorf("generate: failed to create directory %s: %w", opts.Dir, err)
+	}
+
+	// Prepare template data
+	data := handlertpl.TemplateData{
+		Name:       strings.Title(name), //nolint:staticcheck
+		NameLower:  strings.ToLower(name),
+		Package:    opts.Package,
+		Methods:    opts.Methods,
+		Path:       opts.Path,
+		Middleware: opts.Middleware,
+		Framework:  opts.Framework,
+	}
+
+	var filesCreated []string
+
+	// Select template based on framework
+	var tpl string
+
+	switch strings.ToLower(opts.Framework) {
+	case "chi":
+		tpl = handlertpl.ChiHandlerTemplate
+	case "gin":
+		tpl = handlertpl.GinHandlerTemplate
+	case "echo":
+		tpl = handlertpl.EchoHandlerTemplate
+	default:
+		tpl = handlertpl.StdlibHandlerTemplate
+	}
+
+	// Generate handler file
+	handlerPath := filepath.Join(opts.Dir, strings.ToLower(name)+".go")
+
+	if err := writeTemplate(handlerPath, tpl, data); err != nil {
+		return fmt.Errorf("generate: failed to create %s: %w", handlerPath, err)
+	}
+
+	filesCreated = append(filesCreated, handlerPath)
+
+	// Generate test file (only for stdlib for now)
+	if opts.Framework == "stdlib" {
+		testPath := filepath.Join(opts.Dir, strings.ToLower(name)+"_test.go")
+
+		if err := writeTemplate(testPath, handlertpl.HandlerTestTemplate, data); err != nil {
+			return fmt.Errorf("generate: failed to create %s: %w", testPath, err)
+		}
+
+		filesCreated = append(filesCreated, testPath)
+	}
+
+	if genOpts.JSON {
+		result := HandlerResult{
+			Status:       "created",
+			Name:         name,
+			Package:      opts.Package,
+			Framework:    opts.Framework,
+			FilesCreated: filesCreated,
+		}
+
+		return json.NewEncoder(w).Encode(result)
+	}
+
+	_, _ = fmt.Fprintf(w, "Created handler: %s\n", name)
+	_, _ = fmt.Fprintf(w, "Framework: %s\n", opts.Framework)
+	_, _ = fmt.Fprintf(w, "Methods: %s\n", strings.Join(opts.Methods, ", "))
+
+	_, _ = fmt.Fprintln(w, "\nFiles created:")
+
+	for _, f := range filesCreated {
+		_, _ = fmt.Fprintf(w, "  - %s\n", f)
+	}
+
+	return nil
+}
+
+// RepositoryOptions configures repository generation
+type RepositoryOptions struct {
+	Package   string // Package name (default: "repository")
+	Dir       string // Output directory (default: "internal/repository")
+	Entity    string // Entity struct name
+	Table     string // Database table name
+	DB        string // Database type: postgres, mysql, sqlite (default: postgres)
+	Interface bool   // Generate interface (default: true)
+}
+
+// RepositoryResult represents the result of repository generation
+type RepositoryResult struct {
+	Status       string   `json:"status"`
+	Name         string   `json:"name"`
+	Entity       string   `json:"entity"`
+	Table        string   `json:"table"`
+	DB           string   `json:"db"`
+	FilesCreated []string `json:"files_created"`
+}
+
+// RunRepositoryInit generates a new repository
+func RunRepositoryInit(w io.Writer, name string, opts RepositoryOptions, genOpts Options) error {
+	if name == "" {
+		return fmt.Errorf("generate: repository name is required")
+	}
+
+	// Set defaults
+	if opts.Package == "" {
+		opts.Package = "repository"
+	}
+
+	if opts.Dir == "" {
+		opts.Dir = filepath.Join("internal", "repository")
+	}
+
+	if opts.Entity == "" {
+		opts.Entity = strings.Title(name) //nolint:staticcheck
+	}
+
+	if opts.Table == "" {
+		opts.Table = strings.ToLower(name) + "s"
+	}
+
+	if opts.DB == "" {
+		opts.DB = "postgres"
+	}
+
+	// Create directory
+	if err := os.MkdirAll(opts.Dir, 0755); err != nil {
+		return fmt.Errorf("generate: failed to create directory %s: %w", opts.Dir, err)
+	}
+
+	// Prepare template data
+	data := repotpl.TemplateData{
+		Name:      strings.Title(name), //nolint:staticcheck
+		NameLower: strings.ToLower(name),
+		Package:   opts.Package,
+		Entity:    opts.Entity,
+		Table:     opts.Table,
+		DB:        opts.DB,
+		IDType:    "int64",
+		Interface: opts.Interface,
+	}
+
+	var filesCreated []string
+
+	// Generate interface file if requested
+	if opts.Interface {
+		interfacePath := filepath.Join(opts.Dir, "interface.go")
+
+		if err := writeTemplate(interfacePath, repotpl.InterfaceTemplate, data); err != nil {
+			return fmt.Errorf("generate: failed to create %s: %w", interfacePath, err)
+		}
+
+		filesCreated = append(filesCreated, interfacePath)
+	}
+
+	// Select template based on DB
+	var tpl string
+
+	switch strings.ToLower(opts.DB) {
+	case "mysql":
+		tpl = repotpl.MySQLRepositoryTemplate
+	case "sqlite":
+		tpl = repotpl.SQLiteRepositoryTemplate
+	default:
+		tpl = repotpl.PostgresRepositoryTemplate
+	}
+
+	// Generate repository file
+	repoPath := filepath.Join(opts.Dir, strings.ToLower(name)+".go")
+
+	if err := writeTemplate(repoPath, tpl, data); err != nil {
+		return fmt.Errorf("generate: failed to create %s: %w", repoPath, err)
+	}
+
+	filesCreated = append(filesCreated, repoPath)
+
+	// Generate test file
+	testPath := filepath.Join(opts.Dir, strings.ToLower(name)+"_test.go")
+
+	if err := writeTemplate(testPath, repotpl.RepositoryTestTemplate, data); err != nil {
+		return fmt.Errorf("generate: failed to create %s: %w", testPath, err)
+	}
+
+	filesCreated = append(filesCreated, testPath)
+
+	if genOpts.JSON {
+		result := RepositoryResult{
+			Status:       "created",
+			Name:         name,
+			Entity:       opts.Entity,
+			Table:        opts.Table,
+			DB:           opts.DB,
+			FilesCreated: filesCreated,
+		}
+
+		return json.NewEncoder(w).Encode(result)
+	}
+
+	_, _ = fmt.Fprintf(w, "Created repository: %s\n", name)
+	_, _ = fmt.Fprintf(w, "Entity: %s\n", opts.Entity)
+	_, _ = fmt.Fprintf(w, "Table: %s\n", opts.Table)
+	_, _ = fmt.Fprintf(w, "Database: %s\n", opts.DB)
+
+	_, _ = fmt.Fprintln(w, "\nFiles created:")
+
+	for _, f := range filesCreated {
+		_, _ = fmt.Fprintf(w, "  - %s\n", f)
+	}
+
+	return nil
+}
+
+// TestOptions configures test generation
+type TestOptions struct {
+	Table     bool // Generate table-driven tests (default: true)
+	Parallel  bool // Add t.Parallel() calls
+	Mock      bool // Generate mock setup
+	Benchmark bool // Include benchmark tests
+	Fuzz      bool // Include fuzz tests (Go 1.18+)
+}
+
+// TestResult represents the result of test generation
+type TestResult struct {
+	Status    string   `json:"status"`
+	SourceFile string  `json:"source_file"`
+	TestFile  string   `json:"test_file"`
+	Functions []string `json:"functions"`
+}
+
+// RunTestInit generates tests for a Go source file
+func RunTestInit(w io.Writer, sourcePath string, opts TestOptions, genOpts Options) error {
+	if sourcePath == "" {
+		return fmt.Errorf("generate: source file path is required")
+	}
+
+	// Check if file exists
+	if _, err := os.Stat(sourcePath); os.IsNotExist(err) {
+		return fmt.Errorf("generate: file not found: %s", sourcePath)
+	}
+
+	// Parse the Go source file
+	fset := token.NewFileSet()
+
+	node, err := parser.ParseFile(fset, sourcePath, nil, parser.ParseComments)
+	if err != nil {
+		return fmt.Errorf("generate: failed to parse %s: %w", sourcePath, err)
+	}
+
+	// Extract functions
+	var functions []testtpl.FuncInfo
+
+	ast.Inspect(node, func(n ast.Node) bool {
+		fn, ok := n.(*ast.FuncDecl)
+		if !ok {
+			return true
+		}
+
+		if !fn.Name.IsExported() {
+			return true
+		}
+
+		funcInfo := testtpl.FuncInfo{
+			Name:       fn.Name.Name,
+			IsExported: true,
+		}
+
+		// Get receiver type if method
+		if fn.Recv != nil && len(fn.Recv.List) > 0 {
+			if t, ok := fn.Recv.List[0].Type.(*ast.StarExpr); ok {
+				if ident, ok := t.X.(*ast.Ident); ok {
+					funcInfo.Receiver = ident.Name
+				}
+			} else if ident, ok := fn.Recv.List[0].Type.(*ast.Ident); ok {
+				funcInfo.Receiver = ident.Name
+			}
+		}
+
+		// Get parameters
+		if fn.Type.Params != nil {
+			for _, param := range fn.Type.Params.List {
+				paramType := exprToString(param.Type)
+
+				for _, name := range param.Names {
+					funcInfo.Params = append(funcInfo.Params, testtpl.Param{
+						Name: name.Name,
+						Type: paramType,
+					})
+				}
+
+				if len(param.Names) == 0 {
+					funcInfo.Params = append(funcInfo.Params, testtpl.Param{
+						Name: "arg",
+						Type: paramType,
+					})
+				}
+			}
+		}
+
+		// Get results
+		if fn.Type.Results != nil {
+			for _, result := range fn.Type.Results.List {
+				funcInfo.Results = append(funcInfo.Results, exprToString(result.Type))
+			}
+		}
+
+		functions = append(functions, funcInfo)
+
+		return true
+	})
+
+	if len(functions) == 0 {
+		return fmt.Errorf("generate: no exported functions found in %s", sourcePath)
+	}
+
+	// Prepare template data
+	data := testtpl.TemplateData{
+		Package:   node.Name.Name,
+		Functions: functions,
+		Parallel:  opts.Parallel,
+		Mock:      opts.Mock,
+		Benchmark: opts.Benchmark,
+		Fuzz:      opts.Fuzz,
+	}
+
+	// Generate test file path
+	testPath := strings.TrimSuffix(sourcePath, ".go") + "_test.go"
+
+	// Select template
+	var tpl string
+	if opts.Table {
+		tpl = testtpl.TableDrivenTestTemplate
+	} else {
+		tpl = testtpl.SimpleTestTemplate
+	}
+
+	// Add benchmark tests if requested
+	if opts.Benchmark {
+		tpl += testtpl.BenchmarkTestTemplate
+	}
+
+	// Write test file
+	if err := writeTemplate(testPath, tpl, data); err != nil {
+		return fmt.Errorf("generate: failed to create %s: %w", testPath, err)
+	}
+
+	if genOpts.JSON {
+		var funcNames []string
+
+		for _, f := range functions {
+			funcNames = append(funcNames, f.Name)
+		}
+
+		result := TestResult{
+			Status:     "created",
+			SourceFile: sourcePath,
+			TestFile:   testPath,
+			Functions:  funcNames,
+		}
+
+		return json.NewEncoder(w).Encode(result)
+	}
+
+	_, _ = fmt.Fprintf(w, "Created test file: %s\n", testPath)
+	_, _ = fmt.Fprintf(w, "Source file: %s\n", sourcePath)
+	_, _ = fmt.Fprintf(w, "Package: %s\n", node.Name.Name)
+
+	_, _ = fmt.Fprintln(w, "\nTests generated for:")
+
+	for _, f := range functions {
+		if f.Receiver != "" {
+			_, _ = fmt.Fprintf(w, "  - %s.%s\n", f.Receiver, f.Name)
+		} else {
+			_, _ = fmt.Fprintf(w, "  - %s\n", f.Name)
+		}
+	}
+
+	return nil
+}
+
+// exprToString converts an AST expression to string representation
+func exprToString(expr ast.Expr) string {
+	switch t := expr.(type) {
+	case *ast.Ident:
+		return t.Name
+	case *ast.StarExpr:
+		return "*" + exprToString(t.X)
+	case *ast.SelectorExpr:
+		return exprToString(t.X) + "." + t.Sel.Name
+	case *ast.ArrayType:
+		return "[]" + exprToString(t.Elt)
+	case *ast.MapType:
+		return "map[" + exprToString(t.Key) + "]" + exprToString(t.Value)
+	case *ast.InterfaceType:
+		return "interface{}"
+	case *ast.FuncType:
+		return "func"
+	case *ast.ChanType:
+		return "chan " + exprToString(t.Value)
+	case *ast.Ellipsis:
+		return "..." + exprToString(t.Elt)
+	default:
+		return "any"
+	}
 }

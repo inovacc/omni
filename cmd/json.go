@@ -6,8 +6,10 @@ import (
 	"os"
 
 	"github.com/BurntSushi/toml"
+	"github.com/inovacc/omni/internal/cli/csvutil"
 	"github.com/inovacc/omni/internal/cli/json2struct"
 	"github.com/inovacc/omni/internal/cli/jsonfmt"
+	"github.com/inovacc/omni/internal/cli/xmlutil"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
 )
@@ -28,6 +30,10 @@ Subcommands:
   fromyaml  Convert YAML to JSON
   fromtoml  Convert TOML to JSON
   tostruct  Convert JSON to Go struct definition
+  tocsv     Convert JSON array to CSV
+  fromcsv   Convert CSV to JSON array
+  toxml     Convert JSON to XML
+  fromxml   Convert XML to JSON
 
 Examples:
   omni json fmt file.json              # beautify JSON
@@ -38,7 +44,11 @@ Examples:
   omni json toyaml file.json           # convert to YAML
   omni json fromyaml file.yaml         # convert from YAML
   omni json fromtoml file.toml         # convert from TOML
-  omni json tostruct file.json         # convert to Go struct`,
+  omni json tostruct file.json         # convert to Go struct
+  omni json tocsv file.json            # convert to CSV
+  omni json fromcsv file.csv           # convert from CSV
+  omni json toxml file.json            # convert to XML
+  omni json fromxml file.xml           # convert from XML`,
 }
 
 // jsonFmtCmd formats JSON
@@ -391,6 +401,117 @@ Examples:
 	},
 }
 
+// jsonToCSVCmd converts JSON to CSV
+var jsonToCSVCmd = &cobra.Command{
+	Use:     "tocsv [FILE]",
+	Aliases: []string{"csv", "2csv"},
+	Short:   "Convert JSON array to CSV",
+	Long: `Convert JSON array of objects to CSV format.
+
+Nested objects are flattened with dot notation (e.g., address.city).
+
+  --no-header          don't include header row
+  -d, --delimiter=STR  field delimiter (default ",")
+  --no-quotes          don't quote fields
+
+Examples:
+  omni json tocsv file.json
+  echo '[{"name":"John","age":30}]' | omni json tocsv
+  omni json tocsv -d ";" file.json     # semicolon delimiter
+  omni json tocsv --no-header file.json`,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		opts := csvutil.ToCSVOptions{Header: true}
+
+		noHeader, _ := cmd.Flags().GetBool("no-header")
+		opts.Header = !noHeader
+		opts.Delimiter, _ = cmd.Flags().GetString("delimiter")
+		opts.NoQuotes, _ = cmd.Flags().GetBool("no-quotes")
+
+		return csvutil.RunToCSV(cmd.OutOrStdout(), cmd.InOrStdin(), args, opts)
+	},
+}
+
+// jsonFromCSVCmd converts CSV to JSON
+var jsonFromCSVCmd = &cobra.Command{
+	Use:     "fromcsv [FILE]",
+	Aliases: []string{"from-csv", "csv2json"},
+	Short:   "Convert CSV to JSON array",
+	Long: `Convert CSV data to JSON array of objects.
+
+  --no-header          first row is data, not headers
+  -d, --delimiter=STR  field delimiter (default ",")
+  -a, --array          always output as array (even for single row)
+
+Examples:
+  omni json fromcsv file.csv
+  cat file.csv | omni json fromcsv
+  omni json fromcsv -d ";" file.csv    # semicolon delimiter
+  omni json fromcsv --no-header file.csv`,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		opts := csvutil.FromCSVOptions{Header: true}
+
+		noHeader, _ := cmd.Flags().GetBool("no-header")
+		opts.Header = !noHeader
+		opts.Delimiter, _ = cmd.Flags().GetString("delimiter")
+		opts.Array, _ = cmd.Flags().GetBool("array")
+
+		return csvutil.RunFromCSV(cmd.OutOrStdout(), cmd.InOrStdin(), args, opts)
+	},
+}
+
+// jsonToXMLCmd converts JSON to XML
+var jsonToXMLCmd = &cobra.Command{
+	Use:     "toxml [FILE]",
+	Aliases: []string{"xml", "2xml"},
+	Short:   "Convert JSON to XML",
+	Long: `Convert JSON data to XML format.
+
+  -r, --root=NAME      root element name (default "root")
+  -i, --indent=STR     indentation string (default "  ")
+  --item-tag=NAME      tag for array items (default "item")
+  --attr-prefix=STR    prefix for attributes (default "-")
+
+Examples:
+  omni json toxml file.json
+  echo '{"name":"John"}' | omni json toxml
+  omni json toxml -r person file.json   # custom root
+  omni json toxml --item-tag=entry file.json`,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		opts := xmlutil.ToXMLOptions{}
+
+		opts.Root, _ = cmd.Flags().GetString("root")
+		opts.Indent, _ = cmd.Flags().GetString("indent")
+		opts.ItemTag, _ = cmd.Flags().GetString("item-tag")
+		opts.AttrPrefix, _ = cmd.Flags().GetString("attr-prefix")
+
+		return xmlutil.RunToXML(cmd.OutOrStdout(), cmd.InOrStdin(), args, opts)
+	},
+}
+
+// jsonFromXMLCmd converts XML to JSON
+var jsonFromXMLCmd = &cobra.Command{
+	Use:     "fromxml [FILE]",
+	Aliases: []string{"from-xml", "xml2json"},
+	Short:   "Convert XML to JSON",
+	Long: `Convert XML data to JSON format.
+
+  --attr-prefix=STR    prefix for attributes in JSON (default "-")
+  --text-key=STR       key for text content (default "#text")
+
+Examples:
+  omni json fromxml file.xml
+  cat file.xml | omni json fromxml
+  omni json fromxml --attr-prefix=@ file.xml`,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		opts := xmlutil.FromXMLOptions{}
+
+		opts.AttrPrefix, _ = cmd.Flags().GetString("attr-prefix")
+		opts.TextKey, _ = cmd.Flags().GetString("text-key")
+
+		return xmlutil.RunFromXML(cmd.OutOrStdout(), cmd.InOrStdin(), args, opts)
+	},
+}
+
 func readStdin() ([]byte, error) {
 	return io.ReadAll(os.Stdin)
 }
@@ -422,6 +543,10 @@ func init() {
 	jsonCmd.AddCommand(jsonFromYAMLCmd)
 	jsonCmd.AddCommand(jsonFromTOMLCmd)
 	jsonCmd.AddCommand(jsonToStructCmd)
+	jsonCmd.AddCommand(jsonToCSVCmd)
+	jsonCmd.AddCommand(jsonFromCSVCmd)
+	jsonCmd.AddCommand(jsonToXMLCmd)
+	jsonCmd.AddCommand(jsonFromXMLCmd)
 
 	// fmt flags
 	jsonFmtCmd.Flags().StringP("indent", "i", "  ", "indentation string")
@@ -452,4 +577,24 @@ func init() {
 	jsonToStructCmd.Flags().StringP("package", "p", "main", "package name")
 	jsonToStructCmd.Flags().Bool("inline", false, "inline nested structs")
 	jsonToStructCmd.Flags().Bool("omitempty", false, "add omitempty to all fields")
+
+	// tocsv flags
+	jsonToCSVCmd.Flags().Bool("no-header", false, "don't include header row")
+	jsonToCSVCmd.Flags().StringP("delimiter", "d", ",", "field delimiter")
+	jsonToCSVCmd.Flags().Bool("no-quotes", false, "don't quote fields")
+
+	// fromcsv flags
+	jsonFromCSVCmd.Flags().Bool("no-header", false, "first row is data, not headers")
+	jsonFromCSVCmd.Flags().StringP("delimiter", "d", ",", "field delimiter")
+	jsonFromCSVCmd.Flags().BoolP("array", "a", false, "always output as array")
+
+	// toxml flags
+	jsonToXMLCmd.Flags().StringP("root", "r", "root", "root element name")
+	jsonToXMLCmd.Flags().StringP("indent", "i", "  ", "indentation string")
+	jsonToXMLCmd.Flags().String("item-tag", "item", "tag for array items")
+	jsonToXMLCmd.Flags().String("attr-prefix", "-", "prefix for attributes")
+
+	// fromxml flags
+	jsonFromXMLCmd.Flags().String("attr-prefix", "-", "prefix for attributes in JSON")
+	jsonFromXMLCmd.Flags().String("text-key", "#text", "key for text content")
 }
