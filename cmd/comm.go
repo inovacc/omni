@@ -53,7 +53,7 @@ Examples:
 			JSON:         commJSON,
 		}
 
-		return comm.RunComm(os.Stdout, args, opts)
+		return comm.RunComm(cmd.OutOrStdout(), args, opts)
 	},
 }
 

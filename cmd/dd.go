@@ -86,7 +86,7 @@ Examples:
 			}
 		}
 
-		return dd.RunDd(os.Stdout, opts)
+		return dd.RunDd(cmd.OutOrStdout(), opts)
 	},
 }
 

@@ -21,7 +21,7 @@ If no NAME is specified, print all environment variables.`,
 		opts.Ignore, _ = cmd.Flags().GetBool("ignore-environment")
 		opts.JSON, _ = cmd.Flags().GetBool("json")
 
-		return env.RunEnv(os.Stdout, args, opts)
+		return env.RunEnv(cmd.OutOrStdout(), args, opts)
 	},
 }
 

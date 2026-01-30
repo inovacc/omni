@@ -43,7 +43,7 @@ Examples:
 			Verbose:     splitVerbose,
 		}
 
-		return split.RunSplit(os.Stdout, args, opts)
+		return split.RunSplit(cmd.OutOrStdout(), args, opts)
 	},
 }
 

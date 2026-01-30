@@ -48,7 +48,7 @@ Examples:
 			JSON:       cmpJSON,
 		}
 
-		result, err := cmp.RunCmp(os.Stdout, args, opts)
+		result, err := cmp.RunCmp(cmd.OutOrStdout(), args, opts)
 		if err != nil {
 			return err
 		}

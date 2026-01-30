@@ -41,7 +41,7 @@ Examples:
 			opts.Ignore = strings.Split(ignoreStr, ",")
 		}
 
-		return tree.RunTree(os.Stdout, args, opts)
+		return tree.RunTree(cmd.OutOrStdout(), args, opts)
 	},
 }
 

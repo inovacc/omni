@@ -47,7 +47,7 @@ var bboltInfoCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		jsonOutput, _ := cmd.Flags().GetBool("json")
-		return bbolt.RunInfo(os.Stdout, args[0], bbolt.Options{JSON: jsonOutput})
+		return bbolt.RunInfo(cmd.OutOrStdout(), args[0], bbolt.Options{JSON: jsonOutput})
 	},
 }
 
@@ -57,7 +57,7 @@ var bboltStatsCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		jsonOutput, _ := cmd.Flags().GetBool("json")
-		return bbolt.RunStats(os.Stdout, args[0], bbolt.Options{JSON: jsonOutput})
+		return bbolt.RunStats(cmd.OutOrStdout(), args[0], bbolt.Options{JSON: jsonOutput})
 	},
 }
 
@@ -67,7 +67,7 @@ var bboltBucketsCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		jsonOutput, _ := cmd.Flags().GetBool("json")
-		return bbolt.RunBuckets(os.Stdout, args[0], bbolt.Options{JSON: jsonOutput})
+		return bbolt.RunBuckets(cmd.OutOrStdout(), args[0], bbolt.Options{JSON: jsonOutput})
 	},
 }
 
@@ -79,7 +79,7 @@ var bboltKeysCmd = &cobra.Command{
 		jsonOutput, _ := cmd.Flags().GetBool("json")
 		prefix, _ := cmd.Flags().GetString("prefix")
 
-		return bbolt.RunKeys(os.Stdout, args[0], args[1], bbolt.Options{
+		return bbolt.RunKeys(cmd.OutOrStdout(), args[0], args[1], bbolt.Options{
 			JSON:   jsonOutput,
 			Prefix: prefix,
 		})
@@ -94,7 +94,7 @@ var bboltGetCmd = &cobra.Command{
 		jsonOutput, _ := cmd.Flags().GetBool("json")
 		hexOutput, _ := cmd.Flags().GetBool("hex")
 
-		return bbolt.RunGet(os.Stdout, args[0], args[1], args[2], bbolt.Options{
+		return bbolt.RunGet(cmd.OutOrStdout(), args[0], args[1], args[2], bbolt.Options{
 			JSON: jsonOutput,
 			Hex:  hexOutput,
 		})
@@ -107,7 +107,7 @@ var bboltPutCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(4),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		jsonOutput, _ := cmd.Flags().GetBool("json")
-		return bbolt.RunPut(os.Stdout, args[0], args[1], args[2], args[3], bbolt.Options{JSON: jsonOutput})
+		return bbolt.RunPut(cmd.OutOrStdout(), args[0], args[1], args[2], args[3], bbolt.Options{JSON: jsonOutput})
 	},
 }
 
@@ -117,7 +117,7 @@ var bboltDeleteCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(3),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		jsonOutput, _ := cmd.Flags().GetBool("json")
-		return bbolt.RunDelete(os.Stdout, args[0], args[1], args[2], bbolt.Options{JSON: jsonOutput})
+		return bbolt.RunDelete(cmd.OutOrStdout(), args[0], args[1], args[2], bbolt.Options{JSON: jsonOutput})
 	},
 }
 
@@ -130,7 +130,7 @@ var bboltDumpCmd = &cobra.Command{
 		hexOutput, _ := cmd.Flags().GetBool("hex")
 		prefix, _ := cmd.Flags().GetString("prefix")
 
-		return bbolt.RunDump(os.Stdout, args[0], args[1], bbolt.Options{
+		return bbolt.RunDump(cmd.OutOrStdout(), args[0], args[1], bbolt.Options{
 			JSON:   jsonOutput,
 			Hex:    hexOutput,
 			Prefix: prefix,
@@ -144,7 +144,7 @@ var bboltCompactCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(2),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		jsonOutput, _ := cmd.Flags().GetBool("json")
-		return bbolt.RunCompact(os.Stdout, args[0], args[1], bbolt.Options{JSON: jsonOutput})
+		return bbolt.RunCompact(cmd.OutOrStdout(), args[0], args[1], bbolt.Options{JSON: jsonOutput})
 	},
 }
 
@@ -154,7 +154,7 @@ var bboltCheckCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		jsonOutput, _ := cmd.Flags().GetBool("json")
-		return bbolt.RunCheck(os.Stdout, args[0], bbolt.Options{JSON: jsonOutput})
+		return bbolt.RunCheck(cmd.OutOrStdout(), args[0], bbolt.Options{JSON: jsonOutput})
 	},
 }
 
@@ -164,7 +164,7 @@ var bboltPagesCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		jsonOutput, _ := cmd.Flags().GetBool("json")
-		return bbolt.RunPages(os.Stdout, args[0], bbolt.Options{JSON: jsonOutput})
+		return bbolt.RunPages(cmd.OutOrStdout(), args[0], bbolt.Options{JSON: jsonOutput})
 	},
 }
 
@@ -180,7 +180,7 @@ var bboltPageCmd = &cobra.Command{
 			return fmt.Errorf("invalid page ID: %s", args[1])
 		}
 
-		return bbolt.RunPageDump(os.Stdout, args[0], pageID, bbolt.Options{JSON: jsonOutput})
+		return bbolt.RunPageDump(cmd.OutOrStdout(), args[0], pageID, bbolt.Options{JSON: jsonOutput})
 	},
 }
 
@@ -190,7 +190,7 @@ var bboltCreateBucketCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(2),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		jsonOutput, _ := cmd.Flags().GetBool("json")
-		return bbolt.RunCreateBucket(os.Stdout, args[0], args[1], bbolt.Options{JSON: jsonOutput})
+		return bbolt.RunCreateBucket(cmd.OutOrStdout(), args[0], args[1], bbolt.Options{JSON: jsonOutput})
 	},
 }
 
@@ -200,7 +200,7 @@ var bboltDeleteBucketCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(2),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		jsonOutput, _ := cmd.Flags().GetBool("json")
-		return bbolt.RunDeleteBucket(os.Stdout, args[0], args[1], bbolt.Options{JSON: jsonOutput})
+		return bbolt.RunDeleteBucket(cmd.OutOrStdout(), args[0], args[1], bbolt.Options{JSON: jsonOutput})
 	},
 }
 

@@ -66,6 +66,7 @@ func RunJSON2Struct(w io.Writer, r io.Reader, args []string, opts Options) error
 			for name := range gen.structs {
 				names = append(names, name)
 			}
+
 			sort.Strings(names)
 
 			// Output main struct first
@@ -103,6 +104,7 @@ func (g *generator) generateType(name string, v any) string {
 		if val == float64(int64(val)) {
 			return "int"
 		}
+
 		return "float64"
 	case string:
 		return "string"
@@ -110,7 +112,9 @@ func (g *generator) generateType(name string, v any) string {
 		if len(val) == 0 {
 			return "[]any"
 		}
+
 		elemType := g.generateType(singularize(name), val[0])
+
 		return "[]" + elemType
 	case map[string]any:
 		return g.generateStruct(name, val)
@@ -131,6 +135,7 @@ func (g *generator) generateStruct(name string, obj map[string]any) string {
 	for k := range obj {
 		keys = append(keys, k)
 	}
+
 	sort.Strings(keys)
 
 	for _, key := range keys {
@@ -150,6 +155,7 @@ func (g *generator) generateStruct(name string, obj map[string]any) string {
 		if g.opts.OmitEmpty {
 			tag += ",omitempty"
 		}
+
 		tag += "\"`"
 
 		fields = append(fields, fmt.Sprintf("\t%s %s %s", fieldName, fieldType, tag))
@@ -171,8 +177,10 @@ func toGoName(s string) string {
 	}
 
 	// Split by common separators
-	var words []string
-	var current strings.Builder
+	var (
+		words   []string
+		current strings.Builder
+	)
 
 	for i, r := range s {
 		if r == '_' || r == '-' || r == ' ' || r == '.' {
@@ -186,6 +194,7 @@ func toGoName(s string) string {
 				words = append(words, current.String())
 				current.Reset()
 			}
+
 			current.WriteRune(r)
 		} else {
 			current.WriteRune(r)
@@ -198,6 +207,7 @@ func toGoName(s string) string {
 
 	// Title case each word
 	var result strings.Builder
+
 	for _, word := range words {
 		if len(word) > 0 {
 			// Handle common acronyms
@@ -231,6 +241,7 @@ func isAcronym(s string) bool {
 		"XML": true, "SQL": true, "SSH": true, "TCP": true,
 		"UDP": true, "IP": true, "DNS": true, "UUID": true,
 	}
+
 	return acronyms[s]
 }
 
@@ -238,11 +249,14 @@ func singularize(s string) string {
 	if strings.HasSuffix(s, "ies") {
 		return s[:len(s)-3] + "y"
 	}
+
 	if strings.HasSuffix(s, "es") {
 		return s[:len(s)-2]
 	}
+
 	if strings.HasSuffix(s, "s") && len(s) > 1 {
 		return s[:len(s)-1]
 	}
+
 	return s + "Item"
 }

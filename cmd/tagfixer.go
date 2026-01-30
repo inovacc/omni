@@ -68,7 +68,7 @@ Examples:
 			opts.Path = args[0]
 		}
 
-		return tagfixer.RunTagFixer(os.Stdout, opts)
+		return tagfixer.RunTagFixer(cmd.OutOrStdout(), opts)
 	},
 }
 
@@ -110,7 +110,7 @@ Examples:
 			opts.Path = args[0]
 		}
 
-		return tagfixer.RunTagFixer(os.Stdout, opts)
+		return tagfixer.RunTagFixer(cmd.OutOrStdout(), opts)
 	},
 }
 

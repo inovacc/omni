@@ -40,7 +40,7 @@ Examples:
 		opts.WorkerID, _ = cmd.Flags().GetInt64("worker")
 		opts.JSON, _ = cmd.Flags().GetBool("json")
 
-		return snowflake.RunSnowflake(os.Stdout, opts)
+		return snowflake.RunSnowflake(cmd.OutOrStdout(), opts)
 	},
 }
 

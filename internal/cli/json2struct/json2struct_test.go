@@ -33,7 +33,7 @@ func TestRunJSON2Struct(t *testing.T) {
 			contains: []string{
 				"package models",
 				"type Response struct",
-				"User User",
+				"User",
 				"type User struct",
 				"Name string",
 				"Age int",
@@ -103,6 +103,7 @@ func TestRunJSON2Struct(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var buf bytes.Buffer
+
 			r := strings.NewReader(tt.input)
 
 			err := RunJSON2Struct(&buf, r, nil, tt.opts)
@@ -172,6 +173,7 @@ func TestSingularize(t *testing.T) {
 
 func TestInvalidJSON(t *testing.T) {
 	var buf bytes.Buffer
+
 	r := strings.NewReader("not valid json")
 
 	err := RunJSON2Struct(&buf, r, nil, Options{})

@@ -31,7 +31,7 @@ Sort entries alphabetically if none of -tSU is specified.`,
 		opts.Inode, _ = cmd.Flags().GetBool("inode")
 		opts.JSON, _ = cmd.Flags().GetBool("json")
 
-		return ls.Run(os.Stdout, args, opts)
+		return ls.Run(cmd.OutOrStdout(), args, opts)
 	},
 }
 

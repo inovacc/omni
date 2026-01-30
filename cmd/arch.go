@@ -19,7 +19,7 @@ Examples:
 	Args: cobra.NoArgs,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		opts := arch.ArchOptions{JSON: archJSON}
-		return arch.RunArch(os.Stdout, opts)
+		return arch.RunArch(cmd.OutOrStdout(), opts)
 	},
 }
 

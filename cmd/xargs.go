@@ -41,7 +41,7 @@ Examples:
 		opts.Verbose, _ = cmd.Flags().GetBool("verbose")
 		opts.ReplaceStr, _ = cmd.Flags().GetString("I")
 
-		return xargs.RunXargsWithPrint(os.Stdout, os.Stdin, opts)
+		return xargs.RunXargsWithPrint(cmd.OutOrStdout(), os.Stdin, opts)
 	},
 }
 

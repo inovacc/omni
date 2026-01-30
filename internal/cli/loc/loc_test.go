@@ -14,6 +14,7 @@ func TestRunLoc(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	// Create a Go file
@@ -45,6 +46,7 @@ hello()
 
 	t.Run("basic count", func(t *testing.T) {
 		var buf bytes.Buffer
+
 		err := RunLoc(&buf, []string{tmpDir}, Options{})
 		if err != nil {
 			t.Fatalf("RunLoc() error = %v", err)
@@ -54,9 +56,11 @@ hello()
 		if !strings.Contains(output, "Go") {
 			t.Errorf("output missing Go language")
 		}
+
 		if !strings.Contains(output, "Python") {
 			t.Errorf("output missing Python language")
 		}
+
 		if !strings.Contains(output, "Total") {
 			t.Errorf("output missing Total line")
 		}
@@ -64,6 +68,7 @@ hello()
 
 	t.Run("json output", func(t *testing.T) {
 		var buf bytes.Buffer
+
 		err := RunLoc(&buf, []string{tmpDir}, Options{JSON: true})
 		if err != nil {
 			t.Fatalf("RunLoc() error = %v", err)
@@ -73,6 +78,7 @@ hello()
 		if !strings.Contains(output, `"language"`) {
 			t.Errorf("JSON output missing language field")
 		}
+
 		if !strings.Contains(output, `"code"`) {
 			t.Errorf("JSON output missing code field")
 		}
@@ -84,12 +90,14 @@ hello()
 		if err := os.Mkdir(excludeDir, 0755); err != nil {
 			t.Fatal(err)
 		}
+
 		excludedFile := filepath.Join(excludeDir, "test.go")
 		if err := os.WriteFile(excludedFile, []byte("package test\n"), 0644); err != nil {
 			t.Fatal(err)
 		}
 
 		var buf bytes.Buffer
+
 		err := RunLoc(&buf, []string{tmpDir}, Options{Exclude: []string{"excluded"}})
 		if err != nil {
 			t.Fatalf("RunLoc() error = %v", err)
@@ -109,10 +117,10 @@ func TestParseLine(t *testing.T) {
 	}
 
 	tests := []struct {
-		name     string
-		line     string
-		want     lineClass
-		inBlock  bool
+		name      string
+		line      string
+		want      lineClass
+		inBlock   bool
 		wantBlock bool
 	}{
 		{
@@ -151,30 +159,30 @@ func TestParseLine(t *testing.T) {
 			want: lineCode,
 		},
 		{
-			name: "block comment start",
-			line: "/* start of block",
-			want: lineComment,
+			name:      "block comment start",
+			line:      "/* start of block",
+			want:      lineComment,
 			wantBlock: true,
 		},
 		{
-			name: "inside block comment",
-			line: "still in block",
-			inBlock: true,
-			want: lineComment,
+			name:      "inside block comment",
+			line:      "still in block",
+			inBlock:   true,
+			want:      lineComment,
 			wantBlock: true,
 		},
 		{
-			name: "block comment end",
-			line: "end of block */",
-			inBlock: true,
-			want: lineComment,
+			name:      "block comment end",
+			line:      "end of block */",
+			inBlock:   true,
+			want:      lineComment,
 			wantBlock: false,
 		},
 		{
-			name: "block end with code after",
-			line: "end */ x := 1",
-			inBlock: true,
-			want: lineCode,
+			name:      "block end with code after",
+			line:      "end */ x := 1",
+			inBlock:   true,
+			want:      lineCode,
 			wantBlock: false,
 		},
 	}
@@ -182,6 +190,7 @@ func TestParseLine(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			inBlock := tt.inBlock
+
 			depth := 0
 			if inBlock {
 				depth = 1
@@ -192,6 +201,7 @@ func TestParseLine(t *testing.T) {
 			if got != tt.want {
 				t.Errorf("parseLine(%q) = %v, want %v", tt.line, got, tt.want)
 			}
+
 			if inBlock != tt.wantBlock {
 				t.Errorf("parseLine(%q) inBlock = %v, want %v", tt.line, inBlock, tt.wantBlock)
 			}
@@ -204,9 +214,11 @@ func TestMarkdownLiterate(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	mdFile := filepath.Join(tmpDir, "README.md")
+
 	mdContent := `# Title
 
 Some text here.
@@ -230,6 +242,7 @@ echo "hello"
 	}
 
 	var buf bytes.Buffer
+
 	err = RunLoc(&buf, []string{tmpDir}, Options{JSON: true})
 	if err != nil {
 		t.Fatalf("RunLoc() error = %v", err)
@@ -258,6 +271,7 @@ func TestCountFileWithStrings(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	goFile := filepath.Join(tmpDir, "test.go")
@@ -275,6 +289,7 @@ func main() {
 	}
 
 	lang := extToLang[".go"]
+
 	stats, err := countFile(goFile, lang)
 	if err != nil {
 		t.Fatal(err)
@@ -294,9 +309,11 @@ func main() {
 	if stats.main.Code != 6 {
 		t.Errorf("Code = %d, want 6", stats.main.Code)
 	}
+
 	if stats.main.Comments != 1 {
 		t.Errorf("Comments = %d, want 1", stats.main.Comments)
 	}
+
 	if stats.main.Blanks != 1 {
 		t.Errorf("Blanks = %d, want 1", stats.main.Blanks)
 	}
@@ -328,9 +345,11 @@ func TestEmptyDirectory(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	var buf bytes.Buffer
+
 	err = RunLoc(&buf, []string{tmpDir}, Options{})
 	if err != nil {
 		t.Fatalf("RunLoc() error = %v", err)

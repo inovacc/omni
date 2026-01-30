@@ -122,9 +122,9 @@ Examples:
 		// Load config file and merge with flags
 		cfg, configPath, err := generate.LoadCobraConfig()
 		if err != nil {
-			_, _ = fmt.Fprintf(os.Stderr, "Warning: failed to load config from %s: %v\n", configPath, err)
+			_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "Warning: failed to load config from %s: %v\n", configPath, err)
 		} else if configPath != "" && !jsonOutput {
-			_, _ = fmt.Fprintf(os.Stdout, "Using config file: %s\n", configPath)
+			_, _ = fmt.Fprintf(cmd.OutOrStdout(), "Using config file: %s\n", configPath)
 		}
 
 		// Track which flags were explicitly set
@@ -142,7 +142,7 @@ Examples:
 			dir = filepath.Join(cwd, dir)
 		}
 
-		return generate.RunCobraInit(os.Stdout, dir, opts, generate.Options{JSON: jsonOutput})
+		return generate.RunCobraInit(cmd.OutOrStdout(), dir, opts, generate.Options{JSON: jsonOutput})
 	},
 }
 
@@ -168,7 +168,7 @@ Examples:
 			dir, _ = os.Getwd()
 		}
 
-		return generate.RunCobraAdd(os.Stdout, dir, generate.CobraAddOptions{
+		return generate.RunCobraAdd(cmd.OutOrStdout(), dir, generate.CobraAddOptions{
 			Name:        args[0],
 			Parent:      parent,
 			Description: description,
@@ -206,18 +206,18 @@ Examples:
 			}
 
 			if configPath == "" {
-				_, _ = fmt.Fprintln(os.Stdout, "No configuration file found.")
-				_, _ = fmt.Fprintln(os.Stdout, "\nTo create one, run:")
-				_, _ = fmt.Fprintln(os.Stdout, "  omni generate cobra config --init")
+				_, _ = fmt.Fprintln(cmd.OutOrStdout(), "No configuration file found.")
+				_, _ = fmt.Fprintln(cmd.OutOrStdout(), "\nTo create one, run:")
+				_, _ = fmt.Fprintln(cmd.OutOrStdout(), "  omni generate cobra config --init")
 				return nil
 			}
 
-			_, _ = fmt.Fprintf(os.Stdout, "Config file: %s\n\n", configPath)
-			_, _ = fmt.Fprintf(os.Stdout, "author: %s\n", cfg.Author)
-			_, _ = fmt.Fprintf(os.Stdout, "license: %s\n", cfg.License)
-			_, _ = fmt.Fprintf(os.Stdout, "useViper: %v\n", cfg.UseViper)
-			_, _ = fmt.Fprintf(os.Stdout, "useService: %v\n", cfg.UseService)
-			_, _ = fmt.Fprintf(os.Stdout, "full: %v\n", cfg.Full)
+			_, _ = fmt.Fprintf(cmd.OutOrStdout(), "Config file: %s\n\n", configPath)
+			_, _ = fmt.Fprintf(cmd.OutOrStdout(), "author: %s\n", cfg.Author)
+			_, _ = fmt.Fprintf(cmd.OutOrStdout(), "license: %s\n", cfg.License)
+			_, _ = fmt.Fprintf(cmd.OutOrStdout(), "useViper: %v\n", cfg.UseViper)
+			_, _ = fmt.Fprintf(cmd.OutOrStdout(), "useService: %v\n", cfg.UseService)
+			_, _ = fmt.Fprintf(cmd.OutOrStdout(), "full: %v\n", cfg.Full)
 			return nil
 		}
 
@@ -243,8 +243,8 @@ Examples:
 
 			// Check if file already exists
 			if _, err := os.Stat(configPath); err == nil {
-				_, _ = fmt.Fprintf(os.Stderr, "Config file already exists: %s\n", configPath)
-				_, _ = fmt.Fprintln(os.Stderr, "Use --show to view current configuration.")
+				_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "Config file already exists: %s\n", configPath)
+				_, _ = fmt.Fprintln(cmd.ErrOrStderr(), "Use --show to view current configuration.")
 				return nil
 			}
 
@@ -252,7 +252,7 @@ Examples:
 				return fmt.Errorf("failed to write config: %w", err)
 			}
 
-			_, _ = fmt.Fprintf(os.Stdout, "Created config file: %s\n", configPath)
+			_, _ = fmt.Fprintf(cmd.OutOrStdout(), "Created config file: %s\n", configPath)
 			return nil
 		}
 
@@ -303,7 +303,7 @@ Examples:
 			Framework:  framework,
 		}
 
-		return generate.RunHandlerInit(os.Stdout, args[0], opts, generate.Options{JSON: jsonOutput})
+		return generate.RunHandlerInit(cmd.OutOrStdout(), args[0], opts, generate.Options{JSON: jsonOutput})
 	},
 }
 
@@ -343,7 +343,7 @@ Examples:
 			Interface: iface,
 		}
 
-		return generate.RunRepositoryInit(os.Stdout, args[0], opts, generate.Options{JSON: jsonOutput})
+		return generate.RunRepositoryInit(cmd.OutOrStdout(), args[0], opts, generate.Options{JSON: jsonOutput})
 	},
 }
 
@@ -383,7 +383,7 @@ Examples:
 			Fuzz:      fuzz,
 		}
 
-		return generate.RunTestInit(os.Stdout, args[0], opts, generate.Options{JSON: jsonOutput})
+		return generate.RunTestInit(cmd.OutOrStdout(), args[0], opts, generate.Options{JSON: jsonOutput})
 	},
 }
 

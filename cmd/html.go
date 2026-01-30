@@ -43,7 +43,7 @@ Examples:
 		opts := htmlenc.Options{}
 		opts.JSON, _ = cmd.Flags().GetBool("json")
 
-		return htmlenc.RunEncode(os.Stdout, args, opts)
+		return htmlenc.RunEncode(cmd.OutOrStdout(), args, opts)
 	},
 }
 
@@ -62,7 +62,7 @@ Examples:
 		opts := htmlenc.Options{}
 		opts.JSON, _ = cmd.Flags().GetBool("json")
 
-		return htmlenc.RunDecode(os.Stdout, args, opts)
+		return htmlenc.RunDecode(cmd.OutOrStdout(), args, opts)
 	},
 }
 

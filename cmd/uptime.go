@@ -24,7 +24,7 @@ for the past 1, 5, and 15 minutes.
 		opts.Since, _ = cmd.Flags().GetBool("since")
 		opts.JSON, _ = cmd.Flags().GetBool("json")
 
-		return uptime.RunUptime(os.Stdout, opts)
+		return uptime.RunUptime(cmd.OutOrStdout(), opts)
 	},
 }
 

@@ -41,7 +41,7 @@ Examples:
 		opts.Chop, _ = cmd.Flags().GetBool("chop-long-lines")
 		opts.Raw, _ = cmd.Flags().GetBool("raw-control-chars")
 
-		return pager.RunLess(os.Stdout, args, opts)
+		return pager.RunLess(cmd.OutOrStdout(), args, opts)
 	},
 }
 

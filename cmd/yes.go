@@ -31,7 +31,7 @@ Examples:
 			cancel()
 		}()
 
-		return yes.RunYes(ctx, os.Stdout, args)
+		return yes.RunYes(ctx, cmd.OutOrStdout(), args)
 	},
 }
 

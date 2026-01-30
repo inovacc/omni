@@ -40,7 +40,7 @@ Examples:
 			Verbose:    bzip2Verbose,
 		}
 
-		return bzip2.RunBzip2(os.Stdout, args, opts)
+		return bzip2.RunBzip2(cmd.OutOrStdout(), args, opts)
 	},
 }
 
@@ -63,7 +63,7 @@ Examples:
 			Verbose:    bzip2Verbose,
 		}
 
-		return bzip2.RunBunzip2(os.Stdout, args, opts)
+		return bzip2.RunBunzip2(cmd.OutOrStdout(), args, opts)
 	},
 }
 
@@ -77,7 +77,7 @@ Equivalent to bzip2 -dc.
 Examples:
   omni bzcat file.txt.bz2      # print decompressed content`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return bzip2.RunBzcat(os.Stdout, args)
+		return bzip2.RunBzcat(cmd.OutOrStdout(), args)
 	},
 }
 

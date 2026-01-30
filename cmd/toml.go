@@ -37,7 +37,7 @@ Examples:
 		opts := tomlutil.ValidateOptions{}
 		opts.JSON, _ = cmd.Flags().GetBool("json")
 
-		return tomlutil.RunValidate(os.Stdout, args, opts)
+		return tomlutil.RunValidate(cmd.OutOrStdout(), args, opts)
 	},
 }
 
@@ -56,7 +56,7 @@ Examples:
 		opts := tomlutil.FormatOptions{}
 		opts.Indent, _ = cmd.Flags().GetInt("indent")
 
-		return tomlutil.RunFormat(os.Stdout, args, opts)
+		return tomlutil.RunFormat(cmd.OutOrStdout(), args, opts)
 	},
 }
 

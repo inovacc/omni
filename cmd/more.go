@@ -30,7 +30,7 @@ Examples:
 		opts.LineNumbers, _ = cmd.Flags().GetBool("line-numbers")
 		opts.Quit = true // more traditionally quits at end
 
-		return pager.RunMore(os.Stdout, args, opts)
+		return pager.RunMore(cmd.OutOrStdout(), args, opts)
 	},
 }
 
