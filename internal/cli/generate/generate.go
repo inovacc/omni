@@ -676,10 +676,10 @@ type TestOptions struct {
 
 // TestResult represents the result of test generation
 type TestResult struct {
-	Status    string   `json:"status"`
-	SourceFile string  `json:"source_file"`
-	TestFile  string   `json:"test_file"`
-	Functions []string `json:"functions"`
+	Status     string   `json:"status"`
+	SourceFile string   `json:"source_file"`
+	TestFile   string   `json:"test_file"`
+	Functions  []string `json:"functions"`
 }
 
 // RunTestInit generates tests for a Go source file

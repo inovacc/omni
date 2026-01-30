@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/inovacc/omni/internal/cli/bbolt"
 	"github.com/spf13/cobra"

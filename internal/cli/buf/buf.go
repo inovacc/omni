@@ -246,4 +246,3 @@ func OutputResults(w io.Writer, results []LintResult, format string) error {
 		return nil
 	}
 }
-

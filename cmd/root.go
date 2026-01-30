@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"os"
-
 	"github.com/inovacc/omni/internal/flags"
 	"github.com/inovacc/omni/internal/logger"
 	"github.com/spf13/cobra"
