@@ -42,7 +42,7 @@ Examples:
 		opts.StripComponents, _ = cmd.Flags().GetInt("strip-components")
 		opts.JSON, _ = cmd.Flags().GetBool("json")
 
-		return archive.RunTar(os.Stdout, args, opts)
+		return archive.RunTar(cmd.OutOrStdout(), args, opts)
 	},
 }
 

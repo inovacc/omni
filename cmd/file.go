@@ -40,7 +40,7 @@ Examples:
 			JSON:      fileJSON,
 		}
 
-		return file.RunFile(os.Stdout, args, opts)
+		return file.RunFile(cmd.OutOrStdout(), args, opts)
 	},
 }
 

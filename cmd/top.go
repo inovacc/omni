@@ -43,7 +43,7 @@ Examples:
 			opts.Sort = "cpu"
 		}
 
-		return ps.RunTop(os.Stdout, opts, n)
+		return ps.RunTop(cmd.OutOrStdout(), opts, n)
 	},
 }
 

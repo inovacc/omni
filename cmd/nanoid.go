@@ -40,7 +40,7 @@ Examples:
 		opts.Alphabet, _ = cmd.Flags().GetString("alphabet")
 		opts.JSON, _ = cmd.Flags().GetBool("json")
 
-		return nanoid.RunNanoID(os.Stdout, opts)
+		return nanoid.RunNanoID(cmd.OutOrStdout(), opts)
 	},
 }
 

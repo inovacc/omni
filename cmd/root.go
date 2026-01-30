@@ -26,7 +26,7 @@ designed for Taskfile, CI/CD, and enterprise environments.`,
 		log := logger.Init(cmd.Name())
 		if log.IsActive() {
 			// Wrap stdout/stderr to capture output
-			stdout, stderr := log.StartExecution(cmd.Name(), args, os.Stdout, os.Stderr)
+			stdout, stderr := log.StartExecution(cmd.Name(), args, cmd.OutOrStdout(), cmd.ErrOrStderr())
 			cmd.SetOut(stdout)
 			cmd.SetErr(stderr)
 		}

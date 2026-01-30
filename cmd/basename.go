@@ -26,7 +26,7 @@ If specified, also remove a trailing SUFFIX.`,
 			names = args[:1]
 		}
 
-		return basename.RunBasename(os.Stdout, names, opts)
+		return basename.RunBasename(cmd.OutOrStdout(), names, opts)
 	},
 }
 

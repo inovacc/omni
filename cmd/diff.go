@@ -45,7 +45,7 @@ Examples:
 		opts.Width, _ = cmd.Flags().GetInt("width")
 		opts.SuppressCommon, _ = cmd.Flags().GetBool("suppress-common-lines")
 
-		return diff.RunDiff(os.Stdout, args, opts)
+		return diff.RunDiff(cmd.OutOrStdout(), args, opts)
 	},
 }
 

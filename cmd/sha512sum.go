@@ -33,7 +33,7 @@ Examples:
 		opts.Status, _ = cmd.Flags().GetBool("status")
 		opts.Warn, _ = cmd.Flags().GetBool("warn")
 
-		return hash.RunSHA512Sum(os.Stdout, args, opts)
+		return hash.RunSHA512Sum(cmd.OutOrStdout(), args, opts)
 	},
 }
 

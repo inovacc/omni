@@ -39,7 +39,7 @@ Examples:
 		opts.Strict, _ = cmd.Flags().GetBool("strict")
 		opts.Quiet, _ = cmd.Flags().GetBool("quiet")
 
-		return lint.RunLint(os.Stdout, args, opts)
+		return lint.RunLint(cmd.OutOrStdout(), args, opts)
 	},
 }
 

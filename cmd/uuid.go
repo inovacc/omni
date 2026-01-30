@@ -38,7 +38,7 @@ Examples:
 		opts.NoDashes, _ = cmd.Flags().GetBool("no-dashes")
 		opts.JSON, _ = cmd.Flags().GetBool("json")
 
-		return uuid.RunUUID(os.Stdout, opts)
+		return uuid.RunUUID(cmd.OutOrStdout(), opts)
 	},
 }
 

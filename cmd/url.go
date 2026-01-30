@@ -41,7 +41,7 @@ Examples:
 		opts.Component, _ = cmd.Flags().GetBool("component")
 		opts.JSON, _ = cmd.Flags().GetBool("json")
 
-		return urlenc.RunEncode(os.Stdout, args, opts)
+		return urlenc.RunEncode(cmd.OutOrStdout(), args, opts)
 	},
 }
 
@@ -61,7 +61,7 @@ Examples:
 		opts.Component, _ = cmd.Flags().GetBool("component")
 		opts.JSON, _ = cmd.Flags().GetBool("json")
 
-		return urlenc.RunDecode(os.Stdout, args, opts)
+		return urlenc.RunDecode(cmd.OutOrStdout(), args, opts)
 	},
 }
 

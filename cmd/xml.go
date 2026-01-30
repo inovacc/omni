@@ -36,7 +36,7 @@ Examples:
 		opts.Minify, _ = cmd.Flags().GetBool("minify")
 		opts.Indent, _ = cmd.Flags().GetString("indent")
 
-		return xmlfmt.Run(os.Stdout, args, opts)
+		return xmlfmt.Run(cmd.OutOrStdout(), args, opts)
 	},
 }
 
@@ -59,7 +59,7 @@ Examples:
 		opts.Minify, _ = cmd.Flags().GetBool("minify")
 		opts.Indent, _ = cmd.Flags().GetString("indent")
 
-		return xmlfmt.Run(os.Stdout, args, opts)
+		return xmlfmt.Run(cmd.OutOrStdout(), args, opts)
 	},
 }
 
@@ -79,7 +79,7 @@ Examples:
 		opts := xmlfmt.ValidateOptions{}
 		opts.JSON, _ = cmd.Flags().GetBool("json")
 
-		return xmlfmt.RunValidate(os.Stdout, args, opts)
+		return xmlfmt.RunValidate(cmd.OutOrStdout(), args, opts)
 	},
 }
 

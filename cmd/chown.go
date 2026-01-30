@@ -40,7 +40,7 @@ Options:
 		opts.Reference, _ = cmd.Flags().GetString("reference")
 		opts.PreserveRoot, _ = cmd.Flags().GetBool("preserve-root")
 
-		return chown.RunChown(os.Stdout, args, opts)
+		return chown.RunChown(cmd.OutOrStdout(), args, opts)
 	},
 }
 

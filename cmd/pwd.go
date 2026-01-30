@@ -15,7 +15,7 @@ var pwdCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		opts := pwd.PwdOptions{}
 		opts.JSON, _ = cmd.Flags().GetBool("json")
-		return pwd.RunPwd(os.Stdout, opts)
+		return pwd.RunPwd(cmd.OutOrStdout(), opts)
 	},
 }
 

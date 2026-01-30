@@ -35,7 +35,7 @@ or all file systems by default.
 		opts.Portability, _ = cmd.Flags().GetBool("portability")
 		opts.JSON, _ = cmd.Flags().GetBool("json")
 
-		return df.RunDF(os.Stdout, args, opts)
+		return df.RunDF(cmd.OutOrStdout(), args, opts)
 	},
 }
 

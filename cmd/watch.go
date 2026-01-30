@@ -62,13 +62,13 @@ Examples:
 			case "file":
 				return watch.WatchFile(ctx, args[1], func(path string) error {
 					info, _ := os.Stat(path)
-					_, _ = fmt.Fprintf(os.Stdout, "[%s] File modified: %s (size: %d)\n",
+					_, _ = fmt.Fprintf(cmd.OutOrStdout(), "[%s] File modified: %s (size: %d)\n",
 						time.Now().Format("15:04:05"), path, info.Size())
 					return nil
 				}, opts.Interval)
 			case "dir":
 				return watch.WatchDir(ctx, args[1], func(event, path string) error {
-					_, _ = fmt.Fprintf(os.Stdout, "[%s] %s: %s\n",
+					_, _ = fmt.Fprintf(cmd.OutOrStdout(), "[%s] %s: %s\n",
 						time.Now().Format("15:04:05"), event, path)
 					return nil
 				}, opts.Interval)
@@ -76,7 +76,7 @@ Examples:
 		}
 
 		// Default: just show periodic message
-		return watch.RunWatch(ctx, os.Stdout, func() (string, error) {
+		return watch.RunWatch(ctx, cmd.OutOrStdout(), func() (string, error) {
 			return fmt.Sprintf("Watching: %s\n", args), nil
 		}, opts)
 	},

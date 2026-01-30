@@ -35,7 +35,7 @@ var readlinkCmd = &cobra.Command{
 		opts.Zero, _ = cmd.Flags().GetBool("zero")
 		opts.JSON, _ = cmd.Flags().GetBool("json")
 
-		return readlink.RunReadlink(os.Stdout, args, opts)
+		return readlink.RunReadlink(cmd.OutOrStdout(), args, opts)
 	},
 }
 

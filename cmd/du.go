@@ -39,7 +39,7 @@ var duCmd = &cobra.Command{
 		opts.BlockSize, _ = cmd.Flags().GetInt64("block-size")
 		opts.JSON, _ = cmd.Flags().GetBool("json")
 
-		return du.RunDU(os.Stdout, args, opts)
+		return du.RunDU(cmd.OutOrStdout(), args, opts)
 	},
 }
 

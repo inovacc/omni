@@ -39,7 +39,7 @@ Examples:
 		opts.Quiet, _ = cmd.Flags().GetBool("quiet")
 		opts.Expand, _ = cmd.Flags().GetBool("expand")
 
-		return dotenv.RunDotenv(os.Stdout, args, opts)
+		return dotenv.RunDotenv(cmd.OutOrStdout(), args, opts)
 	},
 }
 

@@ -43,7 +43,7 @@ Examples:
 			JSON:       shufJSON,
 		}
 
-		return shuf.RunShuf(os.Stdout, args, opts)
+		return shuf.RunShuf(cmd.OutOrStdout(), args, opts)
 	},
 }
 

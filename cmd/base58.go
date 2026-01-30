@@ -27,7 +27,7 @@ Examples:
 
 		opts.Decode, _ = cmd.Flags().GetBool("decode")
 
-		return base.RunBase58(os.Stdout, args, opts)
+		return base.RunBase58(cmd.OutOrStdout(), args, opts)
 	},
 }
 

@@ -40,7 +40,7 @@ Examples:
 		opts.Base64, _ = cmd.Flags().GetBool("base64")
 		opts.Iterations, _ = cmd.Flags().GetInt("iterations")
 
-		return crypt.RunEncrypt(os.Stdout, args, opts)
+		return crypt.RunEncrypt(cmd.OutOrStdout(), args, opts)
 	},
 }
 

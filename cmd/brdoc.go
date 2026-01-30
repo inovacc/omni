@@ -53,7 +53,7 @@ Examples:
 		opts.Count, _ = cmd.Flags().GetInt("count")
 		opts.JSON, _ = cmd.Flags().GetBool("json")
 
-		return brdoc.RunCPF(os.Stdout, args, opts)
+		return brdoc.RunCPF(cmd.OutOrStdout(), args, opts)
 	},
 }
 
@@ -91,7 +91,7 @@ Examples:
 		opts.Legacy, _ = cmd.Flags().GetBool("legacy")
 		opts.JSON, _ = cmd.Flags().GetBool("json")
 
-		return brdoc.RunCNPJ(os.Stdout, args, opts)
+		return brdoc.RunCNPJ(cmd.OutOrStdout(), args, opts)
 	},
 }
 

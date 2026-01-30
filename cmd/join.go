@@ -53,7 +53,7 @@ Examples:
 			opts.OnlyUnpaired2 = true
 		}
 
-		return join.RunJoin(os.Stdout, args, opts)
+		return join.RunJoin(cmd.OutOrStdout(), args, opts)
 	},
 }
 

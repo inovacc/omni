@@ -16,7 +16,7 @@ var realpathCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		opts := realpath.RealpathOptions{}
 		opts.JSON, _ = cmd.Flags().GetBool("json")
-		return realpath.RunRealpath(os.Stdout, args, opts)
+		return realpath.RunRealpath(cmd.OutOrStdout(), args, opts)
 	},
 }
 

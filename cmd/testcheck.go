@@ -29,7 +29,7 @@ Examples:
 			dir = args[0]
 		}
 
-		return testcheck.Run(os.Stdout, dir, testcheckOpts)
+		return testcheck.Run(cmd.OutOrStdout(), dir, testcheckOpts)
 	},
 }
 

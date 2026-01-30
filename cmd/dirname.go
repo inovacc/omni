@@ -16,7 +16,7 @@ var dirnameCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		opts := dirname.DirnameOptions{}
 		opts.JSON, _ = cmd.Flags().GetBool("json")
-		return dirname.RunDirname(os.Stdout, args, opts)
+		return dirname.RunDirname(cmd.OutOrStdout(), args, opts)
 	},
 }
 

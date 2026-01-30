@@ -33,7 +33,7 @@ in the system, as well as the buffers and caches used by the kernel.
 		opts.Total, _ = cmd.Flags().GetBool("total")
 		opts.JSON, _ = cmd.Flags().GetBool("json")
 
-		return free.RunFree(os.Stdout, opts)
+		return free.RunFree(cmd.OutOrStdout(), opts)
 	},
 }
 

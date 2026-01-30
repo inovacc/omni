@@ -33,7 +33,7 @@ Examples:
 		opts.Count, _ = cmd.Flags().GetInt("count")
 		opts.JSON, _ = cmd.Flags().GetBool("json")
 
-		return ksuid.RunKSUID(os.Stdout, opts)
+		return ksuid.RunKSUID(cmd.OutOrStdout(), opts)
 	},
 }
 
