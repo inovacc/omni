@@ -639,6 +639,43 @@ omni yes | head -5    # outputs 5 'y' lines
 omni nohup COMMAND [ARG]...
 ```
 
+### pipe - Chain omni commands with variable substitution
+```bash
+omni pipe [OPTION]... {CMD}, {CMD}, ... [flags]
+  --json                   output result as JSON with metadata
+  -s, --sep=STR            command separator (default "|")
+  -v, --verbose            show intermediate results
+  --var=STR                variable name for output substitution (default "OUT")
+```
+
+**Variable Substitution:**
+- `$OUT` or `${OUT}` - Single value substitution (uses last non-empty line)
+- `[$OUT...]` - Iteration: execute command for each line of output
+
+**Examples:**
+```bash
+# Chain commands with braces (recommended)
+omni pipe '{cat file.txt}' '{grep pattern}' '{sort}'
+
+# Generate UUID and create folder
+omni pipe '{uuid -v 7}' '{mkdir $OUT}'
+
+# Custom variable name
+omni pipe --var UUID '{uuid -v 7}' '{mkdir $UUID}'
+
+# Iteration: create folder for each UUID
+omni pipe '{uuid -v 7 -n 10}' '{mkdir [$OUT...]}'
+
+# With verbose output
+omni pipe -v '{cat data.txt}' '{head -10}' '{sort}'
+
+# JSON output with metadata
+omni pipe --json '{cat file.txt}' '{wc -l}'
+
+# Using pipe separator
+omni pipe "cat file.txt | grep error | sort | uniq"
+```
+
 ---
 
 ## Archive & Compression
@@ -806,6 +843,32 @@ omni base58 [OPTION]... [FILE] [flags]
 **Examples:**
 ```bash
 omni base58 -d encoded.txt           # decode
+```
+
+### xxd - Make a hexdump or do the reverse
+```bash
+omni xxd [OPTION]... [FILE] [flags]
+  -b, --bits               binary digit dump
+  -c, --cols=N             format N bytes per line (default 16)
+  -g, --groupsize=N        bytes per group (default 2)
+  -i, --include            C include file style output
+  -l, --len=N              stop after N bytes
+  -p, --plain              plain hexdump style
+  -r, --reverse            reverse operation: convert hex to binary
+  -s, --seek=N             start at offset N
+  -u, --uppercase          use uppercase hex letters
+```
+
+**Examples:**
+```bash
+omni xxd file.bin                    # standard hex dump
+omni xxd -p file.bin                 # plain hex output
+omni xxd -i file.bin                 # C include style
+omni xxd -b file.bin                 # binary digit dump
+omni xxd -r hexdump.txt > file.bin   # reverse (hex to binary)
+omni xxd -c 8 -g 1 file.bin          # 8 bytes per line, 1 byte groups
+omni xxd -l 64 file.bin              # dump first 64 bytes
+omni xxd -s 0x100 file.bin           # start at offset 256
 ```
 
 ---
@@ -1125,6 +1188,7 @@ omni
 +-- nl                                       # Number lines of files
 +-- nohup                                    # Run a command immune to hangups
 +-- paste                                    # Merge lines of files
++-- pipe                                     # Chain omni commands with variable subst...
 +-- pipeline                                 # A brief description of your command
 +-- ps                                       # Report a snapshot of current processes
 +-- pwd                                      # Print working directory
@@ -1156,6 +1220,7 @@ omni
 +-- wc                                       # Print newline, word, and byte counts ...
 +-- whoami                                   # Print effective username
 +-- xargs                                    # Build and execute command lines from ...
++-- xxd                                      # Make a hexdump or do the reverse
 +-- yes                                      # Output a string repeatedly until killed
 +-- yq                                       # Command-line YAML processor
 \-- zip                                      # Package and compress files into a zip...

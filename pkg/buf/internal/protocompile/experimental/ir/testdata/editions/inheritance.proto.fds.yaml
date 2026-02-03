@@ -1,0 +1,91 @@
+file:
+- name: "google/protobuf/cpp_features.proto"
+  package: "pb"
+  dependency: ["google/protobuf/descriptor.proto"]
+  message_type:
+  - name: "CppFeatures"
+    field:
+    - name: "legacy_closed_enum"
+      number: 1
+      label: LABEL_OPTIONAL
+      type: TYPE_BOOL
+      json_name: "legacyClosedEnum"
+      options:
+        retention: RETENTION_RUNTIME
+        targets: [TARGET_TYPE_FIELD, TARGET_TYPE_FILE]
+        edition_defaults:
+        - { edition: EDITION_LEGACY, value: "true" }
+        - { edition: EDITION_PROTO3, value: "false" }
+        feature_support:
+          edition_introduced: EDITION_2023
+          edition_deprecated: EDITION_2023
+          deprecation_warning: "The legacy closed enum behavior in C++ is deprecated and is scheduled to be removed in edition 2025.  See http://protobuf.dev/programming-guides/enum/#cpp for more information"
+    - name: "string_type"
+      number: 2
+      label: LABEL_OPTIONAL
+      type: TYPE_ENUM
+      type_name: ".pb.CppFeatures.StringType"
+      json_name: "stringType"
+      options:
+        retention: RETENTION_RUNTIME
+        targets: [TARGET_TYPE_FIELD, TARGET_TYPE_FILE]
+        edition_defaults:
+        - { edition: EDITION_LEGACY, value: "STRING" }
+        - { edition: EDITION_2024, value: "VIEW" }
+        feature_support.edition_introduced: EDITION_2023
+    - name: "enum_name_uses_string_view"
+      number: 3
+      label: LABEL_OPTIONAL
+      type: TYPE_BOOL
+      json_name: "enumNameUsesStringView"
+      options:
+        retention: RETENTION_RUNTIME
+        targets: [TARGET_TYPE_ENUM, TARGET_TYPE_FILE]
+        edition_defaults:
+        - { edition: EDITION_LEGACY, value: "false" }
+        - { edition: EDITION_2024, value: "true" }
+        feature_support.edition_introduced: EDITION_2024
+    enum_type:
+    - name: "StringType"
+      value:
+      - { name: "STRING_TYPE_UNKNOWN", number: 0 }
+      - { name: "VIEW", number: 1 }
+      - { name: "CORD", number: 2 }
+      - { name: "STRING", number: 3 }
+  extension:
+  - name: "cpp"
+    number: 1000
+    label: LABEL_OPTIONAL
+    type: TYPE_MESSAGE
+    type_name: ".pb.CppFeatures"
+    extendee: ".google.protobuf.FeatureSet"
+    json_name: "cpp"
+  syntax: "proto2"
+- name: "testdata/editions/inheritance.proto"
+  package: "buf.test"
+  dependency: ["google/protobuf/cpp_features.proto"]
+  message_type:
+  - name: "M"
+    field:
+    - name: "x"
+      number: 1
+      label: LABEL_REPEATED
+      type: TYPE_INT32
+      json_name: "x"
+      options.features.repeated_field_encoding: PACKED
+    - name: "y"
+      number: 2
+      label: LABEL_OPTIONAL
+      type: TYPE_INT32
+      json_name: "y"
+      options.features.field_presence: LEGACY_REQUIRED
+    - name: "z"
+      number: 3
+      label: LABEL_OPTIONAL
+      type: TYPE_ENUM
+      type_name: ".buf.test.E"
+      json_name: "z"
+  enum_type: [{ name: "E", value: [{ name: "Z", number: 0 }] }]
+  options.features: { field_presence: IMPLICIT, $unknown: "1000: {1: 0}" }
+  syntax: "editions"
+  edition: EDITION_2023

@@ -1,0 +1,7 @@
+error: unexpected string literal in extension range
+  --> testdata/parser/range/extension_names.proto:20:21
+   |
+20 |     extensions foo, "bar";
+   |                     ^^^^^ expected range expression or integer literal
+
+encountered 1 error

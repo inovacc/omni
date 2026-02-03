@@ -1,0 +1,34 @@
+file:
+- name: "testdata/options/values/message.proto"
+  package: "buf.test"
+  dependency: ["google/protobuf/descriptor.proto"]
+  message_type:
+  - name: "Foo"
+    field:
+    - name: "y"
+      number: 1
+      label: LABEL_OPTIONAL
+      type: TYPE_INT32
+      json_name: "y"
+    extension:
+    - name: "z"
+      number: 1000
+      label: LABEL_OPTIONAL
+      type: TYPE_INT32
+      extendee: ".buf.test.Foo"
+      json_name: "z"
+    extension_range: [{ start: 1000, end: 1001 }]
+  extension:
+  - name: "x"
+    number: 1000
+    label: LABEL_OPTIONAL
+    type: TYPE_MESSAGE
+    type_name: ".buf.test.Foo"
+    extendee: ".google.protobuf.FileOptions"
+    json_name: "x"
+  options.$unknown: |
+    1000: {
+      1: 0
+      1000: 1
+    }
+  syntax: "proto2"

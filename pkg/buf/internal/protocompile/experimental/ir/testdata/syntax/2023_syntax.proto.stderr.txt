@@ -1,0 +1,21 @@
+error: editions must use the `edition` keyword
+  --> testdata/syntax/2023_syntax.proto:16:1
+   |
+16 | syntax = 2023;
+   | ^^^^^^
+  help: replace with `edition`
+   |
+16 | - syntax = 2023;
+16 | + edition = 2023;
+
+error: the value of a `syntax` declaration must be a string literal
+  --> testdata/syntax/2023_syntax.proto:16:10
+   |
+16 | syntax = 2023;
+   |          ^^^^
+  help: add quotes to make this a string literal
+   |
+16 | syntax = "2023";
+   |          +    +
+
+encountered 2 errors

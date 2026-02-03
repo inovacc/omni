@@ -1,0 +1,40 @@
+file:
+- name: "testdata/options/values/string.proto"
+  package: "buf.test"
+  dependency: ["google/protobuf/descriptor.proto"]
+  message_type:
+  - name: "Foo"
+    field:
+    - name: "s"
+      number: 1
+      label: LABEL_REPEATED
+      type: TYPE_STRING
+      json_name: "s"
+    - name: "b"
+      number: 2
+      label: LABEL_REPEATED
+      type: TYPE_BYTES
+      json_name: "b"
+  extension:
+  - name: "x"
+    number: 1000
+    label: LABEL_OPTIONAL
+    type: TYPE_MESSAGE
+    type_name: ".buf.test.Foo"
+    extendee: ".google.protobuf.FileOptions"
+    json_name: "x"
+  options.$unknown: |
+    1000: {
+      1: {}
+      1: {"foo"}
+      1: {"foo barbaz"}
+      1: {`f09f9088e2808de2ac9b`}
+      1: {`ff`}
+      1: {"neg"}
+      2: {}
+      2: {"foo"}
+      2: {"foo barbaz"}
+      2: {`f09f9088e2808de2ac9b`}
+      2: {`ff`}
+    }
+  syntax: "proto2"

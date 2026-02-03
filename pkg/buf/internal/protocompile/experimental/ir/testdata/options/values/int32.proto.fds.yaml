@@ -1,0 +1,52 @@
+file:
+- name: "testdata/options/values/int32.proto"
+  package: "buf.test"
+  dependency: ["google/protobuf/descriptor.proto"]
+  message_type:
+  - name: "Foo"
+    field:
+    - name: "i1"
+      number: 1
+      label: LABEL_REPEATED
+      type: TYPE_INT32
+      json_name: "i1"
+    - name: "i2"
+      number: 2
+      label: LABEL_REPEATED
+      type: TYPE_SINT32
+      json_name: "i2"
+    - name: "i3"
+      number: 3
+      label: LABEL_REPEATED
+      type: TYPE_SFIXED32
+      json_name: "i3"
+    - name: "u1"
+      number: 11
+      label: LABEL_REPEATED
+      type: TYPE_UINT32
+      json_name: "u1"
+    - name: "u2"
+      number: 12
+      label: LABEL_REPEATED
+      type: TYPE_FIXED32
+      json_name: "u2"
+  extension:
+  - name: "x"
+    number: 1000
+    label: LABEL_OPTIONAL
+    type: TYPE_MESSAGE
+    type_name: ".buf.test.Foo"
+    extendee: ".google.protobuf.FileOptions"
+    json_name: "x"
+  options.$unknown: |
+    1000: {
+      1: {
+        `00010203ffffffffffffffffff01feffffffffffffffff01fdffffffffffffffff01fcffffffffff`
+        `ffffff01ffffffff0780808080f8ffffffff01`
+      }
+      2: {`0002040601030507feffffff0fffffffff0f`}
+      3: {`00000000010000000200000003000000fffffffffefffffffdfffffffcffffffffffff7f00000080`}
+      11: {`00010203ffffffff0f`}
+      12: {`00000000010000000200000003000000ffffffff`}
+    }
+  syntax: "proto2"

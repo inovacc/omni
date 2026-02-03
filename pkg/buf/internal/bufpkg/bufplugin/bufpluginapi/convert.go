@@ -1,0 +1,75 @@
+// Copyright 2020-2025 Buf Technologies, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package bufpluginapi
+
+import (
+	"fmt"
+
+	pluginv1beta1 "buf.build/gen/go/bufbuild/registry/protocolbuffers/go/buf/registry/plugin/v1beta1"
+	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufcas"
+	bufplugin2 "github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufplugin"
+)
+
+var (
+	v1beta1ProtoDigestTypeToDigestType = map[pluginv1beta1.DigestType]bufplugin2.DigestType{
+		pluginv1beta1.DigestType_DIGEST_TYPE_P1: bufplugin2.DigestTypeP1,
+	}
+)
+
+// V1Beta1ProtoToDigest converts the given proto Digest to a Digest.
+//
+// Validation is performed to ensure the DigestType is known, and the value
+// is a valid digest value for the given DigestType.
+func V1Beta1ProtoToDigest(protoDigest *pluginv1beta1.Digest) (bufplugin2.Digest, error) {
+	digestType, err := v1beta1ProtoToDigestType(protoDigest.Type)
+	if err != nil {
+		return nil, err
+	}
+	bufcasDigest, err := bufcas.NewDigest(protoDigest.Value)
+	if err != nil {
+		return nil, err
+	}
+	return bufplugin2.NewDigest(digestType, bufcasDigest)
+}
+
+// *** PRIVATE ***
+
+func pluginVisibilityToV1Beta1Proto(pluginVisibility bufplugin2.PluginVisibility) (pluginv1beta1.PluginVisibility, error) {
+	switch pluginVisibility {
+	case bufplugin2.PluginVisibilityPublic:
+		return pluginv1beta1.PluginVisibility_PLUGIN_VISIBILITY_PUBLIC, nil
+	case bufplugin2.PluginVisibilityPrivate:
+		return pluginv1beta1.PluginVisibility_PLUGIN_VISIBILITY_PRIVATE, nil
+	default:
+		return 0, fmt.Errorf("unknown PluginVisibility: %v", pluginVisibility)
+	}
+}
+
+func pluginTypeToV1Beta1Proto(pluginType bufplugin2.PluginType) (pluginv1beta1.PluginType, error) {
+	switch pluginType {
+	case bufplugin2.PluginTypeCheck:
+		return pluginv1beta1.PluginType_PLUGIN_TYPE_CHECK, nil
+	default:
+		return 0, fmt.Errorf("unknown PluginType: %v", pluginType)
+	}
+}
+
+func v1beta1ProtoToDigestType(protoDigestType pluginv1beta1.DigestType) (bufplugin2.DigestType, error) {
+	digestType, ok := v1beta1ProtoDigestTypeToDigestType[protoDigestType]
+	if !ok {
+		return 0, fmt.Errorf("unknown pluginv1beta1.DigestType: %v", protoDigestType)
+	}
+	return digestType, nil
+}
