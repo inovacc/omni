@@ -162,16 +162,45 @@ Incorporate features from [ripgrep](https://github.com/BurntSushi/ripgrep) for f
 
 | Feature | Description | Priority | Status |
 |---------|-------------|----------|--------|
-| `rg` | ripgrep-style search command | P1 | |
-| Recursive search | Search directories recursively by default | P1 | |
-| Gitignore support | Respect .gitignore files | P1 | |
-| File type filtering | `--type`, `-t` for language-specific search | P1 | |
-| Glob patterns | `--glob`, `-g` for file matching | P1 | |
-| Context lines | `-A`, `-B`, `-C` for context around matches | P1 | |
+| `rg` | ripgrep-style search command | P1 | ✅ Done |
+| Recursive search | Search directories recursively by default | P1 | ✅ Done |
+| Gitignore support | Respect .gitignore files | P1 | ✅ Done |
+| File type filtering | `--type`, `-t` for language-specific search | P1 | ✅ Done |
+| Glob patterns | `--glob`, `-g` for file matching | P1 | ✅ Done |
+| Context lines | `-A`, `-B`, `-C` for context around matches | P1 | ✅ Done |
+| JSON output | `--json` for structured output | P1 | ✅ Done |
+| Binary detection | Skip binary files automatically | P1 | ✅ Done |
 | Replace mode | `--replace`, `-r` for search and replace | P2 | |
-| JSON output | `--json` for structured output | P1 | |
 | Multiline search | `-U` for multiline patterns | P2 | |
 | PCRE2 support | `--pcre2` for advanced regex | P3 | |
+
+#### Ripgrep Gaps (vs Rust implementation)
+
+Based on comparison with ripgrep Rust source code, the following improvements are planned:
+
+| Feature | Description | Priority | Impact |
+|---------|-------------|----------|--------|
+| Parallel walking | Work-stealing parallel directory traversal | P1 | 2-10x speedup on multi-core |
+| Gitignore negation | Support `!pattern` negation in .gitignore | P1 | Correctness |
+| .ignore files | Respect `.ignore` files (ripgrep-specific) | P1 | Compatibility |
+| Global gitignore | Read `~/.config/git/ignore` | P1 | Completeness |
+| .git/info/exclude | Read `.git/info/exclude` patterns | P1 | Completeness |
+| Directory-only patterns | Support `dir/` patterns in gitignore | P1 | Correctness |
+| Color output | ANSI color highlighting for matches | P2 | UX |
+| Match highlighting | Highlight matched text within lines | P2 | UX |
+| More file types | Expand from ~20 to 100+ type definitions | P2 | Compatibility |
+| Type composition | `--type-add 'web:include:html,css,js'` | P2 | Power users |
+| Column numbers | Show column position of matches | P2 | IDE integration |
+| Literal optimization | Fast path for literal string patterns | P3 | Performance |
+| Streaming JSON | Stream JSON output instead of batch | P3 | Memory for large results |
+| Candidate detection | Two-path search with fast candidate detection | P3 | Performance |
+
+**Architecture differences:**
+- Ripgrep uses modular crates (grep-searcher, grep-matcher, grep-printer, ignore)
+- Ripgrep uses trait-based `Matcher` interface supporting multiple regex engines
+- Ripgrep uses `Sink` pattern for push-based result streaming
+- Ripgrep has three specialized searchers: `ReadByLine`, `SliceByLine`, `MultiLine`
+- Ripgrep uses compiled `GlobSet` for O(1) pattern matching vs our O(n)
 
 ```go
 type RgOptions struct {
