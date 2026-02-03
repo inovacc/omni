@@ -178,22 +178,22 @@ Incorporate features from [ripgrep](https://github.com/BurntSushi/ripgrep) for f
 
 Based on comparison with ripgrep Rust source code, the following improvements are planned:
 
-| Feature | Description | Priority | Impact |
-|---------|-------------|----------|--------|
-| Parallel walking | Work-stealing parallel directory traversal | P1 | 2-10x speedup on multi-core |
-| Gitignore negation | Support `!pattern` negation in .gitignore | P1 | Correctness |
-| .ignore files | Respect `.ignore` files (ripgrep-specific) | P1 | Compatibility |
-| Global gitignore | Read `~/.config/git/ignore` | P1 | Completeness |
-| .git/info/exclude | Read `.git/info/exclude` patterns | P1 | Completeness |
-| Directory-only patterns | Support `dir/` patterns in gitignore | P1 | Correctness |
-| Color output | ANSI color highlighting for matches | P2 | UX |
-| Match highlighting | Highlight matched text within lines | P2 | UX |
-| More file types | Expand from ~20 to 100+ type definitions | P2 | Compatibility |
-| Type composition | `--type-add 'web:include:html,css,js'` | P2 | Power users |
-| Column numbers | Show column position of matches | P2 | IDE integration |
-| Literal optimization | Fast path for literal string patterns | P3 | Performance |
-| Streaming JSON | Stream JSON output instead of batch | P3 | Memory for large results |
-| Candidate detection | Two-path search with fast candidate detection | P3 | Performance |
+| Feature | Description | Priority | Impact | Status |
+|---------|-------------|----------|--------|--------|
+| Parallel walking | Work-stealing parallel directory traversal | P1 | 2-10x speedup on multi-core | ✅ Done |
+| Gitignore negation | Support `!pattern` negation in .gitignore | P1 | Correctness | ✅ Done |
+| .ignore files | Respect `.ignore` files (ripgrep-specific) | P1 | Compatibility | ✅ Done |
+| Global gitignore | Read `~/.config/git/ignore` | P1 | Completeness | ✅ Done |
+| .git/info/exclude | Read `.git/info/exclude` patterns | P1 | Completeness | ✅ Done |
+| Directory-only patterns | Support `dir/` patterns in gitignore | P1 | Correctness | ✅ Done |
+| Literal optimization | Fast path for literal string patterns | P3 | Performance | ✅ Done |
+| Streaming JSON | Stream JSON output instead of batch | P3 | Memory for large results | ✅ Done |
+| Color output | ANSI color highlighting for matches | P2 | UX | |
+| Match highlighting | Highlight matched text within lines | P2 | UX | |
+| More file types | Expand from ~20 to 100+ type definitions | P2 | Compatibility | |
+| Type composition | `--type-add 'web:include:html,css,js'` | P2 | Power users | |
+| Column numbers | Show column position of matches | P2 | IDE integration | ✅ Done |
+| Candidate detection | Two-path search with fast candidate detection | P3 | Performance | |
 
 **Architecture differences:**
 - Ripgrep uses modular crates (grep-searcher, grep-matcher, grep-printer, ignore)
