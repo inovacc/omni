@@ -156,6 +156,76 @@ type GrepOptions struct {
 func GrepWithOptions(lines []string, pattern string, opt GrepOptions) []string
 ```
 
+### Enhanced Search (ripgrep-inspired)
+
+Incorporate features from [ripgrep](https://github.com/BurntSushi/ripgrep) for fast, modern search:
+
+| Feature | Description | Priority | Status |
+|---------|-------------|----------|--------|
+| `rg` | ripgrep-style search command | P1 | |
+| Recursive search | Search directories recursively by default | P1 | |
+| Gitignore support | Respect .gitignore files | P1 | |
+| File type filtering | `--type`, `-t` for language-specific search | P1 | |
+| Glob patterns | `--glob`, `-g` for file matching | P1 | |
+| Context lines | `-A`, `-B`, `-C` for context around matches | P1 | |
+| Replace mode | `--replace`, `-r` for search and replace | P2 | |
+| JSON output | `--json` for structured output | P1 | |
+| Multiline search | `-U` for multiline patterns | P2 | |
+| PCRE2 support | `--pcre2` for advanced regex | P3 | |
+
+```go
+type RgOptions struct {
+    Recursive      bool     // search recursively (default: true)
+    IgnoreCase     bool     // -i: case insensitive
+    SmartCase      bool     // -S: smart case matching
+    WordRegexp     bool     // -w: match whole words
+    LineNumber     bool     // -n: show line numbers
+    Count          bool     // -c: count matches
+    FilesWithMatch bool     // -l: only show file names
+    Context        int      // -C: lines of context
+    Before         int      // -B: lines before match
+    After          int      // -A: lines after match
+    Types          []string // -t: file types to include
+    Glob           []string // -g: glob patterns
+    Hidden         bool     // --hidden: search hidden files
+    NoIgnore       bool     // --no-ignore: don't respect gitignore
+    Replace        string   // -r: replacement text
+    JSON           bool     // --json: JSON output
+}
+```
+
+**Examples:**
+```bash
+# Search recursively (default)
+omni rg "pattern" ./src
+
+# Search specific file types
+omni rg -t go "func main"
+omni rg -t js -t ts "import"
+
+# With context
+omni rg -C 3 "error" ./logs
+
+# Respect/ignore gitignore
+omni rg --no-ignore "TODO"
+omni rg --hidden "secret"  # include hidden files
+
+# JSON output for tooling
+omni rg --json "pattern" | omni jq '.data.lines'
+
+# Search and replace (dry-run)
+omni rg "old_name" -r "new_name" --dry-run
+
+# Glob patterns
+omni rg -g "*.go" -g "!*_test.go" "pattern"
+```
+
+**Go Implementation Notes:**
+- Use `filepath.WalkDir` for recursive traversal
+- Parse `.gitignore` with custom parser or `github.com/sabhiram/go-gitignore`
+- Maintain ripgrep CLI compatibility where possible
+- Consider using `regexp2` for PCRE2-like features
+
 ### Pipeline Engine (Internal)
 
 ```go
@@ -875,6 +945,7 @@ files, _ := fs.Ls(".", fs.LsOptions{})
 - Cobra CLI: https://github.com/spf13/cobra
 - twig (tree replacement): https://github.com/inovacc/twig
 - fsnotify: https://github.com/fsnotify/fsnotify
+- ripgrep (search inspiration): https://github.com/BurntSushi/ripgrep
 
 ## Related Documents
 
