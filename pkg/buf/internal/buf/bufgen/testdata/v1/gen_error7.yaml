@@ -1,0 +1,4 @@
+version: v1
+plugins:
+  - plugin: buf.build/myuser/myplugin:v1.1.0-1
+    # No out specified, error

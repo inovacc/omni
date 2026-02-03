@@ -1,0 +1,163 @@
+// Copyright 2020-2025 Buf Technologies, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+// Package bufprotoc builds ModuleSets for protoc include paths and file paths.
+package bufprotoc
+
+import (
+	"context"
+	"fmt"
+	"log/slog"
+	"sort"
+
+	"buf.build/go/standard/xslices"
+	"buf.build/go/standard/xstrings"
+	bufmodule2 "github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufmodule"
+	normalpath2 "github.com/inovacc/omni/pkg/buf/internal/pkg/normalpath"
+	storage2 "github.com/inovacc/omni/pkg/buf/internal/pkg/storage"
+	"github.com/inovacc/omni/pkg/buf/internal/pkg/storage/storageos"
+)
+
+// NewModuleSetForProtoc returns a new ModuleSet for protoc -I dirPaths and filePaths.
+//
+// The returned ModuleSet will have a single targeted Module, with target files
+// matching the filePaths.
+//
+// Technically this will work with len(filePaths) == 0 but we should probably make sure
+// that is banned in protoc.
+func NewModuleSetForProtoc(
+	ctx context.Context,
+	logger *slog.Logger,
+	storageosProvider storageos.Provider,
+	includeDirPaths []string,
+	filePaths []string,
+) (bufmodule2.ModuleSet, error) {
+	absIncludeDirPaths, err := normalizeAndAbsolutePaths(includeDirPaths, "include directory")
+	if err != nil {
+		return nil, err
+	}
+	absFilePaths, err := normalizeAndAbsolutePaths(filePaths, "input file")
+	if err != nil {
+		return nil, err
+	}
+	var rootBuckets []storage2.ReadBucket
+	for _, includeDirPath := range includeDirPaths {
+		rootBucket, err := storageosProvider.NewReadWriteBucket(
+			includeDirPath,
+			storageos.ReadWriteBucketWithSymlinksIfSupported(),
+		)
+		if err != nil {
+			return nil, err
+		}
+		// need to do match extension here
+		// https://github.com/bufbuild/buf/issues/113
+		rootBuckets = append(rootBuckets, storage2.FilterReadBucket(rootBucket, storage2.MatchPathExt(".proto")))
+	}
+	targetPaths, err := xslices.MapError(
+		absFilePaths,
+		func(absFilePath string) (string, error) {
+			return applyRootsToTargetPath(absIncludeDirPaths, absFilePath, normalpath2.Absolute)
+		},
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	moduleSetBuilder := bufmodule2.NewModuleSetBuilder(ctx, logger, bufmodule2.NopModuleDataProvider, bufmodule2.NopCommitProvider)
+	moduleSetBuilder.AddLocalModule(
+		storage2.MultiReadBucket(rootBuckets...),
+		".",
+		true,
+		bufmodule2.LocalModuleWithTargetPaths(
+			targetPaths,
+			nil,
+		),
+	)
+	return moduleSetBuilder.Build()
+}
+
+// *** PRIVATE ***
+
+func applyRootsToTargetPath(roots []string, path string, pathType normalpath2.PathType) (string, error) {
+	var matchingRoots []string
+	for _, root := range roots {
+		if normalpath2.ContainsPath(root, path, pathType) {
+			matchingRoots = append(matchingRoots, root)
+		}
+	}
+	switch len(matchingRoots) {
+	case 0:
+		// this is a user error and will likely happen often
+		return "", fmt.Errorf(
+			"path %q is not contained within any of roots %s - note that specified paths "+
+				"cannot be roots, but must be contained within roots",
+			path,
+			xstrings.SliceToHumanStringQuoted(roots),
+		)
+	case 1:
+		targetPath, err := normalpath2.Rel(matchingRoots[0], path)
+		if err != nil {
+			return "", err
+		}
+		// just in case
+		return normalpath2.NormalizeAndValidate(targetPath)
+	default:
+		// this should never happen
+		return "", fmt.Errorf("%q is contained in multiple roots %s", path, xstrings.SliceToHumanStringQuoted(roots))
+	}
+}
+
+// normalizeAndAbsolutePaths verifies that:
+//
+//   - No paths are empty.
+//   - All paths are normalized.
+//   - All paths are unique.
+//   - No path contains another path.
+//
+// Normalizes, absolutes, and sorts the paths.
+func normalizeAndAbsolutePaths(paths []string, name string) ([]string, error) {
+	if len(paths) == 0 {
+		return paths, nil
+	}
+	outputs := make([]string, len(paths))
+	for i, path := range paths {
+		if path == "" {
+			return nil, fmt.Errorf("%s contained an empty path", name)
+		}
+		output, err := normalpath2.NormalizeAndAbsolute(path)
+		if err != nil {
+			// user error
+			return nil, err
+		}
+		outputs[i] = output
+	}
+	sort.Strings(outputs)
+	for i := range outputs {
+		for j := i + 1; j < len(outputs); j++ {
+			output1 := outputs[i]
+			output2 := outputs[j]
+
+			if output1 == output2 {
+				return nil, fmt.Errorf("duplicate %s %q", name, output1)
+			}
+			if normalpath2.EqualsOrContainsPath(output2, output1, normalpath2.Absolute) {
+				return nil, fmt.Errorf("%s %q is within %s %q which is not allowed", name, output1, name, output2)
+			}
+			if normalpath2.EqualsOrContainsPath(output1, output2, normalpath2.Absolute) {
+				return nil, fmt.Errorf("%s %q is within %s %q which is not allowed", name, output2, name, output1)
+			}
+		}
+	}
+	return outputs, nil
+}

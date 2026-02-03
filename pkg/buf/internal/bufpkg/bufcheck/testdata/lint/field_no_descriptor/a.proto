@@ -1,0 +1,69 @@
+syntax = "proto2";
+
+package a;
+
+message One {
+  optional string descriptor = 1;
+  optional string Descriptor = 2;
+  optional string descRiptor = 3;
+  optional string _descriptor = 4;
+  optional string __descriptor = 5;
+  optional string descriptor_ = 6;
+  optional string descriptor__ = 7;
+  optional string __descriptor__ = 8;
+  extensions 10 to 100;
+}
+
+message Two {
+  message Three {
+    message Four {
+      optional string descriptor = 1;
+      optional string Descriptor = 2;
+      optional string descRiptor = 3;
+      optional string _descriptor = 4;
+      optional string __descriptor = 5;
+      optional string descriptor_ = 6;
+      optional string descriptor__ = 7;
+      optional string __descriptor__ = 8;
+      message Five {
+        extend One {
+          optional string descriptor = 10;
+          optional string Descriptor = 11;
+          optional string descRiptor = 12;
+          optional string _descriptor = 13;
+          optional string __descriptor = 14;
+          optional string descriptor_ = 15;
+          optional string descriptor__ = 16;
+          optional string __descriptor__ = 17;
+        }
+      }
+    }
+    optional string descriptor = 1;
+    optional string Descriptor = 2;
+    optional string descRiptor = 3;
+    optional string _descriptor = 4;
+    optional string __descriptor = 5;
+    optional string descriptor_ = 6;
+    optional string descriptor__ = 7;
+    optional string __descriptor__ = 8;
+  }
+  optional string descriptor = 1;
+  optional string Descriptor = 2;
+  optional string descRiptor = 3;
+  optional string _descriptor = 4;
+  optional string __descriptor = 5;
+  optional string descriptor_ = 6;
+  optional string descriptor__ = 7;
+  optional string __descriptor__ = 8;
+}
+
+extend One {
+  optional string descriptor = 20;
+  optional string Descriptor = 21;
+  optional string descRiptor = 22;
+  optional string _descriptor = 23;
+  optional string __descriptor = 24;
+  optional string descriptor_ = 25;
+  optional string descriptor__ = 26;
+  optional string __descriptor__ = 27;
+}

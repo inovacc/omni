@@ -1,0 +1,48 @@
+file:
+- name: "testdata/options/values/float.proto"
+  package: "buf.test"
+  dependency: ["google/protobuf/descriptor.proto"]
+  message_type:
+  - name: "Foo"
+    field:
+    - name: "f32"
+      number: 1
+      label: LABEL_REPEATED
+      type: TYPE_FLOAT
+      json_name: "f32"
+    - name: "f64"
+      number: 2
+      label: LABEL_REPEATED
+      type: TYPE_DOUBLE
+      json_name: "f64"
+  extension:
+  - name: "x"
+    number: 1000
+    label: LABEL_OPTIONAL
+    type: TYPE_MESSAGE
+    type_name: ".buf.test.Foo"
+    extendee: ".google.protobuf.FileOptions"
+    json_name: "x"
+  - name: "y"
+    number: 1001
+    label: LABEL_REPEATED
+    type: TYPE_FLOAT
+    extendee: ".google.protobuf.FileOptions"
+    json_name: "y"
+  options.$unknown: |
+    1000: {
+      1: {
+        `00000000000000000000008000000080f9021550ffe6db2e000020410000807f000080ff0000c07f`
+        `0000c0ff0000807f000080ff0000c07f0000c0ffdb0f4940ffff7f7f00008000000000340000807f`
+        `000080ff`
+      }
+      2: {
+        `0000000000000000000000000000000000000000000000800000000000000080000000205fa00242`
+        `0000d8d9df7cdb3d0000000000002440000000000000f07f000000000000f0ff000000000000f87f`
+        `000000000000f8ff000000000000f07f000000000000f0ff000000000000f87f000000000000f8ff`
+        `182d4454fb210940ffffffffffffef7f0000000000001000000000000000b03c000000000000f07f`
+        `000000000000f0ff`
+      }
+    }
+    1001: {`0000807f0000c07f`}
+  syntax: "proto2"

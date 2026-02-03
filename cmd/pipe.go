@@ -23,7 +23,10 @@ Commands can be separated by:
   - A custom separator with --sep
   - As separate quoted arguments
 
-The first command can read from stdin if no file is specified.
+Variable Substitution:
+  Use $OUT (or custom var name with --var) to substitute previous output:
+  - $OUT or ${OUT}     - single value substitution (uses last line)
+  - [$OUT...]          - iterate over each line of output
 
 Examples:
   # Using braces (recommended - clearest syntax)
@@ -52,6 +55,15 @@ Examples:
   # JSON output with pipeline metadata
   omni pipe --json '{cat file.txt}', '{wc -l}'
 
+  # Variable substitution - create folder with UUID
+  omni pipe '{uuid -v 7}', '{mkdir $OUT}'
+
+  # Custom variable name
+  omni pipe --var UUID '{uuid -v 7}', '{mkdir $UUID}'
+
+  # Iteration - create folder for each UUID
+  omni pipe '{uuid -v 7 -n 10}', '{mkdir [$OUT...]}'
+
 Supported commands include all omni commands:
   cat, grep, head, tail, sort, uniq, wc, cut, tr, sed, awk,
   base64, hex, json, jq, yq, curl, and many more.`,
@@ -60,6 +72,7 @@ Supported commands include all omni commands:
 		opts.JSON, _ = cmd.Flags().GetBool("json")
 		opts.Separator, _ = cmd.Flags().GetString("sep")
 		opts.Verbose, _ = cmd.Flags().GetBool("verbose")
+		opts.VarName, _ = cmd.Flags().GetString("var")
 
 		registry := pipe.NewRegistry(rootCmd)
 
@@ -94,4 +107,5 @@ func init() {
 	pipeCmd.Flags().Bool("json", false, "output result as JSON with metadata")
 	pipeCmd.Flags().StringP("sep", "s", "|", "command separator")
 	pipeCmd.Flags().BoolP("verbose", "v", false, "show intermediate results")
+	pipeCmd.Flags().String("var", "OUT", "variable name for output substitution (default: OUT)")
 }

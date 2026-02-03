@@ -1,0 +1,16 @@
+file:
+- name: "testdata/extend/invalid_partial.proto"
+  package: "test"
+  message_type:
+  - name: "M"
+    nested_type:
+    - { name: "N", extension_range: [{ start: 1, end: 2 }] }
+    - name: "M"
+      extension:
+      - name: "x"
+        number: 1
+        label: LABEL_OPTIONAL
+        type: TYPE_INT32
+        extendee: ".test.M.N"
+        json_name: "x"
+  syntax: "proto2"

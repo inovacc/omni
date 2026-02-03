@@ -1,0 +1,9 @@
+{
+  "version": "v1",
+  "plugins": [
+    {
+      "plugin": "someremote.com/owner/myplugin:v1.1.0-1",
+      "out": "gen/go"
+    }
+  ]
+}

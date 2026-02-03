@@ -32,10 +32,12 @@
 omni/
 ├── .github/workflows/  # CI/CD workflows
 ├── cmd/                # Cobra CLI commands (thin wrappers)
-├── pkg/cli/            # Library implementations (all logic here)
-│   ├── *_test.go       # Unit tests
-│   ├── *_unix.go       # Unix-specific code
-│   └── *_windows.go    # Windows-specific code
+├── internal/cli/       # Library implementations (all logic here)
+│   ├── <command>/      # Each command in its own package
+│   │   ├── <command>.go
+│   │   ├── <command>_test.go
+│   │   ├── <command>_unix.go    # Unix-specific (optional)
+│   │   └── <command>_windows.go # Windows-specific (optional)
 ├── tests/              # Integration tests
 ├── docs/               # Documentation
 ├── Taskfile.yml        # Task automation
@@ -46,9 +48,10 @@ omni/
 
 #### Command Implementation Pattern
 
-1. **Options struct** in `pkg/cli/`:
+1. **Options struct** in `internal/cli/<command>/`:
 ```go
-type LsOptions struct {
+// internal/cli/ls/ls.go
+type Options struct {
     All       bool   // -a
     Long      bool   // -l
     Recursive bool   // -R
@@ -57,7 +60,7 @@ type LsOptions struct {
 
 2. **Run function** with io.Writer:
 ```go
-func RunLs(w io.Writer, args []string, opts LsOptions) error {
+func Run(w io.Writer, args []string, opts Options) error {
     // Implementation
     _, _ = fmt.Fprintln(w, output)
     return nil
@@ -66,13 +69,14 @@ func RunLs(w io.Writer, args []string, opts LsOptions) error {
 
 3. **Cobra wrapper** in `cmd/`:
 ```go
+// cmd/ls.go
 var lsCmd = &cobra.Command{
     Use:   "ls [OPTION]... [FILE]...",
     Short: "List directory contents",
     RunE: func(cmd *cobra.Command, args []string) error {
-        opts := cli.LsOptions{}
+        opts := ls.Options{}
         opts.All, _ = cmd.Flags().GetBool("all")
-        return cli.RunLs(os.Stdout, args, opts)
+        return ls.Run(cmd.OutOrStdout(), args, opts)
     },
 }
 ```
@@ -82,10 +86,12 @@ var lsCmd = &cobra.Command{
 Use build tags for platform-specific implementations:
 
 ```
-pkg/cli/
+internal/cli/df/
 ├── df.go           # Interface + shared logic
 ├── df_unix.go      # //go:build unix
-├── df_windows.go   # //go:build windows
+└── df_windows.go   # //go:build windows
+
+internal/cli/kill/
 ├── kill.go         # Shared logic
 ├── kill_unix.go    # Unix signals (30 signals)
 └── kill_windows.go # Windows signals (INT, KILL, TERM only)
@@ -123,7 +129,7 @@ defer func() {
 | **Archive** | tar, zip, unzip |
 | **Compression** | gzip, gunzip, zcat, bzip2, bunzip2, bzcat, xz, unxz, xzcat |
 | **Hash** | hash, sha256sum, sha512sum, md5sum |
-| **Encoding** | base64, base32, base58, url encode/decode, html encode/decode, hex encode/decode |
+| **Encoding** | base64, base32, base58, url encode/decode, html encode/decode, hex encode/decode, xxd |
 | **Data** | jq, yq, dotenv, json (tostruct, tocsv, fromcsv, toxml, fromxml), yaml tostruct, yaml validate, toml validate, xml (validate, tojson, fromjson) |
 | **Formatting** | sql fmt/minify/validate, html fmt/minify/validate, css fmt/minify/validate |
 | **Protobuf** | buf lint, buf format, buf compile, buf breaking, buf generate, buf mod init/update, buf ls-files |
@@ -139,6 +145,38 @@ defer func() {
 | Command | Notes |
 |---------|-------|
 | `pipeline` | Internal streaming engine |
+
+### Pipe Command (Variable Substitution)
+
+The `pipe` command chains omni commands together with variable substitution support:
+
+```go
+type Options struct {
+    JSON      bool   // --json: output pipeline result as JSON
+    Separator string // --sep: command separator (default "|")
+    Verbose   bool   // --verbose: show intermediate steps
+    VarName   string // --var: variable name for output substitution (default "OUT")
+}
+```
+
+**Variable Patterns:**
+- `$OUT` or `${OUT}` - Single value substitution (uses last non-empty line)
+- `[$OUT...]` - Iteration: execute command for each line of output
+
+**Examples:**
+```bash
+# Generate UUID and create folder
+omni pipe '{uuid -v 7}' '{mkdir $OUT}'
+
+# Custom variable name
+omni pipe --var UUID '{uuid -v 7}' '{mkdir $UUID}'
+
+# Iteration: create folder for each UUID
+omni pipe '{uuid -v 7 -n 10}' '{mkdir [$OUT...]}'
+
+# Chain with verbose output
+omni pipe -v '{cat file.txt}' '{grep pattern}' '{sort}'
+```
 
 ---
 
@@ -206,41 +244,49 @@ task build     # Build binary
 # Run all tests with race detection and coverage
 go test -race -cover ./...
 
+# Run specific package tests
+go test -race -v ./internal/cli/pipe/...
+
 # Run specific test
-go test -race ./pkg/cli/... -run TestRunUniq -v
+go test -race ./internal/cli/... -run TestSubstituteVariables -v
 
 # Generate coverage report
 go test -race -coverprofile=coverage.out ./...
 go tool cover -html=coverage.out
+
+# Run integration tests
+task test:integration
 ```
 
 ### Test Coverage
 
-Current coverage: ~26% (pkg/cli)
+Current coverage: ~26% (internal/cli)
 
 ### Test Files
 
 | File | Tests |
 |------|-------|
-| `pkg/cli/hash_test.go` | SHA256, SHA512, MD5 hashing |
-| `pkg/cli/base_test.go` | Base64, Base32, Base58 encoding |
-| `pkg/cli/uuid_test.go` | UUID generation |
-| `pkg/cli/random_test.go` | Random string, hex, password, int |
-| `pkg/cli/fs_test.go` | mkdir, cp, touch, stat, ln, readlink |
-| `pkg/cli/text_test.go` | tr, cut, nl, uniq, paste, tac, fold, column, join |
-| `pkg/cli/kill_test.go` | Signal listing, PID validation |
-| `pkg/cli/jq_test.go` | JSON querying |
-| `pkg/cli/yq_test.go` | YAML querying |
-| `pkg/cli/diff_test.go` | File comparison |
-| `pkg/cli/crypt_test.go` | Encrypt/decrypt |
-| `pkg/cli/path_test.go` | dirname, basename, realpath |
+| `internal/cli/hash/hash_test.go` | SHA256, SHA512, MD5 hashing |
+| `internal/cli/base/base_test.go` | Base64, Base32, Base58 encoding |
+| `internal/cli/uuid/uuid_test.go` | UUID generation |
+| `internal/cli/random/random_test.go` | Random string, hex, password, int |
+| `internal/cli/fs/fs_test.go` | mkdir, cp, touch, stat, ln, readlink |
+| `internal/cli/text/text_test.go` | tr, cut, nl, uniq, paste, tac, fold, column, join |
+| `internal/cli/kill/kill_test.go` | Signal listing, PID validation |
+| `internal/cli/jq/jq_test.go` | JSON querying |
+| `internal/cli/yq/yq_test.go` | YAML querying |
+| `internal/cli/diff/diff_test.go` | File comparison |
+| `internal/cli/crypt/crypt_test.go` | Encrypt/decrypt |
+| `internal/cli/path/path_test.go` | dirname, basename, realpath |
+| `internal/cli/pipe/pipe_test.go` | Command parsing, variable substitution |
+| `internal/cli/xxd/xxd_test.go` | Hex dump, reverse, plain, include, bits modes |
 
 ### Test Pattern
 
 ```go
-func TestRunLs(t *testing.T) {
+func TestRun(t *testing.T) {
     var buf bytes.Buffer
-    err := cli.RunLs(&buf, []string{"."}, cli.LsOptions{})
+    err := ls.Run(&buf, []string{"."}, ls.Options{})
     if err != nil {
         t.Fatal(err)
     }
@@ -291,11 +337,12 @@ GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" -o omni.exe .
 
 ### Add New Command
 
-1. Create `pkg/cli/newcmd.go` with Options struct and RunNewCmd function
-2. Create `cmd/newcmd.go` with Cobra wrapper
-3. Add to rootCmd in init()
-4. Update docs/COMMANDS.md
+1. Create `internal/cli/newcmd/newcmd.go` with Options struct and Run function
+2. Create `internal/cli/newcmd/newcmd_test.go` with tests
+3. Create `cmd/newcmd.go` with Cobra wrapper
+4. Add to rootCmd in init()
 5. Update docs/ROADMAP.md
+6. Update CLAUDE.md command categories
 
 ### Add Platform-Specific Code
 
@@ -310,8 +357,10 @@ GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" -o omni.exe .
 - Follow project CLAUDE.md conventions (defer patterns, error muting)
 - Use short receiver names (1-2 letters)
 - Prefer table-driven tests
-- Keep cmd/ files thin - all logic in pkg/cli/
+- Keep cmd/ files thin - all logic in internal/cli/
 - Always accept io.Writer for testability
+- Use `cmd.OutOrStdout()` in Cobra commands for proper output capture
+- Use `cmd.InOrStdin()` for stdin in commands that need piped input
 
 ---
 

@@ -1,0 +1,45 @@
+# Copyright 2020-2024 Buf Technologies, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http:#www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# buf.compiler.v1.Report
+
+diagnostics:
+  - message: "system not supported"
+    level: LEVEL_ERROR
+
+  - message: "this diagnostic message is comically long to illustrate message wrapping; real diagnostics should probably avoid doing this"
+    level: LEVEL_ERROR
+
+  - message: 'could not open file "foo.proto": os error 2: no such file or directory'
+    level: LEVEL_ERROR
+    in_file: foo.proto
+
+  - message: "file consists only of the byte `0xaa`"
+    level: LEVEL_WARNING
+    in_file: foo.proto
+    notes: ["that means that the file is screaming"]
+    help: ["you should delete it to put it out of its misery"]
+    debug: ["0xaaaaaaaaaaaaaaaa"]
+
+  - message: "very long footers"
+    level: LEVEL_REMARK
+    in_file: foo.proto
+    notes: 
+      - "this footer is a very very very very very very very very very very very very very very very very very very very very very very long footer"
+      - "this one is also long, and it's also supercalifragilistcexpialidocious, leading to a very early break"
+    help:
+      - "this help is very long (and triggers the same word-wrapping code path)"
+      - "this one contains a newline\nwhich overrides the default word wrap behavior (but this line is wrapped naturally)"
+    debug:
+      - "debug lines are never wrapped, no matter how crazy long they are, since they can contain stack traces"
