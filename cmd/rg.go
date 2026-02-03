@@ -101,7 +101,7 @@ func init() {
 	rgCmd.Flags().BoolP("fixed-strings", "F", false, "treat pattern as literal string")
 
 	// Output control
-	rgCmd.Flags().BoolP("line-number", "n", true, "show line numbers")
+	rgCmd.Flags().BoolP("line-number", "n", false, "show line numbers")
 	rgCmd.Flags().BoolP("count", "c", false, "only show count of matches per file")
 	rgCmd.Flags().BoolP("files-with-matches", "l", false, "only show file names with matches")
 	rgCmd.Flags().BoolP("invert-match", "v", false, "show non-matching lines")
