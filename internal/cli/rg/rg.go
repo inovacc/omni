@@ -9,7 +9,9 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"runtime"
 	"strings"
+	"sync"
 )
 
 // Options configures the rg command behavior
@@ -33,10 +35,12 @@ type Options struct {
 	MaxDepth       int      // --max-depth: max directory depth
 	FollowSymlinks bool     // -L: follow symlinks
 	JSON           bool     // --json: JSON output
+	JSONStream     bool     // --json-stream: streaming NDJSON output
 	NoHeading      bool     // --no-heading: no file name headings
 	OnlyMatching   bool     // -o: only show matching part
 	Quiet          bool     // -q: quiet mode, exit on first match
 	Fixed          bool     // -F: treat pattern as literal string
+	Threads        int      // --threads: number of worker threads (0 = auto)
 }
 
 // Match represents a single match result
@@ -60,6 +64,57 @@ type Result struct {
 	Files      []FileResult `json:"files"`
 	TotalFiles int          `json:"total_files"`
 	TotalMatch int          `json:"total_matches"`
+}
+
+// resultInternal is used during parallel search with mutex protection
+type resultInternal struct {
+	Result
+
+	mu sync.Mutex
+}
+
+// StreamMessage represents a message in NDJSON streaming output
+type StreamMessage struct {
+	Type string `json:"type"` // "begin", "match", "context", "end", "summary"
+	Data any    `json:"data"`
+}
+
+// StreamBegin is sent at the start of searching a file
+type StreamBegin struct {
+	Path string `json:"path"`
+}
+
+// StreamLines holds line text for streaming output
+type StreamLines struct {
+	Text string `json:"text"`
+}
+
+// StreamMatch is sent for each match
+type StreamMatch struct {
+	Path       string      `json:"path"`
+	LineNumber int         `json:"line_number"`
+	Column     int         `json:"column,omitempty"`
+	Lines      StreamLines `json:"lines"`
+	Match      string      `json:"match,omitempty"`
+}
+
+// StreamContext is sent for context lines
+type StreamContext struct {
+	Path       string      `json:"path"`
+	LineNumber int         `json:"line_number"`
+	Lines      StreamLines `json:"lines"`
+}
+
+// StreamEnd is sent at the end of searching a file
+type StreamEnd struct {
+	Path       string `json:"path"`
+	MatchCount int    `json:"match_count"`
+}
+
+// StreamSummary is sent at the end of all searching
+type StreamSummary struct {
+	TotalFiles   int `json:"total_files"`
+	TotalMatches int `json:"total_matches"`
 }
 
 // fileTypeExtensions maps file type names to extensions
@@ -99,7 +154,10 @@ func Run(w io.Writer, pattern string, paths []string, opts Options) error {
 		paths = []string{"."}
 	}
 
-	// Build regex pattern
+	// For literal/fixed patterns without regex features, we can use a fast path
+	useLiteralSearch := opts.Fixed && !opts.WordRegexp && !opts.InvertMatch
+
+	// Build regex pattern (needed even for literal if we need to highlight matches)
 	regexPattern := pattern
 	if opts.Fixed {
 		regexPattern = regexp.QuoteMeta(pattern)
@@ -121,14 +179,31 @@ func Run(w io.Writer, pattern string, paths []string, opts Options) error {
 		return fmt.Errorf("rg: invalid pattern: %w", err)
 	}
 
-	// Load gitignore patterns
-	var gitignorePatterns []string
-	if !opts.NoIgnore {
-		gitignorePatterns = loadGitignore(".")
+	// Prepare literal pattern for fast search
+	literalPattern := pattern
+	if opts.IgnoreCase || (opts.SmartCase && pattern == strings.ToLower(pattern)) {
+		literalPattern = strings.ToLower(pattern)
 	}
 
-	result := Result{
-		Files: make([]FileResult, 0),
+	result := &resultInternal{
+		Result: Result{
+			Files: make([]FileResult, 0),
+		},
+	}
+
+	// Determine number of workers
+	numWorkers := opts.Threads
+	if numWorkers <= 0 {
+		numWorkers = runtime.NumCPU()
+	}
+
+	// Create streaming encoder if needed
+	var streamEnc *json.Encoder
+
+	var streamMu sync.Mutex
+
+	if opts.JSONStream {
+		streamEnc = json.NewEncoder(w)
 	}
 
 	// Search each path
@@ -142,10 +217,27 @@ func Run(w io.Writer, pattern string, paths []string, opts Options) error {
 			continue
 		}
 
+		// Load gitignore patterns for this specific path
+		var gitignore *GitignoreSet
+
+		if !opts.NoIgnore {
+			searchDir := path
+			if !info.IsDir() {
+				searchDir = filepath.Dir(path)
+			}
+
+			gitignore = NewGitignoreSet(searchDir)
+			gitignore.AddCommonIgnores()
+		}
+
 		if info.IsDir() {
-			err = searchDir(w, path, re, opts, gitignorePatterns, &result, 0)
+			if numWorkers > 1 {
+				err = searchDirParallel(w, path, re, pattern, literalPattern, useLiteralSearch, opts, gitignore, result, numWorkers, streamEnc, &streamMu)
+			} else {
+				err = searchDir(w, path, re, pattern, literalPattern, useLiteralSearch, opts, gitignore, result, 0, streamEnc, &streamMu)
+			}
 		} else {
-			err = searchFile(w, path, re, opts, &result)
+			err = searchFile(w, path, re, pattern, literalPattern, useLiteralSearch, opts, result, streamEnc, &streamMu)
 		}
 
 		if err != nil {
@@ -159,18 +251,129 @@ func Run(w io.Writer, pattern string, paths []string, opts Options) error {
 		}
 	}
 
-	// Output JSON if requested
-	if opts.JSON {
+	// Output results
+	if opts.JSONStream {
+		// Write summary
+		streamMu.Lock()
+		//nolint:errchkjson // StreamSummary is a concrete type, not any
+		_ = streamEnc.Encode(StreamMessage{
+			Type: "summary",
+			Data: StreamSummary{
+				TotalFiles:   result.TotalFiles,
+				TotalMatches: result.TotalMatch,
+			},
+		})
+
+		streamMu.Unlock()
+	} else if opts.JSON {
 		enc := json.NewEncoder(w)
 		enc.SetIndent("", "  ")
 
-		return enc.Encode(result)
+		return enc.Encode(result.Result)
 	}
 
 	return nil
 }
 
-func searchDir(w io.Writer, dir string, re *regexp.Regexp, opts Options, gitignore []string, result *Result, depth int) error {
+// searchDirParallel performs parallel directory traversal and search
+func searchDirParallel(w io.Writer, dir string, re *regexp.Regexp, pattern, literalPattern string, useLiteral bool, opts Options, gitignore *GitignoreSet, result *resultInternal, numWorkers int, streamEnc *json.Encoder, streamMu *sync.Mutex) error {
+	// Collect all files to search
+	var files []string
+
+	err := collectFiles(dir, opts, gitignore, &files, 0)
+	if err != nil {
+		return err
+	}
+
+	if len(files) == 0 {
+		return nil
+	}
+
+	// Create work channel and result channel
+	fileCh := make(chan string, len(files))
+	resultCh := make(chan FileResult, len(files))
+	errCh := make(chan error, numWorkers)
+
+	// Start workers
+	var wg sync.WaitGroup
+
+	for range numWorkers {
+		wg.Go(func() {
+			for path := range fileCh {
+				fr, err := searchFileSingle(path, re, pattern, literalPattern, useLiteral, opts)
+				if err != nil {
+					errCh <- fmt.Errorf("%s: %w", path, err)
+
+					continue
+				}
+
+				if fr != nil && fr.Count > 0 {
+					resultCh <- *fr
+				}
+			}
+		})
+	}
+
+	// Send files to workers
+	for _, f := range files {
+		fileCh <- f
+	}
+
+	close(fileCh)
+
+	// Wait for workers to finish
+	wg.Wait()
+	close(resultCh)
+	close(errCh)
+
+	// Collect results
+	for fr := range resultCh {
+		result.mu.Lock()
+		result.Files = append(result.Files, fr)
+		result.TotalFiles++
+		result.TotalMatch += fr.Count
+		result.mu.Unlock()
+
+		// Output results
+		if !opts.JSON && !opts.JSONStream {
+			outputFileResult(w, fr, opts)
+		} else if opts.JSONStream && streamEnc != nil {
+			streamMu.Lock()
+			//nolint:errchkjson // StreamBegin is a concrete type
+			_ = streamEnc.Encode(StreamMessage{Type: "begin", Data: StreamBegin{Path: fr.Path}})
+
+			for _, m := range fr.Matches {
+				//nolint:errchkjson // StreamMatch is a concrete type
+				_ = streamEnc.Encode(StreamMessage{
+					Type: "match",
+					Data: StreamMatch{
+						Path:       m.Path,
+						LineNumber: m.LineNumber,
+						Column:     m.Column,
+						Lines:      StreamLines{Text: m.Line},
+						Match:      m.Match,
+					},
+				})
+			}
+			//nolint:errchkjson // StreamEnd is a concrete type
+			_ = streamEnc.Encode(StreamMessage{Type: "end", Data: StreamEnd{Path: fr.Path, MatchCount: fr.Count}})
+
+			streamMu.Unlock()
+		}
+	}
+
+	// Report errors (non-fatal)
+	if !opts.Quiet {
+		for err := range errCh {
+			_, _ = fmt.Fprintf(w, "rg: %v\n", err)
+		}
+	}
+
+	return nil
+}
+
+// collectFiles recursively collects all searchable files
+func collectFiles(dir string, opts Options, gitignore *GitignoreSet, files *[]string, depth int) error {
 	if opts.MaxDepth > 0 && depth > opts.MaxDepth {
 		return nil
 	}
@@ -190,13 +393,188 @@ func searchDir(w io.Writer, dir string, re *regexp.Regexp, opts Options, gitigno
 		}
 
 		// Check gitignore
-		if !opts.NoIgnore && isIgnored(path, gitignore) {
+		if gitignore != nil && gitignore.ShouldIgnore(path, entry.IsDir()) {
 			continue
 		}
 
 		if entry.IsDir() {
 			if opts.FollowSymlinks || entry.Type()&os.ModeSymlink == 0 {
-				if err := searchDir(w, path, re, opts, gitignore, result, depth+1); err != nil {
+				_ = collectFiles(path, opts, gitignore, files, depth+1)
+			}
+
+			continue
+		}
+
+		// Check file type filters
+		if !matchesFileType(path, opts.Types, opts.TypesNot) {
+			continue
+		}
+
+		// Check glob patterns
+		if !matchesGlob(path, opts.Glob) {
+			continue
+		}
+
+		*files = append(*files, path)
+	}
+
+	return nil
+}
+
+// errSkipBinary signals that a file was skipped because it's binary
+var errSkipBinary = fmt.Errorf("binary file skipped")
+
+// searchFileSingle searches a single file and returns results (used by parallel search)
+func searchFileSingle(path string, re *regexp.Regexp, pattern, literalPattern string, useLiteral bool, opts Options) (*FileResult, error) {
+	file, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+
+	defer func() { _ = file.Close() }()
+
+	// Check if binary
+	buf := make([]byte, 512)
+
+	n, _ := file.Read(buf)
+	if n > 0 && isBinary(buf[:n]) {
+		return nil, errSkipBinary
+	}
+
+	// Reset file position
+	if _, err := file.Seek(0, 0); err != nil {
+		return nil, err
+	}
+
+	scanner := bufio.NewScanner(file)
+
+	var (
+		lineNum    int
+		matches    []Match
+		matchCount int
+	)
+
+	caseInsensitive := opts.IgnoreCase || (opts.SmartCase && pattern == strings.ToLower(pattern))
+
+	for scanner.Scan() {
+		lineNum++
+		line := scanner.Text()
+
+		// Check for match using appropriate method
+		var found bool
+
+		var matchStart int
+
+		if useLiteral {
+			// Fast literal search
+			searchLine := line
+			if caseInsensitive {
+				searchLine = strings.ToLower(line)
+			}
+
+			matchStart = strings.Index(searchLine, literalPattern)
+			found = matchStart >= 0
+		} else {
+			// Regex search
+			loc := re.FindStringIndex(line)
+			found = loc != nil
+
+			if found {
+				matchStart = loc[0]
+			}
+		}
+
+		if opts.InvertMatch {
+			found = !found
+		}
+
+		if found {
+			matchCount++
+
+			if opts.MaxCount > 0 && matchCount > opts.MaxCount {
+				break
+			}
+
+			if !opts.Count && !opts.FilesWithMatch && !opts.Quiet {
+				match := Match{
+					Path:       path,
+					LineNumber: lineNum,
+					Column:     matchStart + 1, // 1-indexed
+					Line:       line,
+				}
+
+				if opts.OnlyMatching {
+					if useLiteral {
+						match.Match = line[matchStart : matchStart+len(literalPattern)]
+					} else {
+						match.Match = re.FindString(line)
+					}
+				}
+
+				matches = append(matches, match)
+			}
+		}
+	}
+
+	if err := scanner.Err(); err != nil {
+		return nil, err
+	}
+
+	if matchCount == 0 {
+		return nil, nil //nolint:nilnil // nil result with nil error means no matches
+	}
+
+	return &FileResult{
+		Path:    path,
+		Matches: matches,
+		Count:   matchCount,
+	}, nil
+}
+
+// outputFileResult outputs results for a single file
+func outputFileResult(w io.Writer, fr FileResult, opts Options) {
+	if opts.FilesWithMatch {
+		_, _ = fmt.Fprintln(w, fr.Path)
+		return
+	}
+
+	if opts.Count {
+		_, _ = fmt.Fprintf(w, "%s:%d\n", fr.Path, fr.Count)
+		return
+	}
+
+	for _, m := range fr.Matches {
+		printLine(w, m.Path, m.LineNumber, m.Line, opts, false)
+	}
+}
+
+func searchDir(w io.Writer, dir string, re *regexp.Regexp, pattern, literalPattern string, useLiteral bool, opts Options, gitignore *GitignoreSet, result *resultInternal, depth int, streamEnc *json.Encoder, streamMu *sync.Mutex) error {
+	if opts.MaxDepth > 0 && depth > opts.MaxDepth {
+		return nil
+	}
+
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return err
+	}
+
+	for _, entry := range entries {
+		name := entry.Name()
+		path := filepath.Join(dir, name)
+
+		// Skip hidden files unless --hidden
+		if !opts.Hidden && strings.HasPrefix(name, ".") {
+			continue
+		}
+
+		// Check gitignore
+		if gitignore != nil && gitignore.ShouldIgnore(path, entry.IsDir()) {
+			continue
+		}
+
+		if entry.IsDir() {
+			if opts.FollowSymlinks || entry.Type()&os.ModeSymlink == 0 {
+				if err := searchDir(w, path, re, pattern, literalPattern, useLiteral, opts, gitignore, result, depth+1, streamEnc, streamMu); err != nil {
 					if !opts.Quiet {
 						_, _ = fmt.Fprintf(w, "rg: %s: %v\n", path, err)
 					}
@@ -216,7 +594,7 @@ func searchDir(w io.Writer, dir string, re *regexp.Regexp, opts Options, gitigno
 			continue
 		}
 
-		if err := searchFile(w, path, re, opts, result); err != nil {
+		if err := searchFile(w, path, re, pattern, literalPattern, useLiteral, opts, result, streamEnc, streamMu); err != nil {
 			if !opts.Quiet {
 				_, _ = fmt.Fprintf(w, "rg: %s: %v\n", path, err)
 			}
@@ -230,7 +608,7 @@ func searchDir(w io.Writer, dir string, re *regexp.Regexp, opts Options, gitigno
 	return nil
 }
 
-func searchFile(w io.Writer, path string, re *regexp.Regexp, opts Options, result *Result) error {
+func searchFile(w io.Writer, path string, re *regexp.Regexp, pattern, literalPattern string, useLiteral bool, opts Options, result *resultInternal, streamEnc *json.Encoder, streamMu *sync.Mutex) error {
 	file, err := os.Open(path)
 	if err != nil {
 		return err
@@ -276,20 +654,55 @@ func searchFile(w io.Writer, path string, re *regexp.Regexp, opts Options, resul
 	}
 
 	needsContext := beforeContext > 0 || afterContext > 0
+	caseInsensitive := opts.IgnoreCase || (opts.SmartCase && pattern == strings.ToLower(pattern))
+
+	// Stream begin message
+	if opts.JSONStream && streamEnc != nil {
+		streamMu.Lock()
+		//nolint:errchkjson // StreamBegin is a concrete type
+		_ = streamEnc.Encode(StreamMessage{Type: "begin", Data: StreamBegin{Path: path}})
+
+		streamMu.Unlock()
+	}
 
 	for scanner.Scan() {
 		lineNum++
 		line := scanner.Text()
 
-		// Check for match
-		found := re.MatchString(line)
+		// Check for match using appropriate method
+		var found bool
+
+		var matchStart int
+
+		if useLiteral {
+			// Fast literal search
+			searchLine := line
+			if caseInsensitive {
+				searchLine = strings.ToLower(line)
+			}
+
+			matchStart = strings.Index(searchLine, literalPattern)
+			found = matchStart >= 0
+		} else {
+			// Regex search
+			loc := re.FindStringIndex(line)
+			found = loc != nil
+
+			if found {
+				matchStart = loc[0]
+			}
+		}
+
 		if opts.InvertMatch {
 			found = !found
 		}
 
 		if found {
 			matchCount++
+
+			result.mu.Lock()
 			result.TotalMatch++
+			result.mu.Unlock()
 
 			if opts.MaxCount > 0 && matchCount > opts.MaxCount {
 				break
@@ -299,17 +712,40 @@ func searchFile(w io.Writer, path string, re *regexp.Regexp, opts Options, resul
 				match := Match{
 					Path:       path,
 					LineNumber: lineNum,
+					Column:     matchStart + 1,
 					Line:       line,
 				}
 
 				if opts.OnlyMatching {
-					match.Match = re.FindString(line)
+					if useLiteral {
+						match.Match = line[matchStart : matchStart+len(literalPattern)]
+					} else {
+						match.Match = re.FindString(line)
+					}
 				}
 
 				matches = append(matches, match)
 
+				// Stream output
+				if opts.JSONStream && streamEnc != nil {
+					streamMu.Lock()
+					//nolint:errchkjson // StreamMatch is a concrete type
+					_ = streamEnc.Encode(StreamMessage{
+						Type: "match",
+						Data: StreamMatch{
+							Path:       match.Path,
+							LineNumber: match.LineNumber,
+							Column:     match.Column,
+							Lines:      StreamLines{Text: match.Line},
+							Match:      match.Match,
+						},
+					})
+
+					streamMu.Unlock()
+				}
+
 				// Print context before
-				if !opts.JSON && beforeContext > 0 && len(beforeLines) > 0 {
+				if !opts.JSON && !opts.JSONStream && beforeContext > 0 && len(beforeLines) > 0 {
 					// Print separator if there's a gap
 					firstBeforeLine := beforeLines[0].lineNum
 					if needsContext && lastPrintedLine > 0 && firstBeforeLine > lastPrintedLine+1 {
@@ -325,11 +761,11 @@ func searchFile(w io.Writer, path string, re *regexp.Regexp, opts Options, resul
 				}
 
 				// Print separator if there's a gap and no before context was printed
-				if !opts.JSON && needsContext && lastPrintedLine > 0 && lineNum > lastPrintedLine+1 {
+				if !opts.JSON && !opts.JSONStream && needsContext && lastPrintedLine > 0 && lineNum > lastPrintedLine+1 {
 					_, _ = fmt.Fprintln(w, "--")
 				}
 
-				if !opts.JSON {
+				if !opts.JSON && !opts.JSONStream {
 					printLine(w, path, lineNum, line, opts, false)
 					lastPrintedLine = lineNum
 				}
@@ -338,7 +774,7 @@ func searchFile(w io.Writer, path string, re *regexp.Regexp, opts Options, resul
 			}
 		} else {
 			// Handle after context
-			if afterNeeded > 0 && !opts.JSON && !opts.Count && !opts.FilesWithMatch {
+			if afterNeeded > 0 && !opts.JSON && !opts.JSONStream && !opts.Count && !opts.FilesWithMatch {
 				printLine(w, path, lineNum, line, opts, true)
 				lastPrintedLine = lineNum
 
@@ -356,6 +792,7 @@ func searchFile(w io.Writer, path string, re *regexp.Regexp, opts Options, resul
 	}
 
 	if matchCount > 0 {
+		result.mu.Lock()
 		result.TotalFiles++
 
 		fileResult := FileResult{
@@ -364,14 +801,24 @@ func searchFile(w io.Writer, path string, re *regexp.Regexp, opts Options, resul
 			Count:   matchCount,
 		}
 		result.Files = append(result.Files, fileResult)
+		result.mu.Unlock()
 
-		if opts.FilesWithMatch && !opts.JSON {
+		if opts.FilesWithMatch && !opts.JSON && !opts.JSONStream {
 			_, _ = fmt.Fprintln(w, path)
 		}
 
-		if opts.Count && !opts.JSON {
+		if opts.Count && !opts.JSON && !opts.JSONStream {
 			_, _ = fmt.Fprintf(w, "%s:%d\n", path, matchCount)
 		}
+	}
+
+	// Stream end message
+	if opts.JSONStream && streamEnc != nil {
+		streamMu.Lock()
+		//nolint:errchkjson // StreamEnd is a concrete type
+		_ = streamEnc.Encode(StreamMessage{Type: "end", Data: StreamEnd{Path: path, MatchCount: matchCount}})
+
+		streamMu.Unlock()
 	}
 
 	return scanner.Err()
@@ -476,65 +923,6 @@ func matchesGlob(path string, patterns []string) bool {
 	// If no pattern matched and all were negations, include the file
 	// If no pattern matched and some were inclusions, exclude the file
 	return allNegations
-}
-
-func loadGitignore(dir string) []string {
-	var patterns []string
-
-	// Check for .gitignore in current and parent directories
-	current := dir
-
-	for {
-		gitignorePath := filepath.Join(current, ".gitignore")
-
-		if data, err := os.ReadFile(gitignorePath); err == nil {
-			for line := range strings.SplitSeq(string(data), "\n") {
-				line = strings.TrimSpace(line)
-				if line != "" && !strings.HasPrefix(line, "#") {
-					patterns = append(patterns, line)
-				}
-			}
-		}
-
-		parent := filepath.Dir(current)
-		if parent == current {
-			break
-		}
-
-		current = parent
-	}
-
-	// Add common ignored patterns
-	patterns = append(patterns, ".git", "node_modules", "vendor", "__pycache__", ".idea", ".vscode")
-
-	return patterns
-}
-
-func isIgnored(path string, patterns []string) bool {
-	base := filepath.Base(path)
-
-	for _, pattern := range patterns {
-		if pattern == base {
-			return true
-		}
-
-		if matched, _ := filepath.Match(pattern, base); matched {
-			return true
-		}
-
-		// Check if any path component matches
-		for part := range strings.SplitSeq(filepath.ToSlash(path), "/") {
-			if part == pattern {
-				return true
-			}
-
-			if matched, _ := filepath.Match(pattern, part); matched {
-				return true
-			}
-		}
-	}
-
-	return false
 }
 
 func isBinary(data []byte) bool {

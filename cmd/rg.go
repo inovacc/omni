@@ -50,12 +50,28 @@ Examples:
   # JSON output
   omni rg --json "pattern"
 
+  # Streaming JSON output (NDJSON)
+  omni rg --json-stream "pattern"
+
   # Glob patterns
   omni rg -g "*.go" -g "!*_test.go" "pattern"
 
+  # Control parallelism
+  omni rg --threads 4 "pattern"
+
 File Types:
   go, js, ts, py, rust, c, cpp, java, rb, php, sh, json, yaml, toml,
-  xml, html, css, md, sql, proto, dockerfile, make, txt`,
+  xml, html, css, md, sql, proto, dockerfile, make, txt
+
+Gitignore Support:
+  rg respects multiple ignore sources (in order of precedence):
+  - ~/.config/git/ignore (global gitignore)
+  - .git/info/exclude (per-repo excludes)
+  - .gitignore files (walked up from target directory)
+  - .ignore files (ripgrep-specific, same hierarchy)
+
+  Supports negation patterns (!pattern) to re-include files.
+  Supports directory-only patterns (pattern/).`,
 	Args: cobra.MinimumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		opts := rg.Options{}
@@ -79,10 +95,12 @@ File Types:
 		opts.MaxDepth, _ = cmd.Flags().GetInt("max-depth")
 		opts.FollowSymlinks, _ = cmd.Flags().GetBool("follow")
 		opts.JSON, _ = cmd.Flags().GetBool("json")
+		opts.JSONStream, _ = cmd.Flags().GetBool("json-stream")
 		opts.NoHeading, _ = cmd.Flags().GetBool("no-heading")
 		opts.OnlyMatching, _ = cmd.Flags().GetBool("only-matching")
 		opts.Quiet, _ = cmd.Flags().GetBool("quiet")
 		opts.Fixed, _ = cmd.Flags().GetBool("fixed-strings")
+		opts.Threads, _ = cmd.Flags().GetInt("threads")
 
 		pattern := args[0]
 		paths := args[1:]
@@ -109,6 +127,7 @@ func init() {
 	rgCmd.Flags().BoolP("no-heading", "H", false, "don't group matches by file name")
 	rgCmd.Flags().BoolP("quiet", "q", false, "quiet mode, exit on first match")
 	rgCmd.Flags().Bool("json", false, "output results as JSON")
+	rgCmd.Flags().Bool("json-stream", false, "output results as streaming NDJSON (one JSON object per line)")
 
 	// Context
 	rgCmd.Flags().IntP("context", "C", 0, "show N lines before and after match")
@@ -126,4 +145,7 @@ func init() {
 	rgCmd.Flags().IntP("max-count", "m", 0, "limit matches per file")
 	rgCmd.Flags().Int("max-depth", 0, "limit directory traversal depth")
 	rgCmd.Flags().BoolP("follow", "L", false, "follow symbolic links")
+
+	// Performance
+	rgCmd.Flags().IntP("threads", "j", 0, "number of worker threads (default: CPU count)")
 }
