@@ -264,6 +264,44 @@ omni fgrep [options] PATTERN [FILE...] [flags]
   -q, --quiet              suppress all normal output
 ```
 
+### rg - Recursively search for a pattern (ripgrep-style)
+```bash
+omni rg [OPTIONS] PATTERN [PATH...] [flags]
+  -i, --ignore-case        case insensitive search
+  -S, --smart-case         smart case (insensitive if pattern is lowercase)
+  -w, --word-regexp        only match whole words
+  -F, --fixed-strings      treat pattern as literal string
+  -n, --line-number        show line numbers (default true)
+  -c, --count              only show count of matches per file
+  -l, --files-with-matches only show file names with matches
+  -v, --invert-match       show non-matching lines
+  -o, --only-matching      show only matching part of line
+  -C, --context=N          show N lines before and after match
+  -B, --before-context=N   show N lines before match
+  -A, --after-context=N    show N lines after match
+  -t, --type=TYPE          only search files of TYPE (go, js, py, etc.)
+  -T, --type-not=TYPE      exclude files of TYPE
+  -g, --glob=GLOB          include/exclude files matching GLOB
+  --hidden                 search hidden files and directories
+  --no-ignore              don't respect gitignore files
+  -m, --max-count=N        limit matches per file
+  --max-depth=N            limit directory traversal depth
+  -L, --follow             follow symbolic links
+  --json                   output results as JSON
+```
+
+**Examples:**
+```bash
+omni rg "pattern"                    # search current directory
+omni rg -i "pattern"                 # case insensitive
+omni rg -t go "func main"            # search only Go files
+omni rg -C 3 "error"                 # with 3 lines context
+omni rg -l "TODO"                    # show only filenames
+omni rg -c "pattern"                 # count matches
+omni rg --hidden "secret"            # include hidden files
+omni rg -g "*.go" -g "!*_test.go" "pattern"  # glob patterns
+```
+
 ### head - Output the first part of files
 ```bash
 omni head [option]... [file]... [flags]
@@ -1196,6 +1234,7 @@ omni
 +-- readlink                                 # Print resolved symbolic links or cano...
 +-- realpath                                 # Print the resolved path
 +-- remove                                   # Alias for rm
++-- rg                                       # Recursively search for a pattern (ripg...
 +-- rm                                       # Remove files or directories
 +-- rmdir                                    # Remove empty directories
 +-- sed                                      # Stream editor for filtering and trans...
