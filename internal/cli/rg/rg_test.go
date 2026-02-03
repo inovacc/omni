@@ -2,6 +2,7 @@ package rg
 
 import (
 	"bytes"
+	"encoding/json"
 	"os"
 	"path/filepath"
 	"strings"
@@ -188,6 +189,169 @@ func Nested() {
 	}
 }
 
+func TestLiteralSearch(t *testing.T) {
+	dir := t.TempDir()
+
+	// Create test file with regex special characters
+	content := `package main
+
+func test() {
+	if x := foo(); x != nil {
+		println("match: foo()")
+	}
+}
+`
+
+	testFile := filepath.Join(dir, "test.go")
+	if err := os.WriteFile(testFile, []byte(content), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	tests := []struct {
+		name    string
+		pattern string
+		opts    Options
+		want    bool
+	}{
+		{
+			name:    "literal parentheses",
+			pattern: "foo()",
+			opts:    Options{Fixed: true},
+			want:    true,
+		},
+		{
+			name:    "literal with special chars",
+			pattern: "x != nil",
+			opts:    Options{Fixed: true},
+			want:    true,
+		},
+		{
+			name:    "literal case insensitive",
+			pattern: "FOO()",
+			opts:    Options{Fixed: true, IgnoreCase: true},
+			want:    true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var buf bytes.Buffer
+
+			err := Run(&buf, tt.pattern, []string{dir}, tt.opts)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			hasMatch := buf.Len() > 0
+			if hasMatch != tt.want {
+				t.Errorf("Run() hasMatch = %v, want %v, output: %s", hasMatch, tt.want, buf.String())
+			}
+		})
+	}
+}
+
+func TestParallelSearch(t *testing.T) {
+	dir := t.TempDir()
+
+	// Create multiple test files
+	for i := range 10 {
+		content := "package main\n\nfunc test() {\n\tprintln(\"hello\")\n}\n"
+		path := filepath.Join(dir, "file"+string(rune('0'+i))+".go")
+
+		if err := os.WriteFile(path, []byte(content), 0644); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	// Run with single thread
+	var buf1 bytes.Buffer
+
+	err := Run(&buf1, "hello", []string{dir}, Options{Threads: 1, FilesWithMatch: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Run with multiple threads
+	var buf2 bytes.Buffer
+
+	err = Run(&buf2, "hello", []string{dir}, Options{Threads: 4, FilesWithMatch: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Both should have the same number of matches
+	count1 := strings.Count(buf1.String(), ".go")
+	count2 := strings.Count(buf2.String(), ".go")
+
+	if count1 != count2 {
+		t.Errorf("parallel search gave different results: single=%d, parallel=%d", count1, count2)
+	}
+
+	if count1 != 10 {
+		t.Errorf("expected 10 matches, got %d", count1)
+	}
+}
+
+func TestJSONStreamOutput(t *testing.T) {
+	dir := t.TempDir()
+
+	content := `package main
+
+func hello() {
+	println("hello world")
+}
+`
+	if err := os.WriteFile(filepath.Join(dir, "test.go"), []byte(content), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	var buf bytes.Buffer
+
+	opts := Options{JSONStream: true}
+
+	err := Run(&buf, "hello", []string{dir}, opts)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	output := buf.String()
+	lines := strings.Split(strings.TrimSpace(output), "\n")
+
+	// Should have: begin, match(es), end, summary
+	if len(lines) < 4 {
+		t.Errorf("expected at least 4 NDJSON lines, got %d: %s", len(lines), output)
+	}
+
+	// Verify each line is valid JSON
+	for i, line := range lines {
+		if line == "" {
+			continue
+		}
+
+		var msg StreamMessage
+		if err := json.Unmarshal([]byte(line), &msg); err != nil {
+			t.Errorf("line %d is not valid JSON: %v", i, err)
+		}
+	}
+
+	// Check for expected message types
+	if !strings.Contains(output, `"type":"begin"`) {
+		t.Error("missing begin message")
+	}
+
+	if !strings.Contains(output, `"type":"match"`) {
+		t.Error("missing match message")
+	}
+
+	if !strings.Contains(output, `"type":"end"`) {
+		t.Error("missing end message")
+	}
+
+	if !strings.Contains(output, `"type":"summary"`) {
+		t.Error("missing summary message")
+	}
+}
+
 func TestMatchesFileType(t *testing.T) {
 	tests := []struct {
 		path    string
@@ -239,32 +403,6 @@ func TestMatchesGlob(t *testing.T) {
 			if got != tt.want {
 				t.Errorf("matchesGlob(%q, %v) = %v, want %v",
 					tt.path, tt.patterns, got, tt.want)
-			}
-		})
-	}
-}
-
-func TestIsIgnored(t *testing.T) {
-	patterns := []string{".git", "node_modules", "*.log", "vendor"}
-
-	tests := []struct {
-		path string
-		want bool
-	}{
-		{".git", true},
-		{"node_modules", true},
-		{"src/main.go", false},
-		{"debug.log", true},
-		{"vendor/lib.go", true},
-		{"src/vendor/lib.go", true},
-		{"main.go", false},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.path, func(t *testing.T) {
-			got := isIgnored(tt.path, patterns)
-			if got != tt.want {
-				t.Errorf("isIgnored(%q) = %v, want %v", tt.path, got, tt.want)
 			}
 		})
 	}
@@ -373,5 +511,132 @@ line 7
 
 	if !strings.Contains(output, "line 5") {
 		t.Error("output should contain after context (line 5)")
+	}
+}
+
+func TestGitignoreIntegration(t *testing.T) {
+	dir := t.TempDir()
+
+	// Create .gitignore
+	gitignore := `*.log
+!important.log
+build/
+`
+	if err := os.WriteFile(filepath.Join(dir, ".gitignore"), []byte(gitignore), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	// Create test files
+	files := map[string]string{
+		"main.go":        "package main\n\nfunc main() { println(\"hello\") }",
+		"debug.log":      "DEBUG: hello world",
+		"important.log":  "IMPORTANT: hello critical",
+		"build/out.go":   "package build\n\nfunc Build() { println(\"hello\") }",
+		"src/lib.go":     "package lib\n\nfunc Lib() { println(\"hello\") }",
+	}
+
+	for name, content := range files {
+		path := filepath.Join(dir, name)
+
+		if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
+			t.Fatal(err)
+		}
+
+		if err := os.WriteFile(path, []byte(content), 0644); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	// Search with gitignore enabled
+	var buf bytes.Buffer
+
+	opts := Options{FilesWithMatch: true}
+
+	err := Run(&buf, "hello", []string{dir}, opts)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	output := buf.String()
+
+	// Should include main.go and src/lib.go
+	if !strings.Contains(output, "main.go") {
+		t.Error("should include main.go")
+	}
+
+	if !strings.Contains(output, "lib.go") {
+		t.Error("should include src/lib.go")
+	}
+
+	// Should NOT include debug.log (ignored)
+	if strings.Contains(output, "debug.log") {
+		t.Error("should NOT include debug.log (ignored by *.log)")
+	}
+
+	// SHOULD include important.log (negation pattern)
+	if !strings.Contains(output, "important.log") {
+		t.Error("should include important.log (negation pattern !important.log)")
+	}
+
+	// Should NOT include build/out.go (ignored directory)
+	if strings.Contains(output, "build") {
+		t.Error("should NOT include files in build/ (ignored directory)")
+	}
+}
+
+func TestIgnoreFileSupport(t *testing.T) {
+	dir := t.TempDir()
+
+	// Create .ignore file (ripgrep-specific)
+	ignoreContent := `*.generated.go
+testdata/
+`
+	if err := os.WriteFile(filepath.Join(dir, ".ignore"), []byte(ignoreContent), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	// Create test files
+	files := map[string]string{
+		"main.go":           "package main\n\nfunc main() { println(\"hello\") }",
+		"types.generated.go": "package main\n\n// hello generated code",
+		"testdata/test.go":  "package testdata\n\n// hello test data",
+	}
+
+	for name, content := range files {
+		path := filepath.Join(dir, name)
+
+		if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
+			t.Fatal(err)
+		}
+
+		if err := os.WriteFile(path, []byte(content), 0644); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	var buf bytes.Buffer
+
+	opts := Options{FilesWithMatch: true}
+
+	err := Run(&buf, "hello", []string{dir}, opts)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	output := buf.String()
+
+	// Should include main.go
+	if !strings.Contains(output, "main.go") {
+		t.Error("should include main.go")
+	}
+
+	// Should NOT include *.generated.go
+	if strings.Contains(output, "generated") {
+		t.Error("should NOT include types.generated.go")
+	}
+
+	// Should NOT include testdata/
+	if strings.Contains(output, "testdata") {
+		t.Error("should NOT include files in testdata/")
 	}
 }
