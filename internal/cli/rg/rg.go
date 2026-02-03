@@ -253,12 +253,18 @@ func searchFile(w io.Writer, path string, re *regexp.Regexp, opts Options, resul
 
 	scanner := bufio.NewScanner(file)
 
+	type contextLine struct {
+		lineNum int
+		text    string
+	}
+
 	var (
-		lineNum     int
-		matches     []Match
-		matchCount  int
-		beforeLines []string
-		afterNeeded int
+		lineNum         int
+		matches         []Match
+		matchCount      int
+		beforeLines     []contextLine
+		afterNeeded     int
+		lastPrintedLine int
 	)
 
 	beforeContext := opts.Before
@@ -268,6 +274,8 @@ func searchFile(w io.Writer, path string, re *regexp.Regexp, opts Options, resul
 		beforeContext = opts.Context
 		afterContext = opts.Context
 	}
+
+	needsContext := beforeContext > 0 || afterContext > 0
 
 	for scanner.Scan() {
 		lineNum++
@@ -301,30 +309,45 @@ func searchFile(w io.Writer, path string, re *regexp.Regexp, opts Options, resul
 				matches = append(matches, match)
 
 				// Print context before
-				if !opts.JSON && beforeContext > 0 {
+				if !opts.JSON && beforeContext > 0 && len(beforeLines) > 0 {
+					// Print separator if there's a gap
+					firstBeforeLine := beforeLines[0].lineNum
+					if needsContext && lastPrintedLine > 0 && firstBeforeLine > lastPrintedLine+1 {
+						_, _ = fmt.Fprintln(w, "--")
+					}
+
 					for _, bl := range beforeLines {
-						printLine(w, path, 0, bl, opts, true)
+						printLine(w, path, bl.lineNum, bl.text, opts, true)
+						lastPrintedLine = bl.lineNum
 					}
 
 					beforeLines = nil
 				}
 
+				// Print separator if there's a gap and no before context was printed
+				if !opts.JSON && needsContext && lastPrintedLine > 0 && lineNum > lastPrintedLine+1 {
+					_, _ = fmt.Fprintln(w, "--")
+				}
+
 				if !opts.JSON {
 					printLine(w, path, lineNum, line, opts, false)
+					lastPrintedLine = lineNum
 				}
 
 				afterNeeded = afterContext
 			}
 		} else {
-			// Handle context
+			// Handle after context
 			if afterNeeded > 0 && !opts.JSON && !opts.Count && !opts.FilesWithMatch {
 				printLine(w, path, lineNum, line, opts, true)
+				lastPrintedLine = lineNum
 
 				afterNeeded--
 			}
 
+			// Store for before context
 			if beforeContext > 0 {
-				beforeLines = append(beforeLines, line)
+				beforeLines = append(beforeLines, contextLine{lineNum: lineNum, text: line})
 				if len(beforeLines) > beforeContext {
 					beforeLines = beforeLines[1:]
 				}
