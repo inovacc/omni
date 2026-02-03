@@ -1,0 +1,335 @@
+// Copyright 2020-2025 Buf Technologies, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package bufmodulecache
+
+import (
+	"context"
+	"os"
+	"path/filepath"
+	"testing"
+	"time"
+
+	"buf.build/go/standard/xslices"
+	bufmodule2 "github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufmodule"
+	bufmodulestore2 "github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufmodule/bufmodulestore"
+	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufmodule/bufmoduletesting"
+	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufparse"
+	"github.com/inovacc/omni/pkg/buf/internal/pkg/filelock"
+	"github.com/inovacc/omni/pkg/buf/internal/pkg/slogtestext"
+	"github.com/inovacc/omni/pkg/buf/internal/pkg/storage/storagemem"
+	"github.com/inovacc/omni/pkg/buf/internal/pkg/storage/storageos"
+	"github.com/inovacc/omni/pkg/buf/internal/pkg/thread"
+	"github.com/stretchr/testify/require"
+)
+
+func TestCommitProviderForModuleKeyBasic(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+
+	bsrProvider, moduleKeys := testGetBSRProviderAndModuleKeys(t, ctx)
+	logger := slogtestext.NewLogger(t)
+
+	cacheProvider := newCommitProvider(
+		logger,
+		bsrProvider,
+		bufmodulestore2.NewCommitStore(
+			logger,
+			storagemem.NewReadWriteBucket(),
+		),
+	)
+
+	commits, err := cacheProvider.GetCommitsForModuleKeys(
+		ctx,
+		moduleKeys,
+	)
+	require.NoError(t, err)
+	require.Equal(t, 3, cacheProvider.byModuleKey.getKeysRetrieved())
+	require.Equal(t, 0, cacheProvider.byModuleKey.getKeysHit())
+	require.Equal(
+		t,
+		[]string{
+			"buf.build/foo/mod1",
+			"buf.build/foo/mod3",
+			"buf.build/foo/mod2",
+		},
+		xslices.Map(
+			commits,
+			func(commit bufmodule2.Commit) string {
+				return commit.ModuleKey().FullName().String()
+			},
+		),
+	)
+
+	moduleKeys[0], moduleKeys[1] = moduleKeys[1], moduleKeys[0]
+	commits, err = cacheProvider.GetCommitsForModuleKeys(
+		ctx,
+		moduleKeys,
+	)
+	require.NoError(t, err)
+	require.Equal(t, 6, cacheProvider.byModuleKey.getKeysRetrieved())
+	require.Equal(t, 3, cacheProvider.byModuleKey.getKeysHit())
+	require.Equal(
+		t,
+		[]string{
+			"buf.build/foo/mod3",
+			"buf.build/foo/mod1",
+			"buf.build/foo/mod2",
+		},
+		xslices.Map(
+			commits,
+			func(commit bufmodule2.Commit) string {
+				return commit.ModuleKey().FullName().String()
+			},
+		),
+	)
+}
+
+func TestCommitProviderForCommitKeyBasic(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+
+	bsrProvider, moduleKeys := testGetBSRProviderAndModuleKeys(t, ctx)
+	logger := slogtestext.NewLogger(t)
+	commitKeys, err := xslices.MapError(moduleKeys, bufmodule2.ModuleKeyToCommitKey)
+	require.NoError(t, err)
+
+	cacheProvider := newCommitProvider(
+		logger,
+		bsrProvider,
+		bufmodulestore2.NewCommitStore(
+			logger,
+			storagemem.NewReadWriteBucket(),
+		),
+	)
+
+	commits, err := cacheProvider.GetCommitsForCommitKeys(
+		ctx,
+		commitKeys,
+	)
+	require.NoError(t, err)
+	require.Equal(t, 3, cacheProvider.byCommitKey.getKeysRetrieved())
+	require.Equal(t, 0, cacheProvider.byCommitKey.getKeysHit())
+	require.Equal(
+		t,
+		[]string{
+			"buf.build/foo/mod1",
+			"buf.build/foo/mod3",
+			"buf.build/foo/mod2",
+		},
+		xslices.Map(
+			commits,
+			func(commit bufmodule2.Commit) string {
+				return commit.ModuleKey().FullName().String()
+			},
+		),
+	)
+
+	commitKeys[0], commitKeys[1] = commitKeys[1], commitKeys[0]
+	commits, err = cacheProvider.GetCommitsForCommitKeys(
+		ctx,
+		commitKeys,
+	)
+	require.NoError(t, err)
+	require.Equal(t, 6, cacheProvider.byCommitKey.getKeysRetrieved())
+	require.Equal(t, 3, cacheProvider.byCommitKey.getKeysHit())
+	require.Equal(
+		t,
+		[]string{
+			"buf.build/foo/mod3",
+			"buf.build/foo/mod1",
+			"buf.build/foo/mod2",
+		},
+		xslices.Map(
+			commits,
+			func(commit bufmodule2.Commit) string {
+				return commit.ModuleKey().FullName().String()
+			},
+		),
+	)
+}
+
+func TestModuleDataProviderBasic(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+
+	bsrProvider, moduleKeys := testGetBSRProviderAndModuleKeys(t, ctx)
+	logger := slogtestext.NewLogger(t)
+
+	cacheProvider := newModuleDataProvider(
+		logger,
+		bsrProvider,
+		bufmodulestore2.NewModuleDataStore(
+			logger,
+			storagemem.NewReadWriteBucket(),
+			filelock.NewNopLocker(),
+		),
+	)
+
+	moduleDatas, err := cacheProvider.GetModuleDatasForModuleKeys(
+		ctx,
+		moduleKeys,
+	)
+	require.NoError(t, err)
+	require.Equal(t, 3, cacheProvider.getKeysRetrieved())
+	require.Equal(t, 0, cacheProvider.getKeysHit())
+	require.Equal(
+		t,
+		[]string{
+			"buf.build/foo/mod1",
+			"buf.build/foo/mod3",
+			"buf.build/foo/mod2",
+		},
+		xslices.Map(
+			moduleDatas,
+			func(moduleData bufmodule2.ModuleData) string {
+				return moduleData.ModuleKey().FullName().String()
+			},
+		),
+	)
+
+	moduleKeys[0], moduleKeys[1] = moduleKeys[1], moduleKeys[0]
+	moduleDatas, err = cacheProvider.GetModuleDatasForModuleKeys(
+		ctx,
+		moduleKeys,
+	)
+	require.NoError(t, err)
+	require.Equal(t, 6, cacheProvider.getKeysRetrieved())
+	require.Equal(t, 3, cacheProvider.getKeysHit())
+	require.Equal(
+		t,
+		[]string{
+			"buf.build/foo/mod3",
+			"buf.build/foo/mod1",
+			"buf.build/foo/mod2",
+		},
+		xslices.Map(
+			moduleDatas,
+			func(moduleData bufmodule2.ModuleData) string {
+				return moduleData.ModuleKey().FullName().String()
+			},
+		),
+	)
+}
+
+func TestConcurrentCacheReadWrite(t *testing.T) {
+	t.Parallel()
+
+	bsrProvider, moduleKeys := testGetBSRProviderAndModuleKeys(t, context.Background())
+	tempDir := t.TempDir()
+	cacheDir := filepath.Join(tempDir, "cache")
+	logger := slogtestext.NewLogger(t)
+
+	for range 20 {
+		require.NoError(t, os.MkdirAll(cacheDir, 0755))
+		jobs, err := xslices.MapError(
+			[]int{0, 1, 2, 3, 4},
+			func(i int) (func(ctx context.Context) error, error) {
+				bucket, err := storageos.NewProvider().NewReadWriteBucket(cacheDir)
+				if err != nil {
+					return nil, err
+				}
+				filelocker, err := filelock.NewLocker(
+					cacheDir,
+					filelock.LockerWithLockRetryDelay(10*time.Millisecond), // Drops test time from ~16s to ~1s
+				)
+				if err != nil {
+					return nil, err
+				}
+				cacheProvider := newModuleDataProvider(
+					logger,
+					bsrProvider,
+					bufmodulestore2.NewModuleDataStore(
+						logger,
+						bucket,
+						filelocker,
+					),
+				)
+				return func(ctx context.Context) error {
+					moduleDatas, err := cacheProvider.GetModuleDatasForModuleKeys(
+						ctx,
+						moduleKeys,
+					)
+					if err != nil {
+						return err
+					}
+					for _, moduleData := range moduleDatas {
+						// Calling moduleData.Bucket() checks the digest
+						if _, err := moduleData.Bucket(); err != nil {
+							return err
+						}
+					}
+					return nil
+				}, nil
+			},
+		)
+		require.NoError(t, err)
+		require.NoError(t, thread.Parallelize(context.Background(), jobs))
+		require.NoError(t, os.RemoveAll(cacheDir))
+	}
+}
+
+func testGetBSRProviderAndModuleKeys(t *testing.T, ctx context.Context) (bufmoduletesting.OmniProvider, []bufmodule2.ModuleKey) {
+	bsrProvider, err := bufmoduletesting.NewOmniProvider(
+		bufmoduletesting.ModuleData{
+			Name: "buf.build/foo/mod1",
+			PathToData: map[string][]byte{
+				"mod1.proto": []byte(
+					`syntax = proto3; package mod1;`,
+				),
+			},
+		},
+		bufmoduletesting.ModuleData{
+			Name: "buf.build/foo/mod2",
+			PathToData: map[string][]byte{
+				"mod2.proto": []byte(
+					`syntax = proto3; package mod2; import "mod1.proto";`,
+				),
+			},
+		},
+		bufmoduletesting.ModuleData{
+			Name: "buf.build/foo/mod3",
+			PathToData: map[string][]byte{
+				"mod3a.proto": []byte(
+					`syntax = proto3; package mod3;`,
+				),
+				"mod3b.proto": []byte(
+					`syntax = proto3; package mod3;`,
+				),
+			},
+		},
+	)
+	require.NoError(t, err)
+	moduleRefMod1, err := bufparse.NewRef("buf.build", "foo", "mod1", "")
+	require.NoError(t, err)
+	moduleRefMod2, err := bufparse.NewRef("buf.build", "foo", "mod2", "")
+	require.NoError(t, err)
+	moduleRefMod3, err := bufparse.NewRef("buf.build", "foo", "mod3", "")
+	require.NoError(t, err)
+	moduleKeys, err := bsrProvider.GetModuleKeysForModuleRefs(
+		ctx,
+		[]bufparse.Ref{
+			moduleRefMod1,
+			// Switching order on purpose.
+			moduleRefMod3,
+			moduleRefMod2,
+		},
+		bufmodule2.DigestTypeB5,
+	)
+	require.NoError(t, err)
+	require.Equal(t, 3, len(moduleKeys))
+	return bsrProvider, moduleKeys
+}

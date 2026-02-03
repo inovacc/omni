@@ -1,0 +1,58 @@
+file:
+- name: "testdata/options/values/nested.proto"
+  package: "buf.test"
+  dependency: ["google/protobuf/descriptor.proto"]
+  message_type:
+  - name: "Foo"
+    field:
+    - name: "a"
+      number: 1
+      label: LABEL_OPTIONAL
+      type: TYPE_MESSAGE
+      type_name: ".buf.test.Foo"
+      json_name: "a"
+    - name: "b"
+      number: 2
+      label: LABEL_REPEATED
+      type: TYPE_MESSAGE
+      type_name: ".buf.test.Foo"
+      json_name: "b"
+    extension_range: [{ start: 1000, end: 536870912 }]
+  extension:
+  - name: "x"
+    number: 1000
+    label: LABEL_OPTIONAL
+    type: TYPE_MESSAGE
+    type_name: ".buf.test.Foo"
+    extendee: ".google.protobuf.FileOptions"
+    json_name: "x"
+  - name: "y"
+    number: 1000
+    label: LABEL_OPTIONAL
+    type: TYPE_MESSAGE
+    type_name: ".buf.test.Foo"
+    extendee: ".buf.test.Foo"
+    json_name: "y"
+  - name: "z"
+    number: 1001
+    label: LABEL_REPEATED
+    type: TYPE_MESSAGE
+    type_name: ".buf.test.Foo"
+    extendee: ".buf.test.Foo"
+    json_name: "z"
+  options.$unknown: |
+    1000: {
+      2: {}
+      2: {}
+      1: {
+        1: {
+          1: {}
+          2: {}
+          2: {}
+        }
+        1001: {}
+        1001: {}
+      }
+      1000: {1: {1000: {}}}
+    }
+  syntax: "proto2"

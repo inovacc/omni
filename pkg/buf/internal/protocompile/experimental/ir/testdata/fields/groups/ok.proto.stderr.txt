@@ -1,0 +1,22 @@
+warning: group syntax is deprecated
+  --> testdata/fields/groups/ok.proto:22:14
+   |
+22 |     optional group FooBar = 1 {
+   |              ^^^^^
+   = note: group syntax is not available in proto3 or editions
+
+warning: group syntax is deprecated
+  --> testdata/fields/groups/ok.proto:26:18
+   |
+26 |         repeated group X_Y_Z = 2 [deprecated = true] {
+   |                  ^^^^^
+   = note: group syntax is not available in proto3 or editions
+
+warning: group syntax is deprecated
+  --> testdata/fields/groups/ok.proto:27:22
+   |
+27 |             required group Baz = 3 {}
+   |                      ^^^^^
+   = note: group syntax is not available in proto3 or editions
+
+encountered 3 warnings

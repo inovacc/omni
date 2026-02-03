@@ -242,6 +242,7 @@ Concurrency, streaming, and flow control.
 | `watch` | `time.Ticker` + file monitoring | `-n`, `-d`, `-t`, `-b`, `-e`, `-p`, `-c` | P1 ✅ |
 | `less` | (TUI - consider `bubbletea`) | — | P3 |
 | `more` | Simple pager | — | P3 |
+| `pipe` | Chain omni commands with variable substitution | `--var`, `--json`, `--sep`, `-v` | P0 ✅ |
 | `pipeline` | Internal streaming engine | — | P0 |
 
 ### xargs Design (Safe)
@@ -272,6 +273,36 @@ type WatchOptions struct {
 }
 
 func Watch(path string, opt WatchOptions, fn func() error) error
+```
+
+### Pipe Design (Variable Substitution)
+
+```go
+type Options struct {
+    JSON      bool   // --json: output pipeline result as JSON
+    Separator string // --sep: command separator (default "|")
+    Verbose   bool   // --verbose: show intermediate steps
+    VarName   string // --var: variable name for output substitution (default "OUT")
+}
+```
+
+Variable substitution patterns:
+- `$OUT` or `${OUT}` - Single value substitution (uses last line of output)
+- `[$OUT...]` - Iteration over each line of output
+
+Usage:
+```bash
+# Generate UUID and create folder with that name
+omni pipe '{uuid -v 7}' '{mkdir $OUT}'
+
+# Custom variable name
+omni pipe --var UUID '{uuid -v 7}' '{mkdir $UUID}'
+
+# Generate 10 UUIDs and create a folder for each
+omni pipe '{uuid -v 7 -n 10}' '{mkdir [$OUT...]}'
+
+# Chain with processing
+omni pipe '{uuid -v 7 -n 5}' '{echo prefix-[$OUT...]-suffix}'
 ```
 
 ---
@@ -909,6 +940,7 @@ Comprehensive data conversion, validation, and developer utilities inspired by C
 | `base64` | Base64 encode/decode | P0 | ✅ Done |
 | `base32` | Base32 encode/decode | P0 | ✅ Done |
 | `base58` | Base58 encode/decode | P0 | ✅ Done |
+| `xxd` | Hex dump and reverse (like Unix xxd) | P0 | ✅ Done |
 | `url encode/decode` | URL encoding | P1 | |
 | `html encode/decode` | HTML entity encoding | P1 | |
 | `hex encode/decode` | Hex encoding | P1 | |
@@ -1138,6 +1170,34 @@ Database management CLIs and code scaffolding utilities.
 | `sqlite dump` | Export as SQL | P0 | ✅ Done |
 | `sqlite import` | Import SQL file | P0 | ✅ Done |
 
+### Server Lifecycle Management
+
+| Command | Description | Priority | Status |
+|---------|-------------|----------|--------|
+| `server init` | Initialize server with clean database | P0 | |
+| `server start` | Start server instance | P0 | |
+| `server stop` | Stop running server instance | P0 | |
+| `server status` | Check if server is running | P0 | |
+| `server restart` | Stop and start server | P1 | |
+
+#### Init Behavior
+
+When `server init` is called:
+1. Check if server instance is running
+2. If running: stop server, delete database, start server
+3. If not running: delete database, start server
+
+```bash
+# Initialize with fresh database (auto-handles running server)
+omni server init
+
+# Manual workflow equivalent
+omni server status          # Check if running
+omni server stop            # Stop if running
+omni sqlite drop mydb.sqlite  # Delete database
+omni server start           # Start fresh
+```
+
 ### BoltDB CLI Examples
 
 ```bash
@@ -1337,3 +1397,4 @@ myapp/
 | `tar` | `archive/tar` |
 | `zip` | `archive/zip` |
 | `gzip` | `compress/gzip` |
+| `xxd` | `encoding/hex` + custom formatting |

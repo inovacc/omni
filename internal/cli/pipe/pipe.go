@@ -17,6 +17,7 @@ type Options struct {
 	JSON      bool   // --json: output pipeline result as JSON
 	Separator string // --sep: command separator (default "|")
 	Verbose   bool   // --verbose: show intermediate steps
+	VarName   string // --var: variable name for output substitution (default "OUT")
 }
 
 // Result represents the pipeline execution result
@@ -65,38 +66,60 @@ func Run(w io.Writer, args []string, opts Options, registry *CommandRegistry) er
 	var input bytes.Buffer
 
 	for i, cmdStr := range commands {
-		cmdResult := CommandResult{Command: cmdStr}
+		// Apply variable substitution from previous output
+		prevOutput := input.String()
+		substitutedCmds, isIteration := substituteVariables(cmdStr, prevOutput, opts.VarName)
 
-		// Parse command and arguments
-		cmdParts := parseCommandLine(cmdStr)
-		if len(cmdParts) == 0 {
-			continue
-		}
+		for _, subCmd := range substitutedCmds {
+			cmdResult := CommandResult{Command: subCmd}
 
-		// Execute command
-		var output bytes.Buffer
+			// Parse command and arguments
+			cmdParts := parseCommandLine(subCmd)
+			if len(cmdParts) == 0 {
+				continue
+			}
 
-		err := executeCommand(registry, cmdParts, &input, &output)
-		if err != nil {
-			cmdResult.Error = err.Error()
-			result.Success = false
-			result.Error = fmt.Sprintf("command %d failed: %s", i+1, err.Error())
+			// Execute command
+			var output bytes.Buffer
+
+			// For iteration, don't pass stdin (each command is independent)
+			var cmdInput io.Reader
+			if !isIteration {
+				cmdInput = &input
+			}
+
+			err := executeCommand(registry, cmdParts, cmdInput, &output)
+			if err != nil {
+				cmdResult.Error = err.Error()
+				result.Success = false
+				result.Error = fmt.Sprintf("command %d failed: %s", i+1, err.Error())
+				result.Commands = append(result.Commands, cmdResult)
+
+				if !isIteration {
+					break
+				}
+
+				continue
+			}
+
+			cmdResult.Output = output.String()
 			result.Commands = append(result.Commands, cmdResult)
 
+			// Verbose output
+			if opts.Verbose {
+				_, _ = fmt.Fprintf(w, "=== Step %d: %s ===\n", i+1, subCmd)
+				_, _ = fmt.Fprintln(w, output.String())
+			}
+
+			// Pass output to next command's input (only for non-iteration)
+			if !isIteration {
+				input = output
+			}
+		}
+
+		if !result.Success && !isIteration {
 			break
 		}
-
-		cmdResult.Output = output.String()
-		result.Commands = append(result.Commands, cmdResult)
-
-		// Verbose output
-		if opts.Verbose {
-			_, _ = fmt.Fprintf(w, "=== Step %d: %s ===\n", i+1, cmdStr)
-			_, _ = fmt.Fprintln(w, output.String())
-		}
-
-		// Pass output to next command's input
-		input = output
 	}
 
 	result.Output = input.String()
@@ -324,6 +347,64 @@ func parseCommandLine(cmdLine string) []string {
 	return parts
 }
 
+// substituteVariables replaces variable placeholders in command string with actual values
+// Supports:
+//   - $VAR or ${VAR} - single value substitution (uses last line of output)
+//   - [$VAR...] - iteration over all lines
+func substituteVariables(cmdStr, output, varName string) ([]string, bool) {
+	if varName == "" {
+		varName = "OUT"
+	}
+
+	// Check for iteration pattern: [$VAR...]
+	iterPattern := "[" + "$" + varName + "...]"
+	iterPatternBrace := "[" + "${" + varName + "}...]"
+
+	if strings.Contains(cmdStr, iterPattern) || strings.Contains(cmdStr, iterPatternBrace) {
+		// Split output into lines and create command for each
+		lines := strings.Split(strings.TrimSpace(output), "\n")
+		commands := make([]string, 0, len(lines))
+
+		for _, line := range lines {
+			line = strings.TrimSpace(line)
+			if line == "" {
+				continue
+			}
+
+			cmd := strings.ReplaceAll(cmdStr, iterPattern, line)
+			cmd = strings.ReplaceAll(cmd, iterPatternBrace, line)
+			commands = append(commands, cmd)
+		}
+
+		return commands, true
+	}
+
+	// Single value substitution: $VAR or ${VAR}
+	singlePattern := "$" + varName
+	singlePatternBrace := "${" + varName + "}"
+
+	if strings.Contains(cmdStr, singlePattern) || strings.Contains(cmdStr, singlePatternBrace) {
+		// Use last non-empty line as value
+		lines := strings.Split(strings.TrimSpace(output), "\n")
+		value := ""
+
+		for i := len(lines) - 1; i >= 0; i-- {
+			if strings.TrimSpace(lines[i]) != "" {
+				value = strings.TrimSpace(lines[i])
+
+				break
+			}
+		}
+
+		cmd := strings.ReplaceAll(cmdStr, singlePatternBrace, value)
+		cmd = strings.ReplaceAll(cmd, singlePattern, value)
+
+		return []string{cmd}, false
+	}
+
+	return []string{cmdStr}, false
+}
+
 // executeCommand executes a single omni command using cmd.SetIn for stdin
 func executeCommand(registry *CommandRegistry, cmdParts []string, stdin io.Reader, stdout io.Writer) error {
 	if registry == nil || registry.RootCmd == nil {
@@ -398,34 +479,57 @@ func RunWithInput(w io.Writer, input string, args []string, opts Options, regist
 	inputBuf := bytes.NewBufferString(input)
 
 	for i, cmdStr := range commands {
-		cmdResult := CommandResult{Command: cmdStr}
+		// Apply variable substitution from previous output
+		prevOutput := inputBuf.String()
+		substitutedCmds, isIteration := substituteVariables(cmdStr, prevOutput, opts.VarName)
 
-		cmdParts := parseCommandLine(cmdStr)
-		if len(cmdParts) == 0 {
-			continue
-		}
+		for _, subCmd := range substitutedCmds {
+			cmdResult := CommandResult{Command: subCmd}
 
-		var output bytes.Buffer
+			cmdParts := parseCommandLine(subCmd)
+			if len(cmdParts) == 0 {
+				continue
+			}
 
-		err := executeCommand(registry, cmdParts, inputBuf, &output)
-		if err != nil {
-			cmdResult.Error = err.Error()
-			result.Success = false
-			result.Error = fmt.Sprintf("command %d failed: %s", i+1, err.Error())
+			var output bytes.Buffer
+
+			// For iteration, don't pass stdin (each command is independent)
+			var cmdInput io.Reader
+			if !isIteration {
+				cmdInput = inputBuf
+			}
+
+			err := executeCommand(registry, cmdParts, cmdInput, &output)
+			if err != nil {
+				cmdResult.Error = err.Error()
+				result.Success = false
+				result.Error = fmt.Sprintf("command %d failed: %s", i+1, err.Error())
+				result.Commands = append(result.Commands, cmdResult)
+
+				if !isIteration {
+					break
+				}
+
+				continue
+			}
+
+			cmdResult.Output = output.String()
 			result.Commands = append(result.Commands, cmdResult)
 
+			if opts.Verbose {
+				_, _ = fmt.Fprintf(w, "=== Step %d: %s ===\n", i+1, subCmd)
+				_, _ = fmt.Fprintln(w, output.String())
+			}
+
+			// Pass output to next command's input (only for non-iteration)
+			if !isIteration {
+				inputBuf = &output
+			}
+		}
+
+		if !result.Success && !isIteration {
 			break
 		}
-
-		cmdResult.Output = output.String()
-		result.Commands = append(result.Commands, cmdResult)
-
-		if opts.Verbose {
-			_, _ = fmt.Fprintf(w, "=== Step %d: %s ===\n", i+1, cmdStr)
-			_, _ = fmt.Fprintln(w, output.String())
-		}
-
-		inputBuf = &output
 	}
 
 	result.Output = inputBuf.String()

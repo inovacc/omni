@@ -236,3 +236,127 @@ func TestCommandResultWithError(t *testing.T) {
 		t.Errorf("Error should mention which command failed")
 	}
 }
+
+func TestSubstituteVariables(t *testing.T) {
+	tests := []struct {
+		name        string
+		cmdStr      string
+		output      string
+		varName     string
+		wantCmds    []string
+		wantIsIter  bool
+	}{
+		{
+			name:       "no substitution",
+			cmdStr:     "mkdir test",
+			output:     "some-uuid\n",
+			varName:    "OUT",
+			wantCmds:   []string{"mkdir test"},
+			wantIsIter: false,
+		},
+		{
+			name:       "single var substitution with $OUT",
+			cmdStr:     "mkdir $OUT",
+			output:     "my-uuid-123\n",
+			varName:    "OUT",
+			wantCmds:   []string{"mkdir my-uuid-123"},
+			wantIsIter: false,
+		},
+		{
+			name:       "single var substitution with ${OUT}",
+			cmdStr:     "mkdir ${OUT}",
+			output:     "my-uuid-456\n",
+			varName:    "OUT",
+			wantCmds:   []string{"mkdir my-uuid-456"},
+			wantIsIter: false,
+		},
+		{
+			name:       "custom variable name",
+			cmdStr:     "mkdir $UUID",
+			output:     "custom-id\n",
+			varName:    "UUID",
+			wantCmds:   []string{"mkdir custom-id"},
+			wantIsIter: false,
+		},
+		{
+			name:       "iteration with [$OUT...]",
+			cmdStr:     "mkdir [$OUT...]",
+			output:     "uuid1\nuuid2\nuuid3\n",
+			varName:    "OUT",
+			wantCmds:   []string{"mkdir uuid1", "mkdir uuid2", "mkdir uuid3"},
+			wantIsIter: true,
+		},
+		{
+			name:       "iteration with ${OUT} braces",
+			cmdStr:     "mkdir [${OUT}...]",
+			output:     "id1\nid2\n",
+			varName:    "OUT",
+			wantCmds:   []string{"mkdir id1", "mkdir id2"},
+			wantIsIter: true,
+		},
+		{
+			name:       "custom var iteration",
+			cmdStr:     "touch [$UUID...]",
+			output:     "file1\nfile2\nfile3\n",
+			varName:    "UUID",
+			wantCmds:   []string{"touch file1", "touch file2", "touch file3"},
+			wantIsIter: true,
+		},
+		{
+			name:       "empty var name defaults to OUT",
+			cmdStr:     "mkdir $OUT",
+			output:     "default-test\n",
+			varName:    "",
+			wantCmds:   []string{"mkdir default-test"},
+			wantIsIter: false,
+		},
+		{
+			name:       "multiple lines uses last non-empty",
+			cmdStr:     "mkdir $OUT",
+			output:     "first\nsecond\nthird\n",
+			varName:    "OUT",
+			wantCmds:   []string{"mkdir third"},
+			wantIsIter: false,
+		},
+		{
+			name:       "skip empty lines in iteration",
+			cmdStr:     "mkdir [$OUT...]",
+			output:     "one\n\ntwo\n\n",
+			varName:    "OUT",
+			wantCmds:   []string{"mkdir one", "mkdir two"},
+			wantIsIter: true,
+		},
+		{
+			name:       "var in middle of command",
+			cmdStr:     "echo prefix-$OUT-suffix",
+			output:     "value\n",
+			varName:    "OUT",
+			wantCmds:   []string{"echo prefix-value-suffix"},
+			wantIsIter: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotCmds, gotIsIter := substituteVariables(tt.cmdStr, tt.output, tt.varName)
+
+			if gotIsIter != tt.wantIsIter {
+				t.Errorf("substituteVariables() isIteration = %v, want %v", gotIsIter, tt.wantIsIter)
+			}
+
+			if len(gotCmds) != len(tt.wantCmds) {
+				t.Errorf("substituteVariables() got %d commands, want %d", len(gotCmds), len(tt.wantCmds))
+				t.Errorf("got: %v", gotCmds)
+				t.Errorf("want: %v", tt.wantCmds)
+
+				return
+			}
+
+			for i, cmd := range gotCmds {
+				if cmd != tt.wantCmds[i] {
+					t.Errorf("substituteVariables()[%d] = %q, want %q", i, cmd, tt.wantCmds[i])
+				}
+			}
+		})
+	}
+}

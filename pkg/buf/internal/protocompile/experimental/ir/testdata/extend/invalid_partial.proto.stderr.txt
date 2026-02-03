@@ -1,0 +1,13 @@
+error: cannot find `M.N` in this scope
+  --> testdata/extend/invalid_partial.proto:25:16
+   |
+21 |     message N {
+   |             - found possibly related symbol `test.M.N`
+...
+25 |         extend M.N {
+   |                ^^^ not found in this scope
+   |
+   = note: Protobuf's name lookup rules expected a symbol `test.M.M.N`, rather
+           than the one we found
+
+encountered 1 error
