@@ -2,6 +2,7 @@ package watch
 
 import (
 	"context"
+	"crypto/sha256"
 	"fmt"
 	"io"
 	"os"
@@ -19,6 +20,8 @@ type WatchOptions struct {
 	ExitOnError bool          // -e: exit if command has a non-zero exit
 	Precise     bool          // -p: attempt to run command at precise intervals
 	Color       bool          // -c: interpret ANSI color sequences
+	ChangeExit  bool          // -g: exit when command output changes
+	OnlyChanges bool          // --only-changes: only display output when it changes
 }
 
 // WatchFunc is the function type for watch operations
@@ -38,8 +41,13 @@ func RunWatch(ctx context.Context, w io.Writer, fn WatchFunc, opts WatchOptions)
 	ticker := time.NewTicker(opts.Interval)
 	defer ticker.Stop()
 
+	// Track previous output for change detection
+	var prevHash [sha256.Size]byte
+	firstRun := true
+
 	// Run immediately first
-	if err := runWatchIteration(w, fn, opts); err != nil {
+	changed, newHash, err := runWatchIterationWithChange(w, fn, opts, prevHash, firstRun)
+	if err != nil {
 		if opts.ExitOnError {
 			return err
 		}
@@ -48,6 +56,8 @@ func RunWatch(ctx context.Context, w io.Writer, fn WatchFunc, opts WatchOptions)
 			_, _ = fmt.Fprint(w, "\a") // Bell character
 		}
 	}
+	prevHash = newHash
+	firstRun = false
 
 	for {
 		select {
@@ -56,7 +66,8 @@ func RunWatch(ctx context.Context, w io.Writer, fn WatchFunc, opts WatchOptions)
 		case <-sigCh:
 			return nil
 		case <-ticker.C:
-			if err := runWatchIteration(w, fn, opts); err != nil {
+			changed, newHash, err = runWatchIterationWithChange(w, fn, opts, prevHash, firstRun)
+			if err != nil {
 				if opts.ExitOnError {
 					return err
 				}
@@ -65,8 +76,43 @@ func RunWatch(ctx context.Context, w io.Writer, fn WatchFunc, opts WatchOptions)
 					_, _ = fmt.Fprint(w, "\a")
 				}
 			}
+
+			// Exit if output changed and ChangeExit is enabled
+			if changed && opts.ChangeExit {
+				return nil
+			}
+
+			prevHash = newHash
 		}
 	}
+}
+
+// runWatchIterationWithChange executes one watch iteration with change detection
+// Returns: changed (bool), newHash, error
+func runWatchIterationWithChange(w io.Writer, fn WatchFunc, opts WatchOptions, prevHash [sha256.Size]byte, firstRun bool) (bool, [sha256.Size]byte, error) {
+	output, err := fn()
+
+	// Compute hash of output for change detection
+	newHash := sha256.Sum256([]byte(output))
+	changed := newHash != prevHash
+
+	// Skip display if OnlyChanges is enabled and output hasn't changed (except on first run)
+	if opts.OnlyChanges && !changed && !firstRun {
+		return false, newHash, err
+	}
+
+	// Clear screen
+	_, _ = fmt.Fprint(w, "\033[H\033[2J")
+
+	// Print header unless disabled
+	if !opts.NoTitle {
+		now := time.Now().Format("Mon Jan 2 15:04:05 2006")
+		_, _ = fmt.Fprintf(w, "Every %.1fs: watching...\t%s\n\n", opts.Interval.Seconds(), now)
+	}
+
+	_, _ = fmt.Fprint(w, output)
+
+	return changed, newHash, err
 }
 
 func runWatchIteration(w io.Writer, fn WatchFunc, opts WatchOptions) error {
