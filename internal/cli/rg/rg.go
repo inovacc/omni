@@ -59,6 +59,7 @@ type Match struct {
 	Path       string `json:"path"`
 	LineNumber int    `json:"line_number"`
 	Column     int    `json:"column,omitempty"`
+	ByteOffset int64  `json:"byte_offset,omitempty"`
 	Line       string `json:"line"`
 	Match      string `json:"match,omitempty"`
 }
@@ -576,7 +577,7 @@ func outputFileResult(w io.Writer, fr FileResult, opts Options, re *regexp.Regex
 	}
 
 	for _, m := range fr.Matches {
-		printLineWithColor(w, m.Path, m.LineNumber, m.Column, m.Line, opts, false, re, pattern, useLiteral)
+		printLineWithColor(w, m.Path, m.LineNumber, m.Column, m.ByteOffset, m.Line, opts, false, re, pattern, useLiteral)
 	}
 }
 
@@ -664,12 +665,14 @@ func searchFile(w io.Writer, path string, re *regexp.Regexp, pattern, literalPat
 	scanner := bufio.NewScanner(file)
 
 	type contextLine struct {
-		lineNum int
-		text    string
+		lineNum    int
+		byteOffset int64
+		text       string
 	}
 
 	var (
 		lineNum         int
+		byteOffset      int64
 		matches         []Match
 		matchCount      int
 		beforeLines     []contextLine
@@ -700,6 +703,8 @@ func searchFile(w io.Writer, path string, re *regexp.Regexp, pattern, literalPat
 	for scanner.Scan() {
 		lineNum++
 		line := scanner.Text()
+		lineByteOffset := byteOffset              // Save offset at start of this line
+		byteOffset += int64(len(line)) + 1        // +1 for newline
 
 		// Check for match using appropriate method
 		var found bool
@@ -745,6 +750,7 @@ func searchFile(w io.Writer, path string, re *regexp.Regexp, pattern, literalPat
 					Path:       path,
 					LineNumber: lineNum,
 					Column:     matchStart + 1,
+					ByteOffset: lineByteOffset,
 					Line:       line,
 				}
 
@@ -785,7 +791,7 @@ func searchFile(w io.Writer, path string, re *regexp.Regexp, pattern, literalPat
 					}
 
 					for _, bl := range beforeLines {
-						printLineWithColor(w, path, bl.lineNum, 0, bl.text, opts, true, re, pattern, useLiteral)
+						printLineWithColor(w, path, bl.lineNum, 0, bl.byteOffset, bl.text, opts, true, re, pattern, useLiteral)
 						lastPrintedLine = bl.lineNum
 					}
 
@@ -798,7 +804,7 @@ func searchFile(w io.Writer, path string, re *regexp.Regexp, pattern, literalPat
 				}
 
 				if !opts.JSON && !opts.JSONStream {
-					printLineWithColor(w, path, lineNum, matchStart+1, line, opts, false, re, pattern, useLiteral)
+					printLineWithColor(w, path, lineNum, matchStart+1, lineByteOffset, line, opts, false, re, pattern, useLiteral)
 					lastPrintedLine = lineNum
 				}
 
@@ -807,7 +813,7 @@ func searchFile(w io.Writer, path string, re *regexp.Regexp, pattern, literalPat
 		} else {
 			// Handle after context
 			if afterNeeded > 0 && !opts.JSON && !opts.JSONStream && !opts.Count && !opts.FilesWithMatch {
-				printLineWithColor(w, path, lineNum, 0, line, opts, true, re, pattern, useLiteral)
+				printLineWithColor(w, path, lineNum, 0, lineByteOffset, line, opts, true, re, pattern, useLiteral)
 				lastPrintedLine = lineNum
 
 				afterNeeded--
@@ -815,7 +821,7 @@ func searchFile(w io.Writer, path string, re *regexp.Regexp, pattern, literalPat
 
 			// Store for before context
 			if beforeContext > 0 {
-				beforeLines = append(beforeLines, contextLine{lineNum: lineNum, text: line})
+				beforeLines = append(beforeLines, contextLine{lineNum: lineNum, byteOffset: lineByteOffset, text: line})
 				if len(beforeLines) > beforeContext {
 					beforeLines = beforeLines[1:]
 				}
@@ -872,7 +878,7 @@ func printContextSeparator(w io.Writer, opts Options) {
 	_, _ = fmt.Fprintln(w, FormatSeparator("--", scheme, useColor))
 }
 
-func printLineWithColor(w io.Writer, path string, lineNum, column int, line string, opts Options, isContext bool, re *regexp.Regexp, pattern string, useLiteral bool) {
+func printLineWithColor(w io.Writer, path string, lineNum, column int, byteOffset int64, line string, opts Options, isContext bool, re *regexp.Regexp, pattern string, useLiteral bool) {
 	sep := ":"
 	if isContext {
 		sep = "-"
@@ -922,7 +928,37 @@ func printLineWithColor(w io.Writer, path string, lineNum, column int, line stri
 			sepStr = FormatSeparator(sep, scheme, useColor)
 		}
 
-		if opts.LineNumber && lineNum > 0 {
+		// Build byte offset string if enabled
+		byteOffsetStr := ""
+		if opts.ByteOffset && byteOffset >= 0 {
+			byteOffsetStr = fmt.Sprintf("%d", byteOffset)
+			if useColor {
+				byteOffsetStr = FormatByteOffset(byteOffset, scheme, useColor)
+			}
+		}
+
+		if opts.ByteOffset && byteOffset >= 0 {
+			// With byte offset: path:byteoffset:linenum:col:line
+			if opts.LineNumber && lineNum > 0 {
+				lineNumStr := fmt.Sprintf("%d", lineNum)
+				if useColor {
+					lineNumStr = FormatLineNumber(lineNum, scheme, useColor)
+				}
+
+				if opts.ShowColumn && column > 0 {
+					colStr := fmt.Sprintf("%d", column)
+					if useColor {
+						colStr = FormatColumn(column, scheme, useColor)
+					}
+
+					_, _ = fmt.Fprintf(w, "%s%s%s%s%s%s%s%s%s\n", pathStr, sepStr, byteOffsetStr, sepStr, lineNumStr, sepStr, colStr, sepStr, highlightedLine)
+				} else {
+					_, _ = fmt.Fprintf(w, "%s%s%s%s%s%s%s\n", pathStr, sepStr, byteOffsetStr, sepStr, lineNumStr, sepStr, highlightedLine)
+				}
+			} else {
+				_, _ = fmt.Fprintf(w, "%s%s%s%s%s\n", pathStr, sepStr, byteOffsetStr, sepStr, highlightedLine)
+			}
+		} else if opts.LineNumber && lineNum > 0 {
 			lineNumStr := fmt.Sprintf("%d", lineNum)
 			if useColor {
 				lineNumStr = FormatLineNumber(lineNum, scheme, useColor)
@@ -947,7 +983,37 @@ func printLineWithColor(w io.Writer, path string, lineNum, column int, line stri
 			sepStr = FormatSeparator(sep, scheme, useColor)
 		}
 
-		if opts.LineNumber && lineNum > 0 {
+		// Build byte offset string if enabled
+		byteOffsetStr := ""
+		if opts.ByteOffset && byteOffset >= 0 {
+			byteOffsetStr = fmt.Sprintf("%d", byteOffset)
+			if useColor {
+				byteOffsetStr = FormatByteOffset(byteOffset, scheme, useColor)
+			}
+		}
+
+		if opts.ByteOffset && byteOffset >= 0 {
+			// With byte offset: byteoffset:linenum:col:line
+			if opts.LineNumber && lineNum > 0 {
+				lineNumStr := fmt.Sprintf("%d", lineNum)
+				if useColor {
+					lineNumStr = FormatLineNumber(lineNum, scheme, useColor)
+				}
+
+				if opts.ShowColumn && column > 0 {
+					colStr := fmt.Sprintf("%d", column)
+					if useColor {
+						colStr = FormatColumn(column, scheme, useColor)
+					}
+
+					_, _ = fmt.Fprintf(w, "%s%s%s%s%s%s%s\n", byteOffsetStr, sepStr, lineNumStr, sepStr, colStr, sepStr, highlightedLine)
+				} else {
+					_, _ = fmt.Fprintf(w, "%s%s%s%s%s\n", byteOffsetStr, sepStr, lineNumStr, sepStr, highlightedLine)
+				}
+			} else {
+				_, _ = fmt.Fprintf(w, "%s%s%s\n", byteOffsetStr, sepStr, highlightedLine)
+			}
+		} else if opts.LineNumber && lineNum > 0 {
 			lineNumStr := fmt.Sprintf("%d", lineNum)
 			if useColor {
 				lineNumStr = FormatLineNumber(lineNum, scheme, useColor)

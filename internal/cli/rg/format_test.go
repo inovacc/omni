@@ -99,7 +99,7 @@ func TestPrintMatch(t *testing.T) {
 			Regex:          re,
 		})
 
-		f.PrintMatch("test.go", 10, 5, "hello world", false)
+		f.PrintMatch("test.go", 10, 5, 0, "hello world", false)
 
 		output := buf.String()
 		if !strings.Contains(output, "10") {
@@ -118,7 +118,7 @@ func TestPrintMatch(t *testing.T) {
 			Trim: true,
 		})
 
-		f.PrintMatch("test.go", 1, 1, "  spaced line  ", false)
+		f.PrintMatch("test.go", 1, 1, 0, "  spaced line  ", false)
 
 		output := buf.String()
 		if strings.Contains(output, "  spaced") {
@@ -134,7 +134,7 @@ func TestPrintMatch(t *testing.T) {
 			Replace: "universe",
 		})
 
-		f.PrintMatch("test.go", 1, 1, "hello world", false)
+		f.PrintMatch("test.go", 1, 1, 0, "hello world", false)
 
 		output := buf.String()
 		if !strings.Contains(output, "universe") {
@@ -151,7 +151,7 @@ func TestPrintMatch(t *testing.T) {
 			ShowColumn:     true,
 		})
 
-		f.PrintMatch("test.go", 10, 5, "hello world", false)
+		f.PrintMatch("test.go", 10, 5, 0, "hello world", false)
 
 		output := buf.String()
 		if !strings.Contains(output, "test.go") {
@@ -168,7 +168,7 @@ func TestPrintMatch(t *testing.T) {
 			ShowLineNumber: true,
 		})
 
-		f.PrintMatch("test.go", 10, 1, "context line", true)
+		f.PrintMatch("test.go", 10, 1, 0, "context line", true)
 
 		output := buf.String()
 		if strings.Contains(output, scheme.Match) {
@@ -185,7 +185,7 @@ func TestPrintMatch(t *testing.T) {
 			Regex:    re,
 		})
 
-		f.PrintMatch("test.go", 1, 1, "hello world", false)
+		f.PrintMatch("test.go", 1, 1, 0, "hello world", false)
 
 		output := buf.String()
 		if !strings.Contains(output, scheme.Match) {
@@ -206,7 +206,7 @@ func TestPrintMatchOnlyMatching(t *testing.T) {
 			ShowLineNumber: true,
 		})
 
-		f.PrintMatch("test.go", 5, 1, "foo bar foo", false)
+		f.PrintMatch("test.go", 5, 1, 0, "foo bar foo", false)
 
 		output := buf.String()
 
@@ -225,7 +225,7 @@ func TestPrintMatchOnlyMatching(t *testing.T) {
 			Pattern:      "bar",
 		})
 
-		f.PrintMatch("test.go", 5, 1, "foo bar baz bar", false)
+		f.PrintMatch("test.go", 5, 1, 0, "foo bar baz bar", false)
 
 		output := buf.String()
 
