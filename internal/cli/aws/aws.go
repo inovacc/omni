@@ -7,17 +7,21 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/credentials"
+	"github.com/inovacc/omni/internal/cli/cloud/profile"
 )
 
 // Options configures AWS operations
 type Options struct {
-	Profile string // AWS profile to use
-	Region  string // AWS region
-	Output  string // Output format: json, text, table (default: json)
-	Debug   bool   // Enable debug logging
+	Profile     string // AWS profile to use
+	Region      string // AWS region
+	Output      string // Output format: json, text, table (default: json)
+	Debug       bool   // Enable debug logging
+	EndpointURL string // Custom endpoint URL (for LocalStack, etc.)
 }
 
 // OutputFormat represents the output format type
@@ -42,7 +46,22 @@ func ParseOutputFormat(s string) OutputFormat {
 }
 
 // LoadConfig loads AWS configuration from environment, profile, etc.
+// Supports omni cloud profiles via:
+//   - OMNI_CLOUD_PROFILE environment variable
+//   - --profile omni:name flag prefix
 func LoadConfig(ctx context.Context, opts Options) (aws.Config, error) {
+	// 1. Check OMNI_CLOUD_PROFILE env var
+	if omniProfile := os.Getenv("OMNI_CLOUD_PROFILE"); omniProfile != "" {
+		return loadWithOmniProfile(ctx, omniProfile, opts)
+	}
+
+	// 2. Check --profile with "omni:" prefix
+	if strings.HasPrefix(opts.Profile, "omni:") {
+		name := strings.TrimPrefix(opts.Profile, "omni:")
+		return loadWithOmniProfile(ctx, name, opts)
+	}
+
+	// 3. Fallback to standard AWS SDK config
 	var cfgOpts []func(*config.LoadOptions) error
 
 	// Set profile if specified
@@ -62,6 +81,67 @@ func LoadConfig(ctx context.Context, opts Options) (aws.Config, error) {
 	}
 
 	return cfg, nil
+}
+
+// loadWithOmniProfile loads AWS configuration using an omni cloud profile.
+func loadWithOmniProfile(ctx context.Context, name string, opts Options) (aws.Config, error) {
+	svc, err := profile.NewService()
+	if err != nil {
+		return aws.Config{}, fmt.Errorf("initializing profile service: %w", err)
+	}
+
+	// Get the profile to check region
+	p, err := svc.GetProfile(profile.ProviderAWS, name)
+	if err != nil {
+		return aws.Config{}, fmt.Errorf("loading omni profile: %w", err)
+	}
+
+	// Get credentials
+	creds, err := svc.GetAWSCredentials(name)
+	if err != nil {
+		return aws.Config{}, fmt.Errorf("loading credentials: %w", err)
+	}
+
+	// Create static credentials provider
+	staticCreds := credentials.NewStaticCredentialsProvider(
+		creds.AccessKeyID,
+		creds.SecretAccessKey,
+		creds.SessionToken,
+	)
+
+	// Determine region: explicit opts > profile > default
+	region := opts.Region
+	if region == "" && p.Region != "" {
+		region = p.Region
+	}
+	if region == "" {
+		region = GetRegion(opts)
+	}
+
+	// Load config with static credentials
+	cfg, err := config.LoadDefaultConfig(ctx,
+		config.WithCredentialsProvider(staticCreds),
+		config.WithRegion(region),
+	)
+	if err != nil {
+		return aws.Config{}, fmt.Errorf("loading AWS config: %w", err)
+	}
+
+	return cfg, nil
+}
+
+// GetEndpointURL returns the endpoint URL, checking environment variable
+func GetEndpointURL(opts Options) string {
+	if opts.EndpointURL != "" {
+		return opts.EndpointURL
+	}
+
+	// Check environment variable (commonly used for LocalStack)
+	if endpoint := os.Getenv("AWS_ENDPOINT_URL"); endpoint != "" {
+		return endpoint
+	}
+
+	return ""
 }
 
 // GetRegion returns the region to use, checking various sources
