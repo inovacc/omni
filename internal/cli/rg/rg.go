@@ -301,20 +301,25 @@ func searchDirParallel(w io.Writer, dir string, re *regexp.Regexp, pattern, lite
 	}
 
 	// Create work channel and result channel
-	fileCh := make(chan string, len(files))
-	resultCh := make(chan FileResult, len(files))
+	fileCh := make(chan string, numWorkers*2)
+	resultCh := make(chan FileResult, numWorkers*2)
 	errCh := make(chan error, numWorkers)
 
 	// Start workers
 	var wg sync.WaitGroup
 
 	for range numWorkers {
-		wg.Go(func() {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
 			for path := range fileCh {
 				fr, err := searchFileSingle(path, re, pattern, literalPattern, useLiteral, opts)
 				if err != nil {
-					errCh <- fmt.Errorf("%s: %w", path, err)
-
+					select {
+					case errCh <- fmt.Errorf("%s: %w", path, err):
+					default:
+						// Drop error if channel is full
+					}
 					continue
 				}
 
@@ -322,8 +327,49 @@ func searchDirParallel(w io.Writer, dir string, re *regexp.Regexp, pattern, lite
 					resultCh <- *fr
 				}
 			}
-		})
+		}()
 	}
+
+	// Start result collector goroutine
+	var collectorWg sync.WaitGroup
+	collectorWg.Add(1)
+	go func() {
+		defer collectorWg.Done()
+		for fr := range resultCh {
+			result.mu.Lock()
+			result.Files = append(result.Files, fr)
+			result.TotalFiles++
+			result.TotalMatch += fr.Count
+			result.mu.Unlock()
+
+			// Output results
+			if !opts.JSON && !opts.JSONStream {
+				outputFileResult(w, fr, opts, re, pattern, useLiteral)
+			} else if opts.JSONStream && streamEnc != nil {
+				streamMu.Lock()
+				//nolint:errchkjson // StreamBegin is a concrete type
+				_ = streamEnc.Encode(StreamMessage{Type: "begin", Data: StreamBegin{Path: fr.Path}})
+
+				for _, m := range fr.Matches {
+					//nolint:errchkjson // StreamMatch is a concrete type
+					_ = streamEnc.Encode(StreamMessage{
+						Type: "match",
+						Data: StreamMatch{
+							Path:       m.Path,
+							LineNumber: m.LineNumber,
+							Column:     m.Column,
+							Lines:      StreamLines{Text: m.Line},
+							Match:      m.Match,
+						},
+					})
+				}
+				//nolint:errchkjson // StreamEnd is a concrete type
+				_ = streamEnc.Encode(StreamMessage{Type: "end", Data: StreamEnd{Path: fr.Path, MatchCount: fr.Count}})
+
+				streamMu.Unlock()
+			}
+		}
+	}()
 
 	// Send files to workers
 	for _, f := range files {
@@ -335,43 +381,10 @@ func searchDirParallel(w io.Writer, dir string, re *regexp.Regexp, pattern, lite
 	// Wait for workers to finish
 	wg.Wait()
 	close(resultCh)
+
+	// Wait for collector to finish
+	collectorWg.Wait()
 	close(errCh)
-
-	// Collect results
-	for fr := range resultCh {
-		result.mu.Lock()
-		result.Files = append(result.Files, fr)
-		result.TotalFiles++
-		result.TotalMatch += fr.Count
-		result.mu.Unlock()
-
-		// Output results
-		if !opts.JSON && !opts.JSONStream {
-			outputFileResult(w, fr, opts, re, pattern, useLiteral)
-		} else if opts.JSONStream && streamEnc != nil {
-			streamMu.Lock()
-			//nolint:errchkjson // StreamBegin is a concrete type
-			_ = streamEnc.Encode(StreamMessage{Type: "begin", Data: StreamBegin{Path: fr.Path}})
-
-			for _, m := range fr.Matches {
-				//nolint:errchkjson // StreamMatch is a concrete type
-				_ = streamEnc.Encode(StreamMessage{
-					Type: "match",
-					Data: StreamMatch{
-						Path:       m.Path,
-						LineNumber: m.LineNumber,
-						Column:     m.Column,
-						Lines:      StreamLines{Text: m.Line},
-						Match:      m.Match,
-					},
-				})
-			}
-			//nolint:errchkjson // StreamEnd is a concrete type
-			_ = streamEnc.Encode(StreamMessage{Type: "end", Data: StreamEnd{Path: fr.Path, MatchCount: fr.Count}})
-
-			streamMu.Unlock()
-		}
-	}
 
 	// Report errors (non-fatal)
 	if !opts.Quiet {
