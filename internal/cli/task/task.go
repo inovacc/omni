@@ -12,14 +12,15 @@ import (
 
 // Options configures the task runner
 type Options struct {
-	Taskfile string // Path to Taskfile.yml (default: current directory)
-	Dir      string // Working directory
-	List     bool   // List available tasks
-	Verbose  bool   // Verbose output
-	DryRun   bool   // Show commands without executing
-	Force    bool   // Force run even if up-to-date
-	Silent   bool   // Suppress output
-	Summary  bool   // Show task summary/description
+	Taskfile      string // Path to Taskfile.yml (default: current directory)
+	Dir           string // Working directory
+	List          bool   // List available tasks
+	Verbose       bool   // Verbose output
+	DryRun        bool   // Show commands without executing
+	Force         bool   // Force run even if up-to-date
+	Silent        bool   // Suppress output
+	Summary       bool   // Show task summary/description
+	AllowExternal bool   // Allow external (non-omni) commands
 }
 
 // DefaultTaskfiles lists the default taskfile names to search for
@@ -32,7 +33,8 @@ var DefaultTaskfiles = []string{
 
 // CommandRunnerFactory is a function that creates a command runner
 // This allows the cmd package to inject the Cobra command runner
-var CommandRunnerFactory func() CommandRunner
+// The dir parameter is the working directory for external commands
+var CommandRunnerFactory func(dir string, allowExternal bool) CommandRunner
 
 // Run executes the task runner
 func Run(ctx context.Context, w io.Writer, taskNames []string, opts Options) error {
@@ -58,7 +60,7 @@ func Run(ctx context.Context, w io.Writer, taskNames []string, opts Options) err
 
 	// Set command runner if factory is available
 	if CommandRunnerFactory != nil {
-		exec.SetCommandRunner(CommandRunnerFactory())
+		exec.SetCommandRunner(CommandRunnerFactory(opts.Dir, opts.AllowExternal))
 	}
 
 	// List tasks if requested
@@ -97,6 +99,7 @@ func findTaskfile(path, dir string) (string, error) {
 		if _, err := os.Stat(path); err != nil {
 			return "", fmt.Errorf("taskfile not found: %s", path)
 		}
+
 		return path, nil
 	}
 
@@ -104,6 +107,7 @@ func findTaskfile(path, dir string) (string, error) {
 	searchDir := dir
 	if searchDir == "" {
 		var err error
+
 		searchDir, err = os.Getwd()
 		if err != nil {
 			return "", err

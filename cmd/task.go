@@ -15,8 +15,8 @@ var taskCmd = &cobra.Command{
 	Short: "Run tasks defined in Taskfile.yml",
 	Long: `A task runner that executes tasks defined in Taskfile.yml.
 
-This task runner only supports omni internal commands. External shell
-commands are not supported since omni doesn't execute external processes.
+By default, only omni internal commands are supported. Use --allow-external
+to enable execution of external shell commands (golangci-lint, go, npm, etc).
 
 Examples:
   # List available tasks
@@ -30,6 +30,9 @@ Examples:
 
   # Run multiple tasks
   omni task build test
+
+  # Run with external commands enabled
+  omni task --allow-external lint
 
   # Dry run (show commands without executing)
   omni task --dry-run build
@@ -56,11 +59,10 @@ Taskfile Format:
         - omni mkdir -p {{.BUILD_DIR}}
         - omni cp -r src/* {{.BUILD_DIR}}/
 
-    test:
-      desc: Run tests
-      deps: [build]
+    lint:
+      desc: Run linter (requires --allow-external)
       cmds:
-        - omni echo "Running tests..."
+        - golangci-lint run --fix ./...
 
     clean:
       desc: Clean build artifacts
@@ -74,9 +76,9 @@ Supported Features:
   - Status checks for up-to-date detection
   - Deferred commands
   - Task aliases
+  - External commands (with --allow-external)
 
 Limitations:
-  - Only omni commands are supported (no shell execution)
   - Dynamic variables (sh:) are not supported`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		opts := task.Options{}
@@ -89,6 +91,7 @@ Limitations:
 		opts.Force, _ = cmd.Flags().GetBool("force")
 		opts.Silent, _ = cmd.Flags().GetBool("silent")
 		opts.Summary, _ = cmd.Flags().GetBool("summary")
+		opts.AllowExternal, _ = cmd.Flags().GetBool("allow-external")
 
 		// Create context that cancels on SIGINT/SIGTERM
 		ctx, cancel := context.WithCancel(context.Background())
@@ -116,10 +119,16 @@ func init() {
 	taskCmd.Flags().BoolP("force", "f", false, "force run even if up-to-date")
 	taskCmd.Flags().BoolP("silent", "s", false, "suppress output")
 	taskCmd.Flags().Bool("summary", false, "show task summary")
+	taskCmd.Flags().Bool("allow-external", false, "allow external (non-omni) commands")
 
 	// Register the command runner factory
-	task.CommandRunnerFactory = func() task.CommandRunner {
-		return task.NewCobraCommandRunner(rootCmd)
+	task.CommandRunnerFactory = func(dir string, allowExternal bool) task.CommandRunner {
+		omniRunner := task.NewCobraCommandRunner(rootCmd)
+		if allowExternal {
+			return task.NewHybridCommandRunner(omniRunner, dir)
+		}
+
+		return omniRunner
 	}
 }
 

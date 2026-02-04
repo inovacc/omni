@@ -2,6 +2,7 @@ package task
 
 import (
 	"fmt"
+	maps0 "maps"
 	"os"
 	"regexp"
 	"strings"
@@ -38,7 +39,9 @@ func (r *VarResolver) Expand(s string) string {
 		if len(parts) < 2 {
 			return match
 		}
+
 		name := parts[1]
+
 		return r.resolveVar(name)
 	})
 
@@ -49,6 +52,7 @@ func (r *VarResolver) Expand(s string) string {
 		if len(parts) < 2 {
 			return match
 		}
+
 		name := parts[1]
 
 		// Check taskfile env first
@@ -102,6 +106,7 @@ func formatVar(v any) string {
 		if val {
 			return "true"
 		}
+
 		return "false"
 	case []any:
 		// Join slice elements
@@ -109,6 +114,7 @@ func formatVar(v any) string {
 		for _, elem := range val {
 			parts = append(parts, formatVar(elem))
 		}
+
 		return strings.Join(parts, " ")
 	case map[string]any:
 		// For maps, just return empty (complex types not supported in cmd expansion)
@@ -121,11 +127,11 @@ func formatVar(v any) string {
 // MergeVars merges multiple variable maps (later takes precedence)
 func MergeVars(maps ...map[string]any) map[string]any {
 	result := make(map[string]any)
+
 	for _, m := range maps {
-		for k, v := range m {
-			result[k] = v
-		}
+		maps0.Copy(result, m)
 	}
+
 	return result
 }
 
@@ -144,6 +150,7 @@ func EvaluateDynamicVar(v any) (string, error) {
 		if ref, ok := val["ref"]; ok {
 			return formatVar(ref), nil
 		}
+
 		return "", fmt.Errorf("unsupported variable format: %v", val)
 	default:
 		return formatVar(val), nil

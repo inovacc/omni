@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"slices"
 
 	"gopkg.in/yaml.v3"
 )
@@ -42,11 +43,11 @@ type Task struct {
 
 // Command represents a command to execute
 type Command struct {
-	Cmd      string `yaml:"cmd"`
-	Task     string `yaml:"task"`    // Reference to another task
-	Silent   bool   `yaml:"silent"`
-	IgnoreError bool `yaml:"ignore_error"`
-	Defer    bool   `yaml:"defer"`
+	Cmd         string `yaml:"cmd"`
+	Task        string `yaml:"task"` // Reference to another task
+	Silent      bool   `yaml:"silent"`
+	IgnoreError bool   `yaml:"ignore_error"`
+	Defer       bool   `yaml:"defer"`
 }
 
 // UnmarshalYAML implements custom unmarshaling for Command
@@ -59,6 +60,7 @@ func (c *Command) UnmarshalYAML(node *yaml.Node) error {
 
 	// Handle map form
 	type rawCommand Command
+
 	return node.Decode((*rawCommand)(c))
 }
 
@@ -78,6 +80,7 @@ func (d *Dependency) UnmarshalYAML(node *yaml.Node) error {
 
 	// Handle map form
 	type rawDep Dependency
+
 	return node.Decode((*rawDep)(d))
 }
 
@@ -136,14 +139,17 @@ func (tf *Taskfile) processIncludes() error {
 		if info.IsDir() {
 			// Look for taskfile in directory
 			found := false
+
 			for _, name := range DefaultTaskfiles {
 				path := filepath.Join(includePath, name)
 				if _, err := os.Stat(path); err == nil {
 					includePath = path
 					found = true
+
 					break
 				}
 			}
+
 			if !found {
 				return fmt.Errorf("no taskfile found in included directory: %s", includePath)
 			}
@@ -182,10 +188,8 @@ func (tf *Taskfile) GetTask(name string) *Task {
 
 	// Check aliases
 	for _, task := range tf.Tasks {
-		for _, alias := range task.Aliases {
-			if alias == name {
-				return task
-			}
+		if slices.Contains(task.Aliases, name) {
+			return task
 		}
 	}
 
@@ -195,10 +199,12 @@ func (tf *Taskfile) GetTask(name string) *Task {
 // ListTaskNames returns all non-internal task names
 func (tf *Taskfile) ListTaskNames() []string {
 	var names []string
+
 	for name, task := range tf.Tasks {
 		if task != nil && !task.Internal {
 			names = append(names, name)
 		}
 	}
+
 	return names
 }
