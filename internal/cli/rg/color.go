@@ -245,6 +245,16 @@ func FormatColumn(col int, scheme ColorScheme, useColor bool) string {
 	return s
 }
 
+// FormatByteOffset formats a byte offset with colors (uses same color as line number)
+func FormatByteOffset(offset int64, scheme ColorScheme, useColor bool) string {
+	s := fmt.Sprintf("%d", offset)
+	if useColor && scheme.Line != "" {
+		return scheme.Line + s + Reset
+	}
+
+	return s
+}
+
 // FormatSeparator formats a separator with colors
 func FormatSeparator(sep string, scheme ColorScheme, useColor bool) string {
 	if useColor && scheme.Separator != "" {
