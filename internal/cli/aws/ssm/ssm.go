@@ -33,7 +33,7 @@ type Parameter struct {
 	Type             string    `json:"Type"`
 	Value            string    `json:"Value"`
 	Version          int64     `json:"Version"`
-	LastModifiedDate time.Time `json:"LastModifiedDate,omitempty"`
+	LastModifiedDate time.Time `json:"LastModifiedDate,omitzero"`
 	ARN              string    `json:"ARN,omitempty"`
 	DataType         string    `json:"DataType,omitempty"`
 }
@@ -190,6 +190,7 @@ func (c *Client) PutParameter(ctx context.Context, input PutParameterInput) (*Pu
 				Value: aws.String(v),
 			})
 		}
+
 		params.Tags = tags
 	}
 
@@ -217,6 +218,7 @@ func (c *Client) DeleteParameter(ctx context.Context, name string) error {
 	if err != nil {
 		return fmt.Errorf("delete-parameter: %w", err)
 	}
+
 	return nil
 }
 

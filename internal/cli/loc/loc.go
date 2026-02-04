@@ -418,7 +418,7 @@ func RunLoc(w io.Writer, args []string, opts Options) error {
 	for _, root := range args {
 		err := filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
 			if err != nil {
-				return nil // Skip files we can't access
+				return nil //nolint:nilerr // intentional: skip files we can't access
 			}
 
 			name := d.Name()
@@ -457,7 +457,7 @@ func RunLoc(w io.Writer, args []string, opts Options) error {
 			// Count lines
 			fileStats, err := countFile(path, lang)
 			if err != nil {
-				return nil // Skip files we can't read
+				return nil //nolint:nilerr // intentional: skip files we can't read
 			}
 
 			// Aggregate main language stats
@@ -564,7 +564,7 @@ func countFile(path string, lang *langDef) (*fileStats, error) {
 
 // countLiterate handles literate languages like Markdown
 // Like tokei: code block content goes to embedded stats, not main
-func countLiterate(scanner *bufio.Scanner, lang *langDef, result *fileStats) {
+func countLiterate(scanner *bufio.Scanner, _ *langDef, result *fileStats) {
 	inCodeBlock := false
 
 	var codeBlockLang string

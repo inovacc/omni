@@ -8,6 +8,9 @@ import (
 	"testing"
 )
 
+// nilReader returns nil for stdin when testing with files
+var nilReader = bytes.NewReader(nil)
+
 func TestRunRev(t *testing.T) {
 	tmpDir, err := os.MkdirTemp("", "rev_test")
 	if err != nil {
@@ -24,7 +27,7 @@ func TestRunRev(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunRev(&buf, []string{file}, RevOptions{})
+		err := RunRev(&buf, nilReader, []string{file}, RevOptions{})
 		if err != nil {
 			t.Fatalf("RunRev() error = %v", err)
 		}
@@ -43,7 +46,7 @@ func TestRunRev(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunRev(&buf, []string{file}, RevOptions{})
+		err := RunRev(&buf, nilReader, []string{file}, RevOptions{})
 		if err != nil {
 			t.Fatalf("RunRev() error = %v", err)
 		}
@@ -66,7 +69,7 @@ func TestRunRev(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunRev(&buf, []string{file}, RevOptions{})
+		err := RunRev(&buf, nilReader, []string{file}, RevOptions{})
 		if err != nil {
 			t.Fatalf("RunRev() error = %v", err)
 		}
@@ -84,7 +87,7 @@ func TestRunRev(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunRev(&buf, []string{file}, RevOptions{})
+		err := RunRev(&buf, nilReader, []string{file}, RevOptions{})
 		if err != nil {
 			t.Fatalf("RunRev() error = %v", err)
 		}
@@ -104,7 +107,7 @@ func TestRunRev(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunRev(&buf, []string{file1, file2}, RevOptions{})
+		err := RunRev(&buf, nilReader, []string{file1, file2}, RevOptions{})
 		if err != nil {
 			t.Fatalf("RunRev() error = %v", err)
 		}
@@ -122,7 +125,7 @@ func TestRunRev(t *testing.T) {
 	t.Run("nonexistent file", func(t *testing.T) {
 		var buf bytes.Buffer
 
-		err := RunRev(&buf, []string{"/nonexistent/file.txt"}, RevOptions{})
+		err := RunRev(&buf, nilReader, []string{"/nonexistent/file.txt"}, RevOptions{})
 		if err == nil {
 			t.Error("RunRev() expected error for nonexistent file")
 		}
@@ -136,7 +139,7 @@ func TestRunRev(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		_ = RunRev(&buf, []string{file}, RevOptions{})
+		_ = RunRev(&buf, nilReader, []string{file}, RevOptions{})
 
 		output := strings.TrimSpace(buf.String())
 		if output != "racecar" {
@@ -152,7 +155,7 @@ func TestRunRev(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		_ = RunRev(&buf, []string{file}, RevOptions{})
+		_ = RunRev(&buf, nilReader, []string{file}, RevOptions{})
 
 		output := strings.TrimSpace(buf.String())
 		if output != "dlrow olleh" {
