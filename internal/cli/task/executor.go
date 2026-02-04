@@ -207,25 +207,37 @@ func (e *Executor) executeCommand(ctx context.Context, cmd Command, resolver *Va
 	// Expand variables
 	cmdStr := resolver.Expand(cmd.Cmd)
 
-	// Validate that it's an omni command (unless external commands are allowed)
-	if !e.opts.AllowExternal && !isOmniCommand(cmdStr) {
+	// Check if command can be mapped to an omni built-in
+	mappedCmd, isOmni := mapToOmniCommand(cmdStr)
+
+	// If not an omni command and external not allowed, error
+	if !isOmni && !e.opts.AllowExternal {
 		return fmt.Errorf("unknown command: %s\n\nHint: Use --allow-external to run external commands", firstWord(cmdStr))
 	}
 
 	// Print command (unless silent)
 	silent := taskSilent || cmd.Silent || e.opts.Silent
 	if !silent && e.opts.Verbose {
-		_, _ = fmt.Fprintf(e.w, "  $ %s\n", cmdStr)
+		if isOmni && !strings.HasPrefix(cmdStr, "omni ") {
+			_, _ = fmt.Fprintf(e.w, "  $ %s  (using omni %s)\n", cmdStr, firstWord(cmdStr))
+		} else {
+			_, _ = fmt.Fprintf(e.w, "  $ %s\n", cmdStr)
+		}
 	}
 
 	// Dry run: don't actually execute
 	if e.opts.DryRun {
-		_, _ = fmt.Fprintf(e.w, "  [dry-run] %s\n", cmdStr)
+		if isOmni && !strings.HasPrefix(cmdStr, "omni ") {
+			_, _ = fmt.Fprintf(e.w, "  [dry-run] %s  (using omni %s)\n", cmdStr, firstWord(cmdStr))
+		} else {
+			_, _ = fmt.Fprintf(e.w, "  [dry-run] %s\n", cmdStr)
+		}
+
 		return nil
 	}
 
 	// Parse and execute
-	args := parseCommand(cmdStr)
+	args := parseCommand(mappedCmd)
 	if len(args) == 0 {
 		return nil
 	}
@@ -235,6 +247,8 @@ func (e *Executor) executeCommand(ctx context.Context, cmd Command, resolver *Va
 		args = args[1:]
 	}
 
+	// If it's an omni command, use the omni runner directly
+	// If it's external, the HybridCommandRunner will route to shell
 	return e.cmdRunner.Run(ctx, e.w, args)
 }
 
@@ -279,48 +293,89 @@ func firstWord(cmd string) string {
 	return parts[0]
 }
 
-// isOmniCommand checks if a command is an omni command
-// Valid: "omni echo hello", "echo hello" (implicit omni), "ls"
-// Invalid: "/bin/ls", "bash -c 'ls'" (external commands)
-func isOmniCommand(cmd string) bool {
+// omniCommands is the set of commands that omni provides as built-ins.
+// These commands will be automatically routed to omni instead of external shell.
+var omniCommands = map[string]bool{
+	// File operations
+	"cat": true, "cp": true, "mv": true, "rm": true, "mkdir": true, "rmdir": true,
+	"ls": true, "find": true, "touch": true, "chmod": true, "chown": true,
+	"ln": true, "readlink": true, "realpath": true, "stat": true, "file": true,
+	"dd": true, "df": true, "du": true,
+
+	// Text processing
+	"head": true, "tail": true, "tac": true, "rev": true,
+	"grep": true, "egrep": true, "fgrep": true, "rg": true,
+	"sed": true, "awk": true, "cut": true, "sort": true, "uniq": true,
+	"wc": true, "nl": true, "tr": true, "fold": true, "column": true,
+	"join": true, "paste": true, "comm": true, "cmp": true, "diff": true,
+	"shuf": true, "split": true, "strings": true,
+
+	// Archive/compression
+	"tar": true, "zip": true, "unzip": true,
+	"gzip": true, "gunzip": true, "zcat": true,
+	"bzip2": true, "bunzip2": true, "bzcat": true,
+	"xz": true, "unxz": true, "xzcat": true,
+
+	// Data formats
+	"jq": true, "yq": true, "json": true, "yaml": true, "toml": true, "xml": true,
+	"csv": true, "html": true, "css": true,
+
+	// Encoding
+	"base32": true, "base64": true, "base58": true,
+	"md5sum": true, "sha256sum": true, "sha512sum": true, "hash": true,
+	"hex": true, "xxd": true,
+
+	// System info
+	"echo": true, "printf": true, "env": true, "pwd": true,
+	"uname": true, "arch": true, "whoami": true, "id": true,
+	"ps": true, "kill": true, "free": true, "uptime": true, "which": true,
+
+	// Utilities
+	"date": true, "sleep": true, "seq": true, "yes": true, "tree": true,
+	"basename": true, "dirname": true, "xargs": true, "time": true,
+	"curl": true, "watch": true,
+
+	// Security
+	"encrypt": true, "decrypt": true, "random": true, "uuid": true,
+
+	// Omni-specific
+	"loc": true, "dotenv": true,
+}
+
+// mapToOmniCommand checks if a command can be handled by omni's built-in
+// and returns true if it should be routed to omni instead of external shell.
+func mapToOmniCommand(cmd string) (string, bool) {
 	cmd = strings.TrimSpace(cmd)
 
-	// Explicit omni prefix
+	// Already has omni prefix
 	if strings.HasPrefix(cmd, "omni ") {
-		return true
+		return cmd, true
 	}
 
-	// Check for external command indicators
-	parts := strings.Fields(cmd)
-	if len(parts) == 0 {
-		return true
+	// Check first word
+	first := firstWord(cmd)
+	if first == "" {
+		return cmd, false
 	}
 
-	firstWord := parts[0]
-
-	// Path-based commands are external
-	if strings.Contains(firstWord, "/") || strings.Contains(firstWord, "\\") {
-		return false
+	// Path-based commands should not be mapped
+	if strings.Contains(first, "/") || strings.Contains(first, "\\") {
+		return cmd, false
 	}
 
-	// Known external shell commands
-	externalCmds := map[string]bool{
-		"bash": true, "sh": true, "zsh": true, "fish": true,
-		"powershell": true, "pwsh": true, "cmd": true,
-		"python": true, "python3": true, "ruby": true, "perl": true,
-		"node": true, "npm": true, "npx": true,
-		"go": true, "cargo": true, "rustc": true,
-		"make": true, "cmake": true, "msbuild": true,
-		"docker": true, "kubectl": true,
-		"git": true, // git should use omni commands
+	// Check if it's a known omni command
+	if omniCommands[first] {
+		return cmd, true
 	}
 
-	if externalCmds[firstWord] {
-		return false
-	}
+	return cmd, false
+}
 
-	// Assume other single commands are omni subcommands
-	return true
+// isOmniCommand checks if a command is an omni command
+// Uses the omniCommands map to determine if a command is built-in
+func isOmniCommand(cmd string) bool {
+	_, isOmni := mapToOmniCommand(cmd)
+	return isOmni
 }
 
 // parseCommand splits a command string into arguments
