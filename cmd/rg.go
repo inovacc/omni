@@ -102,6 +102,17 @@ Gitignore Support:
 		opts.Fixed, _ = cmd.Flags().GetBool("fixed-strings")
 		opts.Threads, _ = cmd.Flags().GetInt("threads")
 
+		// New ripgrep-compatible options
+		opts.Color, _ = cmd.Flags().GetString("color")
+		opts.Colors, _ = cmd.Flags().GetStringSlice("colors")
+		opts.Replace, _ = cmd.Flags().GetString("replace")
+		opts.Multiline, _ = cmd.Flags().GetBool("multiline")
+		opts.Trim, _ = cmd.Flags().GetBool("trim")
+		opts.ShowColumn, _ = cmd.Flags().GetBool("column")
+		opts.ByteOffset, _ = cmd.Flags().GetBool("byte-offset")
+		opts.Stats, _ = cmd.Flags().GetBool("stats")
+		opts.Passthru, _ = cmd.Flags().GetBool("passthru")
+
 		pattern := args[0]
 		paths := args[1:]
 
@@ -148,4 +159,17 @@ func init() {
 
 	// Performance
 	rgCmd.Flags().IntP("threads", "j", 0, "number of worker threads (default: CPU count)")
+
+	// Color output (ripgrep compatible)
+	rgCmd.Flags().String("color", "auto", "when to use colors: auto, always, never")
+	rgCmd.Flags().StringSlice("colors", nil, "custom color specification (e.g., 'path:fg:magenta')")
+
+	// Additional ripgrep-compatible flags
+	rgCmd.Flags().StringP("replace", "r", "", "replace matches with STRING")
+	rgCmd.Flags().BoolP("multiline", "U", false, "enable multiline matching")
+	rgCmd.Flags().Bool("trim", false, "trim leading/trailing whitespace from each line")
+	rgCmd.Flags().Bool("column", false, "show column numbers")
+	rgCmd.Flags().BoolP("byte-offset", "b", false, "show byte offset of each line (not yet implemented)")
+	rgCmd.Flags().Bool("stats", false, "show search statistics")
+	rgCmd.Flags().Bool("passthru", false, "show all lines, highlighting matches")
 }

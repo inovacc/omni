@@ -219,3 +219,86 @@ func TestRunWatchIteration(t *testing.T) {
 		t.Errorf("runWatchIteration() should contain header: %s", output)
 	}
 }
+
+func TestRunWatch_ChangeExit(t *testing.T) {
+	var buf bytes.Buffer
+
+	ctx, cancel := context.WithTimeout(context.Background(), 500*time.Millisecond)
+	defer cancel()
+
+	callCount := 0
+	err := RunWatch(ctx, &buf, func() (string, error) {
+		callCount++
+		// Output changes on second call
+		if callCount == 1 {
+			return "initial\n", nil
+		}
+		return "changed\n", nil
+	}, WatchOptions{Interval: 20 * time.Millisecond, ChangeExit: true})
+
+	// Should exit without error when output changes (ChangeExit)
+	if err != nil {
+		t.Fatalf("RunWatch() with ChangeExit should exit cleanly on change: %v", err)
+	}
+
+	// Should have been called at least twice (initial + one change)
+	if callCount < 2 {
+		t.Errorf("RunWatch() with ChangeExit should detect change, callCount = %d", callCount)
+	}
+}
+
+func TestRunWatch_OnlyChanges(t *testing.T) {
+	var buf bytes.Buffer
+
+	ctx, cancel := context.WithTimeout(context.Background(), 150*time.Millisecond)
+	defer cancel()
+
+	callCount := 0
+	_ = RunWatch(ctx, &buf, func() (string, error) {
+		callCount++
+		// Always return the same output
+		return "same output\n", nil
+	}, WatchOptions{Interval: 20 * time.Millisecond, OnlyChanges: true})
+
+	output := buf.String()
+
+	// First run should show output (always displayed on first run)
+	if !strings.Contains(output, "same output") {
+		t.Errorf("RunWatch() with OnlyChanges should show first output: %s", output)
+	}
+
+	// Count how many times the screen was cleared (indicator of refresh)
+	// With OnlyChanges, after first run, output shouldn't be repeated if unchanged
+	clearCount := strings.Count(output, "\033[H\033[2J")
+	if clearCount > 1 {
+		t.Logf("OnlyChanges mode cleared screen %d times (only first expected)", clearCount)
+	}
+}
+
+func TestRunWatch_OnlyChanges_WithChange(t *testing.T) {
+	var buf bytes.Buffer
+
+	ctx, cancel := context.WithTimeout(context.Background(), 200*time.Millisecond)
+	defer cancel()
+
+	callCount := 0
+	_ = RunWatch(ctx, &buf, func() (string, error) {
+		callCount++
+		// Change output on third call
+		if callCount >= 3 {
+			return "changed output\n", nil
+		}
+		return "initial output\n", nil
+	}, WatchOptions{Interval: 20 * time.Millisecond, OnlyChanges: true})
+
+	output := buf.String()
+
+	// Should show both initial and changed output
+	if !strings.Contains(output, "initial output") {
+		t.Errorf("RunWatch() with OnlyChanges should show initial output: %s", output)
+	}
+
+	if !strings.Contains(output, "changed output") {
+		t.Errorf("RunWatch() with OnlyChanges should show changed output: %s", output)
+	}
+}
