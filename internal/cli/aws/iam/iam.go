@@ -33,8 +33,8 @@ type User struct {
 	UserId           string    `json:"UserId"`
 	Arn              string    `json:"Arn"`
 	Path             string    `json:"Path,omitempty"`
-	CreateDate       time.Time `json:"CreateDate,omitempty"`
-	PasswordLastUsed time.Time `json:"PasswordLastUsed,omitempty"`
+	CreateDate       time.Time `json:"CreateDate,omitzero"`
+	PasswordLastUsed time.Time `json:"PasswordLastUsed,omitzero"`
 	Tags             []Tag     `json:"Tags,omitempty"`
 }
 
@@ -66,6 +66,7 @@ func (c *Client) GetUser(ctx context.Context, userName string) (*User, error) {
 	if result.User.CreateDate != nil {
 		user.CreateDate = *result.User.CreateDate
 	}
+
 	if result.User.PasswordLastUsed != nil {
 		user.PasswordLastUsed = *result.User.PasswordLastUsed
 	}
@@ -93,7 +94,7 @@ type Role struct {
 	RoleId                   string    `json:"RoleId"`
 	Arn                      string    `json:"Arn"`
 	Path                     string    `json:"Path,omitempty"`
-	CreateDate               time.Time `json:"CreateDate,omitempty"`
+	CreateDate               time.Time `json:"CreateDate,omitzero"`
 	AssumeRolePolicyDocument string    `json:"AssumeRolePolicyDocument,omitempty"`
 	Description              string    `json:"Description,omitempty"`
 	MaxSessionDuration       int32     `json:"MaxSessionDuration,omitempty"`
@@ -153,6 +154,7 @@ func (c *Client) ListRoles(ctx context.Context, input ListRolesInput) ([]Role, e
 	if input.PathPrefix != "" {
 		params.PathPrefix = aws.String(input.PathPrefix)
 	}
+
 	if input.MaxItems > 0 {
 		params.MaxItems = aws.Int32(input.MaxItems)
 	}
@@ -179,6 +181,7 @@ func (c *Client) ListRoles(ctx context.Context, input ListRolesInput) ([]Role, e
 			if r.CreateDate != nil {
 				role.CreateDate = *r.CreateDate
 			}
+
 			roles = append(roles, role)
 		}
 	}
@@ -203,19 +206,19 @@ type Policy struct {
 	AttachmentCount               int32     `json:"AttachmentCount,omitempty"`
 	PermissionsBoundaryUsageCount int32     `json:"PermissionsBoundaryUsageCount,omitempty"`
 	IsAttachable                  bool      `json:"IsAttachable"`
-	CreateDate                    time.Time `json:"CreateDate,omitempty"`
-	UpdateDate                    time.Time `json:"UpdateDate,omitempty"`
+	CreateDate                    time.Time `json:"CreateDate,omitzero"`
+	UpdateDate                    time.Time `json:"UpdateDate,omitzero"`
 	Description                   string    `json:"Description,omitempty"`
 	Tags                          []Tag     `json:"Tags,omitempty"`
 }
 
 // ListPoliciesInput contains parameters for ListPolicies
 type ListPoliciesInput struct {
-	Scope            string // All, AWS, Local
-	OnlyAttached     bool
-	PathPrefix       string
+	Scope             string // All, AWS, Local
+	OnlyAttached      bool
+	PathPrefix        string
 	PolicyUsageFilter string // PermissionsPolicy, PermissionsBoundary
-	MaxItems         int32
+	MaxItems          int32
 }
 
 // ListPolicies lists IAM policies
@@ -225,12 +228,15 @@ func (c *Client) ListPolicies(ctx context.Context, input ListPoliciesInput) ([]P
 	if input.Scope != "" {
 		params.Scope = iamPolicyScope(input.Scope)
 	}
+
 	if input.OnlyAttached {
 		params.OnlyAttached = input.OnlyAttached
 	}
+
 	if input.PathPrefix != "" {
 		params.PathPrefix = aws.String(input.PathPrefix)
 	}
+
 	if input.MaxItems > 0 {
 		params.MaxItems = aws.Int32(input.MaxItems)
 	}
@@ -259,9 +265,11 @@ func (c *Client) ListPolicies(ctx context.Context, input ListPoliciesInput) ([]P
 			if p.CreateDate != nil {
 				policy.CreateDate = *p.CreateDate
 			}
+
 			if p.UpdateDate != nil {
 				policy.UpdateDate = *p.UpdateDate
 			}
+
 			policies = append(policies, policy)
 		}
 	}
@@ -300,6 +308,7 @@ func (c *Client) GetPolicy(ctx context.Context, policyArn string) (*Policy, erro
 	if result.Policy.CreateDate != nil {
 		policy.CreateDate = *result.Policy.CreateDate
 	}
+
 	if result.Policy.UpdateDate != nil {
 		policy.UpdateDate = *result.Policy.UpdateDate
 	}

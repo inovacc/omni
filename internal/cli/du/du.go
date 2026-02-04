@@ -123,12 +123,12 @@ func duPath(w io.Writer, path string, opts DUOptions, _ int, terminator string) 
 
 	err = filepath.WalkDir(path, func(p string, d fs.DirEntry, err error) error {
 		if err != nil {
-			return nil //nolint:nilerr // Intentionally skip errors
+			return nil //nolint:nilerr // intentional: skip files we can't access
 		}
 
 		fileInfo, err := d.Info()
 		if err != nil {
-			return nil //nolint:nilerr // Intentionally skip errors
+			return nil //nolint:nilerr // intentional: skip files we can't get info for
 		}
 
 		size := fileInfo.Size()
@@ -203,7 +203,7 @@ func calculateDirSize(path string) int64 {
 
 	_ = filepath.WalkDir(path, func(p string, d fs.DirEntry, err error) error {
 		if err != nil {
-			return nil //nolint:nilerr // Intentionally skip errors
+			return nil //nolint:nilerr // intentional: skip files we can't access
 		}
 
 		if info, err := d.Info(); err == nil {
@@ -251,7 +251,7 @@ func DiskUsage(path string) (int64, error) {
 
 	err := filepath.WalkDir(path, func(p string, d fs.DirEntry, err error) error {
 		if err != nil {
-			return nil //nolint:nilerr // Intentionally skip errors
+			return nil //nolint:nilerr // intentional: skip files we can't access
 		}
 
 		if info, err := d.Info(); err == nil && !info.IsDir() {
