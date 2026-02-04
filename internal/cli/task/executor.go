@@ -10,12 +10,12 @@ import (
 
 // Executor handles task execution
 type Executor struct {
-	w          io.Writer
-	tf         *Taskfile
-	opts       Options
-	resolver   *DependencyResolver
-	executed   map[string]bool
-	cmdRunner  CommandRunner
+	w         io.Writer
+	tf        *Taskfile
+	opts      Options
+	resolver  *DependencyResolver
+	executed  map[string]bool
+	cmdRunner CommandRunner
 }
 
 // CommandRunner is the interface for running omni commands
@@ -73,18 +73,23 @@ func (e *Executor) ShowSummary(taskNames []string) error {
 		if task.Desc != "" {
 			_, _ = fmt.Fprintf(e.w, "Description: %s\n", task.Desc)
 		}
+
 		if task.Summary != "" {
 			_, _ = fmt.Fprintf(e.w, "Summary:\n%s\n", task.Summary)
 		}
+
 		if len(task.Deps) > 0 {
 			deps := make([]string, len(task.Deps))
 			for i, d := range task.Deps {
 				deps[i] = d.Task
 			}
+
 			_, _ = fmt.Fprintf(e.w, "Dependencies: %s\n", strings.Join(deps, ", "))
 		}
+
 		if len(task.Cmds) > 0 {
 			_, _ = fmt.Fprintln(e.w, "Commands:")
+
 			for _, cmd := range task.Cmds {
 				if cmd.Task != "" {
 					_, _ = fmt.Fprintf(e.w, "  - task: %s\n", cmd.Task)
@@ -93,8 +98,10 @@ func (e *Executor) ShowSummary(taskNames []string) error {
 				}
 			}
 		}
+
 		_, _ = fmt.Fprintln(e.w)
 	}
+
 	return nil
 }
 
@@ -140,7 +147,9 @@ func (e *Executor) executeTask(ctx context.Context, name string) error {
 			if e.opts.Verbose {
 				_, _ = fmt.Fprintf(e.w, "task: %s is up to date\n", name)
 			}
+
 			e.executed[name] = true
+
 			return nil
 		}
 	}
@@ -166,6 +175,7 @@ func (e *Executor) executeTask(ctx context.Context, name string) error {
 		if err := e.executeCommand(ctx, cmd, resolver, task.Silent); err != nil {
 			// Execute deferred commands before returning error
 			e.executeDeferredCommands(ctx, deferredCmds, resolver, task.Silent)
+
 			if !cmd.IgnoreError {
 				return fmt.Errorf("task %s: %w", name, err)
 			}
@@ -176,6 +186,7 @@ func (e *Executor) executeTask(ctx context.Context, name string) error {
 	e.executeDeferredCommands(ctx, deferredCmds, resolver, task.Silent)
 
 	e.executed[name] = true
+
 	return nil
 }
 
@@ -251,7 +262,8 @@ func (e *Executor) checkStatus(ctx context.Context, task *Task) (bool, error) {
 
 		// Suppress output for status checks
 		if err := e.cmdRunner.Run(ctx, io.Discard, args); err != nil {
-			return false, nil // Status check failed, task needs to run
+			// Status check failed means task is not up-to-date, not an error
+			return false, nil //nolint:nilerr // intentional: failed status check = task needs to run
 		}
 	}
 
@@ -305,8 +317,11 @@ func isOmniCommand(cmd string) bool {
 // parseCommand splits a command string into arguments
 // Handles basic quoting
 func parseCommand(cmd string) []string {
-	var args []string
-	var current strings.Builder
+	var (
+		args    []string
+		current strings.Builder
+	)
+
 	inQuote := false
 	quoteChar := byte(0)
 

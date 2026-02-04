@@ -43,15 +43,15 @@ type Options struct {
 	Threads        int      // --threads: number of worker threads (0 = auto)
 
 	// New options for ripgrep compatibility
-	Color       string   // --color: when to use colors (auto, always, never)
-	Colors      []string // --colors: custom color specifications
-	Replace     string   // -r/--replace: replacement string for matches
-	Multiline   bool     // -U/--multiline: enable multiline matching
-	Trim        bool     // --trim: trim leading/trailing whitespace
-	ShowColumn  bool     // --column: show column numbers
-	ByteOffset  bool     // -b/--byte-offset: show byte offset (not implemented)
-	Stats       bool     // --stats: show search statistics
-	Passthru    bool     // --passthru: show all lines, highlighting matches
+	Color      string   // --color: when to use colors (auto, always, never)
+	Colors     []string // --colors: custom color specifications
+	Replace    string   // -r/--replace: replacement string for matches
+	Multiline  bool     // -U/--multiline: enable multiline matching
+	Trim       bool     // --trim: trim leading/trailing whitespace
+	ShowColumn bool     // --column: show column numbers
+	ByteOffset bool     // -b/--byte-offset: show byte offset (not implemented)
+	Stats      bool     // --stats: show search statistics
+	Passthru   bool     // --passthru: show all lines, highlighting matches
 }
 
 // Match represents a single match result
@@ -309,9 +309,7 @@ func searchDirParallel(w io.Writer, dir string, re *regexp.Regexp, pattern, lite
 	var wg sync.WaitGroup
 
 	for range numWorkers {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
+		wg.Go(func() {
 			for path := range fileCh {
 				fr, err := searchFileSingle(path, re, pattern, literalPattern, useLiteral, opts)
 				if err != nil {
@@ -320,6 +318,7 @@ func searchDirParallel(w io.Writer, dir string, re *regexp.Regexp, pattern, lite
 					default:
 						// Drop error if channel is full
 					}
+
 					continue
 				}
 
@@ -327,14 +326,13 @@ func searchDirParallel(w io.Writer, dir string, re *regexp.Regexp, pattern, lite
 					resultCh <- *fr
 				}
 			}
-		}()
+		})
 	}
 
 	// Start result collector goroutine
 	var collectorWg sync.WaitGroup
-	collectorWg.Add(1)
-	go func() {
-		defer collectorWg.Done()
+
+	collectorWg.Go(func() {
 		for fr := range resultCh {
 			result.mu.Lock()
 			result.Files = append(result.Files, fr)
@@ -347,11 +345,10 @@ func searchDirParallel(w io.Writer, dir string, re *regexp.Regexp, pattern, lite
 				outputFileResult(w, fr, opts, re, pattern, useLiteral)
 			} else if opts.JSONStream && streamEnc != nil {
 				streamMu.Lock()
-				//nolint:errchkjson // StreamBegin is a concrete type
+
 				_ = streamEnc.Encode(StreamMessage{Type: "begin", Data: StreamBegin{Path: fr.Path}})
 
 				for _, m := range fr.Matches {
-					//nolint:errchkjson // StreamMatch is a concrete type
 					_ = streamEnc.Encode(StreamMessage{
 						Type: "match",
 						Data: StreamMatch{
@@ -363,13 +360,13 @@ func searchDirParallel(w io.Writer, dir string, re *regexp.Regexp, pattern, lite
 						},
 					})
 				}
-				//nolint:errchkjson // StreamEnd is a concrete type
+
 				_ = streamEnc.Encode(StreamMessage{Type: "end", Data: StreamEnd{Path: fr.Path, MatchCount: fr.Count}})
 
 				streamMu.Unlock()
 			}
 		}
-	}()
+	})
 
 	// Send files to workers
 	for _, f := range files {
@@ -562,6 +559,7 @@ func outputFileResult(w io.Writer, fr FileResult, opts Options, re *regexp.Regex
 		useColor := ShouldUseColor(colorMode)
 		scheme := DefaultScheme()
 		_, _ = fmt.Fprintln(w, FormatPath(fr.Path, scheme, useColor))
+
 		return
 	}
 
@@ -573,6 +571,7 @@ func outputFileResult(w io.Writer, fr FileResult, opts Options, re *regexp.Regex
 			FormatPath(fr.Path, scheme, useColor),
 			FormatSeparator(":", scheme, useColor),
 			fr.Count)
+
 		return
 	}
 
@@ -866,10 +865,6 @@ func searchFile(w io.Writer, path string, re *regexp.Regexp, pattern, literalPat
 	return scanner.Err()
 }
 
-func printLine(w io.Writer, path string, lineNum int, line string, opts Options, isContext bool) {
-	printLineWithColor(w, path, lineNum, 0, line, opts, isContext, nil, "", false)
-}
-
 func printContextSeparator(w io.Writer, opts Options) {
 	colorMode := ParseColorMode(opts.Color)
 	useColor := ShouldUseColor(colorMode)
@@ -905,6 +900,7 @@ func printLineWithColor(w io.Writer, path string, lineNum, column int, line stri
 
 	// Highlight matches
 	highlightedLine := line
+
 	if useColor && !isContext {
 		caseInsensitive := opts.IgnoreCase || (opts.SmartCase && pattern == strings.ToLower(pattern))
 		if useLiteral {
@@ -920,6 +916,7 @@ func printLineWithColor(w io.Writer, path string, lineNum, column int, line stri
 		if useColor {
 			pathStr = FormatPath(path, scheme, useColor)
 		}
+
 		sepStr := sep
 		if useColor {
 			sepStr = FormatSeparator(sep, scheme, useColor)
@@ -936,6 +933,7 @@ func printLineWithColor(w io.Writer, path string, lineNum, column int, line stri
 				if useColor {
 					colStr = FormatColumn(column, scheme, useColor)
 				}
+
 				_, _ = fmt.Fprintf(w, "%s%s%s%s%s%s%s\n", pathStr, sepStr, lineNumStr, sepStr, colStr, sepStr, highlightedLine)
 			} else {
 				_, _ = fmt.Fprintf(w, "%s%s%s%s%s\n", pathStr, sepStr, lineNumStr, sepStr, highlightedLine)
@@ -960,6 +958,7 @@ func printLineWithColor(w io.Writer, path string, lineNum, column int, line stri
 				if useColor {
 					colStr = FormatColumn(column, scheme, useColor)
 				}
+
 				_, _ = fmt.Fprintf(w, "%s%s%s%s%s\n", lineNumStr, sepStr, colStr, sepStr, highlightedLine)
 			} else {
 				_, _ = fmt.Fprintf(w, "%s%s%s\n", lineNumStr, sepStr, highlightedLine)

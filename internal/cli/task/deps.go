@@ -2,6 +2,7 @@ package task
 
 import (
 	"fmt"
+	"slices"
 )
 
 // DependencyResolver handles task dependency resolution
@@ -18,8 +19,8 @@ func NewDependencyResolver(tf *Taskfile) *DependencyResolver {
 // Uses Kahn's algorithm for topological sorting
 func (r *DependencyResolver) ResolveDeps(taskName string) ([]string, error) {
 	// Build dependency graph
-	graph := make(map[string][]string)  // task -> dependencies
-	inDegree := make(map[string]int)    // task -> number of incoming edges
+	graph := make(map[string][]string) // task -> dependencies
+	inDegree := make(map[string]int)   // task -> number of incoming edges
 
 	// Collect all tasks to process
 	toProcess := []string{taskName}
@@ -32,6 +33,7 @@ func (r *DependencyResolver) ResolveDeps(taskName string) ([]string, error) {
 		if processed[current] {
 			continue
 		}
+
 		processed[current] = true
 
 		task := r.tf.GetTask(current)
@@ -64,6 +66,7 @@ func (r *DependencyResolver) ResolveDeps(taskName string) ([]string, error) {
 	// Actually, let's build reverse graph: who depends on whom
 	// reverseDeps[A] = [B, C] means B and C depend on A
 	reverseDeps := make(map[string][]string)
+
 	for task, deps := range graph {
 		for _, dep := range deps {
 			reverseDeps[dep] = append(reverseDeps[dep], task)
@@ -76,10 +79,13 @@ func (r *DependencyResolver) ResolveDeps(taskName string) ([]string, error) {
 	}
 
 	// Kahn's algorithm
-	var queue []string
-	var result []string
+	var (
+		queue  []string
+		result []string
+	)
 
 	// Start with tasks that have no dependencies
+
 	for task, degree := range inDegree {
 		if degree == 0 {
 			queue = append(queue, task)
@@ -90,6 +96,7 @@ func (r *DependencyResolver) ResolveDeps(taskName string) ([]string, error) {
 		// Pop from queue
 		current := queue[0]
 		queue = queue[1:]
+
 		result = append(result, current)
 
 		// For each task that depends on current
@@ -115,6 +122,7 @@ func (r *DependencyResolver) GetDirectDeps(taskName string) ([]Dependency, error
 	if task == nil {
 		return nil, fmt.Errorf("task %q not found", taskName)
 	}
+
 	return task.Deps, nil
 }
 
@@ -126,15 +134,14 @@ func (r *DependencyResolver) ValidateDeps(taskName string) error {
 
 func (r *DependencyResolver) validateDepsRecursive(taskName string, visited map[string]bool, path []string) error {
 	// Check for cycle
-	for _, p := range path {
-		if p == taskName {
-			return fmt.Errorf("cyclic dependency: %v -> %s", path, taskName)
-		}
+	if slices.Contains(path, taskName) {
+		return fmt.Errorf("cyclic dependency: %v -> %s", path, taskName)
 	}
 
 	if visited[taskName] {
 		return nil
 	}
+
 	visited[taskName] = true
 
 	task := r.tf.GetTask(taskName)
@@ -142,7 +149,10 @@ func (r *DependencyResolver) validateDepsRecursive(taskName string, visited map[
 		return fmt.Errorf("task %q not found", taskName)
 	}
 
-	newPath := append(path, taskName)
+	newPath := make([]string, len(path)+1)
+	copy(newPath, path)
+	newPath[len(path)] = taskName
+
 	for _, dep := range task.Deps {
 		if err := r.validateDepsRecursive(dep.Task, visited, newPath); err != nil {
 			return err

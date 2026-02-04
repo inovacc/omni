@@ -18,6 +18,7 @@ func TestParseTaskfile(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	taskfileContent := `
@@ -53,6 +54,7 @@ tasks:
     cmds:
       - omni rm -rf {{.BUILD_DIR}}
 `
+
 	taskfilePath := filepath.Join(tmpDir, "Taskfile.yml")
 	if err := os.WriteFile(taskfilePath, []byte(taskfileContent), 0644); err != nil {
 		t.Fatal(err)
@@ -88,20 +90,16 @@ tasks:
 	defaultTask := tf.GetTask("default")
 	if defaultTask == nil {
 		t.Error("GetTask(default) = nil")
-	} else {
-		if len(defaultTask.Deps) != 1 || defaultTask.Deps[0].Task != "build" {
-			t.Errorf("default.Deps = %v, want [build]", defaultTask.Deps)
-		}
+	} else if len(defaultTask.Deps) != 1 || defaultTask.Deps[0].Task != "build" {
+		t.Errorf("default.Deps = %v, want [build]", defaultTask.Deps)
 	}
 
 	// Verify build task
 	buildTask := tf.GetTask("build")
 	if buildTask == nil {
 		t.Error("GetTask(build) = nil")
-	} else {
-		if len(buildTask.Cmds) != 2 {
-			t.Errorf("build.Cmds = %d, want 2", len(buildTask.Cmds))
-		}
+	} else if len(buildTask.Cmds) != 2 {
+		t.Errorf("build.Cmds = %d, want 2", len(buildTask.Cmds))
 	}
 
 	// Verify internal task is hidden from list
@@ -172,6 +170,7 @@ func TestDependencyResolver(t *testing.T) {
 
 	// d should come before b and c, which should come before a
 	dIdx, bIdx, cIdx, aIdx := -1, -1, -1, -1
+
 	for i, name := range order {
 		switch name {
 		case "a":
@@ -188,6 +187,7 @@ func TestDependencyResolver(t *testing.T) {
 	if dIdx >= bIdx || dIdx >= cIdx {
 		t.Errorf("d should come before b and c: order = %v", order)
 	}
+
 	if bIdx >= aIdx || cIdx >= aIdx {
 		t.Errorf("b and c should come before a: order = %v", order)
 	}
@@ -229,6 +229,7 @@ func TestParseCommand(t *testing.T) {
 				t.Errorf("parseCommand(%q) = %v, want %v", tt.input, result, tt.expected)
 				return
 			}
+
 			for i := range result {
 				if result[i] != tt.expected[i] {
 					t.Errorf("parseCommand(%q)[%d] = %q, want %q", tt.input, i, result[i], tt.expected[i])
@@ -245,12 +246,12 @@ func TestIsOmniCommand(t *testing.T) {
 	}{
 		{"omni echo hello", true},
 		{"omni mkdir -p ./build", true},
-		{"echo hello", true},      // Implicit omni command
-		{"ls", true},              // Implicit omni command
-		{"bash -c 'ls'", false},   // External shell
-		{"/bin/ls", false},        // External path
+		{"echo hello", true},        // Implicit omni command
+		{"ls", true},                // Implicit omni command
+		{"bash -c 'ls'", false},     // External shell
+		{"/bin/ls", false},          // External path
 		{"python script.py", false}, // External command
-		{"git status", false},     // Git should use omni
+		{"git status", false},       // Git should use omni
 	}
 
 	for _, tt := range tests {
@@ -273,6 +274,7 @@ func TestExecutorListTasks(t *testing.T) {
 	}
 
 	var buf bytes.Buffer
+
 	exec := NewExecutor(&buf, tf, Options{})
 
 	if err := exec.ListTasks(); err != nil {
@@ -283,9 +285,11 @@ func TestExecutorListTasks(t *testing.T) {
 	if !strings.Contains(output, "build") {
 		t.Error("ListTasks() should include 'build'")
 	}
+
 	if !strings.Contains(output, "test") {
 		t.Error("ListTasks() should include 'test'")
 	}
+
 	if strings.Contains(output, "clean") {
 		t.Error("ListTasks() should not include internal task 'clean'")
 	}
@@ -301,6 +305,7 @@ func TestExecutorDryRun(t *testing.T) {
 	}
 
 	var buf bytes.Buffer
+
 	exec := NewExecutor(&buf, tf, Options{DryRun: true})
 
 	// Use mock runner to avoid actual execution
@@ -334,6 +339,7 @@ func TestExecutorWithMock(t *testing.T) {
 	}
 
 	var buf bytes.Buffer
+
 	exec := NewExecutor(&buf, tf, Options{})
 
 	mock := NewMockCommandRunner()
@@ -363,6 +369,7 @@ func TestRun(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	taskfileContent := `
@@ -376,6 +383,7 @@ tasks:
     cmds:
       - omni echo hello
 `
+
 	taskfilePath := filepath.Join(tmpDir, "Taskfile.yml")
 	if err := os.WriteFile(taskfilePath, []byte(taskfileContent), 0644); err != nil {
 		t.Fatal(err)
@@ -383,21 +391,26 @@ tasks:
 
 	// Save original factory and restore after
 	origFactory := CommandRunnerFactory
+
 	defer func() { CommandRunnerFactory = origFactory }()
 
 	mock := NewMockCommandRunner()
 	CommandRunnerFactory = func() CommandRunner { return mock }
 
 	ctx := context.Background()
+
 	var buf bytes.Buffer
 
 	t.Run("run default task", func(t *testing.T) {
 		mock.Commands = nil
+
 		buf.Reset()
+
 		err := Run(ctx, &buf, nil, Options{Taskfile: taskfilePath})
 		if err != nil {
 			t.Fatalf("Run() error = %v", err)
 		}
+
 		if len(mock.Commands) != 1 {
 			t.Errorf("Expected 1 command, got %d", len(mock.Commands))
 		}
@@ -405,11 +418,14 @@ tasks:
 
 	t.Run("run named task", func(t *testing.T) {
 		mock.Commands = nil
+
 		buf.Reset()
+
 		err := Run(ctx, &buf, []string{"hello"}, Options{Taskfile: taskfilePath})
 		if err != nil {
 			t.Fatalf("Run() error = %v", err)
 		}
+
 		if len(mock.Commands) != 1 {
 			t.Errorf("Expected 1 command, got %d", len(mock.Commands))
 		}
@@ -417,10 +433,12 @@ tasks:
 
 	t.Run("list tasks", func(t *testing.T) {
 		buf.Reset()
+
 		err := Run(ctx, &buf, nil, Options{Taskfile: taskfilePath, List: true})
 		if err != nil {
 			t.Fatalf("Run() error = %v", err)
 		}
+
 		output := buf.String()
 		if !strings.Contains(output, "hello") {
 			t.Errorf("List should include 'hello', got: %s", output)
@@ -434,6 +452,7 @@ func TestFindTaskfile(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	t.Run("explicit path", func(t *testing.T) {
@@ -446,6 +465,7 @@ func TestFindTaskfile(t *testing.T) {
 		if err != nil {
 			t.Fatalf("findTaskfile() error = %v", err)
 		}
+
 		if found != taskfilePath {
 			t.Errorf("findTaskfile() = %q, want %q", found, taskfilePath)
 		}
@@ -463,6 +483,7 @@ func TestFindTaskfile(t *testing.T) {
 		if err := os.MkdirAll(subDir, 0755); err != nil {
 			t.Fatal(err)
 		}
+
 		taskfilePath := filepath.Join(subDir, "Taskfile.yml")
 		if err := os.WriteFile(taskfilePath, []byte("version: '3'\ntasks: {}"), 0644); err != nil {
 			t.Fatal(err)
@@ -472,6 +493,7 @@ func TestFindTaskfile(t *testing.T) {
 		if err != nil {
 			t.Fatalf("findTaskfile() error = %v", err)
 		}
+
 		if found != taskfilePath {
 			t.Errorf("findTaskfile() = %q, want %q", found, taskfilePath)
 		}
@@ -508,10 +530,12 @@ func TestShowSummary(t *testing.T) {
 	}
 
 	var buf bytes.Buffer
+
 	exec := NewExecutor(&buf, tf, Options{})
 
 	t.Run("show summary", func(t *testing.T) {
 		buf.Reset()
+
 		err := exec.ShowSummary([]string{"build"})
 		if err != nil {
 			t.Fatalf("ShowSummary() error = %v", err)
@@ -521,15 +545,19 @@ func TestShowSummary(t *testing.T) {
 		if !strings.Contains(output, "Task: build") {
 			t.Errorf("Should contain task name, got: %s", output)
 		}
+
 		if !strings.Contains(output, "Build the project") {
 			t.Errorf("Should contain description, got: %s", output)
 		}
+
 		if !strings.Contains(output, "Go compiler") {
 			t.Errorf("Should contain summary, got: %s", output)
 		}
+
 		if !strings.Contains(output, "Dependencies: clean") {
 			t.Errorf("Should contain dependencies, got: %s", output)
 		}
+
 		if !strings.Contains(output, "task: test") {
 			t.Errorf("Should contain task reference in commands, got: %s", output)
 		}
@@ -537,6 +565,7 @@ func TestShowSummary(t *testing.T) {
 
 	t.Run("task not found", func(t *testing.T) {
 		buf.Reset()
+
 		err := exec.ShowSummary([]string{"nonexistent"})
 		if err == nil {
 			t.Error("ShowSummary() should error for unknown task")
@@ -555,6 +584,7 @@ func TestCheckStatus(t *testing.T) {
 	}
 
 	var buf bytes.Buffer
+
 	exec := NewExecutor(&buf, tf, Options{})
 
 	// Mock that succeeds (task is up-to-date)
@@ -569,6 +599,7 @@ func TestCheckStatus(t *testing.T) {
 		if err != nil {
 			t.Fatalf("checkStatus() error = %v", err)
 		}
+
 		if !upToDate {
 			t.Error("checkStatus() should return true when status checks pass")
 		}
@@ -583,6 +614,7 @@ func TestCheckStatus(t *testing.T) {
 		if err != nil {
 			t.Fatalf("checkStatus() error = %v", err)
 		}
+
 		if upToDate {
 			t.Error("checkStatus() should return false when status check fails")
 		}
@@ -592,6 +624,7 @@ func TestCheckStatus(t *testing.T) {
 		badTask := &Task{
 			Status: []string{"python check.py"},
 		}
+
 		_, err := exec.checkStatus(ctx, badTask)
 		if err == nil {
 			t.Error("checkStatus() should error for non-omni command")
@@ -605,6 +638,7 @@ func TestProcessIncludes(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	// Create included taskfile
@@ -642,6 +676,7 @@ tasks:
   default:
     desc: Main default task
 `
+
 	mainPath := filepath.Join(tmpDir, "Taskfile.yml")
 	if err := os.WriteFile(mainPath, []byte(mainContent), 0644); err != nil {
 		t.Fatal(err)
@@ -656,6 +691,7 @@ tasks:
 		if tf.GetTask("sub:build") == nil {
 			t.Error("Should have 'sub:build' task")
 		}
+
 		if tf.GetTask("sub:test") == nil {
 			t.Error("Should have 'sub:test' task")
 		}
@@ -671,6 +707,7 @@ tasks:
 		if tf.Vars["MAIN_VAR"] != "main_value" {
 			t.Errorf("MAIN_VAR = %v, want main_value", tf.Vars["MAIN_VAR"])
 		}
+
 		if tf.Vars["INCLUDED_VAR"] != "included_value" {
 			t.Errorf("INCLUDED_VAR = %v, want included_value", tf.Vars["INCLUDED_VAR"])
 		}
@@ -686,6 +723,7 @@ func TestProcessIncludesErrors(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	t.Run("include not found", func(t *testing.T) {
@@ -695,6 +733,7 @@ includes:
   missing: ./nonexistent
 tasks: {}
 `
+
 		path := filepath.Join(tmpDir, "missing.yml")
 		if err := os.WriteFile(path, []byte(content), 0644); err != nil {
 			t.Fatal(err)
@@ -718,6 +757,7 @@ includes:
   empty: ./empty_include
 tasks: {}
 `
+
 		path := filepath.Join(tmpDir, "empty_dir.yml")
 		if err := os.WriteFile(path, []byte(content), 0644); err != nil {
 			t.Fatal(err)
@@ -744,6 +784,7 @@ func TestExecutorDeferredCommands(t *testing.T) {
 	}
 
 	var buf bytes.Buffer
+
 	exec := NewExecutor(&buf, tf, Options{})
 
 	mock := NewMockCommandRunner()
@@ -763,9 +804,11 @@ func TestExecutorDeferredCommands(t *testing.T) {
 	if mock.Commands[0][1] != "step1" {
 		t.Errorf("First command should be step1, got %v", mock.Commands[0])
 	}
+
 	if mock.Commands[1][1] != "step2" {
 		t.Errorf("Second command should be step2, got %v", mock.Commands[1])
 	}
+
 	if mock.Commands[2][1] != "cleanup" {
 		t.Errorf("Third command should be cleanup (deferred), got %v", mock.Commands[2])
 	}
@@ -790,6 +833,7 @@ func TestExecutorTaskReference(t *testing.T) {
 	}
 
 	var buf bytes.Buffer
+
 	exec := NewExecutor(&buf, tf, Options{})
 
 	mock := NewMockCommandRunner()
@@ -818,6 +862,7 @@ func TestExecutorIgnoreError(t *testing.T) {
 	}
 
 	var buf bytes.Buffer
+
 	exec := NewExecutor(&buf, tf, Options{})
 
 	mock := NewMockCommandRunner()
@@ -847,6 +892,7 @@ func TestExecutorVerbose(t *testing.T) {
 	}
 
 	var buf bytes.Buffer
+
 	exec := NewExecutor(&buf, tf, Options{Verbose: true})
 
 	mock := NewMockCommandRunner()
@@ -874,6 +920,7 @@ func TestExecutorSilent(t *testing.T) {
 	}
 
 	var buf bytes.Buffer
+
 	exec := NewExecutor(&buf, tf, Options{})
 
 	mock := NewMockCommandRunner()
@@ -937,6 +984,7 @@ func TestCommandUnmarshalYAML(t *testing.T) {
   silent: true
 - task: build
 `
+
 	var cmds []Command
 	if err := yaml.Unmarshal([]byte(yamlStr), &cmds); err != nil {
 		t.Fatalf("Unmarshal error: %v", err)
@@ -966,6 +1014,7 @@ func TestDependencyUnmarshalYAML(t *testing.T) {
   vars:
     FAST: true
 `
+
 	var deps []Dependency
 	if err := yaml.Unmarshal([]byte(yamlStr), &deps); err != nil {
 		t.Fatalf("Unmarshal error: %v", err)
@@ -982,6 +1031,7 @@ func TestDependencyUnmarshalYAML(t *testing.T) {
 	if deps[1].Task != "test" {
 		t.Errorf("deps[1].Task = %q, want 'test'", deps[1].Task)
 	}
+
 	if deps[1].Vars["FAST"] != true {
 		t.Errorf("deps[1].Vars[FAST] = %v, want true", deps[1].Vars["FAST"])
 	}
@@ -992,6 +1042,7 @@ func TestRunNoDefaultTask(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	content := `
@@ -1001,18 +1052,21 @@ tasks:
     cmds:
       - omni echo build
 `
+
 	path := filepath.Join(tmpDir, "Taskfile.yml")
 	if err := os.WriteFile(path, []byte(content), 0644); err != nil {
 		t.Fatal(err)
 	}
 
 	ctx := context.Background()
+
 	var buf bytes.Buffer
 
 	err = Run(ctx, &buf, nil, Options{Taskfile: path})
 	if err == nil {
 		t.Error("Run() should error when no task specified and no default task")
 	}
+
 	if !strings.Contains(err.Error(), "no task specified") {
 		t.Errorf("Error should mention 'no task specified', got: %v", err)
 	}
@@ -1023,6 +1077,7 @@ func TestRunSummaryMode(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	content := `
@@ -1036,12 +1091,14 @@ tasks:
     cmds:
       - omni echo build
 `
+
 	path := filepath.Join(tmpDir, "Taskfile.yml")
 	if err := os.WriteFile(path, []byte(content), 0644); err != nil {
 		t.Fatal(err)
 	}
 
 	ctx := context.Background()
+
 	var buf bytes.Buffer
 
 	err = Run(ctx, &buf, []string{"build"}, Options{Taskfile: path, Summary: true})
@@ -1053,6 +1110,7 @@ tasks:
 	if !strings.Contains(output, "Task: build") {
 		t.Errorf("Summary should contain task name, got: %s", output)
 	}
+
 	if !strings.Contains(output, "longer summary") {
 		t.Errorf("Summary should contain summary text, got: %s", output)
 	}
@@ -1072,6 +1130,7 @@ func TestExecutorForceRun(t *testing.T) {
 
 	t.Run("with status check (up-to-date)", func(t *testing.T) {
 		var buf bytes.Buffer
+
 		exec := NewExecutor(&buf, tf, Options{Verbose: true})
 		mock := NewMockCommandRunner()
 		exec.SetCommandRunner(mock)
@@ -1089,6 +1148,7 @@ func TestExecutorForceRun(t *testing.T) {
 
 	t.Run("with force flag", func(t *testing.T) {
 		var buf bytes.Buffer
+
 		exec := NewExecutor(&buf, tf, Options{Force: true})
 		mock := NewMockCommandRunner()
 		exec.SetCommandRunner(mock)
@@ -1099,12 +1159,14 @@ func TestExecutorForceRun(t *testing.T) {
 
 		// With force, should run the task even if up-to-date
 		found := false
+
 		for _, cmd := range mock.Commands {
 			if len(cmd) > 1 && cmd[1] == "running" {
 				found = true
 				break
 			}
 		}
+
 		if !found {
 			t.Errorf("Force should run task, commands: %v", mock.Commands)
 		}
@@ -1114,6 +1176,7 @@ func TestExecutorForceRun(t *testing.T) {
 func TestVarResolverEnvExpansion(t *testing.T) {
 	// Set environment variable for test
 	os.Setenv("TEST_VAR_123", "env_value_123")
+
 	defer os.Unsetenv("TEST_VAR_123")
 
 	resolver := NewVarResolver(nil, nil, nil)

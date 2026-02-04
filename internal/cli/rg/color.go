@@ -20,13 +20,12 @@ type ColorScheme struct {
 	Context   string // Color for context lines
 }
 
-// ANSI color codes
+// ANSI color codes for terminal output.
 const (
 	Reset     = "\033[0m"
 	Bold      = "\033[1m"
 	Underline = "\033[4m"
 
-	// Foreground colors
 	FgBlack   = "\033[30m"
 	FgRed     = "\033[31m"
 	FgGreen   = "\033[32m"
@@ -36,7 +35,6 @@ const (
 	FgCyan    = "\033[36m"
 	FgWhite   = "\033[37m"
 
-	// Bright foreground colors
 	FgBrightBlack   = "\033[90m"
 	FgBrightRed     = "\033[91m"
 	FgBrightGreen   = "\033[92m"
@@ -46,7 +44,6 @@ const (
 	FgBrightCyan    = "\033[96m"
 	FgBrightWhite   = "\033[97m"
 
-	// Background colors
 	BgBlack   = "\033[40m"
 	BgRed     = "\033[41m"
 	BgGreen   = "\033[42m"
@@ -102,9 +99,11 @@ func ShouldUseColor(mode ColorMode) bool {
 		return true
 	case ColorNever:
 		return false
-	default: // ColorAuto
+	case ColorAuto:
 		return isTerminal()
 	}
+
+	return isTerminal()
 }
 
 // isTerminal checks if stdout is a terminal
@@ -117,6 +116,7 @@ func Colorize(text, color string) string {
 	if color == "" {
 		return text
 	}
+
 	return color + text + Reset
 }
 
@@ -134,6 +134,7 @@ func HighlightMatches(line string, re *regexp.Regexp, scheme ColorScheme, useCol
 
 	// Build highlighted string
 	var result strings.Builder
+
 	lastEnd := 0
 
 	for _, loc := range matches {
@@ -164,6 +165,7 @@ func HighlightLiteralMatches(line, pattern string, caseInsensitive bool, scheme 
 
 	searchLine := line
 	searchPattern := pattern
+
 	if caseInsensitive {
 		searchLine = strings.ToLower(line)
 		searchPattern = strings.ToLower(pattern)
@@ -171,12 +173,14 @@ func HighlightLiteralMatches(line, pattern string, caseInsensitive bool, scheme 
 
 	// Find all match locations
 	var matches [][]int
+
 	offset := 0
 	for {
 		idx := strings.Index(searchLine[offset:], searchPattern)
 		if idx == -1 {
 			break
 		}
+
 		start := offset + idx
 		end := start + len(pattern)
 		matches = append(matches, []int{start, end})
@@ -189,6 +193,7 @@ func HighlightLiteralMatches(line, pattern string, caseInsensitive bool, scheme 
 
 	// Build highlighted string
 	var result strings.Builder
+
 	lastEnd := 0
 
 	for _, loc := range matches {
@@ -216,6 +221,7 @@ func FormatPath(path string, scheme ColorScheme, useColor bool) string {
 	if useColor && scheme.Path != "" {
 		return scheme.Path + path + Reset
 	}
+
 	return path
 }
 
@@ -225,6 +231,7 @@ func FormatLineNumber(lineNum int, scheme ColorScheme, useColor bool) string {
 	if useColor && scheme.Line != "" {
 		return scheme.Line + s + Reset
 	}
+
 	return s
 }
 
@@ -234,6 +241,7 @@ func FormatColumn(col int, scheme ColorScheme, useColor bool) string {
 	if useColor && scheme.Column != "" {
 		return scheme.Column + s + Reset
 	}
+
 	return s
 }
 
@@ -242,6 +250,7 @@ func FormatSeparator(sep string, scheme ColorScheme, useColor bool) string {
 	if useColor && scheme.Separator != "" {
 		return scheme.Separator + sep + Reset
 	}
+
 	return sep
 }
 
@@ -253,6 +262,7 @@ func ParseColorSpec(spec string) (component, attr, value string, err error) {
 	}
 
 	component = parts[0]
+
 	attr = parts[1]
 	if len(parts) > 2 {
 		value = parts[2]
@@ -300,6 +310,7 @@ func ApplyColorSpec(scheme *ColorScheme, spec string) error {
 	}
 
 	var code string
+
 	switch attr {
 	case "fg":
 		code = ColorNameToCode(value, false)
