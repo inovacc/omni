@@ -43,10 +43,11 @@ func RunWatch(ctx context.Context, w io.Writer, fn WatchFunc, opts WatchOptions)
 
 	// Track previous output for change detection
 	var prevHash [sha256.Size]byte
+
 	firstRun := true
 
 	// Run immediately first
-	changed, newHash, err := runWatchIterationWithChange(w, fn, opts, prevHash, firstRun)
+	_, newHash, err := runWatchIterationWithChange(w, fn, opts, prevHash, firstRun)
 	if err != nil {
 		if opts.ExitOnError {
 			return err
@@ -56,6 +57,7 @@ func RunWatch(ctx context.Context, w io.Writer, fn WatchFunc, opts WatchOptions)
 			_, _ = fmt.Fprint(w, "\a") // Bell character
 		}
 	}
+
 	prevHash = newHash
 	firstRun = false
 
@@ -66,7 +68,7 @@ func RunWatch(ctx context.Context, w io.Writer, fn WatchFunc, opts WatchOptions)
 		case <-sigCh:
 			return nil
 		case <-ticker.C:
-			changed, newHash, err = runWatchIterationWithChange(w, fn, opts, prevHash, firstRun)
+			changed, newHash, err := runWatchIterationWithChange(w, fn, opts, prevHash, firstRun)
 			if err != nil {
 				if opts.ExitOnError {
 					return err

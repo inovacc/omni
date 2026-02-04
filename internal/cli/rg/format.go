@@ -11,27 +11,27 @@ import (
 type OutputFormat int
 
 const (
-	FormatDefault  OutputFormat = iota // Default ripgrep-style output
-	FormatNoHeading                    // No file name headings (all on one line)
-	FormatJSON                         // Full JSON output
-	FormatJSONStream                   // Streaming NDJSON output
+	FormatDefault    OutputFormat = iota // Default ripgrep-style output
+	FormatNoHeading                      // No file name headings (all on one line)
+	FormatJSON                           // Full JSON output
+	FormatJSONStream                     // Streaming NDJSON output
 )
 
 // Formatter handles output formatting with color support
 type Formatter struct {
-	w              io.Writer
-	scheme         ColorScheme
-	useColor       bool
-	format         OutputFormat
-	showLineNumber bool
-	showColumn     bool
-	onlyMatching   bool
-	trim           bool
-	replace        string
-	re             *regexp.Regexp
-	pattern        string
+	w               io.Writer
+	scheme          ColorScheme
+	useColor        bool
+	format          OutputFormat
+	showLineNumber  bool
+	showColumn      bool
+	onlyMatching    bool
+	trim            bool
+	replace         string
+	re              *regexp.Regexp
+	pattern         string
 	caseInsensitive bool
-	useLiteral     bool
+	useLiteral      bool
 }
 
 // FormatterOptions configures the formatter
@@ -53,19 +53,19 @@ type FormatterOptions struct {
 // NewFormatter creates a new output formatter
 func NewFormatter(w io.Writer, opts FormatterOptions) *Formatter {
 	return &Formatter{
-		w:              w,
-		scheme:         opts.Scheme,
-		useColor:       opts.UseColor,
-		format:         opts.Format,
-		showLineNumber: opts.ShowLineNumber,
-		showColumn:     opts.ShowColumn,
-		onlyMatching:   opts.OnlyMatching,
-		trim:           opts.Trim,
-		replace:        opts.Replace,
-		re:             opts.Regex,
-		pattern:        opts.Pattern,
+		w:               w,
+		scheme:          opts.Scheme,
+		useColor:        opts.UseColor,
+		format:          opts.Format,
+		showLineNumber:  opts.ShowLineNumber,
+		showColumn:      opts.ShowColumn,
+		onlyMatching:    opts.OnlyMatching,
+		trim:            opts.Trim,
+		replace:         opts.Replace,
+		re:              opts.Regex,
+		pattern:         opts.Pattern,
 		caseInsensitive: opts.CaseInsensitive,
-		useLiteral:     opts.UseLiteral,
+		useLiteral:      opts.UseLiteral,
 	}
 }
 
@@ -74,6 +74,7 @@ func (f *Formatter) PrintFileHeader(path string) {
 	if f.format == FormatNoHeading {
 		return
 	}
+
 	_, _ = fmt.Fprintln(f.w, FormatPath(path, f.scheme, f.useColor))
 }
 
@@ -97,6 +98,7 @@ func (f *Formatter) PrintMatch(path string, lineNum, column int, line string, is
 		for _, m := range matches {
 			f.printOnlyMatch(path, lineNum, m)
 		}
+
 		return
 	}
 
@@ -111,6 +113,7 @@ func (f *Formatter) PrintMatch(path string, lineNum, column int, line string, is
 
 	// Highlight matches in the line
 	highlightedLine := line
+
 	if !isContext && f.useColor {
 		if f.useLiteral {
 			highlightedLine = HighlightLiteralMatches(line, f.pattern, f.caseInsensitive, f.scheme, f.useColor)
@@ -137,7 +140,8 @@ func (f *Formatter) PrintMatch(path string, lineNum, column int, line string, is
 
 		sb.WriteString(highlightedLine)
 
-	default: // FormatDefault - grouped by file
+	case FormatDefault, FormatJSON, FormatJSONStream:
+		// FormatDefault - grouped by file; JSON formats handled elsewhere
 		if f.showLineNumber && lineNum > 0 {
 			sb.WriteString(FormatLineNumber(lineNum, f.scheme, f.useColor))
 			sb.WriteString(FormatSeparator(sep, f.scheme, f.useColor))
@@ -160,6 +164,7 @@ func (f *Formatter) PrintContextSeparator() {
 	if f.useColor && f.scheme.Separator != "" {
 		sep = f.scheme.Separator + "--" + Reset
 	}
+
 	_, _ = fmt.Fprintln(f.w, sep)
 }
 
@@ -181,16 +186,20 @@ func (f *Formatter) findMatches(line string) []string {
 	if f.useLiteral {
 		return f.findLiteralMatches(line)
 	}
+
 	if f.re == nil {
 		return nil
 	}
+
 	return f.re.FindAllString(line, -1)
 }
 
 // findLiteralMatches finds all literal matches in the line
 func (f *Formatter) findLiteralMatches(line string) []string {
 	var matches []string
+
 	searchLine := line
+
 	searchPattern := f.pattern
 	if f.caseInsensitive {
 		searchLine = strings.ToLower(line)
@@ -203,6 +212,7 @@ func (f *Formatter) findLiteralMatches(line string) []string {
 		if idx == -1 {
 			break
 		}
+
 		start := offset + idx
 		end := start + len(f.pattern)
 		matches = append(matches, line[start:end])
