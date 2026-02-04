@@ -28,6 +28,8 @@ monitors files or directories for changes.
   -e, --errexit         exit if command has a non-zero exit
   -p, --precise         attempt run command in precise intervals
   -c, --color           interpret ANSI color and style sequences
+  -g, --chgexit         exit when command output changes
+  --only-changes        only display output when it changes
 
 Examples:
   omni watch -n 1 file myfile.txt    # Watch a file for changes
@@ -44,6 +46,8 @@ Examples:
 		opts.ExitOnError, _ = cmd.Flags().GetBool("errexit")
 		opts.Precise, _ = cmd.Flags().GetBool("precise")
 		opts.Color, _ = cmd.Flags().GetBool("color")
+		opts.ChangeExit, _ = cmd.Flags().GetBool("chgexit")
+		opts.OnlyChanges, _ = cmd.Flags().GetBool("only-changes")
 
 		// Create context that cancels on SIGINT/SIGTERM
 		ctx, cancel := context.WithCancel(context.Background())
@@ -92,4 +96,6 @@ func init() {
 	watchCmd.Flags().BoolP("errexit", "e", false, "exit if command has a non-zero exit")
 	watchCmd.Flags().BoolP("precise", "p", false, "attempt run command in precise intervals")
 	watchCmd.Flags().BoolP("color", "c", false, "interpret ANSI color sequences")
+	watchCmd.Flags().BoolP("chgexit", "g", false, "exit when output changes")
+	watchCmd.Flags().Bool("only-changes", false, "only display output when it changes")
 }

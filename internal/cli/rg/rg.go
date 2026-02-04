@@ -41,6 +41,17 @@ type Options struct {
 	Quiet          bool     // -q: quiet mode, exit on first match
 	Fixed          bool     // -F: treat pattern as literal string
 	Threads        int      // --threads: number of worker threads (0 = auto)
+
+	// New options for ripgrep compatibility
+	Color       string   // --color: when to use colors (auto, always, never)
+	Colors      []string // --colors: custom color specifications
+	Replace     string   // -r/--replace: replacement string for matches
+	Multiline   bool     // -U/--multiline: enable multiline matching
+	Trim        bool     // --trim: trim leading/trailing whitespace
+	ShowColumn  bool     // --column: show column numbers
+	ByteOffset  bool     // -b/--byte-offset: show byte offset (not implemented)
+	Stats       bool     // --stats: show search statistics
+	Passthru    bool     // --passthru: show all lines, highlighting matches
 }
 
 // Match represents a single match result
@@ -336,7 +347,7 @@ func searchDirParallel(w io.Writer, dir string, re *regexp.Regexp, pattern, lite
 
 		// Output results
 		if !opts.JSON && !opts.JSONStream {
-			outputFileResult(w, fr, opts)
+			outputFileResult(w, fr, opts, re, pattern, useLiteral)
 		} else if opts.JSONStream && streamEnc != nil {
 			streamMu.Lock()
 			//nolint:errchkjson // StreamBegin is a concrete type
@@ -532,19 +543,28 @@ func searchFileSingle(path string, re *regexp.Regexp, pattern, literalPattern st
 }
 
 // outputFileResult outputs results for a single file
-func outputFileResult(w io.Writer, fr FileResult, opts Options) {
+func outputFileResult(w io.Writer, fr FileResult, opts Options, re *regexp.Regexp, pattern string, useLiteral bool) {
 	if opts.FilesWithMatch {
-		_, _ = fmt.Fprintln(w, fr.Path)
+		colorMode := ParseColorMode(opts.Color)
+		useColor := ShouldUseColor(colorMode)
+		scheme := DefaultScheme()
+		_, _ = fmt.Fprintln(w, FormatPath(fr.Path, scheme, useColor))
 		return
 	}
 
 	if opts.Count {
-		_, _ = fmt.Fprintf(w, "%s:%d\n", fr.Path, fr.Count)
+		colorMode := ParseColorMode(opts.Color)
+		useColor := ShouldUseColor(colorMode)
+		scheme := DefaultScheme()
+		_, _ = fmt.Fprintf(w, "%s%s%d\n",
+			FormatPath(fr.Path, scheme, useColor),
+			FormatSeparator(":", scheme, useColor),
+			fr.Count)
 		return
 	}
 
 	for _, m := range fr.Matches {
-		printLine(w, m.Path, m.LineNumber, m.Line, opts, false)
+		printLineWithColor(w, m.Path, m.LineNumber, m.Column, m.Line, opts, false, re, pattern, useLiteral)
 	}
 }
 
@@ -749,11 +769,11 @@ func searchFile(w io.Writer, path string, re *regexp.Regexp, pattern, literalPat
 					// Print separator if there's a gap
 					firstBeforeLine := beforeLines[0].lineNum
 					if needsContext && lastPrintedLine > 0 && firstBeforeLine > lastPrintedLine+1 {
-						_, _ = fmt.Fprintln(w, "--")
+						printContextSeparator(w, opts)
 					}
 
 					for _, bl := range beforeLines {
-						printLine(w, path, bl.lineNum, bl.text, opts, true)
+						printLineWithColor(w, path, bl.lineNum, 0, bl.text, opts, true, re, pattern, useLiteral)
 						lastPrintedLine = bl.lineNum
 					}
 
@@ -762,11 +782,11 @@ func searchFile(w io.Writer, path string, re *regexp.Regexp, pattern, literalPat
 
 				// Print separator if there's a gap and no before context was printed
 				if !opts.JSON && !opts.JSONStream && needsContext && lastPrintedLine > 0 && lineNum > lastPrintedLine+1 {
-					_, _ = fmt.Fprintln(w, "--")
+					printContextSeparator(w, opts)
 				}
 
 				if !opts.JSON && !opts.JSONStream {
-					printLine(w, path, lineNum, line, opts, false)
+					printLineWithColor(w, path, lineNum, matchStart+1, line, opts, false, re, pattern, useLiteral)
 					lastPrintedLine = lineNum
 				}
 
@@ -775,7 +795,7 @@ func searchFile(w io.Writer, path string, re *regexp.Regexp, pattern, literalPat
 		} else {
 			// Handle after context
 			if afterNeeded > 0 && !opts.JSON && !opts.JSONStream && !opts.Count && !opts.FilesWithMatch {
-				printLine(w, path, lineNum, line, opts, true)
+				printLineWithColor(w, path, lineNum, 0, line, opts, true, re, pattern, useLiteral)
 				lastPrintedLine = lineNum
 
 				afterNeeded--
@@ -804,11 +824,20 @@ func searchFile(w io.Writer, path string, re *regexp.Regexp, pattern, literalPat
 		result.mu.Unlock()
 
 		if opts.FilesWithMatch && !opts.JSON && !opts.JSONStream {
-			_, _ = fmt.Fprintln(w, path)
+			colorMode := ParseColorMode(opts.Color)
+			useColor := ShouldUseColor(colorMode)
+			scheme := DefaultScheme()
+			_, _ = fmt.Fprintln(w, FormatPath(path, scheme, useColor))
 		}
 
 		if opts.Count && !opts.JSON && !opts.JSONStream {
-			_, _ = fmt.Fprintf(w, "%s:%d\n", path, matchCount)
+			colorMode := ParseColorMode(opts.Color)
+			useColor := ShouldUseColor(colorMode)
+			scheme := DefaultScheme()
+			_, _ = fmt.Fprintf(w, "%s%s%d\n",
+				FormatPath(path, scheme, useColor),
+				FormatSeparator(":", scheme, useColor),
+				matchCount)
 		}
 	}
 
@@ -825,22 +854,105 @@ func searchFile(w io.Writer, path string, re *regexp.Regexp, pattern, literalPat
 }
 
 func printLine(w io.Writer, path string, lineNum int, line string, opts Options, isContext bool) {
+	printLineWithColor(w, path, lineNum, 0, line, opts, isContext, nil, "", false)
+}
+
+func printContextSeparator(w io.Writer, opts Options) {
+	colorMode := ParseColorMode(opts.Color)
+	useColor := ShouldUseColor(colorMode)
+	scheme := DefaultScheme()
+	_, _ = fmt.Fprintln(w, FormatSeparator("--", scheme, useColor))
+}
+
+func printLineWithColor(w io.Writer, path string, lineNum, column int, line string, opts Options, isContext bool, re *regexp.Regexp, pattern string, useLiteral bool) {
 	sep := ":"
 	if isContext {
 		sep = "-"
 	}
 
+	// Determine if we should use colors
+	colorMode := ParseColorMode(opts.Color)
+	useColor := ShouldUseColor(colorMode)
+	scheme := DefaultScheme()
+
+	// Apply custom color specs
+	for _, spec := range opts.Colors {
+		_ = ApplyColorSpec(&scheme, spec)
+	}
+
+	// Handle trim
+	if opts.Trim {
+		line = strings.TrimSpace(line)
+	}
+
+	// Handle replacement
+	if opts.Replace != "" && !isContext && re != nil {
+		line = re.ReplaceAllString(line, opts.Replace)
+	}
+
+	// Highlight matches
+	highlightedLine := line
+	if useColor && !isContext {
+		caseInsensitive := opts.IgnoreCase || (opts.SmartCase && pattern == strings.ToLower(pattern))
+		if useLiteral {
+			highlightedLine = HighlightLiteralMatches(line, pattern, caseInsensitive, scheme, useColor)
+		} else if re != nil {
+			highlightedLine = HighlightMatches(line, re, scheme, useColor)
+		}
+	}
+
+	// Build output
 	if opts.NoHeading {
+		pathStr := path
+		if useColor {
+			pathStr = FormatPath(path, scheme, useColor)
+		}
+		sepStr := sep
+		if useColor {
+			sepStr = FormatSeparator(sep, scheme, useColor)
+		}
+
 		if opts.LineNumber && lineNum > 0 {
-			_, _ = fmt.Fprintf(w, "%s%s%d%s%s\n", path, sep, lineNum, sep, line)
+			lineNumStr := fmt.Sprintf("%d", lineNum)
+			if useColor {
+				lineNumStr = FormatLineNumber(lineNum, scheme, useColor)
+			}
+
+			if opts.ShowColumn && column > 0 {
+				colStr := fmt.Sprintf("%d", column)
+				if useColor {
+					colStr = FormatColumn(column, scheme, useColor)
+				}
+				_, _ = fmt.Fprintf(w, "%s%s%s%s%s%s%s\n", pathStr, sepStr, lineNumStr, sepStr, colStr, sepStr, highlightedLine)
+			} else {
+				_, _ = fmt.Fprintf(w, "%s%s%s%s%s\n", pathStr, sepStr, lineNumStr, sepStr, highlightedLine)
+			}
 		} else {
-			_, _ = fmt.Fprintf(w, "%s%s%s\n", path, sep, line)
+			_, _ = fmt.Fprintf(w, "%s%s%s\n", pathStr, sepStr, highlightedLine)
 		}
 	} else {
+		sepStr := sep
+		if useColor {
+			sepStr = FormatSeparator(sep, scheme, useColor)
+		}
+
 		if opts.LineNumber && lineNum > 0 {
-			_, _ = fmt.Fprintf(w, "%d%s%s\n", lineNum, sep, line)
+			lineNumStr := fmt.Sprintf("%d", lineNum)
+			if useColor {
+				lineNumStr = FormatLineNumber(lineNum, scheme, useColor)
+			}
+
+			if opts.ShowColumn && column > 0 {
+				colStr := fmt.Sprintf("%d", column)
+				if useColor {
+					colStr = FormatColumn(column, scheme, useColor)
+				}
+				_, _ = fmt.Fprintf(w, "%s%s%s%s%s\n", lineNumStr, sepStr, colStr, sepStr, highlightedLine)
+			} else {
+				_, _ = fmt.Fprintf(w, "%s%s%s\n", lineNumStr, sepStr, highlightedLine)
+			}
 		} else {
-			_, _ = fmt.Fprintln(w, line)
+			_, _ = fmt.Fprintln(w, highlightedLine)
 		}
 	}
 }
