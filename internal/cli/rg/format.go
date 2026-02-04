@@ -25,6 +25,7 @@ type Formatter struct {
 	format          OutputFormat
 	showLineNumber  bool
 	showColumn      bool
+	showByteOffset  bool
 	onlyMatching    bool
 	trim            bool
 	replace         string
@@ -41,6 +42,7 @@ type FormatterOptions struct {
 	Format          OutputFormat
 	ShowLineNumber  bool
 	ShowColumn      bool
+	ShowByteOffset  bool
 	OnlyMatching    bool
 	Trim            bool
 	Replace         string
@@ -59,6 +61,7 @@ func NewFormatter(w io.Writer, opts FormatterOptions) *Formatter {
 		format:          opts.Format,
 		showLineNumber:  opts.ShowLineNumber,
 		showColumn:      opts.ShowColumn,
+		showByteOffset:  opts.ShowByteOffset,
 		onlyMatching:    opts.OnlyMatching,
 		trim:            opts.Trim,
 		replace:         opts.Replace,
@@ -79,7 +82,8 @@ func (f *Formatter) PrintFileHeader(path string) {
 }
 
 // PrintMatch prints a single match line
-func (f *Formatter) PrintMatch(path string, lineNum, column int, line string, isContext bool) {
+// byteOffset is the byte offset of the line start in the file (used with -b flag)
+func (f *Formatter) PrintMatch(path string, lineNum, column int, byteOffset int64, line string, isContext bool) {
 	// Handle trim
 	if f.trim {
 		line = strings.TrimSpace(line)
@@ -124,9 +128,14 @@ func (f *Formatter) PrintMatch(path string, lineNum, column int, line string, is
 
 	switch f.format {
 	case FormatNoHeading:
-		// path:linenum:column:line or path:linenum:line or path:line
+		// path:byteoffset:linenum:column:line (ripgrep format)
 		sb.WriteString(FormatPath(path, f.scheme, f.useColor))
 		sb.WriteString(FormatSeparator(sep, f.scheme, f.useColor))
+
+		if f.showByteOffset && byteOffset >= 0 {
+			sb.WriteString(FormatByteOffset(byteOffset, f.scheme, f.useColor))
+			sb.WriteString(FormatSeparator(sep, f.scheme, f.useColor))
+		}
 
 		if f.showLineNumber && lineNum > 0 {
 			sb.WriteString(FormatLineNumber(lineNum, f.scheme, f.useColor))
@@ -142,6 +151,11 @@ func (f *Formatter) PrintMatch(path string, lineNum, column int, line string, is
 
 	case FormatDefault, FormatJSON, FormatJSONStream:
 		// FormatDefault - grouped by file; JSON formats handled elsewhere
+		if f.showByteOffset && byteOffset >= 0 {
+			sb.WriteString(FormatByteOffset(byteOffset, f.scheme, f.useColor))
+			sb.WriteString(FormatSeparator(sep, f.scheme, f.useColor))
+		}
+
 		if f.showLineNumber && lineNum > 0 {
 			sb.WriteString(FormatLineNumber(lineNum, f.scheme, f.useColor))
 			sb.WriteString(FormatSeparator(sep, f.scheme, f.useColor))
