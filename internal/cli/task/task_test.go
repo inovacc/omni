@@ -395,7 +395,7 @@ tasks:
 	defer func() { CommandRunnerFactory = origFactory }()
 
 	mock := NewMockCommandRunner()
-	CommandRunnerFactory = func() CommandRunner { return mock }
+	CommandRunnerFactory = func(dir string, allowExternal bool) CommandRunner { return mock }
 
 	ctx := context.Background()
 

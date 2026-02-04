@@ -207,9 +207,9 @@ func (e *Executor) executeCommand(ctx context.Context, cmd Command, resolver *Va
 	// Expand variables
 	cmdStr := resolver.Expand(cmd.Cmd)
 
-	// Validate that it's an omni command
-	if !isOmniCommand(cmdStr) {
-		return fmt.Errorf("only omni commands are supported: %s", cmdStr)
+	// Validate that it's an omni command (unless external commands are allowed)
+	if !e.opts.AllowExternal && !isOmniCommand(cmdStr) {
+		return fmt.Errorf("unknown command: %s\n\nHint: Use --allow-external to run external commands", firstWord(cmdStr))
 	}
 
 	// Print command (unless silent)
@@ -241,14 +241,13 @@ func (e *Executor) executeCommand(ctx context.Context, cmd Command, resolver *Va
 // checkStatus checks if a task is up-to-date
 func (e *Executor) checkStatus(ctx context.Context, task *Task) (bool, error) {
 	// Status commands should all succeed for task to be up-to-date
-	// Since we can't exec external commands, we only support omni commands for status
 	resolver := NewVarResolver(e.tf.Vars, task.Vars, e.tf.Env)
 
 	for _, statusCmd := range task.Status {
 		cmdStr := resolver.Expand(statusCmd)
-		if !isOmniCommand(cmdStr) {
-			// Can't check status with non-omni command
-			return false, fmt.Errorf("status check requires omni command: %s", cmdStr)
+		if !e.opts.AllowExternal && !isOmniCommand(cmdStr) {
+			// Can't check status with non-omni command unless external allowed
+			return false, fmt.Errorf("status check requires omni command (or use --allow-external): %s", cmdStr)
 		}
 
 		args := parseCommand(cmdStr)
@@ -268,6 +267,16 @@ func (e *Executor) checkStatus(ctx context.Context, task *Task) (bool, error) {
 	}
 
 	return true, nil
+}
+
+// firstWord extracts the first word from a command string
+func firstWord(cmd string) string {
+	parts := strings.Fields(strings.TrimSpace(cmd))
+	if len(parts) == 0 {
+		return ""
+	}
+
+	return parts[0]
 }
 
 // isOmniCommand checks if a command is an omni command
