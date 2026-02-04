@@ -8,6 +8,9 @@ import (
 	"testing"
 )
 
+// nilReader returns nil for stdin when testing with files
+var nilReader = bytes.NewReader(nil)
+
 func TestRunTac(t *testing.T) {
 	tmpDir, err := os.MkdirTemp("", "tac_test")
 	if err != nil {
@@ -24,7 +27,7 @@ func TestRunTac(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunTac(&buf, []string{file}, TacOptions{})
+		err := RunTac(&buf, nilReader, []string{file}, TacOptions{})
 		if err != nil {
 			t.Fatalf("RunTac() error = %v", err)
 		}
@@ -47,7 +50,7 @@ func TestRunTac(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		_ = RunTac(&buf, []string{file}, TacOptions{})
+		_ = RunTac(&buf, nilReader, []string{file}, TacOptions{})
 
 		output := strings.TrimSpace(buf.String())
 		if output != "only" {
@@ -63,7 +66,7 @@ func TestRunTac(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunTac(&buf, []string{file}, TacOptions{})
+		err := RunTac(&buf, nilReader, []string{file}, TacOptions{})
 		if err != nil {
 			t.Fatalf("RunTac() error = %v", err)
 		}
@@ -77,7 +80,7 @@ func TestRunTac(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		_ = RunTac(&buf, []string{file}, TacOptions{})
+		_ = RunTac(&buf, nilReader, []string{file}, TacOptions{})
 
 		lines := strings.Split(strings.TrimSpace(buf.String()), "\n")
 		if lines[0] != "こんにちは" || lines[1] != "世界" {
@@ -94,7 +97,7 @@ func TestRunTac(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunTac(&buf, []string{file1, file2}, TacOptions{})
+		err := RunTac(&buf, nilReader, []string{file1, file2}, TacOptions{})
 		if err != nil {
 			t.Fatalf("RunTac() error = %v", err)
 		}
@@ -113,7 +116,7 @@ func TestRunTac(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		_ = RunTac(&buf, []string{file}, TacOptions{Separator: ","})
+		_ = RunTac(&buf, nilReader, []string{file}, TacOptions{Separator: ","})
 
 		output := buf.String()
 		if !strings.Contains(output, "c") {

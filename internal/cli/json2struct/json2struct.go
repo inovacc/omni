@@ -90,7 +90,6 @@ func RunJSON2Struct(w io.Writer, r io.Reader, args []string, opts Options) error
 type generator struct {
 	opts    Options
 	structs map[string]string
-	counter int
 }
 
 func (g *generator) generateType(name string, v any) string {

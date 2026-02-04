@@ -74,6 +74,7 @@ func GetRegion(opts Options) string {
 	if region := os.Getenv("AWS_REGION"); region != "" {
 		return region
 	}
+
 	if region := os.Getenv("AWS_DEFAULT_REGION"); region != "" {
 		return region
 	}
@@ -98,8 +99,8 @@ func (p *Printer) PrintJSON(v any) error {
 	return PrintJSON(p.w, v)
 }
 
-// PrintText outputs data as plain text
-func (p *Printer) PrintText(format string, args ...any) {
+// PrintTextf outputs data as plain text with formatting
+func (p *Printer) PrintTextf(format string, args ...any) {
 	_, _ = fmt.Fprintf(p.w, format, args...)
 }
 
@@ -121,6 +122,7 @@ func PrintTable(out io.Writer, headers []string, rows [][]string) {
 	for i, h := range headers {
 		widths[i] = len(h)
 	}
+
 	for _, row := range rows {
 		for i, cell := range row {
 			if i < len(widths) && len(cell) > widths[i] {
@@ -134,8 +136,10 @@ func PrintTable(out io.Writer, headers []string, rows [][]string) {
 		if i > 0 {
 			_, _ = fmt.Fprint(out, "  ")
 		}
+
 		_, _ = fmt.Fprintf(out, "%-*s", widths[i], h)
 	}
+
 	_, _ = fmt.Fprintln(out)
 
 	// Print header separator
@@ -143,10 +147,12 @@ func PrintTable(out io.Writer, headers []string, rows [][]string) {
 		if i > 0 {
 			_, _ = fmt.Fprint(out, "  ")
 		}
-		for j := 0; j < width; j++ {
+
+		for range width {
 			_, _ = fmt.Fprint(out, "-")
 		}
 	}
+
 	_, _ = fmt.Fprintln(out)
 
 	// Print rows
@@ -155,10 +161,12 @@ func PrintTable(out io.Writer, headers []string, rows [][]string) {
 			if i > 0 {
 				_, _ = fmt.Fprint(out, "  ")
 			}
+
 			if i < len(widths) {
 				_, _ = fmt.Fprintf(out, "%-*s", widths[i], cell)
 			}
 		}
+
 		_, _ = fmt.Fprintln(out)
 	}
 }

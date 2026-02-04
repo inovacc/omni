@@ -34,7 +34,7 @@ type Instance struct {
 	State            string            `json:"State"`
 	PublicIpAddress  string            `json:"PublicIpAddress,omitempty"`
 	PrivateIpAddress string            `json:"PrivateIpAddress,omitempty"`
-	LaunchTime       time.Time         `json:"LaunchTime,omitempty"`
+	LaunchTime       time.Time         `json:"LaunchTime,omitzero"`
 	Tags             map[string]string `json:"Tags,omitempty"`
 	VpcId            string            `json:"VpcId,omitempty"`
 	SubnetId         string            `json:"SubnetId,omitempty"`
@@ -72,6 +72,7 @@ func (c *Client) DescribeInstances(ctx context.Context, input DescribeInstancesI
 				Values: f.Values,
 			})
 		}
+
 		params.Filters = filters
 	}
 
@@ -191,6 +192,7 @@ func (c *Client) DescribeVpcs(ctx context.Context, vpcIds []string, filters []Fi
 				Values: f.Values,
 			})
 		}
+
 		params.Filters = ec2Filters
 	}
 
@@ -224,21 +226,21 @@ func (c *Client) PrintVpcs(vpcs []VPC) error {
 
 // SecurityGroup represents a security group
 type SecurityGroup struct {
-	GroupId           string            `json:"GroupId"`
-	GroupName         string            `json:"GroupName"`
-	Description       string            `json:"Description"`
-	VpcId             string            `json:"VpcId,omitempty"`
-	Tags              map[string]string `json:"Tags,omitempty"`
-	IpPermissions     []IpPermission    `json:"IpPermissions,omitempty"`
-	IpPermissionsEgress []IpPermission  `json:"IpPermissionsEgress,omitempty"`
+	GroupId             string            `json:"GroupId"`
+	GroupName           string            `json:"GroupName"`
+	Description         string            `json:"Description"`
+	VpcId               string            `json:"VpcId,omitempty"`
+	Tags                map[string]string `json:"Tags,omitempty"`
+	IpPermissions       []IpPermission    `json:"IpPermissions,omitempty"`
+	IpPermissionsEgress []IpPermission    `json:"IpPermissionsEgress,omitempty"`
 }
 
 // IpPermission represents an IP permission rule
 type IpPermission struct {
-	IpProtocol string     `json:"IpProtocol"`
-	FromPort   int32      `json:"FromPort,omitempty"`
-	ToPort     int32      `json:"ToPort,omitempty"`
-	IpRanges   []IpRange  `json:"IpRanges,omitempty"`
+	IpProtocol string    `json:"IpProtocol"`
+	FromPort   int32     `json:"FromPort,omitempty"`
+	ToPort     int32     `json:"ToPort,omitempty"`
+	IpRanges   []IpRange `json:"IpRanges,omitempty"`
 }
 
 // IpRange represents an IP range
@@ -263,6 +265,7 @@ func (c *Client) DescribeSecurityGroups(ctx context.Context, groupIds []string, 
 				Values: f.Values,
 			})
 		}
+
 		params.Filters = ec2Filters
 	}
 
@@ -272,6 +275,7 @@ func (c *Client) DescribeSecurityGroups(ctx context.Context, groupIds []string, 
 	}
 
 	var groups []SecurityGroup
+
 	for _, sg := range result.SecurityGroups {
 		group := SecurityGroup{
 			GroupId:     aws.ToString(sg.GroupId),
@@ -294,6 +298,7 @@ func (c *Client) DescribeSecurityGroups(ctx context.Context, groupIds []string, 
 					Description: aws.ToString(ipr.Description),
 				})
 			}
+
 			group.IpPermissions = append(group.IpPermissions, ipPerm)
 		}
 
@@ -344,9 +349,11 @@ func tagsToMap(tags []types.Tag) map[string]string {
 	if len(tags) == 0 {
 		return nil
 	}
+
 	m := make(map[string]string, len(tags))
 	for _, t := range tags {
 		m[aws.ToString(t.Key)] = aws.ToString(t.Value)
 	}
+
 	return m
 }
