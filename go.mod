@@ -24,6 +24,7 @@ require (
 	github.com/cli/browser v1.3.0
 	github.com/docker/docker v28.5.2+incompatible
 	github.com/fatih/color v1.18.0
+	github.com/go-chi/chi/v5 v5.2.5
 	github.com/gofrs/flock v0.13.0
 	github.com/google/cel-go v0.27.0
 	github.com/google/go-cmp v0.7.0
