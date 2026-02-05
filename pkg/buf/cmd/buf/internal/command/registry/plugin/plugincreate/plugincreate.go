@@ -18,17 +18,17 @@ import (
 	"context"
 	"fmt"
 
-	ownerv1 "github.com/inovacc/omni/pkg/buf/internal/gen/bufbuild/registry/protocolbuffers/go/buf/registry/owner/v1"
-	pluginv1beta1 "github.com/inovacc/omni/pkg/buf/internal/gen/bufbuild/registry/protocolbuffers/go/buf/registry/plugin/v1beta1"
 	"github.com/inovacc/omni/pkg/buf/internal/app/appcmd"
 	"github.com/inovacc/omni/pkg/buf/internal/app/appext"
-	"github.com/inovacc/omni/pkg/buf/internal/standard/xstrings"
-	"github.com/inovacc/omni/pkg/buf/internal/connect"
 	bufcli2 "github.com/inovacc/omni/pkg/buf/internal/buf/bufcli"
 	"github.com/inovacc/omni/pkg/buf/internal/buf/bufprint"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufparse"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufregistryapi/bufregistryapiplugin"
+	"github.com/inovacc/omni/pkg/buf/internal/connect"
+	ownerv1 "github.com/inovacc/omni/pkg/buf/internal/gen/bufbuild/registry/protocolbuffers/go/buf/registry/owner/v1"
+	pluginv1beta1 "github.com/inovacc/omni/pkg/buf/internal/gen/bufbuild/registry/protocolbuffers/go/buf/registry/plugin/v1beta1"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/syserror"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xstrings"
 	"github.com/spf13/pflag"
 )
 

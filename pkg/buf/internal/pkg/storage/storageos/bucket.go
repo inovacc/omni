@@ -22,11 +22,11 @@ import (
 	"path/filepath"
 	"sync/atomic"
 
-	"github.com/inovacc/omni/pkg/buf/internal/standard/xpath/xfilepath"
 	normalpath2 "github.com/inovacc/omni/pkg/buf/internal/pkg/normalpath"
 	storage2 "github.com/inovacc/omni/pkg/buf/internal/pkg/storage"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/storage/storageutil"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/syserror"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xpath/xfilepath"
 )
 
 // errNotDir is the error returned if a path is not a directory.

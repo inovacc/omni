@@ -19,9 +19,9 @@
 package gen
 
 import (
-	connect "github.com/inovacc/omni/pkg/buf/internal/connect"
 	context "context"
 	errors "errors"
+	connect "github.com/inovacc/omni/pkg/buf/internal/connect"
 	http "net/http"
 	strings "strings"
 )

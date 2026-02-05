@@ -19,13 +19,13 @@ import (
 	"fmt"
 	"slices"
 
+	"github.com/inovacc/omni/pkg/buf/internal/app"
+	"github.com/inovacc/omni/pkg/buf/internal/app/appcmd"
+	"github.com/inovacc/omni/pkg/buf/internal/buf/buffetch"
 	modulev1 "github.com/inovacc/omni/pkg/buf/internal/gen/bufbuild/registry/protocolbuffers/go/buf/registry/module/v1"
 	pluginv1beta1 "github.com/inovacc/omni/pkg/buf/internal/gen/bufbuild/registry/protocolbuffers/go/buf/registry/plugin/v1beta1"
 	policyv1beta1 "github.com/inovacc/omni/pkg/buf/internal/gen/bufbuild/registry/protocolbuffers/go/buf/registry/policy/v1beta1"
-	"github.com/inovacc/omni/pkg/buf/internal/app"
-	"github.com/inovacc/omni/pkg/buf/internal/app/appcmd"
 	"github.com/inovacc/omni/pkg/buf/internal/standard/xstrings"
-	"github.com/inovacc/omni/pkg/buf/internal/buf/buffetch"
 	"github.com/spf13/pflag"
 )
 

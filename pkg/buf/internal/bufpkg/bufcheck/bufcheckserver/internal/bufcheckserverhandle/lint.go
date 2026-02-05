@@ -22,8 +22,6 @@ import (
 	"strings"
 
 	"buf.build/go/bufplugin/check"
-	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
-	"github.com/inovacc/omni/pkg/buf/internal/standard/xstrings"
 	bufcheckserverutil2 "github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufcheck/bufcheckserver/internal/bufcheckserverutil"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufcheck/bufcheckserver/internal/buflintvalidate"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufcheck/internal/bufcheckopt"
@@ -32,6 +30,8 @@ import (
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/protodescriptor"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/protoencoding"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/protoversion"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xstrings"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/types/descriptorpb"
 )

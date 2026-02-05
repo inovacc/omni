@@ -19,10 +19,10 @@
 package modulev1connect
 
 import (
-	v1 "github.com/inovacc/omni/pkg/buf/internal/gen/bufbuild/registry/protocolbuffers/go/buf/registry/module/v1"
-	connect "github.com/inovacc/omni/pkg/buf/internal/connect"
 	context "context"
 	errors "errors"
+	connect "github.com/inovacc/omni/pkg/buf/internal/connect"
+	v1 "github.com/inovacc/omni/pkg/buf/internal/gen/bufbuild/registry/protocolbuffers/go/buf/registry/module/v1"
 	http "net/http"
 	strings "strings"
 )

@@ -18,9 +18,9 @@ import (
 	"errors"
 	"sort"
 
+	"buf.build/go/bufplugin/descriptor"
 	checkv1 "github.com/inovacc/omni/pkg/buf/internal/gen/bufbuild/bufplugin/protocolbuffers/go/buf/plugin/check/v1"
 	descriptorv1 "github.com/inovacc/omni/pkg/buf/internal/gen/bufbuild/bufplugin/protocolbuffers/go/buf/plugin/descriptor/v1"
-	"buf.build/go/bufplugin/descriptor"
 )
 
 // Annotation represents a rule Failure.

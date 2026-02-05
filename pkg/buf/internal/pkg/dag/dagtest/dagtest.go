@@ -20,8 +20,8 @@ import (
 	"sort"
 	"testing"
 
-	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
 	dag2 "github.com/inovacc/omni/pkg/buf/internal/pkg/dag"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
 	"github.com/stretchr/testify/require"
 )
 

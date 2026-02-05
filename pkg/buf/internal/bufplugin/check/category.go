@@ -20,8 +20,8 @@ import (
 	"slices"
 	"sort"
 
-	checkv1 "github.com/inovacc/omni/pkg/buf/internal/gen/bufbuild/bufplugin/protocolbuffers/go/buf/plugin/check/v1"
 	"buf.build/go/bufplugin/internal/pkg/xslices"
+	checkv1 "github.com/inovacc/omni/pkg/buf/internal/gen/bufbuild/bufplugin/protocolbuffers/go/buf/plugin/check/v1"
 )
 
 // Category is rule category.

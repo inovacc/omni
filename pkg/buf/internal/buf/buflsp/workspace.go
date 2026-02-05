@@ -22,12 +22,12 @@ import (
 	"iter"
 	"log/slog"
 
-	"github.com/inovacc/omni/pkg/buf/internal/standard/xlog/xslog"
 	"github.com/inovacc/omni/pkg/buf/internal/buf/bufworkspace"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufcheck"
 	bufmodule2 "github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufmodule"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/normalpath"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/storage"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xlog/xslog"
 	"go.lsp.dev/protocol"
 	"go.lsp.dev/uri"
 )

@@ -19,10 +19,10 @@
 package collidev1connect
 
 import (
-	connect "github.com/inovacc/omni/pkg/buf/internal/connect"
-	v1 "github.com/inovacc/omni/pkg/buf/internal/connect/internal/gen/connect/collide/v1"
 	context "context"
 	errors "errors"
+	connect "github.com/inovacc/omni/pkg/buf/internal/connect"
+	v1 "github.com/inovacc/omni/pkg/buf/internal/connect/internal/gen/connect/collide/v1"
 	http "net/http"
 	strings "strings"
 )

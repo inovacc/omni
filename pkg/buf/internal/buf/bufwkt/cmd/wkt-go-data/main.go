@@ -29,7 +29,6 @@ import (
 	"github.com/inovacc/omni/pkg/buf/internal/app"
 	"github.com/inovacc/omni/pkg/buf/internal/app/appcmd"
 	"github.com/inovacc/omni/pkg/buf/internal/app/appext"
-	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufanalysis"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufimage"
 	bufmodule2 "github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufmodule"
@@ -37,6 +36,7 @@ import (
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/slogapp"
 	storage2 "github.com/inovacc/omni/pkg/buf/internal/pkg/storage"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/storage/storageos"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
 	"github.com/spf13/pflag"
 )
 

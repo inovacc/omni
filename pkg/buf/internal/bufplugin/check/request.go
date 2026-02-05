@@ -19,10 +19,10 @@ import (
 	"slices"
 	"sort"
 
-	checkv1 "github.com/inovacc/omni/pkg/buf/internal/gen/bufbuild/bufplugin/protocolbuffers/go/buf/plugin/check/v1"
 	"buf.build/go/bufplugin/descriptor"
 	"buf.build/go/bufplugin/internal/pkg/xslices"
 	"buf.build/go/bufplugin/option"
+	checkv1 "github.com/inovacc/omni/pkg/buf/internal/gen/bufbuild/bufplugin/protocolbuffers/go/buf/plugin/check/v1"
 )
 
 const checkRuleIDPageSize = 250

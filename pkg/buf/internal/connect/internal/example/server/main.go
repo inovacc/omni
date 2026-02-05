@@ -19,10 +19,10 @@ import (
 	"log"
 	"net/http"
 
+	"connectrpc.com/validate"
 	"github.com/inovacc/omni/pkg/buf/internal/connect"
 	pingv1 "github.com/inovacc/omni/pkg/buf/internal/connect/internal/gen/connect/ping/v1"
 	"github.com/inovacc/omni/pkg/buf/internal/connect/internal/gen/simple/connect/ping/v1/pingv1connect"
-	"connectrpc.com/validate"
 )
 
 type PingServer struct {

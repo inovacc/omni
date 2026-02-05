@@ -18,8 +18,8 @@ import (
 	"errors"
 	"sort"
 
-	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/syserror"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
 )
 
 // protoFileTracker tracks if we found a .proto file for each Module tracked, and what the OpaqueIDs

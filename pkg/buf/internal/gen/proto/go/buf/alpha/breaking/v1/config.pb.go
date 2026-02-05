@@ -47,9 +47,9 @@ type Config struct {
 	xxx_hidden_Version                string                 `protobuf:"bytes,1,opt,name=version,proto3"`
 	xxx_hidden_UseIds                 []string               `protobuf:"bytes,2,rep,name=use_ids,json=useIds,proto3"`
 	xxx_hidden_ExceptIds              []string               `protobuf:"bytes,3,rep,name=except_ids,json=exceptIds,proto3"`
-	xxx_hidden_IgnorePaths            []string    `protobuf:"bytes,4,rep,name=ignore_paths,json=ignorePaths,proto3"`
-	xxx_hidden_IgnoreIdPaths          *[]*IDPaths `protobuf:"bytes,5,rep,name=ignore_id_paths,json=ignoreIdPaths,proto3"`
-	xxx_hidden_IgnoreUnstablePackages bool        `protobuf:"varint,6,opt,name=ignore_unstable_packages,json=ignoreUnstablePackages,proto3"`
+	xxx_hidden_IgnorePaths            []string               `protobuf:"bytes,4,rep,name=ignore_paths,json=ignorePaths,proto3"`
+	xxx_hidden_IgnoreIdPaths          *[]*IDPaths            `protobuf:"bytes,5,rep,name=ignore_id_paths,json=ignoreIdPaths,proto3"`
+	xxx_hidden_IgnoreUnstablePackages bool                   `protobuf:"varint,6,opt,name=ignore_unstable_packages,json=ignoreUnstablePackages,proto3"`
 	unknownFields                     protoimpl.UnknownFields
 	sizeCache                         protoimpl.SizeCache
 }

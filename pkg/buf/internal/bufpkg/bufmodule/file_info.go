@@ -17,8 +17,8 @@ package bufmodule
 import (
 	"sync"
 
-	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/storage"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
 )
 
 // FileInfo is the file info for a Module file.

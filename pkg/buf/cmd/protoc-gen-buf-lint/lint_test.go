@@ -20,14 +20,14 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/inovacc/omni/pkg/buf/internal/app"
-	"github.com/inovacc/omni/pkg/buf/internal/standard/xstrings"
 	"github.com/bufbuild/protoplugin"
 	"github.com/google/uuid"
+	"github.com/inovacc/omni/pkg/buf/internal/app"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufimage"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/normalpath"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/protoencoding"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/prototesting"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xstrings"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/pluginpb"
 )

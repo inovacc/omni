@@ -25,8 +25,8 @@ import (
 	"text/tabwriter"
 
 	"buf.build/go/bufplugin/check"
-	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/syserror"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
 )
 
 const (

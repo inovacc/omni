@@ -20,13 +20,13 @@ import (
 	"io/fs"
 	"sort"
 
-	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
 	"github.com/google/uuid"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufparse"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/cache"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/dag"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/syserror"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/uuidutil"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
 )
 
 // ModuleSet is a set of Modules constructed by a ModuleBuilder.

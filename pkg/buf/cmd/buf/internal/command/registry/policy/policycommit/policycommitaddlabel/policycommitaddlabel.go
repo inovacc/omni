@@ -18,16 +18,16 @@ import (
 	"context"
 	"fmt"
 
-	policyv1beta1 "github.com/inovacc/omni/pkg/buf/internal/gen/bufbuild/registry/protocolbuffers/go/buf/registry/policy/v1beta1"
 	"github.com/inovacc/omni/pkg/buf/internal/app/appcmd"
 	"github.com/inovacc/omni/pkg/buf/internal/app/appext"
-	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
-	"github.com/inovacc/omni/pkg/buf/internal/connect"
 	"github.com/inovacc/omni/pkg/buf/internal/buf/bufcli"
 	"github.com/inovacc/omni/pkg/buf/internal/buf/bufprint"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufparse"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufregistryapi/bufregistryapipolicy"
+	"github.com/inovacc/omni/pkg/buf/internal/connect"
+	policyv1beta1 "github.com/inovacc/omni/pkg/buf/internal/gen/bufbuild/registry/protocolbuffers/go/buf/registry/policy/v1beta1"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/uuidutil"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
 	"github.com/spf13/pflag"
 )
 

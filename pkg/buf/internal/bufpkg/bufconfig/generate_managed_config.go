@@ -20,9 +20,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufparse"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/normalpath"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
 )
 
 // GenerateManagedConfig is a managed mode configuration.

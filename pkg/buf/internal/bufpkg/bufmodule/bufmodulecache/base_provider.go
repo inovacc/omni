@@ -19,10 +19,10 @@ import (
 	"log/slog"
 	"sync/atomic"
 
-	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
 	"github.com/google/uuid"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/syserror"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/uuidutil"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
 )
 
 type baseProvider[K any, V any] struct {

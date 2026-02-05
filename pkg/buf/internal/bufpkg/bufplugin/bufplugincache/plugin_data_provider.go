@@ -19,12 +19,12 @@ import (
 	"log/slog"
 	"sync/atomic"
 
-	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
 	"github.com/google/uuid"
 	bufplugin2 "github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufplugin"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufplugin/bufpluginstore"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/syserror"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/uuidutil"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
 )
 
 // NewPluginDataProvider returns a new PluginDataProvider that caches the results of the delegate.

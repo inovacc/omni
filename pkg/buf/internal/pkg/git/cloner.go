@@ -24,11 +24,11 @@ import (
 	"strings"
 
 	"github.com/inovacc/omni/pkg/buf/internal/app"
-	"github.com/inovacc/omni/pkg/buf/internal/standard/xlog/xslog"
-	"github.com/inovacc/omni/pkg/buf/internal/standard/xos/xexec"
 	storage2 "github.com/inovacc/omni/pkg/buf/internal/pkg/storage"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/storage/storageos"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/tmp"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xlog/xslog"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xos/xexec"
 )
 
 type cloner struct {

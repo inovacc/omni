@@ -17,8 +17,8 @@ package buflintvalidate
 import (
 	"fmt"
 
-	"github.com/inovacc/omni/pkg/buf/internal/gen/bufbuild/protovalidate/protocolbuffers/go/buf/validate"
 	"github.com/google/cel-go/cel"
+	"github.com/inovacc/omni/pkg/buf/internal/gen/bufbuild/protovalidate/protocolbuffers/go/buf/validate"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/protoencoding"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"

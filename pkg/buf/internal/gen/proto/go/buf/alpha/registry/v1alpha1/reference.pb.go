@@ -397,8 +397,8 @@ func (*reference_VcsCommit) isReference_Reference() {}
 
 type RepositoryMainReference struct {
 	state             protoimpl.MessageState `protogen:"opaque.v1"`
-	xxx_hidden_Name   string            `protobuf:"bytes,1,opt,name=name,proto3"`
-	xxx_hidden_Commit *RepositoryCommit `protobuf:"bytes,2,opt,name=commit,proto3"`
+	xxx_hidden_Name   string                 `protobuf:"bytes,1,opt,name=name,proto3"`
+	xxx_hidden_Commit *RepositoryCommit      `protobuf:"bytes,2,opt,name=commit,proto3"`
 	unknownFields     protoimpl.UnknownFields
 	sizeCache         protoimpl.SizeCache
 }
@@ -482,8 +482,8 @@ func (b0 RepositoryMainReference_builder) Build() *RepositoryMainReference {
 
 type RepositoryDraft struct {
 	state             protoimpl.MessageState `protogen:"opaque.v1"`
-	xxx_hidden_Name   string            `protobuf:"bytes,1,opt,name=name,proto3"`
-	xxx_hidden_Commit *RepositoryCommit `protobuf:"bytes,2,opt,name=commit,proto3"`
+	xxx_hidden_Name   string                 `protobuf:"bytes,1,opt,name=name,proto3"`
+	xxx_hidden_Commit *RepositoryCommit      `protobuf:"bytes,2,opt,name=commit,proto3"`
 	unknownFields     protoimpl.UnknownFields
 	sizeCache         protoimpl.SizeCache
 }

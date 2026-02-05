@@ -17,8 +17,8 @@ package bufcheckserverhandle
 import (
 	"strings"
 
-	"github.com/inovacc/omni/pkg/buf/internal/standard/xstrings"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufprotosource"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xstrings"
 )
 
 func fieldToLowerSnakeCase(s string) string {

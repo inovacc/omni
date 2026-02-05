@@ -15,9 +15,9 @@
 package bufpluginv1beta1
 
 import (
+	"github.com/inovacc/omni/pkg/buf/cmd/buf/internal/command/beta/internal"
 	"github.com/inovacc/omni/pkg/buf/internal/app/appcmd"
 	"github.com/inovacc/omni/pkg/buf/internal/app/appext"
-	"github.com/inovacc/omni/pkg/buf/cmd/buf/internal/command/beta/internal"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufcheck/bufcheckserver"
 )
 

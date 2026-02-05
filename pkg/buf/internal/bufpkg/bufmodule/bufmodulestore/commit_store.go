@@ -23,13 +23,13 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/inovacc/omni/pkg/buf/internal/standard/xlog/xslog"
 	bufmodule2 "github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufmodule"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufparse"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/normalpath"
 	storage2 "github.com/inovacc/omni/pkg/buf/internal/pkg/storage"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/syserror"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/uuidutil"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xlog/xslog"
 )
 
 var externalCommitVersion = "v1"

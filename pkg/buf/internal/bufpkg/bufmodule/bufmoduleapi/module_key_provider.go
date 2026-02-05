@@ -18,11 +18,11 @@ import (
 	"context"
 	"log/slog"
 
-	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
 	bufmodule2 "github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufmodule"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufparse"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufregistryapi/bufregistryapimodule"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/uuidutil"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
 )
 
 // NewModuleKeyProvider returns a new ModuleKeyProvider for the given API clients.

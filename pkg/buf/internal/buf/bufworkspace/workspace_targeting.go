@@ -22,7 +22,6 @@ import (
 	"log/slog"
 	"path/filepath"
 
-	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
 	buftarget2 "github.com/inovacc/omni/pkg/buf/internal/buf/buftarget"
 	bufconfig2 "github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufconfig"
 	bufmodule2 "github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufmodule"
@@ -30,6 +29,7 @@ import (
 	normalpath2 "github.com/inovacc/omni/pkg/buf/internal/pkg/normalpath"
 	storage2 "github.com/inovacc/omni/pkg/buf/internal/pkg/storage"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/syserror"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
 )
 
 // workspaceTargeting figures out if we are working with a v1 or v2 workspace based on

@@ -27,8 +27,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/inovacc/omni/pkg/buf/internal/standard/xlog/xslog"
-	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufanalysis"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufcheck"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufmodule"
@@ -41,6 +39,8 @@ import (
 	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/report"
 	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/seq"
 	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/source"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xlog/xslog"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
 	"go.lsp.dev/protocol"
 )
 

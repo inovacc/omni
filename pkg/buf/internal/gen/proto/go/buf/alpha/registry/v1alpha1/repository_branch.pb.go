@@ -520,9 +520,9 @@ type ListRepositoryBranchesByReferenceRequest struct {
 	state                   protoimpl.MessageState                               `protogen:"opaque.v1"`
 	xxx_hidden_RepositoryId string                                               `protobuf:"bytes,1,opt,name=repository_id,json=repositoryId,proto3"`
 	xxx_hidden_PageSize     uint32                                               `protobuf:"varint,2,opt,name=page_size,json=pageSize,proto3"`
-	xxx_hidden_PageToken string                                               `protobuf:"bytes,3,opt,name=page_token,json=pageToken,proto3"`
-	xxx_hidden_Reference isListRepositoryBranchesByReferenceRequest_Reference `protobuf_oneof:"reference"`
-	unknownFields        protoimpl.UnknownFields
+	xxx_hidden_PageToken    string                                               `protobuf:"bytes,3,opt,name=page_token,json=pageToken,proto3"`
+	xxx_hidden_Reference    isListRepositoryBranchesByReferenceRequest_Reference `protobuf_oneof:"reference"`
+	unknownFields           protoimpl.UnknownFields
 	sizeCache               protoimpl.SizeCache
 }
 

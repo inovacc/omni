@@ -15,8 +15,8 @@
 package bufworkspace
 
 import (
-	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
 	normalpath2 "github.com/inovacc/omni/pkg/buf/internal/pkg/normalpath"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
 )
 
 // WorkspaceBucketOption is an option for a new Workspace created by a Bucket.

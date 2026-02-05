@@ -17,9 +17,9 @@ package info
 import (
 	"context"
 
-	infov1 "github.com/inovacc/omni/pkg/buf/internal/gen/bufbuild/bufplugin/protocolbuffers/go/buf/plugin/info/v1"
 	"buf.build/go/bufplugin/internal/gen/buf/plugin/info/v1/v1pluginrpc"
 	"buf.build/go/bufplugin/internal/pkg/cache"
+	infov1 "github.com/inovacc/omni/pkg/buf/internal/gen/bufbuild/bufplugin/protocolbuffers/go/buf/plugin/info/v1"
 	"pluginrpc.com/pluginrpc"
 )
 

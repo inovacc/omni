@@ -98,8 +98,8 @@ type GetImageRequest struct {
 	xxx_hidden_Reference         string                 `protobuf:"bytes,3,opt,name=reference,proto3"`
 	xxx_hidden_ExcludeImports    bool                   `protobuf:"varint,4,opt,name=exclude_imports,json=excludeImports,proto3"`
 	xxx_hidden_ExcludeSourceInfo bool                   `protobuf:"varint,5,opt,name=exclude_source_info,json=excludeSourceInfo,proto3"`
-	xxx_hidden_Types             []string    `protobuf:"bytes,6,rep,name=types,proto3"`
-	xxx_hidden_IncludeMask       []ImageMask `protobuf:"varint,7,rep,packed,name=include_mask,json=includeMask,proto3,enum=buf.alpha.registry.v1alpha1.ImageMask"`
+	xxx_hidden_Types             []string               `protobuf:"bytes,6,rep,name=types,proto3"`
+	xxx_hidden_IncludeMask       []ImageMask            `protobuf:"varint,7,rep,packed,name=include_mask,json=includeMask,proto3,enum=buf.alpha.registry.v1alpha1.ImageMask"`
 	unknownFields                protoimpl.UnknownFields
 	sizeCache                    protoimpl.SizeCache
 }

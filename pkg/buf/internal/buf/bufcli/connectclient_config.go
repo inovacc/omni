@@ -15,12 +15,12 @@
 package bufcli
 
 import (
-	"github.com/inovacc/omni/pkg/buf/internal/app/appext"
-	"github.com/inovacc/omni/pkg/buf/internal/connect"
 	otelconnect "connectrpc.com/otelconnect"
+	"github.com/inovacc/omni/pkg/buf/internal/app/appext"
 	"github.com/inovacc/omni/pkg/buf/internal/buf/bufapp"
 	bufconnect2 "github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufconnect"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/buftransport"
+	"github.com/inovacc/omni/pkg/buf/internal/connect"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/connectclient"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/netrc"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/transport/http/httpclient"

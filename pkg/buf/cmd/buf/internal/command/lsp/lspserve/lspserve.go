@@ -26,10 +26,10 @@ import (
 
 	"github.com/inovacc/omni/pkg/buf/internal/app/appcmd"
 	"github.com/inovacc/omni/pkg/buf/internal/app/appext"
-	"github.com/inovacc/omni/pkg/buf/internal/standard/xio"
 	bufcli2 "github.com/inovacc/omni/pkg/buf/internal/buf/bufcli"
 	"github.com/inovacc/omni/pkg/buf/internal/buf/buflsp"
 	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/incremental"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xio"
 	"github.com/spf13/pflag"
 	"go.lsp.dev/jsonrpc2"
 )

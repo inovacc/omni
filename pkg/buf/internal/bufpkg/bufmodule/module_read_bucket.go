@@ -22,7 +22,6 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufprotocompile"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/cache"
 	normalpath2 "github.com/inovacc/omni/pkg/buf/internal/pkg/normalpath"
@@ -30,6 +29,7 @@ import (
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/storage/storagemem"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/syserror"
 	"github.com/inovacc/omni/pkg/buf/internal/protocompile/parser/fastscan"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
 )
 
 // ModuleReadBucket is an object analogous to storage.ReadBucket that supplements ObjectInfos

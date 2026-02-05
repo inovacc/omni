@@ -27,9 +27,6 @@ import (
 	"buf.build/go/bufplugin/check"
 	"buf.build/go/bufplugin/descriptor"
 	"buf.build/go/bufplugin/option"
-	"github.com/inovacc/omni/pkg/buf/internal/standard/xlog/xslog"
-	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
-	"github.com/inovacc/omni/pkg/buf/internal/standard/xstrings"
 	"github.com/google/uuid"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufanalysis"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufcheck/bufcheckserver"
@@ -43,6 +40,9 @@ import (
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/protosourcepath"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/protoversion"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/syserror"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xlog/xslog"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xstrings"
 	"pluginrpc.com/pluginrpc"
 )
 

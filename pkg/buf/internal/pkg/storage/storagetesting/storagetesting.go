@@ -31,12 +31,12 @@ import (
 	"sync/atomic"
 	"testing"
 
-	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
 	storage2 "github.com/inovacc/omni/pkg/buf/internal/pkg/storage"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/storage/storagearchive"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/storage/storageos"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/storage/storageutil"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/tmp"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

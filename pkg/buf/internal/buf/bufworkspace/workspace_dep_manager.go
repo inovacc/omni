@@ -20,7 +20,6 @@ import (
 	"io/fs"
 	"sort"
 
-	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
 	bufconfig2 "github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufconfig"
 	bufmodule2 "github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufmodule"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufparse"
@@ -29,6 +28,7 @@ import (
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufpolicy/bufpolicyconfig"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/storage"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/syserror"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
 )
 
 // WorkspaceDepManager is a workspace that can be updated.

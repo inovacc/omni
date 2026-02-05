@@ -23,8 +23,8 @@ import (
 	"os"
 
 	"github.com/inovacc/omni/pkg/buf/internal/app"
-	"github.com/inovacc/omni/pkg/buf/internal/standard/xio"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/normalpath"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xio"
 )
 
 type protoFileWriter struct {

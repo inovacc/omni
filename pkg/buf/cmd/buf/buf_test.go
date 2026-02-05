@@ -29,10 +29,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/inovacc/omni/pkg/buf/internal/app/appcmd/appcmdtesting"
 	"buf.build/go/bufplugin/check"
-	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
 	"github.com/inovacc/omni/pkg/buf/cmd/buf/internal/internaltesting"
+	"github.com/inovacc/omni/pkg/buf/internal/app/appcmd/appcmdtesting"
 	"github.com/inovacc/omni/pkg/buf/internal/buf/bufcli"
 	"github.com/inovacc/omni/pkg/buf/internal/buf/bufctl"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufcheck"
@@ -44,6 +43,7 @@ import (
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/slogtestext"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/storage/storageos"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/storage/storagetesting"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

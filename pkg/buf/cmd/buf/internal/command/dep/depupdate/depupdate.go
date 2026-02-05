@@ -20,14 +20,14 @@ import (
 	"fmt"
 	"log/slog"
 
+	"github.com/inovacc/omni/pkg/buf/cmd/buf/internal/command/dep/internal"
 	"github.com/inovacc/omni/pkg/buf/internal/app/appcmd"
 	"github.com/inovacc/omni/pkg/buf/internal/app/appext"
-	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
-	"github.com/inovacc/omni/pkg/buf/cmd/buf/internal/command/dep/internal"
 	"github.com/inovacc/omni/pkg/buf/internal/buf/bufcli"
 	"github.com/inovacc/omni/pkg/buf/internal/buf/bufctl"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufmodule"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/syserror"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
 	"github.com/spf13/pflag"
 )
 
