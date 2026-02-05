@@ -703,8 +703,8 @@ func searchFile(w io.Writer, path string, re *regexp.Regexp, pattern, literalPat
 	for scanner.Scan() {
 		lineNum++
 		line := scanner.Text()
-		lineByteOffset := byteOffset              // Save offset at start of this line
-		byteOffset += int64(len(line)) + 1        // +1 for newline
+		lineByteOffset := byteOffset       // Save offset at start of this line
+		byteOffset += int64(len(line)) + 1 // +1 for newline
 
 		// Check for match using appropriate method
 		var found bool
