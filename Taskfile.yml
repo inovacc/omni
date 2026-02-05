@@ -94,7 +94,32 @@ tasks:
     cmds:
       - python testing/run_all.py
     env:
-      OMNI_BIN: ./omni
+      OMNI_BIN: ./bin/omni
+
+  test:blackbox:verbose:
+    desc: Run black-box tests with verbose output
+    deps: [ build ]
+    cmds:
+      - python testing/run_all.py --verbose
+    env:
+      OMNI_BIN: ./bin/omni
+
+  test:blackbox:filter:
+    desc: Run filtered black-box tests (use FILTER env var)
+    deps: [ build ]
+    vars:
+      FILTER: '{{.FILTER | default ""}}'
+    cmds:
+      - python testing/run_all.py --filter "{{.FILTER}}"
+    env:
+      OMNI_BIN: ./bin/omni
+
+  test:e2e:
+    desc: Run all end-to-end tests (integration + blackbox)
+    deps: [ build ]
+    cmds:
+      - task: test:integration
+      - task: test:blackbox
 
   test:benchmark:
     desc: Run benchmarks comparing omni vs native Linux commands
