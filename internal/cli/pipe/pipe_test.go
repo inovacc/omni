@@ -239,12 +239,12 @@ func TestCommandResultWithError(t *testing.T) {
 
 func TestSubstituteVariables(t *testing.T) {
 	tests := []struct {
-		name        string
-		cmdStr      string
-		output      string
-		varName     string
-		wantCmds    []string
-		wantIsIter  bool
+		name       string
+		cmdStr     string
+		output     string
+		varName    string
+		wantCmds   []string
+		wantIsIter bool
 	}{
 		{
 			name:       "no substitution",

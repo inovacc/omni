@@ -131,4 +131,3 @@ func init() {
 		return omniRunner
 	}
 }
-
