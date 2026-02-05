@@ -95,17 +95,19 @@ Prioritized items for future development phases.
 - Source: `B:\shared\personal\repos\kubernetes\kubectl\pkg\cmd`
 - All kubectl commands available: get, describe, logs, exec, apply, delete, rollout, scale, etc.
 
-### Terraform Integration
-- Source: `B:\shared\personal\repos\hashicorp\terraform`
-- [ ] `terraform init` - Initialize working directory
-- [ ] `terraform plan` - Show execution plan
-- [ ] `terraform apply` - Apply changes
-- [ ] `terraform destroy` - Destroy infrastructure
-- [ ] `terraform state` - State management
-- [ ] `terraform workspace` - Workspace management
-- [ ] `terraform output` - Show outputs
-- [ ] `terraform validate` - Validate configuration
-- [ ] `terraform fmt` - Format configuration
+### Terraform Integration ✅ DONE
+- Source: Subprocess wrapper (terraform binary required)
+- Alias: `omni terraform` / `omni tf`
+- [x] `terraform init` - Initialize working directory
+- [x] `terraform plan` - Show execution plan
+- [x] `terraform apply` - Apply changes
+- [x] `terraform destroy` - Destroy infrastructure
+- [x] `terraform state` - State management (list, show, mv, rm, pull, push)
+- [x] `terraform workspace` - Workspace management (list, new, select, delete, show)
+- [x] `terraform output` - Show outputs
+- [x] `terraform validate` - Validate configuration
+- [x] `terraform fmt` - Format configuration
+- [x] Additional: import, taint, untaint, refresh, graph, console, providers, get, test, show, version
 
 ### Vault Integration
 - Source: `B:\shared\personal\repos\hashicorp\vault`
@@ -137,15 +139,17 @@ Prioritized items for future development phases.
 
 ## Hacks & Shortcuts (P1)
 
-### Git Hacks
-- [ ] `git-quick-commit` / `gqc` - Stage all + commit with message
-- [ ] `git-branch-clean` / `gbc` - Delete merged branches
-- [ ] `git-undo` - Undo last commit (soft reset)
-- [ ] `git-amend-no-edit` - Amend without editing message
-- [ ] `git-stash-staged` - Stash only staged changes
-- [ ] `git-log-graph` - Pretty log with graph
-- [ ] `git-diff-words` - Word-level diff
-- [ ] `git-blame-line` - Blame specific line range
+### Git Hacks ✅ DONE
+- Commands: `omni git <subcommand>` or standalone aliases
+- [x] `git quick-commit` / `gqc` - Stage all + commit with message
+- [x] `git branch-clean` / `gbc` - Delete merged branches (with --dry-run)
+- [x] `git undo` - Undo last commit (soft reset)
+- [x] `git amend` - Amend without editing message
+- [x] `git stash-staged` - Stash only staged changes
+- [x] `git log-graph` / `lg` - Pretty log with graph
+- [x] `git diff-words` - Word-level diff
+- [x] `git blame-line` - Blame specific line range
+- [x] Additional: `git status`, `git push`, `git pull-rebase`, `git fetch-all`
 
 ### GitHub Hacks
 - [ ] `gh-pr-checkout` - Checkout PR by number
@@ -155,17 +159,20 @@ Prioritized items for future development phases.
 - [ ] `gh-repo-clone-org` - Clone all repos from org
 - [ ] `gh-actions-rerun` - Rerun failed workflow
 
-### Kubectl Hacks
-- [ ] `k-get-all` / `kga` - Get all resources in namespace
-- [ ] `k-logs-follow` / `klf` - Follow logs with timestamp
-- [ ] `k-exec-bash` / `keb` - Exec into pod with bash
-- [ ] `k-port-forward` / `kpf` - Quick port forward
-- [ ] `k-delete-pods` / `kdp` - Delete pods by selector
-- [ ] `k-rollout-restart` / `krr` - Restart deployment
-- [ ] `k-get-events` / `kge` - Get events sorted by time
-- [ ] `k-top-pods` / `ktp` - Top pods by resource usage
-- [ ] `k-context-switch` / `kcs` - Interactive context switcher
-- [ ] `k-ns-switch` / `kns` - Interactive namespace switcher
+### Kubectl Hacks ✅ DONE
+- Standalone commands with short names
+- [x] `kga` - Get all resources in namespace (pods, svc, deploy, etc.)
+- [x] `klf <pod>` - Follow logs with timestamp
+- [x] `keb <pod>` - Exec into pod with bash (falls back to sh)
+- [x] `kpf <target> <local:remote>` - Quick port forward
+- [x] `kdp <selector>` - Delete pods by selector
+- [x] `krr <deployment>` - Restart deployment
+- [x] `kge` - Get events sorted by time
+- [x] `ktp` - Top pods by resource usage
+- [x] `ktn` - Top nodes by resource usage
+- [x] `kcs [context]` - Context switcher (list or switch)
+- [x] `kns [namespace]` - Namespace switcher (list or switch)
+- [x] Additional: `kwp` (watch pods), `kscale`, `kdebug`, `kdrain`, `krun`, `kconfig`
 
 ---
 
