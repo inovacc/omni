@@ -124,6 +124,7 @@ defer func() {
 | **Core** | ls, pwd, cat, date, dirname, basename, realpath, tree, arch, sleep, seq, printf, for |
 | **File** | cp, mv, rm, mkdir, rmdir, touch, stat, ln, readlink, chmod, chown, find, dd, file, which |
 | **Text** | grep, egrep, fgrep, head, tail, sort, uniq, wc, cut, tr, nl, paste, tac, column, fold, join, sed, awk, shuf, split, rev, comm, cmp, strings |
+| **Search** | rg (ripgrep-style search with gitignore support, parallel walking, streaming JSON) |
 | **System** | env, whoami, id, uname, uptime, free, df, du, ps, kill, time |
 | **Flow** | xargs, watch, yes, pipe |
 | **Archive** | tar, zip, unzip |
@@ -139,6 +140,9 @@ defer func() {
 | **Comparison** | diff |
 | **Tooling** | lint, cmdtree, loc, cron |
 | **Network** | curl |
+| **Cloud/DevOps** | kubectl (k), terraform (tf), aws |
+| **Git Hacks** | git (quick-commit, branch-clean, undo, amend, stash-staged, log-graph, diff-words, blame-line), gqc, gbc |
+| **Kubectl Hacks** | kga, klf, keb, kpf, kdp, krr, kge, ktp, ktn, kcs, kns, kwp, kscale, kdebug, kdrain, krun, kconfig |
 
 ### Backlog
 
@@ -178,6 +182,149 @@ omni pipe '{uuid -v 7 -n 10}' '{mkdir [$OUT...]}'
 omni pipe -v '{cat file.txt}' '{grep pattern}' '{sort}'
 ```
 
+### Rg Command (Ripgrep-Style Search)
+
+The `rg` command provides ripgrep-compatible search with gitignore support:
+
+```go
+type Options struct {
+    IgnoreCase      bool   // -i: case insensitive
+    Fixed           bool   // -F: literal string (no regex)
+    LineNumber      bool   // -n: show line numbers (default: true)
+    Count           bool   // -c: count matches only
+    FilesWithMatch  bool   // -l: list files with matches
+    FilesWithout    bool   // -L: list files without matches
+    Hidden          bool   // --hidden: search hidden files
+    NoIgnore        bool   // --no-ignore: don't respect gitignore
+    MaxCount        int    // -m: max matches per file
+    Context         int    // -C: context lines
+    Before          int    // -B: lines before match
+    After           int    // -A: lines after match
+    Glob            string // -g: glob pattern filter
+    Type            string // -t: file type filter
+    JSON            bool   // --json: JSON output
+    JSONStream      bool   // --json-stream: streaming NDJSON output
+    Threads         int    // -j/--threads: parallel workers (0 = auto)
+}
+```
+
+**Gitignore Support:**
+- Loads patterns from `~/.config/git/ignore` (global)
+- Loads patterns from `.git/info/exclude` (repo-level)
+- Loads patterns from `.gitignore` files (hierarchy)
+- Loads patterns from `.ignore` files (ripgrep-specific)
+- Supports negation patterns (`!pattern`)
+- Supports directory-only patterns (`dir/`)
+- Supports double-glob patterns (`**/test.go`)
+
+**Performance Features:**
+- Parallel directory walking with configurable workers
+- Literal string optimization for `-F` flag (uses strings.Index)
+- Streaming JSON output for large result sets
+
+**Examples:**
+```bash
+# Basic search
+omni rg "pattern" .
+
+# Case insensitive, show context
+omni rg -i -C 2 "error" ./src
+
+# Fixed string search (faster, no regex)
+omni rg -F "fmt.Println" .
+
+# Filter by file type
+omni rg -t go "func main" .
+
+# JSON output
+omni rg --json "TODO" .
+
+# Streaming JSON (NDJSON) for piping
+omni rg --json-stream "pattern" . | jq '.data.lines.text'
+
+# Parallel search with 8 workers
+omni rg -j 8 "pattern" /large/codebase
+
+# Search hidden files, ignore gitignore
+omni rg --hidden --no-ignore "secret" .
+```
+
+---
+
+## Cloud & DevOps Integrations
+
+### Kubernetes (kubectl / k)
+
+Full kubectl integration via `k8s.io/kubectl` package using local source code.
+
+```bash
+omni kubectl get pods          # or: omni k get pods
+omni k get pods -A
+omni k describe node mynode
+omni k logs -f mypod
+omni k apply -f manifest.yaml
+```
+
+**Source:** `B:\shared\personal\repos\kubernetes\kubectl` (local replace directive)
+
+### Terraform (terraform / tf)
+
+Terraform CLI wrapper for infrastructure management.
+
+```bash
+omni tf init
+omni tf plan -out=plan.tfplan
+omni tf apply -auto-approve
+omni tf destroy
+omni tf state list
+omni tf workspace select prod
+```
+
+**Commands:** init, plan, apply, destroy, validate, fmt, output, state (list/show/mv/rm), workspace (list/new/select/delete), import, taint, untaint, refresh, graph, console, providers, get, test, show, version
+
+### Git Hacks
+
+Shortcuts for common Git operations.
+
+| Command | Alias | Description |
+|---------|-------|-------------|
+| `omni git quick-commit -m "msg"` | `omni gqc -m "msg"` | Stage all + commit |
+| `omni git branch-clean` | `omni gbc` | Delete merged branches |
+| `omni git undo` | - | Soft reset HEAD~1 |
+| `omni git amend` | - | Amend --no-edit |
+| `omni git stash-staged` | - | Stash staged only |
+| `omni git log-graph` | `omni git lg` | Pretty log with graph |
+| `omni git diff-words` | - | Word-level diff |
+| `omni git blame-line` | - | Blame line range |
+| `omni git status` | `omni git st` | Short status |
+| `omni git push` | - | Push (--force-with-lease) |
+| `omni git pull-rebase` | `omni git pr` | Pull --rebase |
+| `omni git fetch-all` | `omni git fa` | Fetch --all --prune |
+
+### Kubectl Hacks
+
+Shortcuts for common Kubernetes operations.
+
+| Command | Description |
+|---------|-------------|
+| `omni kga` | Get all resources (pods, svc, deploy, etc.) |
+| `omni klf <pod>` | Follow logs with timestamps |
+| `omni keb <pod>` | Exec bash into pod (falls back to sh) |
+| `omni kpf <target> <local:remote>` | Port forward |
+| `omni kdp <selector>` | Delete pods by selector |
+| `omni krr <deployment>` | Rollout restart deployment |
+| `omni kge` | Get events sorted by time |
+| `omni ktp` | Top pods by resource |
+| `omni ktn` | Top nodes by resource |
+| `omni kcs [context]` | Switch/list contexts |
+| `omni kns [namespace]` | Switch/list namespaces |
+| `omni kwp` | Watch pods continuously |
+| `omni kscale <deploy> <n>` | Scale deployment |
+| `omni kdebug <pod>` | Debug with ephemeral container |
+| `omni kdrain <node>` | Drain node for maintenance |
+| `omni krun <name> --image=<img>` | Run one-off pod |
+| `omni kconfig` | Show kubeconfig info |
+
 ---
 
 ## Dependencies
@@ -198,7 +345,8 @@ omni pipe -v '{cat file.txt}' '{grep pattern}' '{sort}'
 |---------|----------|
 | `os`, `io`, `io/fs` | All file operations |
 | `path/filepath` | Path manipulation |
-| `regexp` | grep, sed pattern matching |
+| `regexp` | grep, sed, rg pattern matching |
+| `sync` | rg parallel directory walking |
 | `encoding/json` | jq, JSON output, json tocsv/fromcsv |
 | `encoding/csv` | csv/json conversions |
 | `encoding/xml` | xml operations, json toxml/fromxml |
@@ -280,6 +428,8 @@ Current coverage: ~26% (internal/cli)
 | `internal/cli/path/path_test.go` | dirname, basename, realpath |
 | `internal/cli/pipe/pipe_test.go` | Command parsing, variable substitution |
 | `internal/cli/xxd/xxd_test.go` | Hex dump, reverse, plain, include, bits modes |
+| `internal/cli/rg/rg_test.go` | Ripgrep search, parallel walking, streaming JSON, gitignore integration |
+| `internal/cli/rg/gitignore_test.go` | Gitignore pattern parsing, negation, directory-only, double globs |
 
 ### Test Pattern
 
