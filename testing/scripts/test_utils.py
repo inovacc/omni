@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Black-box tests for utility commands."""
 
+import os
 import sys
 import re
 from pathlib import Path
@@ -60,7 +61,9 @@ def main():
         @t.test("dirname_basic")
         def test_dirname_basic():
             result = t.run("dirname", "/path/to/file.txt")
-            assert_eq(result.stdout.strip(), "/path/to", "dirname should extract directory")
+            # Windows uses backslashes, Unix uses forward slashes
+            expected = "/path/to" if os.name != "nt" else "\\path\\to"
+            assert_eq(result.stdout.strip(), expected, "dirname should extract directory")
 
         # seq tests
         @t.test("seq_basic")
