@@ -29,7 +29,7 @@ import (
 	"strings"
 	"testing"
 
-	"buf.build/go/bufplugin/check"
+	"github.com/inovacc/omni/pkg/buf/bufplugin/check"
 	"github.com/inovacc/omni/pkg/buf/cmd/buf/internal/internaltesting"
 	"github.com/inovacc/omni/pkg/buf/internal/app/appcmd/appcmdtesting"
 	"github.com/inovacc/omni/pkg/buf/internal/buf/bufcli"

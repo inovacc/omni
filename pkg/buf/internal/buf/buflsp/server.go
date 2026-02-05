@@ -22,12 +22,13 @@ import (
 	"strings"
 	"unicode/utf16"
 
-	celpv "buf.build/go/protovalidate/cel"
+	celpv "github.com/inovacc/omni/pkg/buf/protovalidate/cel"
 	"github.com/google/cel-go/cel"
 	"github.com/inovacc/omni/pkg/buf/internal/buf/bufformat"
 	"github.com/inovacc/omni/pkg/buf/internal/protocompile/parser"
 	"github.com/inovacc/omni/pkg/buf/internal/protocompile/reporter"
 	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
+	xurls "mvdan.cc/xurls/v2"
 	"go.lsp.dev/protocol"
 )
 
@@ -59,7 +60,7 @@ type server struct {
 
 // newServer creates a protocol.Server implementation out of an lsp.
 func newServer(lsp *lsp) (protocol.Server, error) {
-	httpsURLRegex, err := xurls.StrictMatchingScheme("https://")
+	httpsURLRegex, err := xurls.StrictMatchingScheme("https")
 	if err != nil {
 		return nil, fmt.Errorf("failed to create HTTPS URL regex: %w", err)
 	}

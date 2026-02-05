@@ -25,7 +25,7 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/bufbuild/protoplugin"
+	"github.com/inovacc/omni/pkg/buf/internal/protoplugin"
 	"github.com/inovacc/omni/pkg/buf/internal/app"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/protoencoding"
 	storage2 "github.com/inovacc/omni/pkg/buf/internal/pkg/storage"

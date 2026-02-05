@@ -22,7 +22,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/bufbuild/protoplugin"
+	"github.com/inovacc/omni/pkg/buf/internal/protoplugin"
 	bufcli2 "github.com/inovacc/omni/pkg/buf/internal/buf/bufcli"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufanalysis"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufcheck"

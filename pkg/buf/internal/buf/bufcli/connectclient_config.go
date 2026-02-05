@@ -64,10 +64,12 @@ func newConnectClientConfigWithOptions(container appext.Container, opts ...conne
 	if err != nil {
 		return nil, err
 	}
-	otelconnectInterceptor, err := otelconnect.NewInterceptor()
-	if err != nil {
-		return nil, err
-	}
+	// TODO: Re-enable otelconnect once type compatibility is resolved
+	// otelconnectInterceptor, err := otelconnect.NewInterceptor()
+	// if err != nil {
+	// 	return nil, err
+	// }
+	_ = otelconnect.NewInterceptor // Silence unused import
 	client := httpclient.NewClient(config.TLS)
 	options := []connectclient.ConfigOption{
 		connectclient.WithAddressMapper(func(address string) string {
@@ -82,7 +84,7 @@ func newConnectClientConfigWithOptions(container appext.Container, opts ...conne
 				bufconnect2.NewSetCLIVersionInterceptor(Version),
 				bufconnect2.NewCLIWarningInterceptor(container),
 				bufconnect2.NewDebugLoggingInterceptor(container),
-				otelconnectInterceptor,
+				// otelconnectInterceptor, // Disabled due to type mismatch with internal/connect
 			},
 		),
 	}

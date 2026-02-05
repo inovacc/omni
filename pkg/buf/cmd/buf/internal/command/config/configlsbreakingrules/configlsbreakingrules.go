@@ -15,7 +15,7 @@
 package configlsbreakingrules
 
 import (
-	"buf.build/go/bufplugin/check"
+	"github.com/inovacc/omni/pkg/buf/bufplugin/check"
 	"github.com/inovacc/omni/pkg/buf/cmd/buf/internal/command/config/internal"
 	"github.com/inovacc/omni/pkg/buf/internal/app/appcmd"
 	"github.com/inovacc/omni/pkg/buf/internal/app/appext"

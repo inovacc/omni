@@ -17,7 +17,7 @@ package bufpolicy
 import (
 	"testing"
 
-	"buf.build/go/bufplugin/option"
+	"github.com/inovacc/omni/pkg/buf/bufplugin/option"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufparse"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

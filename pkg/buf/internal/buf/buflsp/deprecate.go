@@ -22,6 +22,10 @@ import (
 	"log/slog"
 	"strings"
 
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/ast"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/ir"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/seq"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/source"
 	"go.lsp.dev/protocol"
 )
 

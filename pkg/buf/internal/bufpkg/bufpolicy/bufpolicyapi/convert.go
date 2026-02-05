@@ -17,7 +17,7 @@ package bufpolicyapi
 import (
 	"fmt"
 
-	"buf.build/go/bufplugin/option"
+	"github.com/inovacc/omni/pkg/buf/bufplugin/option"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufcas"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufparse"
 	bufpolicy2 "github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufpolicy"

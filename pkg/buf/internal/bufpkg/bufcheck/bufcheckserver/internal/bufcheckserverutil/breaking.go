@@ -18,7 +18,7 @@ import (
 	"context"
 	"fmt"
 
-	"buf.build/go/bufplugin/check"
+	"github.com/inovacc/omni/pkg/buf/bufplugin/check"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufprotosource"
 )
 

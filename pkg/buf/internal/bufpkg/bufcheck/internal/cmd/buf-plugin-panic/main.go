@@ -17,9 +17,9 @@ package main
 import (
 	"context"
 
-	"buf.build/go/bufplugin/check"
-	"buf.build/go/bufplugin/check/checkutil"
-	"buf.build/go/bufplugin/descriptor"
+	"github.com/inovacc/omni/pkg/buf/bufplugin/check"
+	"github.com/inovacc/omni/pkg/buf/bufplugin/check/checkutil"
+	"github.com/inovacc/omni/pkg/buf/bufplugin/descriptor"
 )
 
 func main() {

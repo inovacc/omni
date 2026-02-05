@@ -22,7 +22,7 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"buf.build/go/protovalidate"
+	"github.com/inovacc/omni/pkg/buf/protovalidate"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufprotosource"
 	"github.com/inovacc/omni/pkg/buf/internal/gen/bufbuild/protovalidate/protocolbuffers/go/buf/validate"
 	protoencoding2 "github.com/inovacc/omni/pkg/buf/internal/pkg/protoencoding"

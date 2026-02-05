@@ -22,7 +22,7 @@ import (
 	"os"
 	"slices"
 
-	"buf.build/go/bufplugin/option"
+	"github.com/inovacc/omni/pkg/buf/bufplugin/option"
 	bufconfig2 "github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufconfig"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufparse"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufpolicy"
