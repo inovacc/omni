@@ -381,7 +381,7 @@ func TestRunUniq(t *testing.T) {
 	t.Run("count occurrences", func(t *testing.T) {
 		file := filepath.Join(tmpDir, "count.txt")
 		// uniq counts consecutive duplicates
-		content := "apple\nbanana\n"
+		content := "apple\napple\nbanana\nbanana\nbanana\ncherry\n"
 
 		if err := os.WriteFile(file, []byte(content), 0644); err != nil {
 			t.Fatal(err)
@@ -403,7 +403,7 @@ func TestRunUniq(t *testing.T) {
 
 	t.Run("count format", func(t *testing.T) {
 		file := filepath.Join(tmpDir, "count_fmt.txt")
-		content := "a\n"
+		content := "a\na\na\n"
 
 		_ = os.WriteFile(file, []byte(content), 0644)
 
@@ -421,7 +421,7 @@ func TestRunUniq(t *testing.T) {
 	t.Run("repeated only", func(t *testing.T) {
 		file := filepath.Join(tmpDir, "repeated.txt")
 		// apple appears twice (consecutive), banana once, cherry twice (consecutive)
-		content := "apple\nbanana\ncherry"
+		content := "apple\napple\nbanana\ncherry\ncherry\n"
 
 		if err := os.WriteFile(file, []byte(content), 0644); err != nil {
 			t.Fatal(err)
@@ -444,7 +444,7 @@ func TestRunUniq(t *testing.T) {
 	t.Run("unique only", func(t *testing.T) {
 		file := filepath.Join(tmpDir, "unique.txt")
 		// apple appears twice, banana once, cherry twice
-		content := "apple\nbanana\ncherry"
+		content := "apple\napple\nbanana\ncherry\ncherry\n"
 
 		if err := os.WriteFile(file, []byte(content), 0644); err != nil {
 			t.Fatal(err)
