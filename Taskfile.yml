@@ -82,6 +82,57 @@ tasks:
     cmds:
       - go test -v -short ./...
 
+  test:integration:
+    desc: Run integration tests
+    deps: [ build ]
+    cmds:
+      - go test -v -race ./tests/...
+
+  test:blackbox:
+    desc: Run black-box tests against compiled binary
+    deps: [ build ]
+    cmds:
+      - python testing/run_all.py
+    env:
+      OMNI_BIN: ./omni
+
+  test:benchmark:
+    desc: Run benchmarks comparing omni vs native Linux commands
+    deps: [ build ]
+    cmds:
+      - python testing/benchmark.py
+    env:
+      OMNI_BIN: ./omni
+
+  test:all-commands:
+    desc: Run comprehensive command test script (PowerShell)
+    deps: [ build ]
+    cmds:
+      - cmd: pwsh -ExecutionPolicy Bypass -File tests/test_all_commands.ps1 -Category all
+        platforms: [ windows ]
+      - cmd: bash tests/test_all_commands.sh --category all
+        platforms: [ linux, darwin ]
+
+  test:all-commands:verbose:
+    desc: Run comprehensive command test script with verbose output
+    deps: [ build ]
+    cmds:
+      - cmd: pwsh -ExecutionPolicy Bypass -File tests/test_all_commands.ps1 -Category all -VerboseOutput
+        platforms: [ windows ]
+      - cmd: bash tests/test_all_commands.sh --category all --verbose
+        platforms: [ linux, darwin ]
+
+  test:category:
+    desc: Run tests for a specific category (use CATEGORY=name)
+    deps: [ build ]
+    vars:
+      CATEGORY: '{{.CATEGORY | default "core"}}'
+    cmds:
+      - cmd: pwsh -ExecutionPolicy Bypass -File tests/test_all_commands.ps1 -Category {{.CATEGORY}}
+        platforms: [ windows ]
+      - cmd: bash tests/test_all_commands.sh --category {{.CATEGORY}}
+        platforms: [ linux, darwin ]
+
   # === CODE QUALITY ===
   fmt:
     desc: Format all Go code
