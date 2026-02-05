@@ -21,6 +21,7 @@ import (
 	"path/filepath"
 
 	"github.com/inovacc/omni/pkg/buf/internal/app"
+	netrclib "github.com/jdxcode/netrc"
 )
 
 // Filename exposes the netrc filename based on the current operating system.
@@ -97,7 +98,7 @@ func GetMachineForNameAndFilePath(name string, filePath string) (_ Machine, retE
 		}
 		return nil, err
 	}
-	netrcStruct, err := netrc.Parse(filePath)
+	netrcStruct, err := netrclib.Parse(filePath)
 	if err != nil {
 		return nil, err
 	}
@@ -121,18 +122,18 @@ func GetMachineForNameAndFilePath(name string, filePath string) (_ Machine, retE
 }
 
 func putMachinesForFilePath(machines []Machine, filePath string) (retErr error) {
-	var netrcStruct *netrc.Netrc
+	var netrcStruct *netrclib.Netrc
 	fileInfo, err := os.Stat(filePath)
 	var fileMode fs.FileMode
 	if err != nil {
 		if os.IsNotExist(err) {
-			netrcStruct = &netrc.Netrc{}
+			netrcStruct = &netrclib.Netrc{}
 			fileMode = 0600
 		} else {
 			return err
 		}
 	} else {
-		netrcStruct, err = netrc.Parse(filePath)
+		netrcStruct, err = netrclib.Parse(filePath)
 		if err != nil {
 			return err
 		}
@@ -160,7 +161,7 @@ func deleteMachineForFilePath(name string, filePath string) (_ bool, retErr erro
 		}
 		return false, err
 	}
-	netrcStruct, err := netrc.Parse(filePath)
+	netrcStruct, err := netrclib.Parse(filePath)
 	if err != nil {
 		return false, err
 	}

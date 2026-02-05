@@ -32,6 +32,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/hashicorp/vault/api v1.22.0
 	github.com/inovacc/brdoc v1.0.0
+	github.com/jdxcode/netrc v1.0.0
 	github.com/jhump/protoreflect/v2 v2.0.0-beta.2
 	github.com/klauspost/compress v1.18.3
 	github.com/klauspost/pgzip v1.2.6
