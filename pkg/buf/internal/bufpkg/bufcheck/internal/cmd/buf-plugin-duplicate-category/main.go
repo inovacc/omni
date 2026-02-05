@@ -17,7 +17,7 @@ package main
 import (
 	"context"
 
-	"buf.build/go/bufplugin/check"
+	"github.com/inovacc/omni/pkg/buf/bufplugin/check"
 )
 
 func main() {

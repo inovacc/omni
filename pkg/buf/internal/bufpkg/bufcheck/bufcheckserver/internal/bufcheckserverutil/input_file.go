@@ -15,7 +15,7 @@
 package bufcheckserverutil
 
 import (
-	"buf.build/go/bufplugin/descriptor"
+	"github.com/inovacc/omni/pkg/buf/bufplugin/descriptor"
 	"github.com/google/uuid"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufparse"
 )

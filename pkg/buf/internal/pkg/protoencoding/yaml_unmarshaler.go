@@ -17,7 +17,7 @@ package protoencoding
 import (
 	"fmt"
 
-	"buf.build/go/protoyaml"
+	"github.com/inovacc/omni/pkg/buf/protoyaml"
 	"google.golang.org/protobuf/proto"
 )
 

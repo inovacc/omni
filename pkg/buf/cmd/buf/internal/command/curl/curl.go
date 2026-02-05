@@ -41,6 +41,7 @@ import (
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/netrc"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/verbose"
 	"github.com/inovacc/omni/pkg/buf/internal/standard/xstrings"
+	"github.com/quic-go/quic-go"
 	"github.com/quic-go/quic-go/http3"
 	"github.com/spf13/pflag"
 	"google.golang.org/protobuf/reflect/protoreflect"

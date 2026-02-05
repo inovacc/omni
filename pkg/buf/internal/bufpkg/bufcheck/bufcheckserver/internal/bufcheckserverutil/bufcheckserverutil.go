@@ -17,8 +17,8 @@ package bufcheckserverutil
 import (
 	"context"
 
-	"buf.build/go/bufplugin/check"
-	"buf.build/go/bufplugin/descriptor"
+	"github.com/inovacc/omni/pkg/buf/bufplugin/check"
+	"github.com/inovacc/omni/pkg/buf/bufplugin/descriptor"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufprotosource"
 	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
 	"google.golang.org/protobuf/reflect/protodesc"

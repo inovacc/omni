@@ -17,7 +17,7 @@ package internal
 import (
 	"context"
 
-	"buf.build/go/bufplugin/check"
+	"github.com/inovacc/omni/pkg/buf/bufplugin/check"
 	"github.com/inovacc/omni/pkg/buf/internal/app"
 	"github.com/inovacc/omni/pkg/buf/internal/app/appcmd"
 	"github.com/inovacc/omni/pkg/buf/internal/app/appext"

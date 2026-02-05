@@ -17,8 +17,8 @@ package bufcheckserver_test
 import (
 	"testing"
 
-	"buf.build/go/bufplugin/check"
-	"buf.build/go/bufplugin/check/checktest"
+	"github.com/inovacc/omni/pkg/buf/bufplugin/check"
+	"github.com/inovacc/omni/pkg/buf/bufplugin/check/checktest"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufcheck/bufcheckserver"
 )
 

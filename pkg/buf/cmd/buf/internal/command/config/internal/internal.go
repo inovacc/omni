@@ -20,7 +20,7 @@ import (
 	"fmt"
 	"io/fs"
 
-	"buf.build/go/bufplugin/check"
+	"github.com/inovacc/omni/pkg/buf/bufplugin/check"
 	"github.com/inovacc/omni/pkg/buf/internal/app/appcmd"
 	"github.com/inovacc/omni/pkg/buf/internal/app/appext"
 	bufcli2 "github.com/inovacc/omni/pkg/buf/internal/buf/bufcli"

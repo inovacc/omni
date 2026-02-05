@@ -15,8 +15,8 @@
 package main
 
 import (
-	"buf.build/go/bufplugin/check"
-	"buf.build/go/bufplugin/check/checkutil"
+	"github.com/inovacc/omni/pkg/buf/bufplugin/check"
+	"github.com/inovacc/omni/pkg/buf/bufplugin/check/checkutil"
 )
 
 const (

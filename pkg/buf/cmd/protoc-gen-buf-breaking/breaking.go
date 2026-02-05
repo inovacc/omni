@@ -30,6 +30,7 @@ import (
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/encoding"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/protodescriptor"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/protoencoding"
+	"github.com/inovacc/omni/pkg/buf/internal/protoplugin"
 )
 
 const (

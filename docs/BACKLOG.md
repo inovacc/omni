@@ -48,6 +48,7 @@ Prioritized items for future development phases.
 - [ ] `df` - Disk free space (cross-platform with build tags)
 - [ ] `du` - Directory size
 - [ ] `time` - Measure command duration
+- [ ] `lsof` - List open files (cross-platform)
 
 ### Advanced Utilities
 - [ ] `xargs` - Parallel execution of internal commands

@@ -17,7 +17,7 @@ package bufcheckserverbuild
 import (
 	"context"
 
-	"buf.build/go/bufplugin/check"
+	"github.com/inovacc/omni/pkg/buf/bufplugin/check"
 	bufcheckserverhandle2 "github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufcheck/bufcheckserver/internal/bufcheckserverhandle"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufcheck/bufcheckserver/internal/bufcheckserverutil"
 )
