@@ -18,8 +18,8 @@ import (
 	"io"
 	"io/fs"
 
-	"github.com/bufbuild/protocompile"
-	"github.com/bufbuild/protocompile/experimental/source"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/source"
 )
 
 // resolverOpener adapts a protocompile.Resolver to the source.Opener interface

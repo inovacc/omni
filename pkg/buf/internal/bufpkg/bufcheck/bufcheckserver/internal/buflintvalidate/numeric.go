@@ -39,7 +39,7 @@ var fieldNumberToCheckNumberRulesFunc = map[int32]func(*adder, int32, protorefle
 }
 
 func checkNumberRules[
-T int32 | int64 | uint32 | uint64 | float32 | float64,
+	T int32 | int64 | uint32 | uint64 | float32 | float64,
 ](
 	adder *adder,
 	numberRuleFieldNumber int32,
@@ -56,16 +56,16 @@ T int32 | int64 | uint32 | uint64 | float32 | float64,
 }
 
 func checkNumericRules[
-T int32 | int64 | uint32 | uint64 | float32 | float64 | timestamppb.Timestamp | durationpb.Duration,
+	T int32 | int64 | uint32 | uint64 | float32 | float64 | timestamppb.Timestamp | durationpb.Duration,
 ](
 	adder *adder,
 	ruleFieldNumber int32,
 	ruleMessage protoreflect.Message,
-// convertFunc returns the converted value, a file annotation string and an error.
+	// convertFunc returns the converted value, a file annotation string and an error.
 	convertFunc func(protoreflect.Value) (*T, string, error),
-// equalFunc returns whether two values are equal.
+	// equalFunc returns whether two values are equal.
 	equalFunc func(*T, *T) bool,
-// formatFunc returns the value suitable for printing with %v.
+	// formatFunc returns the value suitable for printing with %v.
 	formatFunc func(*T) any,
 ) error {
 	var fieldCount int
@@ -155,7 +155,7 @@ T int32 | int64 | uint32 | uint64 | float32 | float64 | timestamppb.Timestamp | 
 }
 
 func getNumericPointerFromValue[
-T int32 | int64 | uint32 | uint64 | float32 | float64,
+	T int32 | int64 | uint32 | uint64 | float32 | float64,
 ](value protoreflect.Value) (*T, string, error) {
 	number, ok := value.Interface().(T)
 	if !ok {

@@ -18,10 +18,10 @@ import (
 	"iter"
 	"strings"
 
-	"github.com/bufbuild/protocompile/experimental/seq"
-	"github.com/bufbuild/protocompile/internal/ext/iterx"
-	"github.com/bufbuild/protocompile/internal/ext/mapsx"
-	"github.com/bufbuild/protocompile/internal/intern"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/seq"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/internal/ext/iterx"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/internal/ext/mapsx"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/internal/intern"
 )
 
 // Set of all names that are defined in scope of some message; used for

@@ -17,7 +17,7 @@ package seq
 import (
 	"slices"
 
-	"github.com/bufbuild/protocompile/internal/ext/unsafex"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/internal/ext/unsafex"
 )
 
 // TODO: Would this optimize better if Wrap/Unwrap was a single type parameter
@@ -116,6 +116,7 @@ func (s SliceInserter[T, _]) Len() int {
 	if s.Slice == nil {
 		return 0
 	}
+
 	return len(*s.Slice)
 }
 
@@ -210,6 +211,7 @@ func (s SliceInserter2[T, _, _]) Len() int {
 	if s.Slice1 == nil {
 		return 0
 	}
+
 	return len(*s.Slice1)
 }
 

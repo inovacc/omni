@@ -14,7 +14,7 @@
 
 package source
 
-import "github.com/bufbuild/protocompile/wellknownimports"
+import "github.com/inovacc/omni/pkg/buf/internal/protocompile/wellknownimports"
 
 var wktFS = FS{FS: wellknownimports.FS()}
 

@@ -21,7 +21,7 @@ import (
 	"os/exec"
 	"slices"
 
-	"buf.build/go/standard/xos/xexec"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xos/xexec"
 	"pluginrpc.com/pluginrpc"
 )
 

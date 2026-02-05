@@ -17,11 +17,11 @@ package errtoken
 import (
 	"strings"
 
-	"github.com/bufbuild/protocompile/experimental/internal/taxa"
-	"github.com/bufbuild/protocompile/experimental/report"
-	"github.com/bufbuild/protocompile/experimental/source"
-	"github.com/bufbuild/protocompile/experimental/token"
-	"github.com/bufbuild/protocompile/internal/ext/unicodex"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/internal/taxa"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/report"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/source"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/token"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/internal/ext/unicodex"
 )
 
 // errInvalidNumber diagnoses a numeric literal with invalid syntax.

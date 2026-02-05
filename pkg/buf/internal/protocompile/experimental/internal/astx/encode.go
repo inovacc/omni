@@ -20,12 +20,12 @@ import (
 
 	"google.golang.org/protobuf/proto"
 
-	"github.com/bufbuild/protocompile/experimental/ast"
-	"github.com/bufbuild/protocompile/experimental/seq"
-	"github.com/bufbuild/protocompile/experimental/source"
-	"github.com/bufbuild/protocompile/experimental/token"
-	"github.com/bufbuild/protocompile/experimental/token/keyword"
-	compilerpb "github.com/bufbuild/protocompile/internal/gen/buf/compiler/v1alpha1"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/ast"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/seq"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/source"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/token"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/token/keyword"
+	compilerpb "github.com/inovacc/omni/pkg/buf/internal/protocompile/internal/gen/buf/compiler/v1alpha1"
 )
 
 // ToProtoOptions contains options for the [File.ToProto] function.

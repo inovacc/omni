@@ -24,7 +24,7 @@ import (
 	"unicode"
 	"unicode/utf8"
 
-	"github.com/bufbuild/protocompile/ast"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/ast"
 )
 
 // formatter writes an *ast.FileNode as a .proto file.

@@ -18,13 +18,13 @@ import (
 	"maps"
 	"strings"
 
-	"github.com/bufbuild/protocompile/experimental/ir"
-	"github.com/bufbuild/protocompile/experimental/seq"
-	"github.com/bufbuild/protocompile/experimental/source"
-	"github.com/bufbuild/protocompile/experimental/token/keyword"
 	"github.com/google/cel-go/cel"
 	"github.com/google/cel-go/common/ast"
 	"github.com/google/cel-go/common/operators"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/ir"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/seq"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/source"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/token/keyword"
 	exprpb "google.golang.org/genproto/googleapis/api/expr/v1alpha1"
 )
 

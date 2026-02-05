@@ -20,7 +20,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"buf.build/go/app"
+	"github.com/inovacc/omni/pkg/buf/internal/app"
 )
 
 // Filename exposes the netrc filename based on the current operating system.

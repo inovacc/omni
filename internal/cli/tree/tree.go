@@ -6,7 +6,7 @@ import (
 	"io"
 	"strings"
 
-	"github.com/inovacc/omni/internal/twig"
+	twig2 "github.com/inovacc/omni/pkg/twig"
 )
 
 // TreeOptions configures the tree command behavior
@@ -32,23 +32,23 @@ func RunTree(w io.Writer, args []string, opts TreeOptions) error {
 	}
 
 	// Build tree options
-	var treeOpts []twig.TreeOption
+	var treeOpts []twig2.TreeOption
 
-	treeOpts = append(treeOpts, twig.WithMaxDepth(opts.Depth))
-	treeOpts = append(treeOpts, twig.WithShowHidden(opts.All))
-	treeOpts = append(treeOpts, twig.WithDirsOnly(opts.DirsOnly))
-	treeOpts = append(treeOpts, twig.WithDirSlash(!opts.NoDirSlash))
-	treeOpts = append(treeOpts, twig.WithColors(!opts.NoColor))
-	treeOpts = append(treeOpts, twig.WithJSONOutput(opts.JSON))
-	treeOpts = append(treeOpts, twig.WithShowHash(opts.Hash))
-	treeOpts = append(treeOpts, twig.WithShowSize(opts.Size))
-	treeOpts = append(treeOpts, twig.WithShowDate(opts.Date))
+	treeOpts = append(treeOpts, twig2.WithMaxDepth(opts.Depth))
+	treeOpts = append(treeOpts, twig2.WithShowHidden(opts.All))
+	treeOpts = append(treeOpts, twig2.WithDirsOnly(opts.DirsOnly))
+	treeOpts = append(treeOpts, twig2.WithDirSlash(!opts.NoDirSlash))
+	treeOpts = append(treeOpts, twig2.WithColors(!opts.NoColor))
+	treeOpts = append(treeOpts, twig2.WithJSONOutput(opts.JSON))
+	treeOpts = append(treeOpts, twig2.WithShowHash(opts.Hash))
+	treeOpts = append(treeOpts, twig2.WithShowSize(opts.Size))
+	treeOpts = append(treeOpts, twig2.WithShowDate(opts.Date))
 
 	if len(opts.Ignore) > 0 {
-		treeOpts = append(treeOpts, twig.WithIgnorePatterns(opts.Ignore...))
+		treeOpts = append(treeOpts, twig2.WithIgnorePatterns(opts.Ignore...))
 	}
 
-	t := twig.NewTree(treeOpts...)
+	t := twig2.NewTree(treeOpts...)
 
 	if opts.Stats {
 		result, err := t.GenerateWithStats(context.Background(), path)

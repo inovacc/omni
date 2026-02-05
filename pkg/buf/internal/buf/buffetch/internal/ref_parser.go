@@ -21,7 +21,7 @@ import (
 	"strconv"
 	"strings"
 
-	"buf.build/go/app"
+	"github.com/inovacc/omni/pkg/buf/internal/app"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufconfig"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/git"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/normalpath"

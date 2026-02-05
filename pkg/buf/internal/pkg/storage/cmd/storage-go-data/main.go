@@ -24,8 +24,8 @@ import (
 	"path/filepath"
 	"sort"
 
-	"buf.build/go/app"
-	"buf.build/go/app/appcmd"
+	"github.com/inovacc/omni/pkg/buf/internal/app"
+	"github.com/inovacc/omni/pkg/buf/internal/app/appcmd"
 	storage2 "github.com/inovacc/omni/pkg/buf/internal/pkg/storage"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/storage/storageos"
 	"github.com/spf13/pflag"

@@ -24,8 +24,8 @@ type method struct {
 	namedDescriptor
 	optionExtensionDescriptor
 
-	service       Service
-	inputTypeName string
+	service              Service
+	inputTypeName        string
 	outputTypeName       string
 	clientStreaming      bool
 	serverStreaming      bool

@@ -24,8 +24,8 @@ import (
 	"testing"
 	"testing/iotest"
 
-	"github.com/bufbuild/protocompile"
-	"github.com/bufbuild/protocompile/protoutil"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/protoutil"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoregistry"

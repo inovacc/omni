@@ -26,7 +26,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"buf.build/go/app"
+	"github.com/inovacc/omni/pkg/buf/internal/app"
 	"github.com/spf13/pflag"
 	"gopkg.in/yaml.v3"
 )
@@ -166,15 +166,18 @@ func BuilderWithLoggerProvider(loggerProvider LoggerProvider) BuilderOption {
 // The value should be a pointer to unmarshal into.
 func ReadConfig(container NameContainer, value any) error {
 	configFilePath := filepath.Join(container.ConfigDirPath(), configFileName)
+
 	data, err := os.ReadFile(configFilePath)
 	if !errors.Is(err, os.ErrNotExist) {
 		if err != nil {
 			return fmt.Errorf("could not read %s configuration file at %s: %w", container.AppName(), configFilePath, err)
 		}
+
 		if err := unmarshalYAMLStrict(data, value); err != nil {
 			return fmt.Errorf("invalid %s configuration file: %w", container.AppName(), err)
 		}
 	}
+
 	return nil
 }
 
@@ -185,15 +188,18 @@ func ReadConfig(container NameContainer, value any) error {
 // The value should be a pointer to unmarshal into.
 func ReadConfigNonStrict(container NameContainer, value any) error {
 	configFilePath := filepath.Join(container.ConfigDirPath(), configFileName)
+
 	data, err := os.ReadFile(configFilePath)
 	if !errors.Is(err, os.ErrNotExist) {
 		if err != nil {
 			return fmt.Errorf("could not read %s configuration file at %s: %w", container.AppName(), configFilePath, err)
 		}
+
 		if err := unmarshalYAMLNonStrict(data, value); err != nil {
 			return fmt.Errorf("invalid %s configuration file: %w", container.AppName(), err)
 		}
 	}
+
 	return nil
 }
 
@@ -201,10 +207,12 @@ func ReadConfigNonStrict(container NameContainer, value any) error {
 // filepath.Join(container.ConfigDirPath(), secretRelDirPath, name).
 func ReadSecret(container NameContainer, name string) (string, error) {
 	secretFilePath := filepath.Join(container.ConfigDirPath(), secretRelDirPath, name)
+
 	data, err := os.ReadFile(secretFilePath)
 	if err != nil {
 		return "", fmt.Errorf("failed to read secret at %s: %w", secretFilePath, err)
 	}
+
 	return string(data), nil
 }
 
@@ -218,15 +226,18 @@ func WriteConfig(container NameContainer, value any) error {
 	if err != nil {
 		return err
 	}
+
 	if err := os.MkdirAll(container.ConfigDirPath(), 0755); err != nil {
 		return err
 	}
+
 	configFilePath := filepath.Join(container.ConfigDirPath(), configFileName)
 	fileMode := os.FileMode(0644)
 	// OK to use os.Stat instead of os.Lstat here
 	if fileInfo, err := os.Stat(configFilePath); err == nil {
 		fileMode = fileInfo.Mode()
 	}
+
 	return os.WriteFile(configFilePath, data, fileMode)
 }
 
@@ -236,11 +247,13 @@ func Listen(ctx context.Context, container NameContainer, defaultPort uint16) (n
 	if err != nil {
 		return nil, err
 	}
+
 	if port == 0 {
 		port = defaultPort
 	}
 	// Must be 0.0.0.0
 	var listenConfig net.ListenConfig
+
 	return listenConfig.Listen(ctx, "tcp", fmt.Sprintf("0.0.0.0:%d", port))
 }
 
@@ -251,12 +264,15 @@ func marshalYAML(value any) (_ []byte, retErr error) {
 	buffer := bytes.NewBuffer(nil)
 	yamlEncoder := yaml.NewEncoder(buffer)
 	yamlEncoder.SetIndent(2)
+
 	defer func() {
 		retErr = errors.Join(retErr, yamlEncoder.Close())
 	}()
+
 	if err := yamlEncoder.Encode(value); err != nil {
 		return nil, err
 	}
+
 	return buffer.Bytes(), nil
 }
 
@@ -267,11 +283,14 @@ func unmarshalYAMLStrict(data []byte, value any) error {
 	if len(data) == 0 {
 		return nil
 	}
+
 	yamlDecoder := yaml.NewDecoder(bytes.NewReader(data))
 	yamlDecoder.KnownFields(true)
+
 	if err := yamlDecoder.Decode(value); err != nil {
 		return fmt.Errorf("could not unmarshal as YAML: %w", err)
 	}
+
 	return nil
 }
 
@@ -282,9 +301,11 @@ func unmarshalYAMLNonStrict(data []byte, value any) error {
 	if len(data) == 0 {
 		return nil
 	}
+
 	yamlDecoder := yaml.NewDecoder(bytes.NewReader(data))
 	if err := yamlDecoder.Decode(value); err != nil {
 		return fmt.Errorf("could not unmarshal as YAML: %w", err)
 	}
+
 	return nil
 }

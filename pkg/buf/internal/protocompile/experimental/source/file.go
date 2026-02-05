@@ -22,8 +22,8 @@ import (
 	"unicode/utf16"
 	_ "unsafe" // For go:linkname.
 
-	"github.com/bufbuild/protocompile/experimental/source/length"
-	"github.com/bufbuild/protocompile/internal/ext/unicodex"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/source/length"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/internal/ext/unicodex"
 )
 
 // File is a source code file involved in a diagnostic.

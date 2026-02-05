@@ -20,9 +20,9 @@ import (
 	"fmt"
 	"log/slog"
 
-	"buf.build/go/app"
-	"github.com/bufbuild/protoplugin"
+	"github.com/inovacc/omni/pkg/buf/internal/app"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/thread"
+	"github.com/inovacc/omni/pkg/buf/internal/protoplugin"
 	"google.golang.org/protobuf/types/pluginpb"
 )
 

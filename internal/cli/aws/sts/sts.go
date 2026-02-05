@@ -19,9 +19,18 @@ type Client struct {
 }
 
 // NewClient creates a new STS client
-func NewClient(cfg aws.Config, w io.Writer, format awscommon.OutputFormat) *Client {
+func NewClient(cfg aws.Config, w io.Writer, format awscommon.OutputFormat, endpointURL string) *Client {
+	var client *sts.Client
+	if endpointURL != "" {
+		client = sts.NewFromConfig(cfg, func(o *sts.Options) {
+			o.BaseEndpoint = aws.String(endpointURL)
+		})
+	} else {
+		client = sts.NewFromConfig(cfg)
+	}
+
 	return &Client{
-		client:  sts.NewFromConfig(cfg),
+		client:  client,
 		printer: awscommon.NewPrinter(w, format),
 	}
 }
@@ -73,9 +82,9 @@ type Credentials struct {
 
 // AssumeRoleOutput represents the result of AssumeRole
 type AssumeRoleOutput struct {
-	Credentials      Credentials `json:"Credentials"`
+	Credentials      Credentials     `json:"Credentials"`
 	AssumedRoleUser  AssumedRoleUser `json:"AssumedRoleUser"`
-	PackedPolicySize *int32      `json:"PackedPolicySize,omitempty"`
+	PackedPolicySize *int32          `json:"PackedPolicySize,omitempty"`
 }
 
 // AssumedRoleUser represents the assumed role user
@@ -94,12 +103,15 @@ func (c *Client) AssumeRole(ctx context.Context, input AssumeRoleInput) (*Assume
 	if input.DurationSeconds > 0 {
 		params.DurationSeconds = aws.Int32(input.DurationSeconds)
 	}
+
 	if input.ExternalId != "" {
 		params.ExternalId = aws.String(input.ExternalId)
 	}
+
 	if input.Policy != "" {
 		params.Policy = aws.String(input.Policy)
 	}
+
 	if input.SerialNumber != "" && input.TokenCode != "" {
 		params.SerialNumber = aws.String(input.SerialNumber)
 		params.TokenCode = aws.String(input.TokenCode)
@@ -142,6 +154,7 @@ func (c *Client) GetSessionToken(ctx context.Context, durationSeconds int32, ser
 	if durationSeconds > 0 {
 		params.DurationSeconds = aws.Int32(durationSeconds)
 	}
+
 	if serialNumber != "" && tokenCode != "" {
 		params.SerialNumber = aws.String(serialNumber)
 		params.TokenCode = aws.String(tokenCode)

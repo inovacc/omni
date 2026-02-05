@@ -20,7 +20,7 @@ import (
 	"strings"
 	"unicode"
 
-	"buf.build/go/standard/xstrings"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xstrings"
 	bufconfig2 "github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufconfig"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufimage"
 	normalpath2 "github.com/inovacc/omni/pkg/buf/internal/pkg/normalpath"

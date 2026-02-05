@@ -19,6 +19,7 @@ func TestRunLoc(t *testing.T) {
 
 	// Create a Go file
 	goFile := filepath.Join(tmpDir, "main.go")
+
 	goContent := `package main
 
 // This is a comment
@@ -33,6 +34,7 @@ func main() {
 
 	// Create a Python file
 	pyFile := filepath.Join(tmpDir, "script.py")
+
 	pyContent := `# Python comment
 def hello():
     print("Hello")
@@ -275,6 +277,7 @@ func TestCountFileWithStrings(t *testing.T) {
 	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	goFile := filepath.Join(tmpDir, "test.go")
+
 	goContent := `package main
 
 func main() {

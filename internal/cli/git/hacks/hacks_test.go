@@ -16,6 +16,7 @@ func setupTestRepo(t *testing.T) string {
 
 	// Initialize git repo
 	cmd := exec.Command("git", "init")
+
 	cmd.Dir = dir
 	if err := cmd.Run(); err != nil {
 		t.Skipf("git not available: %v", err)
@@ -36,6 +37,7 @@ func setupTestRepo(t *testing.T) string {
 func TestQuickCommit(t *testing.T) {
 	dir := setupTestRepo(t)
 	oldDir, _ := os.Getwd()
+
 	defer func() { _ = os.Chdir(oldDir) }()
 
 	if err := os.Chdir(dir); err != nil {
@@ -57,6 +59,7 @@ func TestQuickCommit(t *testing.T) {
 	// Verify commit was created
 	cmd := exec.Command("git", "log", "--oneline", "-1")
 	cmd.Dir = dir
+
 	out, err := cmd.Output()
 	if err != nil {
 		t.Fatalf("git log failed: %v", err)
@@ -70,6 +73,7 @@ func TestQuickCommit(t *testing.T) {
 func TestBranchClean_NoBranches(t *testing.T) {
 	dir := setupTestRepo(t)
 	oldDir, _ := os.Getwd()
+
 	defer func() { _ = os.Chdir(oldDir) }()
 
 	if err := os.Chdir(dir); err != nil {
@@ -104,6 +108,7 @@ func TestBranchClean_NoBranches(t *testing.T) {
 func TestUndo(t *testing.T) {
 	dir := setupTestRepo(t)
 	oldDir, _ := os.Getwd()
+
 	defer func() { _ = os.Chdir(oldDir) }()
 
 	if err := os.Chdir(dir); err != nil {
@@ -146,6 +151,7 @@ func TestUndo(t *testing.T) {
 	// Verify we're back to first commit
 	cmd = exec.Command("git", "log", "--oneline", "-1")
 	cmd.Dir = dir
+
 	out, err := cmd.Output()
 	if err != nil {
 		t.Fatalf("git log failed: %v", err)
@@ -159,6 +165,7 @@ func TestUndo(t *testing.T) {
 func TestLogGraph(t *testing.T) {
 	dir := setupTestRepo(t)
 	oldDir, _ := os.Getwd()
+
 	defer func() { _ = os.Chdir(oldDir) }()
 
 	if err := os.Chdir(dir); err != nil {
@@ -193,6 +200,7 @@ func TestLogGraph(t *testing.T) {
 func TestStatus(t *testing.T) {
 	dir := setupTestRepo(t)
 	oldDir, _ := os.Getwd()
+
 	defer func() { _ = os.Chdir(oldDir) }()
 
 	if err := os.Chdir(dir); err != nil {
@@ -214,6 +222,7 @@ func TestStatus(t *testing.T) {
 func TestGetCurrentBranch(t *testing.T) {
 	dir := setupTestRepo(t)
 	oldDir, _ := os.Getwd()
+
 	defer func() { _ = os.Chdir(oldDir) }()
 
 	if err := os.Chdir(dir); err != nil {

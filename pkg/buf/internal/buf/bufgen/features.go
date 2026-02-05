@@ -21,7 +21,7 @@ import (
 	"slices"
 	"strings"
 
-	"buf.build/go/standard/xslices"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufconfig"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufimage"
 	"google.golang.org/protobuf/reflect/protoreflect"

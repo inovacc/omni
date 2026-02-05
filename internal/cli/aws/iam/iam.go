@@ -20,9 +20,18 @@ type Client struct {
 }
 
 // NewClient creates a new IAM client
-func NewClient(cfg aws.Config, w io.Writer, format awscommon.OutputFormat) *Client {
+func NewClient(cfg aws.Config, w io.Writer, format awscommon.OutputFormat, endpointURL string) *Client {
+	var client *iam.Client
+	if endpointURL != "" {
+		client = iam.NewFromConfig(cfg, func(o *iam.Options) {
+			o.BaseEndpoint = aws.String(endpointURL)
+		})
+	} else {
+		client = iam.NewFromConfig(cfg)
+	}
+
 	return &Client{
-		client:  iam.NewFromConfig(cfg),
+		client:  client,
 		printer: awscommon.NewPrinter(w, format),
 	}
 }

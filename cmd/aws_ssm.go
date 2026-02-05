@@ -29,14 +29,16 @@ Examples:
 		profile, _ := cmd.Flags().GetString("profile")
 		region, _ := cmd.Flags().GetString("region")
 		output, _ := cmd.Flags().GetString("output")
+		endpointURL, _ := cmd.Flags().GetString("endpoint-url")
 
 		name, _ := cmd.Flags().GetString("name")
 		withDecryption, _ := cmd.Flags().GetBool("with-decryption")
 
 		opts := awscommon.Options{
-			Profile: profile,
-			Region:  region,
-			Output:  output,
+			Profile:     profile,
+			Region:      region,
+			Output:      output,
+			EndpointURL: endpointURL,
 		}
 
 		cfg, err := awscommon.LoadConfig(ctx, opts)
@@ -44,7 +46,7 @@ Examples:
 			return err
 		}
 
-		client := ssm.NewClient(cfg, cmd.OutOrStdout(), awscommon.ParseOutputFormat(output))
+		client := ssm.NewClient(cfg, cmd.OutOrStdout(), awscommon.ParseOutputFormat(output), awscommon.GetEndpointURL(opts))
 
 		param, err := client.GetParameter(ctx, ssm.GetParameterInput{
 			Name:           name,
@@ -72,14 +74,16 @@ Examples:
 		profile, _ := cmd.Flags().GetString("profile")
 		region, _ := cmd.Flags().GetString("region")
 		output, _ := cmd.Flags().GetString("output")
+		endpointURL, _ := cmd.Flags().GetString("endpoint-url")
 
 		names, _ := cmd.Flags().GetStringSlice("names")
 		withDecryption, _ := cmd.Flags().GetBool("with-decryption")
 
 		opts := awscommon.Options{
-			Profile: profile,
-			Region:  region,
-			Output:  output,
+			Profile:     profile,
+			Region:      region,
+			Output:      output,
+			EndpointURL: endpointURL,
 		}
 
 		cfg, err := awscommon.LoadConfig(ctx, opts)
@@ -87,7 +91,7 @@ Examples:
 			return err
 		}
 
-		client := ssm.NewClient(cfg, cmd.OutOrStdout(), awscommon.ParseOutputFormat(output))
+		client := ssm.NewClient(cfg, cmd.OutOrStdout(), awscommon.ParseOutputFormat(output), awscommon.GetEndpointURL(opts))
 
 		result, err := client.GetParameters(ctx, ssm.GetParametersInput{
 			Names:          names,
@@ -115,6 +119,7 @@ Examples:
 		profile, _ := cmd.Flags().GetString("profile")
 		region, _ := cmd.Flags().GetString("region")
 		output, _ := cmd.Flags().GetString("output")
+		endpointURL, _ := cmd.Flags().GetString("endpoint-url")
 
 		path, _ := cmd.Flags().GetString("path")
 		withDecryption, _ := cmd.Flags().GetBool("with-decryption")
@@ -122,9 +127,10 @@ Examples:
 		maxResults, _ := cmd.Flags().GetInt32("max-results")
 
 		opts := awscommon.Options{
-			Profile: profile,
-			Region:  region,
-			Output:  output,
+			Profile:     profile,
+			Region:      region,
+			Output:      output,
+			EndpointURL: endpointURL,
 		}
 
 		cfg, err := awscommon.LoadConfig(ctx, opts)
@@ -132,7 +138,7 @@ Examples:
 			return err
 		}
 
-		client := ssm.NewClient(cfg, cmd.OutOrStdout(), awscommon.ParseOutputFormat(output))
+		client := ssm.NewClient(cfg, cmd.OutOrStdout(), awscommon.ParseOutputFormat(output), awscommon.GetEndpointURL(opts))
 
 		params, err := client.GetParametersByPath(ctx, ssm.GetParametersByPathInput{
 			Path:           path,
@@ -163,6 +169,7 @@ Examples:
 		profile, _ := cmd.Flags().GetString("profile")
 		region, _ := cmd.Flags().GetString("region")
 		output, _ := cmd.Flags().GetString("output")
+		endpointURL, _ := cmd.Flags().GetString("endpoint-url")
 
 		name, _ := cmd.Flags().GetString("name")
 		value, _ := cmd.Flags().GetString("value")
@@ -172,9 +179,10 @@ Examples:
 		keyId, _ := cmd.Flags().GetString("key-id")
 
 		opts := awscommon.Options{
-			Profile: profile,
-			Region:  region,
-			Output:  output,
+			Profile:     profile,
+			Region:      region,
+			Output:      output,
+			EndpointURL: endpointURL,
 		}
 
 		cfg, err := awscommon.LoadConfig(ctx, opts)
@@ -182,7 +190,7 @@ Examples:
 			return err
 		}
 
-		client := ssm.NewClient(cfg, cmd.OutOrStdout(), awscommon.ParseOutputFormat(output))
+		client := ssm.NewClient(cfg, cmd.OutOrStdout(), awscommon.ParseOutputFormat(output), awscommon.GetEndpointURL(opts))
 
 		result, err := client.PutParameter(ctx, ssm.PutParameterInput{
 			Name:        name,
@@ -212,12 +220,14 @@ Examples:
 
 		profile, _ := cmd.Flags().GetString("profile")
 		region, _ := cmd.Flags().GetString("region")
+		endpointURL, _ := cmd.Flags().GetString("endpoint-url")
 
 		name, _ := cmd.Flags().GetString("name")
 
 		opts := awscommon.Options{
-			Profile: profile,
-			Region:  region,
+			Profile:     profile,
+			Region:      region,
+			EndpointURL: endpointURL,
 		}
 
 		cfg, err := awscommon.LoadConfig(ctx, opts)
@@ -225,7 +235,7 @@ Examples:
 			return err
 		}
 
-		client := ssm.NewClient(cfg, cmd.OutOrStdout(), awscommon.OutputJSON)
+		client := ssm.NewClient(cfg, cmd.OutOrStdout(), awscommon.OutputJSON, awscommon.GetEndpointURL(opts))
 
 		if err := client.DeleteParameter(ctx, name); err != nil {
 			return err

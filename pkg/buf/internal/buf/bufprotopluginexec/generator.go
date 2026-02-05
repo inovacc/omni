@@ -18,7 +18,7 @@ import (
 	"context"
 	"log/slog"
 
-	"buf.build/go/app"
+	"github.com/inovacc/omni/pkg/buf/internal/app"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufprotoplugin"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/storage/storageos"
 	"google.golang.org/protobuf/types/pluginpb"

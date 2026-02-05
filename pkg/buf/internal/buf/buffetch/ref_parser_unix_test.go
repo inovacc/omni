@@ -19,7 +19,7 @@ package buffetch
 import (
 	"testing"
 
-	"buf.build/go/app"
+	"github.com/inovacc/omni/pkg/buf/internal/app"
 	"github.com/inovacc/omni/pkg/buf/internal/buf/buffetch/internal"
 )
 

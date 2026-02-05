@@ -18,8 +18,8 @@ import (
 	"cmp"
 	"slices"
 
-	"github.com/bufbuild/protocompile/experimental/ast/syntax"
-	"github.com/bufbuild/protocompile/experimental/id"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/ast/syntax"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/id"
 )
 
 // FeatureSet represents the Editions-mediated features of a particular

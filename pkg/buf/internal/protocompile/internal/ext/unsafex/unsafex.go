@@ -52,6 +52,7 @@ func Size[T any]() int {
 func Add[P ~*E, E any, I Int](p P, idx I) P {
 	raw := unsafe.Pointer(p)
 	raw = unsafe.Add(raw, int(idx)*Size[E]())
+
 	return P(raw)
 }
 
@@ -114,8 +115,11 @@ func Bitcast[To, From any](v From) To {
 type badBitcast[To, From any] struct{}
 
 func (badBitcast[To, From]) Error() string {
-	var to To
-	var from From
+	var (
+		to   To
+		from From
+	)
+
 	return fmt.Sprintf(
 		"unsafex: %T and %T are of unequal size (%d != %d)",
 		to, from,
@@ -169,5 +173,6 @@ func NoEscape[P ~*E, E any](ptr P) P {
 	// Xoring the address with zero is a reliable way to hide a pointer from
 	// the compiler.
 	p = unsafe.Pointer(uintptr(p) ^ 0) //nolint:staticcheck
+
 	return P(p)
 }

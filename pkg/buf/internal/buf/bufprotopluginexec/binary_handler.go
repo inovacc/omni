@@ -21,9 +21,9 @@ import (
 	"log/slog"
 	"path/filepath"
 
-	"buf.build/go/standard/xio"
-	"buf.build/go/standard/xlog/xslog"
-	"buf.build/go/standard/xos/xexec"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xio"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xlog/xslog"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xos/xexec"
 	"github.com/bufbuild/protoplugin"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/protoencoding"
 	"google.golang.org/protobuf/types/pluginpb"

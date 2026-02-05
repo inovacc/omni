@@ -19,10 +19,10 @@ import (
 	"fmt"
 	"io/fs"
 
-	"buf.build/go/standard/xslices"
-	"github.com/bufbuild/protocompile/reporter"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufanalysis"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/normalpath"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/reporter"
 )
 
 // FileAnnotationForErrorWithPos returns a new FileAnnotation for the ErrorWithPos.

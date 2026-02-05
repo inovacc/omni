@@ -22,14 +22,14 @@ import (
 	"sort"
 	"strings"
 
-	"buf.build/go/standard/xslices"
-	"github.com/bufbuild/protocompile/parser/fastscan"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufprotocompile"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/cache"
 	normalpath2 "github.com/inovacc/omni/pkg/buf/internal/pkg/normalpath"
 	storage2 "github.com/inovacc/omni/pkg/buf/internal/pkg/storage"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/storage/storagemem"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/syserror"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/parser/fastscan"
 )
 
 // ModuleReadBucket is an object analogous to storage.ReadBucket that supplements ObjectInfos

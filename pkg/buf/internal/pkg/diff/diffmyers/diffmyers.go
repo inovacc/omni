@@ -58,6 +58,7 @@ func Diff(from, to [][]byte) []Edit {
 // Ref: https://www.gnu.org/software/diffutils/manual/html_node/Detailed-Unified.html
 func Print(from, to [][]byte, edits []Edit) ([]byte, error) {
 	const contextThreshold = 2
+
 	type printLine struct {
 		EditKind EditKind
 		line     []byte
@@ -77,6 +78,7 @@ func Print(from, to [][]byte, edits []Edit) ([]byte, error) {
 	// original sequence. The worst case for the hunk headers are
 	// as many edits.
 	out := make([]*printLine, 0, len(from)+2*len(edits))
+
 	var fromIndex, toIndex, bufferSize int
 	for i := 0; i < len(edits); i++ {
 		// Remember the start of the hunk. We add 1 to the indexes because
@@ -86,6 +88,7 @@ func Print(from, to [][]byte, edits []Edit) ([]byte, error) {
 		// Reserve the space for the hunk header.
 		hunk := &printLine{hunk: true}
 		out = append(out, hunk)
+
 		var (
 			insertCount, deleteCount int
 			printHunk                bool
@@ -94,6 +97,7 @@ func Print(from, to [][]byte, edits []Edit) ([]byte, error) {
 		for j := i; j < len(edits); j++ {
 			// Print the lines before the edit.
 			var advance int
+
 			for _, line := range from[fromIndex:edits[i].FromPosition] {
 				out = append(out, &printLine{line: line})
 				bufferSize += len(line) + 1
@@ -103,16 +107,20 @@ func Print(from, to [][]byte, edits []Edit) ([]byte, error) {
 			toIndex += advance
 			fromIndex += advance
 			insertCount += advance
+
 			deleteCount += advance
 			if advance > contextThreshold {
 				i--
 				break
 			}
+
 			printHunk = true
+
 			switch edits[j].Kind {
 			case EditKindDelete:
 				deleteCount++
 				fromIndex++
+
 				out = append(out, &printLine{
 					EditKind: EditKindDelete,
 					line:     from[edits[j].FromPosition],
@@ -120,6 +128,7 @@ func Print(from, to [][]byte, edits []Edit) ([]byte, error) {
 			case EditKindInsert:
 				insertCount++
 				toIndex++
+
 				out = append(out, &printLine{
 					EditKind: EditKindInsert,
 					line:     to[edits[j].ToPosition],
@@ -127,9 +136,11 @@ func Print(from, to [][]byte, edits []Edit) ([]byte, error) {
 			default:
 				return nil, errors.New("unknown edit kind")
 			}
+
 			bufferSize += len(out[len(out)-1].line) + 1
 			i++
 		}
+
 		if printHunk {
 			// Print the hunk header.
 			hunk.line = fmt.Appendf(nil, "@@ -%d,%d +%d,%d @@\n", hunkOldStart, deleteCount, hunkNewStart, insertCount)
@@ -141,15 +152,19 @@ func Print(from, to [][]byte, edits []Edit) ([]byte, error) {
 		out = append(out, &printLine{line: line})
 		bufferSize += len(line) + 1
 	}
+
 	var buffer bytes.Buffer
 	buffer.Grow(bufferSize)
+
 	for _, line := range out {
 		if line.hunk {
 			if len(line.line) > 0 {
 				buffer.Write(line.line)
 			}
+
 			continue
 		}
+
 		switch line.EditKind {
 		case EditKindDelete:
 			buffer.WriteByte('-')
@@ -158,8 +173,10 @@ func Print(from, to [][]byte, edits []Edit) ([]byte, error) {
 		default:
 			buffer.WriteByte(' ')
 		}
+
 		buffer.Write(line.line)
 	}
+
 	return buffer.Bytes(), nil
 }
 
@@ -173,8 +190,10 @@ func shortestEdits(from, to [][]byte, fromOffset, toOffset int) []Edit {
 				FromPosition: fromOffset + i,
 			}
 		}
+
 		return edits
 	}
+
 	if n == 0 { // We've reached the end of the 'from' sequence. So insert the rest of the 'to' sequence.
 		edits := make([]Edit, len(to))
 		for i := range to {
@@ -184,18 +203,23 @@ func shortestEdits(from, to [][]byte, fromOffset, toOffset int) []Edit {
 				ToPosition:   toOffset + i,
 			}
 		}
+
 		return edits
 	}
+
 	d, x, y, u, v := findMiddleSnake(from, to)
 	if d > 1 || x != u && y != v {
 		return append(shortestEdits(from[:x], to[:y], fromOffset, toOffset), shortestEdits(from[u:], to[v:], fromOffset+u, toOffset+v)...)
 	}
+
 	if m > n {
 		return shortestEdits(nil, to[n:m], fromOffset+n, toOffset+n)
 	}
+
 	if m < n {
 		return shortestEdits(from[m:n], nil, fromOffset+m, toOffset+m)
 	}
+
 	return nil
 }
 
@@ -211,13 +235,16 @@ func findMiddleSnake(from, to [][]byte) (d int, x int, y int, u int, v int) {
 	// Wherever we access them we just offset by maxD.
 	vf := make([]int, 2*maxD+1)
 	vb := make([]int, 2*maxD+1)
+
 	for i := range vf {
 		vf[i] = -1
 		vb[i] = -1
 	}
+
 	vf[1+maxD] = 0
 	vb[1+maxD] = 0
 	delta := n - m
+
 	for d := 0; d <= maxD; d++ {
 		for k := -d; k <= d; k += 2 { // Forward snake
 			var x int
@@ -227,6 +254,7 @@ func findMiddleSnake(from, to [][]byte) (d int, x int, y int, u int, v int) {
 			} else {
 				x = vf[k-1+maxD] + 1
 			}
+
 			y := x - k
 			// Initial point
 			xi := x
@@ -236,6 +264,7 @@ func findMiddleSnake(from, to [][]byte) (d int, x int, y int, u int, v int) {
 				x++
 				y++
 			}
+
 			vf[k+maxD] = x
 			if (delta&1 == 1) && -(k-delta) >= -(d-1) && -(k-delta) <= (d-1) && vb[(-(k-delta))+maxD] != -1 {
 				if x+vb[(-(k-delta))+maxD] >= n {
@@ -243,6 +272,7 @@ func findMiddleSnake(from, to [][]byte) (d int, x int, y int, u int, v int) {
 				}
 			}
 		}
+
 		for k := -d; k <= d; k += 2 { // Backward snake
 			var x int
 			if k == -d || (k != d && vb[k-1+maxD] < vb[k+1+maxD]) {
@@ -250,13 +280,16 @@ func findMiddleSnake(from, to [][]byte) (d int, x int, y int, u int, v int) {
 			} else {
 				x = vb[k-1+maxD] + 1
 			}
+
 			y := x - k
 			xi := x
+
 			yi := y
 			for x < n && y < m && bytes.Equal(from[n-x-1], to[m-y-1]) {
 				x++
 				y++
 			}
+
 			vb[k+maxD] = x
 			if (delta&1 == 0) && -(k-delta) >= -d && -(k-delta) <= d && vf[(-(k-delta))+maxD] != -1 {
 				if x+vf[(-(k-delta))+maxD] >= n {
@@ -265,6 +298,7 @@ func findMiddleSnake(from, to [][]byte) (d int, x int, y int, u int, v int) {
 			}
 		}
 	}
+
 	return -1, -1, -1, -1, -1
 }
 
@@ -272,5 +306,6 @@ func ceiledHalf(n int) int {
 	if n%2 == 0 {
 		return n / 2
 	}
+
 	return n/2 + 1
 }

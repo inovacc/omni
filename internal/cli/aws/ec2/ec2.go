@@ -20,9 +20,18 @@ type Client struct {
 }
 
 // NewClient creates a new EC2 client
-func NewClient(cfg aws.Config, w io.Writer, format awscommon.OutputFormat) *Client {
+func NewClient(cfg aws.Config, w io.Writer, format awscommon.OutputFormat, endpointURL string) *Client {
+	var client *ec2.Client
+	if endpointURL != "" {
+		client = ec2.NewFromConfig(cfg, func(o *ec2.Options) {
+			o.BaseEndpoint = aws.String(endpointURL)
+		})
+	} else {
+		client = ec2.NewFromConfig(cfg)
+	}
+
 	return &Client{
-		client:  ec2.NewFromConfig(cfg),
+		client:  client,
 		printer: awscommon.NewPrinter(w, format),
 	}
 }

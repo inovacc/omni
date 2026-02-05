@@ -38,19 +38,24 @@ func BinaryPath(rootDir string) (string, error) {
 	if err != nil {
 		return "", err
 	}
+
 	version := strings.TrimSpace(string(data))
+
 	protocPath := filepath.Join(rootDir, fmt.Sprintf(".tmp/cache/protoc/%s/bin/protoc", version))
 	if runtime.GOOS == "windows" {
 		protocPath += ".exe"
 	}
+
 	if info, err := os.Stat(protocPath); err != nil {
 		if os.IsNotExist(err) {
 			return "", fmt.Errorf("%s does not exist; run 'make protoc' from the top-level of this repo", protocPath)
 		}
+
 		return "", err
 	} else if info.IsDir() {
 		return "", fmt.Errorf("%s is a directory, but should be an executable file", protocPath)
 	}
+
 	return protocPath, nil
 }
 
@@ -65,6 +70,7 @@ func Compile(files map[string]string, fileNames []string) (stdout []byte, err er
 		if len(files) != len(fileNames) {
 			return nil, fmt.Errorf("fileNames has wrong number of entries: expecting %d, got %d", len(files), len(fileNames))
 		}
+
 		for _, fileName := range fileNames {
 			if _, exists := files[fileName]; !exists {
 				return nil, fmt.Errorf("fileNames has wrong number of entries: expecting %d, got %d", len(files), len(fileNames))
@@ -77,20 +83,24 @@ func Compile(files map[string]string, fileNames []string) (stdout []byte, err er
 		if tempDir != "" {
 			_ = os.RemoveAll(tempDir)
 		}
+
 		return nil, err
 	}
+
 	defer func() {
 		removeErr := os.RemoveAll(tempDir)
 		if err == nil && removeErr != nil {
 			err = removeErr
 		}
 	}()
+
 	if len(fileNames) == 0 {
 		fileNames = make([]string, 0, len(files))
 		for fileName := range files {
 			fileNames = append(fileNames, fileName)
 		}
 	}
+
 	return invokeProtoc(tempDir, fileNames)
 }
 
@@ -102,26 +112,32 @@ func writeFileToDisk(files map[string]string) (string, error) {
 
 	for fileName, fileContent := range files {
 		tempFileName := filepath.Join(tempDir, fileName)
+
 		tempFileDirPart := filepath.Dir(tempFileName)
 		if _, err = os.Stat(tempFileDirPart); os.IsNotExist(err) {
 			if err = os.MkdirAll(tempFileDirPart, os.ModePerm); err != nil {
 				return tempDir, err
 			}
 		}
+
 		if err := os.WriteFile(tempFileName, []byte(fileContent), 0600); err != nil {
 			return tempDir, err
 		}
 	}
+
 	return tempDir, nil
 }
 
 func invokeProtoc(protoPath string, fileNames []string) (stdout []byte, err error) {
 	args := []string{"-I", protoPath, "-o", os.DevNull}
 	args = append(args, fileNames...)
+
 	protocPath, err := BinaryPath("../")
 	if err != nil {
 		return nil, err
 	}
+
 	cmd := exec.Command(protocPath, args...)
+
 	return cmd.Output()
 }

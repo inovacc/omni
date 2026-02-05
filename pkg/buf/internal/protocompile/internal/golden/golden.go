@@ -35,7 +35,7 @@ import (
 
 	"github.com/pmezard/go-difflib/difflib"
 
-	"github.com/bufbuild/protocompile/internal/prototest"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/internal/prototest"
 )
 
 // A corpus describes a test data corpus. This is essentially a way for doing table-driven

@@ -24,8 +24,8 @@ import (
 	"sort"
 	"strings"
 
-	"buf.build/go/app/appcmd"
-	"buf.build/go/app/appext"
+	"github.com/inovacc/omni/pkg/buf/internal/app/appcmd"
+	"github.com/inovacc/omni/pkg/buf/internal/app/appext"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/shake256"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/slogapp"
 	"github.com/spf13/pflag"

@@ -19,7 +19,7 @@ import (
 	"errors"
 	"testing"
 
-	"buf.build/go/standard/xslices"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
 	bufmodule2 "github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufmodule"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufmodule/bufmoduletesting"
 	bufparse2 "github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufparse"

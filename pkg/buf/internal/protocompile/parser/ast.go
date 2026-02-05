@@ -15,7 +15,7 @@
 package parser
 
 import (
-	"github.com/bufbuild/protocompile/ast"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/ast"
 )
 
 // the types below are accumulator types, just used in intermediate productions

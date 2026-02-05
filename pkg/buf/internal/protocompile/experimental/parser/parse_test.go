@@ -18,11 +18,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/bufbuild/protocompile/experimental/internal/astx"
-	"github.com/bufbuild/protocompile/experimental/report"
-	"github.com/bufbuild/protocompile/experimental/source"
-	"github.com/bufbuild/protocompile/internal/golden"
-	"github.com/bufbuild/protocompile/internal/prototest"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/internal/astx"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/report"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/source"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/internal/golden"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/internal/prototest"
 )
 
 const (

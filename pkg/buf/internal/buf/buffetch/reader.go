@@ -20,7 +20,7 @@ import (
 	"log/slog"
 	"net/http"
 
-	"buf.build/go/app"
+	"github.com/inovacc/omni/pkg/buf/internal/app"
 	"github.com/inovacc/omni/pkg/buf/internal/buf/buffetch/internal"
 	buftarget2 "github.com/inovacc/omni/pkg/buf/internal/buf/buftarget"
 	bufmodule2 "github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufmodule"

@@ -23,8 +23,8 @@ import (
 	"log/slog"
 	"os"
 
-	"buf.build/go/app"
-	"buf.build/go/standard/xio"
+	"github.com/inovacc/omni/pkg/buf/internal/app"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xio"
 	"github.com/klauspost/compress/zstd"
 )
 

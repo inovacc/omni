@@ -26,11 +26,11 @@ import (
 	"google.golang.org/protobuf/types/dynamicpb"
 	"google.golang.org/protobuf/types/gofeaturespb"
 
-	"github.com/bufbuild/protocompile"
-	"github.com/bufbuild/protocompile/internal/editions"
-	"github.com/bufbuild/protocompile/linker"
-	"github.com/bufbuild/protocompile/protoutil"
-	"github.com/bufbuild/protocompile/walk"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/internal/editions"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/linker"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/protoutil"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/walk"
 )
 
 func TestResolveFeature(t *testing.T) {

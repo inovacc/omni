@@ -15,7 +15,7 @@
 package bufcli
 
 import (
-	"buf.build/go/app/appext"
+	"github.com/inovacc/omni/pkg/buf/internal/app/appext"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufplugin"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufplugin/bufpluginapi"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufregistryapi/bufregistryapiplugin"

@@ -20,7 +20,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"buf.build/go/app"
+	"github.com/inovacc/omni/pkg/buf/internal/app"
 	internal2 "github.com/inovacc/omni/pkg/buf/internal/buf/buffetch/internal"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufparse"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/git"

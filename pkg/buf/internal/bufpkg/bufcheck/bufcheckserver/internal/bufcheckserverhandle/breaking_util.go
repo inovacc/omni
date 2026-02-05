@@ -20,10 +20,10 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/bufbuild/protocompile/protoutil"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufcheck/bufcheckserver/internal/bufcheckserverutil/customfeatures/customfeatures"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufprotosource"
 	protobuf2 "github.com/inovacc/omni/pkg/buf/internal/gen/proto/go/google/protobuf"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/protoutil"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/types/descriptorpb"
 )

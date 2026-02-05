@@ -14,6 +14,7 @@ type JSONEncoder struct {
 func NewJSONEncoder(w io.Writer) *JSONEncoder {
 	enc := json.NewEncoder(w)
 	enc.SetIndent("", "  ")
+
 	return &JSONEncoder{enc: enc}
 }
 

@@ -18,7 +18,7 @@ import (
 	"fmt"
 	"strings"
 
-	"buf.build/go/standard/xslices"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufmodule"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufparse"
 	"github.com/inovacc/omni/pkg/buf/internal/gen/data/datalegacyfederation"

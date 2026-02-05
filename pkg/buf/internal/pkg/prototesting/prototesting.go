@@ -26,7 +26,7 @@ import (
 	"strings"
 	"testing"
 
-	"buf.build/go/standard/xos/xexec"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xos/xexec"
 	"github.com/google/go-cmp/cmp"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/diff"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/protoencoding"

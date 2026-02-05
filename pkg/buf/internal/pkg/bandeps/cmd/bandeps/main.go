@@ -21,8 +21,8 @@ import (
 	"os"
 	"time"
 
-	"buf.build/go/app/appcmd"
-	"buf.build/go/app/appext"
+	"github.com/inovacc/omni/pkg/buf/internal/app/appcmd"
+	"github.com/inovacc/omni/pkg/buf/internal/app/appext"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/bandeps"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/encoding"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/slogapp"

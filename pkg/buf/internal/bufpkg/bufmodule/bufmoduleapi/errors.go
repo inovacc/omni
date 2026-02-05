@@ -18,7 +18,7 @@ import (
 	"errors"
 	"io/fs"
 
-	"connectrpc.com/connect"
+	"github.com/inovacc/omni/pkg/buf/internal/connect"
 )
 
 // notFoundError represents when a resource was not found.

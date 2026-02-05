@@ -33,7 +33,7 @@ import (
 	"path/filepath"
 	"runtime"
 
-	"buf.build/go/standard/xos/xexec"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xos/xexec"
 )
 
 // Diff does a diff.
@@ -51,6 +51,7 @@ func Diff(
 	for _, option := range options {
 		option(diffOptions)
 	}
+
 	return doDiff(
 		ctx,
 		b1,
@@ -96,6 +97,7 @@ func doDiff(
 	if err != nil {
 		return nil, err
 	}
+
 	defer func() {
 		_ = os.Remove(f1)
 	}()
@@ -104,6 +106,7 @@ func doDiff(
 	if err != nil {
 		return nil, err
 	}
+
 	defer func() {
 		_ = os.Remove(f2)
 	}()
@@ -121,12 +124,14 @@ func doDiff(
 		xexec.WithStdout(buffer),
 		xexec.WithStderr(buffer),
 	)
+
 	data := buffer.Bytes()
 	if len(data) > 0 {
 		// diff exits with a non-zero status when the files don't match.
 		// Ignore that failure as long as we get output.
 		return tryModifyHeader(data, filename1, filename2, suppressCommands, suppressTimestamps), nil
 	}
+
 	return nil, err
 }
 
@@ -135,16 +140,20 @@ func writeTempFile(dir string, prefix string, data []byte) (string, error) {
 	if err != nil {
 		return "", err
 	}
+
 	if len(data) > 0 {
 		_, err = file.Write(data)
 	}
+
 	if err1 := file.Close(); err == nil {
 		err = err1
 	}
+
 	if err != nil {
 		_ = os.Remove(file.Name())
 		return "", err
 	}
+
 	return file.Name(), nil
 }
 
@@ -161,21 +170,26 @@ func tryModifyHeader(
 	}
 	// Preserve timestamps.
 	var t0, t1 []byte
+
 	if !suppressTimestamps {
 		if i := bytes.LastIndexByte(bs[0], '\t'); i != -1 {
 			t0 = bs[0][i:]
 		}
+
 		if i := bytes.LastIndexByte(bs[1], '\t'); i != -1 {
 			t1 = bs[1][i:]
 		}
 	}
 	// Always print filepath with slash separator.
 	filename1 = filepath.ToSlash(filename1)
+
 	filename2 = filepath.ToSlash(filename2)
 	if filename1 == filename2 {
 		filename1 = filename1 + ".orig"
 	}
+
 	bs[0] = fmt.Appendf(nil, "--- %s%s", filename1, t0)
+
 	bs[1] = fmt.Appendf(nil, "+++ %s%s", filename2, t1)
 	if !suppressCommands {
 		bs = append(
@@ -185,6 +199,7 @@ func tryModifyHeader(
 			bs...,
 		)
 	}
+
 	return bytes.Join(bs, []byte{'\n'})
 }
 

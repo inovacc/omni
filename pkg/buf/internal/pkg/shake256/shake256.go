@@ -42,15 +42,18 @@ func NewDigestForContent(reader io.Reader) (Digest, error) {
 	shakeHash := sha3.NewShake256()
 	// TODO FUTURE: remove in the future, this should have no effect
 	shakeHash.Reset()
+
 	if _, err := io.Copy(shakeHash, reader); err != nil {
 		return nil, err
 	}
+
 	value := make([]byte, shake256Length)
 	if _, err := shakeHash.Read(value); err != nil {
 		// sha3.ShakeHash never errors or short reads. Something horribly wrong
 		// happened if your computer ended up here.
 		return nil, err
 	}
+
 	return newDigest(value)
 }
 
@@ -64,6 +67,7 @@ func newDigest(value []byte) (*digest, error) {
 	if len(value) != shake256Length {
 		return nil, fmt.Errorf("invalid shake256 digest value: expected %d bytes, got %d", shake256Length, len(value))
 	}
+
 	return &digest{
 		value: value,
 	}, nil

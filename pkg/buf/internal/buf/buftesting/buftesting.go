@@ -22,7 +22,7 @@ import (
 	"testing"
 	"time"
 
-	"buf.build/go/standard/xlog/xslog"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xlog/xslog"
 	"github.com/inovacc/omni/pkg/buf/internal/buf/bufprotoc"
 	bufmodule2 "github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufmodule"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/github/githubtesting"

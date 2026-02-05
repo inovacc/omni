@@ -27,6 +27,7 @@ func Count[T any](seq iter.Seq[T]) int {
 	for range seq {
 		total++
 	}
+
 	return total
 }
 
@@ -36,6 +37,7 @@ func Count2[T, U any](seq iter.Seq2[T, U]) int {
 	for range seq {
 		total++
 	}
+
 	return total
 }
 
@@ -43,12 +45,15 @@ func Count2[T, U any](seq iter.Seq2[T, U]) int {
 // stringified as if by [fmt.Print].
 func Join[T any](seq iter.Seq[T], sep string) string {
 	var out strings.Builder
+
 	for i, v := range Enumerate(seq) {
 		if i > 0 {
 			out.WriteString(sep)
 		}
+
 		fmt.Fprint(&out, v)
 	}
+
 	return out.String()
 }
 
@@ -60,6 +65,7 @@ func Every[T any](seq iter.Seq[T], p func(T) bool) bool {
 			return false
 		}
 	}
+
 	return true
 }
 

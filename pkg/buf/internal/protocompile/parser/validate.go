@@ -22,10 +22,10 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/types/descriptorpb"
 
-	"github.com/bufbuild/protocompile/ast"
-	"github.com/bufbuild/protocompile/internal"
-	"github.com/bufbuild/protocompile/reporter"
-	"github.com/bufbuild/protocompile/walk"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/ast"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/internal"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/reporter"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/walk"
 )
 
 func validateBasic(res *result, handler *reporter.Handler) {

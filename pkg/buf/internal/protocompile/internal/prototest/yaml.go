@@ -24,9 +24,9 @@ import (
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
-	"github.com/bufbuild/protocompile/experimental/dom"
-	"github.com/bufbuild/protocompile/internal/ext/cmpx"
-	"github.com/bufbuild/protocompile/internal/ext/iterx"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/dom"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/internal/ext/cmpx"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/internal/ext/iterx"
 )
 
 // ToYAMLOptions contains configuration for [ToYAML].

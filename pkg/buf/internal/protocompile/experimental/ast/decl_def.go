@@ -17,10 +17,10 @@ package ast
 import (
 	"iter"
 
-	"github.com/bufbuild/protocompile/experimental/id"
-	"github.com/bufbuild/protocompile/experimental/source"
-	"github.com/bufbuild/protocompile/experimental/token"
-	"github.com/bufbuild/protocompile/experimental/token/keyword"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/id"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/source"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/token"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/token/keyword"
 )
 
 // DeclDef is a general Protobuf definition.
@@ -606,8 +606,8 @@ type Def interface {
 // See [DeclDef.Classify].
 type DefMessage struct {
 	Keyword token.Token
-	Name token.Token
-	Body DeclBody
+	Name    token.Token
+	Body    DeclBody
 
 	Decl DeclDef
 }
@@ -621,8 +621,8 @@ func (d DefMessage) Context() *File    { return d.Decl.Context() }
 // See [DeclDef.Classify].
 type DefEnum struct {
 	Keyword token.Token
-	Name token.Token
-	Body DeclBody
+	Name    token.Token
+	Body    DeclBody
 
 	Decl DeclDef
 }
@@ -636,8 +636,8 @@ func (d DefEnum) Context() *File    { return d.Decl.Context() }
 // See [DeclDef.Classify].
 type DefService struct {
 	Keyword token.Token
-	Name token.Token
-	Body DeclBody
+	Name    token.Token
+	Body    DeclBody
 
 	Decl DeclDef
 }
@@ -701,8 +701,8 @@ func (d DefEnumValue) Context() *File    { return d.Decl.Context() }
 // See [DeclDef.Classify].
 type DefOneof struct {
 	Keyword token.Token
-	Name token.Token
-	Body DeclBody
+	Name    token.Token
+	Body    DeclBody
 
 	Decl DeclDef
 }

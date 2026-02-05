@@ -19,7 +19,7 @@ import (
 	"fmt"
 	"iter"
 
-	"github.com/bufbuild/protocompile/internal/ext/slicesx"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/internal/ext/slicesx"
 )
 
 const (
@@ -67,7 +67,9 @@ func (s *Sorter[Node, Key]) Sort(
 		if s.iterating {
 			panic("internal/toposort: Sort() called reëntrantly")
 		}
+
 		s.iterating = true
+
 		defer func() {
 			clear(s.state)
 			clear(s.stack)
@@ -92,14 +94,17 @@ func (s *Sorter[Node, Key]) Sort(
 					for child := range dag(node) {
 						s.push(child)
 					}
+
 					continue
 				}
 
 				s.stack = s.stack[:len(s.stack)-1]
+
 				if state != sorted {
 					if !yield(node) {
 						return
 					}
+
 					s.state[k] = sorted
 				}
 			}

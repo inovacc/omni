@@ -24,7 +24,7 @@ package taxa
 import (
 	"fmt"
 
-	"github.com/bufbuild/protocompile/experimental/token/keyword"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/token/keyword"
 )
 
 //go:generate go run github.com/bufbuild/protocompile/internal/enum noun.yaml

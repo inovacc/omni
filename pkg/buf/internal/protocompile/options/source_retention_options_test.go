@@ -28,7 +28,7 @@ import (
 	"google.golang.org/protobuf/types/descriptorpb"
 	"google.golang.org/protobuf/types/dynamicpb"
 
-	"github.com/bufbuild/protocompile/internal"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/internal"
 )
 
 func TestStripSourceOnlyOptions(t *testing.T) {

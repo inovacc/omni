@@ -37,9 +37,11 @@ func (e *Error) Error() string {
 	if e == nil {
 		return ""
 	}
+
 	if e.Underlying == nil {
 		return ""
 	}
+
 	return "system error: " + e.Underlying.Error()
 }
 
@@ -48,6 +50,7 @@ func (e *Error) Unwrap() error {
 	if e == nil {
 		return nil
 	}
+
 	return e.Underlying
 }
 
@@ -72,6 +75,7 @@ func Wrap(err error) error {
 	if Is(err) {
 		return err
 	}
+
 	return &Error{
 		Underlying: err,
 	}
@@ -88,5 +92,6 @@ func Is(err error) bool {
 func As(err error) (*Error, bool) {
 	target := &Error{}
 	ok := errors.As(err, &target)
+
 	return target, ok
 }

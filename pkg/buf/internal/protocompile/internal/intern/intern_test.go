@@ -21,7 +21,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/bufbuild/protocompile/internal/intern"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/internal/intern"
 )
 
 func TestIntern(t *testing.T) {

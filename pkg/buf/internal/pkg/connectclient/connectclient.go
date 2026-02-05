@@ -17,7 +17,7 @@ package connectclient
 import (
 	"slices"
 
-	"connectrpc.com/connect"
+	"github.com/inovacc/omni/pkg/buf/internal/connect"
 )
 
 // TODO FUTURE: eliminate config, just make the below MakeOptions, add httpClient as a parameter to Make

@@ -46,4 +46,5 @@ func init() {
 	awsCmd.PersistentFlags().String("profile", "", "AWS profile to use")
 	awsCmd.PersistentFlags().String("region", "", "AWS region")
 	awsCmd.PersistentFlags().String("output", "json", "output format: json, text, table")
+	awsCmd.PersistentFlags().String("endpoint-url", "", "custom endpoint URL (for LocalStack, MinIO, etc.)")
 }

@@ -19,7 +19,7 @@ package bufimage_test
 import (
 	"testing"
 
-	"buf.build/go/standard/xtesting"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xtesting"
 	"github.com/inovacc/omni/pkg/buf/internal/buf/buftesting"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufimage"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/prototesting"

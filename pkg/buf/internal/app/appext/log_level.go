@@ -68,12 +68,15 @@ func (l LogLevel) SlogLevel() slog.Level {
 	case LogLevelError:
 		return slog.LevelError
 	}
+
 	if l < LogLevelDebug {
 		return slog.LevelDebug
 	}
+
 	if l > LogLevelError {
 		return slog.LevelError
 	}
+
 	return slog.LevelInfo
 }
 

@@ -17,7 +17,7 @@ package token
 import (
 	"fmt"
 
-	"github.com/bufbuild/protocompile/experimental/internal/tokenmeta"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/internal/tokenmeta"
 )
 
 // GetMeta returns the metadata value associated with this token. This function
