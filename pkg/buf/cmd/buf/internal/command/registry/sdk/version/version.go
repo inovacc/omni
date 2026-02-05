@@ -20,10 +20,10 @@ import (
 
 	"github.com/inovacc/omni/pkg/buf/internal/app/appcmd"
 	"github.com/inovacc/omni/pkg/buf/internal/app/appext"
-	"github.com/inovacc/omni/pkg/buf/internal/connect"
 	"github.com/inovacc/omni/pkg/buf/internal/buf/bufcli"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufparse"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufremoteplugin/bufremotepluginref"
+	"github.com/inovacc/omni/pkg/buf/internal/connect"
 	registryv1alpha1connect2 "github.com/inovacc/omni/pkg/buf/internal/gen/proto/connect/buf/alpha/registry/v1alpha1/registryv1alpha1connect"
 	registryv1alpha2 "github.com/inovacc/omni/pkg/buf/internal/gen/proto/go/buf/alpha/registry/v1alpha1"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/connectclient"

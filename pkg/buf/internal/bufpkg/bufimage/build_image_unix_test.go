@@ -19,10 +19,10 @@ package bufimage_test
 import (
 	"testing"
 
-	"github.com/inovacc/omni/pkg/buf/internal/standard/xtesting"
 	"github.com/inovacc/omni/pkg/buf/internal/buf/buftesting"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufimage"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/prototesting"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xtesting"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/protobuf/types/descriptorpb"
 )

@@ -23,11 +23,11 @@ import (
 	"unicode/utf16"
 
 	celpv "buf.build/go/protovalidate/cel"
-	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
 	"github.com/google/cel-go/cel"
 	"github.com/inovacc/omni/pkg/buf/internal/buf/bufformat"
 	"github.com/inovacc/omni/pkg/buf/internal/protocompile/parser"
 	"github.com/inovacc/omni/pkg/buf/internal/protocompile/reporter"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
 	"go.lsp.dev/protocol"
 )
 

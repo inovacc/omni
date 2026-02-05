@@ -84,9 +84,9 @@ func (x StudioAgentProtocol) Number() protoreflect.EnumNumber {
 type StudioAgentPreset struct {
 	state                protoimpl.MessageState `protogen:"opaque.v1"`
 	xxx_hidden_Url       string                 `protobuf:"bytes,1,opt,name=url,proto3"`
-	xxx_hidden_Alias     string              `protobuf:"bytes,2,opt,name=alias,proto3"`
-	xxx_hidden_Protocol  StudioAgentProtocol `protobuf:"varint,3,opt,name=protocol,proto3,enum=buf.alpha.registry.v1alpha1.StudioAgentProtocol"`
-	xxx_hidden_TargetUrl string              `protobuf:"bytes,4,opt,name=target_url,json=targetUrl,proto3"`
+	xxx_hidden_Alias     string                 `protobuf:"bytes,2,opt,name=alias,proto3"`
+	xxx_hidden_Protocol  StudioAgentProtocol    `protobuf:"varint,3,opt,name=protocol,proto3,enum=buf.alpha.registry.v1alpha1.StudioAgentProtocol"`
+	xxx_hidden_TargetUrl string                 `protobuf:"bytes,4,opt,name=target_url,json=targetUrl,proto3"`
 	unknownFields        protoimpl.UnknownFields
 	sizeCache            protoimpl.SizeCache
 }

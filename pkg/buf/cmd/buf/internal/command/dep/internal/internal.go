@@ -20,13 +20,13 @@ import (
 	"log/slog"
 
 	"github.com/inovacc/omni/pkg/buf/internal/app/appext"
-	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
 	bufcli2 "github.com/inovacc/omni/pkg/buf/internal/buf/bufcli"
 	bufctl2 "github.com/inovacc/omni/pkg/buf/internal/buf/bufctl"
 	bufworkspace2 "github.com/inovacc/omni/pkg/buf/internal/buf/bufworkspace"
 	bufmodule2 "github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufmodule"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufparse"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/syserror"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
 )
 
 // ModuleKeysAndTransitiveDepModuleKeysForModuleRefs gets the ModuleKeys for the

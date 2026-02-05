@@ -17,11 +17,11 @@ package check
 import (
 	"context"
 
-	checkv1 "github.com/inovacc/omni/pkg/buf/internal/gen/bufbuild/bufplugin/protocolbuffers/go/buf/plugin/check/v1"
 	"buf.build/go/bufplugin/info"
 	"buf.build/go/bufplugin/internal/gen/buf/plugin/check/v1/v1pluginrpc"
 	"buf.build/go/bufplugin/internal/pkg/cache"
 	"buf.build/go/bufplugin/internal/pkg/xslices"
+	checkv1 "github.com/inovacc/omni/pkg/buf/internal/gen/bufbuild/bufplugin/protocolbuffers/go/buf/plugin/check/v1"
 	"pluginrpc.com/pluginrpc"
 )
 

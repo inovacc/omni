@@ -310,10 +310,10 @@ func (b0 UniquenessPolicy_builder) Build() *UniquenessPolicy {
 // Collision is a collision that has occurred.
 type Collision struct {
 	state                               protoimpl.MessageState `protogen:"opaque.v1"`
-	xxx_hidden_Reference                string              `protobuf:"bytes,1,opt,name=reference,proto3"`
-	xxx_hidden_Type                     CollisionType       `protobuf:"varint,2,opt,name=type,proto3,enum=buf.alpha.registry.v1alpha1.CollisionType"`
-	xxx_hidden_Sources                  *[]*CollisionSource `protobuf:"bytes,3,rep,name=sources,proto3"`
-	xxx_hidden_HasOtherCollisionSources bool                `protobuf:"varint,4,opt,name=has_other_collision_sources,json=hasOtherCollisionSources,proto3"`
+	xxx_hidden_Reference                string                 `protobuf:"bytes,1,opt,name=reference,proto3"`
+	xxx_hidden_Type                     CollisionType          `protobuf:"varint,2,opt,name=type,proto3,enum=buf.alpha.registry.v1alpha1.CollisionType"`
+	xxx_hidden_Sources                  *[]*CollisionSource    `protobuf:"bytes,3,rep,name=sources,proto3"`
+	xxx_hidden_HasOtherCollisionSources bool                   `protobuf:"varint,4,opt,name=has_other_collision_sources,json=hasOtherCollisionSources,proto3"`
 	unknownFields                       protoimpl.UnknownFields
 	sizeCache                           protoimpl.SizeCache
 }
@@ -786,8 +786,8 @@ func (b0 ForceDeleteUserResponse_builder) Build() *ForceDeleteUserResponse {
 
 type UpdateUserVerificationStatusRequest struct {
 	state                         protoimpl.MessageState `protogen:"opaque.v1"`
-	xxx_hidden_UserId             string             `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3"`
-	xxx_hidden_VerificationStatus VerificationStatus `protobuf:"varint,2,opt,name=verification_status,json=verificationStatus,proto3,enum=buf.alpha.registry.v1alpha1.VerificationStatus"`
+	xxx_hidden_UserId             string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3"`
+	xxx_hidden_VerificationStatus VerificationStatus     `protobuf:"varint,2,opt,name=verification_status,json=verificationStatus,proto3,enum=buf.alpha.registry.v1alpha1.VerificationStatus"`
 	unknownFields                 protoimpl.UnknownFields
 	sizeCache                     protoimpl.SizeCache
 }
@@ -900,8 +900,8 @@ func (b0 UpdateUserVerificationStatusResponse_builder) Build() *UpdateUserVerifi
 
 type UpdateOrganizationVerificationStatusRequest struct {
 	state                         protoimpl.MessageState `protogen:"opaque.v1"`
-	xxx_hidden_OrganizationId     string             `protobuf:"bytes,1,opt,name=organization_id,json=organizationId,proto3"`
-	xxx_hidden_VerificationStatus VerificationStatus `protobuf:"varint,2,opt,name=verification_status,json=verificationStatus,proto3,enum=buf.alpha.registry.v1alpha1.VerificationStatus"`
+	xxx_hidden_OrganizationId     string                 `protobuf:"bytes,1,opt,name=organization_id,json=organizationId,proto3"`
+	xxx_hidden_VerificationStatus VerificationStatus     `protobuf:"varint,2,opt,name=verification_status,json=verificationStatus,proto3,enum=buf.alpha.registry.v1alpha1.VerificationStatus"`
 	unknownFields                 protoimpl.UnknownFields
 	sizeCache                     protoimpl.SizeCache
 }
@@ -1601,8 +1601,8 @@ func (b0 UpdateUniquenessPolicyResponse_builder) Build() *UpdateUniquenessPolicy
 type ListServerUniquenessCollisionsRequest struct {
 	state                    protoimpl.MessageState `protogen:"opaque.v1"`
 	xxx_hidden_PageToken     string                 `protobuf:"bytes,1,opt,name=page_token,json=pageToken,proto3"`
-	xxx_hidden_PageSize      uint32        `protobuf:"varint,2,opt,name=page_size,json=pageSize,proto3"`
-	xxx_hidden_CollisionType CollisionType `protobuf:"varint,3,opt,name=collision_type,json=collisionType,proto3,enum=buf.alpha.registry.v1alpha1.CollisionType"`
+	xxx_hidden_PageSize      uint32                 `protobuf:"varint,2,opt,name=page_size,json=pageSize,proto3"`
+	xxx_hidden_CollisionType CollisionType          `protobuf:"varint,3,opt,name=collision_type,json=collisionType,proto3,enum=buf.alpha.registry.v1alpha1.CollisionType"`
 	unknownFields            protoimpl.UnknownFields
 	sizeCache                protoimpl.SizeCache
 }

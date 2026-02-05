@@ -43,8 +43,8 @@ type Organization struct {
 	xxx_hidden_UpdateTime         *timestamppb.Timestamp `protobuf:"bytes,3,opt,name=update_time,json=updateTime,proto3"`
 	xxx_hidden_Name               string                 `protobuf:"bytes,4,opt,name=name,proto3"`
 	xxx_hidden_Description        string                 `protobuf:"bytes,5,opt,name=description,proto3"`
-	xxx_hidden_Url                string             `protobuf:"bytes,6,opt,name=url,proto3"`
-	xxx_hidden_VerificationStatus VerificationStatus `protobuf:"varint,7,opt,name=verification_status,json=verificationStatus,proto3,enum=buf.alpha.registry.v1alpha1.VerificationStatus"`
+	xxx_hidden_Url                string                 `protobuf:"bytes,6,opt,name=url,proto3"`
+	xxx_hidden_VerificationStatus VerificationStatus     `protobuf:"varint,7,opt,name=verification_status,json=verificationStatus,proto3,enum=buf.alpha.registry.v1alpha1.VerificationStatus"`
 	unknownFields                 protoimpl.UnknownFields
 	sizeCache                     protoimpl.SizeCache
 }
@@ -1346,8 +1346,8 @@ func (b0 DeleteOrganizationByNameResponse_builder) Build() *DeleteOrganizationBy
 type AddOrganizationMemberRequest struct {
 	state                       protoimpl.MessageState `protogen:"opaque.v1"`
 	xxx_hidden_OrganizationId   string                 `protobuf:"bytes,1,opt,name=organization_id,json=organizationId,proto3"`
-	xxx_hidden_UserId           string           `protobuf:"bytes,2,opt,name=user_id,json=userId,proto3"`
-	xxx_hidden_OrganizationRole OrganizationRole `protobuf:"varint,3,opt,name=organization_role,json=organizationRole,proto3,enum=buf.alpha.registry.v1alpha1.OrganizationRole"`
+	xxx_hidden_UserId           string                 `protobuf:"bytes,2,opt,name=user_id,json=userId,proto3"`
+	xxx_hidden_OrganizationRole OrganizationRole       `protobuf:"varint,3,opt,name=organization_role,json=organizationRole,proto3,enum=buf.alpha.registry.v1alpha1.OrganizationRole"`
 	unknownFields               protoimpl.UnknownFields
 	sizeCache                   protoimpl.SizeCache
 }
@@ -1477,8 +1477,8 @@ func (b0 AddOrganizationMemberResponse_builder) Build() *AddOrganizationMemberRe
 type UpdateOrganizationMemberRequest struct {
 	state                       protoimpl.MessageState `protogen:"opaque.v1"`
 	xxx_hidden_OrganizationId   string                 `protobuf:"bytes,1,opt,name=organization_id,json=organizationId,proto3"`
-	xxx_hidden_UserId           string           `protobuf:"bytes,2,opt,name=user_id,json=userId,proto3"`
-	xxx_hidden_OrganizationRole OrganizationRole `protobuf:"varint,3,opt,name=organization_role,json=organizationRole,proto3,enum=buf.alpha.registry.v1alpha1.OrganizationRole"`
+	xxx_hidden_UserId           string                 `protobuf:"bytes,2,opt,name=user_id,json=userId,proto3"`
+	xxx_hidden_OrganizationRole OrganizationRole       `protobuf:"varint,3,opt,name=organization_role,json=organizationRole,proto3,enum=buf.alpha.registry.v1alpha1.OrganizationRole"`
 	unknownFields               protoimpl.UnknownFields
 	sizeCache                   protoimpl.SizeCache
 }
@@ -1870,9 +1870,9 @@ func (b0 GetOrganizationSettingsResponse_builder) Build() *GetOrganizationSettin
 
 type UpdateOrganizationSettingsRequest struct {
 	state                         protoimpl.MessageState `protogen:"opaque.v1"`
-	xxx_hidden_OrganizationId     string         `protobuf:"bytes,1,opt,name=organization_id,json=organizationId,proto3"`
-	xxx_hidden_RepositoryBaseRole RepositoryRole `protobuf:"varint,2,opt,name=repository_base_role,json=repositoryBaseRole,proto3,enum=buf.alpha.registry.v1alpha1.RepositoryRole"`
-	xxx_hidden_Description        *string        `protobuf:"bytes,5,opt,name=description,proto3,oneof"`
+	xxx_hidden_OrganizationId     string                 `protobuf:"bytes,1,opt,name=organization_id,json=organizationId,proto3"`
+	xxx_hidden_RepositoryBaseRole RepositoryRole         `protobuf:"varint,2,opt,name=repository_base_role,json=repositoryBaseRole,proto3,enum=buf.alpha.registry.v1alpha1.RepositoryRole"`
+	xxx_hidden_Description        *string                `protobuf:"bytes,5,opt,name=description,proto3,oneof"`
 	xxx_hidden_Url                *string                `protobuf:"bytes,6,opt,name=url,proto3,oneof"`
 	XXX_raceDetectHookData        protoimpl.RaceDetectHookData
 	XXX_presence                  [1]uint32
@@ -2057,9 +2057,9 @@ func (b0 UpdateOrganizationSettingsResponse_builder) Build() *UpdateOrganization
 type AddOrganizationGroupRequest struct {
 	state                     protoimpl.MessageState `protogen:"opaque.v1"`
 	xxx_hidden_OrganizationId string                 `protobuf:"bytes,1,opt,name=organization_id,json=organizationId,proto3"`
-	xxx_hidden_GroupName    string           `protobuf:"bytes,2,opt,name=group_name,json=groupName,proto3"`
-	xxx_hidden_RoleOverride OrganizationRole `protobuf:"varint,3,opt,name=role_override,json=roleOverride,proto3,enum=buf.alpha.registry.v1alpha1.OrganizationRole"`
-	unknownFields           protoimpl.UnknownFields
+	xxx_hidden_GroupName      string                 `protobuf:"bytes,2,opt,name=group_name,json=groupName,proto3"`
+	xxx_hidden_RoleOverride   OrganizationRole       `protobuf:"varint,3,opt,name=role_override,json=roleOverride,proto3,enum=buf.alpha.registry.v1alpha1.OrganizationRole"`
+	unknownFields             protoimpl.UnknownFields
 	sizeCache                 protoimpl.SizeCache
 }
 
@@ -2191,9 +2191,9 @@ func (b0 AddOrganizationGroupResponse_builder) Build() *AddOrganizationGroupResp
 type UpdateOrganizationGroupRequest struct {
 	state                     protoimpl.MessageState `protogen:"opaque.v1"`
 	xxx_hidden_OrganizationId string                 `protobuf:"bytes,1,opt,name=organization_id,json=organizationId,proto3"`
-	xxx_hidden_GroupName    string           `protobuf:"bytes,2,opt,name=group_name,json=groupName,proto3"`
-	xxx_hidden_RoleOverride OrganizationRole `protobuf:"varint,3,opt,name=role_override,json=roleOverride,proto3,enum=buf.alpha.registry.v1alpha1.OrganizationRole,oneof"`
-	XXX_raceDetectHookData  protoimpl.RaceDetectHookData
+	xxx_hidden_GroupName      string                 `protobuf:"bytes,2,opt,name=group_name,json=groupName,proto3"`
+	xxx_hidden_RoleOverride   OrganizationRole       `protobuf:"varint,3,opt,name=role_override,json=roleOverride,proto3,enum=buf.alpha.registry.v1alpha1.OrganizationRole,oneof"`
+	XXX_raceDetectHookData    protoimpl.RaceDetectHookData
 	XXX_presence              [1]uint32
 	unknownFields             protoimpl.UnknownFields
 	sizeCache                 protoimpl.SizeCache
@@ -2460,8 +2460,8 @@ func (b0 RemoveOrganizationGroupResponse_builder) Build() *RemoveOrganizationGro
 
 type GetOrganizationSettingsResponse_IdPGroup struct {
 	state                   protoimpl.MessageState `protogen:"opaque.v1"`
-	xxx_hidden_Name         string           `protobuf:"bytes,1,opt,name=name,proto3"`
-	xxx_hidden_RoleOverride OrganizationRole `protobuf:"varint,2,opt,name=role_override,json=roleOverride,proto3,enum=buf.alpha.registry.v1alpha1.OrganizationRole"`
+	xxx_hidden_Name         string                 `protobuf:"bytes,1,opt,name=name,proto3"`
+	xxx_hidden_RoleOverride OrganizationRole       `protobuf:"varint,2,opt,name=role_override,json=roleOverride,proto3,enum=buf.alpha.registry.v1alpha1.OrganizationRole"`
 	unknownFields           protoimpl.UnknownFields
 	sizeCache               protoimpl.SizeCache
 }

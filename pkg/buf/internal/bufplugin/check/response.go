@@ -17,8 +17,8 @@ package check
 import (
 	"slices"
 
-	checkv1 "github.com/inovacc/omni/pkg/buf/internal/gen/bufbuild/bufplugin/protocolbuffers/go/buf/plugin/check/v1"
 	"buf.build/go/bufplugin/internal/pkg/xslices"
+	checkv1 "github.com/inovacc/omni/pkg/buf/internal/gen/bufbuild/bufplugin/protocolbuffers/go/buf/plugin/check/v1"
 )
 
 // Response is a response from a plugin for a check call.

@@ -135,9 +135,9 @@ func (b0 Headers_builder) Build() *Headers {
 // for more information.
 type InvokeRequest struct {
 	state              protoimpl.MessageState `protogen:"opaque.v1"`
-	xxx_hidden_Target  string      `protobuf:"bytes,1,opt,name=target,proto3"`
-	xxx_hidden_Headers *[]*Headers `protobuf:"bytes,2,rep,name=headers,proto3"`
-	xxx_hidden_Body    []byte      `protobuf:"bytes,3,opt,name=body,proto3"`
+	xxx_hidden_Target  string                 `protobuf:"bytes,1,opt,name=target,proto3"`
+	xxx_hidden_Headers *[]*Headers            `protobuf:"bytes,2,rep,name=headers,proto3"`
+	xxx_hidden_Body    []byte                 `protobuf:"bytes,3,opt,name=body,proto3"`
 	unknownFields      protoimpl.UnknownFields
 	sizeCache          protoimpl.SizeCache
 }

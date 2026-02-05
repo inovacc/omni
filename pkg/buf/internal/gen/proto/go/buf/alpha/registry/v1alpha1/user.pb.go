@@ -135,9 +135,9 @@ type User struct {
 	xxx_hidden_Username           string                 `protobuf:"bytes,4,opt,name=username,proto3"`
 	xxx_hidden_Deactivated        bool                   `protobuf:"varint,5,opt,name=deactivated,proto3"`
 	xxx_hidden_Description        string                 `protobuf:"bytes,6,opt,name=description,proto3"`
-	xxx_hidden_Url                string             `protobuf:"bytes,7,opt,name=url,proto3"`
-	xxx_hidden_VerificationStatus VerificationStatus `protobuf:"varint,8,opt,name=verification_status,json=verificationStatus,proto3,enum=buf.alpha.registry.v1alpha1.VerificationStatus"`
-	xxx_hidden_UserType           UserType           `protobuf:"varint,9,opt,name=user_type,json=userType,proto3,enum=buf.alpha.registry.v1alpha1.UserType"`
+	xxx_hidden_Url                string                 `protobuf:"bytes,7,opt,name=url,proto3"`
+	xxx_hidden_VerificationStatus VerificationStatus     `protobuf:"varint,8,opt,name=verification_status,json=verificationStatus,proto3,enum=buf.alpha.registry.v1alpha1.VerificationStatus"`
+	xxx_hidden_UserType           UserType               `protobuf:"varint,9,opt,name=user_type,json=userType,proto3,enum=buf.alpha.registry.v1alpha1.UserType"`
 	unknownFields                 protoimpl.UnknownFields
 	sizeCache                     protoimpl.SizeCache
 }
@@ -821,9 +821,9 @@ type ListUsersRequest struct {
 	state                      protoimpl.MessageState `protogen:"opaque.v1"`
 	xxx_hidden_PageSize        uint32                 `protobuf:"varint,1,opt,name=page_size,json=pageSize,proto3"`
 	xxx_hidden_PageToken       string                 `protobuf:"bytes,2,opt,name=page_token,json=pageToken,proto3"`
-	xxx_hidden_Reverse         bool       `protobuf:"varint,3,opt,name=reverse,proto3"`
-	xxx_hidden_UserStateFilter UserState  `protobuf:"varint,4,opt,name=user_state_filter,json=userStateFilter,proto3,enum=buf.alpha.registry.v1alpha1.UserState"`
-	xxx_hidden_UserTypeFilters []UserType `protobuf:"varint,5,rep,packed,name=user_type_filters,json=userTypeFilters,proto3,enum=buf.alpha.registry.v1alpha1.UserType"`
+	xxx_hidden_Reverse         bool                   `protobuf:"varint,3,opt,name=reverse,proto3"`
+	xxx_hidden_UserStateFilter UserState              `protobuf:"varint,4,opt,name=user_state_filter,json=userStateFilter,proto3,enum=buf.alpha.registry.v1alpha1.UserState"`
+	xxx_hidden_UserTypeFilters []UserType             `protobuf:"varint,5,rep,packed,name=user_type_filters,json=userTypeFilters,proto3,enum=buf.alpha.registry.v1alpha1.UserType"`
 	unknownFields              protoimpl.UnknownFields
 	sizeCache                  protoimpl.SizeCache
 }
@@ -1369,8 +1369,8 @@ func (b0 DeactivateUserResponse_builder) Build() *DeactivateUserResponse {
 
 type UpdateUserServerRoleRequest struct {
 	state                 protoimpl.MessageState `protogen:"opaque.v1"`
-	xxx_hidden_UserId     string     `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3"`
-	xxx_hidden_ServerRole ServerRole `protobuf:"varint,2,opt,name=server_role,json=serverRole,proto3,enum=buf.alpha.registry.v1alpha1.ServerRole"`
+	xxx_hidden_UserId     string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3"`
+	xxx_hidden_ServerRole ServerRole             `protobuf:"varint,2,opt,name=server_role,json=serverRole,proto3,enum=buf.alpha.registry.v1alpha1.ServerRole"`
 	unknownFields         protoimpl.UnknownFields
 	sizeCache             protoimpl.SizeCache
 }

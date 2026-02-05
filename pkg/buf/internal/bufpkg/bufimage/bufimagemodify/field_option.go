@@ -17,12 +17,12 @@ package bufimagemodify
 import (
 	"fmt"
 
-	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
 	bufconfig2 "github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufconfig"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufimage"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufimage/bufimagemodify/internal"
 	"github.com/inovacc/omni/pkg/buf/internal/gen/data/datawkt"
 	"github.com/inovacc/omni/pkg/buf/internal/protocompile/walk"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/types/descriptorpb"

@@ -25,12 +25,10 @@ import (
 	"slices"
 	"sort"
 
-	"github.com/inovacc/omni/pkg/buf/internal/app"
-	"github.com/inovacc/omni/pkg/buf/internal/app/appcmd"
 	"buf.build/go/protovalidate"
 	"buf.build/go/protoyaml"
-	"github.com/inovacc/omni/pkg/buf/internal/standard/xio"
-	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
+	"github.com/inovacc/omni/pkg/buf/internal/app"
+	"github.com/inovacc/omni/pkg/buf/internal/app/appcmd"
 	"github.com/inovacc/omni/pkg/buf/internal/buf/buffetch"
 	"github.com/inovacc/omni/pkg/buf/internal/buf/bufwkt/bufwktstore"
 	bufworkspace2 "github.com/inovacc/omni/pkg/buf/internal/buf/bufworkspace"
@@ -53,6 +51,8 @@ import (
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/storage/storageos"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/syserror"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/wasm"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xio"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
 	"google.golang.org/protobuf/proto"
 )
 

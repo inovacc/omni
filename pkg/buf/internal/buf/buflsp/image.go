@@ -22,8 +22,6 @@ import (
 	"log/slog"
 	"strings"
 
-	"github.com/inovacc/omni/pkg/buf/internal/standard/xlog/xslog"
-	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
 	"github.com/google/uuid"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufimage"
 	"github.com/inovacc/omni/pkg/buf/internal/protocompile"
@@ -32,6 +30,8 @@ import (
 	"github.com/inovacc/omni/pkg/buf/internal/protocompile/parser"
 	"github.com/inovacc/omni/pkg/buf/internal/protocompile/protoutil"
 	"github.com/inovacc/omni/pkg/buf/internal/protocompile/reporter"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xlog/xslog"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
 	"go.lsp.dev/protocol"
 	"google.golang.org/protobuf/reflect/protoreflect"
 )

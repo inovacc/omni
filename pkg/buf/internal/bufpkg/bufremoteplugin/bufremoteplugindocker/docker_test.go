@@ -33,14 +33,14 @@ import (
 	"testing"
 	"time"
 
-	"github.com/inovacc/omni/pkg/buf/internal/app"
-	"github.com/inovacc/omni/pkg/buf/internal/standard/xos/xexec"
 	"github.com/docker/docker/api/types"
 	dockerimage "github.com/docker/docker/api/types/image"
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/jsonmessage"
 	"github.com/docker/docker/pkg/stringid"
+	"github.com/inovacc/omni/pkg/buf/internal/app"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/slogtestext"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xos/xexec"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

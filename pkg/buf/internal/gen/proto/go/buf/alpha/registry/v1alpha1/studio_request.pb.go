@@ -101,9 +101,9 @@ type CreateStudioRequestRequest struct {
 	xxx_hidden_Method          string                 `protobuf:"bytes,6,opt,name=method,proto3"`
 	xxx_hidden_Body            string                 `protobuf:"bytes,7,opt,name=body,proto3"`
 	xxx_hidden_Headers         map[string]string      `protobuf:"bytes,8,rep,name=headers,proto3" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
-	xxx_hidden_IncludeCookies bool           `protobuf:"varint,9,opt,name=include_cookies,json=includeCookies,proto3"`
-	xxx_hidden_Protocol       StudioProtocol `protobuf:"varint,10,opt,name=protocol,proto3,enum=buf.alpha.registry.v1alpha1.StudioProtocol"`
-	xxx_hidden_AgentUrl       string         `protobuf:"bytes,11,opt,name=agent_url,json=agentUrl,proto3"`
+	xxx_hidden_IncludeCookies  bool                   `protobuf:"varint,9,opt,name=include_cookies,json=includeCookies,proto3"`
+	xxx_hidden_Protocol        StudioProtocol         `protobuf:"varint,10,opt,name=protocol,proto3,enum=buf.alpha.registry.v1alpha1.StudioProtocol"`
+	xxx_hidden_AgentUrl        string                 `protobuf:"bytes,11,opt,name=agent_url,json=agentUrl,proto3"`
 	unknownFields              protoimpl.UnknownFields
 	sizeCache                  protoimpl.SizeCache
 }
@@ -778,9 +778,9 @@ type StudioRequest struct {
 	xxx_hidden_Method          string                 `protobuf:"bytes,11,opt,name=method,proto3"`
 	xxx_hidden_Body            string                 `protobuf:"bytes,12,opt,name=body,proto3"`
 	xxx_hidden_Headers         map[string]string      `protobuf:"bytes,13,rep,name=headers,proto3" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
-	xxx_hidden_IncludeCookies bool           `protobuf:"varint,14,opt,name=include_cookies,json=includeCookies,proto3"`
-	xxx_hidden_Protocol       StudioProtocol `protobuf:"varint,15,opt,name=protocol,proto3,enum=buf.alpha.registry.v1alpha1.StudioProtocol"`
-	xxx_hidden_AgentUrl       string         `protobuf:"bytes,16,opt,name=agent_url,json=agentUrl,proto3"`
+	xxx_hidden_IncludeCookies  bool                   `protobuf:"varint,14,opt,name=include_cookies,json=includeCookies,proto3"`
+	xxx_hidden_Protocol        StudioProtocol         `protobuf:"varint,15,opt,name=protocol,proto3,enum=buf.alpha.registry.v1alpha1.StudioProtocol"`
+	xxx_hidden_AgentUrl        string                 `protobuf:"bytes,16,opt,name=agent_url,json=agentUrl,proto3"`
 	unknownFields              protoimpl.UnknownFields
 	sizeCache                  protoimpl.SizeCache
 }

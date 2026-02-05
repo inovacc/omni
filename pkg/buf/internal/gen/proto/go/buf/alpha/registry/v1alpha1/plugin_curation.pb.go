@@ -1669,27 +1669,27 @@ type CuratedPlugin struct {
 	state                           protoimpl.MessageState     `protogen:"opaque.v1"`
 	xxx_hidden_Id                   string                     `protobuf:"bytes,1,opt,name=id,proto3"`
 	xxx_hidden_Owner                string                     `protobuf:"bytes,2,opt,name=owner,proto3"`
-	xxx_hidden_Name            string                     `protobuf:"bytes,3,opt,name=name,proto3"`
-	xxx_hidden_RegistryType    PluginRegistryType         `protobuf:"varint,4,opt,name=registry_type,json=registryType,proto3,enum=buf.alpha.registry.v1alpha1.PluginRegistryType"`
-	xxx_hidden_Version         string                     `protobuf:"bytes,5,opt,name=version,proto3"`
+	xxx_hidden_Name                 string                     `protobuf:"bytes,3,opt,name=name,proto3"`
+	xxx_hidden_RegistryType         PluginRegistryType         `protobuf:"varint,4,opt,name=registry_type,json=registryType,proto3,enum=buf.alpha.registry.v1alpha1.PluginRegistryType"`
+	xxx_hidden_Version              string                     `protobuf:"bytes,5,opt,name=version,proto3"`
 	xxx_hidden_ContainerImageDigest string                     `protobuf:"bytes,6,opt,name=container_image_digest,json=containerImageDigest,proto3"`
-	xxx_hidden_CreateTime      *timestamppb.Timestamp     `protobuf:"bytes,8,opt,name=create_time,json=createTime,proto3"`
-	xxx_hidden_Dependencies    *[]*CuratedPluginReference `protobuf:"bytes,9,rep,name=dependencies,proto3"`
-	xxx_hidden_SourceUrl       string                     `protobuf:"bytes,10,opt,name=source_url,json=sourceUrl,proto3"`
-	xxx_hidden_Description     string                     `protobuf:"bytes,11,opt,name=description,proto3"`
-	xxx_hidden_RegistryConfig  *RegistryConfig            `protobuf:"bytes,12,opt,name=registry_config,json=registryConfig,proto3"`
-	xxx_hidden_Revision        uint32                     `protobuf:"varint,13,opt,name=revision,proto3"`
-	xxx_hidden_OutputLanguages []PluginLanguage           `protobuf:"varint,14,rep,packed,name=output_languages,json=outputLanguages,proto3,enum=buf.alpha.registry.v1alpha1.PluginLanguage"`
-	xxx_hidden_SpdxLicenseId   string                     `protobuf:"bytes,15,opt,name=spdx_license_id,json=spdxLicenseId,proto3"`
+	xxx_hidden_CreateTime           *timestamppb.Timestamp     `protobuf:"bytes,8,opt,name=create_time,json=createTime,proto3"`
+	xxx_hidden_Dependencies         *[]*CuratedPluginReference `protobuf:"bytes,9,rep,name=dependencies,proto3"`
+	xxx_hidden_SourceUrl            string                     `protobuf:"bytes,10,opt,name=source_url,json=sourceUrl,proto3"`
+	xxx_hidden_Description          string                     `protobuf:"bytes,11,opt,name=description,proto3"`
+	xxx_hidden_RegistryConfig       *RegistryConfig            `protobuf:"bytes,12,opt,name=registry_config,json=registryConfig,proto3"`
+	xxx_hidden_Revision             uint32                     `protobuf:"varint,13,opt,name=revision,proto3"`
+	xxx_hidden_OutputLanguages      []PluginLanguage           `protobuf:"varint,14,rep,packed,name=output_languages,json=outputLanguages,proto3,enum=buf.alpha.registry.v1alpha1.PluginLanguage"`
+	xxx_hidden_SpdxLicenseId        string                     `protobuf:"bytes,15,opt,name=spdx_license_id,json=spdxLicenseId,proto3"`
 	xxx_hidden_LicenseUrl           string                     `protobuf:"bytes,16,opt,name=license_url,json=licenseUrl,proto3"`
-	xxx_hidden_Verified        bool                       `protobuf:"varint,17,opt,name=verified,proto3"`
-	xxx_hidden_Visibility      CuratedPluginVisibility    `protobuf:"varint,18,opt,name=visibility,proto3,enum=buf.alpha.registry.v1alpha1.CuratedPluginVisibility"`
-	xxx_hidden_Deprecated      bool                       `protobuf:"varint,19,opt,name=deprecated,proto3"`
+	xxx_hidden_Verified             bool                       `protobuf:"varint,17,opt,name=verified,proto3"`
+	xxx_hidden_Visibility           CuratedPluginVisibility    `protobuf:"varint,18,opt,name=visibility,proto3,enum=buf.alpha.registry.v1alpha1.CuratedPluginVisibility"`
+	xxx_hidden_Deprecated           bool                       `protobuf:"varint,19,opt,name=deprecated,proto3"`
 	xxx_hidden_DeprecationMessage   string                     `protobuf:"bytes,20,opt,name=deprecation_message,json=deprecationMessage,proto3"`
 	xxx_hidden_IntegrationGuideUrl  string                     `protobuf:"bytes,21,opt,name=integration_guide_url,json=integrationGuideUrl,proto3"`
-	xxx_hidden_Doc             string                     `protobuf:"bytes,22,opt,name=doc,proto3"`
-	xxx_hidden_Collections     *[]*PluginCollection       `protobuf:"bytes,23,rep,name=collections,proto3"`
-	unknownFields              protoimpl.UnknownFields
+	xxx_hidden_Doc                  string                     `protobuf:"bytes,22,opt,name=doc,proto3"`
+	xxx_hidden_Collections          *[]*PluginCollection       `protobuf:"bytes,23,rep,name=collections,proto3"`
+	unknownFields                   protoimpl.UnknownFields
 	sizeCache                       protoimpl.SizeCache
 }
 

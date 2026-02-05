@@ -19,10 +19,10 @@
 package gendiff
 
 import (
-	connect "github.com/inovacc/omni/pkg/buf/internal/connect"
-	gen "github.com/inovacc/omni/pkg/buf/internal/connect/cmd/protoc-gen-connect-go/internal/testdata/diffpackage/gen"
 	context "context"
 	errors "errors"
+	connect "github.com/inovacc/omni/pkg/buf/internal/connect"
+	gen "github.com/inovacc/omni/pkg/buf/internal/connect/cmd/protoc-gen-connect-go/internal/testdata/diffpackage/gen"
 	http "net/http"
 	strings "strings"
 )

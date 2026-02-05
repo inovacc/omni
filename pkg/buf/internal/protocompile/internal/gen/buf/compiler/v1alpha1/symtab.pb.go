@@ -377,8 +377,8 @@ func (x *Feature) GetExplicit() bool {
 // A symbol in a file.
 type Symbol struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	Fqn  string      `protobuf:"bytes,1,opt,name=fqn,proto3" json:"fqn,omitempty"`
-	Kind Symbol_Kind `protobuf:"varint,2,opt,name=kind,proto3,enum=buf.compiler.v1alpha1.Symbol_Kind" json:"kind,omitempty"`
+	Fqn   string                 `protobuf:"bytes,1,opt,name=fqn,proto3" json:"fqn,omitempty"`
+	Kind  Symbol_Kind            `protobuf:"varint,2,opt,name=kind,proto3,enum=buf.compiler.v1alpha1.Symbol_Kind" json:"kind,omitempty"`
 	// The file this symbol came from.
 	File string `protobuf:"bytes,3,opt,name=file,proto3" json:"file,omitempty"`
 	// The index of this kind of entity in that file.
@@ -820,8 +820,8 @@ func (x *Value_Repeated) GetValues() []*Value {
 
 type Value_Any struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Url           string `protobuf:"bytes,1,opt,name=url,proto3" json:"url,omitempty"`
-	Value         *Value `protobuf:"bytes,2,opt,name=value,proto3" json:"value,omitempty"`
+	Url           string                 `protobuf:"bytes,1,opt,name=url,proto3" json:"url,omitempty"`
+	Value         *Value                 `protobuf:"bytes,2,opt,name=value,proto3" json:"value,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }

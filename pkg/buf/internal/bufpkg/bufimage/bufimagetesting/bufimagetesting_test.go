@@ -19,12 +19,12 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/uuid"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufimage"
 	"github.com/inovacc/omni/pkg/buf/internal/gen/data/datawkt"
 	"github.com/inovacc/omni/pkg/buf/internal/gen/proto/go/buf/alpha/image/v1"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/testing/protocmp"

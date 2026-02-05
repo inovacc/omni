@@ -119,8 +119,8 @@ type ImageFile struct {
 	xxx_hidden_Options          *descriptorpb.FileOptions               `protobuf:"bytes,8,opt,name=options"`
 	xxx_hidden_SourceCodeInfo   *descriptorpb.SourceCodeInfo            `protobuf:"bytes,9,opt,name=source_code_info,json=sourceCodeInfo"`
 	xxx_hidden_Syntax           *string                                 `protobuf:"bytes,12,opt,name=syntax"`
-	xxx_hidden_Edition          descriptorpb.Edition `protobuf:"varint,14,opt,name=edition,enum=google.protobuf.Edition"`
-	xxx_hidden_BufExtension     *ImageFileExtension  `protobuf:"bytes,8042,opt,name=buf_extension,json=bufExtension"`
+	xxx_hidden_Edition          descriptorpb.Edition                    `protobuf:"varint,14,opt,name=edition,enum=google.protobuf.Edition"`
+	xxx_hidden_BufExtension     *ImageFileExtension                     `protobuf:"bytes,8042,opt,name=buf_extension,json=bufExtension"`
 	XXX_raceDetectHookData      protoimpl.RaceDetectHookData
 	XXX_presence                [1]uint32
 	unknownFields               protoimpl.UnknownFields
@@ -476,9 +476,9 @@ func (b0 ImageFile_builder) Build() *ImageFile {
 // worrying about conflicts with FileDescriptorProto.
 type ImageFileExtension struct {
 	state                          protoimpl.MessageState `protogen:"opaque.v1"`
-	xxx_hidden_IsImport            bool        `protobuf:"varint,1,opt,name=is_import,json=isImport"`
-	xxx_hidden_ModuleInfo          *ModuleInfo `protobuf:"bytes,2,opt,name=module_info,json=moduleInfo"`
-	xxx_hidden_IsSyntaxUnspecified bool        `protobuf:"varint,3,opt,name=is_syntax_unspecified,json=isSyntaxUnspecified"`
+	xxx_hidden_IsImport            bool                   `protobuf:"varint,1,opt,name=is_import,json=isImport"`
+	xxx_hidden_ModuleInfo          *ModuleInfo            `protobuf:"bytes,2,opt,name=module_info,json=moduleInfo"`
+	xxx_hidden_IsSyntaxUnspecified bool                   `protobuf:"varint,3,opt,name=is_syntax_unspecified,json=isSyntaxUnspecified"`
 	xxx_hidden_UnusedDependency    []int32                `protobuf:"varint,4,rep,name=unused_dependency,json=unusedDependency"`
 	XXX_raceDetectHookData         protoimpl.RaceDetectHookData
 	XXX_presence                   [1]uint32

@@ -16,8 +16,8 @@ package bufcheck
 
 import (
 	"buf.build/go/bufplugin/check"
-	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufanalysis"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
 )
 
 type annotation struct {

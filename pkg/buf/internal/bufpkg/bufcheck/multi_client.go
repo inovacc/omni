@@ -23,9 +23,9 @@ import (
 	"sync"
 
 	"buf.build/go/bufplugin/check"
+	"github.com/inovacc/omni/pkg/buf/internal/pkg/thread"
 	"github.com/inovacc/omni/pkg/buf/internal/standard/xlog/xslog"
 	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/thread"
 )
 
 type multiClient struct {

@@ -20,11 +20,11 @@ import (
 	"io/fs"
 	"path/filepath"
 
-	"github.com/inovacc/omni/pkg/buf/internal/standard/xpath/xfilepath"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/normalpath"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/osext"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/storage/storageos"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/syserror"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xpath/xfilepath"
 )
 
 type cleaner struct {

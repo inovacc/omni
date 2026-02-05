@@ -19,9 +19,9 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/inovacc/omni/pkg/buf/internal/pkg/syserror"
 	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
 	"github.com/inovacc/omni/pkg/buf/internal/standard/xstrings"
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/syserror"
 )
 
 // InputConfigType is an input config's type.

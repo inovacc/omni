@@ -41,9 +41,9 @@ type PushRequest struct {
 	state                 protoimpl.MessageState `protogen:"opaque.v1"`
 	xxx_hidden_Owner      string                 `protobuf:"bytes,1,opt,name=owner,proto3"`
 	xxx_hidden_Repository string                 `protobuf:"bytes,2,opt,name=repository,proto3"`
-	xxx_hidden_Branch     string           `protobuf:"bytes,3,opt,name=branch,proto3"`
-	xxx_hidden_Module     *v1alpha1.Module `protobuf:"bytes,4,opt,name=module,proto3"`
-	xxx_hidden_Tags       []string         `protobuf:"bytes,5,rep,name=tags,proto3"`
+	xxx_hidden_Branch     string                 `protobuf:"bytes,3,opt,name=branch,proto3"`
+	xxx_hidden_Module     *v1alpha1.Module       `protobuf:"bytes,4,opt,name=module,proto3"`
+	xxx_hidden_Tags       []string               `protobuf:"bytes,5,rep,name=tags,proto3"`
 	xxx_hidden_Tracks     []string               `protobuf:"bytes,6,rep,name=tracks,proto3"`
 	xxx_hidden_DraftName  string                 `protobuf:"bytes,7,opt,name=draft_name,json=draftName,proto3"`
 	unknownFields         protoimpl.UnknownFields
@@ -276,10 +276,10 @@ func (b0 PushResponse_builder) Build() *PushResponse {
 type PushManifestAndBlobsRequest struct {
 	state                 protoimpl.MessageState `protogen:"opaque.v1"`
 	xxx_hidden_Owner      string                 `protobuf:"bytes,1,opt,name=owner,proto3"`
-	xxx_hidden_Repository string            `protobuf:"bytes,2,opt,name=repository,proto3"`
-	xxx_hidden_Manifest   *v1alpha1.Blob    `protobuf:"bytes,3,opt,name=manifest,proto3"`
-	xxx_hidden_Blobs      *[]*v1alpha1.Blob `protobuf:"bytes,4,rep,name=blobs,proto3"`
-	xxx_hidden_Tags       []string          `protobuf:"bytes,5,rep,name=tags,proto3"`
+	xxx_hidden_Repository string                 `protobuf:"bytes,2,opt,name=repository,proto3"`
+	xxx_hidden_Manifest   *v1alpha1.Blob         `protobuf:"bytes,3,opt,name=manifest,proto3"`
+	xxx_hidden_Blobs      *[]*v1alpha1.Blob      `protobuf:"bytes,4,rep,name=blobs,proto3"`
+	xxx_hidden_Tags       []string               `protobuf:"bytes,5,rep,name=tags,proto3"`
 	xxx_hidden_DraftName  string                 `protobuf:"bytes,6,opt,name=draft_name,json=draftName,proto3"`
 	unknownFields         protoimpl.UnknownFields
 	sizeCache             protoimpl.SizeCache

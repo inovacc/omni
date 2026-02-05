@@ -21,7 +21,6 @@ import (
 	"os"
 
 	"buf.build/go/bufplugin/check"
-	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
 	bufconfig2 "github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufconfig"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufimage"
 	bufplugin2 "github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufplugin"
@@ -29,6 +28,7 @@ import (
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/pluginrpcutil"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/syserror"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/wasm"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
 	"pluginrpc.com/pluginrpc"
 )
 

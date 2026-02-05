@@ -43,9 +43,9 @@ type RepositoryCommit struct {
 	xxx_hidden_Digest          string                 `protobuf:"bytes,3,opt,name=digest,proto3"`
 	xxx_hidden_Name            string                 `protobuf:"bytes,4,opt,name=name,proto3"`
 	xxx_hidden_Branch          string                 `protobuf:"bytes,5,opt,name=branch,proto3"`
-	xxx_hidden_Author          string            `protobuf:"bytes,7,opt,name=author,proto3"`
-	xxx_hidden_Tags            *[]*RepositoryTag `protobuf:"bytes,8,rep,name=tags,proto3"`
-	xxx_hidden_DraftName       string            `protobuf:"bytes,9,opt,name=draft_name,json=draftName,proto3"`
+	xxx_hidden_Author          string                 `protobuf:"bytes,7,opt,name=author,proto3"`
+	xxx_hidden_Tags            *[]*RepositoryTag      `protobuf:"bytes,8,rep,name=tags,proto3"`
+	xxx_hidden_DraftName       string                 `protobuf:"bytes,9,opt,name=draft_name,json=draftName,proto3"`
 	xxx_hidden_SpdxLicenseId   string                 `protobuf:"bytes,10,opt,name=spdx_license_id,json=spdxLicenseId,proto3"`
 	xxx_hidden_ManifestDigest  string                 `protobuf:"bytes,11,opt,name=manifest_digest,json=manifestDigest,proto3"`
 	xxx_hidden_TagCount        int64                  `protobuf:"varint,12,opt,name=tag_count,json=tagCount,proto3"`

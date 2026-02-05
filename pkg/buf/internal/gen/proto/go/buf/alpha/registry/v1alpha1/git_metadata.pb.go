@@ -141,9 +141,9 @@ func (b0 GitIdentity_builder) Build() *GitIdentity {
 // The author and/or committer user identities are included when available.
 type GitCommitInformation struct {
 	state                protoimpl.MessageState `protogen:"opaque.v1"`
-	xxx_hidden_Hash      string       `protobuf:"bytes,1,opt,name=hash,proto3"`
-	xxx_hidden_Author    *GitIdentity `protobuf:"bytes,2,opt,name=author,proto3"`
-	xxx_hidden_Committer *GitIdentity `protobuf:"bytes,3,opt,name=committer,proto3"`
+	xxx_hidden_Hash      string                 `protobuf:"bytes,1,opt,name=hash,proto3"`
+	xxx_hidden_Author    *GitIdentity           `protobuf:"bytes,2,opt,name=author,proto3"`
+	xxx_hidden_Committer *GitIdentity           `protobuf:"bytes,3,opt,name=committer,proto3"`
 	unknownFields        protoimpl.UnknownFields
 	sizeCache            protoimpl.SizeCache
 }

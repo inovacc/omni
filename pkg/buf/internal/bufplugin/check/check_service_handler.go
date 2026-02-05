@@ -19,11 +19,11 @@ import (
 	"fmt"
 	"slices"
 
-	checkv1 "github.com/inovacc/omni/pkg/buf/internal/gen/bufbuild/bufplugin/protocolbuffers/go/buf/plugin/check/v1"
 	"buf.build/go/bufplugin/internal/gen/buf/plugin/check/v1/v1pluginrpc"
 	"buf.build/go/bufplugin/internal/pkg/thread"
 	"buf.build/go/bufplugin/internal/pkg/xslices"
 	"buf.build/go/protovalidate"
+	checkv1 "github.com/inovacc/omni/pkg/buf/internal/gen/bufbuild/bufplugin/protocolbuffers/go/buf/plugin/check/v1"
 	"pluginrpc.com/pluginrpc"
 )
 

@@ -20,11 +20,11 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/inovacc/omni/pkg/buf/internal/standard/xstrings"
 	bufconfig2 "github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufconfig"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufimage"
 	normalpath2 "github.com/inovacc/omni/pkg/buf/internal/pkg/normalpath"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/protoversion"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xstrings"
 	"google.golang.org/protobuf/types/descriptorpb"
 )
 

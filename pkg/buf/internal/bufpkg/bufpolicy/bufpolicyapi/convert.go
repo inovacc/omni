@@ -17,12 +17,12 @@ package bufpolicyapi
 import (
 	"fmt"
 
-	policyv1beta1 "github.com/inovacc/omni/pkg/buf/internal/gen/bufbuild/registry/protocolbuffers/go/buf/registry/policy/v1beta1"
 	"buf.build/go/bufplugin/option"
-	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufcas"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufparse"
 	bufpolicy2 "github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufpolicy"
+	policyv1beta1 "github.com/inovacc/omni/pkg/buf/internal/gen/bufbuild/registry/protocolbuffers/go/buf/registry/policy/v1beta1"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
 )
 
 var (

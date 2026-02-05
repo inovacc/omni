@@ -83,11 +83,11 @@ func (x ConvertFormat) Number() protoreflect.EnumNumber {
 
 type ConvertRequest struct {
 	state                     protoimpl.MessageState `protogen:"opaque.v1"`
-	xxx_hidden_TypeName       string        `protobuf:"bytes,1,opt,name=type_name,json=typeName,proto3"`
-	xxx_hidden_Image          *v1.Image     `protobuf:"bytes,2,opt,name=image,proto3"`
-	xxx_hidden_Payload        []byte        `protobuf:"bytes,3,opt,name=payload,proto3"`
-	xxx_hidden_RequestFormat  ConvertFormat `protobuf:"varint,4,opt,name=request_format,json=requestFormat,proto3,enum=buf.alpha.registry.v1alpha1.ConvertFormat"`
-	xxx_hidden_ResponseFormat ConvertFormat `protobuf:"varint,5,opt,name=response_format,json=responseFormat,proto3,enum=buf.alpha.registry.v1alpha1.ConvertFormat"`
+	xxx_hidden_TypeName       string                 `protobuf:"bytes,1,opt,name=type_name,json=typeName,proto3"`
+	xxx_hidden_Image          *v1.Image              `protobuf:"bytes,2,opt,name=image,proto3"`
+	xxx_hidden_Payload        []byte                 `protobuf:"bytes,3,opt,name=payload,proto3"`
+	xxx_hidden_RequestFormat  ConvertFormat          `protobuf:"varint,4,opt,name=request_format,json=requestFormat,proto3,enum=buf.alpha.registry.v1alpha1.ConvertFormat"`
+	xxx_hidden_ResponseFormat ConvertFormat          `protobuf:"varint,5,opt,name=response_format,json=responseFormat,proto3,enum=buf.alpha.registry.v1alpha1.ConvertFormat"`
 	unknownFields             protoimpl.UnknownFields
 	sizeCache                 protoimpl.SizeCache
 }

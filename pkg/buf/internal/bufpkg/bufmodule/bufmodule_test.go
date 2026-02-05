@@ -19,7 +19,6 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
 	bufmodule2 "github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufmodule"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufmodule/bufmoduletesting"
 	bufparse2 "github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufparse"
@@ -27,6 +26,7 @@ import (
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/slogtestext"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/storage"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/storage/storagemem"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
 	"github.com/stretchr/testify/require"
 )
 

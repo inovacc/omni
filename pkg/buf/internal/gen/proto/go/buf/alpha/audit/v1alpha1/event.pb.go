@@ -4769,8 +4769,8 @@ func (b0 PayloadOrganizationDeleted_builder) Build() *PayloadOrganizationDeleted
 }
 
 type PayloadOrganizationMemberAdded struct {
-	state                       protoimpl.MessageState          `protogen:"opaque.v1"`
-	xxx_hidden_OrganizationId   string                          `protobuf:"bytes,1,opt,name=organization_id,json=organizationId,proto3"`
+	state                       protoimpl.MessageState                  `protogen:"opaque.v1"`
+	xxx_hidden_OrganizationId   string                                  `protobuf:"bytes,1,opt,name=organization_id,json=organizationId,proto3"`
 	xxx_hidden_OrganizationName string                                  `protobuf:"bytes,2,opt,name=organization_name,json=organizationName,proto3"`
 	xxx_hidden_MemberRole       registryv1alpha1.OrganizationRole       `protobuf:"varint,3,opt,name=member_role,json=memberRole,proto3,enum=buf.alpha.registry.v1alpha1.OrganizationRole"`
 	xxx_hidden_MemberRoleSource registryv1alpha1.OrganizationRoleSource `protobuf:"varint,4,opt,name=member_role_source,json=memberRoleSource,proto3,enum=buf.alpha.registry.v1alpha1.OrganizationRoleSource"`
@@ -4873,8 +4873,8 @@ func (b0 PayloadOrganizationMemberAdded_builder) Build() *PayloadOrganizationMem
 
 // Deprecated: Marked as deprecated in buf/alpha/audit/v1alpha1/event.proto.
 type PayloadOrganizationMemberRoleChanged struct {
-	state                          protoimpl.MessageState          `protogen:"opaque.v1"`
-	xxx_hidden_OrganizationId      string                          `protobuf:"bytes,1,opt,name=organization_id,json=organizationId,proto3"`
+	state                          protoimpl.MessageState                  `protogen:"opaque.v1"`
+	xxx_hidden_OrganizationId      string                                  `protobuf:"bytes,1,opt,name=organization_id,json=organizationId,proto3"`
 	xxx_hidden_OrganizationName    string                                  `protobuf:"bytes,2,opt,name=organization_name,json=organizationName,proto3"`
 	xxx_hidden_OldRole             registryv1alpha1.OrganizationRole       `protobuf:"varint,3,opt,name=old_role,json=oldRole,proto3,enum=buf.alpha.registry.v1alpha1.OrganizationRole"`
 	xxx_hidden_NewRole             registryv1alpha1.OrganizationRole       `protobuf:"varint,4,opt,name=new_role,json=newRole,proto3,enum=buf.alpha.registry.v1alpha1.OrganizationRole"`
@@ -5114,8 +5114,8 @@ func (b0 PayloadOrganizationMemberRolesChanged_builder) Build() *PayloadOrganiza
 }
 
 type PayloadOrganizationMemberRemoved struct {
-	state                       protoimpl.MessageState          `protogen:"opaque.v1"`
-	xxx_hidden_OrganizationId   string                          `protobuf:"bytes,1,opt,name=organization_id,json=organizationId,proto3"`
+	state                       protoimpl.MessageState                  `protogen:"opaque.v1"`
+	xxx_hidden_OrganizationId   string                                  `protobuf:"bytes,1,opt,name=organization_id,json=organizationId,proto3"`
 	xxx_hidden_OrganizationName string                                  `protobuf:"bytes,2,opt,name=organization_name,json=organizationName,proto3"`
 	xxx_hidden_MemberRole       registryv1alpha1.OrganizationRole       `protobuf:"varint,3,opt,name=member_role,json=memberRole,proto3,enum=buf.alpha.registry.v1alpha1.OrganizationRole"`
 	xxx_hidden_MemberRoleSource registryv1alpha1.OrganizationRoleSource `protobuf:"varint,4,opt,name=member_role_source,json=memberRoleSource,proto3,enum=buf.alpha.registry.v1alpha1.OrganizationRoleSource"`
@@ -5217,8 +5217,8 @@ func (b0 PayloadOrganizationMemberRemoved_builder) Build() *PayloadOrganizationM
 }
 
 type PayloadOrganizationIDPGroupAdded struct {
-	state                       protoimpl.MessageState    `protogen:"opaque.v1"`
-	xxx_hidden_OrganizationId   string                    `protobuf:"bytes,1,opt,name=organization_id,json=organizationId,proto3"`
+	state                       protoimpl.MessageState            `protogen:"opaque.v1"`
+	xxx_hidden_OrganizationId   string                            `protobuf:"bytes,1,opt,name=organization_id,json=organizationId,proto3"`
 	xxx_hidden_OrganizationName string                            `protobuf:"bytes,2,opt,name=organization_name,json=organizationName,proto3"`
 	xxx_hidden_RoleOverride     registryv1alpha1.OrganizationRole `protobuf:"varint,3,opt,name=role_override,json=roleOverride,proto3,enum=buf.alpha.registry.v1alpha1.OrganizationRole"`
 	unknownFields               protoimpl.UnknownFields
@@ -5305,8 +5305,8 @@ func (b0 PayloadOrganizationIDPGroupAdded_builder) Build() *PayloadOrganizationI
 }
 
 type PayloadOrganizationIDPGroupUpdated struct {
-	state                       protoimpl.MessageState    `protogen:"opaque.v1"`
-	xxx_hidden_OrganizationId   string                    `protobuf:"bytes,1,opt,name=organization_id,json=organizationId,proto3"`
+	state                       protoimpl.MessageState            `protogen:"opaque.v1"`
+	xxx_hidden_OrganizationId   string                            `protobuf:"bytes,1,opt,name=organization_id,json=organizationId,proto3"`
 	xxx_hidden_OrganizationName string                            `protobuf:"bytes,2,opt,name=organization_name,json=organizationName,proto3"`
 	xxx_hidden_OldRoleOverride  registryv1alpha1.OrganizationRole `protobuf:"varint,3,opt,name=old_role_override,json=oldRoleOverride,proto3,enum=buf.alpha.registry.v1alpha1.OrganizationRole"`
 	xxx_hidden_NewRoleOverride  registryv1alpha1.OrganizationRole `protobuf:"varint,4,opt,name=new_role_override,json=newRoleOverride,proto3,enum=buf.alpha.registry.v1alpha1.OrganizationRole"`
@@ -5410,8 +5410,8 @@ func (b0 PayloadOrganizationIDPGroupUpdated_builder) Build() *PayloadOrganizatio
 }
 
 type PayloadOrganizationIDPGroupRemoved struct {
-	state                       protoimpl.MessageState    `protogen:"opaque.v1"`
-	xxx_hidden_OrganizationId   string                    `protobuf:"bytes,1,opt,name=organization_id,json=organizationId,proto3"`
+	state                       protoimpl.MessageState            `protogen:"opaque.v1"`
+	xxx_hidden_OrganizationId   string                            `protobuf:"bytes,1,opt,name=organization_id,json=organizationId,proto3"`
 	xxx_hidden_OrganizationName string                            `protobuf:"bytes,2,opt,name=organization_name,json=organizationName,proto3"`
 	xxx_hidden_RoleOverride     registryv1alpha1.OrganizationRole `protobuf:"varint,3,opt,name=role_override,json=roleOverride,proto3,enum=buf.alpha.registry.v1alpha1.OrganizationRole"`
 	unknownFields               protoimpl.UnknownFields
@@ -5498,8 +5498,8 @@ func (b0 PayloadOrganizationIDPGroupRemoved_builder) Build() *PayloadOrganizatio
 }
 
 type PayloadRepositoryCreated struct {
-	state                       protoimpl.MessageState `protogen:"opaque.v1"`
-	xxx_hidden_OwnerId          string                 `protobuf:"bytes,1,opt,name=owner_id,json=ownerId,proto3"`
+	state                       protoimpl.MessageState      `protogen:"opaque.v1"`
+	xxx_hidden_OwnerId          string                      `protobuf:"bytes,1,opt,name=owner_id,json=ownerId,proto3"`
 	xxx_hidden_OwnerName        string                      `protobuf:"bytes,2,opt,name=owner_name,json=ownerName,proto3"`
 	xxx_hidden_Visibility       registryv1alpha1.Visibility `protobuf:"varint,3,opt,name=visibility,proto3,enum=buf.alpha.registry.v1alpha1.Visibility"`
 	xxx_hidden_DefaultLabelName string                      `protobuf:"bytes,4,opt,name=default_label_name,json=defaultLabelName,proto3"`
@@ -5602,8 +5602,8 @@ func (b0 PayloadRepositoryCreated_builder) Build() *PayloadRepositoryCreated {
 }
 
 type PayloadRepositoryDeleted struct {
-	state                 protoimpl.MessageState `protogen:"opaque.v1"`
-	xxx_hidden_OwnerId    string                 `protobuf:"bytes,1,opt,name=owner_id,json=ownerId,proto3"`
+	state                 protoimpl.MessageState      `protogen:"opaque.v1"`
+	xxx_hidden_OwnerId    string                      `protobuf:"bytes,1,opt,name=owner_id,json=ownerId,proto3"`
 	xxx_hidden_OwnerName  string                      `protobuf:"bytes,2,opt,name=owner_name,json=ownerName,proto3"`
 	xxx_hidden_Visibility registryv1alpha1.Visibility `protobuf:"varint,3,opt,name=visibility,proto3,enum=buf.alpha.registry.v1alpha1.Visibility"`
 	unknownFields         protoimpl.UnknownFields
@@ -5690,8 +5690,8 @@ func (b0 PayloadRepositoryDeleted_builder) Build() *PayloadRepositoryDeleted {
 }
 
 type PayloadRepositoryDeprecated struct {
-	state                         protoimpl.MessageState `protogen:"opaque.v1"`
-	xxx_hidden_OwnerId            string                 `protobuf:"bytes,1,opt,name=owner_id,json=ownerId,proto3"`
+	state                         protoimpl.MessageState      `protogen:"opaque.v1"`
+	xxx_hidden_OwnerId            string                      `protobuf:"bytes,1,opt,name=owner_id,json=ownerId,proto3"`
 	xxx_hidden_OwnerName          string                      `protobuf:"bytes,2,opt,name=owner_name,json=ownerName,proto3"`
 	xxx_hidden_Visibility         registryv1alpha1.Visibility `protobuf:"varint,3,opt,name=visibility,proto3,enum=buf.alpha.registry.v1alpha1.Visibility"`
 	xxx_hidden_DeprecationMessage string                      `protobuf:"bytes,4,opt,name=deprecation_message,json=deprecationMessage,proto3"`
@@ -5793,8 +5793,8 @@ func (b0 PayloadRepositoryDeprecated_builder) Build() *PayloadRepositoryDeprecat
 }
 
 type PayloadRepositoryUndeprecated struct {
-	state                 protoimpl.MessageState `protogen:"opaque.v1"`
-	xxx_hidden_OwnerId    string                 `protobuf:"bytes,1,opt,name=owner_id,json=ownerId,proto3"`
+	state                 protoimpl.MessageState      `protogen:"opaque.v1"`
+	xxx_hidden_OwnerId    string                      `protobuf:"bytes,1,opt,name=owner_id,json=ownerId,proto3"`
 	xxx_hidden_OwnerName  string                      `protobuf:"bytes,2,opt,name=owner_name,json=ownerName,proto3"`
 	xxx_hidden_Visibility registryv1alpha1.Visibility `protobuf:"varint,3,opt,name=visibility,proto3,enum=buf.alpha.registry.v1alpha1.Visibility"`
 	unknownFields         protoimpl.UnknownFields
@@ -6044,10 +6044,10 @@ func (b0 PayloadRepositoryCommitPushed_builder) Build() *PayloadRepositoryCommit
 }
 
 type PayloadRepositoryContributorAdded struct {
-	state                      protoimpl.MessageState  `protogen:"opaque.v1"`
-	xxx_hidden_OwnerId         string                  `protobuf:"bytes,1,opt,name=owner_id,json=ownerId,proto3"`
-	xxx_hidden_OwnerName       string                  `protobuf:"bytes,2,opt,name=owner_name,json=ownerName,proto3"`
-	xxx_hidden_RepositoryId    string                  `protobuf:"bytes,3,opt,name=repository_id,json=repositoryId,proto3"`
+	state                      protoimpl.MessageState          `protogen:"opaque.v1"`
+	xxx_hidden_OwnerId         string                          `protobuf:"bytes,1,opt,name=owner_id,json=ownerId,proto3"`
+	xxx_hidden_OwnerName       string                          `protobuf:"bytes,2,opt,name=owner_name,json=ownerName,proto3"`
+	xxx_hidden_RepositoryId    string                          `protobuf:"bytes,3,opt,name=repository_id,json=repositoryId,proto3"`
 	xxx_hidden_RepositoryName  string                          `protobuf:"bytes,4,opt,name=repository_name,json=repositoryName,proto3"`
 	xxx_hidden_ContributorRole registryv1alpha1.RepositoryRole `protobuf:"varint,5,opt,name=contributor_role,json=contributorRole,proto3,enum=buf.alpha.registry.v1alpha1.RepositoryRole"`
 	unknownFields              protoimpl.UnknownFields
@@ -6163,10 +6163,10 @@ func (b0 PayloadRepositoryContributorAdded_builder) Build() *PayloadRepositoryCo
 
 // Deprecated: Marked as deprecated in buf/alpha/audit/v1alpha1/event.proto.
 type PayloadRepositoryContributorRoleChanged struct {
-	state                     protoimpl.MessageState  `protogen:"opaque.v1"`
-	xxx_hidden_OwnerId        string                  `protobuf:"bytes,1,opt,name=owner_id,json=ownerId,proto3"`
-	xxx_hidden_OwnerName      string                  `protobuf:"bytes,2,opt,name=owner_name,json=ownerName,proto3"`
-	xxx_hidden_RepositoryId   string                  `protobuf:"bytes,3,opt,name=repository_id,json=repositoryId,proto3"`
+	state                     protoimpl.MessageState          `protogen:"opaque.v1"`
+	xxx_hidden_OwnerId        string                          `protobuf:"bytes,1,opt,name=owner_id,json=ownerId,proto3"`
+	xxx_hidden_OwnerName      string                          `protobuf:"bytes,2,opt,name=owner_name,json=ownerName,proto3"`
+	xxx_hidden_RepositoryId   string                          `protobuf:"bytes,3,opt,name=repository_id,json=repositoryId,proto3"`
 	xxx_hidden_RepositoryName string                          `protobuf:"bytes,4,opt,name=repository_name,json=repositoryName,proto3"`
 	xxx_hidden_OldRole        registryv1alpha1.RepositoryRole `protobuf:"varint,5,opt,name=old_role,json=oldRole,proto3,enum=buf.alpha.registry.v1alpha1.RepositoryRole"`
 	xxx_hidden_NewRole        registryv1alpha1.RepositoryRole `protobuf:"varint,6,opt,name=new_role,json=newRole,proto3,enum=buf.alpha.registry.v1alpha1.RepositoryRole"`
@@ -6434,10 +6434,10 @@ func (b0 PayloadRepositoryContributorRolesChanged_builder) Build() *PayloadRepos
 }
 
 type PayloadRepositoryContributorRemoved struct {
-	state                      protoimpl.MessageState  `protogen:"opaque.v1"`
-	xxx_hidden_OwnerId         string                  `protobuf:"bytes,1,opt,name=owner_id,json=ownerId,proto3"`
-	xxx_hidden_OwnerName       string                  `protobuf:"bytes,2,opt,name=owner_name,json=ownerName,proto3"`
-	xxx_hidden_RepositoryId    string                  `protobuf:"bytes,3,opt,name=repository_id,json=repositoryId,proto3"`
+	state                      protoimpl.MessageState          `protogen:"opaque.v1"`
+	xxx_hidden_OwnerId         string                          `protobuf:"bytes,1,opt,name=owner_id,json=ownerId,proto3"`
+	xxx_hidden_OwnerName       string                          `protobuf:"bytes,2,opt,name=owner_name,json=ownerName,proto3"`
+	xxx_hidden_RepositoryId    string                          `protobuf:"bytes,3,opt,name=repository_id,json=repositoryId,proto3"`
 	xxx_hidden_RepositoryName  string                          `protobuf:"bytes,4,opt,name=repository_name,json=repositoryName,proto3"`
 	xxx_hidden_ContributorRole registryv1alpha1.RepositoryRole `protobuf:"varint,5,opt,name=contributor_role,json=contributorRole,proto3,enum=buf.alpha.registry.v1alpha1.RepositoryRole"`
 	unknownFields              protoimpl.UnknownFields
@@ -6552,8 +6552,8 @@ func (b0 PayloadRepositoryContributorRemoved_builder) Build() *PayloadRepository
 }
 
 type PayloadRepositoryVisibilityChanged struct {
-	state                    protoimpl.MessageState `protogen:"opaque.v1"`
-	xxx_hidden_OwnerId       string                 `protobuf:"bytes,1,opt,name=owner_id,json=ownerId,proto3"`
+	state                    protoimpl.MessageState      `protogen:"opaque.v1"`
+	xxx_hidden_OwnerId       string                      `protobuf:"bytes,1,opt,name=owner_id,json=ownerId,proto3"`
 	xxx_hidden_OwnerName     string                      `protobuf:"bytes,2,opt,name=owner_name,json=ownerName,proto3"`
 	xxx_hidden_OldVisibility registryv1alpha1.Visibility `protobuf:"varint,3,opt,name=old_visibility,json=oldVisibility,proto3,enum=buf.alpha.registry.v1alpha1.Visibility"`
 	xxx_hidden_NewVisibility registryv1alpha1.Visibility `protobuf:"varint,4,opt,name=new_visibility,json=newVisibility,proto3,enum=buf.alpha.registry.v1alpha1.Visibility"`
@@ -6867,8 +6867,8 @@ func (b0 PayloadRepositoryDefaultBranchChanged_builder) Build() *PayloadReposito
 }
 
 type PayloadRepositoryIDPGroupAdded struct {
-	state                     protoimpl.MessageState  `protogen:"opaque.v1"`
-	xxx_hidden_RepositoryId   string                  `protobuf:"bytes,1,opt,name=repository_id,json=repositoryId,proto3"`
+	state                     protoimpl.MessageState          `protogen:"opaque.v1"`
+	xxx_hidden_RepositoryId   string                          `protobuf:"bytes,1,opt,name=repository_id,json=repositoryId,proto3"`
 	xxx_hidden_RepositoryName string                          `protobuf:"bytes,2,opt,name=repository_name,json=repositoryName,proto3"`
 	xxx_hidden_RoleOverride   registryv1alpha1.RepositoryRole `protobuf:"varint,3,opt,name=role_override,json=roleOverride,proto3,enum=buf.alpha.registry.v1alpha1.RepositoryRole"`
 	unknownFields             protoimpl.UnknownFields
@@ -6955,8 +6955,8 @@ func (b0 PayloadRepositoryIDPGroupAdded_builder) Build() *PayloadRepositoryIDPGr
 }
 
 type PayloadRepositoryIDPGroupUpdated struct {
-	state                      protoimpl.MessageState  `protogen:"opaque.v1"`
-	xxx_hidden_RepositoryId    string                  `protobuf:"bytes,1,opt,name=repository_id,json=repositoryId,proto3"`
+	state                      protoimpl.MessageState          `protogen:"opaque.v1"`
+	xxx_hidden_RepositoryId    string                          `protobuf:"bytes,1,opt,name=repository_id,json=repositoryId,proto3"`
 	xxx_hidden_RepositoryName  string                          `protobuf:"bytes,2,opt,name=repository_name,json=repositoryName,proto3"`
 	xxx_hidden_OldRoleOverride registryv1alpha1.RepositoryRole `protobuf:"varint,3,opt,name=old_role_override,json=oldRoleOverride,proto3,enum=buf.alpha.registry.v1alpha1.RepositoryRole"`
 	xxx_hidden_NewRoleOverride registryv1alpha1.RepositoryRole `protobuf:"varint,4,opt,name=new_role_override,json=newRoleOverride,proto3,enum=buf.alpha.registry.v1alpha1.RepositoryRole"`
@@ -7060,8 +7060,8 @@ func (b0 PayloadRepositoryIDPGroupUpdated_builder) Build() *PayloadRepositoryIDP
 }
 
 type PayloadRepositoryIDPGroupRemoved struct {
-	state                     protoimpl.MessageState  `protogen:"opaque.v1"`
-	xxx_hidden_RepositoryId   string                  `protobuf:"bytes,1,opt,name=repository_id,json=repositoryId,proto3"`
+	state                     protoimpl.MessageState          `protogen:"opaque.v1"`
+	xxx_hidden_RepositoryId   string                          `protobuf:"bytes,1,opt,name=repository_id,json=repositoryId,proto3"`
 	xxx_hidden_RepositoryName string                          `protobuf:"bytes,2,opt,name=repository_name,json=repositoryName,proto3"`
 	xxx_hidden_RoleOverride   registryv1alpha1.RepositoryRole `protobuf:"varint,3,opt,name=role_override,json=roleOverride,proto3,enum=buf.alpha.registry.v1alpha1.RepositoryRole"`
 	unknownFields             protoimpl.UnknownFields
@@ -7148,8 +7148,8 @@ func (b0 PayloadRepositoryIDPGroupRemoved_builder) Build() *PayloadRepositoryIDP
 }
 
 type PayloadPolicyCreated struct {
-	state                 protoimpl.MessageState `protogen:"opaque.v1"`
-	xxx_hidden_OwnerId    string                 `protobuf:"bytes,1,opt,name=owner_id,json=ownerId,proto3"`
+	state                 protoimpl.MessageState      `protogen:"opaque.v1"`
+	xxx_hidden_OwnerId    string                      `protobuf:"bytes,1,opt,name=owner_id,json=ownerId,proto3"`
 	xxx_hidden_OwnerName  string                      `protobuf:"bytes,2,opt,name=owner_name,json=ownerName,proto3"`
 	xxx_hidden_Visibility registryv1alpha1.Visibility `protobuf:"varint,3,opt,name=visibility,proto3,enum=buf.alpha.registry.v1alpha1.Visibility"`
 	unknownFields         protoimpl.UnknownFields
@@ -7236,8 +7236,8 @@ func (b0 PayloadPolicyCreated_builder) Build() *PayloadPolicyCreated {
 }
 
 type PayloadPolicyDeleted struct {
-	state                 protoimpl.MessageState `protogen:"opaque.v1"`
-	xxx_hidden_OwnerId    string                 `protobuf:"bytes,1,opt,name=owner_id,json=ownerId,proto3"`
+	state                 protoimpl.MessageState      `protogen:"opaque.v1"`
+	xxx_hidden_OwnerId    string                      `protobuf:"bytes,1,opt,name=owner_id,json=ownerId,proto3"`
 	xxx_hidden_OwnerName  string                      `protobuf:"bytes,2,opt,name=owner_name,json=ownerName,proto3"`
 	xxx_hidden_Visibility registryv1alpha1.Visibility `protobuf:"varint,3,opt,name=visibility,proto3,enum=buf.alpha.registry.v1alpha1.Visibility"`
 	unknownFields         protoimpl.UnknownFields
@@ -7324,8 +7324,8 @@ func (b0 PayloadPolicyDeleted_builder) Build() *PayloadPolicyDeleted {
 }
 
 type PayloadPolicyDeprecated struct {
-	state                 protoimpl.MessageState `protogen:"opaque.v1"`
-	xxx_hidden_OwnerId    string                 `protobuf:"bytes,1,opt,name=owner_id,json=ownerId,proto3"`
+	state                 protoimpl.MessageState      `protogen:"opaque.v1"`
+	xxx_hidden_OwnerId    string                      `protobuf:"bytes,1,opt,name=owner_id,json=ownerId,proto3"`
 	xxx_hidden_OwnerName  string                      `protobuf:"bytes,2,opt,name=owner_name,json=ownerName,proto3"`
 	xxx_hidden_Visibility registryv1alpha1.Visibility `protobuf:"varint,3,opt,name=visibility,proto3,enum=buf.alpha.registry.v1alpha1.Visibility"`
 	unknownFields         protoimpl.UnknownFields
@@ -7412,8 +7412,8 @@ func (b0 PayloadPolicyDeprecated_builder) Build() *PayloadPolicyDeprecated {
 }
 
 type PayloadPolicyUndeprecated struct {
-	state                 protoimpl.MessageState `protogen:"opaque.v1"`
-	xxx_hidden_OwnerId    string                 `protobuf:"bytes,1,opt,name=owner_id,json=ownerId,proto3"`
+	state                 protoimpl.MessageState      `protogen:"opaque.v1"`
+	xxx_hidden_OwnerId    string                      `protobuf:"bytes,1,opt,name=owner_id,json=ownerId,proto3"`
 	xxx_hidden_OwnerName  string                      `protobuf:"bytes,2,opt,name=owner_name,json=ownerName,proto3"`
 	xxx_hidden_Visibility registryv1alpha1.Visibility `protobuf:"varint,3,opt,name=visibility,proto3,enum=buf.alpha.registry.v1alpha1.Visibility"`
 	unknownFields         protoimpl.UnknownFields
@@ -7500,8 +7500,8 @@ func (b0 PayloadPolicyUndeprecated_builder) Build() *PayloadPolicyUndeprecated {
 }
 
 type PayloadPolicyVisibilityChanged struct {
-	state                    protoimpl.MessageState `protogen:"opaque.v1"`
-	xxx_hidden_OwnerId       string                 `protobuf:"bytes,1,opt,name=owner_id,json=ownerId,proto3"`
+	state                    protoimpl.MessageState      `protogen:"opaque.v1"`
+	xxx_hidden_OwnerId       string                      `protobuf:"bytes,1,opt,name=owner_id,json=ownerId,proto3"`
 	xxx_hidden_OwnerName     string                      `protobuf:"bytes,2,opt,name=owner_name,json=ownerName,proto3"`
 	xxx_hidden_OldVisibility registryv1alpha1.Visibility `protobuf:"varint,4,opt,name=old_visibility,json=oldVisibility,proto3,enum=buf.alpha.registry.v1alpha1.Visibility"`
 	xxx_hidden_NewVisibility registryv1alpha1.Visibility `protobuf:"varint,5,opt,name=new_visibility,json=newVisibility,proto3,enum=buf.alpha.registry.v1alpha1.Visibility"`
@@ -7721,9 +7721,9 @@ func (b0 PayloadPolicyCommitPushed_builder) Build() *PayloadPolicyCommitPushed {
 }
 
 type PayloadPluginCreated struct {
-	state                 protoimpl.MessageState `protogen:"opaque.v1"`
-	xxx_hidden_OwnerId    string                 `protobuf:"bytes,1,opt,name=owner_id,json=ownerId,proto3"`
-	xxx_hidden_OwnerName  string                 `protobuf:"bytes,2,opt,name=owner_name,json=ownerName,proto3"`
+	state                 protoimpl.MessageState      `protogen:"opaque.v1"`
+	xxx_hidden_OwnerId    string                      `protobuf:"bytes,1,opt,name=owner_id,json=ownerId,proto3"`
+	xxx_hidden_OwnerName  string                      `protobuf:"bytes,2,opt,name=owner_name,json=ownerName,proto3"`
 	xxx_hidden_PluginType string                      `protobuf:"bytes,3,opt,name=plugin_type,json=pluginType,proto3"`
 	xxx_hidden_Visibility registryv1alpha1.Visibility `protobuf:"varint,4,opt,name=visibility,proto3,enum=buf.alpha.registry.v1alpha1.Visibility"`
 	unknownFields         protoimpl.UnknownFields
@@ -7824,9 +7824,9 @@ func (b0 PayloadPluginCreated_builder) Build() *PayloadPluginCreated {
 }
 
 type PayloadPluginDeleted struct {
-	state                 protoimpl.MessageState `protogen:"opaque.v1"`
-	xxx_hidden_OwnerId    string                 `protobuf:"bytes,1,opt,name=owner_id,json=ownerId,proto3"`
-	xxx_hidden_OwnerName  string                 `protobuf:"bytes,2,opt,name=owner_name,json=ownerName,proto3"`
+	state                 protoimpl.MessageState      `protogen:"opaque.v1"`
+	xxx_hidden_OwnerId    string                      `protobuf:"bytes,1,opt,name=owner_id,json=ownerId,proto3"`
+	xxx_hidden_OwnerName  string                      `protobuf:"bytes,2,opt,name=owner_name,json=ownerName,proto3"`
 	xxx_hidden_PluginType string                      `protobuf:"bytes,3,opt,name=plugin_type,json=pluginType,proto3"`
 	xxx_hidden_Visibility registryv1alpha1.Visibility `protobuf:"varint,4,opt,name=visibility,proto3,enum=buf.alpha.registry.v1alpha1.Visibility"`
 	unknownFields         protoimpl.UnknownFields
@@ -7927,9 +7927,9 @@ func (b0 PayloadPluginDeleted_builder) Build() *PayloadPluginDeleted {
 }
 
 type PayloadPluginDeprecated struct {
-	state                 protoimpl.MessageState `protogen:"opaque.v1"`
-	xxx_hidden_OwnerId    string                 `protobuf:"bytes,1,opt,name=owner_id,json=ownerId,proto3"`
-	xxx_hidden_OwnerName  string                 `protobuf:"bytes,2,opt,name=owner_name,json=ownerName,proto3"`
+	state                 protoimpl.MessageState      `protogen:"opaque.v1"`
+	xxx_hidden_OwnerId    string                      `protobuf:"bytes,1,opt,name=owner_id,json=ownerId,proto3"`
+	xxx_hidden_OwnerName  string                      `protobuf:"bytes,2,opt,name=owner_name,json=ownerName,proto3"`
 	xxx_hidden_PluginType string                      `protobuf:"bytes,3,opt,name=plugin_type,json=pluginType,proto3"`
 	xxx_hidden_Visibility registryv1alpha1.Visibility `protobuf:"varint,4,opt,name=visibility,proto3,enum=buf.alpha.registry.v1alpha1.Visibility"`
 	unknownFields         protoimpl.UnknownFields
@@ -8030,9 +8030,9 @@ func (b0 PayloadPluginDeprecated_builder) Build() *PayloadPluginDeprecated {
 }
 
 type PayloadPluginUndeprecated struct {
-	state                 protoimpl.MessageState `protogen:"opaque.v1"`
-	xxx_hidden_OwnerId    string                 `protobuf:"bytes,1,opt,name=owner_id,json=ownerId,proto3"`
-	xxx_hidden_OwnerName  string                 `protobuf:"bytes,2,opt,name=owner_name,json=ownerName,proto3"`
+	state                 protoimpl.MessageState      `protogen:"opaque.v1"`
+	xxx_hidden_OwnerId    string                      `protobuf:"bytes,1,opt,name=owner_id,json=ownerId,proto3"`
+	xxx_hidden_OwnerName  string                      `protobuf:"bytes,2,opt,name=owner_name,json=ownerName,proto3"`
 	xxx_hidden_PluginType string                      `protobuf:"bytes,3,opt,name=plugin_type,json=pluginType,proto3"`
 	xxx_hidden_Visibility registryv1alpha1.Visibility `protobuf:"varint,4,opt,name=visibility,proto3,enum=buf.alpha.registry.v1alpha1.Visibility"`
 	unknownFields         protoimpl.UnknownFields
@@ -8133,9 +8133,9 @@ func (b0 PayloadPluginUndeprecated_builder) Build() *PayloadPluginUndeprecated {
 }
 
 type PayloadPluginVisibilityChanged struct {
-	state                    protoimpl.MessageState `protogen:"opaque.v1"`
-	xxx_hidden_OwnerId       string                 `protobuf:"bytes,1,opt,name=owner_id,json=ownerId,proto3"`
-	xxx_hidden_OwnerName     string                 `protobuf:"bytes,2,opt,name=owner_name,json=ownerName,proto3"`
+	state                    protoimpl.MessageState      `protogen:"opaque.v1"`
+	xxx_hidden_OwnerId       string                      `protobuf:"bytes,1,opt,name=owner_id,json=ownerId,proto3"`
+	xxx_hidden_OwnerName     string                      `protobuf:"bytes,2,opt,name=owner_name,json=ownerName,proto3"`
 	xxx_hidden_PluginType    string                      `protobuf:"bytes,3,opt,name=plugin_type,json=pluginType,proto3"`
 	xxx_hidden_OldVisibility registryv1alpha1.Visibility `protobuf:"varint,4,opt,name=old_visibility,json=oldVisibility,proto3,enum=buf.alpha.registry.v1alpha1.Visibility"`
 	xxx_hidden_NewVisibility registryv1alpha1.Visibility `protobuf:"varint,5,opt,name=new_visibility,json=newVisibility,proto3,enum=buf.alpha.registry.v1alpha1.Visibility"`

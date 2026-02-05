@@ -19,9 +19,9 @@
 package v1pluginrpc
 
 import (
-	v1 "github.com/inovacc/omni/pkg/buf/internal/gen/bufbuild/bufplugin/protocolbuffers/go/buf/plugin/check/v1"
 	context "context"
 	fmt "fmt"
+	v1 "github.com/inovacc/omni/pkg/buf/internal/gen/bufbuild/bufplugin/protocolbuffers/go/buf/plugin/check/v1"
 	pluginrpc "pluginrpc.com/pluginrpc"
 )
 

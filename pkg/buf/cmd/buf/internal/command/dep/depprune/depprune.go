@@ -17,9 +17,9 @@ package depprune
 import (
 	"context"
 
+	"github.com/inovacc/omni/pkg/buf/cmd/buf/internal/command/dep/internal"
 	"github.com/inovacc/omni/pkg/buf/internal/app/appcmd"
 	"github.com/inovacc/omni/pkg/buf/internal/app/appext"
-	"github.com/inovacc/omni/pkg/buf/cmd/buf/internal/command/dep/internal"
 	"github.com/inovacc/omni/pkg/buf/internal/buf/bufcli"
 )
 

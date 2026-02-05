@@ -21,13 +21,13 @@ import (
 	"sort"
 	"strings"
 
+	"buf.build/go/bufplugin/option"
+	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufparse"
 	pluginoptionv1 "github.com/inovacc/omni/pkg/buf/internal/gen/bufbuild/bufplugin/protocolbuffers/go/buf/plugin/option/v1"
 	policyv1beta1 "github.com/inovacc/omni/pkg/buf/internal/gen/bufbuild/registry/protocolbuffers/go/buf/registry/policy/v1beta1"
-	"buf.build/go/bufplugin/option"
-	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
-	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufparse"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/protoencoding"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/syserror"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
 )
 
 // PolicyConfig is the configuration for a Policy.

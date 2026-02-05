@@ -47,9 +47,9 @@ type Config struct {
 	xxx_hidden_Version                              string                 `protobuf:"bytes,1,opt,name=version,proto3"`
 	xxx_hidden_UseIds                               []string               `protobuf:"bytes,2,rep,name=use_ids,json=useIds,proto3"`
 	xxx_hidden_ExceptIds                            []string               `protobuf:"bytes,3,rep,name=except_ids,json=exceptIds,proto3"`
-	xxx_hidden_IgnorePaths                          []string    `protobuf:"bytes,4,rep,name=ignore_paths,json=ignorePaths,proto3"`
-	xxx_hidden_IgnoreIdPaths                        *[]*IDPaths `protobuf:"bytes,5,rep,name=ignore_id_paths,json=ignoreIdPaths,proto3"`
-	xxx_hidden_EnumZeroValueSuffix                  string      `protobuf:"bytes,6,opt,name=enum_zero_value_suffix,json=enumZeroValueSuffix,proto3"`
+	xxx_hidden_IgnorePaths                          []string               `protobuf:"bytes,4,rep,name=ignore_paths,json=ignorePaths,proto3"`
+	xxx_hidden_IgnoreIdPaths                        *[]*IDPaths            `protobuf:"bytes,5,rep,name=ignore_id_paths,json=ignoreIdPaths,proto3"`
+	xxx_hidden_EnumZeroValueSuffix                  string                 `protobuf:"bytes,6,opt,name=enum_zero_value_suffix,json=enumZeroValueSuffix,proto3"`
 	xxx_hidden_RpcAllowSameRequestResponse          bool                   `protobuf:"varint,7,opt,name=rpc_allow_same_request_response,json=rpcAllowSameRequestResponse,proto3"`
 	xxx_hidden_RpcAllowGoogleProtobufEmptyRequests  bool                   `protobuf:"varint,8,opt,name=rpc_allow_google_protobuf_empty_requests,json=rpcAllowGoogleProtobufEmptyRequests,proto3"`
 	xxx_hidden_RpcAllowGoogleProtobufEmptyResponses bool                   `protobuf:"varint,9,opt,name=rpc_allow_google_protobuf_empty_responses,json=rpcAllowGoogleProtobufEmptyResponses,proto3"`

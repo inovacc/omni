@@ -17,10 +17,10 @@ package bufworkspace
 import (
 	"sort"
 
-	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
 	bufmodule2 "github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufmodule"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufparse"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/syserror"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
 )
 
 const (

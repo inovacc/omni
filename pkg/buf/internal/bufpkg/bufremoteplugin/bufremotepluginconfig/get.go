@@ -20,9 +20,9 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/inovacc/omni/pkg/buf/internal/standard/xstrings"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/encoding"
 	storage2 "github.com/inovacc/omni/pkg/buf/internal/pkg/storage"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xstrings"
 )
 
 func getConfigForBucket(ctx context.Context, readBucket storage2.ReadBucket, options []ConfigOption) (_ *Config, retErr error) {
