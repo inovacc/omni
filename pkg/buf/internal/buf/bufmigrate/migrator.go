@@ -25,7 +25,7 @@ import (
 	"sort"
 	"strings"
 
-	"buf.build/go/bufplugin/check"
+	"github.com/inovacc/omni/pkg/buf/bufplugin/check"
 	"github.com/google/uuid"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufcheck"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufcheck/bufcheckserver"

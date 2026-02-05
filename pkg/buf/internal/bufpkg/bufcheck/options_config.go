@@ -15,8 +15,8 @@
 package bufcheck
 
 import (
-	"buf.build/go/bufplugin/check"
-	"buf.build/go/bufplugin/option"
+	"github.com/inovacc/omni/pkg/buf/bufplugin/check"
+	"github.com/inovacc/omni/pkg/buf/bufplugin/option"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufcheck/internal/bufcheckopt"
 	bufconfig2 "github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufconfig"
 )

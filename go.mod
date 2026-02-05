@@ -3,10 +3,6 @@ module github.com/inovacc/omni
 go 1.25.0
 
 require (
-	buf.build/go/bufplugin v0.9.0
-	buf.build/go/protovalidate v1.1.0
-	buf.build/go/protoyaml v0.6.0
-	buf.build/go/spdx v0.2.0
 	connectrpc.com/otelconnect v0.9.0
 	github.com/BurntSushi/toml v1.6.0
 	github.com/aws/aws-sdk-go-v2 v1.41.1
@@ -19,6 +15,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sts v1.41.6
 	github.com/bmatcuk/doublestar/v4 v4.10.0
 	github.com/btcsuite/btcd/btcutil v1.1.6
+	github.com/bufbuild/protocompile v0.14.1
 	github.com/bufbuild/protoplugin v0.0.0-20250218205857-750e09ce93e1
 	github.com/charmbracelet/bubbletea v1.3.10
 	github.com/charmbracelet/lipgloss v1.1.0
@@ -44,6 +41,7 @@ require (
 	github.com/protocolbuffers/protoscope v0.0.0-20221109213918-8e7a6aafa2c9
 	github.com/quic-go/quic-go v0.59.0
 	github.com/rivo/uniseg v0.4.7
+	github.com/rodaine/protogofakeit v0.1.1
 	github.com/rs/cors v1.11.1
 	github.com/segmentio/ksuid v1.0.4
 	github.com/spf13/cobra v1.10.2
@@ -72,13 +70,13 @@ require (
 	k8s.io/cli-runtime v0.35.0
 	k8s.io/kubectl v0.35.0
 	modernc.org/sqlite v1.44.3
+	mvdan.cc/xurls/v2 v2.6.0
 	pluginrpc.com/pluginrpc v0.5.0
 )
 
 require (
-	buf.build/gen/go/bufbuild/bufplugin/protocolbuffers/go v1.36.11-20250718181942-e35f9b667443.1 // indirect
-	buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go v1.36.11-20251209175733-2a1774d88802.1 // indirect
-	buf.build/gen/go/pluginrpc/pluginrpc/protocolbuffers/go v1.36.3-20241007202033-cf42259fcbfc.1 // indirect
+	buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go v1.34.2-20240717164558-a6c49f84cc0f.2 // indirect
+	buf.build/gen/go/pluginrpc/pluginrpc/protocolbuffers/go v1.34.2-20240828222655-5345c0a56177.2 // indirect
 	cel.dev/expr v0.25.1 // indirect
 	connectrpc.com/connect v1.19.1 // indirect
 	github.com/Azure/go-ansiterm v0.0.0-20230124172434-306776ec8161 // indirect
@@ -101,7 +99,6 @@ require (
 	github.com/aws/smithy-go v1.24.0 // indirect
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
 	github.com/blang/semver/v4 v4.0.0 // indirect
-	github.com/bufbuild/protocompile v0.14.1 // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/chai2010/gettext-go v1.0.2 // indirect

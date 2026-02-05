@@ -18,9 +18,9 @@ import (
 	"context"
 	"strings"
 
-	"buf.build/go/bufplugin/check"
-	"buf.build/go/bufplugin/check/checkutil"
-	"buf.build/go/bufplugin/option"
+	"github.com/inovacc/omni/pkg/buf/bufplugin/check"
+	"github.com/inovacc/omni/pkg/buf/bufplugin/check/checkutil"
+	"github.com/inovacc/omni/pkg/buf/bufplugin/option"
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 

@@ -22,7 +22,7 @@ import (
 	"strconv"
 	"strings"
 
-	"buf.build/go/bufplugin/check"
+	"github.com/inovacc/omni/pkg/buf/bufplugin/check"
 	bufcheckserverutil2 "github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufcheck/bufcheckserver/internal/bufcheckserverutil"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufprotosource"
 	"github.com/inovacc/omni/pkg/buf/internal/gen/proto/go/google/protobuf"

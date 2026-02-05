@@ -19,9 +19,9 @@ import (
 	"slices"
 	"strings"
 
-	"buf.build/go/bufplugin/check"
-	"buf.build/go/bufplugin/descriptor"
-	"buf.build/go/bufplugin/option"
+	"github.com/inovacc/omni/pkg/buf/bufplugin/check"
+	"github.com/inovacc/omni/pkg/buf/bufplugin/descriptor"
+	"github.com/inovacc/omni/pkg/buf/bufplugin/option"
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
