@@ -18,7 +18,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/bufbuild/protocompile"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/reflect/protoreflect"
 )

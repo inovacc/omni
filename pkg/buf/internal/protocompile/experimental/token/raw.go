@@ -17,9 +17,9 @@ package token
 import (
 	"fmt"
 
-	"github.com/bufbuild/protocompile/experimental/id"
-	"github.com/bufbuild/protocompile/experimental/token/keyword"
-	"github.com/bufbuild/protocompile/internal/ext/slicesx"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/id"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/token/keyword"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/internal/ext/slicesx"
 )
 
 // Implementation notes:

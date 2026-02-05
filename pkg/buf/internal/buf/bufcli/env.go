@@ -18,7 +18,7 @@ import (
 	"context"
 	"net/http"
 
-	"buf.build/go/app/appext"
+	"github.com/inovacc/omni/pkg/buf/internal/app/appext"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/git"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/httpauth"
 )

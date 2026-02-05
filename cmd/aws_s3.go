@@ -53,15 +53,17 @@ Examples:
 		profile, _ := cmd.Flags().GetString("profile")
 		region, _ := cmd.Flags().GetString("region")
 		output, _ := cmd.Flags().GetString("output")
+		endpointURL, _ := cmd.Flags().GetString("endpoint-url")
 
 		recursive, _ := cmd.Flags().GetBool("recursive")
 		human, _ := cmd.Flags().GetBool("human-readable")
 		summarize, _ := cmd.Flags().GetBool("summarize")
 
 		opts := awscommon.Options{
-			Profile: profile,
-			Region:  region,
-			Output:  output,
+			Profile:     profile,
+			Region:      region,
+			Output:      output,
+			EndpointURL: endpointURL,
 		}
 
 		cfg, err := awscommon.LoadConfig(ctx, opts)
@@ -69,7 +71,7 @@ Examples:
 			return err
 		}
 
-		client := s3.NewClient(cfg, cmd.OutOrStdout(), awscommon.ParseOutputFormat(output))
+		client := s3.NewClient(cfg, cmd.OutOrStdout(), awscommon.ParseOutputFormat(output), awscommon.GetEndpointURL(opts))
 
 		uri := ""
 		if len(args) > 0 {
@@ -107,14 +109,16 @@ Examples:
 
 		profile, _ := cmd.Flags().GetString("profile")
 		region, _ := cmd.Flags().GetString("region")
+		endpointURL, _ := cmd.Flags().GetString("endpoint-url")
 
 		recursive, _ := cmd.Flags().GetBool("recursive")
 		dryRun, _ := cmd.Flags().GetBool("dryrun")
 		quiet, _ := cmd.Flags().GetBool("quiet")
 
 		opts := awscommon.Options{
-			Profile: profile,
-			Region:  region,
+			Profile:     profile,
+			Region:      region,
+			EndpointURL: endpointURL,
 		}
 
 		cfg, err := awscommon.LoadConfig(ctx, opts)
@@ -122,7 +126,7 @@ Examples:
 			return err
 		}
 
-		client := s3.NewClient(cfg, cmd.OutOrStdout(), awscommon.OutputText)
+		client := s3.NewClient(cfg, cmd.OutOrStdout(), awscommon.OutputText, awscommon.GetEndpointURL(opts))
 
 		return client.Cp(ctx, cmd.OutOrStdout(), args[0], args[1], s3.CpOptions{
 			Recursive: recursive,
@@ -147,14 +151,16 @@ Examples:
 
 		profile, _ := cmd.Flags().GetString("profile")
 		region, _ := cmd.Flags().GetString("region")
+		endpointURL, _ := cmd.Flags().GetString("endpoint-url")
 
 		recursive, _ := cmd.Flags().GetBool("recursive")
 		dryRun, _ := cmd.Flags().GetBool("dryrun")
 		quiet, _ := cmd.Flags().GetBool("quiet")
 
 		opts := awscommon.Options{
-			Profile: profile,
-			Region:  region,
+			Profile:     profile,
+			Region:      region,
+			EndpointURL: endpointURL,
 		}
 
 		cfg, err := awscommon.LoadConfig(ctx, opts)
@@ -162,7 +168,7 @@ Examples:
 			return err
 		}
 
-		client := s3.NewClient(cfg, cmd.OutOrStdout(), awscommon.OutputText)
+		client := s3.NewClient(cfg, cmd.OutOrStdout(), awscommon.OutputText, awscommon.GetEndpointURL(opts))
 
 		return client.Rm(ctx, cmd.OutOrStdout(), args[0], recursive, dryRun, quiet)
 	},
@@ -182,10 +188,12 @@ Examples:
 
 		profile, _ := cmd.Flags().GetString("profile")
 		region, _ := cmd.Flags().GetString("region")
+		endpointURL, _ := cmd.Flags().GetString("endpoint-url")
 
 		opts := awscommon.Options{
-			Profile: profile,
-			Region:  region,
+			Profile:     profile,
+			Region:      region,
+			EndpointURL: endpointURL,
 		}
 
 		cfg, err := awscommon.LoadConfig(ctx, opts)
@@ -193,7 +201,7 @@ Examples:
 			return err
 		}
 
-		client := s3.NewClient(cfg, cmd.OutOrStdout(), awscommon.OutputText)
+		client := s3.NewClient(cfg, cmd.OutOrStdout(), awscommon.OutputText, awscommon.GetEndpointURL(opts))
 
 		return client.Mb(ctx, cmd.OutOrStdout(), args[0], awscommon.GetRegion(opts))
 	},
@@ -213,12 +221,14 @@ Examples:
 
 		profile, _ := cmd.Flags().GetString("profile")
 		region, _ := cmd.Flags().GetString("region")
+		endpointURL, _ := cmd.Flags().GetString("endpoint-url")
 
 		force, _ := cmd.Flags().GetBool("force")
 
 		opts := awscommon.Options{
-			Profile: profile,
-			Region:  region,
+			Profile:     profile,
+			Region:      region,
+			EndpointURL: endpointURL,
 		}
 
 		cfg, err := awscommon.LoadConfig(ctx, opts)
@@ -226,7 +236,7 @@ Examples:
 			return err
 		}
 
-		client := s3.NewClient(cfg, cmd.OutOrStdout(), awscommon.OutputText)
+		client := s3.NewClient(cfg, cmd.OutOrStdout(), awscommon.OutputText, awscommon.GetEndpointURL(opts))
 
 		return client.Rb(ctx, cmd.OutOrStdout(), args[0], force)
 	},
@@ -246,12 +256,14 @@ Examples:
 
 		profile, _ := cmd.Flags().GetString("profile")
 		region, _ := cmd.Flags().GetString("region")
+		endpointURL, _ := cmd.Flags().GetString("endpoint-url")
 
 		expiresIn, _ := cmd.Flags().GetInt("expires-in")
 
 		opts := awscommon.Options{
-			Profile: profile,
-			Region:  region,
+			Profile:     profile,
+			Region:      region,
+			EndpointURL: endpointURL,
 		}
 
 		cfg, err := awscommon.LoadConfig(ctx, opts)
@@ -259,7 +271,7 @@ Examples:
 			return err
 		}
 
-		client := s3.NewClient(cfg, cmd.OutOrStdout(), awscommon.OutputText)
+		client := s3.NewClient(cfg, cmd.OutOrStdout(), awscommon.OutputText, awscommon.GetEndpointURL(opts))
 
 		url, err := client.Presign(ctx, args[0], s3.PresignOptions{
 			ExpiresIn: time.Duration(expiresIn) * time.Second,

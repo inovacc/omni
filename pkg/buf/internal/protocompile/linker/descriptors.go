@@ -28,12 +28,12 @@ import (
 	"google.golang.org/protobuf/types/descriptorpb"
 	"google.golang.org/protobuf/types/dynamicpb"
 
-	"github.com/bufbuild/protocompile/ast"
-	"github.com/bufbuild/protocompile/internal"
-	"github.com/bufbuild/protocompile/internal/editions"
-	"github.com/bufbuild/protocompile/internal/ext/unsafex"
-	"github.com/bufbuild/protocompile/parser"
-	"github.com/bufbuild/protocompile/protoutil"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/ast"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/internal"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/internal/editions"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/internal/ext/unsafex"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/parser"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/protoutil"
 )
 
 var (

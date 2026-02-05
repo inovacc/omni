@@ -41,8 +41,8 @@ import (
 
 	"gopkg.in/yaml.v3"
 
-	"github.com/bufbuild/protocompile/internal/ext/osx"
-	"github.com/bufbuild/protocompile/internal/ext/slicesx"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/internal/ext/osx"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/internal/ext/slicesx"
 )
 
 //nolint:tagliatelle // Weird opinions on YAML fields.

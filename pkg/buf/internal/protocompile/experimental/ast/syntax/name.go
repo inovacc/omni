@@ -37,5 +37,6 @@ func (s Syntax) Name() string {
 	if !ok {
 		return "Edition <?>"
 	}
+
 	return name
 }

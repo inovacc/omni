@@ -24,7 +24,7 @@ import (
 	"strconv"
 	"strings"
 
-	"buf.build/go/standard/xslices"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
 	bufcas2 "github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufcas"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufparse"
 	storage2 "github.com/inovacc/omni/pkg/buf/internal/pkg/storage"

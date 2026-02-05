@@ -100,6 +100,7 @@ func (s Syntax) DescriptorName() string {
 	if name != "" {
 		return name
 	}
+
 	return strconv.Itoa(int(s))
 }
 

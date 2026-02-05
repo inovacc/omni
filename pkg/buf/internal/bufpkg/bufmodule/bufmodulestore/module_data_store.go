@@ -21,8 +21,8 @@ import (
 	"io/fs"
 	"log/slog"
 
-	"buf.build/go/standard/xlog/xslog"
-	"buf.build/go/standard/xslices"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xlog/xslog"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
 	bufmodule2 "github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufmodule"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufparse"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/encoding"

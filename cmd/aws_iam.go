@@ -30,13 +30,15 @@ Examples:
 		profile, _ := cmd.Flags().GetString("profile")
 		region, _ := cmd.Flags().GetString("region")
 		output, _ := cmd.Flags().GetString("output")
+		endpointURL, _ := cmd.Flags().GetString("endpoint-url")
 
 		userName, _ := cmd.Flags().GetString("user-name")
 
 		opts := awscommon.Options{
-			Profile: profile,
-			Region:  region,
-			Output:  output,
+			Profile:     profile,
+			Region:      region,
+			Output:      output,
+			EndpointURL: endpointURL,
 		}
 
 		cfg, err := awscommon.LoadConfig(ctx, opts)
@@ -44,7 +46,7 @@ Examples:
 			return err
 		}
 
-		client := iam.NewClient(cfg, cmd.OutOrStdout(), awscommon.ParseOutputFormat(output))
+		client := iam.NewClient(cfg, cmd.OutOrStdout(), awscommon.ParseOutputFormat(output), awscommon.GetEndpointURL(opts))
 
 		user, err := client.GetUser(ctx, userName)
 		if err != nil {
@@ -69,13 +71,15 @@ Examples:
 		profile, _ := cmd.Flags().GetString("profile")
 		region, _ := cmd.Flags().GetString("region")
 		output, _ := cmd.Flags().GetString("output")
+		endpointURL, _ := cmd.Flags().GetString("endpoint-url")
 
 		roleName, _ := cmd.Flags().GetString("role-name")
 
 		opts := awscommon.Options{
-			Profile: profile,
-			Region:  region,
-			Output:  output,
+			Profile:     profile,
+			Region:      region,
+			Output:      output,
+			EndpointURL: endpointURL,
 		}
 
 		cfg, err := awscommon.LoadConfig(ctx, opts)
@@ -83,7 +87,7 @@ Examples:
 			return err
 		}
 
-		client := iam.NewClient(cfg, cmd.OutOrStdout(), awscommon.ParseOutputFormat(output))
+		client := iam.NewClient(cfg, cmd.OutOrStdout(), awscommon.ParseOutputFormat(output), awscommon.GetEndpointURL(opts))
 
 		role, err := client.GetRole(ctx, roleName)
 		if err != nil {
@@ -108,14 +112,16 @@ Examples:
 		profile, _ := cmd.Flags().GetString("profile")
 		region, _ := cmd.Flags().GetString("region")
 		output, _ := cmd.Flags().GetString("output")
+		endpointURL, _ := cmd.Flags().GetString("endpoint-url")
 
 		pathPrefix, _ := cmd.Flags().GetString("path-prefix")
 		maxItems, _ := cmd.Flags().GetInt32("max-items")
 
 		opts := awscommon.Options{
-			Profile: profile,
-			Region:  region,
-			Output:  output,
+			Profile:     profile,
+			Region:      region,
+			Output:      output,
+			EndpointURL: endpointURL,
 		}
 
 		cfg, err := awscommon.LoadConfig(ctx, opts)
@@ -123,7 +129,7 @@ Examples:
 			return err
 		}
 
-		client := iam.NewClient(cfg, cmd.OutOrStdout(), awscommon.ParseOutputFormat(output))
+		client := iam.NewClient(cfg, cmd.OutOrStdout(), awscommon.ParseOutputFormat(output), awscommon.GetEndpointURL(opts))
 
 		roles, err := client.ListRoles(ctx, iam.ListRolesInput{
 			PathPrefix: pathPrefix,
@@ -152,6 +158,7 @@ Examples:
 		profile, _ := cmd.Flags().GetString("profile")
 		region, _ := cmd.Flags().GetString("region")
 		output, _ := cmd.Flags().GetString("output")
+		endpointURL, _ := cmd.Flags().GetString("endpoint-url")
 
 		scope, _ := cmd.Flags().GetString("scope")
 		onlyAttached, _ := cmd.Flags().GetBool("only-attached")
@@ -159,9 +166,10 @@ Examples:
 		maxItems, _ := cmd.Flags().GetInt32("max-items")
 
 		opts := awscommon.Options{
-			Profile: profile,
-			Region:  region,
-			Output:  output,
+			Profile:     profile,
+			Region:      region,
+			Output:      output,
+			EndpointURL: endpointURL,
 		}
 
 		cfg, err := awscommon.LoadConfig(ctx, opts)
@@ -169,7 +177,7 @@ Examples:
 			return err
 		}
 
-		client := iam.NewClient(cfg, cmd.OutOrStdout(), awscommon.ParseOutputFormat(output))
+		client := iam.NewClient(cfg, cmd.OutOrStdout(), awscommon.ParseOutputFormat(output), awscommon.GetEndpointURL(opts))
 
 		policies, err := client.ListPolicies(ctx, iam.ListPoliciesInput{
 			Scope:        scope,
@@ -198,13 +206,15 @@ Examples:
 		profile, _ := cmd.Flags().GetString("profile")
 		region, _ := cmd.Flags().GetString("region")
 		output, _ := cmd.Flags().GetString("output")
+		endpointURL, _ := cmd.Flags().GetString("endpoint-url")
 
 		policyArn, _ := cmd.Flags().GetString("policy-arn")
 
 		opts := awscommon.Options{
-			Profile: profile,
-			Region:  region,
-			Output:  output,
+			Profile:     profile,
+			Region:      region,
+			Output:      output,
+			EndpointURL: endpointURL,
 		}
 
 		cfg, err := awscommon.LoadConfig(ctx, opts)
@@ -212,7 +222,7 @@ Examples:
 			return err
 		}
 
-		client := iam.NewClient(cfg, cmd.OutOrStdout(), awscommon.ParseOutputFormat(output))
+		client := iam.NewClient(cfg, cmd.OutOrStdout(), awscommon.ParseOutputFormat(output), awscommon.GetEndpointURL(opts))
 
 		policy, err := client.GetPolicy(ctx, policyArn)
 		if err != nil {

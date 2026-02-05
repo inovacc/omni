@@ -18,7 +18,7 @@ import (
 	"errors"
 	"fmt"
 
-	"buf.build/go/standard/xslices"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
 	"github.com/bufbuild/protoplugin/protopluginutil"
 	"github.com/google/uuid"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufparse"

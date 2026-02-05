@@ -27,13 +27,13 @@ import (
 	"github.com/stretchr/testify/assert/yaml"
 	"github.com/stretchr/testify/require"
 
-	"github.com/bufbuild/protocompile/experimental/internal/lexer"
-	"github.com/bufbuild/protocompile/experimental/report"
-	"github.com/bufbuild/protocompile/experimental/source"
-	"github.com/bufbuild/protocompile/experimental/source/length"
-	"github.com/bufbuild/protocompile/experimental/token"
-	"github.com/bufbuild/protocompile/experimental/token/keyword"
-	"github.com/bufbuild/protocompile/internal/golden"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/internal/lexer"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/report"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/source"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/source/length"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/token"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/token/keyword"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/internal/golden"
 )
 
 // Config is configuration settable in a text via //% comments.

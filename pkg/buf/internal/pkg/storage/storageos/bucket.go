@@ -22,7 +22,7 @@ import (
 	"path/filepath"
 	"sync/atomic"
 
-	"buf.build/go/standard/xpath/xfilepath"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xpath/xfilepath"
 	normalpath2 "github.com/inovacc/omni/pkg/buf/internal/pkg/normalpath"
 	storage2 "github.com/inovacc/omni/pkg/buf/internal/pkg/storage"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/storage/storageutil"

@@ -19,8 +19,8 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/bufbuild/protocompile"
 	normalpath2 "github.com/inovacc/omni/pkg/buf/internal/pkg/normalpath"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/descriptorpb"
 )

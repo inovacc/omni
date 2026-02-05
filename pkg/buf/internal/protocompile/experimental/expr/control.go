@@ -15,10 +15,10 @@
 package expr
 
 import (
-	"github.com/bufbuild/protocompile/experimental/id"
-	"github.com/bufbuild/protocompile/experimental/source"
-	"github.com/bufbuild/protocompile/experimental/token"
-	"github.com/bufbuild/protocompile/experimental/token/keyword"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/id"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/source"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/token"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/token/keyword"
 )
 
 // Control is a control flow expression, such as a break or continue, with an

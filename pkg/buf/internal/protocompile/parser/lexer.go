@@ -25,8 +25,8 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"github.com/bufbuild/protocompile/ast"
-	"github.com/bufbuild/protocompile/reporter"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/ast"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/reporter"
 )
 
 type runeReader struct {

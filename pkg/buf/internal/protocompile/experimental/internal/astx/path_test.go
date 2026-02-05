@@ -18,8 +18,8 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/bufbuild/protocompile/experimental/ast"
-	"github.com/bufbuild/protocompile/internal/prototest"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/ast"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/internal/prototest"
 )
 
 func TestFakePathLayout(t *testing.T) {

@@ -43,13 +43,13 @@ import (
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/descriptorpb"
 
-	"github.com/bufbuild/protocompile"
-	"github.com/bufbuild/protocompile/ast"
-	"github.com/bufbuild/protocompile/internal/protoc"
-	"github.com/bufbuild/protocompile/parser"
-	"github.com/bufbuild/protocompile/parser/fastscan"
-	"github.com/bufbuild/protocompile/protoutil"
-	"github.com/bufbuild/protocompile/reporter"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/ast"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/internal/protoc"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/parser"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/parser/fastscan"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/protoutil"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/reporter"
 )
 
 const (

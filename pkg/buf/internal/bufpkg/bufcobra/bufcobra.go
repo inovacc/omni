@@ -18,7 +18,7 @@ import (
 	"fmt"
 	"regexp"
 
-	"buf.build/go/standard/xslices"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 )

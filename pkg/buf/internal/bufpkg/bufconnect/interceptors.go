@@ -23,8 +23,8 @@ import (
 	"strings"
 	"time"
 
-	"buf.build/go/app/appext"
-	"connectrpc.com/connect"
+	"github.com/inovacc/omni/pkg/buf/internal/app/appext"
+	"github.com/inovacc/omni/pkg/buf/internal/connect"
 	"google.golang.org/protobuf/proto"
 )
 

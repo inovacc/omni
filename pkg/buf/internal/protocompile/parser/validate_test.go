@@ -23,8 +23,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/bufbuild/protocompile/internal/protoc"
-	"github.com/bufbuild/protocompile/reporter"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/internal/protoc"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/reporter"
 )
 
 func TestBasicValidation(t *testing.T) {

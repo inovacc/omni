@@ -21,11 +21,11 @@ import (
 	"strings"
 	"time"
 
-	modulev1 "buf.build/gen/go/bufbuild/registry/protocolbuffers/go/buf/registry/module/v1"
-	modulev1beta1 "buf.build/gen/go/bufbuild/registry/protocolbuffers/go/buf/registry/module/v1beta1"
-	ownerv1 "buf.build/gen/go/bufbuild/registry/protocolbuffers/go/buf/registry/owner/v1"
-	"buf.build/go/standard/xslices"
-	"connectrpc.com/connect"
+	modulev1 "github.com/inovacc/omni/pkg/buf/internal/gen/bufbuild/registry/protocolbuffers/go/buf/registry/module/v1"
+	modulev1beta1 "github.com/inovacc/omni/pkg/buf/internal/gen/bufbuild/registry/protocolbuffers/go/buf/registry/module/v1beta1"
+	ownerv1 "github.com/inovacc/omni/pkg/buf/internal/gen/bufbuild/registry/protocolbuffers/go/buf/registry/owner/v1"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
+	"github.com/inovacc/omni/pkg/buf/internal/connect"
 	"github.com/google/uuid"
 	bufmodule2 "github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufmodule"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufregistryapi/bufregistryapimodule"
@@ -503,4 +503,5 @@ func remoteDepToV1Beta1ProtoUploadRequestDepRef(
 	return &modulev1beta1.UploadRequest_DepRef{
 		CommitId: uuidutil.ToDashless(depCommitID),
 		Registry: remoteDep.FullName().Registry(),
-	}
+	}, nil
+}

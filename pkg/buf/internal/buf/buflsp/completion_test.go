@@ -18,7 +18,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"buf.build/go/standard/xslices"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.lsp.dev/protocol"

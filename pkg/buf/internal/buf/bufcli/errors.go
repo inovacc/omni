@@ -18,7 +18,7 @@ import (
 	"errors"
 	"fmt"
 
-	"connectrpc.com/connect"
+	"github.com/inovacc/omni/pkg/buf/internal/connect"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufparse"
 )
 

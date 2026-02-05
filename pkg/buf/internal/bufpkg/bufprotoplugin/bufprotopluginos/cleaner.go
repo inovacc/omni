@@ -20,7 +20,7 @@ import (
 	"io/fs"
 	"path/filepath"
 
-	"buf.build/go/standard/xpath/xfilepath"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xpath/xfilepath"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/normalpath"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/osext"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/storage/storageos"

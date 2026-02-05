@@ -24,7 +24,7 @@ import (
 	"fmt"
 	"strings"
 
-	"buf.build/go/app"
+	"github.com/inovacc/omni/pkg/buf/internal/app"
 	"github.com/spf13/cobra"
 	"github.com/spf13/cobra/doc"
 	"github.com/spf13/pflag"

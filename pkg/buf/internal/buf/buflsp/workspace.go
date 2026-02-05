@@ -22,7 +22,7 @@ import (
 	"iter"
 	"log/slog"
 
-	"buf.build/go/standard/xlog/xslog"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xlog/xslog"
 	"github.com/inovacc/omni/pkg/buf/internal/buf/bufworkspace"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufcheck"
 	bufmodule2 "github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufmodule"

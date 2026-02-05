@@ -16,4 +16,4 @@
 
 package bufpluginapi
 
-import _ "buf.build/go/bufprivateusage"
+import _ "github.com/inovacc/omni/pkg/buf/internal/bufprivateusage"

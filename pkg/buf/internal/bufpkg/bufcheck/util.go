@@ -15,8 +15,8 @@
 package bufcheck
 
 import (
-	descriptorv1 "buf.build/gen/go/bufbuild/bufplugin/protocolbuffers/go/buf/plugin/descriptor/v1"
-	"buf.build/go/standard/xslices"
+	descriptorv1 "github.com/inovacc/omni/pkg/buf/internal/gen/bufbuild/bufplugin/protocolbuffers/go/buf/plugin/descriptor/v1"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufimage"
 )
 

@@ -107,12 +107,15 @@ func TestBuildPlanArgs(t *testing.T) {
 			if tt.out != "" {
 				args = append(args, "-out="+tt.out)
 			}
+
 			if tt.destroy {
 				args = append(args, "-destroy")
 			}
+
 			for k, v := range tt.vars {
 				args = append(args, "-var", k+"="+v)
 			}
+
 			for _, f := range tt.varFiles {
 				args = append(args, "-var-file="+f)
 			}

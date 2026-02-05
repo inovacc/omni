@@ -23,5 +23,6 @@ func (t *Trie[V]) Dump() string {
 	buf := new(strings.Builder)
 	t.impl.dump(buf)
 	fmt.Fprintf(buf, "values: %v\n", t.values)
+
 	return buf.String()
 }

@@ -22,8 +22,8 @@ import (
 	"log/slog"
 	"net/http"
 
-	"buf.build/go/app"
-	"buf.build/go/standard/xstrings"
+	"github.com/inovacc/omni/pkg/buf/internal/app"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xstrings"
 	"github.com/inovacc/omni/pkg/buf/internal/buf/buffetch/internal"
 	"github.com/inovacc/omni/pkg/buf/internal/buf/buftarget"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufconfig"

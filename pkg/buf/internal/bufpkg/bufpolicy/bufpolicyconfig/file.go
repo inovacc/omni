@@ -50,10 +50,10 @@ func getFile[F File](
 	bucket storage2.ReadBucket,
 	path string,
 	readFileFunc func(
-	data []byte,
-	objectData bufconfig2.ObjectData,
-	allowJSON bool,
-) (F, error),
+		data []byte,
+		objectData bufconfig2.ObjectData,
+		allowJSON bool,
+	) (F, error),
 ) (F, error) {
 	var f F
 	data, err := storage2.ReadPath(ctx, bucket, path)
@@ -80,9 +80,9 @@ func putFile[F File](
 	path string,
 	f F,
 	writeFileFunc func(
-	writer io.Writer,
-	f F,
-) error,
+		writer io.Writer,
+		f F,
+	) error,
 ) (retErr error) {
 	if err := validateSupportedFileVersion(path, f.FileVersion()); err != nil {
 		// This is effectively a system error. We should be able to write with whatever file name we have.
@@ -102,10 +102,10 @@ func readFile[F File](
 	reader io.Reader,
 	fileName string,
 	readFileFunc func(
-	data []byte,
-	objectData bufconfig2.ObjectData,
-	allowJSON bool,
-) (F, error),
+		data []byte,
+		objectData bufconfig2.ObjectData,
+		allowJSON bool,
+	) (F, error),
 ) (F, error) {
 	data, err := io.ReadAll(reader)
 	if err != nil {
@@ -124,9 +124,9 @@ func writeFile[F File](
 	writer io.Writer,
 	f F,
 	writeFileFunc func(
-	writer io.Writer,
-	f F,
-) error,
+		writer io.Writer,
+		f F,
+	) error,
 ) error {
 	if err := writeFileFunc(writer, f); err != nil {
 		var fileName string

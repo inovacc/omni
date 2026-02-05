@@ -19,7 +19,7 @@ import (
 	"fmt"
 	"log/slog"
 
-	"buf.build/go/app"
+	"github.com/inovacc/omni/pkg/buf/internal/app"
 )
 
 // Checker is a checker.

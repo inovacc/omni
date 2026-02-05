@@ -17,14 +17,14 @@ package ir
 import (
 	"iter"
 
-	"github.com/bufbuild/protocompile/experimental/ast"
-	"github.com/bufbuild/protocompile/experimental/ast/predeclared"
-	"github.com/bufbuild/protocompile/experimental/id"
-	"github.com/bufbuild/protocompile/experimental/internal/taxa"
-	"github.com/bufbuild/protocompile/experimental/ir/presence"
-	"github.com/bufbuild/protocompile/experimental/seq"
-	"github.com/bufbuild/protocompile/internal/arena"
-	"github.com/bufbuild/protocompile/internal/intern"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/ast"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/ast/predeclared"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/id"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/internal/taxa"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/ir/presence"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/seq"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/internal/arena"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/internal/intern"
 )
 
 //go:generate go run github.com/bufbuild/protocompile/internal/enum option_target.yaml
@@ -46,17 +46,17 @@ import (
 type Member id.Node[Member, *File, *rawMember]
 
 type rawMember struct {
-	featureInfo *rawFeatureInfo
-	elem        Ref[Type]
-	number      int32
-	extendee    id.ID[Extend]
-	fqn         intern.ID
+	featureInfo   *rawFeatureInfo
+	elem          Ref[Type]
+	number        int32
+	extendee      id.ID[Extend]
+	fqn           intern.ID
 	name          intern.ID
-	def         id.ID[ast.DeclDef]
-	parent      id.ID[Type]
-	features    id.ID[FeatureSet]
-	options     id.ID[Value]
-	oneof       int32
+	def           id.ID[ast.DeclDef]
+	parent        id.ID[Type]
+	features      id.ID[FeatureSet]
+	options       id.ID[Value]
+	oneof         int32
 	optionTargets uint32
 	jsonName      intern.ID
 	isGroup       bool

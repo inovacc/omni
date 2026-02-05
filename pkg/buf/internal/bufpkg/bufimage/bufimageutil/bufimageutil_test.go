@@ -23,8 +23,8 @@ import (
 	"sort"
 	"testing"
 
-	"buf.build/go/app/appext"
-	"buf.build/go/standard/xslices"
+	"github.com/inovacc/omni/pkg/buf/internal/app/appext"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
 	"github.com/google/uuid"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufimage"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufmodule"

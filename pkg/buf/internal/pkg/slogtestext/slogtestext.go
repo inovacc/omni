@@ -20,7 +20,7 @@ import (
 	"os"
 	"testing"
 
-	"buf.build/go/app/appext"
+	"github.com/inovacc/omni/pkg/buf/internal/app/appext"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/slogapp"
 	"github.com/stretchr/testify/require"
 )

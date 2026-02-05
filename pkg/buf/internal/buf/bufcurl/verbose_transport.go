@@ -26,7 +26,7 @@ import (
 	"strings"
 	"sync/atomic"
 
-	"connectrpc.com/connect"
+	"github.com/inovacc/omni/pkg/buf/internal/connect"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/verbose"
 )
 

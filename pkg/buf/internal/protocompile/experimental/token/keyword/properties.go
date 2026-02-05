@@ -37,6 +37,7 @@ func (k Keyword) properties() property {
 	if int(k) < len(properties) {
 		return properties[k]
 	}
+
 	return 0
 }
 

@@ -17,7 +17,7 @@ package internal
 import (
 	"strings"
 
-	"buf.build/go/app"
+	"github.com/inovacc/omni/pkg/buf/internal/app"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufparse"
 )
 

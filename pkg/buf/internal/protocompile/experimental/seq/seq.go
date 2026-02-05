@@ -23,7 +23,7 @@ package seq
 import (
 	"iter"
 
-	"github.com/bufbuild/protocompile/internal/ext/iterx"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/internal/ext/iterx"
 )
 
 // Indexer is a type that can be indexed like a slice.
@@ -117,5 +117,6 @@ func ToSlice[T any](seq Indexer[T]) []T {
 	for i := range out {
 		out[i] = seq.At(i)
 	}
+
 	return out
 }

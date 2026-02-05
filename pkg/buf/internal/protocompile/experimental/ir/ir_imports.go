@@ -17,11 +17,11 @@ package ir
 import (
 	"slices"
 
-	"github.com/bufbuild/protocompile/experimental/ast"
-	"github.com/bufbuild/protocompile/experimental/seq"
-	"github.com/bufbuild/protocompile/internal/ext/mapsx"
-	"github.com/bufbuild/protocompile/internal/ext/slicesx"
-	"github.com/bufbuild/protocompile/internal/intern"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/ast"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/seq"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/internal/ext/mapsx"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/internal/ext/slicesx"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/internal/intern"
 )
 
 // Import is an import in a [File].

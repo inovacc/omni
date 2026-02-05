@@ -30,15 +30,17 @@ Examples:
 		profile, _ := cmd.Flags().GetString("profile")
 		region, _ := cmd.Flags().GetString("region")
 		output, _ := cmd.Flags().GetString("output")
+		endpointURL, _ := cmd.Flags().GetString("endpoint-url")
 
 		instanceIds, _ := cmd.Flags().GetStringSlice("instance-ids")
 		filters, _ := cmd.Flags().GetStringSlice("filters")
 		maxResults, _ := cmd.Flags().GetInt32("max-results")
 
 		opts := awscommon.Options{
-			Profile: profile,
-			Region:  region,
-			Output:  output,
+			Profile:     profile,
+			Region:      region,
+			Output:      output,
+			EndpointURL: endpointURL,
 		}
 
 		cfg, err := awscommon.LoadConfig(ctx, opts)
@@ -46,7 +48,7 @@ Examples:
 			return err
 		}
 
-		client := ec2.NewClient(cfg, cmd.OutOrStdout(), awscommon.ParseOutputFormat(output))
+		client := ec2.NewClient(cfg, cmd.OutOrStdout(), awscommon.ParseOutputFormat(output), awscommon.GetEndpointURL(opts))
 
 		instances, err := client.DescribeInstances(ctx, ec2.DescribeInstancesInput{
 			InstanceIds: instanceIds,
@@ -75,13 +77,15 @@ Examples:
 		profile, _ := cmd.Flags().GetString("profile")
 		region, _ := cmd.Flags().GetString("region")
 		output, _ := cmd.Flags().GetString("output")
+		endpointURL, _ := cmd.Flags().GetString("endpoint-url")
 
 		instanceIds, _ := cmd.Flags().GetStringSlice("instance-ids")
 
 		opts := awscommon.Options{
-			Profile: profile,
-			Region:  region,
-			Output:  output,
+			Profile:     profile,
+			Region:      region,
+			Output:      output,
+			EndpointURL: endpointURL,
 		}
 
 		cfg, err := awscommon.LoadConfig(ctx, opts)
@@ -89,7 +93,7 @@ Examples:
 			return err
 		}
 
-		client := ec2.NewClient(cfg, cmd.OutOrStdout(), awscommon.ParseOutputFormat(output))
+		client := ec2.NewClient(cfg, cmd.OutOrStdout(), awscommon.ParseOutputFormat(output), awscommon.GetEndpointURL(opts))
 
 		changes, err := client.StartInstances(ctx, instanceIds)
 		if err != nil {
@@ -114,14 +118,16 @@ Examples:
 		profile, _ := cmd.Flags().GetString("profile")
 		region, _ := cmd.Flags().GetString("region")
 		output, _ := cmd.Flags().GetString("output")
+		endpointURL, _ := cmd.Flags().GetString("endpoint-url")
 
 		instanceIds, _ := cmd.Flags().GetStringSlice("instance-ids")
 		force, _ := cmd.Flags().GetBool("force")
 
 		opts := awscommon.Options{
-			Profile: profile,
-			Region:  region,
-			Output:  output,
+			Profile:     profile,
+			Region:      region,
+			Output:      output,
+			EndpointURL: endpointURL,
 		}
 
 		cfg, err := awscommon.LoadConfig(ctx, opts)
@@ -129,7 +135,7 @@ Examples:
 			return err
 		}
 
-		client := ec2.NewClient(cfg, cmd.OutOrStdout(), awscommon.ParseOutputFormat(output))
+		client := ec2.NewClient(cfg, cmd.OutOrStdout(), awscommon.ParseOutputFormat(output), awscommon.GetEndpointURL(opts))
 
 		changes, err := client.StopInstances(ctx, instanceIds, force)
 		if err != nil {
@@ -154,14 +160,16 @@ Examples:
 		profile, _ := cmd.Flags().GetString("profile")
 		region, _ := cmd.Flags().GetString("region")
 		output, _ := cmd.Flags().GetString("output")
+		endpointURL, _ := cmd.Flags().GetString("endpoint-url")
 
 		vpcIds, _ := cmd.Flags().GetStringSlice("vpc-ids")
 		filters, _ := cmd.Flags().GetStringSlice("filters")
 
 		opts := awscommon.Options{
-			Profile: profile,
-			Region:  region,
-			Output:  output,
+			Profile:     profile,
+			Region:      region,
+			Output:      output,
+			EndpointURL: endpointURL,
 		}
 
 		cfg, err := awscommon.LoadConfig(ctx, opts)
@@ -169,7 +177,7 @@ Examples:
 			return err
 		}
 
-		client := ec2.NewClient(cfg, cmd.OutOrStdout(), awscommon.ParseOutputFormat(output))
+		client := ec2.NewClient(cfg, cmd.OutOrStdout(), awscommon.ParseOutputFormat(output), awscommon.GetEndpointURL(opts))
 
 		vpcs, err := client.DescribeVpcs(ctx, vpcIds, parseEC2Filters(filters))
 		if err != nil {
@@ -194,14 +202,16 @@ Examples:
 		profile, _ := cmd.Flags().GetString("profile")
 		region, _ := cmd.Flags().GetString("region")
 		output, _ := cmd.Flags().GetString("output")
+		endpointURL, _ := cmd.Flags().GetString("endpoint-url")
 
 		groupIds, _ := cmd.Flags().GetStringSlice("group-ids")
 		filters, _ := cmd.Flags().GetStringSlice("filters")
 
 		opts := awscommon.Options{
-			Profile: profile,
-			Region:  region,
-			Output:  output,
+			Profile:     profile,
+			Region:      region,
+			Output:      output,
+			EndpointURL: endpointURL,
 		}
 
 		cfg, err := awscommon.LoadConfig(ctx, opts)
@@ -209,7 +219,7 @@ Examples:
 			return err
 		}
 
-		client := ec2.NewClient(cfg, cmd.OutOrStdout(), awscommon.ParseOutputFormat(output))
+		client := ec2.NewClient(cfg, cmd.OutOrStdout(), awscommon.ParseOutputFormat(output), awscommon.GetEndpointURL(opts))
 
 		groups, err := client.DescribeSecurityGroups(ctx, groupIds, parseEC2Filters(filters))
 		if err != nil {
@@ -262,14 +272,16 @@ func parseEC2Filters(filters []string) []ec2.Filter {
 			continue
 		}
 
-		var name string
-		var values []string
+		var (
+			name   string
+			values []string
+		)
 
-		for _, part := range strings.Split(f, ",") {
-			if strings.HasPrefix(part, "Name=") {
-				name = strings.TrimPrefix(part, "Name=")
-			} else if strings.HasPrefix(part, "Values=") {
-				values = strings.Split(strings.TrimPrefix(part, "Values="), ",")
+		for part := range strings.SplitSeq(f, ",") {
+			if after, ok := strings.CutPrefix(part, "Name="); ok {
+				name = after
+			} else if after, ok := strings.CutPrefix(part, "Values="); ok {
+				values = strings.Split(after, ",")
 			}
 		}
 

@@ -88,8 +88,11 @@ func (m *Intersect[K, V]) Entries() iter.Seq[Entry[K, []V]] {
 func (m *Intersect[K, V]) Contiguous(values bool) iter.Seq[Entry[K, []V]] {
 	return func(yield func(Entry[K, []V]) bool) {
 		iter := m.tree.Iter()
+
 		var current Entry[K, []V]
+
 		first := true
+
 		for more := iter.First(); more; more = iter.Next() {
 			entry := iter.Value()
 			switch {
@@ -111,6 +114,7 @@ func (m *Intersect[K, V]) Contiguous(values bool) iter.Seq[Entry[K, []V]] {
 				if !yield(current) {
 					return
 				}
+
 				current = *entry
 				if !values {
 					current.Value = nil
@@ -214,6 +218,7 @@ func (m *Intersect[K, V]) Insert(start, end K, value V) (disjoint bool) {
 	for _, entry := range m.pending {
 		m.tree.Set(entry.End, entry)
 	}
+
 	m.pending = m.pending[:0]
 
 	if prev == nil {
@@ -230,11 +235,14 @@ func (m *Intersect[K, V]) Insert(start, end K, value V) (disjoint bool) {
 // Format implements [fmt.Formatter].
 func (m *Intersect[K, V]) Format(s fmt.State, v rune) {
 	fmt.Fprint(s, "{")
+
 	first := true
+
 	m.tree.Scan(func(end K, entry *Entry[K, []V]) bool {
 		if !first {
 			fmt.Fprint(s, ", ")
 		}
+
 		first = false
 
 		if entry.Start == end {
@@ -242,6 +250,7 @@ func (m *Intersect[K, V]) Format(s fmt.State, v rune) {
 		} else {
 			fmt.Fprintf(s, "[%#v, %#v]: ", entry.Start, end)
 		}
+
 		fmt.Fprintf(s, fmt.FormatString(s, v), entry.Value)
 
 		return true

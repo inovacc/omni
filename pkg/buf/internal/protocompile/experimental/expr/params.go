@@ -17,9 +17,9 @@ package expr
 import (
 	"slices"
 
-	"github.com/bufbuild/protocompile/experimental/id"
-	"github.com/bufbuild/protocompile/experimental/source"
-	"github.com/bufbuild/protocompile/experimental/token"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/id"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/source"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/token"
 )
 
 // Params is a parameter list, which is used for all expression lists in the

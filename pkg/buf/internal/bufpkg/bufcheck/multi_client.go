@@ -23,8 +23,8 @@ import (
 	"sync"
 
 	"buf.build/go/bufplugin/check"
-	"buf.build/go/standard/xlog/xslog"
-	"buf.build/go/standard/xslices"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xlog/xslog"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/thread"
 )
 

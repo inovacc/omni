@@ -27,7 +27,7 @@ import (
 	"strings"
 	"testing"
 
-	"buf.build/go/app"
+	"github.com/inovacc/omni/pkg/buf/internal/app"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/slogtestext"
 	storage2 "github.com/inovacc/omni/pkg/buf/internal/pkg/storage"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/storage/storagemem"

@@ -23,7 +23,7 @@ import (
 	"strings"
 	"testing"
 
-	"buf.build/go/standard/xtesting"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xtesting"
 	"github.com/inovacc/omni/pkg/buf/internal/buf/buftesting"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufanalysis"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufimage"

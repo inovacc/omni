@@ -17,14 +17,14 @@ package parser
 import (
 	"unicode"
 
-	"github.com/bufbuild/protocompile/experimental/ast"
-	"github.com/bufbuild/protocompile/experimental/ast/syntax"
-	"github.com/bufbuild/protocompile/experimental/internal/erredition"
-	"github.com/bufbuild/protocompile/experimental/internal/errtoken"
-	"github.com/bufbuild/protocompile/experimental/internal/taxa"
-	"github.com/bufbuild/protocompile/experimental/report"
-	"github.com/bufbuild/protocompile/experimental/source"
-	"github.com/bufbuild/protocompile/experimental/token/keyword"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/ast"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/ast/syntax"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/internal/erredition"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/internal/errtoken"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/internal/taxa"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/report"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/source"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/token/keyword"
 )
 
 // Map of a def kind to the valid parents it can have.

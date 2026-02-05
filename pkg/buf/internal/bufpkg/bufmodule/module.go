@@ -18,7 +18,7 @@ import (
 	"context"
 	"sync"
 
-	"buf.build/go/standard/xslices"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
 	"github.com/google/uuid"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufparse"
 	normalpath2 "github.com/inovacc/omni/pkg/buf/internal/pkg/normalpath"

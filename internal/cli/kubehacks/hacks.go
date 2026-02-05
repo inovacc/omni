@@ -17,7 +17,9 @@ func GetAll(namespace string, allNamespaces bool) error {
 	} else if namespace != "" {
 		args = append(args, "-n", namespace)
 	}
+
 	args = append(args, "-o", "wide")
+
 	return kubectl.Run(args)
 }
 
@@ -28,13 +30,17 @@ func LogsFollow(pod, namespace, container string, tail int) error {
 	if tail > 0 {
 		args = append(args, fmt.Sprintf("--tail=%d", tail))
 	}
+
 	if namespace != "" {
 		args = append(args, "-n", namespace)
 	}
+
 	if container != "" {
 		args = append(args, "-c", container)
 	}
+
 	args = append(args, pod)
+
 	return kubectl.Run(args)
 }
 
@@ -45,9 +51,11 @@ func ExecBash(pod, namespace, container string) error {
 	if namespace != "" {
 		args = append(args, "-n", namespace)
 	}
+
 	if container != "" {
 		args = append(args, "-c", container)
 	}
+
 	args = append(args, pod, "--", "/bin/bash")
 
 	// Try bash first, fall back to sh
@@ -56,6 +64,7 @@ func ExecBash(pod, namespace, container string) error {
 		args[len(args)-1] = "/bin/sh"
 		return kubectl.Run(args)
 	}
+
 	return nil
 }
 
@@ -66,7 +75,9 @@ func PortForward(target, namespace string, localPort, remotePort int) error {
 	if namespace != "" {
 		args = append(args, "-n", namespace)
 	}
+
 	args = append(args, target, fmt.Sprintf("%d:%d", localPort, remotePort))
+
 	return kubectl.Run(args)
 }
 
@@ -77,9 +88,11 @@ func DeletePods(selector, namespace string, force bool) error {
 	if namespace != "" {
 		args = append(args, "-n", namespace)
 	}
+
 	if force {
 		args = append(args, "--grace-period=0", "--force")
 	}
+
 	return kubectl.Run(args)
 }
 
@@ -90,6 +103,7 @@ func RolloutRestart(name, namespace string) error {
 	if namespace != "" {
 		args = append(args, "-n", namespace)
 	}
+
 	return kubectl.Run(args)
 }
 
@@ -102,6 +116,7 @@ func GetEvents(namespace string, allNamespaces bool) error {
 	} else if namespace != "" {
 		args = append(args, "-n", namespace)
 	}
+
 	return kubectl.Run(args)
 }
 
@@ -114,9 +129,11 @@ func TopPods(namespace string, allNamespaces bool, sortBy string) error {
 	} else if namespace != "" {
 		args = append(args, "-n", namespace)
 	}
+
 	if sortBy != "" {
 		args = append(args, "--sort-by="+sortBy)
 	}
+
 	return kubectl.Run(args)
 }
 
@@ -126,6 +143,7 @@ func TopNodes(sortBy string) error {
 	if sortBy != "" {
 		args = append(args, "--sort-by="+sortBy)
 	}
+
 	return kubectl.Run(args)
 }
 
@@ -157,6 +175,7 @@ func Describe(resource, name, namespace string) error {
 	if namespace != "" {
 		args = append(args, "-n", namespace)
 	}
+
 	return kubectl.Run(args)
 }
 
@@ -166,9 +185,11 @@ func Apply(file string, namespace string, dryRun bool) error {
 	if namespace != "" {
 		args = append(args, "-n", namespace)
 	}
+
 	if dryRun {
 		args = append(args, "--dry-run=client")
 	}
+
 	return kubectl.Run(args)
 }
 
@@ -178,9 +199,11 @@ func Delete(resource, name, namespace string, force bool) error {
 	if namespace != "" {
 		args = append(args, "-n", namespace)
 	}
+
 	if force {
 		args = append(args, "--grace-period=0", "--force")
 	}
+
 	return kubectl.Run(args)
 }
 
@@ -190,6 +213,7 @@ func Scale(name string, replicas int, namespace string) error {
 	if namespace != "" {
 		args = append(args, "-n", namespace)
 	}
+
 	return kubectl.Run(args)
 }
 
@@ -201,9 +225,11 @@ func WatchPods(namespace string, allNamespaces bool, selector string) error {
 	} else if namespace != "" {
 		args = append(args, "-n", namespace)
 	}
+
 	if selector != "" {
 		args = append(args, "-l", selector)
 	}
+
 	return kubectl.Run(args)
 }
 
@@ -217,10 +243,12 @@ func GetSecret(name, namespace, key string) error {
 		// Need to decode base64
 		return kubectl.Run(args)
 	}
+
 	args := []string{"get", "secret", name, "-o", "yaml"}
 	if namespace != "" {
 		args = append(args, "-n", namespace)
 	}
+
 	return kubectl.Run(args)
 }
 
@@ -230,9 +258,11 @@ func Drain(node string, ignoreDaemonsets, deleteEmptydir bool) error {
 	if ignoreDaemonsets {
 		args = append(args, "--ignore-daemonsets")
 	}
+
 	if deleteEmptydir {
 		args = append(args, "--delete-emptydir-data")
 	}
+
 	return kubectl.Run(args)
 }
 
@@ -252,11 +282,13 @@ func Debug(pod, namespace, image string) error {
 	if namespace != "" {
 		args = append(args, "-n", namespace)
 	}
+
 	if image != "" {
 		args = append(args, "--image="+image)
 	} else {
 		args = append(args, "--image=busybox")
 	}
+
 	return kubectl.Run(args)
 }
 
@@ -266,10 +298,13 @@ func PrintEnv(pod, namespace, container string) error {
 	if namespace != "" {
 		args = append(args, "-n", namespace)
 	}
+
 	if container != "" {
 		args = append(args, "-c", container)
 	}
+
 	args = append(args, pod, "--", "env")
+
 	return kubectl.Run(args)
 }
 
@@ -281,6 +316,7 @@ func CopyFrom(pod, namespace, srcPath, destPath string) error {
 	} else {
 		args = append(args, pod+":"+srcPath, destPath)
 	}
+
 	return kubectl.Run(args)
 }
 
@@ -292,6 +328,7 @@ func CopyTo(pod, namespace, srcPath, destPath string) error {
 	} else {
 		args = append(args, srcPath, pod+":"+destPath)
 	}
+
 	return kubectl.Run(args)
 }
 
@@ -301,19 +338,24 @@ func Run(name, image, namespace string, args []string) error {
 	if namespace != "" {
 		cmdArgs = append(cmdArgs, "-n", namespace)
 	}
+
 	if len(args) > 0 {
 		cmdArgs = append(cmdArgs, "--")
 		cmdArgs = append(cmdArgs, args...)
 	}
+
 	return kubectl.Run(cmdArgs)
 }
 
 // GetConfig prints the current kubeconfig info.
 func GetConfig() error {
 	fmt.Fprintln(os.Stdout, "Current Context:")
+
 	if err := kubectl.Run([]string{"config", "current-context"}); err != nil {
 		return err
 	}
+
 	fmt.Fprintln(os.Stdout, "\nCluster Info:")
+
 	return kubectl.Run([]string{"cluster-info"})
 }

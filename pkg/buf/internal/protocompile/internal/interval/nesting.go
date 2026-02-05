@@ -65,12 +65,12 @@ func (n *Nesting[K, V]) Sets() iter.Seq[iter.Seq[Entry[K, V]]] {
 // Insert adds a new interval to the collection.
 func (n *Nesting[K, V]) Insert(start, end K, value V) {
 	var found *btree.Map[K, *Entry[K, V]]
+
 	for _, set := range n.sets {
 		// Two cases under which we insert:
 		//
 		// 1. We do not intersect anything currently in the set.
 		// 2. We overlap precisely one interval.
-
 		iter := set.Iter()
 		if !iter.Seek(end) {
 			// This would be the greatest end in the set, so we need only
@@ -102,6 +102,7 @@ func (n *Nesting[K, V]) Insert(start, end K, value V) {
 		}
 
 		found = set
+
 		break // We're done.
 	}
 

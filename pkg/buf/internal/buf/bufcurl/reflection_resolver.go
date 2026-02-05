@@ -24,7 +24,7 @@ import (
 	"strings"
 	"sync"
 
-	"connectrpc.com/connect"
+	"github.com/inovacc/omni/pkg/buf/internal/connect"
 	"github.com/inovacc/omni/pkg/buf/internal/gen/proto/go/grpc/reflection/v1"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/protoencoding"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/verbose"

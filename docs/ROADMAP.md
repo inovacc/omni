@@ -1498,3 +1498,913 @@ myapp/
 | `zip` | `archive/zip` |
 | `gzip` | `compress/gzip` |
 | `xxd` | `encoding/hex` + custom formatting |
+
+---
+
+## Phase 10 – Backup & Archival (Restic-Inspired)
+
+Advanced backup, encryption, and deduplication features inspired by [restic](https://github.com/restic/restic).
+
+### Core Backup Features
+
+| Command | Description | Priority | Status |
+|---------|-------------|----------|--------|
+| `backup create` | Create encrypted, deduplicated backup | P1 | |
+| `backup restore` | Restore files from backup | P1 | |
+| `backup list` | List snapshots | P1 | |
+| `backup diff` | Show differences between snapshots | P2 | |
+| `backup check` | Verify backup integrity | P1 | |
+| `backup prune` | Remove old snapshots | P2 | |
+| `backup mount` | Mount backup as filesystem (FUSE) | P3 | |
+
+### Encryption & Security
+
+| Feature | Description | Priority | Go Implementation |
+|---------|-------------|----------|-------------------|
+| AES-256 encryption | Content encryption at rest | P1 | `crypto/aes` |
+| Poly1305-AES MAC | Authentication | P1 | `golang.org/x/crypto/poly1305` |
+| scrypt KDF | Key derivation from password | P1 | `golang.org/x/crypto/scrypt` |
+| Repository lock | Prevent concurrent modifications | P2 | File-based locking |
+
+### Deduplication & Chunking
+
+| Feature | Description | Priority |
+|---------|-------------|----------|
+| Content-aware chunking | Variable-size chunks based on content | P1 |
+| Content-addressable storage | Blobs identified by hash | P1 |
+| Pack files | Group blobs for efficient storage | P2 |
+| Zstd compression | Configurable compression levels | P1 |
+
+### Reusable Patterns from Restic
+
+**Pattern Matching (from `internal/filter`):**
+```go
+// Advanced glob patterns with:
+// - Recursive wildcards (**)
+// - Negation patterns (!)
+// - Directory-only patterns (dir/)
+filter.Match(patterns, path) bool
+```
+
+**Tree Walker (from `internal/walker`):**
+```go
+// Visitor pattern for tree traversal
+walker.Walk(ctx, tree, func(path string, node *Node) error {
+    // Process each node
+    return walker.Continue
+})
+```
+
+**Backend Abstraction:**
+```go
+// Pluggable storage backend interface
+type Backend interface {
+    Save(ctx, handle, reader) error
+    Load(ctx, handle, length, offset, fn) error
+    Remove(ctx, handle) error
+    List(ctx, fileType, fn) error
+}
+```
+
+### Backend Support
+
+| Backend | Description | Priority |
+|---------|-------------|----------|
+| Local filesystem | Default backend | P0 |
+| S3/MinIO | AWS S3 compatible storage | P1 |
+| SFTP | SSH file transfer | P2 |
+| Azure Blob | Azure cloud storage | P2 |
+| Google Cloud Storage | GCS backend | P2 |
+| REST server | HTTP-based backend | P3 |
+| Rclone | Use rclone as backend | P3 |
+
+### Backup CLI Examples
+
+```bash
+# Initialize repository
+omni backup init /path/to/repo
+
+# Create backup
+omni backup create /path/to/repo /path/to/data
+
+# List snapshots
+omni backup list /path/to/repo
+
+# Restore snapshot
+omni backup restore /path/to/repo latest /path/to/restore
+
+# Check integrity
+omni backup check /path/to/repo
+
+# With S3 backend
+omni backup init s3:bucket-name/prefix
+omni backup create s3:bucket-name/prefix ./data
+```
+
+### Code Quality Patterns to Adopt
+
+From restic's architecture:
+- **Options struct with AddFlags()** - Consistent flag handling across commands
+- **Context propagation** - All operations accept `context.Context`
+- **Error wrapping** - Preserve stack traces with `pkg/errors`
+- **Backend composition** - Wrap backends with Retry, Cache, Logger, Limiter
+- **Iterator channels** - Lazy evaluation for large datasets
+
+---
+
+## Phase 11 – Cloud CLI (Exact Behavior Matching)
+
+**Goal:** Match the exact behavior, command structure, flags, and output formats of AWS CLI, Azure CLI, and GCP gcloud.
+
+### Design Principles
+
+| Principle | Description |
+|-----------|-------------|
+| **Command compatibility** | Same command names and structure as official CLIs |
+| **Flag compatibility** | Same flags with same short/long forms |
+| **Output compatibility** | Same output formats (json, text, table, yaml) |
+| **Query support** | JMESPath query support (`--query`) |
+| **Profile/credential handling** | Same credential file locations and formats |
+| **Script compatibility** | Drop-in replacement for existing scripts |
+
+### Global Options (All Clouds)
+
+```bash
+# AWS pattern
+omni aws [options] <service> <operation> [parameters]
+--region          # AWS region
+--profile         # Credential profile
+--output          # json | text | table | yaml
+--query           # JMESPath query
+--endpoint-url    # Custom endpoint (LocalStack, etc.)
+--debug           # Debug logging
+--no-paginate     # Disable pagination
+
+# Azure pattern
+omni az [options] <group> <subgroup> <operation> [parameters]
+--subscription    # Azure subscription
+--output          # json | jsonc | table | tsv | yaml | yamlc | none
+--query           # JMESPath query
+--verbose         # Verbose output
+--debug           # Debug logging
+
+# GCP pattern
+omni gcloud [options] <group> <command> [parameters]
+--project         # GCP project
+--account         # GCP account
+--format          # json | yaml | text | table | csv | value | get
+--filter          # Resource filter
+--quiet           # Suppress prompts
+```
+
+---
+
+### AWS CLI – Complete Service Coverage
+
+#### Core Services (P0 - MVP)
+
+| Service | Commands | Status |
+|---------|----------|--------|
+| **sts** | get-caller-identity, assume-role, get-session-token | ✅ Done |
+| **s3** | ls, cp, mv, rm, mb, rb, sync, presign | ✅ Partial |
+| **s3api** | get-object, put-object, list-objects-v2, delete-object, head-object | |
+| **ec2** | describe-instances, start-instances, stop-instances, describe-vpcs, describe-security-groups | ✅ Done |
+| **iam** | get-user, get-role, list-users, list-roles, list-policies, get-policy | ✅ Done |
+| **ssm** | get-parameter, put-parameter, get-parameters-by-path, delete-parameter | ✅ Done |
+
+#### Extended Services (P1)
+
+| Service | Commands | Priority |
+|---------|----------|----------|
+| **lambda** | list-functions, invoke, create-function, update-function-code, delete-function | P1 |
+| **dynamodb** | list-tables, scan, query, get-item, put-item, delete-item, create-table | P1 |
+| **sns** | list-topics, create-topic, publish, subscribe, delete-topic | P1 |
+| **sqs** | list-queues, create-queue, send-message, receive-message, delete-message | P1 |
+| **cloudwatch** | get-metric-data, put-metric-data, describe-alarms | P1 |
+| **logs** | describe-log-groups, filter-log-events, create-log-group | P1 |
+
+#### Infrastructure Services (P2)
+
+| Service | Commands | Priority |
+|---------|----------|----------|
+| **cloudformation** | create-stack, delete-stack, describe-stacks, list-stacks | P2 |
+| **ecs** | list-clusters, describe-services, run-task, list-tasks | P2 |
+| **eks** | list-clusters, describe-cluster, update-kubeconfig | P2 |
+| **rds** | describe-db-instances, create-db-instance, delete-db-instance | P2 |
+| **route53** | list-hosted-zones, change-resource-record-sets | P2 |
+| **secretsmanager** | get-secret-value, create-secret, update-secret | P2 |
+
+#### AWS CLI Examples (Exact Matching)
+
+```bash
+# These should work identically to official AWS CLI
+omni aws s3 ls
+omni aws s3 ls s3://my-bucket/prefix/ --recursive
+omni aws s3 cp file.txt s3://my-bucket/ --acl public-read
+omni aws s3 sync ./local s3://my-bucket/backup --delete
+omni aws s3 presign s3://my-bucket/file.txt --expires-in 3600
+
+omni aws ec2 describe-instances --filters "Name=instance-state-name,Values=running"
+omni aws ec2 describe-instances --query "Reservations[*].Instances[*].[InstanceId,State.Name]" --output table
+
+omni aws lambda invoke --function-name myFunc --payload '{"key":"value"}' output.json
+omni aws dynamodb scan --table-name MyTable --filter-expression "status = :s" --expression-attribute-values '{":s":{"S":"active"}}'
+
+omni aws cloudformation deploy --template-file template.yaml --stack-name mystack --capabilities CAPABILITY_IAM
+```
+
+---
+
+### Azure CLI – Complete Service Coverage
+
+#### Authentication & Account (P0)
+
+| Command | Description | Status |
+|---------|-------------|--------|
+| `az login` | Interactive login (browser) | |
+| `az login --service-principal` | Service principal login | |
+| `az logout` | Log out | |
+| `az account list` | List subscriptions | |
+| `az account set` | Set active subscription | |
+| `az account show` | Show current subscription | |
+
+#### Resource Management (P0)
+
+| Command | Description | Status |
+|---------|-------------|--------|
+| `az group list` | List resource groups | |
+| `az group create` | Create resource group | |
+| `az group delete` | Delete resource group | |
+| `az resource list` | List resources | |
+| `az tag list` | List tags | |
+
+#### Compute (P1)
+
+| Command | Description | Status |
+|---------|-------------|--------|
+| `az vm list` | List VMs | |
+| `az vm create` | Create VM | |
+| `az vm start` | Start VM | |
+| `az vm stop` | Stop VM | |
+| `az vm delete` | Delete VM | |
+| `az vm show` | Show VM details | |
+| `az vmss list` | List VM scale sets | |
+
+#### Storage (P1)
+
+| Command | Description | Status |
+|---------|-------------|--------|
+| `az storage account list` | List storage accounts | |
+| `az storage account create` | Create storage account | |
+| `az storage container list` | List blob containers | |
+| `az storage blob list` | List blobs | |
+| `az storage blob upload` | Upload blob | |
+| `az storage blob download` | Download blob | |
+| `az storage blob delete` | Delete blob | |
+
+#### Key Vault (P1)
+
+| Command | Description | Status |
+|---------|-------------|--------|
+| `az keyvault list` | List key vaults | |
+| `az keyvault secret list` | List secrets | |
+| `az keyvault secret show` | Get secret value | |
+| `az keyvault secret set` | Set secret | |
+| `az keyvault key list` | List keys | |
+
+#### Kubernetes (P2)
+
+| Command | Description | Status |
+|---------|-------------|--------|
+| `az aks list` | List AKS clusters | |
+| `az aks create` | Create AKS cluster | |
+| `az aks get-credentials` | Get kubeconfig | |
+| `az aks scale` | Scale node pool | |
+
+#### Azure CLI Examples (Exact Matching)
+
+```bash
+# These should work identically to official Azure CLI
+omni az login
+omni az account list --output table
+omni az group create --name myRG --location eastus
+
+omni az vm create --resource-group myRG --name myVM --image Ubuntu2204 --admin-username azureuser --generate-ssh-keys
+omni az vm list --output table --query "[].{Name:name, State:powerState}"
+
+omni az storage account create --name mystorageacct --resource-group myRG --sku Standard_LRS
+omni az storage blob upload --account-name mystorageacct --container-name mycontainer --file ./local.txt --name remote.txt
+
+omni az keyvault secret set --vault-name myVault --name mySecret --value "secret-value"
+omni az keyvault secret show --vault-name myVault --name mySecret --query value -o tsv
+```
+
+---
+
+### GCP gcloud – Complete Service Coverage
+
+#### Authentication & Config (P0)
+
+| Command | Description | Status |
+|---------|-------------|--------|
+| `gcloud auth login` | Interactive login | |
+| `gcloud auth activate-service-account` | Service account auth | |
+| `gcloud auth list` | List accounts | |
+| `gcloud config set` | Set config property | |
+| `gcloud config list` | List config | |
+| `gcloud projects list` | List projects | |
+
+#### Compute Engine (P1)
+
+| Command | Description | Status |
+|---------|-------------|--------|
+| `gcloud compute instances list` | List instances | |
+| `gcloud compute instances create` | Create instance | |
+| `gcloud compute instances start` | Start instance | |
+| `gcloud compute instances stop` | Stop instance | |
+| `gcloud compute instances delete` | Delete instance | |
+| `gcloud compute zones list` | List zones | |
+| `gcloud compute regions list` | List regions | |
+
+#### Cloud Storage (P1)
+
+| Command | Description | Status |
+|---------|-------------|--------|
+| `gcloud storage buckets list` | List buckets | |
+| `gcloud storage buckets create` | Create bucket | |
+| `gcloud storage ls` | List objects | |
+| `gcloud storage cp` | Copy objects | |
+| `gcloud storage rm` | Remove objects | |
+| `gcloud storage cat` | Output object contents | |
+
+#### GKE (P2)
+
+| Command | Description | Status |
+|---------|-------------|--------|
+| `gcloud container clusters list` | List GKE clusters | |
+| `gcloud container clusters create` | Create cluster | |
+| `gcloud container clusters get-credentials` | Get kubeconfig | |
+| `gcloud container clusters delete` | Delete cluster | |
+
+#### IAM (P1)
+
+| Command | Description | Status |
+|---------|-------------|--------|
+| `gcloud iam service-accounts list` | List service accounts | |
+| `gcloud iam service-accounts create` | Create service account | |
+| `gcloud iam service-accounts keys create` | Create key | |
+| `gcloud iam roles list` | List roles | |
+
+#### Cloud Functions / Cloud Run (P2)
+
+| Command | Description | Status |
+|---------|-------------|--------|
+| `gcloud functions list` | List functions | |
+| `gcloud functions deploy` | Deploy function | |
+| `gcloud run services list` | List Cloud Run services | |
+| `gcloud run deploy` | Deploy to Cloud Run | |
+
+#### GCP gcloud Examples (Exact Matching)
+
+```bash
+# These should work identically to official gcloud CLI
+omni gcloud auth login
+omni gcloud config set project my-project
+omni gcloud projects list --format="table(projectId,name,projectNumber)"
+
+omni gcloud compute instances list --filter="status=RUNNING"
+omni gcloud compute instances create my-vm --zone=us-central1-a --machine-type=e2-medium --image-family=debian-11 --image-project=debian-cloud
+
+omni gcloud storage buckets create gs://my-bucket --location=us
+omni gcloud storage cp ./local.txt gs://my-bucket/
+omni gcloud storage ls gs://my-bucket/ --recursive
+
+omni gcloud container clusters create my-cluster --zone=us-central1-a --num-nodes=3
+omni gcloud container clusters get-credentials my-cluster --zone=us-central1-a
+
+omni gcloud iam service-accounts create my-sa --display-name="My Service Account"
+```
+
+---
+
+---
+
+### Security Profile Architecture (Based on clonr)
+
+**Goal:** Secure credential storage for all cloud providers with hardware-backed encryption.
+
+#### Profile Model
+
+```go
+// internal/cli/cloud/profile/model.go
+type CloudProfile struct {
+    Name           string       `json:"name"`            // "my-aws-prod"
+    Provider       string       `json:"provider"`        // "aws", "azure", "gcp"
+    Region         string       `json:"region"`          // "us-east-1"
+    AccountID      string       `json:"account_id"`      // AWS account, Azure sub, GCP project
+    RoleArn        string       `json:"role_arn,omitempty"`   // AWS assume-role
+    TenantID       string       `json:"tenant_id,omitempty"`  // Azure
+    SourceProfile  string       `json:"source_profile,omitempty"` // For role chaining
+    TokenStorage   TokenStorage `json:"token_storage"`   // "encrypted" or "open"
+    Default        bool         `json:"default"`
+    CreatedAt      time.Time    `json:"created_at"`
+    LastUsedAt     time.Time    `json:"last_used_at"`
+    CacheExpiry    *time.Time   `json:"cache_expiry,omitempty"`
+}
+
+type TokenStorage string
+const (
+    TokenStorageEncrypted TokenStorage = "encrypted"
+    TokenStorageOpen      TokenStorage = "open"       // Fallback when TPM unavailable
+)
+```
+
+#### File-Based Storage Structure
+
+```
+~/.omni/
+├── config.json                    # Global config + default profiles
+├── master.key                     # TPM-sealed or software master key
+└── profiles/
+    ├── aws/
+    │   ├── default.json           # Profile metadata (no secrets)
+    │   ├── default.enc            # Encrypted credentials
+    │   ├── prod.json
+    │   ├── prod.enc
+    │   └── staging.json
+    ├── azure/
+    │   ├── dev.json
+    │   ├── dev.enc
+    │   └── prod.json
+    └── gcp/
+        ├── myproject.json
+        └── myproject.enc
+
+# File permissions: 0600 (user read/write only)
+```
+
+#### Profile File Format
+
+```json
+// ~/.omni/profiles/aws/prod.json (metadata - no secrets)
+{
+  "name": "prod",
+  "provider": "aws",
+  "region": "us-east-1",
+  "account_id": "123456789012",
+  "role_arn": "",
+  "source_profile": "",
+  "token_storage": "encrypted",
+  "default": true,
+  "created_at": "2026-02-04T10:00:00Z",
+  "last_used_at": "2026-02-04T18:00:00Z"
+}
+
+// ~/.omni/profiles/aws/prod.enc (encrypted credentials)
+// Binary: ENC:<nonce:12><ciphertext><tag:16>
+// Contains encrypted JSON of AWSCredentials struct
+```
+
+#### Global Config
+
+```json
+// ~/.omni/config.json
+{
+  "version": 1,
+  "defaults": {
+    "aws": "prod",
+    "azure": "dev",
+    "gcp": "myproject"
+  },
+  "key_rotation_days": 30,
+  "cache_ttl_seconds": 3600
+}
+```
+
+#### Master Key Storage
+
+```go
+// ~/.omni/master.key format
+// TPM-sealed: binary blob from TPM seal operation
+// Software fallback: PBKDF2-derived key from machine ID
+
+type MasterKeyFile struct {
+    Version   int       `json:"version"`
+    KeyType   string    `json:"key_type"`   // "tpm", "software"
+    SealedKey []byte    `json:"sealed_key"` // Encrypted master key
+    CreatedAt time.Time `json:"created_at"`
+    RotatedAt time.Time `json:"rotated_at"`
+}
+```
+
+#### Credential Encryption
+
+```go
+// internal/cli/cloud/crypto/crypto.go
+
+// Multi-layer encryption:
+// 1. TPM-sealed master key (hardware-backed when available)
+// 2. Per-profile derived key: SHA256(master || provider:profile_name)
+// 3. AES-256-GCM encryption with random 12-byte nonce
+
+// Token prefixes for storage type detection
+const (
+    OpenPrefix = "OPEN:"  // Plaintext fallback (no TPM)
+    EncPrefix  = "ENC:"   // AES-256-GCM encrypted
+)
+
+func EncryptCredentials(creds []byte, profileName, provider string) ([]byte, error)
+func DecryptCredentials(encrypted []byte, profileName, provider string) ([]byte, error)
+
+// Per-profile key derivation (isolation: one profile compromise doesn't expose others)
+func deriveKey(masterKey []byte, profileName, provider string) []byte {
+    suffix := []byte(profileName + ":" + provider)
+    data := append(masterKey, suffix...)
+    hash := sha256.Sum256(data)
+    return hash[:]
+}
+```
+
+#### Provider-Specific Credentials
+
+```go
+// AWS credentials
+type AWSCredentials struct {
+    AccessKeyID     string `json:"access_key_id"`
+    SecretAccessKey string `json:"secret_access_key"`
+    SessionToken    string `json:"session_token,omitempty"`  // For STS
+    RoleArn         string `json:"role_arn,omitempty"`       // For assume-role
+}
+
+// Azure credentials
+type AzureCredentials struct {
+    TenantID       string `json:"tenant_id"`
+    ClientID       string `json:"client_id"`
+    ClientSecret   string `json:"client_secret,omitempty"`
+    Certificate    []byte `json:"certificate,omitempty"`
+    SubscriptionID string `json:"subscription_id"`
+}
+
+// GCP credentials
+type GCPCredentials struct {
+    Type           string `json:"type"`                     // "service_account"
+    ProjectID      string `json:"project_id"`
+    PrivateKeyID   string `json:"private_key_id"`
+    PrivateKey     string `json:"private_key"`
+    ClientEmail    string `json:"client_email"`
+    ClientID       string `json:"client_id"`
+    // ... full service account JSON structure
+}
+```
+
+#### Profile Management Commands
+
+```bash
+# Profile CRUD
+omni cloud profile add <name> --provider <aws|azure|gcp> [options]
+omni cloud profile list [--provider <provider>]
+omni cloud profile show <name>
+omni cloud profile use <name>               # Set as default
+omni cloud profile delete <name>
+omni cloud profile validate <name>          # Check credential validity
+
+# AWS-specific profile creation
+omni cloud profile add myaws --provider aws --region us-east-1
+  # Interactive: prompts for Access Key ID and Secret Access Key
+
+omni cloud profile add myaws --provider aws \
+    --access-key-id AKIA... \
+    --secret-access-key ...        # Direct input (use with caution)
+
+omni cloud profile add myaws-role --provider aws \
+    --role-arn arn:aws:iam::123456789:role/MyRole \
+    --source-profile myaws         # Assume role from another profile
+
+# Azure-specific profile creation
+omni cloud profile add myazure --provider azure
+  # Launches browser for interactive login (OAuth device flow)
+
+omni cloud profile add myazure-sp --provider azure \
+    --tenant-id ... --client-id ... --client-secret ...  # Service principal
+
+# GCP-specific profile creation
+omni cloud profile add mygcp --provider gcp
+  # Launches browser for interactive login
+
+omni cloud profile add mygcp-sa --provider gcp \
+    --service-account-key /path/to/key.json  # Service account
+
+# Credential rotation
+omni cloud profile rotate <name>            # Force rotation
+omni cloud profile cache clear              # Clear cached STS tokens
+
+# Environment variable support
+export OMNI_CLOUD_PROFILE=myaws             # Override default
+omni aws s3 ls                              # Uses myaws profile
+omni aws s3 ls --profile other-profile      # Explicit override
+```
+
+#### Profile Service Architecture
+
+```go
+// internal/cli/cloud/profile/service.go
+type ProfileService struct {
+    baseDir string        // ~/.omni
+    crypto  CryptoService
+}
+
+// File operations
+func (ps *ProfileService) AddProfile(profile *CloudProfile, creds any) error {
+    // 1. Write profile metadata to ~/.omni/profiles/{provider}/{name}.json
+    // 2. Encrypt credentials and write to ~/.omni/profiles/{provider}/{name}.enc
+    // 3. Set file permissions to 0600
+}
+
+func (ps *ProfileService) GetProfile(name, provider string) (*CloudProfile, error) {
+    // Read from ~/.omni/profiles/{provider}/{name}.json
+}
+
+func (ps *ProfileService) GetProfileCredentials(name, provider string) (any, error) {
+    // 1. Read ~/.omni/profiles/{provider}/{name}.enc
+    // 2. Decrypt with profile-specific derived key
+    // 3. Return typed credentials (AWSCredentials, AzureCredentials, etc.)
+}
+
+func (ps *ProfileService) GetDefaultProfile(provider string) (*CloudProfile, error) {
+    // 1. Read ~/.omni/config.json for default profile name
+    // 2. Load that profile
+}
+
+func (ps *ProfileService) SetDefaultProfile(name, provider string) error {
+    // Update ~/.omni/config.json defaults section
+}
+
+func (ps *ProfileService) DeleteProfile(name, provider string) error {
+    // Remove both .json and .enc files
+}
+
+func (ps *ProfileService) ListProfiles(provider string) ([]*CloudProfile, error) {
+    // List all .json files in ~/.omni/profiles/{provider}/
+    // Or all providers if provider is empty
+}
+
+func (ps *ProfileService) ValidateProfile(name, provider string) error
+func (ps *ProfileService) RotateCredentials(name, provider string, newCreds any) error
+```
+
+#### File Store Implementation
+
+```go
+// internal/cli/cloud/profile/store.go
+type FileStore struct {
+    baseDir string  // ~/.omni
+}
+
+func NewFileStore() (*FileStore, error) {
+    home, _ := os.UserHomeDir()
+    baseDir := filepath.Join(home, ".omni")
+
+    // Create directory structure
+    for _, provider := range []string{"aws", "azure", "gcp"} {
+        dir := filepath.Join(baseDir, "profiles", provider)
+        os.MkdirAll(dir, 0700)
+    }
+
+    return &FileStore{baseDir: baseDir}, nil
+}
+
+func (fs *FileStore) profilePath(provider, name string) string {
+    return filepath.Join(fs.baseDir, "profiles", provider, name+".json")
+}
+
+func (fs *FileStore) credentialsPath(provider, name string) string {
+    return filepath.Join(fs.baseDir, "profiles", provider, name+".enc")
+}
+
+func (fs *FileStore) SaveProfile(profile *CloudProfile) error {
+    path := fs.profilePath(profile.Provider, profile.Name)
+    data, _ := json.MarshalIndent(profile, "", "  ")
+    return os.WriteFile(path, data, 0600)  // User read/write only
+}
+
+func (fs *FileStore) SaveCredentials(provider, name string, encrypted []byte) error {
+    path := fs.credentialsPath(provider, name)
+    return os.WriteFile(path, encrypted, 0600)
+}
+
+func (fs *FileStore) LoadProfile(provider, name string) (*CloudProfile, error) {
+    path := fs.profilePath(provider, name)
+    data, err := os.ReadFile(path)
+    if err != nil {
+        return nil, err
+    }
+    var profile CloudProfile
+    json.Unmarshal(data, &profile)
+    return &profile, nil
+}
+
+func (fs *FileStore) LoadCredentials(provider, name string) ([]byte, error) {
+    path := fs.credentialsPath(provider, name)
+    return os.ReadFile(path)
+}
+
+func (fs *FileStore) DeleteProfile(provider, name string) error {
+    os.Remove(fs.profilePath(provider, name))
+    os.Remove(fs.credentialsPath(provider, name))
+    return nil
+}
+
+func (fs *FileStore) ListProfiles(provider string) ([]string, error) {
+    dir := filepath.Join(fs.baseDir, "profiles", provider)
+    entries, _ := os.ReadDir(dir)
+    var names []string
+    for _, e := range entries {
+        if strings.HasSuffix(e.Name(), ".json") {
+            names = append(names, strings.TrimSuffix(e.Name(), ".json"))
+        }
+    }
+    return names, nil
+}
+```
+
+#### Security Features
+
+| Feature | Description |
+|---------|-------------|
+| **TPM-sealed master key** | Hardware-backed encryption when available |
+| **Per-profile isolation** | Compromise of one profile doesn't expose others |
+| **AES-256-GCM** | Authenticated encryption with integrity check |
+| **Automatic rotation** | Configurable credential rotation interval |
+| **Secure deletion** | Keystore cascade delete when profile removed |
+| **Token caching** | Cache STS tokens with automatic refresh |
+| **Audit trail** | Timestamps for creation, access, rotation |
+| **Software fallback** | Encrypted storage even without TPM |
+
+#### Integration with CLI Commands
+
+```go
+// Example: AWS command using profile
+func runS3Ls(cmd *cobra.Command, args []string) error {
+    // 1. Get profile (from flag, env var, or default)
+    profileName := getProfileName(cmd)  // --profile flag or OMNI_CLOUD_PROFILE
+
+    // 2. Load credentials (auto-decrypted)
+    profile, creds, err := profileService.GetProfileWithCredentials(profileName)
+    if err != nil {
+        return err
+    }
+
+    // 3. Create AWS config with credentials
+    cfg, err := awscommon.LoadConfigWithCredentials(ctx, creds.(*AWSCredentials))
+
+    // 4. Execute command
+    client := s3.NewClient(cfg, ...)
+    return client.Ls(ctx, args[0], opts)
+}
+```
+
+---
+
+### Cloud CLI Architecture
+
+```
+internal/cli/
+├── cloud/                  # Shared cloud infrastructure
+│   ├── profile/            # Profile management
+│   │   ├── model.go        # CloudProfile struct
+│   │   ├── service.go      # ProfileService (business logic)
+│   │   ├── store.go        # File-based storage operations
+│   │   └── cli.go          # Interactive profile selector (TUI)
+│   ├── crypto/             # Encryption (from clonr pattern)
+│   │   ├── crypto.go       # AES-256-GCM encrypt/decrypt
+│   │   ├── master.go       # Master key management
+│   │   ├── tpm.go          # TPM-sealed master key (when available)
+│   │   └── software.go     # Software fallback (PBKDF2)
+│   ├── output/             # Output formatting
+│   │   ├── format.go       # JSON, table, yaml, tsv formatters
+│   │   └── query.go        # JMESPath support (--query)
+│   └── cache/              # Token caching
+│       └── cache.go        # STS/temporary token cache
+
+# User data directory
+~/.omni/
+├── config.json             # Global config + default profiles
+├── master.key              # Encrypted master key
+├── cache/                  # Cached STS tokens
+│   └── aws_prod_sts.json   # Temporary tokens with expiry
+└── profiles/
+    ├── aws/
+    │   ├── default.json    # Profile metadata
+    │   └── default.enc     # Encrypted credentials
+    ├── azure/
+    └── gcp/
+├── aws/                    # AWS SDK v2
+│   ├── aws.go              # Config, credentials, output formatter
+│   ├── query.go            # JMESPath query support
+│   ├── s3/                 # S3 + S3API operations ✅
+│   ├── ec2/                # EC2 operations ✅
+│   ├── iam/                # IAM operations ✅
+│   ├── sts/                # STS operations ✅
+│   ├── ssm/                # SSM operations ✅
+│   ├── lambda/             # Lambda operations
+│   ├── dynamodb/           # DynamoDB operations
+│   └── ...
+├── azure/                  # Azure SDK for Go
+│   ├── azure.go            # Config, auth, output formatter
+│   ├── query.go            # JMESPath query support
+│   ├── account/            # Account/subscription management
+│   ├── group/              # Resource groups
+│   ├── vm/                 # Virtual machines
+│   ├── storage/            # Blob storage
+│   ├── keyvault/           # Key Vault
+│   └── aks/                # AKS
+└── gcp/                    # Google Cloud SDK for Go
+    ├── gcp.go              # Config, auth, output formatter
+    ├── filter.go           # Resource filter support
+    ├── auth/               # Authentication
+    ├── compute/            # Compute Engine
+    ├── storage/            # Cloud Storage
+    ├── container/          # GKE
+    └── iam/                # IAM
+
+cmd/
+├── aws.go                  # aws command root
+├── aws_*.go                # aws subcommands (per service)
+├── az.go                   # az command root
+├── az_*.go                 # az subcommands (per group)
+├── gcloud.go               # gcloud command root
+└── gcloud_*.go             # gcloud subcommands (per group)
+```
+
+### Output Format Support
+
+```go
+// internal/cli/cloud/output.go
+type OutputFormat string
+
+const (
+    OutputJSON    OutputFormat = "json"
+    OutputJSONC   OutputFormat = "jsonc"   // Azure: colored JSON
+    OutputText    OutputFormat = "text"
+    OutputTable   OutputFormat = "table"
+    OutputTSV     OutputFormat = "tsv"
+    OutputYAML    OutputFormat = "yaml"
+    OutputYAMLC   OutputFormat = "yamlc"   // Azure: colored YAML
+    OutputCSV     OutputFormat = "csv"     // GCP
+    OutputValue   OutputFormat = "value"   // GCP: plain values
+)
+
+// JMESPath query support
+func QueryJSON(data any, query string) (any, error)
+```
+
+### Testing with Local Emulators
+
+| Cloud | Emulator | Docker Image | Services |
+|-------|----------|--------------|----------|
+| AWS | LocalStack | `localstack/localstack` ✅ | S3, EC2, IAM, STS, SSM, Lambda, DynamoDB, SNS, SQS |
+| Azure | Azurite | `mcr.microsoft.com/azure-storage/azurite` | Blob, Queue, Table storage |
+| Azure | CosmosDB | `mcr.microsoft.com/cosmosdb/linux/azure-cosmos-emulator` | CosmosDB |
+| GCP | Storage | `fsouza/fake-gcs-server` | Cloud Storage |
+| GCP | Pub/Sub | `google/cloud-sdk` with emulator | Pub/Sub |
+| GCP | Firestore | `google/cloud-sdk` with emulator | Firestore |
+
+### Docker Compose for Testing
+
+```yaml
+# test/cloud/docker-compose.yml
+services:
+  localstack:
+    image: localstack/localstack:latest
+    ports:
+      - "4566:4566"
+    environment:
+      - SERVICES=s3,ec2,iam,sts,ssm,lambda,dynamodb,sns,sqs
+
+  azurite:
+    image: mcr.microsoft.com/azure-storage/azurite
+    ports:
+      - "10000:10000"  # Blob
+      - "10001:10001"  # Queue
+      - "10002:10002"  # Table
+
+  fake-gcs:
+    image: fsouza/fake-gcs-server
+    ports:
+      - "4443:4443"
+    command: ["-scheme", "http"]
+```
+
+### Implementation Priority
+
+| Phase | Cloud | Services | Priority |
+|-------|-------|----------|----------|
+| 11.1 | AWS | Complete S3, S3API, Lambda, DynamoDB | P0 |
+| 11.2 | AWS | SNS, SQS, CloudWatch, Logs | P1 |
+| 11.3 | AWS | CloudFormation, ECS, EKS, RDS | P2 |
+| 11.4 | Azure | Auth, Account, Group, VM | P1 |
+| 11.5 | Azure | Storage, KeyVault | P1 |
+| 11.6 | Azure | AKS, SQL, CosmosDB | P2 |
+| 11.7 | GCP | Auth, Config, Projects | P1 |
+| 11.8 | GCP | Compute, Storage | P1 |
+| 11.9 | GCP | GKE, IAM, Functions | P2 |

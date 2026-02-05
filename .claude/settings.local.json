@@ -34,7 +34,27 @@
       "Bash(base32:*)",
       "Bash(# Summary with installed binary task install echo \"\"=== SUMMARY ===\"\" echo \"\"Total commands:\"\" omni cmdtree --json 2>&1)",
       "Bash(# Check if stderr has content omni cmdtree --json)",
-      "Bash(echo:*)"
+      "Bash(echo:*)",
+      "Bash(dir:*)",
+      "Bash(tree:*)",
+      "Bash(go list:*)",
+      "Bash(powershell -NoProfile -ExecutionPolicy Bypass -Command \"$files = Get-ChildItem -Path ''pkg/buf'' -Recurse -Filter ''*.go''; foreach \\($f in $files\\) { $content = Get-Content -Path $f.FullName -Raw -ErrorAction SilentlyContinue; if \\($content -and $content -match ''\"\"buf\\\\.build/go/app''\\) { $newContent = $content -replace ''\"\"buf\\\\.build/go/app'', ''\"\"github.com/inovacc/omni/pkg/buf/internal/app''; Set-Content -Path $f.FullName -Value $newContent -NoNewline; Write-Host ''Updated:'' $f.FullName } }\")",
+      "Bash(powershell -NoProfile -ExecutionPolicy Bypass -File replace_imports.ps1 -OldImport '\"\"buf.build/go/app' -NewImport '\"\"github.com/inovacc/omni/pkg/buf/internal/app')",
+      "Bash(powershell -NoProfile -ExecutionPolicy Bypass -File replace_imports.ps1:*)",
+      "Bash(find:*)",
+      "Bash(go get:*)",
+      "Bash(go env:*)",
+      "Bash(powershell -Command \"Get-ChildItem -Path ''pkg\\\\buf\\\\internal\\\\gen\\\\bufbuild'' -Recurse | ForEach-Object { if \\($_Attributes -band [System.IO.FileAttributes]::ReadOnly\\) { $_Attributes = $_Attributes -bxor [System.IO.FileAttributes]::ReadOnly } }\")",
+      "Bash(./omni.exe xxd:*)",
+      "Bash(./omni.exe pipe -v '{uuid -v 7}' '{echo $OUT}')",
+      "Bash(./omni.exe pipe -v '{uuid -v 7 -n 3}' '{echo [$OUT...]}')",
+      "Bash(./omni.exe pipe -v --var UUID '{uuid -v 7}' '{echo test-$UUID-suffix}')",
+      "Bash(./omni.exe pipe -v '{uuid -v 7}' '{mkdir test-$OUT}')",
+      "Bash(./omni.exe ls -la)",
+      "Bash(./omni.exe pipe -v '{uuid -v 7 -n 3}' '{mkdir multi-[$OUT...]}')",
+      "Bash(./omni.exe rg:*)",
+      "Bash(powershell:*)",
+      "WebFetch(domain:raw.githubusercontent.com)"
     ]
   }
 }

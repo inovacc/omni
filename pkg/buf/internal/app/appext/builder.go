@@ -21,7 +21,7 @@ import (
 	"log/slog"
 	"time"
 
-	"buf.build/go/app"
+	"github.com/inovacc/omni/pkg/buf/internal/app"
 	"github.com/spf13/pflag"
 )
 
@@ -49,12 +49,14 @@ func newBuilder(appName string, options ...BuilderOption) *builder {
 	for _, option := range options {
 		option(builder)
 	}
+
 	return builder
 }
 
 func (b *builder) BindRoot(flagSet *pflag.FlagSet) {
 	flagSet.BoolVar(&b.debug, "debug", false, "Turn on debug logging")
 	flagSet.StringVar(&b.logFormat, "log-format", "color", "The log format [text,color,json]")
+
 	if b.timeoutFlag {
 		flagSet.DurationVar(&b.timeout, "timeout", b.defaultTimeout, `The duration until timing out, setting it to 0 means no timeout`)
 	}
@@ -73,10 +75,12 @@ func (b *builder) NewRunFunc(
 	f func(context.Context, Container) error,
 ) func(context.Context, app.Container) error {
 	interceptor := chainInterceptors(b.interceptors...)
+
 	return func(ctx context.Context, appContainer app.Container) error {
 		if interceptor != nil {
 			return b.run(ctx, appContainer, interceptor(f))
 		}
+
 		return b.run(ctx, appContainer, f)
 	}
 }
@@ -90,18 +94,22 @@ func (b *builder) run(
 	if err != nil {
 		return err
 	}
+
 	logFormat, err := ParseLogFormat(b.logFormat)
 	if err != nil {
 		return err
 	}
+
 	nameContainer, err := newNameContainer(appContainer, b.appName)
 	if err != nil {
 		return err
 	}
+
 	logger, err := b.loggerProvider(nameContainer, logLevel, logFormat)
 	if err != nil {
 		return err
 	}
+
 	container := newContainer(nameContainer, logger)
 
 	var cancel context.CancelFunc
@@ -117,12 +125,15 @@ func getLogLevel(debugFlag bool, noWarnFlag bool) (LogLevel, error) {
 	if debugFlag && noWarnFlag {
 		return 0, errors.New("cannot set both --debug and --no-warn")
 	}
+
 	if noWarnFlag {
 		return LogLevelError, nil
 	}
+
 	if debugFlag {
 		return LogLevelDebug, nil
 	}
+
 	return LogLevelInfo, nil
 }
 
@@ -143,12 +154,14 @@ func chainInterceptors(interceptors ...Interceptor) Interceptor {
 	if len(interceptors) == 0 {
 		return nil
 	}
+
 	filtered := make([]Interceptor, 0, len(interceptors))
 	for _, interceptor := range interceptors {
 		if interceptor != nil {
 			filtered = append(filtered, interceptor)
 		}
 	}
+
 	switch len(filtered) {
 	case 0:
 		return nil
@@ -156,10 +169,12 @@ func chainInterceptors(interceptors ...Interceptor) Interceptor {
 		return filtered[0]
 	default:
 		first := filtered[0]
+
 		return func(next func(context.Context, Container) error) func(context.Context, Container) error {
 			for i := len(filtered) - 1; i > 0; i-- {
 				next = filtered[i](next)
 			}
+
 			return first(next)
 		}
 	}

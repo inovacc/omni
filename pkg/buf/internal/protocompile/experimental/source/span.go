@@ -21,7 +21,7 @@ import (
 	"slices"
 	"unicode/utf8"
 
-	"github.com/bufbuild/protocompile/experimental/source/length"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/source/length"
 )
 
 // Spanner is any type with a [Span].

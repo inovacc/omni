@@ -22,7 +22,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"buf.build/go/app/appext"
+	"github.com/inovacc/omni/pkg/buf/internal/app/appext"
 	"github.com/inovacc/omni/pkg/buf/internal/buf/bufwkt/bufwktstore"
 	bufmodule2 "github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufmodule"
 	bufmoduleapi2 "github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufmodule/bufmoduleapi"

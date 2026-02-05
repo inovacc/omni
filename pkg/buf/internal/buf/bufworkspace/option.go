@@ -15,7 +15,7 @@
 package bufworkspace
 
 import (
-	"buf.build/go/standard/xslices"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
 	normalpath2 "github.com/inovacc/omni/pkg/buf/internal/pkg/normalpath"
 )
 

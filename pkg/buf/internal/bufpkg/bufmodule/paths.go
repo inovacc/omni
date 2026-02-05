@@ -18,7 +18,7 @@ import (
 	"context"
 	"sync"
 
-	"buf.build/go/standard/xslices"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
 	storage2 "github.com/inovacc/omni/pkg/buf/internal/pkg/storage"
 )
 

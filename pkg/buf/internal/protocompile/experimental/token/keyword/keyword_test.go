@@ -19,7 +19,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/bufbuild/protocompile/experimental/token/keyword"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/token/keyword"
 )
 
 func TestValid(t *testing.T) {

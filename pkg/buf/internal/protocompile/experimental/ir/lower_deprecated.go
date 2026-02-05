@@ -15,9 +15,9 @@
 package ir
 
 import (
-	"github.com/bufbuild/protocompile/experimental/report"
-	"github.com/bufbuild/protocompile/experimental/seq"
-	"github.com/bufbuild/protocompile/experimental/source"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/report"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/seq"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/source"
 )
 
 // checkDeprecated checks for deprecation warnings in the given file.

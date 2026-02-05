@@ -17,8 +17,8 @@ package keyword
 import (
 	"iter"
 
-	"github.com/bufbuild/protocompile/internal/ext/iterx"
-	"github.com/bufbuild/protocompile/internal/trie"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/internal/ext/iterx"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/internal/trie"
 )
 
 var kwTrie = func() *trie.Trie[Keyword] {
@@ -49,6 +49,7 @@ func (k Keyword) Brackets() (left, right, joined Keyword) {
 	if int(k) >= len(braces) {
 		return Unknown, Unknown, Unknown
 	}
+
 	return braces[k][0], braces[k][1], braces[k][2]
 }
 

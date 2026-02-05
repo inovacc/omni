@@ -17,8 +17,8 @@ package internal
 import (
 	"strings"
 
-	"buf.build/go/app"
-	"buf.build/go/standard/xpath/xfilepath"
+	"github.com/inovacc/omni/pkg/buf/internal/app"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xpath/xfilepath"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/normalpath"
 )
 

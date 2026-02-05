@@ -20,13 +20,13 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/bufbuild/protocompile/experimental/ast"
-	"github.com/bufbuild/protocompile/experimental/ast/syntax"
-	"github.com/bufbuild/protocompile/experimental/id"
-	"github.com/bufbuild/protocompile/experimental/report"
-	"github.com/bufbuild/protocompile/experimental/seq"
-	"github.com/bufbuild/protocompile/experimental/token"
-	"github.com/bufbuild/protocompile/experimental/token/keyword"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/ast"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/ast/syntax"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/id"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/report"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/seq"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/token"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/token/keyword"
 )
 
 // walker is the state struct for the AST-walking logic.

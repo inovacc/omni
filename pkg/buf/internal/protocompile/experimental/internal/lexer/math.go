@@ -19,7 +19,7 @@ import (
 	"math/big"
 	"math/bits"
 
-	"github.com/bufbuild/protocompile/internal/ext/unicodex"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/internal/ext/unicodex"
 )
 
 var log2Table = func() (logs [16]float64) {

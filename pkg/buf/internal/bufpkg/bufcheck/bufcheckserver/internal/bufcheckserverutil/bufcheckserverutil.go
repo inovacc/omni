@@ -19,7 +19,7 @@ import (
 
 	"buf.build/go/bufplugin/check"
 	"buf.build/go/bufplugin/descriptor"
-	"buf.build/go/standard/xslices"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufprotosource"
 	"google.golang.org/protobuf/reflect/protodesc"
 	"google.golang.org/protobuf/types/descriptorpb"

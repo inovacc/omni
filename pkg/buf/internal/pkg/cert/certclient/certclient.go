@@ -20,7 +20,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"buf.build/go/app/appext"
+	"github.com/inovacc/omni/pkg/buf/internal/app/appext"
 )
 
 // ExternalClientTLSConfig allows users to configure TLS on the client side.

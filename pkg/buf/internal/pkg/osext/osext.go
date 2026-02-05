@@ -33,14 +33,20 @@ var (
 // Getwd replaces os.Getwd and caches the result.
 func Getwd() (string, error) {
 	globalLock.RLock()
+
 	workDirPath, workDirPathErr := globalWorkDirPath, globalWorkDirPathErr
+
 	globalLock.RUnlock()
+
 	if workDirPath != "" || workDirPathErr != nil {
 		return workDirPath, workDirPathErr
 	}
+
 	globalLock.Lock()
 	defer globalLock.Unlock()
+
 	globalWorkDirPath, globalWorkDirPathErr = getwdUncached()
+
 	return globalWorkDirPath, globalWorkDirPathErr
 }
 
@@ -48,8 +54,10 @@ func Getwd() (string, error) {
 func Chdir(dir string) error {
 	globalLock.Lock()
 	defer globalLock.Unlock()
+
 	globalWorkDirPath = ""
 	globalWorkDirPathErr = nil
+
 	return os.Chdir(dir)
 }
 
@@ -58,5 +66,6 @@ func getwdUncached() (string, error) {
 	if workDirPath == "" && workDirPathErr == nil {
 		return "", errOSGetwdEmpty
 	}
+
 	return workDirPath, workDirPathErr
 }

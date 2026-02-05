@@ -33,18 +33,26 @@ type Cache[K comparable, V any] struct {
 // must be preserved for lock ordering.
 func (c *Cache[K, V]) GetOrAdd(key K, getUncached func() (V, error)) (V, error) {
 	c.lock.RLock()
-	var result *result[V]
-	var ok bool
+
+	var (
+		result *result[V]
+		ok     bool
+	)
+
 	if c.store != nil {
 		result, ok = c.store[key]
 	}
+
 	c.lock.RUnlock()
+
 	if ok {
 		return result.value, result.err
 	}
+
 	c.lock.Lock()
 	value, err := c.getOrAddInsideWriteLock(key, getUncached)
 	c.lock.Unlock()
+
 	return value, err
 }
 
@@ -52,12 +60,15 @@ func (c *Cache[K, V]) getOrAddInsideWriteLock(key K, getUncached func() (V, erro
 	if c.store == nil {
 		c.store = make(map[K]*result[V])
 	}
+
 	result, ok := c.store[key]
 	if ok {
 		return result.value, result.err
 	}
+
 	value, err := getUncached()
 	c.store[key] = newResult(value, err)
+
 	return value, err
 }
 

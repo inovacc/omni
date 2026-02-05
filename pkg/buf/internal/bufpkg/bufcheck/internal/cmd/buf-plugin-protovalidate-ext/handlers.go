@@ -17,7 +17,7 @@ package main
 import (
 	"context"
 
-	"buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go/buf/validate"
+	"github.com/inovacc/omni/pkg/buf/internal/gen/bufbuild/protovalidate/protocolbuffers/go/buf/validate"
 	"buf.build/go/bufplugin/check"
 	"buf.build/go/bufplugin/option"
 	"buf.build/go/protovalidate"

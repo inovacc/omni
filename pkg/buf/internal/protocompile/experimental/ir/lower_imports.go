@@ -22,11 +22,11 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/bufbuild/protocompile/experimental/ast"
-	"github.com/bufbuild/protocompile/experimental/internal/cycle"
-	"github.com/bufbuild/protocompile/experimental/report"
-	"github.com/bufbuild/protocompile/internal/ext/iterx"
-	"github.com/bufbuild/protocompile/internal/intern"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/ast"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/internal/cycle"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/report"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/internal/ext/iterx"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/internal/intern"
 )
 
 const DescriptorProtoPath = "google/protobuf/descriptor.proto"

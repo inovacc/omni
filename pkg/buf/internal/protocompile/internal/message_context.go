@@ -20,7 +20,7 @@ import (
 
 	"google.golang.org/protobuf/types/descriptorpb"
 
-	"github.com/bufbuild/protocompile/ast"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/ast"
 )
 
 // ParsedFile wraps an optional AST and required FileDescriptorProto.

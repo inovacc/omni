@@ -20,10 +20,10 @@ import (
 	"os"
 	"regexp"
 
-	"buf.build/go/app"
-	"buf.build/go/standard/xos/xexec"
-	"buf.build/go/standard/xslices"
-	"buf.build/go/standard/xstrings"
+	"github.com/inovacc/omni/pkg/buf/internal/app"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xos/xexec"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xstrings"
 )
 
 type lister struct{}

@@ -17,8 +17,8 @@ package report
 import (
 	"fmt"
 
-	"github.com/bufbuild/protocompile/experimental/source"
-	"github.com/bufbuild/protocompile/internal/ext/slicesx"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/source"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/internal/ext/slicesx"
 )
 
 // Level represents the severity of a diagnostic message.

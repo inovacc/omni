@@ -17,7 +17,7 @@ package bufpluginapi
 import (
 	"fmt"
 
-	pluginv1beta1 "buf.build/gen/go/bufbuild/registry/protocolbuffers/go/buf/registry/plugin/v1beta1"
+	pluginv1beta1 "github.com/inovacc/omni/pkg/buf/internal/gen/bufbuild/registry/protocolbuffers/go/buf/registry/plugin/v1beta1"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufcas"
 	bufplugin2 "github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufplugin"
 )

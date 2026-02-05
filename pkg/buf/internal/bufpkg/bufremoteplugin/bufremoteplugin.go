@@ -20,7 +20,7 @@ import (
 	"sort"
 	"strings"
 
-	"buf.build/go/standard/xslices"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufremoteplugin/bufremotepluginconfig"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufremoteplugin/bufremotepluginref"
 	"github.com/inovacc/omni/pkg/buf/internal/gen/proto/go/buf/alpha/registry/v1alpha1"

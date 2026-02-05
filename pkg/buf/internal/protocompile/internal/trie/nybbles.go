@@ -53,6 +53,7 @@ func (t *nybbles[N]) search(key string, yield func(string, int) bool) {
 	}
 
 	var n int
+
 	for i := range len(key) {
 		b := key[i]
 		lo, hi := b&0xf, b>>4
@@ -60,11 +61,13 @@ func (t *nybbles[N]) search(key string, yield func(string, int) bool) {
 		if len(t.hi) <= n {
 			break
 		}
+
 		m := int(t.hi[n][hi])
 
 		if len(t.lo) <= m {
 			break
 		}
+
 		n = int(t.lo[m][lo])
 
 		if t.has(n) && !yield(key[:i+1], n) {
@@ -83,6 +86,7 @@ func (t *nybbles[N]) insert(key string) int {
 	}
 
 	n := 0
+
 	for i := range len(key) {
 		b := key[i]
 		lo, hi := b&0xf, b>>4
@@ -102,10 +106,12 @@ func (t *nybbles[N]) insert(key string) int {
 			*m2 = N(len(t.hi))
 			t.appendAllOnes(&t.hi)
 		}
+
 		n = int(*m2)
 	}
 
 	t.set(n)
+
 	return n
 }
 
@@ -128,6 +134,7 @@ func (t *nybbles[N]) set(n int) {
 	if len(t.hasValue) <= i {
 		t.hasValue = append(t.hasValue, make([]uint, i+1-len(t.hasValue))...)
 	}
+
 	t.hasValue[i] |= uint(1) << j
 }
 
@@ -137,6 +144,7 @@ func (t *nybbles[N]) dump(buf *strings.Builder) {
 
 	for i, v := range t.hi {
 		fmt.Fprintf(buf, "hi[%#x]:", i)
+
 		for _, i := range v {
 			if ^i == 0 {
 				buf.WriteString(" --")
@@ -144,10 +152,13 @@ func (t *nybbles[N]) dump(buf *strings.Builder) {
 				fmt.Fprintf(buf, " %02x", i)
 			}
 		}
+
 		fmt.Fprintln(buf)
 	}
+
 	for i, v := range t.lo {
 		fmt.Fprintf(buf, "lo[%#x]:", i)
+
 		for _, i := range v {
 			if ^i == 0 {
 				buf.WriteString(" --")
@@ -155,6 +166,7 @@ func (t *nybbles[N]) dump(buf *strings.Builder) {
 				fmt.Fprintf(buf, " %02x", i)
 			}
 		}
+
 		fmt.Fprintln(buf)
 	}
 }
@@ -170,8 +182,10 @@ func grow[To, From uint8 | uint16 | uint32 | uint64](in *nybbles[From]) *nybbles
 					y[i] = ^To(0)
 				}
 			}
+
 			out[i] = y
 		}
+
 		return out
 	}
 

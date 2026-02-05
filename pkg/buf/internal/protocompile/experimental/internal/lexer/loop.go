@@ -20,14 +20,14 @@ import (
 	"unicode"
 	"unicode/utf8"
 
-	"github.com/bufbuild/protocompile/experimental/id"
-	"github.com/bufbuild/protocompile/experimental/internal/errtoken"
-	"github.com/bufbuild/protocompile/experimental/internal/tokenmeta"
-	"github.com/bufbuild/protocompile/experimental/report"
-	"github.com/bufbuild/protocompile/experimental/token"
-	"github.com/bufbuild/protocompile/experimental/token/keyword"
-	"github.com/bufbuild/protocompile/internal/ext/stringsx"
-	"github.com/bufbuild/protocompile/internal/ext/unicodex"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/id"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/internal/errtoken"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/internal/tokenmeta"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/report"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/token"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/token/keyword"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/internal/ext/stringsx"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/internal/ext/unicodex"
 )
 
 // loop is the main loop of the lexer.

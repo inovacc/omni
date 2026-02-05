@@ -22,10 +22,6 @@ import (
 	"log/slog"
 	"strings"
 
-	"github.com/bufbuild/protocompile/experimental/ast"
-	"github.com/bufbuild/protocompile/experimental/ir"
-	"github.com/bufbuild/protocompile/experimental/seq"
-	"github.com/bufbuild/protocompile/experimental/source"
 	"go.lsp.dev/protocol"
 )
 

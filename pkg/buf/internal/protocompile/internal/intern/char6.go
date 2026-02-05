@@ -17,7 +17,7 @@ package intern
 import (
 	"strings"
 
-	"github.com/bufbuild/protocompile/internal/ext/unsafex"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/internal/ext/unsafex"
 )
 
 const (
@@ -46,6 +46,7 @@ func encodeChar6(data string) (ID, bool) {
 	if data == "" {
 		return 0, true
 	}
+
 	if len(data) > maxInlined || strings.HasSuffix(data, ".") {
 		return 0, false
 	}
@@ -67,11 +68,13 @@ func encodeOutlined(data string) (ID, bool) {
 	//
 	//    Thus, "foo" is encoded as if it was the string "foo..".
 	value := ID(-1)
+
 	for i := len(data) - 1; i >= 0; i-- {
 		sextet := byteToChar6[data[i]]
 		if sextet == 0xff {
 			return 0, false
 		}
+
 		value <<= 6
 		value |= ID(sextet)
 	}

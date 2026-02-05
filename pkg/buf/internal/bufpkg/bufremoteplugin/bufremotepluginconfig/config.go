@@ -21,7 +21,7 @@ import (
 	"strings"
 
 	"buf.build/go/spdx"
-	"buf.build/go/standard/xslices"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufremoteplugin/bufremotepluginref"
 	"golang.org/x/mod/modfile"
 	"golang.org/x/mod/semver"

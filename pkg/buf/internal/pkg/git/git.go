@@ -27,8 +27,8 @@ import (
 	"regexp"
 	"strings"
 
-	"buf.build/go/app"
-	"buf.build/go/standard/xos/xexec"
+	"github.com/inovacc/omni/pkg/buf/internal/app"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xos/xexec"
 	storage2 "github.com/inovacc/omni/pkg/buf/internal/pkg/storage"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/storage/storageos"
 )

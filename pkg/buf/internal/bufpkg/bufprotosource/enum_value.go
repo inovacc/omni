@@ -18,8 +18,8 @@ type enumValue struct {
 	namedDescriptor
 	optionExtensionDescriptor
 
-	enum   Enum
-	number int
+	enum       Enum
+	number     int
 	deprecated bool
 	numberPath []int32
 }

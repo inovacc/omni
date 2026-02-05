@@ -17,8 +17,8 @@ package bufworkspace
 import (
 	"fmt"
 
-	"buf.build/go/standard/xslices"
-	"buf.build/go/standard/xstrings"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xstrings"
 	"github.com/inovacc/omni/pkg/buf/internal/buf/buftarget"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/normalpath"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/syserror"

@@ -23,7 +23,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"buf.build/go/app"
+	"github.com/inovacc/omni/pkg/buf/internal/app"
 	"github.com/inovacc/omni/pkg/buf/internal/buf/buffetch/internal"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufconfig"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufparse"
