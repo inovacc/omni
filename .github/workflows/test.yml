@@ -13,3 +13,5 @@ jobs:
       run-tests: true
       run-lint: true
       run-vulncheck: true
+      golangci-lint-args: "--timeout=10m"
+      test-timeout: "15m"
