@@ -98,6 +98,44 @@ Examples:
 	RunE: runCloudProfileDelete,
 }
 
+var cloudProfileImportCmd = &cobra.Command{
+	Use:   "import [name]",
+	Short: "Import credentials from existing cloud CLI",
+	Long: `Import existing credentials from AWS, Azure, or GCP CLI configurations.
+
+AWS:
+  Reads from ~/.aws/credentials and ~/.aws/config
+  Use --source to specify which AWS profile to import (default: "default")
+
+Azure:
+  Requires a service principal JSON file (Azure CLI tokens cannot be migrated)
+  Use --source to specify the service principal file path
+  Create one with: az ad sp create-for-rbac --name omni-sp --sdk-auth > ~/.azure/sp.json
+
+GCP:
+  Imports service account credentials from GOOGLE_APPLICATION_CREDENTIALS
+  or ~/.config/gcloud/ directory
+  Note: Application Default Credentials (authorized_user) cannot be migrated
+
+Examples:
+  # Import default AWS profile
+  omni cloud profile import --provider aws
+
+  # Import specific AWS profile with custom name
+  omni cloud profile import myaws --provider aws --source prod
+
+  # List available AWS profiles
+  omni cloud profile import --provider aws --list
+
+  # Import Azure service principal
+  omni cloud profile import --provider azure --source ~/.azure/sp.json
+
+  # Import GCP service account
+  omni cloud profile import --provider gcp --source /path/to/sa.json`,
+	Args: cobra.MaximumNArgs(1),
+	RunE: runCloudProfileImport,
+}
+
 func init() {
 	cloudCmd.AddCommand(cloudProfileCmd)
 	cloudProfileCmd.AddCommand(cloudProfileAddCmd)
@@ -105,6 +143,7 @@ func init() {
 	cloudProfileCmd.AddCommand(cloudProfileShowCmd)
 	cloudProfileCmd.AddCommand(cloudProfileUseCmd)
 	cloudProfileCmd.AddCommand(cloudProfileDeleteCmd)
+	cloudProfileCmd.AddCommand(cloudProfileImportCmd)
 
 	// Add flags
 	cloudProfileAddCmd.Flags().StringP("provider", "p", "", "Cloud provider (aws, azure, gcp) (required)")
@@ -137,6 +176,14 @@ func init() {
 	cloudProfileDeleteCmd.Flags().BoolP("force", "f", false, "Skip confirmation")
 
 	_ = cloudProfileDeleteCmd.MarkFlagRequired("provider")
+
+	// Import flags
+	cloudProfileImportCmd.Flags().StringP("provider", "p", "", "Cloud provider (aws, azure, gcp) (required)")
+	cloudProfileImportCmd.Flags().StringP("source", "s", "", "Source profile/file to import from")
+	cloudProfileImportCmd.Flags().Bool("list", false, "List available profiles/credentials to import")
+	cloudProfileImportCmd.Flags().Bool("default", false, "Set as default profile after import")
+
+	_ = cloudProfileImportCmd.MarkFlagRequired("provider")
 }
 
 func runCloudProfileAdd(cmd *cobra.Command, args []string) error {
@@ -529,4 +576,205 @@ func valueOrDash(s string) string {
 		return "-"
 	}
 	return s
+}
+
+func runCloudProfileImport(cmd *cobra.Command, args []string) error {
+	providerStr, _ := cmd.Flags().GetString("provider")
+	source, _ := cmd.Flags().GetString("source")
+	listOnly, _ := cmd.Flags().GetBool("list")
+	setDefault, _ := cmd.Flags().GetBool("default")
+
+	if !profile.IsValidProvider(providerStr) {
+		return fmt.Errorf("invalid provider: %s (use aws, azure, or gcp)", providerStr)
+	}
+
+	provider := profile.Provider(providerStr)
+	out := cmd.OutOrStdout()
+
+	// Determine target name
+	targetName := ""
+	if len(args) > 0 {
+		targetName = args[0]
+	}
+
+	switch provider {
+	case profile.ProviderAWS:
+		return importAWSProfile(out, source, targetName, listOnly, setDefault)
+	case profile.ProviderAzure:
+		return importAzureProfile(out, source, targetName, listOnly, setDefault)
+	case profile.ProviderGCP:
+		return importGCPProfile(out, source, targetName, listOnly, setDefault)
+	default:
+		return fmt.Errorf("unsupported provider: %s", provider)
+	}
+}
+
+func importAWSProfile(out io.Writer, source, targetName string, listOnly, setDefault bool) error {
+	importer, err := profile.NewAWSImporter()
+	if err != nil {
+		return err
+	}
+
+	if listOnly {
+		profiles, err := importer.ListProfiles()
+		if err != nil {
+			return err
+		}
+
+		_, _ = fmt.Fprintln(out, "Available AWS profiles:")
+		for _, p := range profiles {
+			_, _ = fmt.Fprintf(out, "  %s\n", p)
+		}
+		return nil
+	}
+
+	opts := profile.ImportOptions{
+		SourceProfile: source,
+		TargetName:    targetName,
+		SetDefault:    setDefault,
+	}
+
+	p, creds, err := importer.Import(opts)
+	if err != nil {
+		return err
+	}
+
+	// Save to omni profile
+	svc, err := profile.NewService()
+	if err != nil {
+		return fmt.Errorf("initializing profile service: %w", err)
+	}
+
+	if err := svc.AddProfile(p, creds); err != nil {
+		return fmt.Errorf("saving profile: %w", err)
+	}
+
+	sourceDesc := source
+	if sourceDesc == "" {
+		sourceDesc = "default"
+	}
+
+	_, _ = fmt.Fprintf(out, "Imported AWS profile '%s' from '%s'\n", p.Name, sourceDesc)
+	if p.Region != "" {
+		_, _ = fmt.Fprintf(out, "  Region: %s\n", p.Region)
+	}
+	if p.Default {
+		_, _ = fmt.Fprintf(out, "  Set as default for aws\n")
+	}
+
+	return nil
+}
+
+func importAzureProfile(out io.Writer, source, targetName string, listOnly, setDefault bool) error {
+	importer, err := profile.NewAzureImporter()
+	if err != nil {
+		return err
+	}
+
+	if listOnly {
+		subs, err := importer.ListSubscriptions()
+		if err != nil {
+			return err
+		}
+
+		_, _ = fmt.Fprintln(out, "Available Azure subscriptions:")
+		_, _ = fmt.Fprintf(out, "  %-36s  %-30s  %s\n", "SUBSCRIPTION ID", "NAME", "DEFAULT")
+		_, _ = fmt.Fprintf(out, "  %-36s  %-30s  %s\n", "---------------", "----", "-------")
+		for _, s := range subs {
+			def := ""
+			if s.IsDefault {
+				def = "*"
+			}
+			name := s.Name
+			if len(name) > 30 {
+				name = name[:27] + "..."
+			}
+			_, _ = fmt.Fprintf(out, "  %-36s  %-30s  %s\n", s.ID, name, def)
+		}
+		_, _ = fmt.Fprintln(out, "\nNote: To import, create a service principal:")
+		_, _ = fmt.Fprintln(out, "  az ad sp create-for-rbac --name omni-sp --sdk-auth > ~/.azure/sp.json")
+		_, _ = fmt.Fprintln(out, "  omni cloud profile import --provider azure --source ~/.azure/sp.json")
+		return nil
+	}
+
+	opts := profile.ImportOptions{
+		SourceProfile: source,
+		TargetName:    targetName,
+		SetDefault:    setDefault,
+	}
+
+	p, creds, err := importer.Import(opts)
+	if err != nil {
+		return err
+	}
+
+	svc, err := profile.NewService()
+	if err != nil {
+		return fmt.Errorf("initializing profile service: %w", err)
+	}
+
+	if err := svc.AddProfile(p, creds); err != nil {
+		return fmt.Errorf("saving profile: %w", err)
+	}
+
+	_, _ = fmt.Fprintf(out, "Imported Azure profile '%s'\n", p.Name)
+	_, _ = fmt.Fprintf(out, "  Subscription: %s\n", creds.SubscriptionID)
+	_, _ = fmt.Fprintf(out, "  Tenant: %s\n", creds.TenantID)
+	if p.Default {
+		_, _ = fmt.Fprintf(out, "  Set as default for azure\n")
+	}
+
+	return nil
+}
+
+func importGCPProfile(out io.Writer, source, targetName string, listOnly, setDefault bool) error {
+	importer, err := profile.NewGCPImporter()
+	if err != nil {
+		return err
+	}
+
+	if listOnly {
+		sources := importer.ListSources()
+		if len(sources) == 0 {
+			_, _ = fmt.Fprintln(out, "No GCP credentials found.")
+			_, _ = fmt.Fprintln(out, "\nTo import, specify a service account key file:")
+			_, _ = fmt.Fprintln(out, "  omni cloud profile import --provider gcp --source /path/to/sa.json")
+			return nil
+		}
+
+		_, _ = fmt.Fprintln(out, "Available GCP credential sources:")
+		for _, s := range sources {
+			_, _ = fmt.Fprintf(out, "  %s\n", s)
+		}
+		return nil
+	}
+
+	opts := profile.ImportOptions{
+		SourceProfile: source,
+		TargetName:    targetName,
+		SetDefault:    setDefault,
+	}
+
+	p, creds, err := importer.Import(opts)
+	if err != nil {
+		return err
+	}
+
+	svc, err := profile.NewService()
+	if err != nil {
+		return fmt.Errorf("initializing profile service: %w", err)
+	}
+
+	if err := svc.AddProfile(p, creds); err != nil {
+		return fmt.Errorf("saving profile: %w", err)
+	}
+
+	_, _ = fmt.Fprintf(out, "Imported GCP profile '%s'\n", p.Name)
+	_, _ = fmt.Fprintf(out, "  Project: %s\n", creds.ProjectID)
+	_, _ = fmt.Fprintf(out, "  Service Account: %s\n", creds.ClientEmail)
+	if p.Default {
+		_, _ = fmt.Fprintf(out, "  Set as default for gcp\n")
+	}
+
+	return nil
 }
