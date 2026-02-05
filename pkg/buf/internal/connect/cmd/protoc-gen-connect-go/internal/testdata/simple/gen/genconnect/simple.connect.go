@@ -19,10 +19,10 @@
 package genconnect
 
 import (
-	connect "github.com/inovacc/omni/pkg/buf/internal/connect"
-	gen "github.com/inovacc/omni/pkg/buf/internal/connect/cmd/protoc-gen-connect-go/internal/testdata/simple/gen"
 	context "context"
 	errors "errors"
+	connect "github.com/inovacc/omni/pkg/buf/internal/connect"
+	gen "github.com/inovacc/omni/pkg/buf/internal/connect/cmd/protoc-gen-connect-go/internal/testdata/simple/gen"
 	http "net/http"
 	strings "strings"
 )

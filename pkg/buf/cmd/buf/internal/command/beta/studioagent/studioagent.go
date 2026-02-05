@@ -22,10 +22,10 @@ import (
 
 	"github.com/inovacc/omni/pkg/buf/internal/app/appcmd"
 	"github.com/inovacc/omni/pkg/buf/internal/app/appext"
-	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
 	"github.com/inovacc/omni/pkg/buf/internal/buf/bufstudioagent"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/cert/certclient"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/transport/http/httpserver"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
 	"github.com/spf13/pflag"
 )
 

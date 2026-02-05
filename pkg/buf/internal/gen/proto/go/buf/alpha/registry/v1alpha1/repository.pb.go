@@ -85,10 +85,10 @@ type Repository struct {
 	xxx_hidden_Id                 string                 `protobuf:"bytes,1,opt,name=id,proto3"`
 	xxx_hidden_CreateTime         *timestamppb.Timestamp `protobuf:"bytes,2,opt,name=create_time,json=createTime,proto3"`
 	xxx_hidden_UpdateTime         *timestamppb.Timestamp `protobuf:"bytes,3,opt,name=update_time,json=updateTime,proto3"`
-	xxx_hidden_Name       string             `protobuf:"bytes,4,opt,name=name,proto3"`
-	xxx_hidden_Owner      isRepository_Owner `protobuf_oneof:"owner"`
-	xxx_hidden_Visibility Visibility         `protobuf:"varint,7,opt,name=visibility,proto3,enum=buf.alpha.registry.v1alpha1.Visibility"`
-	xxx_hidden_Deprecated bool               `protobuf:"varint,8,opt,name=deprecated,proto3"`
+	xxx_hidden_Name               string                 `protobuf:"bytes,4,opt,name=name,proto3"`
+	xxx_hidden_Owner              isRepository_Owner     `protobuf_oneof:"owner"`
+	xxx_hidden_Visibility         Visibility             `protobuf:"varint,7,opt,name=visibility,proto3,enum=buf.alpha.registry.v1alpha1.Visibility"`
+	xxx_hidden_Deprecated         bool                   `protobuf:"varint,8,opt,name=deprecated,proto3"`
 	xxx_hidden_DeprecationMessage string                 `protobuf:"bytes,9,opt,name=deprecation_message,json=deprecationMessage,proto3"`
 	xxx_hidden_OwnerName          string                 `protobuf:"bytes,10,opt,name=owner_name,json=ownerName,proto3"`
 	xxx_hidden_Description        string                 `protobuf:"bytes,11,opt,name=description,proto3"`
@@ -1856,8 +1856,8 @@ func (b0 ListOrganizationRepositoriesResponse_builder) Build() *ListOrganization
 
 type CreateRepositoryByFullNameRequest struct {
 	state                 protoimpl.MessageState `protogen:"opaque.v1"`
-	xxx_hidden_FullName   string     `protobuf:"bytes,1,opt,name=full_name,json=fullName,proto3"`
-	xxx_hidden_Visibility Visibility `protobuf:"varint,2,opt,name=visibility,proto3,enum=buf.alpha.registry.v1alpha1.Visibility"`
+	xxx_hidden_FullName   string                 `protobuf:"bytes,1,opt,name=full_name,json=fullName,proto3"`
+	xxx_hidden_Visibility Visibility             `protobuf:"varint,2,opt,name=visibility,proto3,enum=buf.alpha.registry.v1alpha1.Visibility"`
 	unknownFields         protoimpl.UnknownFields
 	sizeCache             protoimpl.SizeCache
 }
@@ -2491,8 +2491,8 @@ func (b0 UndeprecateRepositoryByNameResponse_builder) Build() *UndeprecateReposi
 type SetRepositoryContributorRequest struct {
 	state                     protoimpl.MessageState `protogen:"opaque.v1"`
 	xxx_hidden_RepositoryId   string                 `protobuf:"bytes,1,opt,name=repository_id,json=repositoryId,proto3"`
-	xxx_hidden_UserId         string         `protobuf:"bytes,2,opt,name=user_id,json=userId,proto3"`
-	xxx_hidden_RepositoryRole RepositoryRole `protobuf:"varint,3,opt,name=repository_role,json=repositoryRole,proto3,enum=buf.alpha.registry.v1alpha1.RepositoryRole"`
+	xxx_hidden_UserId         string                 `protobuf:"bytes,2,opt,name=user_id,json=userId,proto3"`
+	xxx_hidden_RepositoryRole RepositoryRole         `protobuf:"varint,3,opt,name=repository_role,json=repositoryRole,proto3,enum=buf.alpha.registry.v1alpha1.RepositoryRole"`
 	unknownFields             protoimpl.UnknownFields
 	sizeCache                 protoimpl.SizeCache
 }
@@ -2914,9 +2914,9 @@ func (b0 GetRepositorySettingsResponse_builder) Build() *GetRepositorySettingsRe
 type UpdateRepositorySettingsByNameRequest struct {
 	state                     protoimpl.MessageState `protogen:"opaque.v1"`
 	xxx_hidden_OwnerName      string                 `protobuf:"bytes,1,opt,name=owner_name,json=ownerName,proto3"`
-	xxx_hidden_RepositoryName string     `protobuf:"bytes,2,opt,name=repository_name,json=repositoryName,proto3"`
-	xxx_hidden_Visibility     Visibility `protobuf:"varint,3,opt,name=visibility,proto3,enum=buf.alpha.registry.v1alpha1.Visibility"`
-	xxx_hidden_Description    *string    `protobuf:"bytes,4,opt,name=description,proto3,oneof"`
+	xxx_hidden_RepositoryName string                 `protobuf:"bytes,2,opt,name=repository_name,json=repositoryName,proto3"`
+	xxx_hidden_Visibility     Visibility             `protobuf:"varint,3,opt,name=visibility,proto3,enum=buf.alpha.registry.v1alpha1.Visibility"`
+	xxx_hidden_Description    *string                `protobuf:"bytes,4,opt,name=description,proto3,oneof"`
 	xxx_hidden_Url            *string                `protobuf:"bytes,5,opt,name=url,proto3,oneof"`
 	xxx_hidden_DefaultBranch  *string                `protobuf:"bytes,6,opt,name=default_branch,json=defaultBranch,proto3,oneof"`
 	XXX_raceDetectHookData    protoimpl.RaceDetectHookData
@@ -3412,8 +3412,8 @@ func (b0 GetRepositoryDependencyDOTStringResponse_builder) Build() *GetRepositor
 type AddRepositoryGroupRequest struct {
 	state                   protoimpl.MessageState `protogen:"opaque.v1"`
 	xxx_hidden_RepositoryId string                 `protobuf:"bytes,1,opt,name=repository_id,json=repositoryId,proto3"`
-	xxx_hidden_GroupName    string         `protobuf:"bytes,2,opt,name=group_name,json=groupName,proto3"`
-	xxx_hidden_RoleOverride RepositoryRole `protobuf:"varint,3,opt,name=role_override,json=roleOverride,proto3,enum=buf.alpha.registry.v1alpha1.RepositoryRole"`
+	xxx_hidden_GroupName    string                 `protobuf:"bytes,2,opt,name=group_name,json=groupName,proto3"`
+	xxx_hidden_RoleOverride RepositoryRole         `protobuf:"varint,3,opt,name=role_override,json=roleOverride,proto3,enum=buf.alpha.registry.v1alpha1.RepositoryRole"`
 	unknownFields           protoimpl.UnknownFields
 	sizeCache               protoimpl.SizeCache
 }
@@ -3546,8 +3546,8 @@ func (b0 AddRepositoryGroupResponse_builder) Build() *AddRepositoryGroupResponse
 type UpdateRepositoryGroupRequest struct {
 	state                   protoimpl.MessageState `protogen:"opaque.v1"`
 	xxx_hidden_RepositoryId string                 `protobuf:"bytes,1,opt,name=repository_id,json=repositoryId,proto3"`
-	xxx_hidden_GroupName    string         `protobuf:"bytes,2,opt,name=group_name,json=groupName,proto3"`
-	xxx_hidden_RoleOverride RepositoryRole `protobuf:"varint,3,opt,name=role_override,json=roleOverride,proto3,enum=buf.alpha.registry.v1alpha1.RepositoryRole,oneof"`
+	xxx_hidden_GroupName    string                 `protobuf:"bytes,2,opt,name=group_name,json=groupName,proto3"`
+	xxx_hidden_RoleOverride RepositoryRole         `protobuf:"varint,3,opt,name=role_override,json=roleOverride,proto3,enum=buf.alpha.registry.v1alpha1.RepositoryRole,oneof"`
 	XXX_raceDetectHookData  protoimpl.RaceDetectHookData
 	XXX_presence            [1]uint32
 	unknownFields           protoimpl.UnknownFields

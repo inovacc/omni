@@ -18,7 +18,6 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
 	"github.com/bufbuild/protoplugin/protopluginutil"
 	"github.com/google/uuid"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufparse"
@@ -26,6 +25,7 @@ import (
 	"github.com/inovacc/omni/pkg/buf/internal/gen/proto/go/buf/alpha/image/v1"
 	normalpath2 "github.com/inovacc/omni/pkg/buf/internal/pkg/normalpath"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/uuidutil"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
 	"google.golang.org/protobuf/encoding/protowire"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"

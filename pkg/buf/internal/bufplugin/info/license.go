@@ -19,8 +19,8 @@ import (
 	"fmt"
 	"net/url"
 
-	infov1 "github.com/inovacc/omni/pkg/buf/internal/gen/bufbuild/bufplugin/protocolbuffers/go/buf/plugin/info/v1"
 	"buf.build/go/spdx"
+	infov1 "github.com/inovacc/omni/pkg/buf/internal/gen/bufbuild/bufplugin/protocolbuffers/go/buf/plugin/info/v1"
 )
 
 // License contains license information about a plugin.

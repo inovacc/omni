@@ -27,8 +27,6 @@ import (
 	"path/filepath"
 
 	"github.com/inovacc/omni/pkg/buf/internal/app"
-	"github.com/inovacc/omni/pkg/buf/internal/standard/xio"
-	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
 	buftarget2 "github.com/inovacc/omni/pkg/buf/internal/buf/buftarget"
 	bufmodule2 "github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufmodule"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufparse"
@@ -41,6 +39,8 @@ import (
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/storage/storagemem"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/storage/storageos"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/syserror"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xio"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
 	"github.com/klauspost/compress/zstd"
 	"github.com/klauspost/pgzip"
 )

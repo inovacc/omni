@@ -15,9 +15,9 @@
 package bufcheck
 
 import (
+	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufimage"
 	descriptorv1 "github.com/inovacc/omni/pkg/buf/internal/gen/bufbuild/bufplugin/protocolbuffers/go/buf/plugin/descriptor/v1"
 	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
-	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufimage"
 )
 
 func imageToProtoFileDescriptors(image bufimage.Image) []*descriptorv1.FileDescriptor {

@@ -20,10 +20,10 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/inovacc/omni/pkg/buf/cmd/buf/internal/internaltesting"
 	"github.com/inovacc/omni/pkg/buf/internal/app/appcmd"
 	"github.com/inovacc/omni/pkg/buf/internal/app/appcmd/appcmdtesting"
 	"github.com/inovacc/omni/pkg/buf/internal/app/appext"
-	"github.com/inovacc/omni/pkg/buf/cmd/buf/internal/internaltesting"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/osext"
 	storage2 "github.com/inovacc/omni/pkg/buf/internal/pkg/storage"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/storage/storageos"

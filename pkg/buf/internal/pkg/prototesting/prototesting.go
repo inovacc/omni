@@ -26,10 +26,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/inovacc/omni/pkg/buf/internal/standard/xos/xexec"
 	"github.com/google/go-cmp/cmp"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/diff"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/protoencoding"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xos/xexec"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/protobuf/testing/protocmp"
 	"google.golang.org/protobuf/types/descriptorpb"

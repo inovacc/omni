@@ -17,9 +17,9 @@ package bufpolicyconfig
 import (
 	"strings"
 
-	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
 	bufconfig2 "github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufconfig"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufpolicy"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
 )
 
 // LintConfigToBufConfig converts the given LintConfig to a bufconfig.LintConfig.

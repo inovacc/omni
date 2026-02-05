@@ -21,7 +21,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
 	bufmodule2 "github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufmodule"
 	bufmodulestore2 "github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufmodule/bufmodulestore"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufmodule/bufmoduletesting"
@@ -31,6 +30,7 @@ import (
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/storage/storagemem"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/storage/storageos"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/thread"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
 	"github.com/stretchr/testify/require"
 )
 

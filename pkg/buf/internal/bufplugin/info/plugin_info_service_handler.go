@@ -17,9 +17,9 @@ package info
 import (
 	"context"
 
-	infov1 "github.com/inovacc/omni/pkg/buf/internal/gen/bufbuild/bufplugin/protocolbuffers/go/buf/plugin/info/v1"
 	"buf.build/go/bufplugin/internal/gen/buf/plugin/info/v1/v1pluginrpc"
 	"buf.build/go/protovalidate"
+	infov1 "github.com/inovacc/omni/pkg/buf/internal/gen/bufbuild/bufplugin/protocolbuffers/go/buf/plugin/info/v1"
 )
 
 // NewPluginInfoServiceHandler returns a new v1pluginrpc.PluginInfoServiceHandler for the given Spec.

@@ -23,8 +23,6 @@ import (
 	"sort"
 
 	"github.com/inovacc/omni/pkg/buf/internal/app"
-	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
-	connect "github.com/inovacc/omni/pkg/buf/internal/connect"
 	"github.com/inovacc/omni/pkg/buf/internal/buf/bufprotopluginexec"
 	bufconfig2 "github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufconfig"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufimage"
@@ -34,11 +32,13 @@ import (
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufprotoplugin/bufprotopluginos"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufremoteplugin"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufremoteplugin/bufremotepluginref"
+	connect "github.com/inovacc/omni/pkg/buf/internal/connect"
 	"github.com/inovacc/omni/pkg/buf/internal/gen/proto/connect/buf/alpha/registry/v1alpha1/registryv1alpha1connect"
 	"github.com/inovacc/omni/pkg/buf/internal/gen/proto/go/buf/alpha/registry/v1alpha1"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/connectclient"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/storage/storageos"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/thread"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
 	"google.golang.org/protobuf/types/pluginpb"
 )
 

@@ -765,14 +765,14 @@ func (x *For) GetInSpan() *Span {
 
 type Func struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Name          string  `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-	Params        *Params `protobuf:"bytes,2,opt,name=params,proto3" json:"params,omitempty"`
-	Return        *Expr   `protobuf:"bytes,3,opt,name=return,proto3" json:"return,omitempty"`
-	Body          *Expr   `protobuf:"bytes,4,opt,name=body,proto3" json:"body,omitempty"`
-	Span          *Span   `protobuf:"bytes,10,opt,name=span,proto3" json:"span,omitempty"`
-	FuncSpan      *Span   `protobuf:"bytes,11,opt,name=func_span,json=funcSpan,proto3" json:"func_span,omitempty"`
-	NameSpan      *Span   `protobuf:"bytes,12,opt,name=name_span,json=nameSpan,proto3" json:"name_span,omitempty"`
-	ArrowSpan     *Span   `protobuf:"bytes,13,opt,name=arrow_span,json=arrowSpan,proto3" json:"arrow_span,omitempty"`
+	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	Params        *Params                `protobuf:"bytes,2,opt,name=params,proto3" json:"params,omitempty"`
+	Return        *Expr                  `protobuf:"bytes,3,opt,name=return,proto3" json:"return,omitempty"`
+	Body          *Expr                  `protobuf:"bytes,4,opt,name=body,proto3" json:"body,omitempty"`
+	Span          *Span                  `protobuf:"bytes,10,opt,name=span,proto3" json:"span,omitempty"`
+	FuncSpan      *Span                  `protobuf:"bytes,11,opt,name=func_span,json=funcSpan,proto3" json:"func_span,omitempty"`
+	NameSpan      *Span                  `protobuf:"bytes,12,opt,name=name_span,json=nameSpan,proto3" json:"name_span,omitempty"`
+	ArrowSpan     *Span                  `protobuf:"bytes,13,opt,name=arrow_span,json=arrowSpan,proto3" json:"arrow_span,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1346,12 +1346,12 @@ func (x *Span) GetEnd() uint32 {
 
 type Switch_Case struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Else          bool    `protobuf:"varint,1,opt,name=else,proto3" json:"else,omitempty"`
-	Alts          *Params `protobuf:"bytes,2,opt,name=alts,proto3" json:"alts,omitempty"`
-	Block         *Block  `protobuf:"bytes,3,opt,name=block,proto3" json:"block,omitempty"`
-	Span          *Span   `protobuf:"bytes,10,opt,name=span,proto3" json:"span,omitempty"`
-	KwSpan        *Span   `protobuf:"bytes,11,opt,name=kw_span,json=kwSpan,proto3" json:"kw_span,omitempty"`
-	ColonSpan     *Span   `protobuf:"bytes,12,opt,name=colon_span,json=colonSpan,proto3" json:"colon_span,omitempty"`
+	Else          bool                   `protobuf:"varint,1,opt,name=else,proto3" json:"else,omitempty"`
+	Alts          *Params                `protobuf:"bytes,2,opt,name=alts,proto3" json:"alts,omitempty"`
+	Block         *Block                 `protobuf:"bytes,3,opt,name=block,proto3" json:"block,omitempty"`
+	Span          *Span                  `protobuf:"bytes,10,opt,name=span,proto3" json:"span,omitempty"`
+	KwSpan        *Span                  `protobuf:"bytes,11,opt,name=kw_span,json=kwSpan,proto3" json:"kw_span,omitempty"`
+	ColonSpan     *Span                  `protobuf:"bytes,12,opt,name=colon_span,json=colonSpan,proto3" json:"colon_span,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }

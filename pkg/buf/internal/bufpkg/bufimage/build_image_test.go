@@ -23,7 +23,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/inovacc/omni/pkg/buf/internal/standard/xtesting"
 	"github.com/inovacc/omni/pkg/buf/internal/buf/buftesting"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufanalysis"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufimage"
@@ -33,6 +32,7 @@ import (
 	normalpath2 "github.com/inovacc/omni/pkg/buf/internal/pkg/normalpath"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/prototesting"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/slogtestext"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xtesting"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

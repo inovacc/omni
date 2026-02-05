@@ -25,11 +25,11 @@ import (
 	"strconv"
 	"testing"
 
-	descriptorv1 "github.com/inovacc/omni/pkg/buf/internal/gen/bufbuild/bufplugin/protocolbuffers/go/buf/plugin/descriptor/v1"
 	"buf.build/go/bufplugin/check"
 	"buf.build/go/bufplugin/descriptor"
 	"buf.build/go/bufplugin/internal/pkg/xslices"
 	"buf.build/go/bufplugin/option"
+	descriptorv1 "github.com/inovacc/omni/pkg/buf/internal/gen/bufbuild/bufplugin/protocolbuffers/go/buf/plugin/descriptor/v1"
 	"github.com/inovacc/omni/pkg/buf/internal/protocompile"
 	"github.com/inovacc/omni/pkg/buf/internal/protocompile/linker"
 	"github.com/inovacc/omni/pkg/buf/internal/protocompile/parser"

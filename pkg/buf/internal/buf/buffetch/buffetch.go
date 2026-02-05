@@ -23,7 +23,6 @@ import (
 	"net/http"
 
 	"github.com/inovacc/omni/pkg/buf/internal/app"
-	"github.com/inovacc/omni/pkg/buf/internal/standard/xstrings"
 	"github.com/inovacc/omni/pkg/buf/internal/buf/buffetch/internal"
 	"github.com/inovacc/omni/pkg/buf/internal/buf/buftarget"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufconfig"
@@ -31,6 +30,7 @@ import (
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/git"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/httpauth"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/storage/storageos"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xstrings"
 )
 
 const (

@@ -20,8 +20,8 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/syserror"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
 )
 
 // Graph is a directed acyclic graph structure.

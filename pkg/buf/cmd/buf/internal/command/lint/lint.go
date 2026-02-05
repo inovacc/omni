@@ -21,12 +21,12 @@ import (
 
 	"github.com/inovacc/omni/pkg/buf/internal/app/appcmd"
 	"github.com/inovacc/omni/pkg/buf/internal/app/appext"
-	"github.com/inovacc/omni/pkg/buf/internal/standard/xstrings"
 	bufcli2 "github.com/inovacc/omni/pkg/buf/internal/buf/bufcli"
 	bufctl2 "github.com/inovacc/omni/pkg/buf/internal/buf/bufctl"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufanalysis"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufcheck"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufconfig"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xstrings"
 	"github.com/spf13/pflag"
 )
 

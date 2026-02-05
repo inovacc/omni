@@ -86,9 +86,9 @@ func (x WebhookEvent) Number() protoreflect.EnumNumber {
 // CreateWebhookRequest is the proto request representation of a
 // webhook request body.
 type CreateWebhookRequest struct {
-	state                   protoimpl.MessageState `protogen:"opaque.v1"`
-	xxx_hidden_WebhookEvent WebhookEvent           `protobuf:"varint,1,opt,name=webhook_event,json=webhookEvent,proto3,enum=buf.alpha.registry.v1alpha1.WebhookEvent"`
-	xxx_hidden_OwnerName    string                 `protobuf:"bytes,2,opt,name=owner_name,json=ownerName,proto3"`
+	state                     protoimpl.MessageState `protogen:"opaque.v1"`
+	xxx_hidden_WebhookEvent   WebhookEvent           `protobuf:"varint,1,opt,name=webhook_event,json=webhookEvent,proto3,enum=buf.alpha.registry.v1alpha1.WebhookEvent"`
+	xxx_hidden_OwnerName      string                 `protobuf:"bytes,2,opt,name=owner_name,json=ownerName,proto3"`
 	xxx_hidden_RepositoryName string                 `protobuf:"bytes,3,opt,name=repository_name,json=repositoryName,proto3"`
 	xxx_hidden_CallbackUrl    string                 `protobuf:"bytes,4,opt,name=callback_url,json=callbackUrl,proto3"`
 	unknownFields             protoimpl.UnknownFields
@@ -532,9 +532,9 @@ func (b0 ListWebhooksResponse_builder) Build() *ListWebhooksResponse {
 
 // Webhook is the representation of a webhook repository event subscription.
 type Webhook struct {
-	state                protoimpl.MessageState `protogen:"opaque.v1"`
-	xxx_hidden_Event     WebhookEvent           `protobuf:"varint,1,opt,name=event,proto3,enum=buf.alpha.registry.v1alpha1.WebhookEvent"`
-	xxx_hidden_WebhookId string                 `protobuf:"bytes,2,opt,name=webhook_id,json=webhookId,proto3"`
+	state                     protoimpl.MessageState `protogen:"opaque.v1"`
+	xxx_hidden_Event          WebhookEvent           `protobuf:"varint,1,opt,name=event,proto3,enum=buf.alpha.registry.v1alpha1.WebhookEvent"`
+	xxx_hidden_WebhookId      string                 `protobuf:"bytes,2,opt,name=webhook_id,json=webhookId,proto3"`
 	xxx_hidden_CreateTime     *timestamppb.Timestamp `protobuf:"bytes,3,opt,name=create_time,json=createTime,proto3"`
 	xxx_hidden_UpdateTime     *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=update_time,json=updateTime,proto3"`
 	xxx_hidden_RepositoryName string                 `protobuf:"bytes,5,opt,name=repository_name,json=repositoryName,proto3"`

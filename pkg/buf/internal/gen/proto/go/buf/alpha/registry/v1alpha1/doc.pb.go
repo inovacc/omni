@@ -244,8 +244,8 @@ func (b0 GetSourceDirectoryInfoResponse_builder) Build() *GetSourceDirectoryInfo
 type FileInfo struct {
 	state               protoimpl.MessageState `protogen:"opaque.v1"`
 	xxx_hidden_Path     string                 `protobuf:"bytes,1,opt,name=path,proto3"`
-	xxx_hidden_IsDir    bool         `protobuf:"varint,2,opt,name=is_dir,json=isDir,proto3"`
-	xxx_hidden_Children *[]*FileInfo `protobuf:"bytes,3,rep,name=children,proto3"`
+	xxx_hidden_IsDir    bool                   `protobuf:"varint,2,opt,name=is_dir,json=isDir,proto3"`
+	xxx_hidden_Children *[]*FileInfo           `protobuf:"bytes,3,rep,name=children,proto3"`
 	unknownFields       protoimpl.UnknownFields
 	sizeCache           protoimpl.SizeCache
 }
@@ -583,8 +583,8 @@ func (b0 GetModulePackagesRequest_builder) Build() *GetModulePackagesRequest {
 // GetModulePackagesResponse returns the list of ModulePackages for the requested module.
 type GetModulePackagesResponse struct {
 	state                     protoimpl.MessageState `protogen:"opaque.v1"`
-	xxx_hidden_Name           string            `protobuf:"bytes,1,opt,name=name,proto3"`
-	xxx_hidden_ModulePackages *[]*ModulePackage `protobuf:"bytes,2,rep,name=module_packages,json=modulePackages,proto3"`
+	xxx_hidden_Name           string                 `protobuf:"bytes,1,opt,name=name,proto3"`
+	xxx_hidden_ModulePackages *[]*ModulePackage      `protobuf:"bytes,2,rep,name=module_packages,json=modulePackages,proto3"`
 	unknownFields             protoimpl.UnknownFields
 	sizeCache                 protoimpl.SizeCache
 }
@@ -1169,11 +1169,11 @@ func (b0 GetPackageDocumentationResponse_builder) Build() *GetPackageDocumentati
 type PackageDocumentation struct {
 	state                     protoimpl.MessageState `protogen:"opaque.v1"`
 	xxx_hidden_Name           string                 `protobuf:"bytes,1,opt,name=name,proto3"`
-	xxx_hidden_Comments       string            `protobuf:"bytes,2,opt,name=comments,proto3"`
-	xxx_hidden_Services       *[]*Service       `protobuf:"bytes,3,rep,name=services,proto3"`
-	xxx_hidden_Enums          *[]*Enum          `protobuf:"bytes,4,rep,name=enums,proto3"`
-	xxx_hidden_Messages       *[]*Message       `protobuf:"bytes,5,rep,name=messages,proto3"`
-	xxx_hidden_FileExtensions *[]*FileExtension `protobuf:"bytes,6,rep,name=file_extensions,json=fileExtensions,proto3"`
+	xxx_hidden_Comments       string                 `protobuf:"bytes,2,opt,name=comments,proto3"`
+	xxx_hidden_Services       *[]*Service            `protobuf:"bytes,3,rep,name=services,proto3"`
+	xxx_hidden_Enums          *[]*Enum               `protobuf:"bytes,4,rep,name=enums,proto3"`
+	xxx_hidden_Messages       *[]*Message            `protobuf:"bytes,5,rep,name=messages,proto3"`
+	xxx_hidden_FileExtensions *[]*FileExtension      `protobuf:"bytes,6,rep,name=file_extensions,json=fileExtensions,proto3"`
 	unknownFields             protoimpl.UnknownFields
 	sizeCache                 protoimpl.SizeCache
 }
@@ -1421,12 +1421,12 @@ type Service struct {
 	xxx_hidden_NestedName           string                 `protobuf:"bytes,2,opt,name=nested_name,json=nestedName,proto3"`
 	xxx_hidden_FullName             string                 `protobuf:"bytes,3,opt,name=full_name,json=fullName,proto3"`
 	xxx_hidden_Comments             string                 `protobuf:"bytes,4,opt,name=comments,proto3"`
-	xxx_hidden_FilePath             string           `protobuf:"bytes,5,opt,name=file_path,json=filePath,proto3"`
-	xxx_hidden_Location             *Location        `protobuf:"bytes,6,opt,name=location,proto3"`
-	xxx_hidden_Methods              *[]*Method       `protobuf:"bytes,7,rep,name=methods,proto3"`
-	xxx_hidden_ImplicitlyDeprecated bool             `protobuf:"varint,9,opt,name=implicitly_deprecated,json=implicitlyDeprecated,proto3"`
-	xxx_hidden_Options              *[]*FieldLiteral `protobuf:"bytes,10,rep,name=options,proto3"`
-	xxx_hidden_ServiceOptions       *ServiceOptions  `protobuf:"bytes,8,opt,name=service_options,json=serviceOptions,proto3"`
+	xxx_hidden_FilePath             string                 `protobuf:"bytes,5,opt,name=file_path,json=filePath,proto3"`
+	xxx_hidden_Location             *Location              `protobuf:"bytes,6,opt,name=location,proto3"`
+	xxx_hidden_Methods              *[]*Method             `protobuf:"bytes,7,rep,name=methods,proto3"`
+	xxx_hidden_ImplicitlyDeprecated bool                   `protobuf:"varint,9,opt,name=implicitly_deprecated,json=implicitlyDeprecated,proto3"`
+	xxx_hidden_Options              *[]*FieldLiteral       `protobuf:"bytes,10,rep,name=options,proto3"`
+	xxx_hidden_ServiceOptions       *ServiceOptions        `protobuf:"bytes,8,opt,name=service_options,json=serviceOptions,proto3"`
 	unknownFields                   protoimpl.UnknownFields
 	sizeCache                       protoimpl.SizeCache
 }
@@ -1979,9 +1979,9 @@ type MethodRequestResponse struct {
 	state                      protoimpl.MessageState `protogen:"opaque.v1"`
 	xxx_hidden_NestedType      string                 `protobuf:"bytes,1,opt,name=nested_type,json=nestedType,proto3"`
 	xxx_hidden_FullType        string                 `protobuf:"bytes,2,opt,name=full_type,json=fullType,proto3"`
-	xxx_hidden_Streaming       bool             `protobuf:"varint,3,opt,name=streaming,proto3"`
-	xxx_hidden_Message         *Message         `protobuf:"bytes,4,opt,name=message,proto3"`
-	xxx_hidden_ImportModuleRef *ImportModuleRef `protobuf:"bytes,5,opt,name=import_module_ref,json=importModuleRef,proto3"`
+	xxx_hidden_Streaming       bool                   `protobuf:"varint,3,opt,name=streaming,proto3"`
+	xxx_hidden_Message         *Message               `protobuf:"bytes,4,opt,name=message,proto3"`
+	xxx_hidden_ImportModuleRef *ImportModuleRef       `protobuf:"bytes,5,opt,name=import_module_ref,json=importModuleRef,proto3"`
 	unknownFields              protoimpl.UnknownFields
 	sizeCache                  protoimpl.SizeCache
 }
@@ -2122,12 +2122,12 @@ type Enum struct {
 	xxx_hidden_NestedName           string                 `protobuf:"bytes,2,opt,name=nested_name,json=nestedName,proto3"`
 	xxx_hidden_FullName             string                 `protobuf:"bytes,3,opt,name=full_name,json=fullName,proto3"`
 	xxx_hidden_Comments             string                 `protobuf:"bytes,4,opt,name=comments,proto3"`
-	xxx_hidden_FilePath             string           `protobuf:"bytes,5,opt,name=file_path,json=filePath,proto3"`
-	xxx_hidden_Location             *Location        `protobuf:"bytes,6,opt,name=location,proto3"`
-	xxx_hidden_Values               *[]*EnumValue    `protobuf:"bytes,7,rep,name=values,proto3"`
-	xxx_hidden_ImplicitlyDeprecated bool             `protobuf:"varint,9,opt,name=implicitly_deprecated,json=implicitlyDeprecated,proto3"`
-	xxx_hidden_Options              *[]*FieldLiteral `protobuf:"bytes,10,rep,name=options,proto3"`
-	xxx_hidden_EnumOptions          *EnumOptions     `protobuf:"bytes,8,opt,name=enum_options,json=enumOptions,proto3"`
+	xxx_hidden_FilePath             string                 `protobuf:"bytes,5,opt,name=file_path,json=filePath,proto3"`
+	xxx_hidden_Location             *Location              `protobuf:"bytes,6,opt,name=location,proto3"`
+	xxx_hidden_Values               *[]*EnumValue          `protobuf:"bytes,7,rep,name=values,proto3"`
+	xxx_hidden_ImplicitlyDeprecated bool                   `protobuf:"varint,9,opt,name=implicitly_deprecated,json=implicitlyDeprecated,proto3"`
+	xxx_hidden_Options              *[]*FieldLiteral       `protobuf:"bytes,10,rep,name=options,proto3"`
+	xxx_hidden_EnumOptions          *EnumOptions           `protobuf:"bytes,8,opt,name=enum_options,json=enumOptions,proto3"`
 	unknownFields                   protoimpl.UnknownFields
 	sizeCache                       protoimpl.SizeCache
 }
@@ -2424,9 +2424,9 @@ type EnumValue struct {
 	state                       protoimpl.MessageState `protogen:"opaque.v1"`
 	xxx_hidden_Name             string                 `protobuf:"bytes,1,opt,name=name,proto3"`
 	xxx_hidden_Number           int32                  `protobuf:"varint,2,opt,name=number,proto3"`
-	xxx_hidden_Comments         string            `protobuf:"bytes,3,opt,name=comments,proto3"`
-	xxx_hidden_Options          *[]*FieldLiteral  `protobuf:"bytes,5,rep,name=options,proto3"`
-	xxx_hidden_EnumValueOptions *EnumValueOptions `protobuf:"bytes,4,opt,name=enum_value_options,json=enumValueOptions,proto3"`
+	xxx_hidden_Comments         string                 `protobuf:"bytes,3,opt,name=comments,proto3"`
+	xxx_hidden_Options          *[]*FieldLiteral       `protobuf:"bytes,5,rep,name=options,proto3"`
+	xxx_hidden_EnumValueOptions *EnumValueOptions      `protobuf:"bytes,4,opt,name=enum_value_options,json=enumValueOptions,proto3"`
 	unknownFields               protoimpl.UnknownFields
 	sizeCache                   protoimpl.SizeCache
 }
@@ -2746,13 +2746,13 @@ type Message struct {
 	xxx_hidden_FullName             string                 `protobuf:"bytes,3,opt,name=full_name,json=fullName,proto3"`
 	xxx_hidden_Comments             string                 `protobuf:"bytes,4,opt,name=comments,proto3"`
 	xxx_hidden_FilePath             string                 `protobuf:"bytes,5,opt,name=file_path,json=filePath,proto3"`
-	xxx_hidden_IsMapEntry           bool             `protobuf:"varint,6,opt,name=is_map_entry,json=isMapEntry,proto3"`
-	xxx_hidden_Fields               *[]*MessageField `protobuf:"bytes,7,rep,name=fields,proto3"`
-	xxx_hidden_Location             *Location        `protobuf:"bytes,8,opt,name=location,proto3"`
-	xxx_hidden_MessageExtensions    *[]*Field        `protobuf:"bytes,9,rep,name=message_extensions,json=messageExtensions,proto3"`
-	xxx_hidden_ImplicitlyDeprecated bool             `protobuf:"varint,11,opt,name=implicitly_deprecated,json=implicitlyDeprecated,proto3"`
-	xxx_hidden_Options              *[]*FieldLiteral `protobuf:"bytes,12,rep,name=options,proto3"`
-	xxx_hidden_MessageOptions       *MessageOptions  `protobuf:"bytes,10,opt,name=message_options,json=messageOptions,proto3"`
+	xxx_hidden_IsMapEntry           bool                   `protobuf:"varint,6,opt,name=is_map_entry,json=isMapEntry,proto3"`
+	xxx_hidden_Fields               *[]*MessageField       `protobuf:"bytes,7,rep,name=fields,proto3"`
+	xxx_hidden_Location             *Location              `protobuf:"bytes,8,opt,name=location,proto3"`
+	xxx_hidden_MessageExtensions    *[]*Field              `protobuf:"bytes,9,rep,name=message_extensions,json=messageExtensions,proto3"`
+	xxx_hidden_ImplicitlyDeprecated bool                   `protobuf:"varint,11,opt,name=implicitly_deprecated,json=implicitlyDeprecated,proto3"`
+	xxx_hidden_Options              *[]*FieldLiteral       `protobuf:"bytes,12,rep,name=options,proto3"`
+	xxx_hidden_MessageOptions       *MessageOptions        `protobuf:"bytes,10,opt,name=message_options,json=messageOptions,proto3"`
 	unknownFields                   protoimpl.UnknownFields
 	sizeCache                       protoimpl.SizeCache
 }
@@ -3233,9 +3233,9 @@ func (b0 MessageOptions_builder) Build() *MessageOptions {
 // Oneof represents a oneof set of fields.
 type Oneof struct {
 	state              protoimpl.MessageState `protogen:"opaque.v1"`
-	xxx_hidden_Name    string           `protobuf:"bytes,1,opt,name=name,proto3"`
-	xxx_hidden_Fields  *[]*Field        `protobuf:"bytes,2,rep,name=fields,proto3"`
-	xxx_hidden_Options *[]*FieldLiteral `protobuf:"bytes,3,rep,name=options,proto3"`
+	xxx_hidden_Name    string                 `protobuf:"bytes,1,opt,name=name,proto3"`
+	xxx_hidden_Fields  *[]*Field              `protobuf:"bytes,2,rep,name=fields,proto3"`
+	xxx_hidden_Options *[]*FieldLiteral       `protobuf:"bytes,3,rep,name=options,proto3"`
 	unknownFields      protoimpl.UnknownFields
 	sizeCache          protoimpl.SizeCache
 }
@@ -3331,12 +3331,12 @@ type Field struct {
 	xxx_hidden_Label           string                 `protobuf:"bytes,3,opt,name=label,proto3"`
 	xxx_hidden_NestedType      string                 `protobuf:"bytes,4,opt,name=nested_type,json=nestedType,proto3"`
 	xxx_hidden_FullType        string                 `protobuf:"bytes,5,opt,name=full_type,json=fullType,proto3"`
-	xxx_hidden_Tag             uint32           `protobuf:"varint,6,opt,name=tag,proto3"`
-	xxx_hidden_MapEntry        *MapEntry        `protobuf:"bytes,7,opt,name=map_entry,json=mapEntry,proto3"`
-	xxx_hidden_ImportModuleRef *ImportModuleRef `protobuf:"bytes,8,opt,name=import_module_ref,json=importModuleRef,proto3"`
-	xxx_hidden_Extendee        string           `protobuf:"bytes,9,opt,name=extendee,proto3"`
-	xxx_hidden_Options         *[]*FieldLiteral `protobuf:"bytes,11,rep,name=options,proto3"`
-	xxx_hidden_FieldOptions    *FieldOptions    `protobuf:"bytes,10,opt,name=field_options,json=fieldOptions,proto3"`
+	xxx_hidden_Tag             uint32                 `protobuf:"varint,6,opt,name=tag,proto3"`
+	xxx_hidden_MapEntry        *MapEntry              `protobuf:"bytes,7,opt,name=map_entry,json=mapEntry,proto3"`
+	xxx_hidden_ImportModuleRef *ImportModuleRef       `protobuf:"bytes,8,opt,name=import_module_ref,json=importModuleRef,proto3"`
+	xxx_hidden_Extendee        string                 `protobuf:"bytes,9,opt,name=extendee,proto3"`
+	xxx_hidden_Options         *[]*FieldLiteral       `protobuf:"bytes,11,rep,name=options,proto3"`
+	xxx_hidden_FieldOptions    *FieldOptions          `protobuf:"bytes,10,opt,name=field_options,json=fieldOptions,proto3"`
 	unknownFields              protoimpl.UnknownFields
 	sizeCache                  protoimpl.SizeCache
 }
@@ -3706,10 +3706,10 @@ func (b0 FieldOptions_builder) Build() *FieldOptions {
 type FieldLiteral struct {
 	state                      protoimpl.MessageState `protogen:"opaque.v1"`
 	xxx_hidden_Name            string                 `protobuf:"bytes,1,opt,name=name,proto3"`
-	xxx_hidden_Tag             int32            `protobuf:"varint,2,opt,name=tag,proto3"`
-	xxx_hidden_FieldType       FieldType        `protobuf:"varint,3,opt,name=field_type,json=fieldType,proto3,enum=buf.alpha.registry.v1alpha1.FieldType"`
-	xxx_hidden_Value           *LiteralValue    `protobuf:"bytes,4,opt,name=value,proto3"`
-	xxx_hidden_ImportModuleRef *ImportModuleRef `protobuf:"bytes,5,opt,name=import_module_ref,json=importModuleRef,proto3"`
+	xxx_hidden_Tag             int32                  `protobuf:"varint,2,opt,name=tag,proto3"`
+	xxx_hidden_FieldType       FieldType              `protobuf:"varint,3,opt,name=field_type,json=fieldType,proto3,enum=buf.alpha.registry.v1alpha1.FieldType"`
+	xxx_hidden_Value           *LiteralValue          `protobuf:"bytes,4,opt,name=value,proto3"`
+	xxx_hidden_ImportModuleRef *ImportModuleRef       `protobuf:"bytes,5,opt,name=import_module_ref,json=importModuleRef,proto3"`
 	unknownFields              protoimpl.UnknownFields
 	sizeCache                  protoimpl.SizeCache
 }
@@ -4400,8 +4400,8 @@ type MapEntry struct {
 	state                           protoimpl.MessageState `protogen:"opaque.v1"`
 	xxx_hidden_KeyFullType          string                 `protobuf:"bytes,1,opt,name=key_full_type,json=keyFullType,proto3"`
 	xxx_hidden_ValueNestedType      string                 `protobuf:"bytes,2,opt,name=value_nested_type,json=valueNestedType,proto3"`
-	xxx_hidden_ValueFullType        string           `protobuf:"bytes,3,opt,name=value_full_type,json=valueFullType,proto3"`
-	xxx_hidden_ValueImportModuleRef *ImportModuleRef `protobuf:"bytes,4,opt,name=value_import_module_ref,json=valueImportModuleRef,proto3"`
+	xxx_hidden_ValueFullType        string                 `protobuf:"bytes,3,opt,name=value_full_type,json=valueFullType,proto3"`
+	xxx_hidden_ValueImportModuleRef *ImportModuleRef       `protobuf:"bytes,4,opt,name=value_import_module_ref,json=valueImportModuleRef,proto3"`
 	unknownFields                   protoimpl.UnknownFields
 	sizeCache                       protoimpl.SizeCache
 }
@@ -4516,10 +4516,10 @@ type FileExtension struct {
 	state                           protoimpl.MessageState `protogen:"opaque.v1"`
 	xxx_hidden_ExtensionType        string                 `protobuf:"bytes,1,opt,name=extension_type,json=extensionType,proto3"`
 	xxx_hidden_Comments             string                 `protobuf:"bytes,2,opt,name=comments,proto3"`
-	xxx_hidden_FilePath             string    `protobuf:"bytes,3,opt,name=file_path,json=filePath,proto3"`
-	xxx_hidden_Location             *Location `protobuf:"bytes,4,opt,name=location,proto3"`
-	xxx_hidden_Fields               *[]*Field `protobuf:"bytes,5,rep,name=fields,proto3"`
-	xxx_hidden_ImplicitlyDeprecated bool      `protobuf:"varint,6,opt,name=implicitly_deprecated,json=implicitlyDeprecated,proto3"`
+	xxx_hidden_FilePath             string                 `protobuf:"bytes,3,opt,name=file_path,json=filePath,proto3"`
+	xxx_hidden_Location             *Location              `protobuf:"bytes,4,opt,name=location,proto3"`
+	xxx_hidden_Fields               *[]*Field              `protobuf:"bytes,5,rep,name=fields,proto3"`
+	xxx_hidden_ImplicitlyDeprecated bool                   `protobuf:"varint,6,opt,name=implicitly_deprecated,json=implicitlyDeprecated,proto3"`
 	unknownFields                   protoimpl.UnknownFields
 	sizeCache                       protoimpl.SizeCache
 }

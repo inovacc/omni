@@ -299,7 +299,7 @@ func (b0 EventResponse_builder) Build() *EventResponse {
 
 // Payload for the event WEBHOOK_EVENT_REPOSITORY_PUSH.
 type RepositoryPushEvent struct {
-	state                       protoimpl.MessageState     `protogen:"opaque.v1"`
+	state                       protoimpl.MessageState             `protogen:"opaque.v1"`
 	xxx_hidden_EventTime        *timestamppb.Timestamp             `protobuf:"bytes,1,opt,name=event_time,json=eventTime,proto3"`
 	xxx_hidden_RepositoryCommit *registryv1alpha1.RepositoryCommit `protobuf:"bytes,2,opt,name=repository_commit,json=repositoryCommit,proto3"`
 	xxx_hidden_Repository       *registryv1alpha1.Repository       `protobuf:"bytes,3,opt,name=repository,proto3"`

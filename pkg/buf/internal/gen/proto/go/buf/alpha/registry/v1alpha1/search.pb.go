@@ -244,12 +244,12 @@ type RepositorySearchResult struct {
 	state                              protoimpl.MessageState `protogen:"opaque.v1"`
 	xxx_hidden_Id                      string                 `protobuf:"bytes,1,opt,name=id,proto3"`
 	xxx_hidden_Name                    string                 `protobuf:"bytes,2,opt,name=name,proto3"`
-	xxx_hidden_Owner                   string             `protobuf:"bytes,3,opt,name=owner,proto3"`
-	xxx_hidden_Visibility              Visibility         `protobuf:"varint,4,opt,name=visibility,proto3,enum=buf.alpha.registry.v1alpha1.Visibility"`
-	xxx_hidden_Deprecated              bool               `protobuf:"varint,5,opt,name=deprecated,proto3"`
-	xxx_hidden_LatestSpdxLicenseId     string             `protobuf:"bytes,6,opt,name=latest_spdx_license_id,json=latestSpdxLicenseId,proto3"`
-	xxx_hidden_OwnerVerificationStatus VerificationStatus `protobuf:"varint,7,opt,name=owner_verification_status,json=ownerVerificationStatus,proto3,enum=buf.alpha.registry.v1alpha1.VerificationStatus"`
-	xxx_hidden_Url                     string             `protobuf:"bytes,8,opt,name=url,proto3"`
+	xxx_hidden_Owner                   string                 `protobuf:"bytes,3,opt,name=owner,proto3"`
+	xxx_hidden_Visibility              Visibility             `protobuf:"varint,4,opt,name=visibility,proto3,enum=buf.alpha.registry.v1alpha1.Visibility"`
+	xxx_hidden_Deprecated              bool                   `protobuf:"varint,5,opt,name=deprecated,proto3"`
+	xxx_hidden_LatestSpdxLicenseId     string                 `protobuf:"bytes,6,opt,name=latest_spdx_license_id,json=latestSpdxLicenseId,proto3"`
+	xxx_hidden_OwnerVerificationStatus VerificationStatus     `protobuf:"varint,7,opt,name=owner_verification_status,json=ownerVerificationStatus,proto3,enum=buf.alpha.registry.v1alpha1.VerificationStatus"`
+	xxx_hidden_Url                     string                 `protobuf:"bytes,8,opt,name=url,proto3"`
 	xxx_hidden_LatestCommitTime        *timestamppb.Timestamp `protobuf:"bytes,9,opt,name=latest_commit_time,json=latestCommitTime,proto3"`
 	unknownFields                      protoimpl.UnknownFields
 	sizeCache                          protoimpl.SizeCache
@@ -2185,8 +2185,8 @@ type SearchRequest struct {
 	state                protoimpl.MessageState `protogen:"opaque.v1"`
 	xxx_hidden_Query     string                 `protobuf:"bytes,1,opt,name=query,proto3"`
 	xxx_hidden_PageSize  uint32                 `protobuf:"varint,2,opt,name=page_size,json=pageSize,proto3"`
-	xxx_hidden_PageToken uint32         `protobuf:"varint,3,opt,name=page_token,json=pageToken,proto3"`
-	xxx_hidden_Filters   []SearchFilter `protobuf:"varint,4,rep,packed,name=filters,proto3,enum=buf.alpha.registry.v1alpha1.SearchFilter"`
+	xxx_hidden_PageToken uint32                 `protobuf:"varint,3,opt,name=page_token,json=pageToken,proto3"`
+	xxx_hidden_Filters   []SearchFilter         `protobuf:"varint,4,rep,packed,name=filters,proto3,enum=buf.alpha.registry.v1alpha1.SearchFilter"`
 	unknownFields        protoimpl.UnknownFields
 	sizeCache            protoimpl.SizeCache
 }
@@ -2365,9 +2365,9 @@ type SearchTagRequest struct {
 	xxx_hidden_RepositoryName  string                 `protobuf:"bytes,2,opt,name=repository_name,json=repositoryName,proto3"`
 	xxx_hidden_Query           string                 `protobuf:"bytes,3,opt,name=query,proto3"`
 	xxx_hidden_PageSize        uint32                 `protobuf:"varint,4,opt,name=page_size,json=pageSize,proto3"`
-	xxx_hidden_PageToken string  `protobuf:"bytes,5,opt,name=page_token,json=pageToken,proto3"`
-	xxx_hidden_OrderBy   OrderBy `protobuf:"varint,6,opt,name=order_by,json=orderBy,proto3,enum=buf.alpha.registry.v1alpha1.OrderBy"`
-	xxx_hidden_Reverse   bool    `protobuf:"varint,7,opt,name=reverse,proto3"`
+	xxx_hidden_PageToken       string                 `protobuf:"bytes,5,opt,name=page_token,json=pageToken,proto3"`
+	xxx_hidden_OrderBy         OrderBy                `protobuf:"varint,6,opt,name=order_by,json=orderBy,proto3,enum=buf.alpha.registry.v1alpha1.OrderBy"`
+	xxx_hidden_Reverse         bool                   `protobuf:"varint,7,opt,name=reverse,proto3"`
 	unknownFields              protoimpl.UnknownFields
 	sizeCache                  protoimpl.SizeCache
 }
@@ -2586,9 +2586,9 @@ type SearchDraftRequest struct {
 	xxx_hidden_RepositoryName  string                 `protobuf:"bytes,2,opt,name=repository_name,json=repositoryName,proto3"`
 	xxx_hidden_Query           string                 `protobuf:"bytes,3,opt,name=query,proto3"`
 	xxx_hidden_PageSize        uint32                 `protobuf:"varint,4,opt,name=page_size,json=pageSize,proto3"`
-	xxx_hidden_PageToken string  `protobuf:"bytes,5,opt,name=page_token,json=pageToken,proto3"`
-	xxx_hidden_OrderBy   OrderBy `protobuf:"varint,6,opt,name=order_by,json=orderBy,proto3,enum=buf.alpha.registry.v1alpha1.OrderBy"`
-	xxx_hidden_Reverse   bool    `protobuf:"varint,7,opt,name=reverse,proto3"`
+	xxx_hidden_PageToken       string                 `protobuf:"bytes,5,opt,name=page_token,json=pageToken,proto3"`
+	xxx_hidden_OrderBy         OrderBy                `protobuf:"varint,6,opt,name=order_by,json=orderBy,proto3,enum=buf.alpha.registry.v1alpha1.OrderBy"`
+	xxx_hidden_Reverse         bool                   `protobuf:"varint,7,opt,name=reverse,proto3"`
 	unknownFields              protoimpl.UnknownFields
 	sizeCache                  protoimpl.SizeCache
 }

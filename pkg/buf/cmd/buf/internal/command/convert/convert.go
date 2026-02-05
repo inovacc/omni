@@ -22,7 +22,6 @@ import (
 
 	"github.com/inovacc/omni/pkg/buf/internal/app/appcmd"
 	"github.com/inovacc/omni/pkg/buf/internal/app/appext"
-	"github.com/inovacc/omni/pkg/buf/internal/standard/xstrings"
 	bufcli2 "github.com/inovacc/omni/pkg/buf/internal/buf/bufcli"
 	"github.com/inovacc/omni/pkg/buf/internal/buf/bufconvert"
 	"github.com/inovacc/omni/pkg/buf/internal/buf/bufctl"
@@ -32,6 +31,7 @@ import (
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufimage/bufimageutil"
 	bufmodule2 "github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufmodule"
 	"github.com/inovacc/omni/pkg/buf/internal/gen/data/datawkt"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xstrings"
 	"github.com/spf13/pflag"
 )
 

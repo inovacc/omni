@@ -25,8 +25,8 @@ import (
 	"log/slog"
 	"os/exec"
 
-	"github.com/inovacc/omni/pkg/buf/internal/app"
 	"github.com/bufbuild/protoplugin"
+	"github.com/inovacc/omni/pkg/buf/internal/app"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufconfig"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/storage/storageos"
 	"google.golang.org/protobuf/types/pluginpb"

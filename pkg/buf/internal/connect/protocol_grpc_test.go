@@ -26,8 +26,8 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"github.com/inovacc/omni/pkg/buf/internal/connect/internal/assert"
 	"github.com/google/go-cmp/cmp"
+	"github.com/inovacc/omni/pkg/buf/internal/connect/internal/assert"
 )
 
 func TestGRPCHandlerSender(t *testing.T) {
