@@ -88,6 +88,87 @@ Prioritized items for future development phases.
 
 ---
 
+## Cloud & DevOps Integrations (P1)
+
+### Kubernetes Integration ✅ DONE
+- [x] `kubectl` / `k` - Full kubectl via k8s.io/kubectl
+- Source: `B:\shared\personal\repos\kubernetes\kubectl\pkg\cmd`
+- All kubectl commands available: get, describe, logs, exec, apply, delete, rollout, scale, etc.
+
+### Terraform Integration
+- Source: `B:\shared\personal\repos\hashicorp\terraform`
+- [ ] `terraform init` - Initialize working directory
+- [ ] `terraform plan` - Show execution plan
+- [ ] `terraform apply` - Apply changes
+- [ ] `terraform destroy` - Destroy infrastructure
+- [ ] `terraform state` - State management
+- [ ] `terraform workspace` - Workspace management
+- [ ] `terraform output` - Show outputs
+- [ ] `terraform validate` - Validate configuration
+- [ ] `terraform fmt` - Format configuration
+
+### Vault Integration
+- Source: `B:\shared\personal\repos\hashicorp\vault`
+- [ ] `vault login` - Authenticate
+- [ ] `vault read` - Read secrets
+- [ ] `vault write` - Write secrets
+- [ ] `vault list` - List secrets
+- [ ] `vault kv` - KV secrets engine operations
+
+### Consul Integration
+- Source: `B:\shared\personal\repos\hashicorp\consul`
+- [ ] `consul members` - List cluster members
+- [ ] `consul kv` - Key-value store operations
+- [ ] `consul services` - Service catalog operations
+
+### Nomad Integration
+- Source: `B:\shared\personal\repos\hashicorp\nomad`
+- [ ] `nomad job` - Job management
+- [ ] `nomad node` - Node operations
+- [ ] `nomad alloc` - Allocation operations
+
+### Packer Integration
+- Source: `B:\shared\personal\repos\hashicorp\packer`
+- [ ] `packer build` - Build images
+- [ ] `packer validate` - Validate templates
+- [ ] `packer fmt` - Format templates
+
+---
+
+## Hacks & Shortcuts (P1)
+
+### Git Hacks
+- [ ] `git-quick-commit` / `gqc` - Stage all + commit with message
+- [ ] `git-branch-clean` / `gbc` - Delete merged branches
+- [ ] `git-undo` - Undo last commit (soft reset)
+- [ ] `git-amend-no-edit` - Amend without editing message
+- [ ] `git-stash-staged` - Stash only staged changes
+- [ ] `git-log-graph` - Pretty log with graph
+- [ ] `git-diff-words` - Word-level diff
+- [ ] `git-blame-line` - Blame specific line range
+
+### GitHub Hacks
+- [ ] `gh-pr-checkout` - Checkout PR by number
+- [ ] `gh-pr-diff` - Show PR diff locally
+- [ ] `gh-pr-approve` - Quick approve PR
+- [ ] `gh-issue-mine` - List issues assigned to me
+- [ ] `gh-repo-clone-org` - Clone all repos from org
+- [ ] `gh-actions-rerun` - Rerun failed workflow
+
+### Kubectl Hacks
+- [ ] `k-get-all` / `kga` - Get all resources in namespace
+- [ ] `k-logs-follow` / `klf` - Follow logs with timestamp
+- [ ] `k-exec-bash` / `keb` - Exec into pod with bash
+- [ ] `k-port-forward` / `kpf` - Quick port forward
+- [ ] `k-delete-pods` / `kdp` - Delete pods by selector
+- [ ] `k-rollout-restart` / `krr` - Restart deployment
+- [ ] `k-get-events` / `kge` - Get events sorted by time
+- [ ] `k-top-pods` / `ktp` - Top pods by resource usage
+- [ ] `k-context-switch` / `kcs` - Interactive context switcher
+- [ ] `k-ns-switch` / `kns` - Interactive namespace switcher
+
+---
+
 ## Low Priority / Nice to Have (P3)
 
 ### Complex Commands
