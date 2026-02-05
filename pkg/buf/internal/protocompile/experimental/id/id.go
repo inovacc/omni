@@ -54,9 +54,11 @@ func (id ID[T]) String() string {
 	if id.IsZero() {
 		return name + "(<nil>)"
 	}
+
 	if id < 0 {
 		return fmt.Sprintf("%s(^%d)", name, ^int32(id))
 	}
+
 	return fmt.Sprintf("%s(%d)", name, int32(id)-1)
 }
 
@@ -74,6 +76,7 @@ func NewDyn[T any, K Kind[K]](kind K, id ID[T]) Dyn[T, K] {
 	if !ok {
 		return 0
 	}
+
 	return NewDynFromRaw[T, K](lo, hi)
 }
 
@@ -101,7 +104,9 @@ func (id Dyn[T, K]) Value() ID[T] {
 	if id.Kind() == z {
 		return 0
 	}
+
 	_, v := id.Raw()
+
 	return ID[T](v)
 }
 
@@ -120,11 +125,13 @@ func (id Dyn[T, K]) String() string {
 	}
 
 	a, b := id.Raw()
+
 	var z K
 	if k := id.Kind(); k != z {
 		if b < 0 {
 			return fmt.Sprintf("%s(%v, ^%d)", name, k, ^b)
 		}
+
 		return fmt.Sprintf("%s(%v, %d)", name, k, b-1)
 	}
 

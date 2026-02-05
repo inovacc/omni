@@ -27,9 +27,9 @@ import (
 func DigestForCommitID(
 	ctx context.Context,
 	moduleClientProvider interface {
-	bufregistryapimodule.V1CommitServiceClientProvider
-	bufregistryapimodule.V1Beta1CommitServiceClientProvider
-},
+		bufregistryapimodule.V1CommitServiceClientProvider
+		bufregistryapimodule.V1Beta1CommitServiceClientProvider
+	},
 	registry string,
 	commitID uuid.UUID,
 	digestType bufmodule.DigestType,

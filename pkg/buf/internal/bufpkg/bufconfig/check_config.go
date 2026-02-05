@@ -17,7 +17,7 @@ package bufconfig
 import (
 	"slices"
 
-	"buf.build/go/standard/xslices"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
 )
 
 var (

@@ -18,8 +18,8 @@ import (
 	"iter"
 	"strings"
 
-	"github.com/bufbuild/protocompile/internal/ext/iterx"
-	"github.com/bufbuild/protocompile/internal/ext/unsafex"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/internal/ext/iterx"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/internal/ext/unsafex"
 )
 
 // Trie implements a map from strings to V, except lookups return the key
@@ -74,6 +74,7 @@ func (t *Trie[V]) Insert(key string, value V) {
 
 again:
 	n := t.impl.insert(key)
+
 	if n == -1 {
 		switch impl := t.impl.(type) {
 		case *nybbles[uint8]:
@@ -92,5 +93,6 @@ again:
 	if len(t.values) <= n {
 		t.values = append(t.values, make([]V, n+1-len(t.values))...)
 	}
+
 	t.values[n] = value
 }

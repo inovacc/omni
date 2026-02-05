@@ -18,7 +18,7 @@ import (
 	"context"
 	"log/slog"
 
-	"buf.build/go/standard/xlog/xslog"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xlog/xslog"
 	"go.lsp.dev/jsonrpc2"
 )
 

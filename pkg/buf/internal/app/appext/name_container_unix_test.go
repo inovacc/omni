@@ -23,7 +23,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"buf.build/go/app"
+	"github.com/inovacc/omni/pkg/buf/internal/app"
 	"github.com/stretchr/testify/require"
 )
 

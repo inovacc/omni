@@ -24,6 +24,7 @@ func KeySet[M ~map[K]V, K comparable, V any](m M) map[K]struct{} {
 	for k := range m {
 		keys[k] = struct{}{}
 	}
+
 	return keys
 }
 
@@ -40,7 +41,9 @@ func Add[M ~map[K]V, K comparable, V any](m M, k K, v V) (mapped V, inserted boo
 	if v, ok := m[k]; ok {
 		return v, false
 	}
+
 	m[k] = v
+
 	return v, true
 }
 
@@ -48,7 +51,9 @@ func Add[M ~map[K]V, K comparable, V any](m M, k K, v V) (mapped V, inserted boo
 // V as the value. Returns whether insertion occurred.
 func AddZero[M ~map[K]V, K comparable, V any](m M, k K) (inserted bool) {
 	var z V
+
 	_, inserted = Add(m, k, z)
+
 	return inserted
 }
 

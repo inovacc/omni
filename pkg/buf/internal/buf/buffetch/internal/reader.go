@@ -26,9 +26,9 @@ import (
 	"os"
 	"path/filepath"
 
-	"buf.build/go/app"
-	"buf.build/go/standard/xio"
-	"buf.build/go/standard/xslices"
+	"github.com/inovacc/omni/pkg/buf/internal/app"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xio"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
 	buftarget2 "github.com/inovacc/omni/pkg/buf/internal/buf/buftarget"
 	bufmodule2 "github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufmodule"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufparse"

@@ -54,6 +54,7 @@ type Converter struct {
 func (c Converter) Convert(str string) string {
 	buf := new(strings.Builder)
 	c.Append(buf, str)
+
 	return buf.String()
 }
 
@@ -66,6 +67,7 @@ func (c Converter) Append(buf *strings.Builder, str string) {
 	} else {
 		iter = Words(str)
 	}
+
 	c.Case.convert(buf, !c.NoLowercase, iter)
 }
 
@@ -73,21 +75,25 @@ func (c Case) convert(buf *strings.Builder, lowercase bool, words iter.Seq[strin
 	switch c {
 	case Snake, Enum:
 		uppercase := c == Enum
+
 		first := true
 		for word := range words {
 			if !first {
 				buf.WriteRune('_')
 			}
+
 			for _, r := range word {
 				if uppercase || lowercase {
 					buf.WriteRune(setCase(r, uppercase))
 				}
 			}
+
 			first = false
 		}
 	case Camel, Pascal:
 		uppercase := c == Pascal
 		firstWord := true
+
 		for word := range words {
 			firstRune := true
 			for _, r := range word {
@@ -95,9 +101,12 @@ func (c Case) convert(buf *strings.Builder, lowercase bool, words iter.Seq[strin
 				if uppercase || lowercase {
 					r = setCase(r, uppercase)
 				}
+
 				buf.WriteRune(r)
+
 				firstRune = false
 			}
+
 			firstWord = false
 		}
 	}
@@ -107,5 +116,6 @@ func setCase(r rune, upper bool) rune {
 	if upper {
 		return unicode.ToUpper(r)
 	}
+
 	return unicode.ToLower(r)
 }

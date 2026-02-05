@@ -233,6 +233,7 @@ func TestRunWatch_ChangeExit(t *testing.T) {
 		if callCount == 1 {
 			return "initial\n", nil
 		}
+
 		return "changed\n", nil
 	}, WatchOptions{Interval: 20 * time.Millisecond, ChangeExit: true})
 
@@ -288,6 +289,7 @@ func TestRunWatch_OnlyChanges_WithChange(t *testing.T) {
 		if callCount >= 3 {
 			return "changed output\n", nil
 		}
+
 		return "initial output\n", nil
 	}, WatchOptions{Interval: 20 * time.Millisecond, OnlyChanges: true})
 

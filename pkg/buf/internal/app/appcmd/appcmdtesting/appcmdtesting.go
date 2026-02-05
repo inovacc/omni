@@ -25,8 +25,8 @@ import (
 	"strings"
 	"testing"
 
-	"buf.build/go/app"
-	"buf.build/go/app/appcmd"
+	"github.com/inovacc/omni/pkg/buf/internal/app"
+	"github.com/inovacc/omni/pkg/buf/internal/app/appcmd"
 	"github.com/stretchr/testify/require"
 )
 

@@ -22,7 +22,7 @@ import (
 	"strings"
 	"sync"
 
-	"buf.build/go/app"
+	"github.com/inovacc/omni/pkg/buf/internal/app"
 )
 
 type nameContainer struct {
@@ -45,6 +45,7 @@ func newNameContainer(baseContainer app.Container, appName string) (*nameContain
 	if err := validateAppName(appName); err != nil {
 		return nil, err
 	}
+
 	return &nameContainer{
 		Container: baseContainer,
 		appName:   appName,
@@ -99,6 +100,7 @@ func (c *nameContainer) getDirPath(envSuffix string, getBaseDirPath func(app.Env
 			dirPath = filepath.Join(baseDirPath, c.appName)
 		}
 	}
+
 	return dirPath
 }
 
@@ -110,10 +112,12 @@ func (c *nameContainer) getPort() (uint16, error) {
 			return 0, nil
 		}
 	}
+
 	port, err := strconv.ParseUint(portString, 10, 16)
 	if err != nil {
 		return 0, fmt.Errorf("could not parse port %q to uint16: %w", portString, err)
 	}
+
 	return uint16(port), nil
 }
 
@@ -125,10 +129,12 @@ func validateAppName(appName string) error {
 	if appName == "" {
 		return errors.New("empty application name")
 	}
+
 	for _, c := range appName {
 		if !((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '-' || c == '_') {
 			return fmt.Errorf("invalid application name: %s", appName)
 		}
 	}
+
 	return nil
 }

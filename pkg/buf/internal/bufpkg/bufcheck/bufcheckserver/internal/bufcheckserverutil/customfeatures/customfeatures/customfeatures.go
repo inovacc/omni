@@ -17,8 +17,8 @@ package customfeatures
 import (
 	"fmt"
 
-	"github.com/bufbuild/protocompile/protoutil"
 	protobuf2 "github.com/inovacc/omni/pkg/buf/internal/gen/proto/go/google/protobuf"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/protoutil"
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 

@@ -19,7 +19,7 @@ import (
 	"math"
 	"testing"
 
-	"github.com/bufbuild/protocompile"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

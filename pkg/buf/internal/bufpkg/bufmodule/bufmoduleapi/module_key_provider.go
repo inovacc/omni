@@ -18,7 +18,7 @@ import (
 	"context"
 	"log/slog"
 
-	"buf.build/go/standard/xslices"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
 	bufmodule2 "github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufmodule"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufparse"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufregistryapi/bufregistryapimodule"
@@ -29,8 +29,8 @@ import (
 func NewModuleKeyProvider(
 	logger *slog.Logger,
 	moduleClientProvider interface {
-	bufregistryapimodule.V1CommitServiceClientProvider
-	bufregistryapimodule.V1Beta1CommitServiceClientProvider
+		bufregistryapimodule.V1CommitServiceClientProvider
+		bufregistryapimodule.V1Beta1CommitServiceClientProvider
 	},
 ) bufmodule2.ModuleKeyProvider {
 	return newModuleKeyProvider(logger, moduleClientProvider)
@@ -49,8 +49,8 @@ type moduleKeyProvider struct {
 func newModuleKeyProvider(
 	logger *slog.Logger,
 	moduleClientProvider interface {
-	bufregistryapimodule.V1CommitServiceClientProvider
-	bufregistryapimodule.V1Beta1CommitServiceClientProvider
+		bufregistryapimodule.V1CommitServiceClientProvider
+		bufregistryapimodule.V1Beta1CommitServiceClientProvider
 	},
 ) *moduleKeyProvider {
 	return &moduleKeyProvider{

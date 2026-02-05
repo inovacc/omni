@@ -17,7 +17,7 @@ package ir
 import (
 	"fmt"
 
-	"github.com/bufbuild/protocompile/experimental/id"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/id"
 )
 
 // Ref is a reference in a Protobuf file: an [id.ID] along with information for

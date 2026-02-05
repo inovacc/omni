@@ -20,7 +20,7 @@ import (
 	"io"
 	"log/slog"
 
-	"buf.build/go/app/appext"
+	"github.com/inovacc/omni/pkg/buf/internal/app/appext"
 )
 
 // LoggerProvider is an appext.LoggerProvider for use with appext.BuilderWithLoggerProvider.

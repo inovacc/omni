@@ -15,7 +15,7 @@
 package bufctl
 
 import (
-	"buf.build/go/app"
+	"github.com/inovacc/omni/pkg/buf/internal/app"
 )
 
 const (

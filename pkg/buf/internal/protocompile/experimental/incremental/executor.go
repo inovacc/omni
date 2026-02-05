@@ -26,8 +26,8 @@ import (
 
 	"golang.org/x/sync/semaphore"
 
-	"github.com/bufbuild/protocompile/experimental/report"
-	"github.com/bufbuild/protocompile/internal"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/report"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/internal"
 )
 
 // Executor is a caching executor for incremental queries.

@@ -26,7 +26,7 @@ import (
 	"strings"
 	"testing"
 
-	"buf.build/go/standard/xlog/xslog"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xlog/xslog"
 	"github.com/inovacc/omni/pkg/buf/internal/buf/buftesting"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufimage"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufmodule"

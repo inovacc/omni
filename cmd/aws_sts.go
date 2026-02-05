@@ -27,11 +27,13 @@ Examples:
 		profile, _ := cmd.Flags().GetString("profile")
 		region, _ := cmd.Flags().GetString("region")
 		output, _ := cmd.Flags().GetString("output")
+		endpointURL, _ := cmd.Flags().GetString("endpoint-url")
 
 		opts := awscommon.Options{
-			Profile: profile,
-			Region:  region,
-			Output:  output,
+			Profile:     profile,
+			Region:      region,
+			Output:      output,
+			EndpointURL: endpointURL,
 		}
 
 		cfg, err := awscommon.LoadConfig(ctx, opts)
@@ -39,7 +41,7 @@ Examples:
 			return err
 		}
 
-		client := sts.NewClient(cfg, cmd.OutOrStdout(), awscommon.ParseOutputFormat(output))
+		client := sts.NewClient(cfg, cmd.OutOrStdout(), awscommon.ParseOutputFormat(output), awscommon.GetEndpointURL(opts))
 
 		identity, err := client.GetCallerIdentity(ctx)
 		if err != nil {
@@ -63,6 +65,7 @@ Examples:
 		profile, _ := cmd.Flags().GetString("profile")
 		region, _ := cmd.Flags().GetString("region")
 		output, _ := cmd.Flags().GetString("output")
+		endpointURL, _ := cmd.Flags().GetString("endpoint-url")
 
 		roleArn, _ := cmd.Flags().GetString("role-arn")
 		roleSessionName, _ := cmd.Flags().GetString("role-session-name")
@@ -70,9 +73,10 @@ Examples:
 		externalId, _ := cmd.Flags().GetString("external-id")
 
 		opts := awscommon.Options{
-			Profile: profile,
-			Region:  region,
-			Output:  output,
+			Profile:     profile,
+			Region:      region,
+			Output:      output,
+			EndpointURL: endpointURL,
 		}
 
 		cfg, err := awscommon.LoadConfig(ctx, opts)
@@ -80,7 +84,7 @@ Examples:
 			return err
 		}
 
-		client := sts.NewClient(cfg, cmd.OutOrStdout(), awscommon.ParseOutputFormat(output))
+		client := sts.NewClient(cfg, cmd.OutOrStdout(), awscommon.ParseOutputFormat(output), awscommon.GetEndpointURL(opts))
 
 		result, err := client.AssumeRole(ctx, sts.AssumeRoleInput{
 			RoleArn:         roleArn,

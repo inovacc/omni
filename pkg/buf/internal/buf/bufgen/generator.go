@@ -22,9 +22,9 @@ import (
 	"path/filepath"
 	"sort"
 
-	"buf.build/go/app"
-	"buf.build/go/standard/xslices"
-	connect "connectrpc.com/connect"
+	"github.com/inovacc/omni/pkg/buf/internal/app"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
+	connect "github.com/inovacc/omni/pkg/buf/internal/connect"
 	"github.com/inovacc/omni/pkg/buf/internal/buf/bufprotopluginexec"
 	bufconfig2 "github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufconfig"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufimage"

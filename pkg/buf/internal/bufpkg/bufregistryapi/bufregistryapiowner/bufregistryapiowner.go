@@ -15,7 +15,7 @@
 package bufregistryapiowner
 
 import (
-	"buf.build/gen/go/bufbuild/registry/connectrpc/go/buf/registry/owner/v1/ownerv1connect"
+	"github.com/inovacc/omni/pkg/buf/internal/gen/bufbuild/registry/connectrpc/go/buf/registry/owner/v1/ownerv1connect"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/connectclient"
 )
 

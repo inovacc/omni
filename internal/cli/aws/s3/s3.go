@@ -25,8 +25,17 @@ type Client struct {
 }
 
 // NewClient creates a new S3 client
-func NewClient(cfg aws.Config, w io.Writer, format awscommon.OutputFormat) *Client {
-	client := s3.NewFromConfig(cfg)
+func NewClient(cfg aws.Config, w io.Writer, format awscommon.OutputFormat, endpointURL string) *Client {
+	var client *s3.Client
+	if endpointURL != "" {
+		client = s3.NewFromConfig(cfg, func(o *s3.Options) {
+			o.BaseEndpoint = aws.String(endpointURL)
+			o.UsePathStyle = true // Required for LocalStack/MinIO
+		})
+	} else {
+		client = s3.NewFromConfig(cfg)
+	}
+
 	return &Client{
 		client:  client,
 		presign: s3.NewPresignClient(client),
@@ -53,6 +62,7 @@ func ParseS3URI(uri string) (*S3URI, error) {
 	}
 
 	key := strings.TrimPrefix(parsed.Path, "/")
+
 	return &S3URI{
 		Bucket: parsed.Host,
 		Key:    key,
@@ -130,9 +140,11 @@ func (c *Client) listObjects(ctx context.Context, bucket, prefix string, opts Ls
 		Delimiter: aws.String(delimiter),
 	})
 
-	var objects []Object
-	var totalSize int64
-	var totalCount int
+	var (
+		objects    []Object
+		totalSize  int64
+		totalCount int
+	)
 
 	for paginator.HasMorePages() {
 		page, err := paginator.NextPage(ctx)
@@ -185,6 +197,7 @@ func (c *Client) Cp(ctx context.Context, w io.Writer, src, dst string, opts CpOp
 	if err != nil {
 		return err
 	}
+
 	dstURI, err := ParseS3URI(dst)
 	if err != nil {
 		return err
@@ -223,6 +236,7 @@ func (c *Client) copyS3ToS3(ctx context.Context, w io.Writer, src, dst *S3URI, o
 	if !opts.Quiet {
 		_, _ = fmt.Fprintf(w, "copy: s3://%s/%s to s3://%s/%s\n", src.Bucket, src.Key, dst.Bucket, dst.Key)
 	}
+
 	return nil
 }
 
@@ -239,6 +253,7 @@ func (c *Client) downloadFromS3(ctx context.Context, w io.Writer, src *S3URI, ds
 	if err != nil {
 		return fmt.Errorf("get-object: %w", err)
 	}
+
 	defer func() { _ = result.Body.Close() }()
 
 	// Create destination directory if needed
@@ -250,6 +265,7 @@ func (c *Client) downloadFromS3(ctx context.Context, w io.Writer, src *S3URI, ds
 	if err != nil {
 		return fmt.Errorf("creating file: %w", err)
 	}
+
 	defer func() { _ = file.Close() }()
 
 	_, err = io.Copy(file, result.Body)
@@ -260,6 +276,7 @@ func (c *Client) downloadFromS3(ctx context.Context, w io.Writer, src *S3URI, ds
 	if !opts.Quiet {
 		_, _ = fmt.Fprintf(w, "download: s3://%s/%s to %s\n", src.Bucket, src.Key, dst)
 	}
+
 	return nil
 }
 
@@ -273,6 +290,7 @@ func (c *Client) uploadToS3(ctx context.Context, w io.Writer, src string, dst *S
 	if err != nil {
 		return fmt.Errorf("opening file: %w", err)
 	}
+
 	defer func() { _ = file.Close() }()
 
 	_, err = c.client.PutObject(ctx, &s3.PutObjectInput{
@@ -287,6 +305,7 @@ func (c *Client) uploadToS3(ctx context.Context, w io.Writer, src string, dst *S
 	if !opts.Quiet {
 		_, _ = fmt.Fprintf(w, "upload: %s to s3://%s/%s\n", src, dst.Bucket, dst.Key)
 	}
+
 	return nil
 }
 
@@ -321,6 +340,7 @@ func (c *Client) Rm(ctx context.Context, w io.Writer, uri string, recursive, dry
 	if !quiet {
 		_, _ = fmt.Fprintf(w, "delete: s3://%s/%s\n", s3uri.Bucket, s3uri.Key)
 	}
+
 	return nil
 }
 
@@ -342,6 +362,7 @@ func (c *Client) rmRecursive(ctx context.Context, w io.Writer, s3uri *S3URI, dry
 
 		// Batch delete
 		var objects []types.ObjectIdentifier
+
 		for _, obj := range page.Contents {
 			if dryRun {
 				_, _ = fmt.Fprintf(w, "(dryrun) delete: s3://%s/%s\n", s3uri.Bucket, aws.ToString(obj.Key))
@@ -398,6 +419,7 @@ func (c *Client) Mb(ctx context.Context, w io.Writer, uri string, region string)
 	}
 
 	_, _ = fmt.Fprintf(w, "make_bucket: s3://%s\n", s3uri.Bucket)
+
 	return nil
 }
 
@@ -427,6 +449,7 @@ func (c *Client) Rb(ctx context.Context, w io.Writer, uri string, force bool) er
 	}
 
 	_, _ = fmt.Fprintf(w, "remove_bucket: s3://%s\n", s3uri.Bucket)
+
 	return nil
 }
 

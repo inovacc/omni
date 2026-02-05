@@ -21,8 +21,8 @@ import (
 	"io/fs"
 	"path/filepath"
 
-	"buf.build/go/app"
-	"buf.build/go/app/appext"
+	"github.com/inovacc/omni/pkg/buf/internal/app"
+	"github.com/inovacc/omni/pkg/buf/internal/app/appext"
 	"github.com/bufbuild/protoplugin"
 	bufconfig2 "github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufconfig"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/slogapp"

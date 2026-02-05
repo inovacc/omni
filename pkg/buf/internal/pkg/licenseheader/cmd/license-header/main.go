@@ -21,8 +21,8 @@ import (
 	"os"
 	"regexp"
 
-	"buf.build/go/app"
-	"buf.build/go/app/appcmd"
+	"github.com/inovacc/omni/pkg/buf/internal/app"
+	"github.com/inovacc/omni/pkg/buf/internal/app/appcmd"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/diff"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/git"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/licenseheader"

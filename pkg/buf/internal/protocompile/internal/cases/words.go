@@ -27,7 +27,9 @@ func Words(str string) iter.Seq[string] {
 		input := str // Not yet yielded.
 
 		var prev rune
+
 		first := true
+
 		for str != "" {
 			next, n := utf8.DecodeRuneInString(str)
 			str = str[n:]
@@ -38,6 +40,7 @@ func Words(str string) iter.Seq[string] {
 				// yield the result if it's nonempty.
 				word := input[:len(input)-len(str)-n]
 				input = input[len(input)-len(str):]
+
 				if word != "" && !yield(word) {
 					return
 				}
@@ -49,6 +52,7 @@ func Words(str string) iter.Seq[string] {
 
 				word := input[:idx]
 				input = input[idx:]
+
 				if word != "" && !yield(word) {
 					return
 				}
@@ -68,12 +72,14 @@ func Words(str string) iter.Seq[string] {
 					idx := len(input) - len(str) - n
 					word := input[:idx]
 					input = input[idx:]
+
 					if word != "" && !yield(word) {
 						return
 					}
 				}
 
 				yield(input)
+
 				return
 			}
 

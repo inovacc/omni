@@ -17,7 +17,7 @@ package httpauth
 import (
 	"net/http"
 
-	"buf.build/go/app"
+	"github.com/inovacc/omni/pkg/buf/internal/app"
 )
 
 type nopAuthenticator struct{}

@@ -26,7 +26,7 @@ import (
 	"fmt"
 	"iter"
 
-	"github.com/bufbuild/protocompile/experimental/token/keyword"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/token/keyword"
 )
 
 // Name is one of the built-in Protobuf names. These represent particular

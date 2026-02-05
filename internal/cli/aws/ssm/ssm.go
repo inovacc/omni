@@ -20,9 +20,18 @@ type Client struct {
 }
 
 // NewClient creates a new SSM client
-func NewClient(cfg aws.Config, w io.Writer, format awscommon.OutputFormat) *Client {
+func NewClient(cfg aws.Config, w io.Writer, format awscommon.OutputFormat, endpointURL string) *Client {
+	var client *ssm.Client
+	if endpointURL != "" {
+		client = ssm.NewFromConfig(cfg, func(o *ssm.Options) {
+			o.BaseEndpoint = aws.String(endpointURL)
+		})
+	} else {
+		client = ssm.NewFromConfig(cfg)
+	}
+
 	return &Client{
-		client:  ssm.NewFromConfig(cfg),
+		client:  client,
 		printer: awscommon.NewPrinter(w, format),
 	}
 }

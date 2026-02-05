@@ -19,7 +19,7 @@ import (
 	"fmt"
 	"testing"
 
-	"buf.build/go/standard/xslices"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/uuid"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufimage"

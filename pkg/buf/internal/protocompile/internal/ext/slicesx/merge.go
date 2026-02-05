@@ -19,7 +19,7 @@ import (
 	"iter"
 	"slices"
 
-	"github.com/bufbuild/protocompile/internal/ext/iterx"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/internal/ext/iterx"
 )
 
 // MergeKey an n-way merge of sorted slices, using a function to extract a
@@ -82,6 +82,7 @@ func MergeKeySeq[S ~[]E, E any, K cmp.Ordered, V any](
 	// of that slice, write it to output, and the push the rest of the
 	// slice back onto the heap.
 	output := make([]V, 0, total)
+
 	for heap.Len() > 0 {
 		_, entry := heap.Peek()
 		output = append(output, mapper(entry.index, entry.slice[0]))

@@ -15,8 +15,8 @@
 package bufcli
 
 import (
-	"buf.build/go/app/appext"
-	"connectrpc.com/connect"
+	"github.com/inovacc/omni/pkg/buf/internal/app/appext"
+	"github.com/inovacc/omni/pkg/buf/internal/connect"
 	otelconnect "connectrpc.com/otelconnect"
 	"github.com/inovacc/omni/pkg/buf/internal/buf/bufapp"
 	bufconnect2 "github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufconnect"

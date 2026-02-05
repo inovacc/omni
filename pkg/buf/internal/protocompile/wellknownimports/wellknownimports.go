@@ -21,7 +21,7 @@ import (
 	"io"
 	"io/fs"
 
-	"github.com/bufbuild/protocompile"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile"
 )
 
 //go:embed google/protobuf/*.proto google/protobuf/*/*.proto

@@ -18,7 +18,7 @@ import (
 	"iter"
 	"slices"
 
-	"github.com/bufbuild/protocompile/internal/ext/iterx"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/internal/ext/iterx"
 )
 
 // Map is a helper for generating a mapped iterator over a slice, to avoid
@@ -39,6 +39,7 @@ func Transform[S ~[]E, E, U any](s S, f func(E) U) []U {
 	for i, e := range s {
 		out[i] = f(e)
 	}
+
 	return out
 }
 
@@ -74,8 +75,11 @@ func Partition[S ~[]E, E comparable](s S) iter.Seq2[int, S] {
 // [Partition] is equivalent to PartitionKey with the identity function.
 func PartitionKey[S ~[]E, E any, K comparable](s S, key func(E) K) iter.Seq2[int, S] {
 	return func(yield func(int, S) bool) {
-		var start int
-		var prev K
+		var (
+			start int
+			prev  K
+		)
+
 		for i, r := range s {
 			next := key(r)
 			if i == 0 {
@@ -107,8 +111,11 @@ func PartitionKey[S ~[]E, E any, K comparable](s S, key func(E) K) iter.Seq2[int
 // [Partition] is PartitionFunc with != as the splitting function.
 func PartitionFunc[S ~[]E, E any](s S, split func(E, E) bool) iter.Seq2[int, S] {
 	return func(yield func(int, S) bool) {
-		var start int
-		var prev E
+		var (
+			start int
+			prev  E
+		)
+
 		for i, next := range s {
 			if i == 0 {
 				prev = next

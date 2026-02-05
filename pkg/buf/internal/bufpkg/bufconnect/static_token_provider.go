@@ -19,7 +19,7 @@ import (
 	"fmt"
 	"strings"
 
-	"buf.build/go/app"
+	"github.com/inovacc/omni/pkg/buf/internal/app"
 )
 
 // NewTokenProviderFromContainer creates a singleTokenProvider from the BUF_TOKEN environment variable

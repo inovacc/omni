@@ -20,7 +20,7 @@ import (
 	"fmt"
 	"io"
 
-	"buf.build/go/standard/xstrings"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xstrings"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/encoding"
 	storage2 "github.com/inovacc/omni/pkg/buf/internal/pkg/storage"
 )

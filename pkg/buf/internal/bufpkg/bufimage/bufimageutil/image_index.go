@@ -18,8 +18,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/bufbuild/protocompile/walk"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufimage"
+	"github.com/inovacc/omni/pkg/buf/internal/protocompile/walk"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/types/descriptorpb"

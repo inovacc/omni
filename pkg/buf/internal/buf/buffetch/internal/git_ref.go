@@ -17,7 +17,7 @@ package internal
 import (
 	"strings"
 
-	"buf.build/go/app"
+	"github.com/inovacc/omni/pkg/buf/internal/app"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/git"
 	normalpath2 "github.com/inovacc/omni/pkg/buf/internal/pkg/normalpath"
 )
@@ -36,10 +36,10 @@ var (
 
 type gitRef struct {
 	format            string
-	path      string
-	gitScheme GitScheme
-	gitName   git.Name
-	depth     uint32
+	path              string
+	gitScheme         GitScheme
+	gitName           git.Name
+	depth             uint32
 	recurseSubmodules bool
 	subDirPath        string
 	filter            string

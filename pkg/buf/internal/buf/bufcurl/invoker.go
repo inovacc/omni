@@ -26,9 +26,9 @@ import (
 	"net/http/httptest"
 	"sync"
 
-	"buf.build/go/app"
-	"buf.build/go/app/appext"
-	"connectrpc.com/connect"
+	"github.com/inovacc/omni/pkg/buf/internal/app"
+	"github.com/inovacc/omni/pkg/buf/internal/app/appext"
+	"github.com/inovacc/omni/pkg/buf/internal/connect"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/protoencoding"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/verbose"
 	"google.golang.org/protobuf/proto"
@@ -423,8 +423,8 @@ func (s *singleEmptyMessageProvider) next(_ proto.Message) error {
 
 type streamMessageProvider struct {
 	name string
-	dec *json.Decoder
-	res protoencoding.Resolver
+	dec  *json.Decoder
+	res  protoencoding.Resolver
 }
 
 func (s *streamMessageProvider) next(msg proto.Message) error {

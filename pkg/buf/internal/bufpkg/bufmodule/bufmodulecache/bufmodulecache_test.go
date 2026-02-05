@@ -21,7 +21,7 @@ import (
 	"testing"
 	"time"
 
-	"buf.build/go/standard/xslices"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
 	bufmodule2 "github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufmodule"
 	bufmodulestore2 "github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufmodule/bufmodulestore"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufmodule/bufmoduletesting"

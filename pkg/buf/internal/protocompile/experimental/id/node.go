@@ -49,7 +49,7 @@ func Wrap[T ~Node[T, C, Raw], C Constraint, Raw any](c C, id ID[T]) T {
 	return T{
 		impl: impl[T, C, Raw]{
 			hasContext: hasContext[C]{c},
-			raw:        raw.(Raw), //nolint:errcheck
+			raw:        raw.(Raw),
 			id:         int32(id),
 		},
 	}
@@ -96,6 +96,7 @@ func WrapRaw[T ~Node[T, C, Raw], C Constraint, Raw any](c C, id ID[T], raw Raw) 
 // they pick up those methods.
 type impl[T any, C Constraint, Raw any] struct {
 	hasContext[C]
+
 	raw Raw
 	id  int32
 }
@@ -113,6 +114,7 @@ func (v impl[T, C, R]) ID() ID[T] {
 // See impl.
 type implDynamic[T any, K Kind[K], C Constraint] struct {
 	hasContext[C]
+
 	id uint64
 }
 

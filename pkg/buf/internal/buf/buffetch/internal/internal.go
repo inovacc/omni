@@ -22,7 +22,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"buf.build/go/app"
+	"github.com/inovacc/omni/pkg/buf/internal/app"
 	buftarget2 "github.com/inovacc/omni/pkg/buf/internal/buf/buftarget"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufconfig"
 	bufmodule2 "github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufmodule"

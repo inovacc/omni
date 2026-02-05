@@ -26,8 +26,8 @@ import (
 	"slices"
 	"sort"
 
-	"buf.build/go/standard/xslices"
-	"buf.build/go/standard/xstrings"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
+	"github.com/inovacc/omni/pkg/buf/internal/standard/xstrings"
 	bufparse2 "github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufparse"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/encoding"
 	normalpath2 "github.com/inovacc/omni/pkg/buf/internal/pkg/normalpath"

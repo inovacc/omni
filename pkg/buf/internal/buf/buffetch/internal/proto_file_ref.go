@@ -14,7 +14,7 @@
 
 package internal
 
-import "buf.build/go/app"
+import "github.com/inovacc/omni/pkg/buf/internal/app"
 
 var (
 	_ ParsedProtoFileRef = &protoFileRef{}

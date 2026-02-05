@@ -44,5 +44,6 @@ func MakePowerOfTwo(n uint) uint {
 	if IsPowerOfTwo(n) {
 		return n
 	}
+
 	return NextPowerOfTwo(n)
 }

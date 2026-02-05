@@ -22,6 +22,7 @@ func Set[K comparable](elems ...K) map[K]struct{} {
 	for _, elem := range elems {
 		s[elem] = struct{}{}
 	}
+
 	return s
 }
 
@@ -36,7 +37,9 @@ func CollectSet[K comparable](seq iter.Seq[K]) map[K]struct{} {
 func InsertKeys[M ~map[K]V, K comparable, V any](m M, seq iter.Seq[K]) M {
 	for k := range seq {
 		var zero V
+
 		m[k] = zero
 	}
+
 	return m
 }
