@@ -33,6 +33,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/bmatcuk/doublestar/v4"
 	"github.com/pmezard/go-difflib/difflib"
 
 	"github.com/inovacc/omni/pkg/buf/internal/protocompile/internal/prototest"
