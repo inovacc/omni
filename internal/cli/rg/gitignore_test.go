@@ -168,8 +168,8 @@ build/
 		{"important.log", false, Include}, // Negated
 		{"main.go", false, NoMatch},
 		{"build", true, Ignore},
-		{"build/output", true, NoMatch},   // build/ only matches the dir itself, not its contents
-		{"build/release", true, Include},  // Negated explicitly
+		{"build/output", true, NoMatch},  // build/ only matches the dir itself, not its contents
+		{"build/release", true, Include}, // Negated explicitly
 	}
 
 	for _, tt := range tests {
@@ -202,12 +202,12 @@ cache/
 		isDir  bool
 		expect MatchResult
 	}{
-		{"cache", true, Ignore},        // Directory - should be ignored
-		{"cache", false, NoMatch},      // File named cache - should NOT be ignored
-		{"data.tmp", false, Ignore},    // File matching *.tmp
-		{"backup.tmp", false, Ignore},  // File matching *.tmp
-		{"tmpdir", true, NoMatch},      // Directory not matching pattern
-		{"src/cache", true, Ignore},    // Nested cache directory
+		{"cache", true, Ignore},           // Directory - should be ignored
+		{"cache", false, NoMatch},         // File named cache - should NOT be ignored
+		{"data.tmp", false, Ignore},       // File matching *.tmp
+		{"backup.tmp", false, Ignore},     // File matching *.tmp
+		{"tmpdir", true, NoMatch},         // Directory not matching pattern
+		{"src/cache", true, Ignore},       // Nested cache directory
 		{"src/cache.txt", false, NoMatch}, // File with cache in name
 	}
 

@@ -528,11 +528,11 @@ build/
 
 	// Create test files
 	files := map[string]string{
-		"main.go":        "package main\n\nfunc main() { println(\"hello\") }",
-		"debug.log":      "DEBUG: hello world",
-		"important.log":  "IMPORTANT: hello critical",
-		"build/out.go":   "package build\n\nfunc Build() { println(\"hello\") }",
-		"src/lib.go":     "package lib\n\nfunc Lib() { println(\"hello\") }",
+		"main.go":       "package main\n\nfunc main() { println(\"hello\") }",
+		"debug.log":     "DEBUG: hello world",
+		"important.log": "IMPORTANT: hello critical",
+		"build/out.go":  "package build\n\nfunc Build() { println(\"hello\") }",
+		"src/lib.go":    "package lib\n\nfunc Lib() { println(\"hello\") }",
 	}
 
 	for name, content := range files {
@@ -597,9 +597,9 @@ testdata/
 
 	// Create test files
 	files := map[string]string{
-		"main.go":           "package main\n\nfunc main() { println(\"hello\") }",
+		"main.go":            "package main\n\nfunc main() { println(\"hello\") }",
 		"types.generated.go": "package main\n\n// hello generated code",
-		"testdata/test.go":  "package testdata\n\n// hello test data",
+		"testdata/test.go":   "package testdata\n\n// hello test data",
 	}
 
 	for name, content := range files {

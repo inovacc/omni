@@ -6,9 +6,9 @@ import (
 )
 
 var kubectlCmd = &cobra.Command{
-	Use:                "kubectl",
-	Aliases:            []string{"k"},
-	Short:              "Kubernetes CLI",
+	Use:     "kubectl",
+	Aliases: []string{"k"},
+	Short:   "Kubernetes CLI",
 	Long: `Kubernetes command-line tool integrated into omni.
 
 This is a full integration of kubectl, supporting all kubectl commands and flags.
