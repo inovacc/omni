@@ -117,7 +117,8 @@ def main():
         def test_find_name():
             t.create_temp_file("test", "find_me.txt")
             t.create_temp_file("test", "skip.log")
-            result = t.run("find", t.temp_dir, "-name", "*.txt")
+            # omni find uses --name not -name
+            result = t.run("find", t.temp_dir, "--name", "find_me.txt")
             assert_contains(result.stdout, "find_me.txt", "find should locate .txt file")
 
         # Run all tests
