@@ -854,7 +854,7 @@ Examples:
 			fmt.Printf("\n======= Versions =======\n")
 
 			for v, info := range metadata.Versions {
-				fmt.Printf("Version %d: created=%s destroyed=%t\n", v, info.CreatedTime, info.Destroyed)
+				fmt.Printf("Version %s: created=%s destroyed=%t\n", v, info.CreatedTime, info.Destroyed)
 			}
 		}
 
