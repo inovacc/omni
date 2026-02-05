@@ -17,6 +17,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.96.0
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.67.8
 	github.com/aws/aws-sdk-go-v2/service/sts v1.41.6
+	github.com/bmatcuk/doublestar/v4 v4.10.0
 	github.com/btcsuite/btcd/btcutil v1.1.6
 	github.com/bufbuild/protoplugin v0.0.0-20250218205857-750e09ce93e1
 	github.com/charmbracelet/bubbletea v1.3.10
