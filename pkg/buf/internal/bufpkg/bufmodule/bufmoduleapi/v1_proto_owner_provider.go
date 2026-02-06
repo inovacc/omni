@@ -20,7 +20,7 @@ import (
 	"log/slog"
 
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufregistryapi/bufregistryapiowner"
-	"github.com/inovacc/omni/pkg/buf/internal/connect"
+	"connectrpc.com/connect"
 	ownerv1 "github.com/inovacc/omni/pkg/buf/internal/gen/bufbuild/registry/protocolbuffers/go/buf/registry/owner/v1"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/cache"
 )

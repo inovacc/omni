@@ -1,7 +1,0 @@
-syntax = "proto3";
-
-package bar;
-
-message Bar {
-  string id = 1;
-}

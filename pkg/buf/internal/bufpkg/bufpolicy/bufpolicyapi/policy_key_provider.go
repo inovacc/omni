@@ -21,7 +21,7 @@ import (
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufparse"
 	bufpolicy2 "github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufpolicy"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufregistryapi/bufregistryapipolicy"
-	"github.com/inovacc/omni/pkg/buf/internal/connect"
+	"connectrpc.com/connect"
 	policyv1beta1 "github.com/inovacc/omni/pkg/buf/internal/gen/bufbuild/registry/protocolbuffers/go/buf/registry/policy/v1beta1"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/syserror"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/uuidutil"

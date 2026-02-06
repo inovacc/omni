@@ -22,7 +22,7 @@ import (
 	"strings"
 	"unicode/utf16"
 
-	celpv "github.com/inovacc/omni/pkg/buf/protovalidate/cel"
+	celpv "buf.build/go/protovalidate/cel"
 	"github.com/google/cel-go/cel"
 	"github.com/inovacc/omni/pkg/buf/internal/buf/bufformat"
 	"github.com/inovacc/omni/pkg/buf/internal/protocompile/parser"

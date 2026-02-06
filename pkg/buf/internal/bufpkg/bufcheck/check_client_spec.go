@@ -15,8 +15,8 @@
 package bufcheck
 
 import (
-	"github.com/inovacc/omni/pkg/buf/bufplugin/check"
-	"github.com/inovacc/omni/pkg/buf/bufplugin/option"
+	"buf.build/go/bufplugin/check"
+	"buf.build/go/bufplugin/option"
 )
 
 // checkClientSpec contains a check.Client and details on what to do about

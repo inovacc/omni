@@ -24,7 +24,7 @@ import (
 	http "net/http"
 	strings "strings"
 
-	connect "github.com/inovacc/omni/pkg/buf/internal/connect"
+	connect "connectrpc.com/connect"
 	v1alpha1 "github.com/inovacc/omni/pkg/buf/internal/gen/proto/go/buf/alpha/audit/v1alpha1"
 )
 

@@ -1,7 +1,0 @@
-syntax = "proto3";
-
-package a.v1;
-
-message Foo {}
-
-message Bar {}

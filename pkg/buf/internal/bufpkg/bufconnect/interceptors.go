@@ -24,7 +24,7 @@ import (
 	"time"
 
 	"github.com/inovacc/omni/pkg/buf/internal/app/appext"
-	"github.com/inovacc/omni/pkg/buf/internal/connect"
+	"connectrpc.com/connect"
 	"google.golang.org/protobuf/proto"
 )
 

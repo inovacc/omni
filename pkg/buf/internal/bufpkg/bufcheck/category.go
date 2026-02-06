@@ -14,7 +14,7 @@
 
 package bufcheck
 
-import "github.com/inovacc/omni/pkg/buf/bufplugin/check"
+import "buf.build/go/bufplugin/check"
 
 var _ check.Category = &category{}
 var _ Category = &category{}
