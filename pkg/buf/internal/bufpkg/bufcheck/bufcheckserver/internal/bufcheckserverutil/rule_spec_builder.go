@@ -15,7 +15,7 @@
 package bufcheckserverutil
 
 import (
-	"github.com/inovacc/omni/pkg/buf/bufplugin/check"
+	"buf.build/go/bufplugin/check"
 )
 
 // RuleSpecBuilder matches check.RuleSpec but without categories.

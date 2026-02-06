@@ -15,7 +15,7 @@
 package buflintvalidate
 
 import (
-	"github.com/inovacc/omni/pkg/buf/protovalidate"
+	"buf.build/go/protovalidate"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufprotosource"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/protoencoding"
 )

@@ -26,7 +26,7 @@ import (
 	"net/textproto"
 	"net/url"
 
-	"github.com/inovacc/omni/pkg/buf/internal/connect"
+	"connectrpc.com/connect"
 	"github.com/inovacc/omni/pkg/buf/internal/gen/proto/go/buf/alpha/studio/v1alpha1"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/protoencoding"
 	"github.com/inovacc/omni/pkg/buf/internal/standard/xlog/xslog"

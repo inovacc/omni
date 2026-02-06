@@ -43,7 +43,8 @@ func check() error {
 	}
 
 	if !strings.HasPrefix(buildInfo.Main.Path, "github.com/bufbuild") &&
-		!strings.HasPrefix(buildInfo.Main.Path, "buf.build/go") {
+		!strings.HasPrefix(buildInfo.Main.Path, "buf.build/go") &&
+		!strings.HasPrefix(buildInfo.Main.Path, "github.com/inovacc/omni") {
 		return fmt.Errorf("This code must only be imported by github.com/bufbuild and buf.build/go projects but was used in %s.", buildInfo.Main.Path)
 	}
 

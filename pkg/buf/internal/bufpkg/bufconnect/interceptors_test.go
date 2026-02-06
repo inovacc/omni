@@ -24,7 +24,7 @@ import (
 
 	"github.com/inovacc/omni/pkg/buf/internal/app"
 	"github.com/inovacc/omni/pkg/buf/internal/app/appext"
-	"github.com/inovacc/omni/pkg/buf/internal/connect"
+	"connectrpc.com/connect"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/netrc"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/slogapp"
 	"github.com/stretchr/testify/assert"

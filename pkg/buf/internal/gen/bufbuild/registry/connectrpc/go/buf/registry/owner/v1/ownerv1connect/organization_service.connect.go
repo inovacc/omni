@@ -21,7 +21,7 @@ package ownerv1connect
 import (
 	context "context"
 	errors "errors"
-	connect "github.com/inovacc/omni/pkg/buf/internal/connect"
+	connect "connectrpc.com/connect"
 	v1 "github.com/inovacc/omni/pkg/buf/internal/gen/bufbuild/registry/protocolbuffers/go/buf/registry/owner/v1"
 	http "net/http"
 	strings "strings"

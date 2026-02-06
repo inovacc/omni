@@ -1,7 +1,0 @@
-syntax = "proto3";
-
-package prefix.bar.v1;
-
-message Bar {
-  string name = 1;
-}

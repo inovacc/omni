@@ -25,8 +25,8 @@ import (
 	"slices"
 	"sort"
 
-	"github.com/inovacc/omni/pkg/buf/protovalidate"
-	"github.com/inovacc/omni/pkg/buf/protoyaml"
+	"buf.build/go/protovalidate"
+	"buf.build/go/protoyaml"
 	"github.com/inovacc/omni/pkg/buf/internal/app"
 	"github.com/inovacc/omni/pkg/buf/internal/app/appcmd"
 	"github.com/inovacc/omni/pkg/buf/internal/buf/buffetch"
