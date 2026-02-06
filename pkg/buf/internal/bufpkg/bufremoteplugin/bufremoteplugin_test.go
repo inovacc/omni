@@ -54,7 +54,7 @@ func TestPluginRegistryRoundTrip(t *testing.T) {
 			MinVersion: "1.18",
 			Deps: []*bufremotepluginconfig.GoRegistryDependencyConfig{
 				{
-					Module:  "github.com/inovacc/omni/pkg/buf/internal/connect",
+					Module:  "connectrpc.com/connect",
 					Version: "v0.1.1",
 				},
 			},
@@ -82,7 +82,7 @@ func TestPluginRegistryRoundTrip(t *testing.T) {
 			MinVersion: "1.18",
 			Deps: []*bufremotepluginconfig.GoRegistryDependencyConfig{
 				{
-					Module:  "github.com/inovacc/omni/pkg/buf/internal/connect",
+					Module:  "connectrpc.com/connect",
 					Version: "v0.4.0",
 				},
 			},

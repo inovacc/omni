@@ -21,9 +21,9 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/inovacc/omni/pkg/buf/bufplugin/option"
+	"buf.build/go/bufplugin/option"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufparse"
-	pluginoptionv1 "github.com/inovacc/omni/pkg/buf/internal/gen/bufbuild/bufplugin/protocolbuffers/go/buf/plugin/option/v1"
+	pluginoptionv1 "buf.build/gen/go/bufbuild/bufplugin/protocolbuffers/go/buf/plugin/option/v1"
 	policyv1beta1 "github.com/inovacc/omni/pkg/buf/internal/gen/bufbuild/registry/protocolbuffers/go/buf/registry/policy/v1beta1"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/protoencoding"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/syserror"

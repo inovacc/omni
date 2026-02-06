@@ -20,7 +20,7 @@ import (
 	"log/slog"
 	"os"
 
-	"github.com/inovacc/omni/pkg/buf/bufplugin/check"
+	"buf.build/go/bufplugin/check"
 	bufconfig2 "github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufconfig"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufimage"
 	bufplugin2 "github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufplugin"

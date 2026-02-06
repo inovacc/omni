@@ -15,7 +15,7 @@
 package bufcheckopt
 
 import (
-	"github.com/inovacc/omni/pkg/buf/bufplugin/option"
+	"buf.build/go/bufplugin/option"
 )
 
 const (

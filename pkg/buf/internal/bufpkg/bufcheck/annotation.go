@@ -15,7 +15,7 @@
 package bufcheck
 
 import (
-	"github.com/inovacc/omni/pkg/buf/bufplugin/check"
+	"buf.build/go/bufplugin/check"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufanalysis"
 	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
 )

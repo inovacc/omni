@@ -20,7 +20,7 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/inovacc/omni/pkg/buf/spdx"
+	"buf.build/go/spdx"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufremoteplugin/bufremotepluginref"
 	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
 	"golang.org/x/mod/modfile"

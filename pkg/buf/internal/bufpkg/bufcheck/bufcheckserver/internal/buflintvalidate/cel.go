@@ -18,11 +18,11 @@ import (
 	"fmt"
 	"strings"
 
-	celpv "github.com/inovacc/omni/pkg/buf/protovalidate/cel"
+	celpv "buf.build/go/protovalidate/cel"
 	"github.com/google/cel-go/cel"
 	"github.com/google/cel-go/common/types"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufprotosource"
-	"github.com/inovacc/omni/pkg/buf/internal/gen/bufbuild/protovalidate/protocolbuffers/go/buf/validate"
+	"buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go/buf/validate"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/types/dynamicpb"
 )

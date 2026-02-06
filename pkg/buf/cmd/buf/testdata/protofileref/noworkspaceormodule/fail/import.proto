@@ -1,7 +1,0 @@
-syntax = "proto3";
-
-import "google/type/date.proto";
-
-message A {
-  google.type.Date date = 1;
-}
