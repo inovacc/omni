@@ -40,6 +40,36 @@ func WithDirsOnly(dirsOnly bool) TreeOption {
 	}
 }
 
+// WithMaxFiles sets the maximum number of files to scan (0 = unlimited).
+func WithMaxFiles(maxFiles int) TreeOption {
+	return func(t *Tree) {
+		t.scanConfig.MaxFiles = maxFiles
+	}
+}
+
+// WithMaxHashSize sets the maximum file size for hashing in bytes (0 = unlimited).
+// Files larger than this will be skipped during hash calculation.
+func WithMaxHashSize(maxHashSize int64) TreeOption {
+	return func(t *Tree) {
+		t.scanConfig.MaxHashSize = maxHashSize
+	}
+}
+
+// WithParallel sets the number of parallel workers for scanning.
+// 0 = runtime.NumCPU(), 1 = sequential (default behavior).
+func WithParallel(workers int) TreeOption {
+	return func(t *Tree) {
+		t.scanConfig.Parallel = workers
+	}
+}
+
+// WithProgressCallback sets a callback that is invoked with the current file count during scanning.
+func WithProgressCallback(fn func(scanned int)) TreeOption {
+	return func(t *Tree) {
+		t.scanConfig.OnProgress = fn
+	}
+}
+
 // WithScanConfig sets a custom scan configuration.
 func WithScanConfig(config *scanner.ScanConfig) TreeOption {
 	return func(t *Tree) {
@@ -97,6 +127,13 @@ func WithFlattenFilesHash(flatten bool) TreeOption {
 func WithJSONOutput(json bool) TreeOption {
 	return func(t *Tree) {
 		t.formatConfig.JSONOutput = json
+	}
+}
+
+// WithJSONStreamOutput enables or disables streaming JSON (NDJSON) output.
+func WithJSONStreamOutput(stream bool) TreeOption {
+	return func(t *Tree) {
+		t.formatConfig.JSONStreamOutput = stream
 	}
 }
 

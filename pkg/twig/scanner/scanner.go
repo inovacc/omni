@@ -9,7 +9,10 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
+	"sync"
+	"sync/atomic"
 
 	"github.com/inovacc/omni/pkg/twig/models"
 )
@@ -19,6 +22,7 @@ var (
 	ErrPathNotFound     = errors.New("path not found")
 	ErrPermissionDenied = errors.New("permission denied")
 	ErrInvalidPath      = errors.New("invalid path")
+	ErrMaxFilesReached  = errors.New("maximum file count reached")
 )
 
 // DirectoryScanner defines the interface for scanning directory structures
@@ -33,6 +37,10 @@ type ScanConfig struct {
 	IgnorePatterns []string
 	DirsOnly       bool
 	ShowHash       bool // Calculate file hashes
+	MaxFiles       int  // Cap total scanned items (0 = unlimited)
+	MaxHashSize    int64           // Skip hashing files larger than N bytes (0 = unlimited)
+	Parallel       int             // Worker count (0 = runtime.NumCPU(), 1 = sequential)
+	OnProgress     func(scanned int) // Optional progress callback
 }
 
 // DefaultConfig returns default scanning configuration
@@ -55,7 +63,8 @@ func DefaultConfig() *ScanConfig {
 
 // Scanner scans directory structures
 type Scanner struct {
-	config *ScanConfig
+	config    *ScanConfig
+	fileCount atomic.Int64
 }
 
 // Ensure Scanner implements DirectoryScanner
@@ -99,8 +108,25 @@ func (s *Scanner) Scan(ctx context.Context, rootPath string) (*models.Node, erro
 	root.FileInfo = info
 
 	if info.IsDir() {
-		if err := s.scanDir(ctx, root, 0); err != nil {
-			return nil, err
+		parallel := s.config.Parallel
+		if parallel == 0 {
+			parallel = runtime.NumCPU()
+		}
+
+		if parallel > 1 {
+			if err := s.scanDirParallel(ctx, root, parallel); err != nil {
+				if errors.Is(err, ErrMaxFilesReached) {
+					return root, err
+				}
+				return nil, err
+			}
+		} else {
+			if err := s.scanDir(ctx, root, 0); err != nil {
+				if errors.Is(err, ErrMaxFilesReached) {
+					return root, err
+				}
+				return nil, err
+			}
 		}
 	}
 
@@ -126,6 +152,11 @@ func (s *Scanner) scanDir(ctx context.Context, parent *models.Node, currentDepth
 	}
 
 	for _, entry := range entries {
+		// Check max files limit
+		if s.config.MaxFiles > 0 && s.fileCount.Load() >= int64(s.config.MaxFiles) {
+			return ErrMaxFilesReached
+		}
+
 		// Skip hidden files if configured
 		if !s.config.ShowHidden && strings.HasPrefix(entry.Name(), ".") {
 			continue
@@ -153,6 +184,12 @@ func (s *Scanner) scanDir(ctx context.Context, parent *models.Node, currentDepth
 		child := models.NewNode(entry.Name(), fullPath, isDir)
 		child.FileInfo = info
 
+		// Increment file count and fire progress callback
+		count := s.fileCount.Add(1)
+		if s.config.OnProgress != nil {
+			s.config.OnProgress(int(count))
+		}
+
 		// Calculate hash for files if enabled
 		if s.config.ShowHash && !isDir {
 			hash, err := s.calculateFileHash(fullPath)
@@ -174,6 +211,113 @@ func (s *Scanner) scanDir(ctx context.Context, parent *models.Node, currentDepth
 	return nil
 }
 
+// scanDirParallel scans the root directory's immediate children sequentially,
+// then fans out subdirectory scanning to a worker pool.
+func (s *Scanner) scanDirParallel(ctx context.Context, root *models.Node, workers int) error {
+	entries, err := os.ReadDir(root.Path)
+	if err != nil {
+		return nil
+	}
+
+	// Build child nodes sequentially to preserve order
+	type dirWork struct {
+		node *models.Node
+	}
+
+	var dirs []dirWork
+
+	for _, entry := range entries {
+		// Check max files limit
+		if s.config.MaxFiles > 0 && s.fileCount.Load() >= int64(s.config.MaxFiles) {
+			return ErrMaxFilesReached
+		}
+
+		if !s.config.ShowHidden && strings.HasPrefix(entry.Name(), ".") {
+			continue
+		}
+
+		if s.shouldIgnore(entry.Name()) {
+			continue
+		}
+
+		fullPath := filepath.Join(root.Path, entry.Name())
+
+		info, err := entry.Info()
+		if err != nil {
+			continue
+		}
+
+		isDir := entry.IsDir()
+
+		if s.config.DirsOnly && !isDir {
+			continue
+		}
+
+		child := models.NewNode(entry.Name(), fullPath, isDir)
+		child.FileInfo = info
+
+		count := s.fileCount.Add(1)
+		if s.config.OnProgress != nil {
+			s.config.OnProgress(int(count))
+		}
+
+		if s.config.ShowHash && !isDir {
+			hash, err := s.calculateFileHash(fullPath)
+			if err == nil {
+				child.Hash = hash
+			}
+		}
+
+		root.AddChild(child)
+
+		if isDir {
+			dirs = append(dirs, dirWork{node: child})
+		}
+	}
+
+	if len(dirs) == 0 {
+		return nil
+	}
+
+	// Fan out subdirectory scanning to worker pool
+	workCh := make(chan dirWork, len(dirs))
+	for _, d := range dirs {
+		workCh <- d
+	}
+	close(workCh)
+
+	var wg sync.WaitGroup
+	errCh := make(chan error, workers)
+
+	numWorkers := workers
+	if numWorkers > len(dirs) {
+		numWorkers = len(dirs)
+	}
+
+	for range numWorkers {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for work := range workCh {
+				if err := s.scanDir(ctx, work.node, 1); err != nil {
+					errCh <- err
+					return
+				}
+			}
+		}()
+	}
+
+	wg.Wait()
+	close(errCh)
+
+	// Return first error if any
+	for err := range errCh {
+		return err
+	}
+
+	return nil
+}
+
 func (s *Scanner) shouldIgnore(name string) bool {
 	for _, pattern := range s.config.IgnorePatterns {
 		matched, err := filepath.Match(pattern, name)
@@ -187,11 +331,23 @@ func (s *Scanner) shouldIgnore(name string) bool {
 
 // calculateFileHash calculates the SHA256 hash of a file
 func (s *Scanner) calculateFileHash(filePath string) (string, error) {
+	// Check MaxHashSize before opening the file
+	if s.config.MaxHashSize > 0 {
+		info, err := os.Stat(filePath)
+		if err != nil {
+			return "", err
+		}
+
+		if info.Size() > s.config.MaxHashSize {
+			return "", nil
+		}
+	}
+
 	file, err := os.Open(filePath)
 	if err != nil {
 		return "", err
 	}
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 
 	hasher := sha256.New()
 	if _, err := io.Copy(hasher, file); err != nil {
