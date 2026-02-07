@@ -15,8 +15,8 @@ func TestNew(t *testing.T) {
 	}
 
 	str := ulid.String()
-	if len(str) != encodedSize {
-		t.Errorf("ULID length = %d, want %d", len(str), encodedSize)
+	if len(str) != 26 {
+		t.Errorf("ULID length = %d, want 26", len(str))
 	}
 }
 
@@ -93,8 +93,8 @@ func TestRunULID(t *testing.T) {
 	}
 
 	for i, line := range lines {
-		if len(line) != encodedSize {
-			t.Errorf("ULID[%d] length = %d, want %d", i, len(line), encodedSize)
+		if len(line) != 26 {
+			t.Errorf("ULID[%d] length = %d, want 26", i, len(line))
 		}
 	}
 }
@@ -141,7 +141,7 @@ func TestRunULIDJSON(t *testing.T) {
 
 func TestNewString(t *testing.T) {
 	str := NewString()
-	if len(str) != encodedSize {
-		t.Errorf("NewString() length = %d, want %d", len(str), encodedSize)
+	if len(str) != 26 {
+		t.Errorf("NewString() length = %d, want 26", len(str))
 	}
 }

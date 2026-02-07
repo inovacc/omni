@@ -1,16 +1,12 @@
 package crypt
 
 import (
-	"crypto/aes"
-	"crypto/cipher"
-	"crypto/rand"
-	"crypto/sha256"
-	"encoding/base64"
 	"fmt"
 	"io"
 	"os"
+	"strings"
 
-	"golang.org/x/crypto/pbkdf2"
+	"github.com/inovacc/omni/pkg/cryptutil"
 )
 
 // CryptOptions configures the encrypt/decrypt command behavior
@@ -25,22 +21,11 @@ type CryptOptions struct {
 	Armor        bool   // -a: ASCII armor output (same as -b)
 }
 
-const (
-	saltSize    = 16
-	keySize     = 32 // AES-256
-	nonceSize   = 12 // GCM nonce size
-	defaultIter = 100000
-)
-
 // RunEncrypt encrypts data using AES-256-GCM
 func RunEncrypt(w io.Writer, args []string, opts CryptOptions) error {
 	password, err := getPassword(opts)
 	if err != nil {
 		return fmt.Errorf("encrypt: %w", err)
-	}
-
-	if opts.Iterations <= 0 {
-		opts.Iterations = defaultIter
 	}
 
 	// Read input
@@ -55,41 +40,20 @@ func RunEncrypt(w io.Writer, args []string, opts CryptOptions) error {
 		return fmt.Errorf("encrypt: %w", err)
 	}
 
-	// Generate salt
-	salt := make([]byte, saltSize)
-	if _, err := rand.Read(salt); err != nil {
-		return fmt.Errorf("encrypt: failed to generate salt: %w", err)
+	// Build options for cryptutil
+	var cryptOpts []cryptutil.Option
+	if opts.Iterations > 0 {
+		cryptOpts = append(cryptOpts, cryptutil.WithIterations(opts.Iterations))
+	}
+	if opts.Base64 || opts.Armor {
+		cryptOpts = append(cryptOpts, cryptutil.WithBase64())
 	}
 
-	// Derive key using PBKDF2
-	key := pbkdf2.Key([]byte(password), salt, opts.Iterations, keySize, sha256.New)
-
-	// Create AES cipher
-	block, err := aes.NewCipher(key)
+	// Encrypt using pkg/cryptutil
+	output, err := cryptutil.Encrypt(input, password, cryptOpts...)
 	if err != nil {
 		return fmt.Errorf("encrypt: %w", err)
 	}
-
-	// Create GCM mode
-	gcm, err := cipher.NewGCM(block)
-	if err != nil {
-		return fmt.Errorf("encrypt: %w", err)
-	}
-
-	// Generate nonce
-	nonce := make([]byte, nonceSize)
-	if _, err := rand.Read(nonce); err != nil {
-		return fmt.Errorf("encrypt: failed to generate nonce: %w", err)
-	}
-
-	// Encrypt
-	ciphertext := gcm.Seal(nil, nonce, input, nil)
-
-	// Combine: salt + nonce + ciphertext
-	output := make([]byte, 0, saltSize+nonceSize+len(ciphertext))
-	output = append(output, salt...)
-	output = append(output, nonce...)
-	output = append(output, ciphertext...)
 
 	// Write output
 	var outWriter = w
@@ -108,7 +72,7 @@ func RunEncrypt(w io.Writer, args []string, opts CryptOptions) error {
 	}
 
 	if opts.Base64 || opts.Armor {
-		_, _ = fmt.Fprintln(outWriter, base64.StdEncoding.EncodeToString(output))
+		_, _ = fmt.Fprintln(outWriter, string(output))
 	} else {
 		_, _ = outWriter.Write(output)
 	}
@@ -123,10 +87,6 @@ func RunDecrypt(w io.Writer, args []string, opts CryptOptions) error {
 		return fmt.Errorf("decrypt: %w", err)
 	}
 
-	if opts.Iterations <= 0 {
-		opts.Iterations = defaultIter
-	}
-
 	// Read input
 	var input []byte
 	if len(args) == 0 || args[0] == "-" {
@@ -139,44 +99,24 @@ func RunDecrypt(w io.Writer, args []string, opts CryptOptions) error {
 		return fmt.Errorf("decrypt: %w", err)
 	}
 
-	// Decode base64 if needed
+	// Build options for cryptutil
+	var cryptOpts []cryptutil.Option
+	if opts.Iterations > 0 {
+		cryptOpts = append(cryptOpts, cryptutil.WithIterations(opts.Iterations))
+	}
 	if opts.Base64 || opts.Armor {
-		input, err = base64.StdEncoding.DecodeString(string(input))
-		if err != nil {
-			return fmt.Errorf("decrypt: invalid base64: %w", err)
-		}
+		cryptOpts = append(cryptOpts, cryptutil.WithBase64())
 	}
 
-	// Validate minimum length
-	minLen := saltSize + nonceSize + 16 // 16 = minimum GCM tag
-	if len(input) < minLen {
-		return fmt.Errorf("decrypt: input too short")
+	// Trim whitespace from base64 input
+	if opts.Base64 || opts.Armor {
+		input = []byte(strings.TrimSpace(string(input)))
 	}
 
-	// Extract salt, nonce, ciphertext
-	salt := input[:saltSize]
-	nonce := input[saltSize : saltSize+nonceSize]
-	ciphertext := input[saltSize+nonceSize:]
-
-	// Derive key using PBKDF2
-	key := pbkdf2.Key([]byte(password), salt, opts.Iterations, keySize, sha256.New)
-
-	// Create AES cipher
-	block, err := aes.NewCipher(key)
+	// Decrypt using pkg/cryptutil
+	plaintext, err := cryptutil.Decrypt(input, password, cryptOpts...)
 	if err != nil {
 		return fmt.Errorf("decrypt: %w", err)
-	}
-
-	// Create GCM mode
-	gcm, err := cipher.NewGCM(block)
-	if err != nil {
-		return fmt.Errorf("decrypt: %w", err)
-	}
-
-	// Decrypt
-	plaintext, err := gcm.Open(nil, nonce, ciphertext, nil)
-	if err != nil {
-		return fmt.Errorf("decrypt: authentication failed (wrong password?)")
 	}
 
 	// Write output
@@ -238,16 +178,12 @@ func getPassword(opts CryptOptions) (string, error) {
 
 // GenerateKey generates a random encryption key
 func GenerateKey(w io.Writer, size int) error {
-	if size <= 0 {
-		size = 32
+	key, err := cryptutil.GenerateKey(size)
+	if err != nil {
+		return err
 	}
 
-	key := make([]byte, size)
-	if _, err := rand.Read(key); err != nil {
-		return fmt.Errorf("failed to generate key: %w", err)
-	}
-
-	_, _ = fmt.Fprintln(w, base64.StdEncoding.EncodeToString(key))
+	_, _ = fmt.Fprintln(w, key)
 
 	return nil
 }

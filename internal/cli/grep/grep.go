@@ -7,9 +7,9 @@ import (
 	"io"
 	"os"
 	"regexp"
-	"strings"
 
 	"github.com/inovacc/omni/internal/cli/input"
+	pkggrep "github.com/inovacc/omni/pkg/search/grep"
 )
 
 // GrepOptions configures the grep command behavior
@@ -149,24 +149,14 @@ func RunGrep(w io.Writer, r io.Reader, pattern string, args []string, opts GrepO
 }
 
 func compilePattern(pattern string, opts GrepOptions) (*regexp.Regexp, error) {
-	if opts.FixedStrings {
-		pattern = regexp.QuoteMeta(pattern)
+	pkgOpts := pkggrep.Options{
+		IgnoreCase:   opts.IgnoreCase,
+		InvertMatch:  false, // not used for pattern compilation
+		FixedStrings: opts.FixedStrings,
+		WordRegexp:   opts.WordRegexp,
+		LineRegexp:   opts.LineRegexp,
 	}
-
-	if opts.WordRegexp {
-		pattern = `\b` + pattern + `\b`
-	}
-
-	if opts.LineRegexp {
-		pattern = "^" + pattern + "$"
-	}
-
-	flags := ""
-	if opts.IgnoreCase {
-		flags = "(?i)"
-	}
-
-	return regexp.Compile(flags + pattern)
+	return pkggrep.CompilePattern(pattern, pkgOpts)
 }
 
 func grepReader(w io.Writer, r io.Reader, filename string, re *regexp.Regexp, opts GrepOptions, showFilename bool) (int, bool, []GrepResult, error) {
@@ -305,57 +295,16 @@ func printGrepLine(w io.Writer, filename string, lineNum int, line string, opts 
 
 // Grep filters lines containing the pattern (simple version for compatibility)
 func Grep(lines []string, pattern string) []string {
-	var out []string
-
-	for _, l := range lines {
-		if strings.Contains(l, pattern) {
-			out = append(out, l)
-		}
-	}
-
-	return out
+	return pkggrep.Search(lines, pattern)
 }
 
 // GrepWithOptions filters lines with options (compatibility wrapper)
 func GrepWithOptions(lines []string, pattern string, opt GrepOptions) []string {
-	out := []string{}
-
-	re, err := compilePattern(pattern, opt)
-	if err != nil {
-		// Fall back to simple string matching
-		if opt.IgnoreCase {
-			pattern = strings.ToLower(pattern)
-		}
-
-		for _, l := range lines {
-			line := l
-			if opt.IgnoreCase {
-				line = strings.ToLower(l)
-			}
-
-			match := strings.Contains(line, pattern)
-			if opt.InvertMatch {
-				match = !match
-			}
-
-			if match {
-				out = append(out, l)
-			}
-		}
-
-		return out
-	}
-
-	for _, l := range lines {
-		match := re.MatchString(l)
-		if opt.InvertMatch {
-			match = !match
-		}
-
-		if match {
-			out = append(out, l)
-		}
-	}
-
-	return out
+	return pkggrep.SearchWithOptionsStruct(lines, pattern, pkggrep.Options{
+		IgnoreCase:   opt.IgnoreCase,
+		InvertMatch:  opt.InvertMatch,
+		FixedStrings: opt.FixedStrings,
+		WordRegexp:   opt.WordRegexp,
+		LineRegexp:   opt.LineRegexp,
+	})
 }

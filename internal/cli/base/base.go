@@ -2,14 +2,11 @@ package base
 
 import (
 	"bufio"
-	"encoding/base32"
-	"encoding/base64"
 	"fmt"
 	"io"
 	"os"
-	"strings"
 
-	"github.com/btcsuite/btcd/btcutil/base58"
+	pkgenc "github.com/inovacc/omni/pkg/encoding"
 )
 
 // BaseOptions configures the base encode/decode command behavior
@@ -47,25 +44,16 @@ func RunBase64(w io.Writer, args []string, opts BaseOptions) error {
 	}
 
 	if opts.Decode {
-		// Remove whitespace for decoding
-		cleanData := strings.Map(func(r rune) rune {
-			if r == ' ' || r == '\n' || r == '\r' || r == '\t' {
-				return -1
-			}
-
-			return r
-		}, string(data))
-
-		decoded, err := base64.StdEncoding.DecodeString(cleanData)
+		decoded, err := pkgenc.Base64Decode(string(data))
 		if err != nil {
-			return fmt.Errorf("base64: invalid input: %w", err)
+			return fmt.Errorf("base64: %w", err)
 		}
 
 		_, _ = w.Write(decoded)
 	} else {
-		encoded := base64.StdEncoding.EncodeToString(data)
+		encoded := pkgenc.Base64Encode(data)
 		if opts.Wrap > 0 {
-			encoded = wrapString(encoded, opts.Wrap)
+			encoded = pkgenc.WrapString(encoded, opts.Wrap)
 		}
 
 		_, _ = fmt.Fprintln(w, encoded)
@@ -102,24 +90,16 @@ func RunBase32(w io.Writer, args []string, opts BaseOptions) error {
 	}
 
 	if opts.Decode {
-		cleanData := strings.Map(func(r rune) rune {
-			if r == ' ' || r == '\n' || r == '\r' || r == '\t' {
-				return -1
-			}
-
-			return r
-		}, string(data))
-
-		decoded, err := base32.StdEncoding.DecodeString(cleanData)
+		decoded, err := pkgenc.Base32Decode(string(data))
 		if err != nil {
-			return fmt.Errorf("base32: invalid input: %w", err)
+			return fmt.Errorf("base32: %w", err)
 		}
 
 		_, _ = w.Write(decoded)
 	} else {
-		encoded := base32.StdEncoding.EncodeToString(data)
+		encoded := pkgenc.Base32Encode(data)
 		if opts.Wrap > 0 {
-			encoded = wrapString(encoded, opts.Wrap)
+			encoded = pkgenc.WrapString(encoded, opts.Wrap)
 		}
 
 		_, _ = fmt.Fprintln(w, encoded)
@@ -151,34 +131,14 @@ func RunBase58(w io.Writer, args []string, opts BaseOptions) error {
 	for scanner.Scan() {
 		line := scanner.Text()
 		if opts.Decode {
-			decoded := base58.Decode(line)
+			decoded := pkgenc.Base58Decode(line)
 			_, _ = w.Write(decoded)
 			_, _ = fmt.Fprintln(w)
 		} else {
-			encoded := base58.Encode([]byte(line))
+			encoded := pkgenc.Base58Encode([]byte(line))
 			_, _ = fmt.Fprintln(w, encoded)
 		}
 	}
 
 	return scanner.Err()
-}
-
-func wrapString(s string, width int) string {
-	if width <= 0 || len(s) <= width {
-		return s
-	}
-
-	var result strings.Builder
-
-	for i := 0; i < len(s); i += width {
-		end := min(i+width, len(s))
-
-		result.WriteString(s[i:end])
-
-		if end < len(s) {
-			result.WriteString("\n")
-		}
-	}
-
-	return result.String()
 }

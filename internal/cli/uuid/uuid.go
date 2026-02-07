@@ -1,12 +1,11 @@
 package uuid
 
 import (
-	"crypto/rand"
 	"encoding/json"
 	"fmt"
 	"io"
-	"strings"
-	"time"
+
+	"github.com/inovacc/omni/pkg/idgen"
 )
 
 // UUIDOptions configures the uuid command behavior
@@ -34,149 +33,72 @@ func RunUUID(w io.Writer, opts UUIDOptions) error {
 		opts.Version = 4
 	}
 
-	var uuids []string
+	var uuidOpts []idgen.UUIDOption
 
-	for i := 0; i < opts.Count; i++ {
-		var (
-			uuid string
-			err  error
-		)
+	switch opts.Version {
+	case 4:
+		uuidOpts = append(uuidOpts, idgen.WithUUIDVersion(idgen.V4))
+	case 7:
+		uuidOpts = append(uuidOpts, idgen.WithUUIDVersion(idgen.V7))
+	default:
+		return fmt.Errorf("uuid: unsupported version %d (use 4 or 7)", opts.Version)
+	}
 
-		switch opts.Version {
-		case 4:
-			uuid, err = generateUUIDv4()
-		case 7:
-			uuid, err = generateUUIDv7()
-		default:
-			return fmt.Errorf("uuid: unsupported version %d (use 4 or 7)", opts.Version)
-		}
+	if opts.Upper {
+		uuidOpts = append(uuidOpts, idgen.WithUppercase())
+	}
 
-		if err != nil {
-			return fmt.Errorf("uuid: %w", err)
-		}
+	if opts.NoDashes {
+		uuidOpts = append(uuidOpts, idgen.WithNoDashes())
+	}
 
-		if opts.NoDashes {
-			uuid = strings.ReplaceAll(uuid, "-", "")
-		}
-
-		if opts.Upper {
-			uuid = strings.ToUpper(uuid)
-		}
-
-		if opts.JSON {
-			uuids = append(uuids, uuid)
-		} else {
-			_, _ = fmt.Fprintln(w, uuid)
-		}
+	uuids, err := idgen.GenerateUUIDs(opts.Count, uuidOpts...)
+	if err != nil {
+		return fmt.Errorf("uuid: %w", err)
 	}
 
 	if opts.JSON {
 		return json.NewEncoder(w).Encode(UUIDResult{UUIDs: uuids, Count: len(uuids)})
 	}
 
+	for _, u := range uuids {
+		_, _ = fmt.Fprintln(w, u)
+	}
+
 	return nil
-}
-
-// generateUUIDv4 generates a random UUID version 4
-func generateUUIDv4() (string, error) {
-	uuid := make([]byte, 16)
-
-	_, err := rand.Read(uuid)
-	if err != nil {
-		return "", err
-	}
-
-	// Set version (4) and variant (RFC 4122)
-	uuid[6] = (uuid[6] & 0x0f) | 0x40 // Version 4
-	uuid[8] = (uuid[8] & 0x3f) | 0x80 // Variant RFC 4122
-
-	return fmt.Sprintf("%08x-%04x-%04x-%04x-%012x",
-		uuid[0:4],
-		uuid[4:6],
-		uuid[6:8],
-		uuid[8:10],
-		uuid[10:16]), nil
-}
-
-// generateUUIDv7 generates a time-ordered UUID version 7
-// UUIDv7 uses Unix timestamp in milliseconds for the first 48 bits
-func generateUUIDv7() (string, error) {
-	uuid := make([]byte, 16)
-
-	// Get current timestamp in milliseconds
-	now := time.Now().UnixMilli()
-
-	// First 48 bits: Unix timestamp in milliseconds (big-endian)
-	uuid[0] = byte(now >> 40)
-	uuid[1] = byte(now >> 32)
-	uuid[2] = byte(now >> 24)
-	uuid[3] = byte(now >> 16)
-	uuid[4] = byte(now >> 8)
-	uuid[5] = byte(now)
-
-	// Fill remaining bytes with random data
-	_, err := rand.Read(uuid[6:])
-	if err != nil {
-		return "", err
-	}
-
-	// Set version (7) and variant (RFC 4122)
-	uuid[6] = (uuid[6] & 0x0f) | 0x70 // Version 7
-	uuid[8] = (uuid[8] & 0x3f) | 0x80 // Variant RFC 4122
-
-	return fmt.Sprintf("%08x-%04x-%04x-%04x-%012x",
-		uuid[0:4],
-		uuid[4:6],
-		uuid[6:8],
-		uuid[8:10],
-		uuid[10:16]), nil
 }
 
 // NewUUIDv7 returns a new time-ordered UUID v7 string
 func NewUUIDv7() string {
-	uuid, err := generateUUIDv7()
+	u, err := idgen.GenerateUUID(idgen.WithUUIDVersion(idgen.V7))
 	if err != nil {
 		return ""
 	}
 
-	return uuid
+	return u
 }
 
 // NewUUID returns a new random UUID string
 func NewUUID() string {
-	uuid, err := generateUUIDv4()
+	u, err := idgen.GenerateUUID()
 	if err != nil {
-		// Fallback to empty string on error (shouldn't happen with crypto/rand)
 		return ""
 	}
 
-	return uuid
+	return u
 }
 
 // MustNewUUID returns a new random UUID string, panics on error
 func MustNewUUID() string {
-	uuid, err := generateUUIDv4()
+	u, err := idgen.GenerateUUID()
 	if err != nil {
 		panic(fmt.Sprintf("uuid: %v", err))
 	}
 
-	return uuid
+	return u
 }
 
 // IsValidUUID checks if a string is a valid UUID format
 func IsValidUUID(s string) bool {
-	// Remove dashes for validation
-	s = strings.ReplaceAll(s, "-", "")
-
-	if len(s) != 32 {
-		return false
-	}
-
-	for _, c := range s {
-		if (c < '0' || c > '9') && (c < 'a' || c > 'f') && (c < 'A' || c > 'F') {
-			return false
-		}
-	}
-
-	return true
+	return idgen.IsValidUUID(s)
 }

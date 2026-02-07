@@ -149,13 +149,13 @@ func TestGenerateUUIDv4(t *testing.T) {
 	uuids := make(map[string]bool)
 
 	for range 100 {
-		uuid, err := generateUUIDv4()
-		if err != nil {
-			t.Fatalf("generateUUIDv4() error = %v", err)
+		uuid := NewUUID()
+		if uuid == "" {
+			t.Fatal("NewUUID() returned empty string")
 		}
 
 		if uuids[uuid] {
-			t.Errorf("generateUUIDv4() generated duplicate UUID: %v", uuid)
+			t.Errorf("NewUUID() generated duplicate UUID: %v", uuid)
 		}
 
 		uuids[uuid] = true
@@ -163,11 +163,11 @@ func TestGenerateUUIDv4(t *testing.T) {
 		// Verify version 4 format
 		parts := strings.Split(uuid, "-")
 		if len(parts) != 5 {
-			t.Errorf("generateUUIDv4() = %v, wrong format", uuid)
+			t.Errorf("NewUUID() = %v, wrong format", uuid)
 		}
 		// Version should be 4
 		if parts[2][0] != '4' {
-			t.Errorf("generateUUIDv4() version = %c, want 4", parts[2][0])
+			t.Errorf("NewUUID() version = %c, want 4", parts[2][0])
 		}
 	}
 }

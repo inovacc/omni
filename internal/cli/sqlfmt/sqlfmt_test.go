@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"strings"
 	"testing"
+
+	pkgsql "github.com/inovacc/omni/pkg/sqlfmt"
 )
 
 func TestRun(t *testing.T) {
@@ -238,9 +240,9 @@ func TestIsKeyword(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.token, func(t *testing.T) {
-			got := isKeyword(tt.token)
+			got := pkgsql.IsKeyword(tt.token)
 			if got != tt.want {
-				t.Errorf("isKeyword(%q) = %v, want %v", tt.token, got, tt.want)
+				t.Errorf("IsKeyword(%q) = %v, want %v", tt.token, got, tt.want)
 			}
 		})
 	}
@@ -265,9 +267,9 @@ func TestNeedsSpace(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.prev+"_"+tt.curr, func(t *testing.T) {
-			got := needsSpace(tt.prev, tt.curr)
+			got := pkgsql.NeedsSpace(tt.prev, tt.curr)
 			if got != tt.want {
-				t.Errorf("needsSpace(%q, %q) = %v, want %v", tt.prev, tt.curr, got, tt.want)
+				t.Errorf("NeedsSpace(%q, %q) = %v, want %v", tt.prev, tt.curr, got, tt.want)
 			}
 		})
 	}
@@ -308,15 +310,15 @@ func TestTokenizeSQL(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := tokenizeSQL(tt.input)
+			got := pkgsql.Tokenize(tt.input)
 			if len(got) != len(tt.want) {
-				t.Errorf("tokenizeSQL() = %v, want %v", got, tt.want)
+				t.Errorf("Tokenize() = %v, want %v", got, tt.want)
 				return
 			}
 
 			for i := range got {
 				if got[i] != tt.want[i] {
-					t.Errorf("tokenizeSQL()[%d] = %q, want %q", i, got[i], tt.want[i])
+					t.Errorf("Tokenize()[%d] = %q, want %q", i, got[i], tt.want[i])
 				}
 			}
 		})
@@ -340,9 +342,9 @@ func TestCheckBalancedQuotes(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.input, func(t *testing.T) {
-			got := checkBalancedQuotes(tt.input, tt.quote)
+			got := pkgsql.CheckBalancedQuotes(tt.input, tt.quote)
 			if got != tt.want {
-				t.Errorf("checkBalancedQuotes(%q, %q) = %v, want %v", tt.input, string(tt.quote), got, tt.want)
+				t.Errorf("CheckBalancedQuotes(%q, %q) = %v, want %v", tt.input, string(tt.quote), got, tt.want)
 			}
 		})
 	}

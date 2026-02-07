@@ -124,13 +124,13 @@ func TestParsePattern(t *testing.T) {
 			for _, path := range tt.wantMatch {
 				// For directory-only patterns, test with isDir=true
 				isDir := tt.wantDir
-				if !p.matchPath(path, path, isDir) {
+				if !p.MatchPath(path, path, isDir) {
 					t.Errorf("pattern should match %q", path)
 				}
 			}
 
 			for _, path := range tt.wantNoM {
-				if p.matchPath(path, path, false) {
+				if p.MatchPath(path, path, false) {
 					t.Errorf("pattern should NOT match %q", path)
 				}
 			}
@@ -349,7 +349,7 @@ build/
 }
 
 func TestCommonIgnores(t *testing.T) {
-	gs := &GitignoreSet{gitignores: make([]*Gitignore, 0)}
+	gs := &GitignoreSet{Gitignores: make([]*Gitignore, 0)}
 	gs.AddCommonIgnores()
 
 	tests := []struct {

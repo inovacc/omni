@@ -15,8 +15,8 @@ func TestNew(t *testing.T) {
 	}
 
 	str := ksuid.String()
-	if len(str) != encodedSize {
-		t.Errorf("KSUID length = %d, want %d", len(str), encodedSize)
+	if len(str) != 27 {
+		t.Errorf("KSUID length = %d, want %d", len(str), 27)
 	}
 }
 
@@ -71,8 +71,8 @@ func TestRunKSUID(t *testing.T) {
 	}
 
 	for i, line := range lines {
-		if len(line) != encodedSize {
-			t.Errorf("KSUID[%d] length = %d, want %d", i, len(line), encodedSize)
+		if len(line) != 27 {
+			t.Errorf("KSUID[%d] length = %d, want %d", i, len(line), 27)
 		}
 	}
 }
@@ -103,7 +103,7 @@ func TestRunKSUIDJSON(t *testing.T) {
 
 func TestNewString(t *testing.T) {
 	str := NewString()
-	if len(str) != encodedSize {
-		t.Errorf("NewString() length = %d, want %d", len(str), encodedSize)
+	if len(str) != 27 {
+		t.Errorf("NewString() length = %d, want %d", len(str), 27)
 	}
 }
