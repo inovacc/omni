@@ -20,6 +20,7 @@ import (
 	"maps"
 	"path/filepath"
 	"regexp"
+	"runtime"
 	"slices"
 	"strconv"
 	"strings"
@@ -126,6 +127,9 @@ func (l *List[T]) UnmarshalYAML(value *yaml.Node) error {
 }
 
 func TestIR(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("Skipped on Windows: golden files have Unix line endings affecting byte offsets")
+	}
 	t.Parallel()
 
 	corpus := golden.Corpus{

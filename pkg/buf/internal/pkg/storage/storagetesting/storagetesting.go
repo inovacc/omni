@@ -1361,6 +1361,9 @@ func RunTestSuite(
 	})
 
 	t.Run("symlink_success_no_symlinks", func(t *testing.T) {
+		if runtime.GOOS == "windows" {
+			t.Skip("Skipped on Windows: symlinks require admin privileges")
+		}
 		t.Parallel()
 		readBucket, _ := newReadBucket(t, symlinkSuccessDirPath, defaultProvider)
 		AssertPathToContent(
@@ -1373,6 +1376,9 @@ func RunTestSuite(
 		)
 	})
 	t.Run("symlink_success_follow_symlinks", func(t *testing.T) {
+		if runtime.GOOS == "windows" {
+			t.Skip("Skipped on Windows: symlinks require admin privileges")
+		}
 		t.Parallel()
 		readBucket, _ := newReadBucket(
 			t,
@@ -1400,6 +1406,9 @@ func RunTestSuite(
 		)
 	})
 	t.Run("symlink_loop_no_symlinks", func(t *testing.T) {
+		if runtime.GOOS == "windows" {
+			t.Skip("Skipped on Windows: symlinks require admin privileges")
+		}
 		t.Parallel()
 		readBucket, _ := newReadBucket(t, symlinkLoopDirPath, defaultProvider)
 		AssertPathToContent(
@@ -1412,6 +1421,9 @@ func RunTestSuite(
 		)
 	})
 	t.Run("symlink_loop_follow_symlinks", func(t *testing.T) {
+		if runtime.GOOS == "windows" {
+			t.Skip("Skipped on Windows: symlinks require admin privileges")
+		}
 		t.Parallel()
 		readBucket, _ := newReadBucket(
 			t,

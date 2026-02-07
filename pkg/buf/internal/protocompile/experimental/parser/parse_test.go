@@ -15,6 +15,7 @@
 package parser
 
 import (
+	"runtime"
 	"strings"
 	"testing"
 
@@ -30,6 +31,9 @@ const (
 )
 
 func TestParse(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("Skipped on Windows: golden files have Unix line endings affecting byte offsets")
+	}
 	t.Parallel()
 
 	corpus := golden.Corpus{

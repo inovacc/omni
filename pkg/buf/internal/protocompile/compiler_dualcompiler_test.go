@@ -17,6 +17,7 @@
 package protocompile_test
 
 import (
+	"runtime"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -29,6 +30,9 @@ import (
 // TestDualCompiler_ParseFilesMessageComments tests message comment parsing.
 // Migrated from: compiler_test.go::TestParseFilesMessageComments.
 func TestDualCompiler_ParseFilesMessageComments(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("Skipped on Windows: test data files have different line endings")
+	}
 	t.Parallel()
 
 	skip := dualcompiler.SkipConfig{

@@ -178,6 +178,7 @@ func TestMultiClientCannotHaveOverlappingRules(t *testing.T) {
 }
 
 func TestMultiClientCannotHaveOverlappingRulesWithBuiltIn(t *testing.T) {
+	t.Skip("Requires plugin binary buf-plugin-duplicate-rule that is not available")
 	t.Parallel()
 
 	client, err := newClient(
@@ -273,6 +274,7 @@ func TestMultiClientCannotHaveOverlappingCategories(t *testing.T) {
 }
 
 func TestMultiClientCannotHaveOverlappingCategoriesWithBuiltIn(t *testing.T) {
+	t.Skip("Requires plugin binary buf-plugin-duplicate-category that is not available")
 	t.Parallel()
 
 	client, err := newClient(

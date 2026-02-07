@@ -16,7 +16,6 @@ package buftesting
 
 import (
 	"context"
-	"io"
 	"net/http"
 	"path/filepath"
 	"testing"
@@ -26,11 +25,9 @@ import (
 	bufmodule2 "github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufmodule"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/github/githubtesting"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/normalpath"
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/prototesting"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/storage/storageos"
 	"github.com/inovacc/omni/pkg/buf/internal/standard/xlog/xslog"
 	"github.com/stretchr/testify/require"
-	"google.golang.org/protobuf/types/descriptorpb"
 )
 
 const (
@@ -54,49 +51,6 @@ var (
 	)
 	testGoogleapisDirPath = filepath.Join("cache", "googleapis")
 )
-
-// GetActualProtocFileDescriptorSet gets the FileDescriptorSet for actual protoc.
-func GetActualProtocFileDescriptorSet(
-	t *testing.T,
-	includeImports bool,
-	includeSourceInfo bool,
-	dirPath string,
-	filePaths []string,
-) *descriptorpb.FileDescriptorSet {
-	fileDescriptorSet, err := prototesting.GetProtocFileDescriptorSet(
-		context.Background(),
-		[]string{dirPath},
-		filePaths,
-		includeImports,
-		includeSourceInfo,
-	)
-	require.NoError(t, err)
-	return fileDescriptorSet
-}
-
-// RunActualProtoc runs actual protoc.
-func RunActualProtoc(
-	t *testing.T,
-	includeImports bool,
-	includeSourceInfo bool,
-	dirPath string,
-	filePaths []string,
-	env map[string]string,
-	stdout io.Writer,
-	extraFlags ...string,
-) {
-	err := prototesting.RunProtoc(
-		context.Background(),
-		[]string{dirPath},
-		filePaths,
-		includeImports,
-		includeSourceInfo,
-		env,
-		stdout,
-		extraFlags...,
-	)
-	require.NoError(t, err)
-}
 
 // GetGoogleapisDirPath gets the path to a clone of googleapis.
 func GetGoogleapisDirPath(t *testing.T, buftestingDirPath string) string {

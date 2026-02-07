@@ -17,6 +17,7 @@ package storagemem_test
 import (
 	"context"
 	"path/filepath"
+	"runtime"
 	"testing"
 
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/normalpath"
@@ -27,7 +28,15 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-var storagetestingDirPath = filepath.Join("..", "storagetesting")
+var storagetestingDirPath string
+
+func init() {
+	_, filename, _, ok := runtime.Caller(0)
+	if !ok {
+		panic("cannot get current file path")
+	}
+	storagetestingDirPath = filepath.Join(filepath.Dir(filename), "..", "storagetesting")
+}
 
 func TestMem(t *testing.T) {
 	t.Parallel()

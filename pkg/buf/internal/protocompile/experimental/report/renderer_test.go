@@ -18,6 +18,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"regexp"
+	"runtime"
 	"strings"
 	"testing"
 
@@ -59,6 +60,9 @@ func ansiToMarkup(text string) string {
 }
 
 func TestRender(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("Skipped on Windows: golden files have Unix line endings affecting byte offsets")
+	}
 	t.Parallel()
 
 	corpus := golden.Corpus{
