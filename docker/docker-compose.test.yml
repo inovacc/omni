@@ -1,0 +1,69 @@
+# Docker Compose for running tests
+# Usage:
+#   Unit tests:      docker compose -f docker/docker-compose.test.yml run --rm linux-test
+#   Black box tests: docker compose -f docker/docker-compose.test.yml run --rm linux-blackbox
+#   Build only:      docker compose -f docker/docker-compose.test.yml build
+
+services:
+  # Unit tests with race detector
+  linux-test:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.linux
+      target: tester
+    volumes:
+      - ../:/app
+    working_dir: /app
+    command: ["go", "test", "-v", "-race", "./..."]
+    environment:
+      - CGO_ENABLED=1
+      - GOOS=linux
+      - GOARCH=amd64
+
+  # Short unit tests (no race detector)
+  linux-test-short:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.linux
+      target: tester
+    volumes:
+      - ../:/app
+    working_dir: /app
+    command: ["go", "test", "-v", "-short", "./..."]
+    environment:
+      - CGO_ENABLED=0
+      - GOOS=linux
+      - GOARCH=amd64
+
+  # Black box tests (Python-based)
+  linux-blackbox:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.linux
+      target: blackbox-tester
+    environment:
+      - OMNI_BIN=/app/omni
+
+  # Production build
+  linux-build:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.linux
+      target: production
+    image: omni:linux-latest
+
+  # Windows containers (requires Docker Desktop in Windows container mode)
+  windows-test:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.windows
+      target: tester
+    command: ["go", "test", "-v", "./..."]
+
+  windows-blackbox:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.windows
+      target: blackbox-tester
+    environment:
+      - OMNI_BIN=C:\app\omni.exe

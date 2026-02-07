@@ -152,3 +152,26 @@ def assert_line_count(text: str, expected: int, message: str = ""):
     actual = len(lines)
     if actual != expected:
         raise AssertionError(f"{message}\n  Expected {expected} lines, got {actual}")
+
+
+def assert_regex(text: str, pattern: str, message: str = ""):
+    """Assert text matches regex pattern."""
+    import re
+    if not re.search(pattern, text):
+        raise AssertionError(f"{message}\n  Expected to match: {pattern}\n  Actual: {text[:200]}")
+
+
+def assert_file_exists(path: str, message: str = ""):
+    """Assert file exists at path."""
+    import os
+    if not os.path.exists(path):
+        raise AssertionError(f"{message}\n  File not found: {path}")
+
+
+def assert_json_valid(text: str, message: str = ""):
+    """Assert text is valid JSON."""
+    import json
+    try:
+        json.loads(text)
+    except json.JSONDecodeError as e:
+        raise AssertionError(f"{message}\n  Invalid JSON: {e}\n  Text: {text[:200]}")

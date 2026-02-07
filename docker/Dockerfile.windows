@@ -1,0 +1,93 @@
+# Windows test container for omni
+# Requires Windows container mode in Docker Desktop
+# Build: docker build -f docker/Dockerfile.windows -t omni-windows-test .
+# Run tests: docker run --rm omni-windows-test
+
+# Use Windows Server Core with Go
+FROM mcr.microsoft.com/windows/servercore:ltsc2022 AS builder
+
+# Download and install Go
+SHELL ["powershell", "-Command"]
+
+ENV GO_VERSION=1.25.5
+
+RUN Invoke-WebRequest -Uri "https://go.dev/dl/go$env:GO_VERSION.windows-amd64.zip" -OutFile "go.zip" ; \
+    Expand-Archive -Path "go.zip" -DestinationPath "C:\\" ; \
+    Remove-Item "go.zip"
+
+ENV GOPATH=C:\go
+ENV PATH="C:\go\bin;C:\Go\bin;${PATH}"
+
+WORKDIR C:\app
+
+# Copy go mod files first for caching
+COPY go.mod go.sum ./
+RUN go mod download
+
+# Copy source code
+COPY . .
+
+# Build the binary
+RUN go build -o C:\omni.exe .
+
+
+# Test stage
+FROM mcr.microsoft.com/windows/servercore:ltsc2022 AS tester
+
+SHELL ["powershell", "-Command"]
+
+ENV GO_VERSION=1.25.5
+
+RUN Invoke-WebRequest -Uri "https://go.dev/dl/go$env:GO_VERSION.windows-amd64.zip" -OutFile "go.zip" ; \
+    Expand-Archive -Path "go.zip" -DestinationPath "C:\\" ; \
+    Remove-Item "go.zip"
+
+ENV GOPATH=C:\go
+ENV PATH="C:\go\bin;C:\Go\bin;${PATH}"
+
+WORKDIR C:\app
+
+# Copy source for testing
+COPY . .
+
+# Run tests
+CMD ["go", "test", "-v", "./..."]
+
+
+# Black-box test stage with Python
+FROM mcr.microsoft.com/windows/servercore:ltsc2022 AS blackbox-tester
+
+SHELL ["powershell", "-Command"]
+
+ENV GO_VERSION=1.25.5
+
+# Install Go
+RUN Invoke-WebRequest -Uri "https://go.dev/dl/go$env:GO_VERSION.windows-amd64.zip" -OutFile "go.zip" ; \
+    Expand-Archive -Path "go.zip" -DestinationPath "C:\\" ; \
+    Remove-Item "go.zip"
+
+# Install Python
+RUN Invoke-WebRequest -Uri "https://www.python.org/ftp/python/3.12.0/python-3.12.0-amd64.exe" -OutFile "python.exe" ; \
+    Start-Process -Wait -FilePath "python.exe" -ArgumentList "/quiet InstallAllUsers=1 PrependPath=1" ; \
+    Remove-Item "python.exe"
+
+ENV GOPATH=C:\go
+ENV PATH="C:\go\bin;C:\Go\bin;C:\Program Files\Python312;C:\Program Files\Python312\Scripts;${PATH}"
+
+WORKDIR C:\app
+
+# Copy source and build
+COPY . .
+RUN go build -ldflags="-s -w" -o C:\app\omni.exe .
+
+ENV OMNI_BIN=C:\app\omni.exe
+
+CMD ["python", "testing/run_all.py"]
+
+
+# Production stage - Windows Nano Server
+FROM mcr.microsoft.com/windows/nanoserver:ltsc2022 AS production
+
+COPY --from=builder C:\omni.exe C:\omni.exe
+
+ENTRYPOINT ["C:\\omni.exe"]
