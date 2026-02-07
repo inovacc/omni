@@ -1,0 +1,40 @@
+# Video comparison test container
+# Builds omni binary and installs yt-dlp for side-by-side comparison testing.
+#
+# Usage:
+#   docker compose -f docker/docker-compose.test.yml run --rm video-comparison
+
+FROM golang:1.25-alpine AS builder
+
+RUN apk add --no-cache git gcc musl-dev
+
+WORKDIR /app
+
+COPY go.mod go.sum ./
+RUN go mod download
+
+COPY . .
+
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o /omni .
+
+
+FROM python:3.13-slim AS video-tester
+
+# Install yt-dlp and ffmpeg (ffmpeg needed by yt-dlp for some operations).
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends ffmpeg && \
+    pip install --no-cache-dir yt-dlp && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# Copy omni binary from builder.
+COPY --from=builder /omni /usr/local/bin/omni
+
+# Copy test scripts.
+WORKDIR /app
+COPY testing/ testing/
+
+ENV OMNI_BIN=/usr/local/bin/omni
+
+# Run video comparison tests.
+CMD ["python3", "testing/scripts/test_video.py"]

@@ -60,6 +60,15 @@ services:
       target: tester
     command: ["go", "test", "-v", "./..."]
 
+  # Video comparison tests (omni vs yt-dlp)
+  video-comparison:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.video-test
+      target: video-tester
+    environment:
+      - OMNI_BIN=/usr/local/bin/omni
+
   windows-blackbox:
     build:
       context: ..

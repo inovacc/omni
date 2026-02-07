@@ -45,8 +45,21 @@ omni/
 │   ├── bbolt.go           # BoltDB key-value store
 │   ├── generate.go        # Code generation tools
 │   └── ...
+├── pkg/                    # Reusable Go libraries (importable externally)
+│   ├── idgen/              # UUID, ULID, KSUID, Nanoid, Snowflake
+│   ├── hashutil/           # MD5, SHA256, SHA512 hashing
+│   ├── jsonutil/           # jq-style JSON query engine
+│   ├── encoding/           # Base64, Base32, Base58 encode/decode
+│   ├── cryptutil/          # AES-256-GCM encrypt/decrypt
+│   ├── sqlfmt/             # SQL format/minify/validate
+│   ├── cssfmt/             # CSS format/minify/validate
+│   ├── htmlfmt/            # HTML format/minify/validate
+│   ├── textutil/           # Sort, Uniq, Trim + diff/
+│   ├── search/grep/        # Pattern search with options
+│   ├── search/rg/          # Gitignore parsing, file type matching
+│   └── twig/               # Tree scanning, formatting, comparison
 ├── internal/
-│   ├── cli/               # Library implementations (80+ packages)
+│   ├── cli/               # CLI wrappers (I/O, flags, stdin handling)
 │   │   ├── ls/
 │   │   ├── pwd/
 │   │   ├── sqlite/        # SQLite operations
@@ -54,8 +67,7 @@ omni/
 │   │   ├── generate/      # Code generation with templates
 │   │   └── ...
 │   ├── flags/             # Feature flags system
-│   ├── logger/            # KSUID-based logging with query support
-│   └── twig/              # Tree visualization module
+│   └── logger/            # KSUID-based logging with query support
 ├── include/               # Template reference files
 │   └── cobra/             # Cobra app templates
 └── main.go
