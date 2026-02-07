@@ -13,535 +13,225 @@ import (
 
 // Options configures the aicontext command behavior
 type Options struct {
-	JSON     bool   // --json: output as structured JSON
-	Compact  bool   // --compact: omit examples and long descriptions
-	Category string // --category: filter to specific category
+	JSON       bool
+	Category   string
+	NoStructure bool
 }
 
 // AIContext represents the complete AI context document
 type AIContext struct {
-	Overview     Overview      `json:"overview"`
-	Categories   []Category    `json:"categories"`
-	Commands     []CommandInfo `json:"commands"`
-	LibraryAPI   LibraryAPI    `json:"library_api"`
-	Architecture Architecture  `json:"architecture"`
+	App        string            `json:"app"`
+	Desc       string            `json:"desc"`
+	Categories map[string][]CMD  `json:"categories"`
+	Structure  map[string]string `json:"structure,omitempty"`
 }
 
-// Overview describes the application
-type Overview struct {
-	Name        string   `json:"name"`
-	Description string   `json:"description"`
-	Principles  []string `json:"principles"`
-	Features    []string `json:"features"`
-}
-
-// Category represents a command category
-type Category struct {
-	Name        string   `json:"name"`
-	Description string   `json:"description"`
-	Commands    []string `json:"commands"`
-}
-
-// CommandInfo represents detailed command documentation
-type CommandInfo struct {
-	Name        string     `json:"name"`
-	Path        string     `json:"path"`
-	Category    string     `json:"category"`
-	Short       string     `json:"short"`
-	Long        string     `json:"long,omitempty"`
-	Usage       string     `json:"usage"`
-	Flags       []FlagInfo `json:"flags,omitempty"`
-	Examples    []string   `json:"examples,omitempty"`
-	Subcommands []string   `json:"subcommands,omitempty"`
-	ImportPath  string     `json:"import_path,omitempty"`
-}
-
-// FlagInfo represents a command flag
-type FlagInfo struct {
-	Name        string `json:"name"`
-	Shorthand   string `json:"shorthand,omitempty"`
-	Type        string `json:"type"`
-	Default     string `json:"default"`
-	Description string `json:"description"`
-}
-
-// LibraryAPI describes how to use commands as Go packages
-type LibraryAPI struct {
-	Description string   `json:"description"`
-	Pattern     string   `json:"pattern"`
-	Examples    []string `json:"examples"`
-}
-
-// Architecture describes the project structure
-type Architecture struct {
-	Description string            `json:"description"`
-	Structure   map[string]string `json:"structure"`
+// CMD represents a command
+type CMD struct {
+	Cmd   string   `json:"cmd"`
+	Desc  string   `json:"desc"`
+	Flags []string `json:"flags,omitempty"`
+	Sub   []string `json:"sub,omitempty"`
 }
 
 // categoryMap maps command names to categories
 var categoryMap = map[string]string{
 	// Core
-	"ls": "Core", "pwd": "Core", "cat": "Core", "date": "Core", "echo": "Core",
-	"basename": "Core", "dirname": "Core", "realpath": "Core", "tree": "Core",
-	"readlink": "Core", "yes": "Core",
+	"ls": "core", "pwd": "core", "cat": "core", "date": "core", "echo": "core",
+	"basename": "core", "dirname": "core", "realpath": "core", "tree": "core",
+	"readlink": "core", "yes": "core",
 
 	// File Operations
-	"cp": "File Operations", "mv": "File Operations", "rm": "File Operations",
-	"mkdir": "File Operations", "rmdir": "File Operations", "touch": "File Operations",
-	"chmod": "File Operations", "chown": "File Operations", "ln": "File Operations",
-	"stat": "File Operations", "file": "File Operations", "find": "File Operations",
-	"dd": "File Operations", "sync": "File Operations",
+	"cp": "file", "mv": "file", "rm": "file", "mkdir": "file", "rmdir": "file",
+	"touch": "file", "chmod": "file", "chown": "file", "ln": "file",
+	"stat": "file", "file": "file", "find": "file", "dd": "file", "sync": "file",
 
 	// Text Processing
-	"grep": "Text Processing", "egrep": "Text Processing", "fgrep": "Text Processing",
-	"sed": "Text Processing", "awk": "Text Processing", "head": "Text Processing",
-	"tail": "Text Processing", "sort": "Text Processing", "uniq": "Text Processing",
-	"cut": "Text Processing", "tr": "Text Processing", "wc": "Text Processing",
-	"nl": "Text Processing", "paste": "Text Processing", "tac": "Text Processing",
-	"column": "Text Processing", "fold": "Text Processing", "join": "Text Processing",
-	"shuf": "Text Processing", "split": "Text Processing", "rev": "Text Processing",
-	"comm": "Text Processing", "cmp": "Text Processing", "strings": "Text Processing",
-	"diff": "Text Processing", "expand": "Text Processing", "unexpand": "Text Processing",
+	"grep": "text", "egrep": "text", "fgrep": "text", "sed": "text", "awk": "text",
+	"head": "text", "tail": "text", "sort": "text", "uniq": "text", "cut": "text",
+	"tr": "text", "wc": "text", "nl": "text", "paste": "text", "tac": "text",
+	"column": "text", "fold": "text", "join": "text", "shuf": "text", "split": "text",
+	"rev": "text", "comm": "text", "cmp": "text", "strings": "text", "diff": "text",
+	"expand": "text", "unexpand": "text",
 
 	// System Info
-	"env": "System Info", "whoami": "System Info", "id": "System Info",
-	"uname": "System Info", "uptime": "System Info", "df": "System Info",
-	"du": "System Info", "ps": "System Info", "free": "System Info",
-	"kill": "System Info", "arch": "System Info", "hostname": "System Info",
-	"nproc": "System Info", "printenv": "System Info", "which": "System Info",
+	"env": "sys", "whoami": "sys", "id": "sys", "uname": "sys", "uptime": "sys",
+	"df": "sys", "du": "sys", "ps": "sys", "free": "sys", "kill": "sys",
+	"arch": "sys", "hostname": "sys", "nproc": "sys", "printenv": "sys", "which": "sys",
 
 	// Archive & Compression
-	"tar": "Archive", "zip": "Archive", "unzip": "Archive",
-	"gzip": "Archive", "gunzip": "Archive", "zcat": "Archive",
-	"bzip2": "Archive", "bunzip2": "Archive", "bzcat": "Archive",
-	"xz": "Archive", "unxz": "Archive", "xzcat": "Archive",
+	"tar": "archive", "zip": "archive", "unzip": "archive", "gzip": "archive",
+	"gunzip": "archive", "zcat": "archive", "bzip2": "archive", "bunzip2": "archive",
+	"bzcat": "archive", "xz": "archive", "unxz": "archive", "xzcat": "archive",
 
 	// Hash & Encoding
-	"hash": "Hash & Encoding", "sha256sum": "Hash & Encoding", "sha512sum": "Hash & Encoding",
-	"md5sum": "Hash & Encoding", "base64": "Hash & Encoding", "base32": "Hash & Encoding",
-	"base58": "Hash & Encoding",
+	"hash": "hash", "sha256sum": "hash", "sha512sum": "hash", "md5sum": "hash",
+	"base64": "hash", "base32": "hash", "base58": "hash",
 
 	// Data Processing
-	"jq": "Data Processing", "yq": "Data Processing", "json": "Data Processing",
-	"dotenv": "Data Processing",
+	"jq": "data", "yq": "data", "json": "data", "dotenv": "data",
 
 	// Security
-	"encrypt": "Security", "decrypt": "Security", "uuid": "Security",
-	"random": "Security", "crypt": "Security",
+	"encrypt": "security", "decrypt": "security", "uuid": "security",
+	"random": "security", "crypt": "security",
 
 	// Database
-	"sqlite": "Database", "bbolt": "Database",
+	"sqlite": "db", "bbolt": "db",
 
 	// Code Generation
-	"generate": "Code Generation",
+	"generate": "codegen",
 
 	// Utilities
-	"time": "Utilities", "sleep": "Utilities", "seq": "Utilities",
-	"xargs": "Utilities", "watch": "Utilities", "tee": "Utilities",
-	"true": "Utilities", "false": "Utilities", "test": "Utilities",
+	"time": "util", "sleep": "util", "seq": "util", "xargs": "util",
+	"watch": "util", "tee": "util", "true": "util", "false": "util", "test": "util",
 
 	// Tooling
-	"lint": "Tooling", "logger": "Tooling", "cmdtree": "Tooling",
-	"aicontext": "Tooling", "version": "Tooling", "help": "Tooling",
-	"completion": "Tooling",
+	"lint": "tools", "logger": "tools", "cmdtree": "tools", "aicontext": "tools",
+	"version": "tools",
 }
 
-// categoryDescriptions provides descriptions for each category
-var categoryDescriptions = map[string]string{
-	"Core":            "Essential file system navigation and basic I/O operations",
-	"File Operations": "File manipulation, permissions, and management commands",
-	"Text Processing": "Text transformation, filtering, and analysis tools",
-	"System Info":     "System information, process management, and environment",
-	"Archive":         "Compression and archive management utilities",
-	"Hash & Encoding": "Cryptographic hashes and encoding/decoding tools",
-	"Data Processing": "JSON, YAML, and structured data manipulation",
-	"Security":        "Encryption, random generation, and security utilities",
-	"Database":        "Embedded database operations (SQLite, BoltDB)",
-	"Code Generation": "Code scaffolding and generation tools",
-	"Utilities":       "General-purpose helper utilities",
-	"Tooling":         "Development and introspection tools",
-}
-
-// getCategory returns the category for a command name
-func getCategory(name string) string {
-	if cat, ok := categoryMap[name]; ok {
-		return cat
-	}
-
-	return "Other"
+var categoryNames = map[string]string{
+	"core":     "Core",
+	"file":     "File",
+	"text":     "Text",
+	"sys":      "System",
+	"archive":  "Archive",
+	"hash":     "Hash/Encoding",
+	"data":     "Data",
+	"security": "Security",
+	"db":       "Database",
+	"codegen":  "CodeGen",
+	"util":     "Utilities",
+	"tools":    "Tools",
 }
 
 // RunAIContext generates AI context documentation
 func RunAIContext(w io.Writer, root *cobra.Command, opts Options) error {
-	ctx := buildAIContext(root, opts)
-
+	ctx := buildContext(root, opts)
 	if opts.JSON {
-		return writeJSON(w, ctx)
+		enc := json.NewEncoder(w)
+		enc.SetIndent("", "  ")
+		return enc.Encode(ctx)
 	}
-
-	return writeMarkdown(w, ctx, opts)
+	return writeMarkdown(w, ctx)
 }
 
-// buildAIContext constructs the complete AI context
-func buildAIContext(root *cobra.Command, opts Options) AIContext {
-	commands := collectCommands(root, "", opts)
-	categories := buildCategories(commands)
+func buildContext(root *cobra.Command, opts Options) AIContext {
+	categories := make(map[string][]CMD)
 
-	// Filter by category if specified
-	if opts.Category != "" {
-		var filtered []CommandInfo
-
-		for _, cmd := range commands {
-			if strings.EqualFold(cmd.Category, opts.Category) {
-				filtered = append(filtered, cmd)
-			}
-		}
-
-		commands = filtered
-
-		var filteredCats []Category
-
-		for _, cat := range categories {
-			if strings.EqualFold(cat.Name, opts.Category) {
-				filteredCats = append(filteredCats, cat)
-			}
-		}
-
-		categories = filteredCats
-	}
-
-	return AIContext{
-		Overview:     buildOverview(),
-		Categories:   categories,
-		Commands:     commands,
-		LibraryAPI:   buildLibraryAPI(),
-		Architecture: buildArchitecture(),
-	}
-}
-
-// buildOverview creates the application overview
-func buildOverview() Overview {
-	return Overview{
-		Name:        "omni",
-		Description: "Cross-platform, Go-native replacement for common shell utilities designed for Taskfile, CI/CD, and enterprise environments.",
-		Principles: []string{
-			"No exec: Never spawns external processes",
-			"Pure Go: Standard library first, minimal dependencies",
-			"Cross-platform: Linux, macOS, Windows support",
-			"Library + CLI: All commands usable as Go packages",
-			"Safe defaults: Destructive operations require explicit flags",
-			"Testable: io.Writer pattern for all output",
-		},
-		Features: []string{
-			"100+ commands implemented in pure Go",
-			"JSON output mode for all commands",
-			"Structured logging with OpenTelemetry support",
-			"No external dependencies at runtime",
-			"Consistent flag conventions across commands",
-		},
-	}
-}
-
-// buildLibraryAPI creates the library API documentation
-func buildLibraryAPI() LibraryAPI {
-	return LibraryAPI{
-		Description: "Command implementations live under internal/cli/ and cannot be imported by external projects (Go's internal package restriction). omni is designed as a CLI tool, not a library. To reuse the logic, fork the repository or use omni as a subprocess.",
-		Pattern:     "internal/cli/<command>/<command>.go",
-		Examples: []string{
-			`// Internal structure (not importable externally):
-// Each command follows the pattern:
-//   - Options struct for configuration
-//   - Run<Command>(w io.Writer, args []string, opts Options) error
-//   - Helper functions for implementation
-
-// Example: internal/cli/cat/cat.go
-type CatOptions struct {
-    NumberAll bool
-    JSON      bool
-}
-func RunCat(w io.Writer, args []string, opts CatOptions) error`,
-		},
-	}
-}
-
-// buildArchitecture creates the architecture documentation
-func buildArchitecture() Architecture {
-	return Architecture{
-		Description: "Hexagonal architecture with clear separation between CLI and library layers",
-		Structure: map[string]string{
-			"cmd/":             "Cobra CLI command definitions (thin wrappers)",
-			"internal/cli/":    "Library implementations with Options structs and Run* functions",
-			"internal/flags/":  "Feature flags and environment configuration",
-			"internal/logger/": "Structured logging with slog",
-			"main.go":          "Entry point calling cmd.Execute()",
-		},
-	}
-}
-
-// collectCommands recursively collects all commands
-func collectCommands(cmd *cobra.Command, parentPath string, opts Options) []CommandInfo {
-	var commands []CommandInfo
-
-	for _, c := range cmd.Commands() {
-		// Skip help and completion commands
-		if c.Name() == "help" || c.Name() == "completion" {
+	for _, c := range root.Commands() {
+		if c.Name() == "help" || c.Name() == "completion" || c.Hidden {
 			continue
 		}
 
-		// Skip hidden commands
-		if c.Hidden {
+		cat := categoryMap[c.Name()]
+		if cat == "" {
+			cat = "other"
+		}
+
+		if opts.Category != "" && cat != opts.Category {
 			continue
 		}
 
-		path := c.Name()
-		if parentPath != "" {
-			path = parentPath + " " + c.Name()
+		cmd := CMD{
+			Cmd:  c.Name(),
+			Desc: c.Short,
 		}
 
-		info := CommandInfo{
-			Name:     c.Name(),
-			Path:     path,
-			Category: getCategory(c.Name()),
-			Short:    c.Short,
-			Usage:    c.UseLine(),
-		}
+		// Collect flags (abbreviated)
+		c.Flags().VisitAll(func(f *pflag.Flag) {
+			if f.Name == "help" {
+				return
+			}
+			flag := "--" + f.Name
+			if f.Shorthand != "" {
+				flag = "-" + f.Shorthand + "/" + flag
+			}
+			cmd.Flags = append(cmd.Flags, flag)
+		})
 
-		// Include long description unless compact mode
-		if !opts.Compact && c.Long != "" {
-			info.Long = c.Long
-			info.Examples = extractExamples(c.Long)
-		}
-
-		// Collect flags
-		info.Flags = collectFlags(c)
-
-		// Collect subcommand names
+		// Collect subcommands
 		for _, sub := range c.Commands() {
 			if sub.Name() != "help" && !sub.Hidden {
-				info.Subcommands = append(info.Subcommands, sub.Name())
+				cmd.Sub = append(cmd.Sub, sub.Name())
 			}
 		}
 
-		commands = append(commands, info)
-
-		// Recurse into subcommands
-		subCommands := collectCommands(c, path, opts)
-		commands = append(commands, subCommands...)
+		categories[cat] = append(categories[cat], cmd)
 	}
 
-	return commands
-}
-
-// collectFlags collects flag information from a command
-func collectFlags(cmd *cobra.Command) []FlagInfo {
-	var flags []FlagInfo
-
-	cmd.Flags().VisitAll(func(f *pflag.Flag) {
-		// Skip help flag
-		if f.Name == "help" {
-			return
-		}
-
-		flags = append(flags, FlagInfo{
-			Name:        f.Name,
-			Shorthand:   f.Shorthand,
-			Type:        f.Value.Type(),
-			Default:     f.DefValue,
-			Description: f.Usage,
-		})
-	})
-
-	return flags
-}
-
-// extractExamples parses examples from long description
-func extractExamples(long string) []string {
-	var examples []string
-
-	lines := strings.Split(long, "\n")
-	inExample := false
-
-	for _, line := range lines {
-		trimmed := strings.TrimSpace(line)
-
-		// Detect example blocks
-		if strings.HasPrefix(trimmed, "omni ") || strings.HasPrefix(trimmed, "$ omni ") {
-			examples = append(examples, strings.TrimPrefix(trimmed, "$ "))
-			inExample = true
-		} else if inExample && (trimmed == "" || !strings.HasPrefix(line, "  ")) {
-			inExample = false
-		}
-	}
-
-	return examples
-}
-
-// buildCategories groups commands by category
-func buildCategories(commands []CommandInfo) []Category {
-	catMap := make(map[string][]string)
-
-	for _, cmd := range commands {
-		// Only include top-level commands in category listing
-		if !strings.Contains(cmd.Path, " ") {
-			catMap[cmd.Category] = append(catMap[cmd.Category], cmd.Name)
-		}
-	}
-
-	categories := make([]Category, 0, len(catMap))
-
-	for name, cmds := range catMap {
-		sort.Strings(cmds)
-		categories = append(categories, Category{
-			Name:        name,
-			Description: categoryDescriptions[name],
-			Commands:    cmds,
+	// Sort commands within categories
+	for cat := range categories {
+		sort.Slice(categories[cat], func(i, j int) bool {
+			return categories[cat][i].Cmd < categories[cat][j].Cmd
 		})
 	}
 
-	// Sort categories by name
-	sort.Slice(categories, func(i, j int) bool {
-		return categories[i].Name < categories[j].Name
-	})
+	ctx := AIContext{
+		App:        "omni",
+		Desc:       "Cross-platform Go-native shell utilities (100+ commands, no exec, pure Go)",
+		Categories: categories,
+	}
 
-	return categories
+	if !opts.NoStructure {
+		ctx.Structure = map[string]string{
+			"cmd/":          "CLI commands (Cobra)",
+			"internal/cli/": "Command implementations",
+			"tests/":        "Go integration tests",
+			"testing/":      "Python black-box tests",
+		}
+	}
+
+	return ctx
 }
 
-// writeJSON outputs the context as JSON
-func writeJSON(w io.Writer, ctx AIContext) error {
-	enc := json.NewEncoder(w)
-	enc.SetIndent("", "  ")
-
-	return enc.Encode(ctx)
-}
-
-// writeMarkdown outputs the context as Markdown
-func writeMarkdown(w io.Writer, ctx AIContext, opts Options) error {
+func writeMarkdown(w io.Writer, ctx AIContext) error {
 	var sb strings.Builder
 
-	// Title
-	sb.WriteString("# omni - AI Context Document\n\n")
+	sb.WriteString(fmt.Sprintf("# %s\n\n%s\n\n", ctx.App, ctx.Desc))
 
-	// Overview
-	sb.WriteString("## Overview\n\n")
-	sb.WriteString(ctx.Overview.Description + "\n\n")
-
-	sb.WriteString("### Design Principles\n\n")
-
-	for _, p := range ctx.Overview.Principles {
-		sb.WriteString("- " + p + "\n")
+	// Sort categories
+	cats := make([]string, 0, len(ctx.Categories))
+	for cat := range ctx.Categories {
+		cats = append(cats, cat)
 	}
+	sort.Strings(cats)
 
-	sb.WriteString("\n")
-
-	sb.WriteString("### Key Features\n\n")
-
-	for _, f := range ctx.Overview.Features {
-		sb.WriteString("- " + f + "\n")
-	}
-
-	sb.WriteString("\n")
-
-	// Categories
-	sb.WriteString("## Command Categories\n\n")
-
-	for _, cat := range ctx.Categories {
-		sb.WriteString(fmt.Sprintf("### %s\n\n", cat.Name))
-
-		if cat.Description != "" {
-			sb.WriteString(cat.Description + "\n\n")
+	for _, cat := range cats {
+		cmds := ctx.Categories[cat]
+		name := categoryNames[cat]
+		if name == "" {
+			name = cat
 		}
+		sb.WriteString(fmt.Sprintf("## %s\n\n", name))
 
-		sb.WriteString("Commands: `" + strings.Join(cat.Commands, "`, `") + "`\n\n")
-	}
+		for _, cmd := range cmds {
+			sb.WriteString(fmt.Sprintf("### %s\n%s\n", cmd.Cmd, cmd.Desc))
 
-	// Command Reference
-	sb.WriteString("## Complete Command Reference\n\n")
+			if len(cmd.Flags) > 0 {
+				sb.WriteString(fmt.Sprintf("Flags: `%s`\n", strings.Join(cmd.Flags, "` `")))
+			}
 
-	for _, cmd := range ctx.Commands {
-		sb.WriteString(fmt.Sprintf("### %s\n\n", cmd.Path))
-		sb.WriteString(fmt.Sprintf("**Category:** %s\n\n", cmd.Category))
-		sb.WriteString(fmt.Sprintf("**Usage:** `%s`\n\n", cmd.Usage))
-		sb.WriteString(fmt.Sprintf("**Description:** %s\n\n", cmd.Short))
-
-		if !opts.Compact && cmd.Long != "" {
-			sb.WriteString("**Details:**\n\n")
-			sb.WriteString(cmd.Long + "\n\n")
-		}
-
-		if len(cmd.Flags) > 0 {
-			sb.WriteString("**Flags:**\n\n")
-			sb.WriteString("| Flag | Type | Default | Description |\n")
-			sb.WriteString("|------|------|---------|-------------|\n")
-
-			for _, f := range cmd.Flags {
-				flag := "--" + f.Name
-				if f.Shorthand != "" {
-					flag = "-" + f.Shorthand + ", " + flag
-				}
-
-				def := f.Default
-				if def == "" {
-					def = "-"
-				}
-
-				sb.WriteString(fmt.Sprintf("| %s | %s | %s | %s |\n",
-					flag, f.Type, def, f.Description))
+			if len(cmd.Sub) > 0 {
+				sb.WriteString(fmt.Sprintf("Sub: `%s`\n", strings.Join(cmd.Sub, "` `")))
 			}
 
 			sb.WriteString("\n")
 		}
-
-		if !opts.Compact && len(cmd.Examples) > 0 {
-			sb.WriteString("**Examples:**\n\n```bash\n")
-
-			for _, ex := range cmd.Examples {
-				sb.WriteString(ex + "\n")
-			}
-
-			sb.WriteString("```\n\n")
-		}
-
-		if len(cmd.Subcommands) > 0 {
-			sb.WriteString(fmt.Sprintf("**Subcommands:** `%s`\n\n", strings.Join(cmd.Subcommands, "`, `")))
-		}
-
-		sb.WriteString("---\n\n")
 	}
 
-	// Library API
-	sb.WriteString("## Library API\n\n")
-	sb.WriteString(ctx.LibraryAPI.Description + "\n\n")
-	sb.WriteString(fmt.Sprintf("**Import pattern:** `%s`\n\n", ctx.LibraryAPI.Pattern))
-
-	if !opts.Compact {
-		sb.WriteString("**Examples:**\n\n")
-
-		for _, ex := range ctx.LibraryAPI.Examples {
-			sb.WriteString("```go\n" + ex + "\n```\n\n")
+	if len(ctx.Structure) > 0 {
+		sb.WriteString("## Structure\n\n")
+		keys := make([]string, 0, len(ctx.Structure))
+		for k := range ctx.Structure {
+			keys = append(keys, k)
+		}
+		sort.Strings(keys)
+		for _, k := range keys {
+			sb.WriteString(fmt.Sprintf("- `%s` %s\n", k, ctx.Structure[k]))
 		}
 	}
-
-	// Architecture
-	sb.WriteString("## Architecture\n\n")
-	sb.WriteString(ctx.Architecture.Description + "\n\n")
-	sb.WriteString("```\n")
-	sb.WriteString("omni/\n")
-
-	// Sort keys for consistent output
-	keys := make([]string, 0, len(ctx.Architecture.Structure))
-	for k := range ctx.Architecture.Structure {
-		keys = append(keys, k)
-	}
-
-	sort.Strings(keys)
-
-	for _, k := range keys {
-		sb.WriteString(fmt.Sprintf("  %s  # %s\n", k, ctx.Architecture.Structure[k]))
-	}
-
-	sb.WriteString("```\n")
 
 	_, err := io.WriteString(w, sb.String())
-
 	return err
 }
