@@ -59,14 +59,14 @@ def main():
 
         @t.test("random_hex")
         def test_random_hex():
-            result = t.run("random", "hex", "-n", "16")
+            result = t.run("random", "-t", "hex", "-l", "16")
             assert_exit_code(result, 0, "random hex")
             output = result.stdout.strip()
             assert_regex(output, r'^[0-9a-f]+$', "random hex should be hex chars only")
 
         @t.test("random_int")
         def test_random_int():
-            result = t.run("random", "int", "--min", "1", "--max", "100")
+            result = t.run("random", "-t", "int", "--min", "1", "--max", "100")
             assert_exit_code(result, 0, "random int")
             try:
                 val = int(result.stdout.strip())
