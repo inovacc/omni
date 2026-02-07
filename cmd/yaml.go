@@ -14,11 +14,14 @@ var yamlCmd = &cobra.Command{
 Subcommands:
   validate    Validate YAML syntax
   fmt         Format/beautify YAML
+  k8s         Format YAML with Kubernetes conventions
   tostruct    Convert YAML to Go struct definition
 
 Examples:
   omni yaml validate config.yaml
   omni yaml fmt config.yaml
+  omni yaml fmt --sort-keys config.yaml
+  omni yaml k8s deployment.yaml
   omni yaml tostruct config.yaml`,
 }
 
@@ -50,17 +53,50 @@ var yamlFmtCmd = &cobra.Command{
 	Long: `Format and beautify YAML.
 
 Parses YAML and outputs it with consistent formatting.
+Supports multi-document YAML files.
 
 Examples:
   omni yaml fmt config.yaml
-  cat config.yaml | omni yaml fmt
-  omni yaml fmt --indent 4 config.yaml`,
+  omni yaml fmt --sort-keys config.yaml
+  omni yaml fmt --remove-empty config.yaml
+  omni yaml fmt -i config.yaml              # in-place edit
+  cat config.yaml | omni yaml fmt`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		opts := yamlutil.FormatOptions{}
 		opts.Indent, _ = cmd.Flags().GetInt("indent")
 		opts.JSON, _ = cmd.Flags().GetBool("json")
+		opts.SortKeys, _ = cmd.Flags().GetBool("sort-keys")
+		opts.RemoveEmpty, _ = cmd.Flags().GetBool("remove-empty")
+		opts.InPlace, _ = cmd.Flags().GetBool("in-place")
 
 		return yamlutil.RunFormat(cmd.OutOrStdout(), args, opts)
+	},
+}
+
+var yamlK8sCmd = &cobra.Command{
+	Use:     "k8s [FILE]",
+	Aliases: []string{"kubernetes", "kube"},
+	Short:   "Format YAML with Kubernetes conventions",
+	Long: `Format YAML with Kubernetes-specific key ordering.
+
+Orders keys according to Kubernetes conventions:
+  - Top level: apiVersion, kind, metadata, spec, status
+  - Metadata: name, namespace, labels, annotations
+
+Supports multi-document YAML files (---, multiple resources).
+
+Examples:
+  omni yaml k8s deployment.yaml
+  omni yaml k8s --remove-empty deployment.yaml
+  omni yaml k8s -i deployment.yaml           # in-place edit
+  cat manifest.yaml | omni yaml k8s`,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		opts := yamlutil.K8sFormatOptions{}
+		opts.Indent, _ = cmd.Flags().GetInt("indent")
+		opts.RemoveEmpty, _ = cmd.Flags().GetBool("remove-empty")
+		opts.InPlace, _ = cmd.Flags().GetBool("in-place")
+
+		return yamlutil.RunK8sFormat(cmd.OutOrStdout(), args, opts)
 	},
 }
 
@@ -96,13 +132,23 @@ func init() {
 	rootCmd.AddCommand(yamlCmd)
 	yamlCmd.AddCommand(yamlValidateCmd)
 	yamlCmd.AddCommand(yamlFmtCmd)
+	yamlCmd.AddCommand(yamlK8sCmd)
 	yamlCmd.AddCommand(yamlToStructCmd)
 
 	yamlValidateCmd.Flags().Bool("json", false, "output as JSON")
 	yamlValidateCmd.Flags().Bool("strict", false, "fail on unknown fields")
 
-	yamlFmtCmd.Flags().IntP("indent", "i", 2, "indentation width")
+	// fmt flags
+	yamlFmtCmd.Flags().Int("indent", 2, "indentation width")
 	yamlFmtCmd.Flags().Bool("json", false, "output as JSON instead of YAML")
+	yamlFmtCmd.Flags().Bool("sort-keys", false, "sort keys alphabetically")
+	yamlFmtCmd.Flags().Bool("remove-empty", false, "remove empty/null values")
+	yamlFmtCmd.Flags().BoolP("in-place", "i", false, "modify file in place")
+
+	// k8s flags
+	yamlK8sCmd.Flags().Int("indent", 2, "indentation width")
+	yamlK8sCmd.Flags().Bool("remove-empty", false, "remove empty/null values")
+	yamlK8sCmd.Flags().BoolP("in-place", "i", false, "modify file in place")
 
 	// tostruct flags
 	yamlToStructCmd.Flags().StringP("name", "n", "Root", "struct name")
