@@ -34,6 +34,20 @@ Prioritized items for future development phases.
 
 ## Medium Priority (P1)
 
+### Data Formatting
+- [ ] `yaml fmt` - YAML formatter/beautifier
+  - Consistent indentation (2 or 4 spaces)
+  - Key sorting (alphabetical or custom)
+  - Remove trailing whitespace
+  - Normalize quotes (single/double)
+  - JSON output mode (`--json`)
+- [ ] `yaml k8s` - Kubernetes YAML formatter
+  - Standard key ordering: apiVersion, kind, metadata, spec, status
+  - Metadata ordering: name, namespace, labels, annotations
+  - Remove empty fields and null values
+  - Multi-document support (---)
+  - Validate against common K8s conventions
+
 ### File Operations
 - [ ] `stat` - File information with JSON output
 - [ ] `touch` - Create/update file timestamps
