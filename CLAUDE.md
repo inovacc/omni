@@ -144,6 +144,45 @@ defer func() {
 | **Git Hacks** | git (quick-commit, branch-clean, undo, amend, stash-staged, log-graph, diff-words, blame-line), gqc, gbc |
 | **Kubectl Hacks** | kga, klf, keb, kpf, kdp, krr, kge, ktp, ktn, kcs, kns, kwp, kscale, kdebug, kdrain, krun, kconfig |
 
+### Tree Command (Advanced Features)
+
+The `tree` command includes performance optimizations for large codebases and a JSON compare feature:
+
+**Scanner Optimizations:**
+- `--max-files N` - Cap total scanned items (0 = unlimited)
+- `--max-hash-size N` - Skip hashing files larger than N bytes (0 = unlimited)
+- `-t/--threads N` - Parallel workers (0 = auto/NumCPU, 1 = sequential)
+- Progress callback API for library consumers
+
+**Streaming Output:**
+- `--json-stream` - NDJSON output (one JSON object per line: begin, node, stats, end)
+
+**JSON Compare:**
+- `--compare a.json b.json` - Compare two tree JSON snapshots
+- `--detect-moves` - Detect moved files by hash matching (default true)
+- 5-phase algorithm: flatten → removed → added → moves → modified
+- Output: human-readable (`+`/`-`/`~`/`>` prefixes) or `--json`
+
+**Library API (pkg/twig):**
+```go
+// Performance options
+twig.WithMaxFiles(10000)
+twig.WithMaxHashSize(50 * 1024 * 1024) // 50MB
+twig.WithParallel(8)
+twig.WithProgressCallback(func(n int) { fmt.Printf("\r%d files...", n) })
+
+// Streaming
+t.GenerateJSONStream(ctx, path, os.Stdout)
+
+// Compare
+comparer.Compare(leftJSON, rightJSON, comparer.CompareConfig{DetectMoves: true})
+```
+
+**Package Structure:**
+- `pkg/twig/scanner/` - Parallel scanning, MaxFiles, MaxHashSize
+- `pkg/twig/formatter/` - NDJSON streaming output
+- `pkg/twig/comparer/` - JSON snapshot comparison
+
 ### Backlog
 
 | Command | Notes |
@@ -346,7 +385,7 @@ Shortcuts for common Kubernetes operations.
 | `os`, `io`, `io/fs` | All file operations |
 | `path/filepath` | Path manipulation |
 | `regexp` | grep, sed, rg pattern matching |
-| `sync` | rg parallel directory walking |
+| `sync`, `sync/atomic` | rg parallel walking, tree parallel scanning |
 | `encoding/json` | jq, JSON output, json tocsv/fromcsv |
 | `encoding/csv` | csv/json conversions |
 | `encoding/xml` | xml operations, json toxml/fromxml |
@@ -430,6 +469,9 @@ Current coverage: ~26% (internal/cli)
 | `internal/cli/xxd/xxd_test.go` | Hex dump, reverse, plain, include, bits modes |
 | `internal/cli/rg/rg_test.go` | Ripgrep search, parallel walking, streaming JSON, gitignore integration |
 | `internal/cli/rg/gitignore_test.go` | Gitignore pattern parsing, negation, directory-only, double globs |
+| `pkg/twig/scanner/scanner_test.go` | Directory scanning, MaxFiles, MaxHashSize, parallel scanning, progress callback |
+| `pkg/twig/formatter/formatter_test.go` | ASCII tree, JSON, flattened hash, NDJSON streaming |
+| `pkg/twig/comparer/comparer_test.go` | Tree comparison: added, removed, modified, moved, detect-moves |
 
 ### Test Pattern
 

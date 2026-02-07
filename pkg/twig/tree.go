@@ -159,6 +159,23 @@ func (t *Tree) GenerateJSON(ctx context.Context, path string, includeStats bool)
 	return f.FormatJSON(root, stats)
 }
 
+// GenerateJSONStream scans a directory and writes the tree as streaming NDJSON to the writer.
+// Each line is a self-contained JSON object with types: "begin", "node", "stats", "end".
+func (t *Tree) GenerateJSONStream(ctx context.Context, path string, w io.Writer) error {
+	s := scanner.NewScanner(t.scanConfig)
+
+	root, err := s.Scan(ctx, path)
+	if err != nil {
+		return err
+	}
+
+	stats := models.CalculateStats(root)
+
+	f := formatter.NewFormatter(t.formatConfig)
+
+	return f.FormatJSONStream(w, root, stats)
+}
+
 // Create creates a directory structure from a tree format reader.
 // The reader should contain tree format text (e.g., from a file or string).
 //

@@ -1,6 +1,8 @@
 package formatter
 
 import (
+	"bytes"
+	"encoding/json"
 	"strings"
 	"testing"
 
@@ -296,5 +298,119 @@ func TestFormatter_DeepNesting(t *testing.T) {
 	levelCount := strings.Count(output, "level")
 	if levelCount != 5 {
 		t.Errorf("Output should contain 5 'level' directories, got %d", levelCount)
+	}
+}
+
+func TestFormatter_FormatJSONStream(t *testing.T) {
+	root := models.NewNode("project", "/project", true)
+	src := models.NewNode("src", "/project/src", true)
+	main := models.NewNode("main.go", "/project/src/main.go", false)
+	main.Hash = "abc123"
+
+	root.AddChild(src)
+	src.AddChild(main)
+
+	stats := &models.TreeStats{
+		TotalDirs:  2,
+		TotalFiles: 1,
+		MaxDepth:   2,
+	}
+
+	f := NewFormatter(nil)
+
+	var buf bytes.Buffer
+	err := f.FormatJSONStream(&buf, root, stats)
+	if err != nil {
+		t.Fatalf("FormatJSONStream() error = %v", err)
+	}
+
+	output := buf.String()
+	lines := strings.Split(strings.TrimSpace(output), "\n")
+
+	// Should have: begin, node(project), node(src), node(main.go), stats, end = 6 lines
+	if len(lines) != 6 {
+		t.Errorf("expected 6 NDJSON lines, got %d", len(lines))
+		for i, line := range lines {
+			t.Logf("line %d: %s", i, line)
+		}
+	}
+
+	// Verify each line is valid JSON
+	for i, line := range lines {
+		var msg StreamMessage
+		if err := json.Unmarshal([]byte(line), &msg); err != nil {
+			t.Errorf("line %d is not valid JSON: %v", i, err)
+		}
+	}
+
+	// Verify first line is begin
+	var firstMsg StreamMessage
+	_ = json.Unmarshal([]byte(lines[0]), &firstMsg)
+
+	if firstMsg.Type != "begin" {
+		t.Errorf("first message type should be 'begin', got %q", firstMsg.Type)
+	}
+
+	// Verify last line is end
+	var lastMsg StreamMessage
+	_ = json.Unmarshal([]byte(lines[len(lines)-1]), &lastMsg)
+
+	if lastMsg.Type != "end" {
+		t.Errorf("last message type should be 'end', got %q", lastMsg.Type)
+	}
+
+	// Verify stats line
+	var statsMsg StreamMessage
+	_ = json.Unmarshal([]byte(lines[len(lines)-2]), &statsMsg)
+
+	if statsMsg.Type != "stats" {
+		t.Errorf("second to last message type should be 'stats', got %q", statsMsg.Type)
+	}
+}
+
+func TestFormatter_FormatJSONStream_Nil(t *testing.T) {
+	f := NewFormatter(nil)
+
+	var buf bytes.Buffer
+	err := f.FormatJSONStream(&buf, nil, nil)
+	if err != nil {
+		t.Fatalf("FormatJSONStream(nil) error = %v", err)
+	}
+
+	if buf.Len() != 0 {
+		t.Errorf("FormatJSONStream(nil) should produce empty output, got %q", buf.String())
+	}
+}
+
+func TestFormatter_FormatJSONStream_NoStats(t *testing.T) {
+	root := models.NewNode("root", "/root", true)
+	file := models.NewNode("file.txt", "/root/file.txt", false)
+
+	root.AddChild(file)
+
+	f := NewFormatter(nil)
+
+	var buf bytes.Buffer
+	err := f.FormatJSONStream(&buf, root, nil)
+	if err != nil {
+		t.Fatalf("FormatJSONStream() error = %v", err)
+	}
+
+	output := buf.String()
+	lines := strings.Split(strings.TrimSpace(output), "\n")
+
+	// Should have: begin, node(root), node(file.txt), end = 4 lines (no stats)
+	if len(lines) != 4 {
+		t.Errorf("expected 4 NDJSON lines without stats, got %d", len(lines))
+	}
+
+	// Verify no stats message
+	for _, line := range lines {
+		var msg StreamMessage
+		_ = json.Unmarshal([]byte(line), &msg)
+
+		if msg.Type == "stats" {
+			t.Error("should not have stats message when stats is nil")
+		}
 	}
 }
