@@ -4,6 +4,7 @@ package formatter
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"strings"
 
 	"github.com/fatih/color"
@@ -11,11 +12,26 @@ import (
 	"github.com/xlab/treeprint"
 )
 
+// StreamMessage represents a single NDJSON line in streaming output
+type StreamMessage struct {
+	Type string      `json:"type"`
+	Data interface{} `json:"data"`
+}
+
+// StreamNodeData is the data payload for a "node" stream message
+type StreamNodeData struct {
+	Name  string `json:"name"`
+	Path  string `json:"path"`
+	IsDir bool   `json:"is_dir"`
+	Hash  string `json:"hash,omitempty"`
+}
+
 // TreeFormatter defines the interface for formatting tree structures
 type TreeFormatter interface {
 	Format(root *models.Node) string
 	FormatSimple(root *models.Node) string
 	FormatJSON(root *models.Node, stats *models.TreeStats) (string, error)
+	FormatJSONStream(w io.Writer, root *models.Node, stats *models.TreeStats) error
 }
 
 // FormatConfig holds the formatting configuration
@@ -27,6 +43,7 @@ type FormatConfig struct {
 	ShowHash         bool // Show file hashes
 	FlattenFilesHash bool // Flatten tree and show only files with hashes
 	JSONOutput       bool // Output as JSON instead of ASCII tree
+	JSONStreamOutput bool // Output as streaming NDJSON
 }
 
 // DefaultFormatConfig returns default formatting configuration
@@ -244,4 +261,62 @@ func (f *Formatter) FormatJSON(root *models.Node, stats *models.TreeStats) (stri
 	}
 
 	return string(jsonBytes) + "\n", nil
+}
+
+// FormatJSONStream writes the tree as streaming NDJSON (one JSON object per line).
+// Message types: "begin", "node" (one per tree node), "stats" (optional), "end".
+func (f *Formatter) FormatJSONStream(w io.Writer, root *models.Node, stats *models.TreeStats) error {
+	if root == nil {
+		return nil
+	}
+
+	enc := json.NewEncoder(w)
+
+	// Begin message
+	if err := enc.Encode(StreamMessage{Type: "begin", Data: map[string]string{"root": root.Name}}); err != nil {
+		return fmt.Errorf("stream begin: %w", err)
+	}
+
+	// Walk tree and emit node messages
+	if err := f.streamNodes(enc, root); err != nil {
+		return err
+	}
+
+	// Stats message
+	if stats != nil {
+		if err := enc.Encode(StreamMessage{Type: "stats", Data: stats.ToJSONStats()}); err != nil {
+			return fmt.Errorf("stream stats: %w", err)
+		}
+	}
+
+	// End message
+	if err := enc.Encode(StreamMessage{Type: "end", Data: nil}); err != nil {
+		return fmt.Errorf("stream end: %w", err)
+	}
+
+	return nil
+}
+
+func (f *Formatter) streamNodes(enc *json.Encoder, node *models.Node) error {
+	msg := StreamMessage{
+		Type: "node",
+		Data: StreamNodeData{
+			Name:  node.Name,
+			Path:  node.Path,
+			IsDir: node.IsDir,
+			Hash:  node.Hash,
+		},
+	}
+
+	if err := enc.Encode(msg); err != nil {
+		return fmt.Errorf("stream node: %w", err)
+	}
+
+	for _, child := range node.Children {
+		if err := f.streamNodes(enc, child); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
