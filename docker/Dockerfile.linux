@@ -1,0 +1,60 @@
+# Linux test container for omni
+FROM golang:1.25-alpine AS builder
+
+# Install build dependencies
+RUN apk add --no-cache git gcc musl-dev
+
+WORKDIR /app
+
+# Copy go mod files first for caching
+COPY go.mod go.sum ./
+RUN go mod download
+
+# Copy source code
+COPY . .
+
+# Build the binary
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o /omni .
+
+# Unit test stage
+FROM golang:1.25-alpine AS tester
+
+# Install test dependencies
+RUN apk add --no-cache git gcc musl-dev bash coreutils procps net-tools
+
+WORKDIR /app
+
+# Copy source for testing
+COPY . .
+
+# Run tests
+CMD ["go", "test", "-v", "./..."]
+
+
+# Black box test stage
+FROM golang:1.25-alpine AS blackbox-tester
+
+# Install dependencies for black box tests
+RUN apk add --no-cache git gcc musl-dev bash coreutils procps net-tools python3 py3-pip
+
+WORKDIR /app
+
+# Copy source code
+COPY . .
+
+# Build the binary
+RUN CGO_ENABLED=0 go build -o /app/omni .
+
+# Set environment
+ENV OMNI_BIN=/app/omni
+
+# Run black box tests
+CMD ["python3", "testing/run_all.py"]
+
+
+# Production stage
+FROM gcr.io/distroless/static-debian12:nonroot AS production
+
+COPY --from=builder /omni /omni
+
+ENTRYPOINT ["/omni"]

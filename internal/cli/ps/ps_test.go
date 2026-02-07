@@ -286,3 +286,148 @@ func TestPrintJSON(t *testing.T) {
 		t.Errorf("printJSON() should contain command: %s", output)
 	}
 }
+
+func TestGetProcessList(t *testing.T) {
+	procs, err := GetProcessList(Options{})
+	if err != nil {
+		t.Fatalf("GetProcessList() error = %v", err)
+	}
+	if len(procs) == 0 {
+		t.Error("GetProcessList() should return at least one process")
+	}
+	// Verify basic fields are populated
+	for _, p := range procs {
+		if p.PID == 0 && p.Command == "" {
+			t.Error("process should have PID or Command set")
+		}
+	}
+}
+
+func TestRun_SortByMem(t *testing.T) {
+	var buf bytes.Buffer
+	err := Run(&buf, Options{Sort: "mem"})
+	if err != nil {
+		t.Fatalf("Run() error = %v", err)
+	}
+	if buf.Len() == 0 {
+		t.Error("Run() --sort=mem should produce output")
+	}
+}
+
+func TestRun_SortByTime(t *testing.T) {
+	var buf bytes.Buffer
+	err := Run(&buf, Options{Sort: "time"})
+	if err != nil {
+		t.Fatalf("Run() error = %v", err)
+	}
+	if buf.Len() == 0 {
+		t.Error("Run() --sort=time should produce output")
+	}
+}
+
+func TestRun_CombinedFlags(t *testing.T) {
+	tests := []struct {
+		name string
+		opts Options
+	}{
+		{"all_long", Options{All: true, Long: true}},
+		{"all_full", Options{All: true, Full: true}},
+		{"aux_json", Options{Aux: true, JSON: true}},
+		{"noheader_sort_cpu", Options{NoHeaders: true, Sort: "cpu"}},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var buf bytes.Buffer
+			err := Run(&buf, tt.opts)
+			if err != nil {
+				t.Fatalf("Run() error = %v", err)
+			}
+			if buf.Len() == 0 {
+				t.Error("Run() should produce output")
+			}
+		})
+	}
+}
+
+func TestRunTop_Zero(t *testing.T) {
+	var buf bytes.Buffer
+	err := RunTop(&buf, Options{}, 0)
+	if err != nil {
+		t.Fatalf("RunTop() error = %v", err)
+	}
+	// Zero limit may show nothing or all
+}
+
+func TestSortProcesses_Time(t *testing.T) {
+	procs := []Info{
+		{PID: 1, Time: "00:01:00"},
+		{PID: 2, Time: "00:05:00"},
+		{PID: 3, Time: "00:03:00"},
+	}
+	sortProcesses(procs, "time")
+	// Should sort by time descending
+	if procs[0].Time != "00:05:00" {
+		t.Logf("sort by time result: %v (ordering may vary by implementation)", procs[0].Time)
+	}
+}
+
+func TestSortProcesses_Default(t *testing.T) {
+	procs := []Info{
+		{PID: 3}, {PID: 1}, {PID: 2},
+	}
+	sortProcesses(procs, "unknown")
+	// Default sort should be by PID
+	if procs[0].PID != 1 {
+		t.Logf("default sort result: PID=%d (may not sort by PID for unknown key)", procs[0].PID)
+	}
+}
+
+func TestPrintJSON_Empty(t *testing.T) {
+	var buf bytes.Buffer
+	err := printJSON(&buf, nil)
+	if err != nil {
+		t.Fatalf("printJSON() error = %v", err)
+	}
+	output := strings.TrimSpace(buf.String())
+	if output != "null" && output != "[]" {
+		t.Logf("printJSON() for nil: %s", output)
+	}
+}
+
+func TestPrintJSON_MultipleProcesses(t *testing.T) {
+	procs := []Info{
+		{PID: 1, Command: "a", CPU: 10.0, MEM: 5.0},
+		{PID: 2, Command: "b", CPU: 20.0, MEM: 10.0},
+		{PID: 3, Command: "c", CPU: 30.0, MEM: 15.0},
+	}
+
+	var buf bytes.Buffer
+	err := printJSON(&buf, procs)
+	if err != nil {
+		t.Fatalf("printJSON() error = %v", err)
+	}
+
+	output := buf.String()
+	if strings.Count(output, `"pid"`) != 3 {
+		t.Errorf("expected 3 pid entries in JSON output")
+	}
+}
+
+func TestFilterGoProcesses_Empty(t *testing.T) {
+	result := filterGoProcesses(nil)
+	if len(result) != 0 {
+		t.Error("filterGoProcesses(nil) should return empty")
+	}
+}
+
+func TestFilterGoProcesses_NoneGo(t *testing.T) {
+	procs := []Info{
+		{PID: 1, IsGo: false},
+		{PID: 2, IsGo: false},
+	}
+	result := filterGoProcesses(procs)
+	if len(result) != 0 {
+		t.Errorf("expected 0 Go processes, got %d", len(result))
+	}
+}

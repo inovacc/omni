@@ -94,7 +94,42 @@ tasks:
     cmds:
       - python testing/run_all.py
     env:
-      OMNI_BIN: ./omni
+      OMNI_BIN: ./bin/omni
+
+  test:blackbox:verbose:
+    desc: Run black-box tests with verbose output
+    deps: [ build ]
+    cmds:
+      - python testing/run_all.py --verbose
+    env:
+      OMNI_BIN: ./bin/omni
+
+  test:blackbox:category:
+    desc: Run specific black-box test script (use SCRIPT=test_archive)
+    deps: [ build ]
+    vars:
+      SCRIPT: '{{.SCRIPT | default "test_file_ops"}}'
+    cmds:
+      - python testing/scripts/{{.SCRIPT}}.py
+    env:
+      OMNI_BIN: ./bin/omni
+
+  test:blackbox:filter:
+    desc: Run filtered black-box tests (use FILTER env var)
+    deps: [ build ]
+    vars:
+      FILTER: '{{.FILTER | default ""}}'
+    cmds:
+      - python testing/run_all.py --filter "{{.FILTER}}"
+    env:
+      OMNI_BIN: ./bin/omni
+
+  test:e2e:
+    desc: Run all end-to-end tests (integration + blackbox)
+    deps: [ build ]
+    cmds:
+      - task: test:integration
+      - task: test:blackbox
 
   test:benchmark:
     desc: Run benchmarks comparing omni vs native Linux commands
@@ -103,6 +138,44 @@ tasks:
       - python testing/benchmark.py
     env:
       OMNI_BIN: ./omni
+
+  test:bench:go:
+    desc: Run Go micro-benchmarks
+    cmds:
+      - go test -bench=. -benchmem -count=3 -timeout=10m
+        ./internal/cli/grep/ ./internal/cli/rg/ ./internal/cli/jq/
+        ./internal/cli/hash/ ./internal/cli/jsonfmt/ ./internal/cli/text/
+        ./internal/cli/find/ ./internal/cli/cat/ ./internal/cli/base/
+        ./pkg/twig/scanner/
+
+  test:bench:go:save:
+    desc: Save Go benchmark results for comparison
+    cmds:
+      - cmd: mkdir -p bench-results
+        platforms: [ linux, darwin ]
+      - cmd: if not exist bench-results mkdir bench-results
+        platforms: [ windows ]
+      - go test -bench=. -benchmem -count=5 -timeout=15m
+        ./internal/cli/grep/ ./internal/cli/rg/ ./internal/cli/jq/
+        ./internal/cli/hash/ ./internal/cli/jsonfmt/ ./internal/cli/text/
+        ./internal/cli/find/ ./internal/cli/cat/ ./internal/cli/base/
+        ./pkg/twig/scanner/ > bench-results/latest.txt
+
+  test:bench:modern:
+    desc: Run benchmarks vs modern tools (rg, fd, bat)
+    deps: [ build ]
+    cmds:
+      - python testing/benchmark_modern.py
+    env:
+      OMNI_BIN: ./bin/omni
+
+  test:bench:all:
+    desc: Run all benchmarks (Go micro + coreutils macro + modern tools)
+    deps: [ build ]
+    cmds:
+      - task: test:bench:go
+      - task: test:benchmark
+      - task: test:bench:modern
 
   test:all-commands:
     desc: Run comprehensive command test script (PowerShell)
@@ -218,3 +291,55 @@ tasks:
     desc: Generate cmd/cmdtree.go with embedded tree
     cmds:
       - go run scripts/cmdtree/cmdtree.go -out-go cmd/cmdtree.go
+
+  # === DOCKER TASKS ===
+  docker:test:linux:
+    desc: Run unit tests in Linux Docker container
+    cmds:
+      - docker compose -f docker/docker-compose.test.yml run --rm linux-test
+
+  docker:test:linux:short:
+    desc: Run short unit tests in Linux Docker container
+    cmds:
+      - docker compose -f docker/docker-compose.test.yml run --rm linux-test-short
+
+  docker:test:linux:blackbox:
+    desc: Run black box tests in Linux Docker container
+    cmds:
+      - docker compose -f docker/docker-compose.test.yml run --rm linux-blackbox
+
+  docker:build:linux:
+    desc: Build Linux Docker image
+    cmds:
+      - docker compose -f docker/docker-compose.test.yml build linux-build
+
+  docker:test:windows:
+    desc: Run tests in Windows Docker container (requires Windows container mode)
+    cmds:
+      - docker build -f docker/Dockerfile.windows --target tester -t omni-windows-test .
+      - docker run --rm omni-windows-test
+
+  docker:build:windows:
+    desc: Build Windows Docker image (requires Windows container mode)
+    cmds:
+      - docker build -f docker/Dockerfile.windows --target production -t omni:windows-latest .
+
+  docker:test:windows:blackbox:
+    desc: Run black box tests in Windows Docker container (requires Windows container mode)
+    cmds:
+      - docker build -f docker/Dockerfile.windows --target blackbox-tester -t omni-windows-blackbox .
+      - docker run --rm omni-windows-blackbox
+
+  docker:test:all:
+    desc: Run all tests (unit + blackbox) in Linux Docker
+    cmds:
+      - task: docker:test:linux:short
+      - task: docker:test:linux:blackbox
+
+  docker:test:all:full:
+    desc: Run all tests across Linux and Windows containers
+    cmds:
+      - task: docker:test:linux
+      - task: docker:test:linux:blackbox
+      - task: docker:test:windows
+      - task: docker:test:windows:blackbox
