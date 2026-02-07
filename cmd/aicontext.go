@@ -11,58 +11,33 @@ import (
 
 var aicontextCmd = &cobra.Command{
 	Use:   "aicontext",
-	Short: "Generate AI-optimized context documentation",
-	Long: `Generate comprehensive, AI-optimized documentation about the omni application.
-
-Unlike cmdtree which shows a visual tree, aicontext produces a detailed context
-document designed for AI consumption, including:
-
-  - Application overview and design principles
-  - Command categories with descriptions
-  - Complete command reference with all flags
-  - Library API usage examples
-  - Architecture documentation
+	Short: "Generate AI context for coding agents",
+	Long: `Generate concise context for AI coding agents.
 
 Examples:
-
-  # Generate markdown documentation (default)
-  omni aicontext
-
-  # Generate JSON for programmatic use
-  omni aicontext --json
-
-  # Generate compact output (no examples or long descriptions)
-  omni aicontext --compact
-
-  # Filter to a specific category
-  omni aicontext --category "Text Processing"
-
-  # Write to a file
-  omni aicontext --output context.md`,
+  omni aicontext              # Markdown output
+  omni aicontext --json       # JSON output
+  omni aicontext -c text      # Filter by category
+  omni aicontext -o ctx.md    # Write to file`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		opts := aicontext.Options{}
-
 		opts.JSON, _ = cmd.Flags().GetBool("json")
-		opts.Compact, _ = cmd.Flags().GetBool("compact")
 		opts.Category, _ = cmd.Flags().GetString("category")
+		opts.NoStructure, _ = cmd.Flags().GetBool("no-structure")
 		outputFile, _ := cmd.Flags().GetString("output")
 
 		if err := flags.IgnoreCommand("aicontext"); err != nil {
 			return err
 		}
 
-		var w = cmd.OutOrStdout()
+		w := cmd.OutOrStdout()
 
 		if outputFile != "" {
 			f, err := os.Create(outputFile)
 			if err != nil {
 				return fmt.Errorf("aicontext: %w", err)
 			}
-
-			defer func() {
-				_ = f.Close()
-			}()
-
+			defer func() { _ = f.Close() }()
 			w = f
 		}
 
@@ -72,9 +47,8 @@ Examples:
 
 func init() {
 	rootCmd.AddCommand(aicontextCmd)
-
-	aicontextCmd.Flags().Bool("json", false, "output as structured JSON")
-	aicontextCmd.Flags().Bool("compact", false, "omit examples and long descriptions")
-	aicontextCmd.Flags().String("category", "", "filter to specific category")
-	aicontextCmd.Flags().StringP("output", "o", "", "write to file instead of stdout")
+	aicontextCmd.Flags().BoolP("json", "j", false, "JSON output")
+	aicontextCmd.Flags().StringP("category", "c", "", "filter category")
+	aicontextCmd.Flags().StringP("output", "o", "", "write to file")
+	aicontextCmd.Flags().Bool("no-structure", false, "omit project structure")
 }
