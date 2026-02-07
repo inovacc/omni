@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/btcsuite/btcd/btcutil/base58"
+	pkgenc "github.com/inovacc/omni/pkg/encoding"
 )
 
 func TestRunBase64(t *testing.T) {
@@ -167,9 +168,9 @@ func TestWrapString(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := wrapString(tt.input, tt.width)
+			result := pkgenc.WrapString(tt.input, tt.width)
 			if result != tt.expect {
-				t.Errorf("wrapString() = %v, want %v", result, tt.expect)
+				t.Errorf("pkgenc.WrapString() = %v, want %v", result, tt.expect)
 			}
 		})
 	}
@@ -460,39 +461,39 @@ func TestBase58Extended(t *testing.T) {
 
 func TestWrapStringExtended(t *testing.T) {
 	t.Run("negative width", func(t *testing.T) {
-		result := wrapString("hello", -1)
+		result := pkgenc.WrapString("hello", -1)
 		if result != "hello" {
 			t.Logf("wrapString with negative width: %v", result)
 		}
 	})
 
 	t.Run("width equals length", func(t *testing.T) {
-		result := wrapString("hello", 5)
+		result := pkgenc.WrapString("hello", 5)
 		if result != "hello" {
-			t.Errorf("wrapString() = %v, want 'hello'", result)
+			t.Errorf("pkgenc.WrapString() = %v, want 'hello'", result)
 		}
 	})
 
 	t.Run("width 1", func(t *testing.T) {
-		result := wrapString("abc", 1)
+		result := pkgenc.WrapString("abc", 1)
 
 		expected := "a\nb\nc"
 		if result != expected {
-			t.Errorf("wrapString() = %v, want %v", result, expected)
+			t.Errorf("pkgenc.WrapString() = %v, want %v", result, expected)
 		}
 	})
 
 	t.Run("empty string", func(t *testing.T) {
-		result := wrapString("", 10)
+		result := pkgenc.WrapString("", 10)
 		if result != "" {
-			t.Errorf("wrapString() = %v, want empty", result)
+			t.Errorf("pkgenc.WrapString() = %v, want empty", result)
 		}
 	})
 
 	t.Run("large width", func(t *testing.T) {
-		result := wrapString("hello", 1000)
+		result := pkgenc.WrapString("hello", 1000)
 		if result != "hello" {
-			t.Errorf("wrapString() = %v, want 'hello'", result)
+			t.Errorf("pkgenc.WrapString() = %v, want 'hello'", result)
 		}
 	})
 }

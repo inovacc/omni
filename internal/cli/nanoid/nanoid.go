@@ -1,18 +1,12 @@
 package nanoid
 
 import (
-	"crypto/rand"
 	"encoding/json"
 	"fmt"
 	"io"
-	"math/big"
+
+	"github.com/inovacc/omni/pkg/idgen"
 )
-
-// Default alphabet for NanoID (URL-safe)
-const defaultAlphabet = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz-"
-
-// Default length for NanoID
-const defaultLength = 21
 
 // Options configures the nanoid command behavior
 type Options struct {
@@ -34,27 +28,26 @@ func RunNanoID(w io.Writer, opts Options) error {
 		opts.Count = 1
 	}
 
-	if opts.Length <= 0 {
-		opts.Length = defaultLength
+	var genOpts []idgen.NanoidOption
+	if opts.Length > 0 {
+		genOpts = append(genOpts, idgen.WithNanoidLength(opts.Length))
 	}
-
-	alphabet := opts.Alphabet
-	if alphabet == "" {
-		alphabet = defaultAlphabet
+	if opts.Alphabet != "" {
+		genOpts = append(genOpts, idgen.WithNanoidAlphabet(opts.Alphabet))
 	}
 
 	var nanoids []string
 
 	for i := 0; i < opts.Count; i++ {
-		nanoid, err := Generate(alphabet, opts.Length)
+		n, err := idgen.GenerateNanoid(genOpts...)
 		if err != nil {
 			return fmt.Errorf("nanoid: %w", err)
 		}
 
 		if opts.JSON {
-			nanoids = append(nanoids, nanoid)
+			nanoids = append(nanoids, n)
 		} else {
-			_, _ = fmt.Fprintln(w, nanoid)
+			_, _ = fmt.Fprintln(w, n)
 		}
 	}
 
@@ -67,50 +60,31 @@ func RunNanoID(w io.Writer, opts Options) error {
 
 // Generate creates a NanoID with custom alphabet and length
 func Generate(alphabet string, length int) (string, error) {
-	if len(alphabet) == 0 {
-		alphabet = defaultAlphabet
+	var opts []idgen.NanoidOption
+	if alphabet != "" {
+		opts = append(opts, idgen.WithNanoidAlphabet(alphabet))
 	}
-
-	if length <= 0 {
-		length = defaultLength
+	if length > 0 {
+		opts = append(opts, idgen.WithNanoidLength(length))
 	}
-
-	alphabetLen := big.NewInt(int64(len(alphabet)))
-	result := make([]byte, length)
-
-	for i := 0; i < length; i++ {
-		idx, err := rand.Int(rand.Reader, alphabetLen)
-		if err != nil {
-			return "", err
-		}
-
-		result[i] = alphabet[idx.Int64()]
-	}
-
-	return string(result), nil
+	return idgen.GenerateNanoid(opts...)
 }
 
 // New generates a new NanoID with default settings
 func New() (string, error) {
-	return Generate(defaultAlphabet, defaultLength)
+	return idgen.GenerateNanoid()
 }
 
 // NewString returns a new NanoID as a string, empty on error
 func NewString() string {
-	nanoid, err := New()
-	if err != nil {
-		return ""
-	}
-
-	return nanoid
+	return idgen.NanoidString()
 }
 
 // MustNew generates a new NanoID and panics on error
 func MustNew() string {
-	nanoid, err := New()
+	n, err := idgen.GenerateNanoid()
 	if err != nil {
 		panic(fmt.Sprintf("nanoid: %v", err))
 	}
-
-	return nanoid
+	return n
 }

@@ -13,8 +13,8 @@ func TestNew(t *testing.T) {
 		t.Fatalf("New() error = %v", err)
 	}
 
-	if len(nanoid) != defaultLength {
-		t.Errorf("NanoID length = %d, want %d", len(nanoid), defaultLength)
+	if len(nanoid) != 21 {
+		t.Errorf("NanoID length = %d, want %d", len(nanoid), 21)
 	}
 }
 
@@ -40,7 +40,7 @@ func TestGenerateCustomLength(t *testing.T) {
 	lengths := []int{5, 10, 15, 30, 50}
 
 	for _, length := range lengths {
-		nanoid, err := Generate(defaultAlphabet, length)
+		nanoid, err := Generate("0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz-", length)
 		if err != nil {
 			t.Fatalf("Generate() error = %v", err)
 		}
@@ -82,8 +82,8 @@ func TestRunNanoID(t *testing.T) {
 	}
 
 	for i, line := range lines {
-		if len(line) != defaultLength {
-			t.Errorf("NanoID[%d] length = %d, want %d", i, len(line), defaultLength)
+		if len(line) != 21 {
+			t.Errorf("NanoID[%d] length = %d, want %d", i, len(line), 21)
 		}
 	}
 }
@@ -130,15 +130,15 @@ func TestRunNanoIDJSON(t *testing.T) {
 
 func TestNewString(t *testing.T) {
 	str := NewString()
-	if len(str) != defaultLength {
-		t.Errorf("NewString() length = %d, want %d", len(str), defaultLength)
+	if len(str) != 21 {
+		t.Errorf("NewString() length = %d, want %d", len(str), 21)
 	}
 }
 
 func TestMustNew(t *testing.T) {
 	// Should not panic
 	nanoid := MustNew()
-	if len(nanoid) != defaultLength {
-		t.Errorf("MustNew() length = %d, want %d", len(nanoid), defaultLength)
+	if len(nanoid) != 21 {
+		t.Errorf("MustNew() length = %d, want %d", len(nanoid), 21)
 	}
 }

@@ -6,11 +6,10 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"sort"
-	"strconv"
 	"strings"
 
 	"github.com/inovacc/omni/internal/cli/input"
+	"github.com/inovacc/omni/pkg/textutil"
 )
 
 // SortOptions configures the sort command behavior
@@ -85,15 +84,20 @@ func RunSort(w io.Writer, r io.Reader, args []string, opts SortOptions) error {
 
 	// Check mode
 	if opts.Check {
-		return checkSorted(lines, opts)
+		pkgOpts := toPkgSortOptions(opts)
+		disorder := textutil.CheckSorted(lines, pkgOpts)
+		if disorder != "" {
+			return fmt.Errorf("sort: disorder: %s", disorder)
+		}
+		return nil
 	}
 
 	// Sort the lines
-	sortLines(lines, opts)
+	textutil.SortLinesWithOpts(lines, toPkgSortOptions(opts))
 
 	// Remove duplicates if -u
 	if opts.Unique {
-		lines = uniqueLines(lines, opts.IgnoreCase)
+		lines = textutil.UniqueConsecutive(lines, opts.IgnoreCase)
 	}
 
 	if opts.JSON {
@@ -123,106 +127,15 @@ func RunSort(w io.Writer, r io.Reader, args []string, opts SortOptions) error {
 	return nil
 }
 
-func sortLines(lines []string, opts SortOptions) {
-	comparator := func(i, j int) bool {
-		a, b := lines[i], lines[j]
-
-		// Ignore leading blanks
-		if opts.IgnoreLeading {
-			a = strings.TrimLeft(a, " \t")
-			b = strings.TrimLeft(b, " \t")
-		}
-
-		// Case insensitive
-		if opts.IgnoreCase {
-			a = strings.ToLower(a)
-			b = strings.ToLower(b)
-		}
-
-		// Numeric comparison
-		if opts.Numeric {
-			na, _ := strconv.ParseFloat(strings.TrimSpace(a), 64)
-
-			nb, _ := strconv.ParseFloat(strings.TrimSpace(b), 64)
-			if opts.Reverse {
-				return na > nb
-			}
-
-			return na < nb
-		}
-
-		// String comparison
-		if opts.Reverse {
-			return a > b
-		}
-
-		return a < b
+func toPkgSortOptions(opts SortOptions) textutil.SortOptions {
+	return textutil.SortOptions{
+		Reverse:       opts.Reverse,
+		Numeric:       opts.Numeric,
+		Unique:        opts.Unique,
+		IgnoreCase:    opts.IgnoreCase,
+		IgnoreLeading: opts.IgnoreLeading,
+		Stable:        opts.Stable,
 	}
-
-	if opts.Stable {
-		sort.SliceStable(lines, comparator)
-	} else {
-		sort.Slice(lines, comparator)
-	}
-}
-
-func checkSorted(lines []string, opts SortOptions) error {
-	for i := 1; i < len(lines); i++ {
-		a, b := lines[i-1], lines[i]
-		if opts.IgnoreCase {
-			a = strings.ToLower(a)
-			b = strings.ToLower(b)
-		}
-
-		var outOfOrder bool
-
-		if opts.Numeric {
-			na, _ := strconv.ParseFloat(strings.TrimSpace(a), 64)
-
-			nb, _ := strconv.ParseFloat(strings.TrimSpace(b), 64)
-			if opts.Reverse {
-				outOfOrder = na < nb
-			} else {
-				outOfOrder = na > nb
-			}
-		} else {
-			if opts.Reverse {
-				outOfOrder = a < b
-			} else {
-				outOfOrder = a > b
-			}
-		}
-
-		if outOfOrder {
-			return fmt.Errorf("sort: disorder: %s", lines[i])
-		}
-	}
-
-	return nil
-}
-
-func uniqueLines(lines []string, ignoreCase bool) []string {
-	if len(lines) == 0 {
-		return lines
-	}
-
-	result := []string{lines[0]}
-	for i := 1; i < len(lines); i++ {
-		prev := result[len(result)-1]
-
-		curr := lines[i]
-		if ignoreCase {
-			if !strings.EqualFold(prev, curr) {
-				result = append(result, curr)
-			}
-		} else {
-			if prev != curr {
-				result = append(result, curr)
-			}
-		}
-	}
-
-	return result
 }
 
 // RunUniq executes the uniq command
@@ -342,30 +255,15 @@ func keysEqual(a, b string, opts UniqOptions) bool {
 
 // Sort sorts a slice of strings in place (for compatibility)
 func Sort(lines []string) {
-	sort.Strings(lines)
+	textutil.Sort(lines)
 }
 
 // Uniq returns unique lines from a slice (for compatibility)
 func Uniq(lines []string) []string {
-	seen := make(map[string]bool)
-	out := make([]string, 0, len(lines))
-
-	for _, l := range lines {
-		if !seen[l] {
-			seen[l] = true
-			out = append(out, l)
-		}
-	}
-
-	return out
+	return textutil.Uniq(lines)
 }
 
 // TrimLines trims whitespace from all lines (for compatibility)
 func TrimLines(lines []string) []string {
-	out := make([]string, 0, len(lines))
-	for _, l := range lines {
-		out = append(out, strings.TrimSpace(l))
-	}
-
-	return out
+	return textutil.TrimLines(lines)
 }

@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"strings"
 	"testing"
+
+	pkghtml "github.com/inovacc/omni/pkg/htmlfmt"
 )
 
 func TestRun(t *testing.T) {
@@ -234,9 +236,9 @@ func TestIsSelfClosing(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.tag, func(t *testing.T) {
-			got := isSelfClosing(tt.tag)
+			got := pkghtml.IsSelfClosing(tt.tag)
 			if got != tt.want {
-				t.Errorf("isSelfClosing(%q) = %v, want %v", tt.tag, got, tt.want)
+				t.Errorf("IsSelfClosing(%q) = %v, want %v", tt.tag, got, tt.want)
 			}
 		})
 	}
@@ -256,9 +258,9 @@ func TestCollapseWhitespace(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.input, func(t *testing.T) {
-			got := collapseWhitespace(tt.input)
+			got := pkghtml.CollapseWhitespace(tt.input)
 			if got != tt.want {
-				t.Errorf("collapseWhitespace(%q) = %q, want %q", tt.input, got, tt.want)
+				t.Errorf("CollapseWhitespace(%q) = %q, want %q", tt.input, got, tt.want)
 			}
 		})
 	}

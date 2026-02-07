@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"strings"
 	"testing"
+
+	pkgcss "github.com/inovacc/omni/pkg/cssfmt"
 )
 
 func TestRun(t *testing.T) {
@@ -249,9 +251,9 @@ func TestRemoveComments(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.input, func(t *testing.T) {
-			got := removeComments(tt.input)
+			got := pkgcss.RemoveComments(tt.input)
 			if got != tt.want {
-				t.Errorf("removeComments(%q) = %q, want %q", tt.input, got, tt.want)
+				t.Errorf("RemoveComments(%q) = %q, want %q", tt.input, got, tt.want)
 			}
 		})
 	}
@@ -271,9 +273,9 @@ func TestParseDeclarations(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.input, func(t *testing.T) {
-			got := parseDeclarations(tt.input)
+			got := pkgcss.ParseDeclarations(tt.input)
 			if len(got) != tt.want {
-				t.Errorf("parseDeclarations(%q) returned %d declarations, want %d", tt.input, len(got), tt.want)
+				t.Errorf("ParseDeclarations(%q) returned %d declarations, want %d", tt.input, len(got), tt.want)
 			}
 		})
 	}

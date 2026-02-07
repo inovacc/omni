@@ -6,6 +6,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	pkgdiff "github.com/inovacc/omni/pkg/textutil/diff"
 )
 
 func TestRunDiff(t *testing.T) {
@@ -544,50 +546,6 @@ func TestRunDiff(t *testing.T) {
 	})
 }
 
-func TestCountLines(t *testing.T) {
-	tests := []struct {
-		name           string
-		lines          []DiffLine
-		expectCount1   int
-		expectCount2   int
-	}{
-		{
-			"empty",
-			nil,
-			0, 0,
-		},
-		{
-			"all_context",
-			[]DiffLine{{Type: ' '}, {Type: ' '}},
-			2, 2,
-		},
-		{
-			"mixed",
-			[]DiffLine{{Type: ' '}, {Type: '-'}, {Type: '+'}, {Type: ' '}},
-			3, 3,
-		},
-		{
-			"only_removed",
-			[]DiffLine{{Type: '-'}, {Type: '-'}},
-			2, 0,
-		},
-		{
-			"only_added",
-			[]DiffLine{{Type: '+'}, {Type: '+'}},
-			0, 2,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			c1, c2 := countLines(tt.lines)
-			if c1 != tt.expectCount1 || c2 != tt.expectCount2 {
-				t.Errorf("countLines() = (%d, %d), want (%d, %d)", c1, c2, tt.expectCount1, tt.expectCount2)
-			}
-		})
-	}
-}
-
 func TestTruncateOrPad(t *testing.T) {
 	tests := []struct {
 		name     string
@@ -602,19 +560,10 @@ func TestTruncateOrPad(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := truncateOrPad(tt.input, tt.width)
+			result := pkgdiff.TruncateOrPad(tt.input, tt.width)
 			if result != tt.expected {
-				t.Errorf("truncateOrPad(%q, %d) = %q, want %q", tt.input, tt.width, result, tt.expected)
+				t.Errorf("TruncateOrPad(%q, %d) = %q, want %q", tt.input, tt.width, result, tt.expected)
 			}
 		})
-	}
-}
-
-func TestPathOrRoot(t *testing.T) {
-	if pathOrRoot("") != "(root)" {
-		t.Error("empty path should return (root)")
-	}
-	if pathOrRoot("a.b") != "a.b" {
-		t.Error("non-empty path should return as-is")
 	}
 }

@@ -1,18 +1,14 @@
 package hash
 
 import (
-	"crypto/md5"
-	"crypto/sha1"
-	"crypto/sha256"
-	"crypto/sha512"
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"hash"
 	"io"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/inovacc/omni/pkg/hashutil"
 )
 
 // HashOptions configures the hash command behavior
@@ -56,16 +52,16 @@ func RunHash(w io.Writer, args []string, opts HashOptions) error {
 }
 
 func computeHashes(w io.Writer, args []string, opts HashOptions) error {
+	algo := hashutil.Algorithm(opts.Algorithm)
 	var results []HashResult
 
 	if len(args) == 0 {
 		// Read from stdin
-		h := getHasher(opts.Algorithm)
-		if _, err := io.Copy(h, os.Stdin); err != nil {
+		hashStr, err := hashutil.HashReader(os.Stdin, algo)
+		if err != nil {
 			return fmt.Errorf("hash: %w", err)
 		}
 
-		hashStr := hex.EncodeToString(h.Sum(nil))
 		if opts.JSON {
 			results = append(results, HashResult{Path: "-", Hash: hashStr, Algorithm: opts.Algorithm})
 			return json.NewEncoder(w).Encode(HashesResult{Hashes: results, Count: len(results)})
@@ -137,6 +133,8 @@ func computeHashes(w io.Writer, args []string, opts HashOptions) error {
 }
 
 func hashFileResult(path string, opts HashOptions) (HashResult, error) {
+	algo := hashutil.Algorithm(opts.Algorithm)
+
 	f, err := os.Open(path)
 	if err != nil {
 		return HashResult{}, err
@@ -149,42 +147,33 @@ func hashFileResult(path string, opts HashOptions) (HashResult, error) {
 		return HashResult{}, err
 	}
 
-	h := getHasher(opts.Algorithm)
-	if _, err := io.Copy(h, f); err != nil {
+	hashStr, err := hashutil.HashReader(f, algo)
+	if err != nil {
 		return HashResult{}, err
 	}
 
 	return HashResult{
 		Path:      path,
-		Hash:      hex.EncodeToString(h.Sum(nil)),
+		Hash:      hashStr,
 		Algorithm: opts.Algorithm,
 		Size:      info.Size(),
 	}, nil
 }
 
 func hashFile(w io.Writer, path string, opts HashOptions) error {
-	f, err := os.Open(path)
+	algo := hashutil.Algorithm(opts.Algorithm)
+
+	hashStr, err := hashutil.HashFile(path, algo)
 	if err != nil {
 		return err
 	}
-
-	defer func() {
-		_ = f.Close()
-	}()
-
-	h := getHasher(opts.Algorithm)
-	if _, err := io.Copy(h, f); err != nil {
-		return err
-	}
-
-	sum := hex.EncodeToString(h.Sum(nil))
 
 	mode := " "
 	if opts.Binary {
 		mode = "*"
 	}
 
-	_, _ = fmt.Fprintf(w, "%s %s%s\n", sum, mode, path)
+	_, _ = fmt.Fprintf(w, "%s %s%s\n", hashStr, mode, path)
 
 	return nil
 }
@@ -194,6 +183,7 @@ func verifyChecksums(w io.Writer, args []string, opts HashOptions) error {
 		return fmt.Errorf("hash: no checksum file specified")
 	}
 
+	algo := hashutil.Algorithm(opts.Algorithm)
 	var failed, notFound, malformed int
 
 	for _, checksumFile := range args {
@@ -216,7 +206,6 @@ func verifyChecksums(w io.Writer, args []string, opts HashOptions) error {
 				continue
 			}
 
-			// Parse checksum line: HASH  FILENAME or HASH *FILENAME
 			parts := strings.SplitN(line, " ", 2)
 			if len(parts) != 2 {
 				if opts.Warn {
@@ -231,8 +220,7 @@ func verifyChecksums(w io.Writer, args []string, opts HashOptions) error {
 			expectedHash := parts[0]
 			filename := strings.TrimLeft(parts[1], " *")
 
-			// Compute actual hash
-			actualHash, err := computeFileHash(filename, opts.Algorithm)
+			actualHash, err := hashutil.HashFile(filename, algo)
 			if err != nil {
 				if !opts.Status {
 					_, _ = fmt.Fprintf(w, "%s: FAILED open or read\n", filename)
@@ -272,43 +260,6 @@ func verifyChecksums(w io.Writer, args []string, opts HashOptions) error {
 	}
 
 	return nil
-}
-
-func computeFileHash(path string, algorithm string) (string, error) {
-	f, err := os.Open(path)
-	if err != nil {
-		return "", err
-	}
-
-	defer func() {
-		_ = f.Close()
-	}()
-
-	h := getHasher(algorithm)
-	if _, err := io.Copy(h, f); err != nil {
-		return "", err
-	}
-
-	return hex.EncodeToString(h.Sum(nil)), nil
-}
-
-func getHasher(algorithm string) hash.Hash {
-	switch strings.ToLower(algorithm) {
-	case "md5":
-		return md5.New()
-	case "sha1":
-		return sha1.New()
-	case "sha256":
-		return sha256.New()
-	case "sha512":
-		return sha512.New()
-	case "sha384":
-		return sha512.New384()
-	case "sha224":
-		return sha256.New224()
-	default:
-		return sha256.New()
-	}
 }
 
 // Convenience functions for specific algorithms

@@ -109,8 +109,8 @@ func TestParse(t *testing.T) {
 	}
 
 	// Sequence should be valid
-	if sequence < 0 || sequence > maxSequence {
-		t.Errorf("Sequence = %d, want [0, %d]", sequence, maxSequence)
+	if sequence < 0 || sequence > 4095 {
+		t.Errorf("Sequence = %d, want [0, %d]", sequence, 4095)
 	}
 }
 
