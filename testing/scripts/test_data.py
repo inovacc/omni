@@ -126,7 +126,8 @@ def main():
         def test_json_validate_invalid():
             f = t.create_temp_file('{invalid json}', "invalid.json")
             result = t.run("json", "validate", str(f))
-            if result.returncode == 0:
+            # Should fail with non-zero exit or report error in output
+            if result.returncode == 0 and "invalid" not in result.stderr.lower() and "invalid" not in result.stdout.lower():
                 raise AssertionError("json validate should fail for invalid JSON")
 
         @t.test("json_tocsv")

@@ -1,16 +1,34 @@
 package kubehacks
 
 import (
+	"net"
 	"testing"
+	"time"
 )
 
 // These tests verify argument construction logic.
 // Since all functions call kubectl.Run() which requires a cluster,
 // we test argument building patterns and interface contracts.
 
+func clusterAvailable() bool {
+	conn, err := net.DialTimeout("tcp", "localhost:8080", 500*time.Millisecond)
+	if err != nil {
+		return false
+	}
+	_ = conn.Close()
+	return true
+}
+
+func skipIfNoCluster(t *testing.T) {
+	t.Helper()
+	if !clusterAvailable() {
+		t.Skip("no k8s cluster available at localhost:8080")
+	}
+}
+
 func TestGetAll_Args(t *testing.T) {
-	// Test that the function accepts the expected parameters
-	// and doesn't panic on various inputs
+	skipIfNoCluster(t)
+
 	tests := []struct {
 		name          string
 		namespace     string
@@ -24,14 +42,14 @@ func TestGetAll_Args(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// Just verify it doesn't panic - kubectl.Run will fail
-			// without a cluster but the argument building is tested
 			_ = GetAll(tt.namespace, tt.allNamespaces)
 		})
 	}
 }
 
 func TestLogsFollow_Args(t *testing.T) {
+	skipIfNoCluster(t)
+
 	tests := []struct {
 		name      string
 		pod       string
@@ -54,6 +72,8 @@ func TestLogsFollow_Args(t *testing.T) {
 }
 
 func TestPortForward_Args(t *testing.T) {
+	skipIfNoCluster(t)
+
 	tests := []struct {
 		name       string
 		target     string
@@ -73,6 +93,8 @@ func TestPortForward_Args(t *testing.T) {
 }
 
 func TestDeletePods_Args(t *testing.T) {
+	skipIfNoCluster(t)
+
 	tests := []struct {
 		name      string
 		selector  string
@@ -92,6 +114,8 @@ func TestDeletePods_Args(t *testing.T) {
 }
 
 func TestRolloutRestart_Args(t *testing.T) {
+	skipIfNoCluster(t)
+
 	tests := []struct {
 		name      string
 		depName   string
@@ -109,6 +133,8 @@ func TestRolloutRestart_Args(t *testing.T) {
 }
 
 func TestScale_Args(t *testing.T) {
+	skipIfNoCluster(t)
+
 	tests := []struct {
 		name      string
 		depName   string
@@ -127,6 +153,8 @@ func TestScale_Args(t *testing.T) {
 }
 
 func TestApply_Args(t *testing.T) {
+	skipIfNoCluster(t)
+
 	tests := []struct {
 		name      string
 		file      string
@@ -146,6 +174,8 @@ func TestApply_Args(t *testing.T) {
 }
 
 func TestDelete_Args(t *testing.T) {
+	skipIfNoCluster(t)
+
 	tests := []struct {
 		name      string
 		resource  string
@@ -165,6 +195,8 @@ func TestDelete_Args(t *testing.T) {
 }
 
 func TestDrain_Args(t *testing.T) {
+	skipIfNoCluster(t)
+
 	tests := []struct {
 		name             string
 		node             string
@@ -185,6 +217,8 @@ func TestDrain_Args(t *testing.T) {
 }
 
 func TestDebug_Args(t *testing.T) {
+	skipIfNoCluster(t)
+
 	tests := []struct {
 		name      string
 		pod       string
@@ -203,6 +237,8 @@ func TestDebug_Args(t *testing.T) {
 }
 
 func TestGetSecret_Args(t *testing.T) {
+	skipIfNoCluster(t)
+
 	tests := []struct {
 		name      string
 		secret    string
@@ -221,6 +257,8 @@ func TestGetSecret_Args(t *testing.T) {
 }
 
 func TestCopyFrom_Args(t *testing.T) {
+	skipIfNoCluster(t)
+
 	tests := []struct {
 		name      string
 		pod       string
@@ -240,6 +278,8 @@ func TestCopyFrom_Args(t *testing.T) {
 }
 
 func TestCopyTo_Args(t *testing.T) {
+	skipIfNoCluster(t)
+
 	tests := []struct {
 		name      string
 		pod       string
@@ -259,6 +299,8 @@ func TestCopyTo_Args(t *testing.T) {
 }
 
 func TestRun_Args(t *testing.T) {
+	skipIfNoCluster(t)
+
 	tests := []struct {
 		name      string
 		podName   string
@@ -279,6 +321,8 @@ func TestRun_Args(t *testing.T) {
 }
 
 func TestWatchPods_Args(t *testing.T) {
+	skipIfNoCluster(t)
+
 	tests := []struct {
 		name          string
 		namespace     string
