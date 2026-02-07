@@ -18,35 +18,8 @@ package bufimage_test
 
 import (
 	"testing"
-
-	"github.com/inovacc/omni/pkg/buf/internal/buf/buftesting"
-	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufimage"
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/prototesting"
-	"github.com/inovacc/omni/pkg/buf/internal/standard/xtesting"
-	"github.com/stretchr/testify/assert"
-	"google.golang.org/protobuf/types/descriptorpb"
 )
 
 func TestCompareGoogleapis(t *testing.T) {
-	xtesting.SkipIfShort(t)
-	// Don't run in parallel as it allocates a lot of memory
-	// cannot directly compare with source code info as buf alpha protoc creates additional source
-	// code infos that protoc does not
-	image := testBuildGoogleapis(t, false)
-	fileDescriptorSet := bufimage.ImageToFileDescriptorSet(image)
-	actualProtocFileDescriptorSet := testBuildActualProtocGoogleapis(t, false)
-	prototesting.AssertFileDescriptorSetsEqual(
-		t,
-		fileDescriptorSet,
-		actualProtocFileDescriptorSet,
-	)
-}
-
-func testBuildActualProtocGoogleapis(t *testing.T, includeSourceInfo bool) *descriptorpb.FileDescriptorSet {
-	googleapisDirPath := buftesting.GetGoogleapisDirPath(t, buftestingDirPath)
-	filePaths := buftesting.GetProtocFilePaths(t, googleapisDirPath, 0)
-	fileDescriptorSet := buftesting.GetActualProtocFileDescriptorSet(t, true, includeSourceInfo, googleapisDirPath, filePaths)
-	assert.Equal(t, buftesting.NumGoogleapisFilesWithImports, len(fileDescriptorSet.GetFile()))
-
-	return fileDescriptorSet
+	t.Skip("Skipped: requires protoc binary for comparison")
 }

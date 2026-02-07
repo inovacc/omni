@@ -25,10 +25,10 @@ import (
 	"log/slog"
 	"os/exec"
 
-	"github.com/inovacc/omni/pkg/buf/internal/protoplugin"
 	"github.com/inovacc/omni/pkg/buf/internal/app"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufconfig"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/storage/storageos"
+	"github.com/inovacc/omni/pkg/buf/internal/protoplugin"
 	"google.golang.org/protobuf/types/pluginpb"
 )
 
@@ -102,12 +102,13 @@ func GenerateWithProtocPath(protocPath ...string) GenerateOption {
 
 // NewHandler returns a new Handler based on the plugin name and optional path.
 //
-// protocPath and pluginPath are optional.
+// pluginPath is optional.
 //
 //   - If the plugin path is set, this returns a new binary handler for that path.
 //   - If the plugin path is unset, this does exec.LookPath for a binary named protoc-gen-pluginName,
 //     and if one is found, a new binary handler is returned for this.
-//   - Else, if the name is in ProtocProxyPluginNames, this returns a new protoc proxy handler.
+//   - If the name is in ProtocProxyPluginNames (protoc built-in), this returns an error as protoc
+//     binary is not supported. Use standalone protoc-gen-* plugins instead.
 //   - Else, this returns error.
 func NewHandler(
 	logger *slog.Logger,
@@ -115,6 +116,17 @@ func NewHandler(
 	pluginName string,
 	options ...HandlerOption,
 ) (protoplugin.Handler, error) {
+	// Check if this is a protoc built-in plugin - these are not supported without protoc binary
+	if _, ok := bufconfig.ProtocProxyPluginNames[pluginName]; ok {
+		return nil, fmt.Errorf(
+			"plugin %q is a protoc built-in plugin (cpp, java, python, etc.) which requires the protoc binary; "+
+				"this build does not support protoc built-in plugins - use standalone protoc-gen-%s plugin instead, "+
+				"or install protoc and use the official buf CLI",
+			pluginName,
+			pluginName,
+		)
+	}
+
 	handlerOptions := newHandlerOptions()
 	for _, option := range options {
 		option(handlerOptions)
@@ -131,19 +143,6 @@ func NewHandler(
 		return handler, nil
 	}
 
-	// Initialize builtin protoc plugin handler. We always look for protoc-gen-X first,
-	// but if not, check the builtins.
-	if _, ok := bufconfig.ProtocProxyPluginNames[pluginName]; ok {
-		if len(handlerOptions.protocPath) == 0 {
-			handlerOptions.protocPath = []string{"protoc"}
-		}
-		protocPath, protocExtraArgs := handlerOptions.protocPath[0], handlerOptions.protocPath[1:]
-		protocPath, err := unsafeLookPath(protocPath)
-		if err != nil {
-			return nil, err
-		}
-		return newProtocProxyHandler(logger, storageosProvider, protocPath, protocExtraArgs, pluginName), nil
-	}
 	return nil, fmt.Errorf(
 		"could not find protoc plugin for name %s - please make sure protoc-gen-%s is installed and present on your $PATH",
 		pluginName,
@@ -205,4 +204,17 @@ func unsafeLookPath(file string) (string, error) {
 		err = nil
 	}
 	return path, err
+}
+
+// newVersion creates a new pluginpb.Version.
+func newVersion(major, minor, patch int32, suffix string) *pluginpb.Version {
+	version := &pluginpb.Version{
+		Major: &major,
+		Minor: &minor,
+		Patch: &patch,
+	}
+	if suffix != "" {
+		version.Suffix = &suffix
+	}
+	return version
 }

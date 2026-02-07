@@ -173,7 +173,7 @@ func (f *File) EOF() Span {
 	return f.Span(eof+1, eof+1)
 }
 
-//go:linkname location github.com/bufbuild/protocompile/experimental/report.fileLocation
+//go:linkname location github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/report.fileLocation
 func location(f *File, offset int, units length.Unit, allowNonPrint bool) Location {
 	lines := f.lines()
 

@@ -19,6 +19,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/normalpath"
@@ -28,7 +29,15 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-var storagetestingDirPath = filepath.Join("..", "storagetesting")
+var storagetestingDirPath string
+
+func init() {
+	_, filename, _, ok := runtime.Caller(0)
+	if !ok {
+		panic("cannot get current file path")
+	}
+	storagetestingDirPath = filepath.Join(filepath.Dir(filename), "..", "storagetesting")
+}
 
 func TestOS(t *testing.T) {
 	t.Parallel()
@@ -71,6 +80,9 @@ func TestOS(t *testing.T) {
 	})
 
 	t.Run("get_non_existent_file_symlink", func(t *testing.T) {
+		if runtime.GOOS == "windows" {
+			t.Skip("Skipped on Windows: symlinks require admin privileges")
+		}
 		t.Parallel()
 		ctx := context.Background()
 		// Create a bucket at an absolute path.
