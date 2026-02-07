@@ -503,7 +503,7 @@ func TestRunGrep(t *testing.T) {
 		}
 	})
 
-	t.Run("no match returns no error", func(t *testing.T) {
+	t.Run("no match returns error", func(t *testing.T) {
 		file := filepath.Join(tmpDir, "nomatch.txt")
 		content := "nothing matches here"
 
@@ -514,9 +514,9 @@ func TestRunGrep(t *testing.T) {
 		var buf bytes.Buffer
 
 		err := RunGrep(&buf, nil, "xyz123", []string{file}, GrepOptions{})
-		// Non-quiet mode should not return error for no matches
-		if err != nil {
-			t.Errorf("RunGrep() should not error on no match: %v", err)
+		// Like GNU grep, return error (exit code 1) when no matches found
+		if err == nil {
+			t.Errorf("RunGrep() should return error on no match")
 		}
 	})
 
@@ -571,10 +571,10 @@ func TestRunGrep(t *testing.T) {
 	t.Run("nonexistent file", func(t *testing.T) {
 		var buf bytes.Buffer
 
-		// Non-quiet mode continues on file errors
+		// Nonexistent file should return an error
 		err := RunGrep(&buf, nil, "pattern", []string{"/nonexistent/file.txt"}, GrepOptions{})
-		if err != nil {
-			t.Logf("RunGrep() nonexistent file: %v", err)
+		if err == nil {
+			t.Errorf("RunGrep() should return error for nonexistent file")
 		}
 	})
 
@@ -586,8 +586,9 @@ func TestRunGrep(t *testing.T) {
 		var buf bytes.Buffer
 
 		err := RunGrep(&buf, nil, "pattern", []string{file}, GrepOptions{})
-		if err != nil {
-			t.Fatalf("RunGrep() error = %v", err)
+		// Empty file has no matches, so should return "no match" error like GNU grep
+		if err == nil {
+			t.Fatalf("RunGrep() should return error for empty file with no matches")
 		}
 
 		if buf.Len() != 0 {
