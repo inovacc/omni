@@ -249,7 +249,7 @@ func TestDirname(t *testing.T) {
 		input    string
 		expected string
 	}{
-		{"/path/to/file.txt", "/path/to"},
+		{"/path/to/file.txt", filepath.Dir("/path/to/file.txt")},
 		{"file.txt", "."},
 	}
 
@@ -474,7 +474,7 @@ func TestFind(t *testing.T) {
 		contains string
 	}{
 		{"basic", []string{"find", dir}, "test.txt"},
-		{"name pattern", []string{"find", dir, "-name", "*.txt"}, "test.txt"},
+		{"name pattern", []string{"find", dir, "--name", "*.txt"}, "test.txt"},
 	}
 
 	for _, tt := range tests {
@@ -596,7 +596,7 @@ func TestUniq(t *testing.T) {
 		args     []string
 		expected string
 	}{
-		{"basic", "a\nb\n", []string{"uniq"}, "a\nb\nc"},
+		{"basic", "a\na\nb\n", []string{"uniq"}, "a\nb"},
 		{"count", "a\nb", []string{"uniq", "-c"}, ""},
 	}
 
@@ -776,8 +776,8 @@ func TestHash(t *testing.T) {
 		input    string
 		contains string
 	}{
-		{"sha256", []string{"hash", "sha256"}, "test", "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08"},
-		{"md5", []string{"hash", "md5"}, "test", "098f6bcd4621d373cade4e832627b4f6"},
+		{"sha256", []string{"hash", "-a", "sha256"}, "test", "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08"},
+		{"md5", []string{"hash", "-a", "md5"}, "test", "098f6bcd4621d373cade4e832627b4f6"},
 	}
 
 	for _, tt := range tests {

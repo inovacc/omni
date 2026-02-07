@@ -141,6 +141,10 @@ func RunGrep(w io.Writer, r io.Reader, pattern string, args []string, opts GrepO
 		return fmt.Errorf("no match")
 	}
 
+	if !anyMatch {
+		return fmt.Errorf("no match")
+	}
+
 	return nil
 }
 

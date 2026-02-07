@@ -286,13 +286,13 @@ func TestRunJSONFmtValidateInvalid(t *testing.T) {
 	opts := Options{Validate: true}
 
 	err := processReader(&buf, reader, "<test>", opts)
-	if err != nil {
-		t.Fatalf("processReader() error = %v (should handle gracefully)", err)
+	// Invalid JSON in validate mode should return an error (non-zero exit code)
+	if err == nil {
+		t.Fatalf("processReader() should return error for invalid JSON")
 	}
 
-	output := buf.String()
-	if !strings.Contains(output, "invalid JSON") {
-		t.Errorf("processReader() should report invalid: %s", output)
+	if !strings.Contains(err.Error(), "invalid JSON") {
+		t.Errorf("processReader() error should mention 'invalid JSON': %v", err)
 	}
 }
 

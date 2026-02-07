@@ -88,9 +88,7 @@ func processReader(w io.Writer, r io.Reader, filename string, opts Options) erro
 				return json.NewEncoder(w).Encode(Result{Valid: false, Error: err.Error(), File: filename})
 			}
 
-			_, _ = fmt.Fprintf(w, "%s: invalid JSON: %v\n", filename, err)
-
-			return nil
+			return fmt.Errorf("%s: invalid JSON: %w", filename, err)
 		}
 
 		return fmt.Errorf("json: invalid JSON: %w", err)
