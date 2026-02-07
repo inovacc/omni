@@ -164,6 +164,15 @@ omni decrypt -p mypass -a secret.enc
 | `uuid` | Generate UUIDs |
 | `random` | Generate random values |
 
+### Video Download
+| Command | Description |
+|---------|-------------|
+| `video download` | Download video from URL |
+| `video info` | Show video metadata as JSON |
+| `video list-formats` | List available formats |
+| `video search` | Search YouTube |
+| `video extractors` | List supported sites |
+
 ### TUI Pagers
 | Command | Description |
 |---------|-------------|
@@ -277,38 +286,107 @@ omni generate cobra config --show
 omni generate cobra config --init --author "John Doe" --license MIT
 ```
 
+## Video Download
+
+Download videos from YouTube and other platforms, pure Go (no FFmpeg required):
+
+```bash
+# Download video (best quality)
+omni video download "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+
+# Download worst quality (smallest file)
+omni video download -f worst "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+
+# Custom output filename
+omni video download -o "%(title)s.%(ext)s" "https://www.youtube.com/watch?v=..."
+
+# Show video metadata as JSON
+omni video info "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+
+# List available formats
+omni video list-formats "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+
+# Search YouTube
+omni video search "golang tutorial"
+
+# Resume a partial download
+omni video download -c "https://www.youtube.com/watch?v=..."
+
+# Rate-limited download
+omni video download --rate-limit 1M "https://www.youtube.com/watch?v=..."
+```
+
+**Supported sites:** YouTube (videos, playlists, search), Generic (direct URLs, `<video>` tags, og:video)
+
+**Protocols:** HTTPS direct download, HLS/M3U8 (with AES-128 decryption)
+
+**Format selectors:** `best`, `worst`, `bestvideo`, `bestaudio`, format ID, `best[height<=720]`
+
 ## Library Usage
 
-All commands are available as importable Go packages:
+Core logic is available as importable Go packages under `pkg/`:
 
 ```go
 import (
-    "github.com/inovacc/omni/internal/cli/ls"
-    "github.com/inovacc/omni/internal/cli/hash"
-    "github.com/inovacc/omni/internal/cli/uuid"
-    "github.com/inovacc/omni/internal/cli/random"
-    "github.com/inovacc/omni/internal/cli/dotenv"
-    "github.com/inovacc/omni/internal/cli/jq"
+    "github.com/inovacc/omni/pkg/idgen"
+    "github.com/inovacc/omni/pkg/hashutil"
+    "github.com/inovacc/omni/pkg/jsonutil"
+    "github.com/inovacc/omni/pkg/encoding"
+    "github.com/inovacc/omni/pkg/cryptutil"
+    "github.com/inovacc/omni/pkg/sqlfmt"
+    "github.com/inovacc/omni/pkg/textutil"
+    "github.com/inovacc/omni/pkg/search/grep"
 )
 
-// List files
-ls.RunLs(os.Stdout, []string{"."}, &ls.Options{All: true, Long: true})
+// Generate UUID v7
+id, _ := idgen.GenerateUUID(idgen.WithUUIDVersion(idgen.V7))
 
 // Hash a file
-hash.RunSHA256Sum(os.Stdout, []string{"file.bin"}, &hash.Options{})
+hash, _ := hashutil.HashFile("file.bin", hashutil.SHA256)
 
-// Generate UUID
-u := uuid.NewUUID()
+// Query JSON
+result, _ := jsonutil.QueryString(`{"name":"omni"}`, ".name")
 
-// Generate random password
-password := random.Password(20)
+// Base64 encode
+encoded := encoding.Base64Encode([]byte("hello world"))
 
-// Load .env file
-dotenv.Load(".env")
+// AES-256-GCM encryption
+ciphertext, _ := cryptutil.Encrypt([]byte("secret"), "password", cryptutil.WithBase64())
 
-// Parse JSON
-jq.RunJq(os.Stdout, []string{".name", "data.json"}, &jq.Options{Raw: true})
+// Format SQL
+formatted := sqlfmt.Format("select * from users where id=1")
+
+// Sort lines
+lines := []string{"banana", "apple", "cherry"}
+textutil.SortLines(lines, textutil.WithReverse())
+
+// Search with grep
+matches := grep.Search(lines, "app")
+
+// Download video
+import "github.com/inovacc/omni/pkg/video"
+client, _ := video.New(video.WithFormat("best"))
+_ = client.Download(ctx, "https://www.youtube.com/watch?v=...")
 ```
+
+### Available Packages
+
+| Package | Import | Description |
+|---------|--------|-------------|
+| `pkg/idgen` | `idgen` | UUID v4/v7, ULID, KSUID, Nanoid, Snowflake |
+| `pkg/hashutil` | `hashutil` | MD5, SHA256, SHA512 file/string/reader hashing |
+| `pkg/jsonutil` | `jsonutil` | JSON query engine (jq-style filters) |
+| `pkg/encoding` | `encoding` | Base64, Base32, Base58 encode/decode |
+| `pkg/cryptutil` | `cryptutil` | AES-256-GCM encrypt/decrypt with PBKDF2 |
+| `pkg/sqlfmt` | `sqlfmt` | SQL format, minify, validate, tokenize |
+| `pkg/cssfmt` | `cssfmt` | CSS format, minify, validate, parse |
+| `pkg/htmlfmt` | `htmlfmt` | HTML format, minify, validate |
+| `pkg/textutil` | `textutil` | Sort, Uniq, Trim text processing |
+| `pkg/textutil/diff` | `diff` | Compute diffs, compare JSON, unified format |
+| `pkg/search/grep` | `grep` | Pattern search with regex/fixed/word options |
+| `pkg/search/rg` | `rg` | Gitignore parsing, file type matching, binary detection |
+| `pkg/twig` | `twig` | Directory tree scanning, formatting, comparison |
+| `pkg/video` | `video` | Video download engine (YouTube, HLS, generic) |
 
 ## Project Structure
 
@@ -318,34 +396,46 @@ omni/
 │   ├── root.go
 │   ├── ls.go
 │   ├── grep.go
-│   ├── sqlite.go
-│   ├── bbolt.go
-│   ├── generate.go
 │   └── ...
+├── pkg/                    # Reusable Go libraries (importable by external projects)
+│   ├── idgen/              # UUID, ULID, KSUID, Nanoid, Snowflake
+│   ├── hashutil/           # File/string/reader hashing
+│   ├── jsonutil/           # JSON query engine
+│   ├── encoding/           # Base64, Base32, Base58
+│   ├── cryptutil/          # AES-256-GCM encryption
+│   ├── sqlfmt/             # SQL formatting and validation
+│   ├── cssfmt/             # CSS formatting and validation
+│   ├── htmlfmt/            # HTML formatting and validation
+│   ├── textutil/           # Sort, Uniq, Trim
+│   │   └── diff/           # Diff computation and JSON comparison
+│   ├── search/
+│   │   ├── grep/           # Pattern search
+│   │   └── rg/             # Gitignore parsing, file type matching
+│   ├── twig/               # Tree scanning, formatting, comparison
+│   │   ├── scanner/
+│   │   ├── formatter/
+│   │   ├── comparer/
+│   │   └── ...
+│   └── video/              # Video download engine
+│       ├── extractor/      # Site-specific extractors (YouTube, Generic)
+│       ├── downloader/     # HTTP and HLS download engines
+│       ├── format/         # Format sorting and selection
+│       ├── m3u8/           # HLS manifest parser
+│       ├── nethttp/        # HTTP client with cookies/proxy
+│       ├── jsinterp/       # JS execution (YouTube signatures)
+│       ├── cache/          # Filesystem cache
+│       ├── utils/          # HTML, URL, sanitize helpers
+│       └── types/          # Shared data structures
 ├── internal/
-│   ├── cli/               # Library implementations (80+ packages)
+│   ├── cli/               # CLI wrappers (I/O, flags, stdin handling)
 │   │   ├── ls/
 │   │   ├── grep/
 │   │   ├── jq/
-│   │   ├── sqlite/        # SQLite operations
-│   │   ├── bbolt/         # BoltDB operations
-│   │   ├── generate/      # Code generation
-│   │   │   └── templates/ # Cobra templates
 │   │   └── ...
 │   ├── flags/             # Feature flags system
-│   ├── logger/            # KSUID-based logging with query support
-│   └── twig/              # Tree visualization module
-│       ├── scanner/       # Directory scanning
-│       ├── formatter/     # Output formatting
-│       ├── builder/       # Structure creation
-│       ├── parser/        # Tree parsing
-│       └── models/        # Data models
+│   └── logger/            # KSUID-based logging
 ├── include/               # Template reference files
-│   └── cobra/             # Cobra app templates
 ├── docs/                  # Documentation
-│   ├── ROADMAP.md
-│   ├── COMMANDS.md
-│   └── BACKLOG.md
 └── main.go
 ```
 
@@ -451,6 +541,9 @@ Or use Taskfile:
 ```bash
 task test
 task lint
+
+# Video comparison tests (omni vs yt-dlp in Docker)
+task docker:test:video
 ```
 
 ## Contributing

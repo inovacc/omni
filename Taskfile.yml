@@ -330,6 +330,16 @@ tasks:
       - docker build -f docker/Dockerfile.windows --target blackbox-tester -t omni-windows-blackbox .
       - docker run --rm omni-windows-blackbox
 
+  docker:test:video:
+    desc: Run video comparison tests (omni vs yt-dlp) in Docker
+    cmds:
+      - docker compose -f docker/docker-compose.test.yml run --rm video-comparison
+
+  docker:test:video:build:
+    desc: Build video test Docker image
+    cmds:
+      - docker compose -f docker/docker-compose.test.yml build video-comparison
+
   docker:test:all:
     desc: Run all tests (unit + blackbox) in Linux Docker
     cmds:

@@ -10,17 +10,30 @@ This document analyzes the omni codebase to identify reusable patterns, code con
 ```
 omni/
 ├── cmd/                    # 98 Cobra CLI commands
+├── pkg/                    # 12 reusable Go libraries (importable externally)
+│   ├── idgen/              # UUID, ULID, KSUID, Nanoid, Snowflake
+│   ├── hashutil/           # MD5, SHA256, SHA512 hashing
+│   ├── jsonutil/           # jq-style JSON query engine
+│   ├── encoding/           # Base64, Base32, Base58
+│   ├── cryptutil/          # AES-256-GCM encrypt/decrypt
+│   ├── sqlfmt/             # SQL format/minify/validate
+│   ├── cssfmt/             # CSS format/minify/validate
+│   ├── htmlfmt/            # HTML format/minify/validate
+│   ├── textutil/           # Sort, Uniq, Trim + diff/
+│   ├── search/grep/        # Pattern search with options
+│   ├── search/rg/          # Gitignore parsing, file type matching
+│   └── twig/               # Tree scanning, formatting, comparison
 ├── internal/
-│   ├── cli/               # 79 library packages
+│   ├── cli/               # CLI wrappers (delegates to pkg/ for core logic)
 │   ├── flags/             # Feature flags system
-│   ├── logger/            # KSUID-based logging
-│   └── twig/              # Tree visualization module
+│   └── logger/            # KSUID-based logging
 └── main.go
 ```
 
 ### Statistics
 - **Command Files:** 98 in `cmd/`
-- **CLI Packages:** 79 in `internal/cli/`
+- **Pkg Libraries:** 12 in `pkg/` (externally importable)
+- **CLI Packages:** 79 in `internal/cli/` (thin wrappers)
 - **Test Coverage:** 97.7% (86/88 packages)
 - **Total Test Cases:** 700+
 

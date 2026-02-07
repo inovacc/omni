@@ -32,8 +32,21 @@
 omni/
 ├── .github/workflows/  # CI/CD workflows
 ├── cmd/                # Cobra CLI commands (thin wrappers)
-├── internal/cli/       # Library implementations (all logic here)
-│   ├── <command>/      # Each command in its own package
+├── pkg/                # Reusable Go libraries (importable by external projects)
+│   ├── idgen/          # UUID, ULID, KSUID, Nanoid, Snowflake
+│   ├── hashutil/       # MD5, SHA256, SHA512 hashing
+│   ├── jsonutil/       # jq-style JSON query engine
+│   ├── encoding/       # Base64, Base32, Base58 encode/decode
+│   ├── cryptutil/      # AES-256-GCM encrypt/decrypt
+│   ├── sqlfmt/         # SQL format/minify/validate
+│   ├── cssfmt/         # CSS format/minify/validate
+│   ├── htmlfmt/        # HTML format/minify/validate
+│   ├── textutil/       # Sort, Uniq, Trim + diff/
+│   ├── search/grep/    # Pattern search with options
+│   ├── search/rg/      # Gitignore parsing, file type matching
+│   └── twig/           # Tree scanning, formatting, comparison
+├── internal/cli/       # CLI wrappers (I/O, flags, stdin handling)
+│   ├── <command>/      # Each command delegates to pkg/ for core logic
 │   │   ├── <command>.go
 │   │   ├── <command>_test.go
 │   │   ├── <command>_unix.go    # Unix-specific (optional)
@@ -78,6 +91,30 @@ var lsCmd = &cobra.Command{
         opts.All, _ = cmd.Flags().GetBool("all")
         return ls.Run(cmd.OutOrStdout(), args, opts)
     },
+}
+```
+
+#### Pkg Library Pattern
+
+Reusable logic lives in `pkg/` with functional options:
+
+```go
+// pkg/sqlfmt/sqlfmt.go
+type Option func(*Options)
+func WithIndent(s string) Option { return func(o *Options) { o.Indent = s } }
+func Format(input string, opts ...Option) string { ... }
+```
+
+`internal/cli/` packages delegate to `pkg/` and handle I/O:
+
+```go
+// internal/cli/sqlfmt/sqlfmt.go
+import pkgsql "github.com/inovacc/omni/pkg/sqlfmt"
+
+func RunFormat(w io.Writer, args []string, opts Options) error {
+    result := pkgsql.Format(input, pkgsql.WithIndent(opts.Indent))
+    _, _ = fmt.Fprintln(w, result)
+    return nil
 }
 ```
 
@@ -140,6 +177,7 @@ defer func() {
 | **Comparison** | diff |
 | **Tooling** | lint, cmdtree, loc, cron |
 | **Network** | curl |
+| **Video** | video download, video info, video list-formats, video search, video extractors |
 | **Cloud/DevOps** | kubectl (k), terraform (tf), aws |
 | **Git Hacks** | git (quick-commit, branch-clean, undo, amend, stash-staged, log-graph, diff-words, blame-line), gqc, gbc |
 | **Kubectl Hacks** | kga, klf, keb, kpf, kdp, krr, kge, ktp, ktn, kcs, kns, kwp, kscale, kdebug, kdrain, krun, kconfig |
@@ -288,6 +326,46 @@ omni rg -j 8 "pattern" /large/codebase
 omni rg --hidden --no-ignore "secret" .
 ```
 
+### Video Download Engine
+
+The `video` command is a pure Go youtube-dl/yt-dlp port under `pkg/video/`:
+
+```
+pkg/video/
+├── video.go                    # Client orchestrator (Extract, Download, DownloadInfo)
+├── options.go                  # Functional options (WithFormat, WithProxy, etc.)
+├── types/types.go              # VideoInfo, Format, Fragment, Thumbnail, etc.
+├── extractor/                  # Site-specific metadata extractors
+│   ├── extractor.go            # Extractor interface + BaseExtractor helpers
+│   ├── registry.go             # Register/Match/Names (init()-based registration)
+│   ├── youtube/                # YouTube: InnerTube API, signature decryption, playlists
+│   └── generic/                # Fallback: direct URLs, <video> tags, og:video
+├── downloader/                 # Download engines
+│   ├── http.go                 # HTTPS: resume via Range, .part files, retry, rate-limit
+│   └── hls.go                  # HLS/M3U8: segment download, AES-128 decrypt, master→media resolution
+├── format/                     # Format sorting + selector ("best", "worst", "best[height<=720]")
+├── m3u8/parser.go              # HLS manifest parser (master + media playlists, EXT-X-KEY)
+├── nethttp/client.go           # HTTP client (cookie jar, proxy, retries, per-request headers)
+├── jsinterp/jsinterp.go        # goja JS runtime (YouTube signature/nsig decryption)
+├── cache/cache.go              # Filesystem cache (XDG paths)
+└── utils/                      # HTML parse, URL join, filename sanitize, traverse_obj
+```
+
+**Key patterns:**
+- Extractors register via `init()` + `extractor.Register()`; `extractor/all/all.go` blank-imports all extractors
+- YouTube uses InnerTube API with multiple client configs (android_vr first — no PoToken needed)
+- HLS downloader auto-resolves master playlists to highest-bandwidth variant
+- `pkg/video/` is a standalone library importable by external Go projects
+
+**CLI wrappers:** `internal/cli/video/` (download.go, info.go, formats.go, output.go) → `cmd/video.go`
+
+**Dependencies:** `github.com/dop251/goja` (pure Go JS runtime for YouTube signatures)
+
+**Testing:**
+- Unit tests: `go test ./pkg/video/...` (format, m3u8, utils, registry — 33+ tests)
+- Black-box: `testing/scripts/test_video.py` (omni video info/list-formats/download vs yt-dlp)
+- Docker: `task docker:test:video` (comparison tests with yt-dlp in container)
+
 ---
 
 ## Cloud & DevOps Integrations
@@ -377,6 +455,7 @@ Shortcuts for common Kubernetes operations.
 | `github.com/charmbracelet/bubbletea` | TUI framework for pagers |
 | `github.com/charmbracelet/lipgloss` | Terminal styling |
 | `gopkg.in/yaml.v3` | YAML parsing for yq, lint |
+| `github.com/dop251/goja` | Pure Go JS runtime (YouTube signature decryption) |
 
 ### Standard Library Usage
 
@@ -469,9 +548,27 @@ Current coverage: ~26% (internal/cli)
 | `internal/cli/xxd/xxd_test.go` | Hex dump, reverse, plain, include, bits modes |
 | `internal/cli/rg/rg_test.go` | Ripgrep search, parallel walking, streaming JSON, gitignore integration |
 | `internal/cli/rg/gitignore_test.go` | Gitignore pattern parsing, negation, directory-only, double globs |
+| `pkg/idgen/idgen_test.go` | UUID v4/v7, ULID, KSUID, Nanoid, Snowflake generation |
+| `pkg/hashutil/hashutil_test.go` | HashFile, HashReader, HashString, HashBytes |
+| `pkg/jsonutil/jsonutil_test.go` | Query, QueryString, QueryReader, ApplyFilter |
+| `pkg/encoding/encoding_test.go` | Base64/32/58 encode/decode, WrapString |
+| `pkg/cryptutil/cryptutil_test.go` | Encrypt/decrypt roundtrip, key generation/derivation |
+| `pkg/sqlfmt/sqlfmt_test.go` | Format, Minify, Validate, Tokenize, IsKeyword |
+| `pkg/cssfmt/cssfmt_test.go` | Format, Minify, Validate, RemoveComments, ParseDeclarations |
+| `pkg/htmlfmt/htmlfmt_test.go` | Format, Minify, Validate, IsSelfClosing, CollapseWhitespace |
+| `pkg/textutil/textutil_test.go` | Sort, SortLines, UniqueConsecutive, Uniq, TrimLines |
+| `pkg/textutil/diff/diff_test.go` | ComputeDiff, FormatUnified, CompareJSON, CompareJSONBytes |
+| `pkg/search/grep/grep_test.go` | Search, SearchWithOptions, CompilePattern |
+| `pkg/search/rg/rg_test.go` | ParsePattern, GitignoreSet, MatchesFileType, MatchesGlob, IsBinary |
 | `pkg/twig/scanner/scanner_test.go` | Directory scanning, MaxFiles, MaxHashSize, parallel scanning, progress callback |
 | `pkg/twig/formatter/formatter_test.go` | ASCII tree, JSON, flattened hash, NDJSON streaming |
 | `pkg/twig/comparer/comparer_test.go` | Tree comparison: added, removed, modified, moved, detect-moves |
+| `pkg/video/format/format_test.go` | Format sorting, HasVideo, HasAudio, resolution |
+| `pkg/video/format/selector_test.go` | Format selector parsing ("best", "worst", filter expressions) |
+| `pkg/video/m3u8/parser_test.go` | M3U8 manifest parsing (master/media playlists, segments, keys) |
+| `pkg/video/utils/*_test.go` | Sanitize, HTML, URL, parse, traverse tests |
+| `pkg/video/extractor/registry_test.go` | Extractor registration and matching |
+| `testing/scripts/test_video.py` | Black-box: omni video vs yt-dlp comparison (Docker) |
 
 ### Test Pattern
 

@@ -6,10 +6,20 @@ import (
 	"github.com/spf13/cobra"
 )
 
+const omniBanner = `
+  ██████╗ ███╗   ███╗███╗   ██╗██╗
+ ██╔═══██╗████╗ ████║████╗  ██║██║
+ ██║   ██║██╔████╔██║██╔██╗ ██║██║
+ ██║   ██║██║╚██╔╝██║██║╚██╗██║██║
+ ╚██████╔╝██║ ╚═╝ ██║██║ ╚████║██║
+  ╚═════╝ ╚═╝     ╚═╝╚═╝  ╚═══╝╚═╝
+  Shell utilities, rewritten in Go.
+`
+
 var rootCmd = &cobra.Command{
 	Use:   "omni",
 	Short: "Go-native replacement for common shell utilities",
-	Long: `omni is a cross-platform, safe, Go-native replacement for common shell utilities,
+	Long: omniBanner + `omni is a cross-platform, safe, Go-native replacement for common shell utilities,
 designed for Taskfile, CI/CD, and enterprise environments.`,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		if err := flags.ExportFlagsToEnv(); err != nil {
