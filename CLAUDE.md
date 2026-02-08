@@ -163,7 +163,7 @@ defer func() {
 | **Text** | grep, egrep, fgrep, head, tail, sort, uniq, wc, cut, tr, nl, paste, tac, column, fold, join, sed, awk, shuf, split, rev, comm, cmp, strings |
 | **Search** | rg (ripgrep-style search with gitignore support, parallel walking, streaming JSON) |
 | **System** | env, whoami, id, uname, uptime, free, df, du, ps, kill, time |
-| **Flow** | xargs, watch, yes, pipe |
+| **Flow** | xargs, watch, yes, pipe, pipeline |
 | **Archive** | tar, zip, unzip |
 | **Compression** | gzip, gunzip, zcat, bzip2, bunzip2, bzcat, xz, unxz, xzcat |
 | **Hash** | hash, sha256sum, sha512sum, md5sum |
@@ -221,12 +221,6 @@ comparer.Compare(leftJSON, rightJSON, comparer.CompareConfig{DetectMoves: true})
 - `pkg/twig/formatter/` - NDJSON streaming output
 - `pkg/twig/comparer/` - JSON snapshot comparison
 
-### Backlog
-
-| Command | Notes |
-|---------|-------|
-| `pipeline` | Internal streaming engine |
-
 ### Pipe Command (Variable Substitution)
 
 The `pipe` command chains omni commands together with variable substitution support:
@@ -258,6 +252,42 @@ omni pipe '{uuid -v 7 -n 10}' '{mkdir [$OUT...]}'
 # Chain with verbose output
 omni pipe -v '{cat file.txt}' '{grep pattern}' '{sort}'
 ```
+
+### Pipeline Command (Streaming Engine)
+
+The `pipeline` command is a streaming text processing engine with built-in transform stages connected via `io.Pipe()` goroutines. Unlike `pipe` (which dispatches through Cobra), `pipeline` has zero Cobra overhead per stage and processes line-by-line for constant memory usage.
+
+**Built-in Stages (20):**
+
+*Streaming (constant memory):*
+`grep`, `grep-v`, `contains`, `replace`, `head`/`take`, `skip`, `uniq`, `cut`, `tr`, `sed`, `rev`, `nl`, `tee`, `filter`(lib-only), `map`(lib-only)
+
+*Buffering (reads all input):*
+`sort`, `tail`, `tac`, `wc`
+
+**Examples:**
+```bash
+omni pipeline 'grep error' 'sort' 'uniq' 'head 10' < log.txt
+omni pipeline -f access.log 'grep 404' 'cut -d" " -f1' 'sort' 'uniq'
+omni pipeline -v 'grep -i warning' 'sort -rn' 'head 5'
+```
+
+**Library API (`pkg/pipeline`):**
+```go
+p := pipeline.New(
+    &pipeline.Grep{Pattern: "error", IgnoreCase: true},
+    &pipeline.Sort{},
+    &pipeline.Uniq{},
+    &pipeline.Head{N: 10},
+)
+err := p.Run(ctx, os.Stdin, os.Stdout)
+```
+
+**Package Structure:**
+- `pkg/pipeline/stage.go` - Stage interface
+- `pkg/pipeline/stages.go` - 20 built-in stage implementations
+- `pkg/pipeline/pipeline.go` - Orchestrator with io.Pipe chaining
+- `pkg/pipeline/parse.go` - CLI string → Stage parser
 
 ### Rg Command (Ripgrep-Style Search)
 
@@ -569,6 +599,9 @@ Current coverage: ~26% (internal/cli)
 | `pkg/video/utils/*_test.go` | Sanitize, HTML, URL, parse, traverse tests |
 | `pkg/video/extractor/registry_test.go` | Extractor registration and matching |
 | `testing/scripts/test_video.py` | Black-box: omni video vs yt-dlp comparison (Docker) |
+| `pkg/pipeline/pipeline_test.go` | Orchestrator, multi-stage, context cancel, head drain |
+| `pkg/pipeline/parse_test.go` | CLI string parser, sed expressions, flag combinations |
+| `internal/cli/pipeline/pipeline_test.go` | CLI wrapper integration tests |
 
 ### Test Pattern
 
