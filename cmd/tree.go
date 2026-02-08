@@ -16,7 +16,8 @@ Examples:
   omni tree                          # current directory
   omni tree /path/to/dir             # specific directory
   omni tree -a                       # show hidden files
-  omni tree -d 3                     # limit depth to 3
+  omni tree -L 3                     # limit depth to 3
+  omni tree -d 3                     # limit depth to 3 (alias for -L)
   omni tree -i "node_modules,.git"   # ignore patterns
   omni tree --dirs-only              # show only directories
   omni tree -s                       # show statistics
@@ -31,6 +32,11 @@ Examples:
 		opts.All, _ = cmd.Flags().GetBool("all")
 		opts.DirsOnly, _ = cmd.Flags().GetBool("dirs-only")
 		opts.Depth, _ = cmd.Flags().GetInt("depth")
+
+		// -L overrides --depth/-d if explicitly set
+		if cmd.Flags().Changed("level") {
+			opts.Depth, _ = cmd.Flags().GetInt("level")
+		}
 		opts.NoDirSlash, _ = cmd.Flags().GetBool("no-dir-slash")
 		opts.Stats, _ = cmd.Flags().GetBool("stats")
 		opts.Hash, _ = cmd.Flags().GetBool("hash")
@@ -64,6 +70,7 @@ func init() {
 	treeCmd.Flags().BoolP("all", "a", false, "show hidden files")
 	treeCmd.Flags().Bool("dirs-only", false, "show only directories")
 	treeCmd.Flags().IntP("depth", "d", -1, "maximum depth to scan (-1 for unlimited)")
+	treeCmd.Flags().IntP("level", "L", -1, "maximum depth level (alias for --depth)")
 	treeCmd.Flags().StringP("ignore", "i", "", "patterns to ignore (comma-separated)")
 	treeCmd.Flags().Bool("no-dir-slash", false, "don't add trailing slash to directory names")
 	treeCmd.Flags().BoolP("stats", "s", false, "show statistics")
