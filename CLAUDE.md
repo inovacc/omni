@@ -175,7 +175,7 @@ defer func() {
 | **Security** | encrypt, decrypt, uuid, random, jwt decode |
 | **Pagers** | less, more |
 | **Comparison** | diff |
-| **Tooling** | lint, cmdtree, loc, cron |
+| **Tooling** | lint, cmdtree, loc, cron, project (info, deps, docs, git, health) |
 | **Network** | curl |
 | **Video** | video download, video info, video list-formats, video search, video extractors |
 | **Cloud/DevOps** | kubectl (k), terraform (tf), aws |
@@ -602,6 +602,7 @@ Current coverage: ~26% (internal/cli)
 | `pkg/pipeline/pipeline_test.go` | Orchestrator, multi-stage, context cancel, head drain |
 | `pkg/pipeline/parse_test.go` | CLI string parser, sed expressions, flag combinations |
 | `internal/cli/pipeline/pipeline_test.go` | CLI wrapper integration tests |
+| `internal/cli/project/project_test.go` | Project detection, deps parsing, health scoring, output formatting |
 
 ### Test Pattern
 
