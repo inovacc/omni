@@ -195,6 +195,15 @@ omni decrypt -p mypass -a secret.enc
 |---------|-------------|
 | `generate cobra` | Generate Cobra CLI applications |
 
+### Project Analyzer
+| Command | Description |
+|---------|-------------|
+| `project info` | Full project overview (type, deps, git, docs) |
+| `project deps` | Dependency analysis |
+| `project docs` | Documentation status check |
+| `project git` | Git repository info |
+| `project health` | Health score (0-100) with grade |
+
 ### Tooling
 | Command | Description |
 |---------|-------------|
@@ -321,6 +330,32 @@ omni video download --rate-limit 1M "https://www.youtube.com/watch?v=..."
 **Protocols:** HTTPS direct download, HLS/M3U8 (with AES-128 decryption)
 
 **Format selectors:** `best`, `worst`, `bestvideo`, `bestaudio`, format ID, `best[height<=720]`
+
+## Project Analyzer
+
+Analyze any codebase directory for project type, languages, dependencies, git info, and health:
+
+```bash
+# Full project overview
+omni project info
+
+# Analyze a different project
+omni project info /path/to/project
+
+# JSON or Markdown output
+omni project info --json
+omni project health --markdown
+
+# Individual checks
+omni project deps                # Dependency analysis
+omni project docs                # Documentation status
+omni project git -n 5            # Git info (5 recent commits)
+omni project health              # Health score (0-100, A-F grade)
+```
+
+**Supported ecosystems:** Go, Node.js, Python, Rust, Java, Ruby, PHP, .NET, C/C++, Elixir, Haskell
+
+**Health checks:** README, LICENSE, .gitignore, CI/CD, tests, linter config, git clean, CONTRIBUTING, docs/, CHANGELOG, .editorconfig, build automation
 
 ## Library Usage
 
