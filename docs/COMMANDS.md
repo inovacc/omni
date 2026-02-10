@@ -66,6 +66,20 @@ omni basename NAME [SUFFIX] [flags]
 omni realpath [path...]
 ```
 
+### path - Path manipulation utilities
+
+#### path clean - Return shortest equivalent path
+```bash
+omni path clean [path...] [flags]
+  --json                   output as JSON
+```
+
+#### path abs - Return absolute path
+```bash
+omni path abs [path...] [flags]
+  --json                   output as JSON
+```
+
 ### echo - Display a line of text
 ```bash
 omni echo [OPTION]... [STRING]... [flags]
@@ -1226,6 +1240,9 @@ omni
 +-- nl                                       # Number lines of files
 +-- nohup                                    # Run a command immune to hangups
 +-- paste                                    # Merge lines of files
++-- path                                     # Path manipulation utilities
+|   +-- abs                                  # Return absolute path
+|   +-- clean                                # Return shortest equivalent path
 +-- pipe                                     # Chain omni commands with variable subst...
 +-- pipeline                                 # A brief description of your command
 +-- ps                                       # Report a snapshot of current processes

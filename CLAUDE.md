@@ -176,7 +176,7 @@ defer func() {
 
 | Category | Commands |
 |----------|----------|
-| **Core** | ls, pwd, cat, date, dirname, basename, realpath, tree, arch, sleep, seq, printf, for |
+| **Core** | ls, pwd, cat, date, dirname, basename, realpath, path (clean, abs), tree, arch, sleep, seq, printf, for |
 | **File** | cp, mv, rm, mkdir, rmdir, touch, stat, ln, readlink, chmod, chown, find, dd, file, which |
 | **Text** | grep, egrep, fgrep, head, tail, sort, uniq, wc, cut, tr, nl, paste, tac, column, fold, join, sed, awk, shuf, split, rev, comm, cmp, strings |
 | **Search** | rg (ripgrep-style search with gitignore support, parallel walking, streaming JSON) |
@@ -591,7 +591,7 @@ Current coverage: ~30.5% overall, 51.6% omni-owned (~75% avg for pkg/)
 | `internal/cli/yq/yq_test.go` | YAML querying |
 | `internal/cli/diff/diff_test.go` | File comparison |
 | `internal/cli/crypt/crypt_test.go` | Encrypt/decrypt |
-| `internal/cli/path/path_test.go` | dirname, basename, realpath |
+| `internal/cli/path/path_test.go` | dirname, basename, realpath, clean, abs |
 | `internal/cli/pipe/pipe_test.go` | Command parsing, variable substitution |
 | `internal/cli/xxd/xxd_test.go` | Hex dump, reverse, plain, include, bits modes |
 | `internal/cli/rg/rg_test.go` | Ripgrep search, parallel walking, streaming JSON, gitignore integration |

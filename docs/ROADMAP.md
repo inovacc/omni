@@ -32,6 +32,8 @@ Foundation commands using Go standard library.
 | `dirname` | `filepath.Dir()` | — | ✅ Done |
 | `basename` | `filepath.Base()` | `-s` (suffix) | ✅ Done |
 | `realpath` | `filepath.Abs()` + `filepath.EvalSymlinks()` | — | ✅ Done |
+| `path clean` | `filepath.Clean()` | `--json` | ✅ Done |
+| `path abs` | `filepath.Abs()` | `--json` | ✅ Done |
 
 ### Architecture
 
