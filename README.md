@@ -11,6 +11,7 @@ A cross-platform, Go-native replacement for common shell utilities, designed for
 - **Cross-platform** - Linux, macOS, Windows
 - **Library + CLI** - Use as commands or import as Go packages
 - **Safe defaults** - Destructive operations require explicit flags
+- **Unix compatible** - GNU-style flags for find (`-name`), head/tail (`-20`)
 
 ## Installation
 
@@ -118,7 +119,7 @@ omni decrypt -p mypass -a secret.enc
 | Command | Description |
 |---------|-------------|
 | `rg` | Ripgrep-style search (gitignore, parallel, JSON/NDJSON) |
-| `find` | Find files by name/type/size |
+| `find` | Find files by name/type/size (GNU-compatible flags) |
 
 ### System Information
 | Command | Description |
