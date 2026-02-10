@@ -1,0 +1,373 @@
+# Golden master test registry for omni CLI.
+# Each test defines: name, args, optional stdin/fixture, and normalizations.
+# Run `python testing/scripts/test_golden.py --update` to generate snapshots.
+# Run `python testing/scripts/test_golden.py` to verify against snapshots.
+
+categories:
+  # ===== ENCODING =====
+  - name: encoding
+    tests:
+      - name: base64_encode
+        args: ["base64"]
+        stdin: "hello world"
+
+      - name: base64_decode
+        args: ["base64", "-d"]
+        stdin: "aGVsbG8gd29ybGQ="
+
+      - name: base64_encode_empty
+        args: ["base64"]
+        stdin: ""
+
+      - name: base32_encode
+        args: ["base32"]
+        stdin: "hello"
+
+      - name: base32_decode
+        args: ["base32", "-d"]
+        stdin: "NBSWY3DP"
+
+      - name: base58_encode
+        args: ["base58"]
+        stdin: "hello"
+
+      - name: base58_decode
+        args: ["base58", "-d"]
+        stdin: "Cn8eVZg"
+
+      - name: hex_encode
+        args: ["hex", "encode"]
+        stdin: "hello"
+
+      - name: hex_decode
+        args: ["hex", "decode"]
+        stdin: "68656c6c6f"
+
+      - name: url_encode
+        args: ["url", "encode"]
+        stdin: "hello world&foo=bar"
+
+      - name: url_decode
+        args: ["url", "decode"]
+        stdin: "hello%20world%26foo%3Dbar"
+
+      - name: html_encode
+        args: ["html", "encode"]
+        stdin: "<div>test & \"quotes\"</div>"
+
+      - name: html_decode
+        args: ["html", "decode"]
+        stdin: "&lt;div&gt;test &amp; &quot;quotes&quot;&lt;/div&gt;"
+
+  # ===== HASHING =====
+  - name: hashing
+    tests:
+      - name: md5sum_stdin
+        args: ["md5sum"]
+        stdin: "test\n"
+        normalizations: ["strip_path"]
+
+      - name: sha256sum_stdin
+        args: ["sha256sum"]
+        stdin: "test\n"
+        normalizations: ["strip_path"]
+
+      - name: sha512sum_stdin
+        args: ["sha512sum"]
+        stdin: "test\n"
+        normalizations: ["strip_path"]
+
+      - name: crc32sum_stdin
+        args: ["crc32sum"]
+        stdin: "test"
+
+      - name: crc64sum_stdin
+        args: ["crc64sum"]
+        stdin: "test"
+
+      - name: hash_crc32_file
+        args: ["hash", "-a", "crc32", "{file}"]
+        fixture: "test"
+        normalizations: ["strip_path", "strip_temp_dir"]
+
+      - name: hash_crc64_file
+        args: ["hash", "-a", "crc64", "{file}"]
+        fixture: "test"
+        normalizations: ["strip_path", "strip_temp_dir"]
+
+      - name: hash_sha256_file
+        args: ["hash", "-a", "sha256", "{file}"]
+        fixture: "test"
+        normalizations: ["strip_path", "strip_temp_dir"]
+
+  # ===== TEXT PROCESSING =====
+  - name: text
+    tests:
+      - name: sort_basic
+        args: ["sort"]
+        stdin: "banana\napple\ncherry\n"
+
+      - name: sort_reverse
+        args: ["sort", "-r"]
+        stdin: "banana\napple\ncherry\n"
+
+      - name: sort_numeric
+        args: ["sort", "-n"]
+        stdin: "10\n2\n30\n1\n"
+
+      - name: sort_unique
+        args: ["sort", "-u"]
+        stdin: "a\nb\na\nc\nb\n"
+
+      - name: tr_lowercase
+        args: ["tr", "A-Z", "a-z"]
+        stdin: "HELLO WORLD"
+
+      - name: tr_uppercase
+        args: ["tr", "a-z", "A-Z"]
+        stdin: "hello world"
+
+      - name: tr_delete
+        args: ["tr", "-d", "aeiou"]
+        stdin: "hello world"
+
+      - name: tr_squeeze
+        args: ["tr", "-s", " "]
+        stdin: "hello    world    test"
+
+      - name: rev_basic
+        args: ["rev"]
+        stdin: "hello\nworld\n"
+
+      - name: tac_basic
+        args: ["tac"]
+        stdin: "line1\nline2\nline3\n"
+
+      - name: sed_substitute
+        args: ["sed", "s/hello/world/"]
+        stdin: "hello there\nhello again\n"
+
+      - name: sed_global
+        args: ["sed", "s/a/X/g"]
+        stdin: "banana aardvark\n"
+
+      - name: nl_basic
+        args: ["nl"]
+        stdin: "first\nsecond\nthird\n"
+
+      - name: fold_width
+        args: ["fold", "-w", "10"]
+        stdin: "this is a long line that should be folded"
+
+      - name: cut_field
+        args: ["cut", "-d", ",", "-f", "2"]
+        stdin: "a,b,c\nd,e,f\n"
+
+  # ===== TEXT WITH FILES =====
+  - name: text_with_files
+    tests:
+      - name: grep_pattern
+        args: ["grep", "error", "{file}"]
+        fixture: "info: ok\nerror: fail\nwarn: hmm\nerror: again\n"
+        normalizations: ["strip_path", "strip_temp_dir"]
+
+      - name: grep_count
+        args: ["grep", "-c", "error", "{file}"]
+        fixture: "error one\ninfo two\nerror three\n"
+        normalizations: ["strip_path", "strip_temp_dir"]
+
+      - name: grep_invert
+        args: ["grep", "-v", "error", "{file}"]
+        fixture: "error: bad\ninfo: good\nwarn: ok\n"
+        normalizations: ["strip_path", "strip_temp_dir"]
+
+      - name: uniq_basic
+        args: ["uniq", "{file}"]
+        fixture: "a\na\nb\nb\nb\nc\n"
+        normalizations: ["strip_path", "strip_temp_dir"]
+
+      - name: uniq_count
+        args: ["uniq", "-c", "{file}"]
+        fixture: "a\na\nb\nb\nb\nc\n"
+        normalizations: ["strip_path", "strip_temp_dir"]
+
+      - name: wc_basic
+        args: ["wc", "{file}"]
+        fixture: "hello world\nsecond line\nthird\n"
+        normalizations: ["strip_path", "strip_temp_dir"]
+
+      - name: wc_lines
+        args: ["wc", "-l", "{file}"]
+        fixture: "line1\nline2\nline3\n"
+        normalizations: ["strip_path", "strip_temp_dir"]
+
+      - name: head_default
+        args: ["head", "{file}"]
+        fixture: "1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n11\n12\n"
+        normalizations: ["strip_path", "strip_temp_dir"]
+
+      - name: tail_default
+        args: ["tail", "{file}"]
+        fixture: "1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n11\n12\n"
+        normalizations: ["strip_path", "strip_temp_dir"]
+
+      - name: head_n5
+        args: ["head", "-n", "5", "{file}"]
+        fixture: "1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n"
+        normalizations: ["strip_path", "strip_temp_dir"]
+
+  # ===== DATA =====
+  - name: data
+    tests:
+      - name: jq_field
+        args: ["jq", ".name"]
+        stdin: '{"name":"test","age":30}'
+
+      - name: jq_nested
+        args: ["jq", ".user.name"]
+        stdin: '{"user":{"name":"alice","role":"admin"}}'
+
+      - name: jq_array_index
+        args: ["jq", ".[0]"]
+        stdin: '["a","b","c"]'
+
+      - name: jq_length
+        args: ["jq", ".items | length"]
+        stdin: '{"items":[1,2,3,4,5]}'
+
+      - name: jq_raw
+        args: ["jq", "-r", ".name"]
+        stdin: '{"name":"test"}'
+
+      # jq_keys excluded: Go map iteration order is non-deterministic
+
+      - name: yq_field
+        args: ["yq", ".name"]
+        stdin: "name: test\nage: 30"
+
+      - name: yq_nested
+        args: ["yq", ".user.name"]
+        stdin: "user:\n  name: alice\n  role: admin"
+
+      - name: yq_array
+        args: ["yq", ".items.[0]"]
+        stdin: "items:\n  - first\n  - second"
+
+      - name: dotenv_basic
+        args: ["dotenv", "{file}"]
+        fixture: "KEY=value\nDB_HOST=localhost\nPORT=8080\n"
+        normalizations: ["strip_path", "strip_temp_dir"]
+
+  # ===== FORMAT =====
+  - name: format
+    tests:
+      - name: sql_format
+        args: ["sql", "fmt"]
+        stdin: "SELECT id,name FROM users WHERE active=1 ORDER BY name;"
+
+      - name: sql_minify
+        args: ["sql", "minify"]
+        stdin: "SELECT\n  id,\n  name\nFROM\n  users\nWHERE\n  active = 1;"
+
+      - name: sql_validate_valid
+        args: ["sql", "validate"]
+        stdin: "SELECT * FROM users;"
+
+      - name: sql_validate_invalid
+        args: ["sql", "validate"]
+        stdin: "SELEC * FORM users"
+
+      - name: css_format
+        args: ["css", "fmt"]
+        stdin: "body{margin:0;padding:0}h1{color:red}"
+
+      - name: css_minify
+        args: ["css", "minify"]
+        stdin: "body {\n  margin: 0;\n  padding: 0;\n}\n"
+
+      - name: html_format
+        args: ["html", "fmt"]
+        stdin: "<html><head><title>Test</title></head><body><p>Hello</p></body></html>"
+
+      - name: html_minify
+        args: ["html", "minify"]
+        stdin: "<html>\n  <head>\n    <title>Test</title>\n  </head>\n  <body>\n    <p>Hello</p>\n  </body>\n</html>"
+
+  # ===== UTILS =====
+  - name: utils
+    tests:
+      - name: echo_basic
+        args: ["echo", "hello world"]
+
+      - name: echo_no_newline
+        args: ["echo", "-n", "test"]
+
+      - name: basename_basic
+        args: ["basename", "/path/to/file.txt"]
+
+      - name: basename_suffix
+        args: ["basename", "/path/to/file.txt", ".txt"]
+
+      - name: dirname_basic
+        args: ["dirname", "/path/to/file.txt"]
+        platform_specific: true
+
+      - name: seq_5
+        args: ["seq", "5"]
+
+      - name: seq_range
+        args: ["seq", "3", "7"]
+
+      - name: seq_step
+        args: ["seq", "0", "2", "10"]
+
+      - name: cat_stdin
+        args: ["cat"]
+        stdin: "hello\nworld\n"
+
+  # ===== SECURITY =====
+  - name: security
+    tests:
+      - name: jwt_decode
+        args: ["jwt", "decode"]
+        stdin: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+
+  # ===== XXD =====
+  - name: xxd
+    tests:
+      - name: xxd_basic
+        args: ["xxd", "{file}"]
+        fixture: "hello"
+        normalizations: ["strip_path", "strip_temp_dir"]
+
+      - name: xxd_plain
+        args: ["xxd", "-p", "{file}"]
+        fixture: "AB"
+        normalizations: ["strip_path", "strip_temp_dir"]
+
+      - name: xxd_reverse
+        args: ["xxd", "-r"]
+        stdin: "00000000: 6865 6c6c 6f                               hello"
+
+  # ===== STRINGS =====
+  - name: strings
+    tests:
+      - name: strings_basic
+        args: ["strings", "{file}"]
+        fixture: "hello\x00\x01\x02world\x00visible text here\x00\x03"
+        normalizations: ["strip_path", "strip_temp_dir"]
+
+  # ===== CASE =====
+  - name: case_conv
+    tests:
+      - name: case_snake
+        args: ["case", "snake", "helloWorld"]
+
+      - name: case_camel
+        args: ["case", "camel", "hello_world"]
+
+      - name: case_kebab
+        args: ["case", "kebab", "helloWorld"]
+
+      - name: case_pascal
+        args: ["case", "pascal", "hello_world"]

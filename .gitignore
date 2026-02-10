@@ -40,3 +40,6 @@ fabric.properties
 .idea/caches/build_file_checksums.ser
 /pkg/pb/
 /cmd/version.go
+tools/golden/golden_masters/
+tools/golden/test-map.json
+tools/golden/__pycache__/

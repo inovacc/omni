@@ -37,7 +37,7 @@ Foundation commands using Go standard library.
 
 ```
 omni/
-├── cmd/                    # Cobra CLI commands (100+ commands)
+├── cmd/                    # Cobra CLI commands (148+ commands)
 │   ├── root.go
 │   ├── ls.go
 │   ├── pwd.go
@@ -47,7 +47,7 @@ omni/
 │   └── ...
 ├── pkg/                    # Reusable Go libraries (importable externally)
 │   ├── idgen/              # UUID, ULID, KSUID, Nanoid, Snowflake
-│   ├── hashutil/           # MD5, SHA256, SHA512 hashing
+│   ├── hashutil/           # MD5, SHA256, SHA512, CRC32, CRC64 hashing
 │   ├── jsonutil/           # jq-style JSON query engine
 │   ├── encoding/           # Base64, Base32, Base58 encode/decode
 │   ├── cryptutil/          # AES-256-GCM encrypt/decrypt
@@ -57,7 +57,10 @@ omni/
 │   ├── textutil/           # Sort, Uniq, Trim + diff/
 │   ├── search/grep/        # Pattern search with options
 │   ├── search/rg/          # Gitignore parsing, file type matching
-│   └── twig/               # Tree scanning, formatting, comparison
+│   ├── pipeline/           # Streaming text processing engine
+│   ├── figlet/             # FIGlet font parser and ASCII art
+│   ├── twig/               # Tree scanning, formatting, comparison
+│   └── video/              # Video download engine (YouTube, HLS, generic)
 ├── internal/
 │   ├── cli/               # CLI wrappers (I/O, flags, stdin handling)
 │   │   ├── ls/
@@ -2420,3 +2423,45 @@ services:
 | 11.7 | GCP | Auth, Config, Projects | P1 |
 | 11.8 | GCP | Compute, Storage | P1 |
 | 11.9 | GCP | GKE, IAM, Functions | P2 |
+
+---
+
+## Test Coverage
+
+**Current:** 30.9% (overall, includes vendored buf packages) | **Target:** 80%
+
+### Omni-owned pkg/ Packages
+
+| Package | Coverage | Status |
+|---------|----------|--------|
+| pkg/encoding | 100.0% | Excellent |
+| pkg/twig/models | 100.0% | Excellent |
+| pkg/twig/expander | 98.1% | Excellent |
+| pkg/video/m3u8 | 96.8% | Excellent |
+| pkg/twig/comparer | 96.3% | Excellent |
+| pkg/textutil/diff | 95.2% | Excellent |
+| pkg/textutil | 93.7% | Excellent |
+| pkg/idgen | 91.4% | Excellent |
+| pkg/search/rg | 90.4% | Excellent |
+| pkg/hashutil | 88.5% | Good |
+| pkg/cssfmt | 87.3% | Good |
+| pkg/cryptutil | 85.3% | Good |
+| pkg/figlet | 82.9% | Good |
+| pkg/twig/scanner | 82.4% | Good |
+| pkg/pipeline | 81.6% | Good |
+| pkg/twig/formatter | 80.4% | Good |
+| pkg/sqlfmt | 79.2% | Acceptable |
+| pkg/htmlfmt | 77.9% | Acceptable |
+| pkg/search/grep | 77.4% | Acceptable |
+| pkg/jsonutil | 67.5% | Needs improvement |
+| pkg/video/utils | 58.4% | Needs improvement |
+| pkg/video/format | 50.0% | Needs improvement |
+| pkg/twig | 44.3% | Needs improvement |
+| pkg/video/extractor | 5.7% | No meaningful tests |
+| pkg/video (root) | 0.0% | No tests |
+| pkg/video/cache | 0.0% | No tests |
+| pkg/video/downloader | 0.0% | No tests |
+| pkg/video/jsinterp | 0.0% | No tests |
+| pkg/video/nethttp | 0.0% | No tests |
+| pkg/twig/builder | 0.0% | No tests |
+| pkg/twig/parser | 0.0% | No tests |

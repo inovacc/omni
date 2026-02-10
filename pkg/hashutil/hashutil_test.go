@@ -100,6 +100,78 @@ func TestHashFile(t *testing.T) {
 	})
 }
 
+func TestHashCRC32(t *testing.T) {
+	// CRC32 (IEEE) of "test" is 0xd87f7e0c → "d87f7e0c"
+	got := HashString("test", CRC32)
+	want := "d87f7e0c"
+	if got != want {
+		t.Errorf("HashString(%q, CRC32) = %v, want %v", "test", got, want)
+	}
+}
+
+func TestHashCRC64(t *testing.T) {
+	// CRC64 (ECMA) of "test"
+	got := HashString("test", CRC64)
+	if len(got) != 16 {
+		t.Errorf("CRC64 hash length = %d, want 16 hex chars", len(got))
+	}
+
+	// Verify consistency
+	got2 := HashString("test", CRC64)
+	if got != got2 {
+		t.Errorf("CRC64 not consistent: %v != %v", got, got2)
+	}
+}
+
+func TestHashCRC32Empty(t *testing.T) {
+	got := HashString("", CRC32)
+	want := "00000000"
+	if got != want {
+		t.Errorf("HashString(%q, CRC32) = %v, want %v", "", got, want)
+	}
+}
+
+func TestHashCRC64Empty(t *testing.T) {
+	got := HashString("", CRC64)
+	want := "0000000000000000"
+	if got != want {
+		t.Errorf("HashString(%q, CRC64) = %v, want %v", "", got, want)
+	}
+}
+
+func TestHashFileCRC(t *testing.T) {
+	tmpDir, err := os.MkdirTemp("", "hashutil_crc_test")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = os.RemoveAll(tmpDir) }()
+
+	testFile := filepath.Join(tmpDir, "test.txt")
+	if err := os.WriteFile(testFile, []byte("test"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	t.Run("crc32", func(t *testing.T) {
+		got, err := HashFile(testFile, CRC32)
+		if err != nil {
+			t.Fatalf("HashFile() error = %v", err)
+		}
+		if got != "d87f7e0c" {
+			t.Errorf("HashFile() = %v, want d87f7e0c", got)
+		}
+	})
+
+	t.Run("crc64", func(t *testing.T) {
+		got, err := HashFile(testFile, CRC64)
+		if err != nil {
+			t.Fatalf("HashFile() error = %v", err)
+		}
+		if len(got) != 16 {
+			t.Errorf("CRC64 hash length = %d, want 16", len(got))
+		}
+	})
+}
+
 func TestHashConsistency(t *testing.T) {
 	h1 := HashString("consistent", SHA256)
 	h2 := HashString("consistent", SHA256)

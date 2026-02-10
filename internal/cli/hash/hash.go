@@ -287,3 +287,15 @@ func RunSHA512Sum(w io.Writer, args []string, opts HashOptions) error {
 	opts.Algorithm = "sha512"
 	return RunHash(w, args, opts)
 }
+
+// RunCRC32Sum computes CRC32 checksums (IEEE polynomial)
+func RunCRC32Sum(w io.Writer, args []string, opts HashOptions) error {
+	opts.Algorithm = "crc32"
+	return RunHash(w, args, opts)
+}
+
+// RunCRC64Sum computes CRC64 checksums (ECMA polynomial)
+func RunCRC64Sum(w io.Writer, args []string, opts HashOptions) error {
+	opts.Algorithm = "crc64"
+	return RunHash(w, args, opts)
+}

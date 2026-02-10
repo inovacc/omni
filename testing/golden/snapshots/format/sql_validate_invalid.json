@@ -1,0 +1,5 @@
+{
+  "exit_code": 1,
+  "stdout_file": "sql_validate_invalid.stdout",
+  "stderr": "Error: validation failed\nUsage:\n  omni sql validate [FILE] [flags]\n\nAliases:\n  validate, check, lint\n\nFlags:\n  -d, --dialect string   SQL dialect (default \"generic\")\n  -h, --help             help for validate\n      --json             output as JSON\n\nError: validation failed\n"
+}

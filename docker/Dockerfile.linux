@@ -52,6 +52,30 @@ ENV OMNI_BIN=/app/omni
 CMD ["python3", "testing/run_all.py"]
 
 
+# Golden master test stage (multi-stage: Go build + Python runner, inspired by togo pattern)
+FROM python:3.12-slim AS golden-tester
+
+# Install minimal dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends git && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Copy built binary from builder stage
+COPY --from=builder /omni /app/omni
+
+# Copy testing infrastructure only (not full source)
+COPY testing/ /app/testing/
+
+# Install Python dependencies
+RUN pip install --no-cache-dir -r /app/testing/requirements.txt
+
+# Set environment
+ENV OMNI_BIN=/app/omni
+
+# Default: verify golden snapshots; override with --update to regenerate
+CMD ["python3", "testing/scripts/test_golden.py"]
+
+
 # Production stage
 FROM gcr.io/distroless/static-debian12:nonroot AS production
 
