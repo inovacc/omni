@@ -97,6 +97,21 @@ var lsCmd = &cobra.Command{
 }
 ```
 
+#### Args Preprocessor Pattern (GNU Compatibility)
+
+Commands that need Unix-style flag compatibility use `os.Args` preprocessing in `init()`, before Cobra parses flags:
+
+- **`head`/`tail`**: Convert `-NUM` to `-n NUM` (e.g., `head -20` → `head -n 20`)
+  - Uses regex `^-(\d+)$` to detect numeric flags
+  - Implemented in `cmd/head.go:preprocessHeadArgs()` and `cmd/tail.go:preprocessTailArgs()`
+
+- **`find`**: Convert single-dash GNU flags to double-dash (e.g., `-name` → `--name`)
+  - Uses `knownFindFlags` map in `cmd/find.go` listing all valid find flags
+  - Implemented in `cmd/find.go:preprocessFindArgs()`
+  - Supports: `-name`, `-iname`, `-path`, `-ipath`, `-regex`, `-iregex`, `-type`, `-size`, `-mindepth`, `-maxdepth`, `-mtime`, `-mmin`, `-atime`, `-amin`, `-empty`, `-executable`, `-readable`, `-writable`, `-print0`, `-not`, `-json`
+
+**Pattern**: Check if command name is in `os.Args`, then rewrite args before Cobra's `Execute()`.
+
 #### Pkg Library Pattern
 
 Reusable logic lives in `pkg/` with functional options:

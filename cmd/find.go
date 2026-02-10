@@ -1,9 +1,22 @@
 package cmd
 
 import (
+	"os"
+
 	"github.com/inovacc/omni/internal/cli/find"
 	"github.com/spf13/cobra"
 )
+
+// knownFindFlags lists single-dash flags used by GNU find that need
+// conversion to double-dash for Cobra compatibility.
+var knownFindFlags = map[string]bool{
+	"-name": true, "-iname": true, "-path": true, "-ipath": true,
+	"-regex": true, "-iregex": true, "-type": true, "-size": true,
+	"-mindepth": true, "-maxdepth": true, "-mtime": true, "-mmin": true,
+	"-atime": true, "-amin": true, "-empty": true, "-executable": true,
+	"-readable": true, "-writable": true, "-print0": true, "-not": true,
+	"-json": true,
+}
 
 var (
 	findName       string
@@ -122,4 +135,45 @@ func init() {
 	findCmd.Flags().BoolVarP(&findPrint0, "print0", "0", false, "print with null terminator")
 	findCmd.Flags().BoolVarP(&findNot, "not", "", false, "negate next test")
 	findCmd.Flags().BoolVarP(&findJSON, "json", "", false, "output in JSON format")
+
+	// Preprocess os.Args to convert -flag to --flag for find command
+	preprocessFindArgs()
+}
+
+// preprocessFindArgs converts GNU find-style single-dash flags (e.g., -name)
+// to double-dash (--name) before Cobra parses them.
+func preprocessFindArgs() {
+	if len(os.Args) < 2 {
+		return
+	}
+
+	// Check if this is a find command
+	isFindCmd := false
+	findIdx := 0
+
+	for i, arg := range os.Args {
+		if arg == "find" && i > 0 {
+			isFindCmd = true
+			findIdx = i
+
+			break
+		}
+	}
+
+	if !isFindCmd {
+		return
+	}
+
+	// Rewrite -flag to --flag for known find flags
+	newArgs := make([]string, 0, len(os.Args))
+
+	for i, arg := range os.Args {
+		if i > findIdx && knownFindFlags[arg] {
+			newArgs = append(newArgs, "-"+arg)
+		} else {
+			newArgs = append(newArgs, arg)
+		}
+	}
+
+	os.Args = newArgs
 }
