@@ -94,16 +94,16 @@ See CLAUDE.md for the full command inventory.
 
 ### Current Status (February 2026)
 - **Total Test Cases:** ~700+ tests across all packages
-- **Packages with Tests:** 86/88 (97.7%)
-- **CLI Packages with Tests:** 79/79 (100%)
-- **Packages without Tests:** 2 (twig/builder, twig/parser)
+- **Overall Coverage:** 30.9% (includes vendored buf packages)
+- **Omni-owned pkg/ avg:** ~75% (16 of 31 packages above 80%)
+- **Packages without Tests:** twig/builder, twig/parser, video/root, video/cache, video/downloader, video/jsinterp, video/nethttp
 
 ### Remaining
 - [ ] Tests for twig/builder and twig/parser
 - [ ] Platform-specific tests (Windows edge cases, symlinks, permissions)
 - [ ] Large file (>1GB) handling tests
 - [ ] Benchmarks vs GNU tools (sort, grep, file operations)
-- [ ] Golden tests with expected output files
+- [x] Golden tests with expected output files (82 tests, 11 categories)
 - [ ] CI coverage threshold enforcement (80%)
 
 ---

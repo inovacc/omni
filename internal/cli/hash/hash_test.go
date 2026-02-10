@@ -314,6 +314,86 @@ func TestRunHashExtended(t *testing.T) {
 	})
 }
 
+func TestRunCRC32Sum(t *testing.T) {
+	tmpDir, err := os.MkdirTemp("", "crc32_test")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	defer func() { _ = os.RemoveAll(tmpDir) }()
+
+	testFile := filepath.Join(tmpDir, "test.txt")
+	if err := os.WriteFile(testFile, []byte("test"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	var buf bytes.Buffer
+
+	err = RunCRC32Sum(&buf, []string{testFile}, HashOptions{})
+	if err != nil {
+		t.Fatalf("RunCRC32Sum() error = %v", err)
+	}
+
+	// CRC32 IEEE of "test" is d87f7e0c
+	if !strings.Contains(buf.String(), "d87f7e0c") {
+		t.Errorf("RunCRC32Sum() got = %v, want hash containing d87f7e0c", buf.String())
+	}
+}
+
+func TestRunCRC64Sum(t *testing.T) {
+	tmpDir, err := os.MkdirTemp("", "crc64_test")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	defer func() { _ = os.RemoveAll(tmpDir) }()
+
+	testFile := filepath.Join(tmpDir, "test.txt")
+	if err := os.WriteFile(testFile, []byte("test"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	var buf bytes.Buffer
+
+	err = RunCRC64Sum(&buf, []string{testFile}, HashOptions{})
+	if err != nil {
+		t.Fatalf("RunCRC64Sum() error = %v", err)
+	}
+
+	// CRC64 hash should be 16 hex characters
+	output := buf.String()
+
+	parts := strings.Fields(output)
+	if len(parts) > 0 && len(parts[0]) != 16 {
+		t.Errorf("CRC64 hash length: %d (expected 16), got %q", len(parts[0]), parts[0])
+	}
+}
+
+func TestRunHashCRC32Algorithm(t *testing.T) {
+	tmpDir, err := os.MkdirTemp("", "hash_crc32_test")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	defer func() { _ = os.RemoveAll(tmpDir) }()
+
+	testFile := filepath.Join(tmpDir, "test.txt")
+	if err := os.WriteFile(testFile, []byte("test"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	var buf bytes.Buffer
+
+	err = RunHash(&buf, []string{testFile}, HashOptions{Algorithm: "crc32"})
+	if err != nil {
+		t.Fatalf("RunHash(crc32) error = %v", err)
+	}
+
+	if !strings.Contains(buf.String(), "d87f7e0c") {
+		t.Errorf("RunHash(crc32) got = %v, want hash containing d87f7e0c", buf.String())
+	}
+}
+
 func TestRunSHA512Sum(t *testing.T) {
 	tmpDir, err := os.MkdirTemp("", "sha512_test")
 	if err != nil {

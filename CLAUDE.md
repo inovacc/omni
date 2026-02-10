@@ -34,7 +34,7 @@ omni/
 ├── cmd/                # Cobra CLI commands (thin wrappers)
 ├── pkg/                # Reusable Go libraries (importable by external projects)
 │   ├── idgen/          # UUID, ULID, KSUID, Nanoid, Snowflake
-│   ├── hashutil/       # MD5, SHA256, SHA512 hashing
+│   ├── hashutil/       # MD5, SHA1, SHA256, SHA512, CRC32, CRC64 hashing
 │   ├── jsonutil/       # jq-style JSON query engine
 │   ├── encoding/       # Base64, Base32, Base58 encode/decode
 │   ├── cryptutil/      # AES-256-GCM encrypt/decrypt
@@ -44,7 +44,10 @@ omni/
 │   ├── textutil/       # Sort, Uniq, Trim + diff/
 │   ├── search/grep/    # Pattern search with options
 │   ├── search/rg/      # Gitignore parsing, file type matching
-│   └── twig/           # Tree scanning, formatting, comparison
+│   ├── pipeline/       # Streaming text processing engine
+│   ├── figlet/         # FIGlet font parser and ASCII art
+│   ├── twig/           # Tree scanning, formatting, comparison
+│   └── video/          # Video download engine (YouTube, HLS, generic)
 ├── internal/cli/       # CLI wrappers (I/O, flags, stdin handling)
 │   ├── <command>/      # Each command delegates to pkg/ for core logic
 │   │   ├── <command>.go
@@ -154,7 +157,7 @@ defer func() {
 
 ## Command Categories
 
-### Implemented (120+ commands)
+### Implemented (148+ commands)
 
 | Category | Commands |
 |----------|----------|
@@ -166,7 +169,7 @@ defer func() {
 | **Flow** | xargs, watch, yes, pipe, pipeline |
 | **Archive** | tar, zip, unzip |
 | **Compression** | gzip, gunzip, zcat, bzip2, bunzip2, bzcat, xz, unxz, xzcat |
-| **Hash** | hash, sha256sum, sha512sum, md5sum |
+| **Hash** | hash, sha256sum, sha512sum, md5sum, crc32sum, crc64sum |
 | **Encoding** | base64, base32, base58, url encode/decode, html encode/decode, hex encode/decode, xxd |
 | **Data** | jq, yq, dotenv, json (tostruct, tocsv, fromcsv, toxml, fromxml), yaml tostruct, yaml validate, toml validate, xml (validate, tojson, fromjson) |
 | **Formatting** | sql fmt/minify/validate, html fmt/minify/validate, css fmt/minify/validate |
@@ -556,13 +559,13 @@ task test:integration
 
 ### Test Coverage
 
-Current coverage: ~26% (internal/cli)
+Current coverage: ~30.5% overall, 51.6% omni-owned (~75% avg for pkg/)
 
 ### Test Files
 
 | File | Tests |
 |------|-------|
-| `internal/cli/hash/hash_test.go` | SHA256, SHA512, MD5 hashing |
+| `internal/cli/hash/hash_test.go` | SHA256, SHA512, MD5, CRC32, CRC64 hashing |
 | `internal/cli/base/base_test.go` | Base64, Base32, Base58 encoding |
 | `internal/cli/uuid/uuid_test.go` | UUID generation |
 | `internal/cli/random/random_test.go` | Random string, hex, password, int |
@@ -579,7 +582,7 @@ Current coverage: ~26% (internal/cli)
 | `internal/cli/rg/rg_test.go` | Ripgrep search, parallel walking, streaming JSON, gitignore integration |
 | `internal/cli/rg/gitignore_test.go` | Gitignore pattern parsing, negation, directory-only, double globs |
 | `pkg/idgen/idgen_test.go` | UUID v4/v7, ULID, KSUID, Nanoid, Snowflake generation |
-| `pkg/hashutil/hashutil_test.go` | HashFile, HashReader, HashString, HashBytes |
+| `pkg/hashutil/hashutil_test.go` | HashFile, HashReader, HashString, HashBytes, CRC32, CRC64 |
 | `pkg/jsonutil/jsonutil_test.go` | Query, QueryString, QueryReader, ApplyFilter |
 | `pkg/encoding/encoding_test.go` | Base64/32/58 encode/decode, WrapString |
 | `pkg/cryptutil/cryptutil_test.go` | Encrypt/decrypt roundtrip, key generation/derivation |
@@ -603,6 +606,64 @@ Current coverage: ~26% (internal/cli)
 | `pkg/pipeline/parse_test.go` | CLI string parser, sed expressions, flag combinations |
 | `internal/cli/pipeline/pipeline_test.go` | CLI wrapper integration tests |
 | `internal/cli/project/project_test.go` | Project detection, deps parsing, health scoring, output formatting |
+
+### Golden Master Tests
+
+Characterization tests that capture exact command outputs as snapshots and detect regressions.
+
+**MUST run on every feature/code change:**
+
+```bash
+# Verify outputs match snapshots
+task test:golden
+
+# After intentional output changes, regenerate snapshots
+task test:golden:update
+
+# Update specific category only
+task test:golden:update -- --update encoding
+
+# CI pre-flight: verify all snapshot files exist
+task test:golden:check
+
+# List all registered tests
+python testing/scripts/test_golden.py --list
+
+# Run with verbose diffs
+python testing/scripts/test_golden.py --verbose
+```
+
+**Adding golden tests for new commands:**
+1. Add test case to `testing/golden/golden_tests.yaml` AND `tools/golden/golden_tests.yaml`
+2. Run `task test:golden:update` and `task golden:record` to generate snapshots
+3. Review the generated `.stdout` files
+4. Commit both the YAML entry and snapshot files
+
+**Full-featured system (tools/golden/):**
+```bash
+task golden:compare             # Compare with SHA-256 fast path
+task golden:record              # Record baselines with manifest
+task golden:list                # List test cases
+task golden:map:table           # Test map as table
+task golden:docker:build        # Build Docker image
+task golden:docker:compare      # Compare in container
+task golden:docker:record       # Record in container
+```
+
+**Lightweight system (testing/golden/):**
+```bash
+task docker:test:golden          # Verify in Linux container
+task docker:test:golden:update   # Regenerate and persist to host via volume mount
+```
+
+**Structure:**
+- `testing/golden_engine.py` — Lightweight engine (auto-discovered by `run_all.py`)
+- `testing/golden/golden_tests.yaml` — Declarative test registry (81 tests, 11 categories)
+- `testing/golden/snapshots/` — JSON metadata + .stdout sidecars
+- `tools/golden/src/golden/` — Full engine (11 modules: manifest, parallel, map, Docker)
+- `tools/golden/golden_tests.yaml` — Shared registry (same tests)
+- `tools/golden/golden_masters/` — Baselines with SHA-256 manifest (gitignored)
+- See `docs/GOLDEN_MASTER_TESTING.md` for full documentation
 
 ### Test Pattern
 
@@ -664,8 +725,10 @@ GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" -o omni.exe .
 2. Create `internal/cli/newcmd/newcmd_test.go` with tests
 3. Create `cmd/newcmd.go` with Cobra wrapper
 4. Add to rootCmd in init()
-5. Update docs/ROADMAP.md
-6. Update CLAUDE.md command categories
+5. Add golden test cases to `testing/golden/golden_tests.yaml` and `tools/golden/golden_tests.yaml`
+6. Run `task test:golden:update` and `task golden:record` to generate snapshots
+7. Update docs/ROADMAP.md
+8. Update CLAUDE.md command categories
 
 ### Add Platform-Specific Code
 

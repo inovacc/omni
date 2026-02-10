@@ -1,0 +1,8 @@
+.git
+.idea
+.claude
+bin/
+tools/golden/golden_masters/
+__pycache__/
+*.tar.gz
+*.exe

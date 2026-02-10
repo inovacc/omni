@@ -107,6 +107,18 @@ omni decrypt -p mypass -a secret.enc
 | `join` | Join files on field |
 | `sed` | Stream editor |
 | `awk` | Pattern scanning |
+| `shuf` | Shuffle lines |
+| `split` | Split file into pieces |
+| `rev` | Reverse lines |
+| `comm` | Compare sorted files |
+| `cmp` | Compare bytes |
+| `strings` | Print printable strings |
+
+### Search
+| Command | Description |
+|---------|-------------|
+| `rg` | Ripgrep-style search (gitignore, parallel, JSON/NDJSON) |
+| `find` | Find files by name/type/size |
 
 ### System Information
 | Command | Description |
@@ -129,7 +141,8 @@ omni decrypt -p mypass -a secret.enc
 | `xargs` | Build arguments |
 | `watch` | Execute repeatedly |
 | `yes` | Output repeatedly |
-| `nohup` | Ignore hangup signal |
+| `pipe` | Chain omni commands with variable substitution |
+| `pipeline` | Streaming text processing engine (constant memory) |
 
 ### Archive & Compression
 | Command | Description |
@@ -137,14 +150,19 @@ omni decrypt -p mypass -a secret.enc
 | `tar` | Create/extract tar archives |
 | `zip` | Create zip archives |
 | `unzip` | Extract zip archives |
+| `gzip`/`gunzip`/`zcat` | Gzip compression |
+| `bzip2`/`bunzip2`/`bzcat` | Bzip2 compression |
+| `xz`/`unxz`/`xzcat` | XZ compression |
 
 ### Hash & Encoding
 | Command | Description |
 |---------|-------------|
-| `hash` | Compute file hashes |
+| `hash` | Compute file hashes (md5, sha1, sha256, sha512, crc32, crc64) |
 | `sha256sum` | SHA256 checksum |
 | `sha512sum` | SHA512 checksum |
 | `md5sum` | MD5 checksum |
+| `crc32sum` | CRC32 checksum (IEEE polynomial) |
+| `crc64sum` | CRC64 checksum (ECMA polynomial) |
 | `base64` | Base64 encode/decode |
 | `base32` | Base32 encode/decode |
 | `base58` | Base58 encode/decode |
@@ -155,6 +173,26 @@ omni decrypt -p mypass -a secret.enc
 | `jq` | JSON processor |
 | `yq` | YAML processor |
 | `dotenv` | Parse .env files |
+| `json` | JSON conversions (tostruct, tocsv, fromcsv, toxml, fromxml) |
+| `csv` | CSV processing |
+| `xml` | XML validate/tojson/fromjson |
+| `toml` | TOML validate |
+| `yaml` | YAML tostruct/validate |
+
+### Data Formatting
+| Command | Description |
+|---------|-------------|
+| `sql fmt/minify/validate` | SQL formatting |
+| `css fmt/minify/validate` | CSS formatting |
+| `html fmt/minify/validate` | HTML formatting |
+
+### Case Conversion
+| Command | Description |
+|---------|-------------|
+| `case snake` | Convert to snake_case |
+| `case camel` | Convert to camelCase |
+| `case kebab` | Convert to kebab-case |
+| `case pascal` | Convert to PascalCase |
 
 ### Security & Random
 | Command | Description |
@@ -183,6 +221,32 @@ omni decrypt -p mypass -a secret.enc
 | Command | Description |
 |---------|-------------|
 | `diff` | Compare files line by line |
+
+### Cloud & DevOps
+| Command | Description |
+|---------|-------------|
+| `kubectl` / `k` | Full kubectl integration (local source) |
+| `terraform` / `tf` | Terraform CLI wrapper |
+| `aws` | AWS CLI (EC2, S3, IAM, STS, SSM) |
+
+### Git Hacks
+| Command | Alias | Description |
+|---------|-------|-------------|
+| `git quick-commit` | `gqc` | Stage all + commit |
+| `git branch-clean` | `gbc` | Delete merged branches |
+| `git undo` | - | Soft reset HEAD~1 |
+| `git log-graph` | `git lg` | Pretty log with graph |
+| `git status` | `git st` | Short status |
+
+### Kubectl Hacks
+| Command | Description |
+|---------|-------------|
+| `kga` | Get all resources |
+| `klf` | Follow pod logs |
+| `keb` | Exec into pod |
+| `kpf` | Port forward |
+| `kge` | Events sorted by time |
+| `kcs`/`kns` | Switch context/namespace |
 
 ### Database Tools
 | Command | Description |
@@ -409,7 +473,7 @@ _ = client.Download(ctx, "https://www.youtube.com/watch?v=...")
 | Package | Import | Description |
 |---------|--------|-------------|
 | `pkg/idgen` | `idgen` | UUID v4/v7, ULID, KSUID, Nanoid, Snowflake |
-| `pkg/hashutil` | `hashutil` | MD5, SHA256, SHA512 file/string/reader hashing |
+| `pkg/hashutil` | `hashutil` | MD5, SHA1, SHA256, SHA512, CRC32, CRC64 file/string/reader hashing |
 | `pkg/jsonutil` | `jsonutil` | JSON query engine (jq-style filters) |
 | `pkg/encoding` | `encoding` | Base64, Base32, Base58 encode/decode |
 | `pkg/cryptutil` | `cryptutil` | AES-256-GCM encrypt/decrypt with PBKDF2 |
@@ -420,14 +484,16 @@ _ = client.Download(ctx, "https://www.youtube.com/watch?v=...")
 | `pkg/textutil/diff` | `diff` | Compute diffs, compare JSON, unified format |
 | `pkg/search/grep` | `grep` | Pattern search with regex/fixed/word options |
 | `pkg/search/rg` | `rg` | Gitignore parsing, file type matching, binary detection |
+| `pkg/pipeline` | `pipeline` | Streaming text processing engine (grep, sort, head, etc.) |
 | `pkg/twig` | `twig` | Directory tree scanning, formatting, comparison |
+| `pkg/figlet` | `figlet` | FIGlet font parser and ASCII art text renderer |
 | `pkg/video` | `video` | Video download engine (YouTube, HLS, generic) |
 
 ## Project Structure
 
 ```
 omni/
-├── cmd/                    # Cobra CLI commands (100+ commands)
+├── cmd/                    # Cobra CLI commands (150+ commands)
 │   ├── root.go
 │   ├── ls.go
 │   ├── grep.go
@@ -446,6 +512,8 @@ omni/
 │   ├── search/
 │   │   ├── grep/           # Pattern search
 │   │   └── rg/             # Gitignore parsing, file type matching
+│   ├── pipeline/           # Streaming text processing engine
+│   ├── figlet/             # FIGlet font parser and ASCII art
 │   ├── twig/               # Tree scanning, formatting, comparison
 │   │   ├── scanner/
 │   │   ├── formatter/
@@ -476,9 +544,11 @@ omni/
 
 ### Test Coverage
 
-- **Overall Coverage:** 97.7% (86/88 packages have tests)
-- **CLI Packages:** 100% (79/79 packages)
+- **Overall Coverage:** 30.5% (includes vendored buf packages) | **Omni-owned:** 51.6%
+- **Omni pkg/ Average:** ~75% (16 of 31 packages above 80%)
 - **Total Test Cases:** 700+
+- **Black-box Tests:** 15 Python test suites
+- **Golden Master Tests:** 81 snapshot tests across 11 categories
 
 ## Platform Support
 
@@ -574,11 +644,16 @@ go test -race -cover ./...
 Or use Taskfile:
 
 ```bash
-task test
-task lint
+task test               # Unit tests with coverage
+task test:blackbox      # Black-box tests (14 Python suites)
+task test:golden        # Golden master tests (81 snapshot tests)
+task test:golden:update # Regenerate snapshots after intentional changes
+task lint               # Linting
 
-# Video comparison tests (omni vs yt-dlp in Docker)
-task docker:test:video
+# Docker-based testing
+task docker:test:linux:blackbox  # Black-box in Linux container
+task docker:test:golden          # Golden tests in Linux container
+task docker:test:video           # Video comparison (omni vs yt-dlp)
 ```
 
 ## Contributing
@@ -587,8 +662,13 @@ Contributions are welcome! See the documentation in `docs/`:
 
 - [ROADMAP.md](docs/ROADMAP.md) - Implementation phases and planned features
 - [BACKLOG.md](docs/BACKLOG.md) - Future work and technical debt
-- [REUSABILITY.md](docs/REUSABILITY.md) - Code consolidation opportunities
+- [ARCHITECTURE.md](docs/ARCHITECTURE.md) - System architecture with Mermaid diagrams
+- [FEATURES.md](docs/FEATURES.md) - Feature tracker and roadmap
+- [MILESTONES.md](docs/MILESTONES.md) - Version milestones and coverage
+- [CONTRIBUTORS.md](docs/CONTRIBUTORS.md) - Contributing guide
 - [COMMANDS.md](docs/COMMANDS.md) - Full command reference
+- [GOLDEN_MASTER_TESTING.md](docs/GOLDEN_MASTER_TESTING.md) - Golden master testing guide
+- [REUSABILITY.md](docs/REUSABILITY.md) - Code consolidation opportunities
 
 ## License
 

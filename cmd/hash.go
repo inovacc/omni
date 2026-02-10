@@ -13,7 +13,7 @@ var hashCmd = &cobra.Command{
 
 With no FILE, or when FILE is -, read standard input.
 
-  -a, --algorithm ALG  hash algorithm: md5, sha1, sha256 (default), sha512
+  -a, --algorithm ALG  hash algorithm: md5, sha1, sha256 (default), sha512, crc32, crc64
   -c, --check          read checksums from FILE and check them
   -b, --binary         read in binary mode
   -r, --recursive      hash files recursively in directories
@@ -46,7 +46,7 @@ Examples:
 func init() {
 	rootCmd.AddCommand(hashCmd)
 
-	hashCmd.Flags().StringP("algorithm", "a", "sha256", "hash algorithm (md5, sha1, sha256, sha512)")
+	hashCmd.Flags().StringP("algorithm", "a", "sha256", "hash algorithm (md5, sha1, sha256, sha512, crc32, crc64)")
 	hashCmd.Flags().BoolP("check", "c", false, "read checksums from FILE and check them")
 	hashCmd.Flags().BoolP("binary", "b", false, "read in binary mode")
 	hashCmd.Flags().BoolP("recursive", "r", false, "hash files recursively")

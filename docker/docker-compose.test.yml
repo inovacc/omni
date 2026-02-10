@@ -2,6 +2,8 @@
 # Usage:
 #   Unit tests:      docker compose -f docker/docker-compose.test.yml run --rm linux-test
 #   Black box tests: docker compose -f docker/docker-compose.test.yml run --rm linux-blackbox
+#   Golden tests:    docker compose -f docker/docker-compose.test.yml run --rm linux-golden
+#   Golden update:   docker compose -f docker/docker-compose.test.yml run --rm linux-golden-update
 #   Build only:      docker compose -f docker/docker-compose.test.yml build
 
 services:
@@ -41,6 +43,27 @@ services:
       context: ..
       dockerfile: docker/Dockerfile.linux
       target: blackbox-tester
+    environment:
+      - OMNI_BIN=/app/omni
+
+  # Golden master tests: verify outputs match snapshots
+  linux-golden:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.linux
+      target: golden-tester
+    environment:
+      - OMNI_BIN=/app/omni
+
+  # Golden master update: regenerate snapshots and persist to host
+  linux-golden-update:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.linux
+      target: golden-tester
+    volumes:
+      - ../testing/golden/snapshots:/app/testing/golden/snapshots
+    command: ["python3", "testing/scripts/test_golden.py", "--update"]
     environment:
       - OMNI_BIN=/app/omni
 

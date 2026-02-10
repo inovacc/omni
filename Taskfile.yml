@@ -124,6 +124,94 @@ tasks:
     env:
       OMNI_BIN: ./bin/omni
 
+  test:golden:
+    desc: Run golden master tests (verify outputs match snapshots)
+    deps: [ build ]
+    cmds:
+      - python testing/scripts/test_golden.py
+    env:
+      OMNI_BIN: ./bin/omni
+
+  test:golden:update:
+    desc: Update all golden master snapshots
+    deps: [ build ]
+    cmds:
+      - python testing/scripts/test_golden.py --update
+    env:
+      OMNI_BIN: ./bin/omni
+
+  test:golden:check:
+    desc: Verify all golden files exist (CI check)
+    deps: [ build ]
+    cmds:
+      - python testing/scripts/test_golden.py --check
+    env:
+      OMNI_BIN: ./bin/omni
+
+  # === GOLDEN MASTER TESTING (tools/golden/) ===
+  golden:record:
+    desc: Record golden master baselines
+    deps: [ build ]
+    dir: tools/golden
+    env:
+      PYTHONPATH: src
+      OMNI_BIN: '{{.USER_WORKING_DIR}}/bin/omni'
+    cmds:
+      - python -m golden --binary ../../bin/omni record
+
+  golden:compare:
+    desc: Compare current output against golden masters
+    deps: [ build ]
+    dir: tools/golden
+    env:
+      PYTHONPATH: src
+      OMNI_BIN: '{{.USER_WORKING_DIR}}/bin/omni'
+    cmds:
+      - python -m golden --binary ../../bin/omni compare
+
+  golden:list:
+    desc: List golden master test cases
+    dir: tools/golden
+    env:
+      PYTHONPATH: src
+    cmds:
+      - python -m golden list
+
+  golden:map:
+    desc: Generate test map as JSON
+    dir: tools/golden
+    env:
+      PYTHONPATH: src
+    cmds:
+      - python -m golden map --output test-map.json
+
+  golden:map:table:
+    desc: Print test map as human-readable table
+    dir: tools/golden
+    env:
+      PYTHONPATH: src
+    cmds:
+      - python -m golden map --format table
+
+  golden:docker:build:
+    desc: Build golden master Docker image
+    env:
+      DOCKER_BUILDKIT: "1"
+    cmds:
+      - docker build -f tools/golden/Dockerfile -t omni-golden .
+
+  golden:docker:record:
+    desc: Record golden masters via Docker
+    deps: [ golden:docker:build ]
+    cmds:
+      - docker run --rm -v "{{.USER_WORKING_DIR}}/tools/golden/golden_masters:/output" omni-golden --golden-dir /output record
+
+  golden:docker:compare:
+    desc: Compare golden masters via Docker
+    deps: [ golden:docker:build ]
+    cmds:
+      - docker run --rm -v "{{.USER_WORKING_DIR}}/tools/golden/golden_masters:/output" omni-golden --golden-dir /output compare
+
   test:e2e:
     desc: Run all end-to-end tests (integration + blackbox)
     deps: [ build ]
@@ -329,6 +417,16 @@ tasks:
     cmds:
       - docker build -f docker/Dockerfile.windows --target blackbox-tester -t omni-windows-blackbox .
       - docker run --rm omni-windows-blackbox
+
+  docker:test:golden:
+    desc: Run golden master tests in Linux Docker container
+    cmds:
+      - docker compose -f docker/docker-compose.test.yml run --rm linux-golden
+
+  docker:test:golden:update:
+    desc: Update golden snapshots via Linux Docker (persists to host)
+    cmds:
+      - docker compose -f docker/docker-compose.test.yml run --rm linux-golden-update
 
   docker:test:video:
     desc: Run video comparison tests (omni vs yt-dlp) in Docker

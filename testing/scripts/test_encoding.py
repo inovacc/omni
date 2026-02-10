@@ -118,6 +118,83 @@ def main():
             assert_exit_code(result, 0, "sha512sum")
             assert_regex(result.stdout, r"^[0-9a-f]{128}\s", "sha512 hash format")
 
+        # crc32sum
+        @t.test("crc32sum_file")
+        def test_crc32sum_file():
+            f = t.create_temp_file("test", "crc32.txt")
+            result = t.run("crc32sum", str(f))
+            assert_exit_code(result, 0, "crc32sum")
+            assert_contains(result.stdout, "d87f7e0c", "crc32 of 'test'")
+
+        @t.test("crc32sum_stdin")
+        def test_crc32sum_stdin():
+            result = t.run("crc32sum", stdin="test")
+            assert_exit_code(result, 0, "crc32sum stdin")
+            assert_contains(result.stdout, "d87f7e0c", "crc32 stdin")
+
+        @t.test("crc32sum_format")
+        def test_crc32sum_format():
+            f = t.create_temp_file("hello", "crc32_fmt.txt")
+            result = t.run("crc32sum", str(f))
+            assert_exit_code(result, 0, "crc32sum format")
+            assert_regex(result.stdout, r"^[0-9a-f]{8}\s", "crc32 hash is 8 hex chars")
+
+        @t.test("crc32sum_multiple")
+        def test_crc32sum_multiple():
+            f1 = t.create_temp_file("aaa", "crc32_a.txt")
+            f2 = t.create_temp_file("bbb", "crc32_b.txt")
+            result = t.run("crc32sum", str(f1), str(f2))
+            assert_exit_code(result, 0, "crc32sum multiple")
+            lines = result.stdout.strip().split('\n')
+            if len(lines) != 2:
+                raise AssertionError(f"expected 2 lines, got {len(lines)}")
+
+        # crc64sum
+        @t.test("crc64sum_file")
+        def test_crc64sum_file():
+            f = t.create_temp_file("test", "crc64.txt")
+            result = t.run("crc64sum", str(f))
+            assert_exit_code(result, 0, "crc64sum")
+            assert_regex(result.stdout, r"^[0-9a-f]{16}\s", "crc64 hash is 16 hex chars")
+
+        @t.test("crc64sum_stdin")
+        def test_crc64sum_stdin():
+            result = t.run("crc64sum", stdin="test")
+            assert_exit_code(result, 0, "crc64sum stdin")
+            assert_regex(result.stdout, r"^[0-9a-f]{16}\s", "crc64 stdin format")
+
+        @t.test("crc64sum_consistent")
+        def test_crc64sum_consistent():
+            f = t.create_temp_file("deterministic", "crc64_con.txt")
+            r1 = t.run("crc64sum", str(f))
+            r2 = t.run("crc64sum", str(f))
+            assert_eq(r1.stdout, r2.stdout, "crc64 should be deterministic")
+
+        @t.test("crc64sum_multiple")
+        def test_crc64sum_multiple():
+            f1 = t.create_temp_file("aaa", "crc64_a.txt")
+            f2 = t.create_temp_file("bbb", "crc64_b.txt")
+            result = t.run("crc64sum", str(f1), str(f2))
+            assert_exit_code(result, 0, "crc64sum multiple")
+            lines = result.stdout.strip().split('\n')
+            if len(lines) != 2:
+                raise AssertionError(f"expected 2 lines, got {len(lines)}")
+
+        # hash -a crc32 / crc64
+        @t.test("hash_crc32_algorithm")
+        def test_hash_crc32_algorithm():
+            f = t.create_temp_file("test", "hash_crc32.txt")
+            result = t.run("hash", "-a", "crc32", str(f))
+            assert_exit_code(result, 0, "hash -a crc32")
+            assert_contains(result.stdout, "d87f7e0c", "hash -a crc32 value")
+
+        @t.test("hash_crc64_algorithm")
+        def test_hash_crc64_algorithm():
+            f = t.create_temp_file("test", "hash_crc64.txt")
+            result = t.run("hash", "-a", "crc64", str(f))
+            assert_exit_code(result, 0, "hash -a crc64")
+            assert_regex(result.stdout, r"^[0-9a-f]{16}\s", "hash -a crc64 format")
+
         # hash consistency
         @t.test("hash_consistent")
         def test_hash_consistent():
@@ -162,6 +239,16 @@ def main():
         test_md5sum()
         test_sha256sum()
         test_sha512sum()
+        test_crc32sum_file()
+        test_crc32sum_stdin()
+        test_crc32sum_format()
+        test_crc32sum_multiple()
+        test_crc64sum_file()
+        test_crc64sum_stdin()
+        test_crc64sum_consistent()
+        test_crc64sum_multiple()
+        test_hash_crc32_algorithm()
+        test_hash_crc64_algorithm()
         test_hash_consistent()
         test_xxd_basic()
         test_xxd_reverse()

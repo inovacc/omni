@@ -8,6 +8,8 @@ import (
 	"encoding/hex"
 	"fmt"
 	"hash"
+	"hash/crc32"
+	"hash/crc64"
 	"io"
 	"os"
 	"strings"
@@ -23,6 +25,8 @@ const (
 	SHA256 Algorithm = "sha256"
 	SHA384 Algorithm = "sha384"
 	SHA512 Algorithm = "sha512"
+	CRC32  Algorithm = "crc32"
+	CRC64  Algorithm = "crc64"
 )
 
 // HashFile computes the hash of a file at the given path.
@@ -73,6 +77,10 @@ func newHasher(algo Algorithm) hash.Hash {
 		return sha512.New384()
 	case SHA512:
 		return sha512.New()
+	case CRC32:
+		return crc32.NewIEEE()
+	case CRC64:
+		return crc64.New(crc64.MakeTable(crc64.ECMA))
 	default:
 		return sha256.New()
 	}
