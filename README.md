@@ -71,6 +71,8 @@ omni decrypt -p mypass -a secret.enc
 | `dirname` | Strip last path component |
 | `basename` | Strip directory from path |
 | `realpath` | Print resolved absolute path |
+| `path clean` | Return shortest equivalent path with OS separators |
+| `path abs` | Resolve relative path to absolute |
 
 ### File Operations
 | Command | Description |
