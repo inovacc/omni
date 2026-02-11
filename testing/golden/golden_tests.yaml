@@ -371,3 +371,37 @@ categories:
 
       - name: case_pascal
         args: ["case", "pascal", "hello_world"]
+
+  # ===== EXIST =====
+  - name: exist
+    tests:
+      - name: exist_file
+        args: ["exist", "file", "go.mod"]
+
+      - name: exist_file_not_found
+        args: ["exist", "file", "nonexistent_file_xyz"]
+        exit_code: 1
+
+      - name: exist_dir
+        args: ["exist", "dir", "cmd"]
+
+      - name: exist_dir_not_found
+        args: ["exist", "dir", "nonexistent_dir_xyz"]
+        exit_code: 1
+
+      - name: exist_path
+        args: ["exist", "path", "go.mod"]
+
+      - name: exist_command
+        args: ["exist", "command", "go"]
+
+      - name: exist_command_not_found
+        args: ["exist", "command", "nonexistent_cmd_xyz"]
+        exit_code: 1
+
+      - name: exist_env
+        args: ["exist", "env", "PATH"]
+
+      - name: exist_env_not_found
+        args: ["exist", "env", "NONEXISTENT_VAR_XYZ_12345"]
+        exit_code: 1
