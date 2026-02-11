@@ -7,6 +7,7 @@ This directory contains integration tests and benchmarks that run against the co
 | Type | Purpose | Command |
 |------|---------|---------|
 | **Black-box Tests** | Verify CLI behavior and output | `task test:blackbox` |
+| **Equivalence Tests** | Compare `omni` vs reference tools (rg/grep/sort) | `task test:equivalence` |
 | **Benchmarks** | Compare performance vs native Linux | `task test:benchmark` |
 
 ## Directory Structure
@@ -50,6 +51,9 @@ python testing/run_all.py
 # Run specific test suite
 python testing/scripts/test_head_tail.py
 
+# Run reference equivalence checks (public tools as golden)
+python testing/scripts/test_equivalence.py
+
 # Custom binary path
 OMNI_BIN=./bin/omni python testing/run_all.py
 ```
@@ -62,6 +66,13 @@ OMNI_BIN=./bin/omni python testing/run_all.py
 | `test_text.py` | grep, sort, uniq, wc, tr, cut | 14 |
 | `test_file_ops.py` | ls, cat, cp, mv, mkdir, rm, touch, stat, find | 14 |
 | `test_utils.py` | echo, date, pwd, basename, dirname, seq, uuid, hash, base64, jq, yq | 17 |
+| `test_equivalence.py` | Output parity vs reference tools (`rg`, `grep`, `sort`) | OS/tool dependent |
+
+`test_equivalence.py` behavior:
+- Uses reference tools as the golden output (exact stdout/stderr/exit-code match).
+- On Windows, only Windows-safe equivalence cases run; Linux/macOS-only cases are skipped.
+- If a reference tool is not installed, the case is skipped by default.
+- Set `OMNI_EQUIV_STRICT=1` to fail when a required reference tool is missing.
 
 ### Test Cases Detail
 

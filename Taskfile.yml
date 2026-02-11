@@ -124,6 +124,14 @@ tasks:
     env:
       OMNI_BIN: ./bin/omni
 
+  test:equivalence:
+    desc: Compare omni output against public/commercial equivalents (rg/grep/sort)
+    deps: [ build ]
+    cmds:
+      - python testing/scripts/test_equivalence.py
+    env:
+      OMNI_BIN: ./bin/omni
+
   test:golden:
     desc: Run golden master tests (verify outputs match snapshots)
     deps: [ build ]

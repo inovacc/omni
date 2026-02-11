@@ -211,6 +211,7 @@ omni decrypt -p mypass -a secret.enc
 | `decrypt` | AES-256-GCM decryption |
 | `uuid` | Generate UUIDs |
 | `random` | Generate random values |
+| `note` | Quick note taking to JSON in Documents |
 
 ### Video Download
 | Command | Description |
@@ -387,6 +388,7 @@ Download videos from YouTube and other platforms, pure Go (no FFmpeg required):
 ```bash
 # Download video (best quality)
 omni video download "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+# (saved to your user Downloads folder by default)
 
 # Download worst quality (smallest file)
 omni video download -f worst "https://www.youtube.com/watch?v=dQw4w9WgXcQ"

@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/inovacc/omni/pkg/userdirs"
 	"github.com/inovacc/omni/pkg/video/downloader"
 	"github.com/inovacc/omni/pkg/video/extractor"
 	_ "github.com/inovacc/omni/pkg/video/extractor/all" // Register all extractors.
@@ -94,6 +95,9 @@ func (c *Client) DownloadInfo(ctx context.Context, info *VideoInfo) error {
 
 	// Build filename.
 	filename := c.buildFilename(info, f)
+	if err := ensureOutputDir(filename); err != nil {
+		return err
+	}
 
 	// Write info JSON if requested.
 	if c.opts.WriteInfo {
@@ -243,7 +247,14 @@ func (c *Client) buildFilename(info *VideoInfo, f *Format) string {
 		ext = "mp4"
 	}
 
-	return title + "." + ext
+	base := title + "." + ext
+
+	downloadDir, err := userdirs.DownloadsDir()
+	if err != nil {
+		return base
+	}
+
+	return filepath.Join(downloadDir, base)
 }
 
 func expandOutputTemplate(tmpl string, info *VideoInfo, f *Format) string {
@@ -281,6 +292,19 @@ func (c *Client) writeInfoJSON(info *VideoInfo, videoPath string) error {
 	}
 
 	return os.WriteFile(jsonPath, data, 0o644)
+}
+
+func ensureOutputDir(path string) error {
+	dir := filepath.Dir(path)
+	if dir == "." || dir == "" {
+		return nil
+	}
+
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		return fmt.Errorf("video: create output directory %q: %w", dir, err)
+	}
+
+	return nil
 }
 
 func (c *Client) mergeHeaders(formatHeaders map[string]string) map[string]string {
