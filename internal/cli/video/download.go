@@ -15,7 +15,7 @@ func RunDownload(w io.Writer, args []string, opts Options) error {
 		return fmt.Errorf("video download: URL is required")
 	}
 
-	url := args[0]
+	url := normalizeVideoURL(args[0])
 
 	rateLimit, _ := utils.ParseFilesize(opts.RateLimit)
 

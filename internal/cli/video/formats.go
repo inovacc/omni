@@ -16,7 +16,7 @@ func RunListFormats(w io.Writer, args []string, opts Options) error {
 		return fmt.Errorf("video list-formats: URL is required")
 	}
 
-	url := args[0]
+	url := normalizeVideoURL(args[0])
 
 	var clientOpts []video.Option
 	if opts.CookieFile != "" {
