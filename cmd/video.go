@@ -10,7 +10,7 @@ import (
 )
 
 var videoCmd = &cobra.Command{
-	Use:   "video",
+	Use:   "video [URL]",
 	Short: "Download videos from YouTube and other platforms",
 	Long: `Video downloader supporting YouTube and other video platforms.
 
@@ -19,6 +19,7 @@ Subcommands:
   info          Show video metadata as JSON
   list-formats  List available download formats
   search        Search YouTube
+  interactive   Interactive menu (download/info/formats/nerd stats)
   extractors    List supported sites
 
 Examples:
@@ -27,7 +28,22 @@ Examples:
   omni video list-formats "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
   omni video download -f worst "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
   omni video search "golang tutorial"
+  omni video interactive
+  omni video "https://www.youtube.com/watch?v=dQw4w9WgXcQ" --interactive
   omni video extractors`,
+	Args: cobra.MaximumNArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		interactive, _ := cmd.Flags().GetBool("interactive")
+		if interactive {
+			return runVideoInteractive(cmd, args)
+		}
+
+		if len(args) > 0 {
+			return fmt.Errorf("video: got URL without action; use --interactive or a subcommand (download/info/list-formats)")
+		}
+
+		return cmd.Help()
+	},
 }
 
 var videoDownloadCmd = &cobra.Command{
@@ -165,6 +181,28 @@ Examples:
 	},
 }
 
+var videoInteractiveCmd = &cobra.Command{
+	Use:     "interactive [URL]",
+	Aliases: []string{"i"},
+	Short:   "Interactive video menu (formats, info, nerd stats, extractors)",
+	Long: `Start an interactive menu for video operations.
+
+The menu lets you:
+  - input or change URL
+  - list formats
+  - show metadata JSON
+  - inspect nerd stats
+  - list supported extractors
+  - download with best or custom format selector
+
+Examples:
+  omni video interactive
+  omni video interactive "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+  omni video "https://www.youtube.com/watch?v=dQw4w9WgXcQ" --interactive`,
+	Args: cobra.MaximumNArgs(1),
+	RunE: runVideoInteractive,
+}
+
 func init() {
 	rootCmd.AddCommand(videoCmd)
 
@@ -172,7 +210,13 @@ func init() {
 	videoCmd.AddCommand(videoInfoCmd)
 	videoCmd.AddCommand(videoListFormatsCmd)
 	videoCmd.AddCommand(videoSearchCmd)
+	videoCmd.AddCommand(videoInteractiveCmd)
 	videoCmd.AddCommand(videoExtractorsCmd)
+
+	videoCmd.Flags().Bool("interactive", false, "start interactive mode (same as 'video interactive')")
+	videoCmd.Flags().String("cookies", "", "Netscape cookie file path for interactive mode")
+	videoCmd.Flags().String("proxy", "", "HTTP/SOCKS proxy URL for interactive mode")
+	videoCmd.Flags().BoolP("verbose", "v", false, "verbose output for interactive mode")
 
 	// download flags
 	videoDownloadCmd.Flags().StringP("format", "f", "best", "format selector")
@@ -204,4 +248,74 @@ func init() {
 
 	// search flags
 	videoSearchCmd.Flags().BoolP("verbose", "v", false, "verbose output")
+
+	// interactive flags
+	videoInteractiveCmd.Flags().StringP("format", "f", "best", "format selector used by 'download (best)'")
+	videoInteractiveCmd.Flags().StringP("output", "o", "", "output filename template")
+	videoInteractiveCmd.Flags().BoolP("quiet", "q", false, "suppress output")
+	videoInteractiveCmd.Flags().Bool("no-progress", false, "disable progress bar")
+	videoInteractiveCmd.Flags().String("rate-limit", "", "rate limit (e.g., 1M, 500K)")
+	videoInteractiveCmd.Flags().IntP("retries", "R", 3, "number of retries")
+	videoInteractiveCmd.Flags().BoolP("continue", "c", false, "resume partial downloads")
+	videoInteractiveCmd.Flags().Bool("no-part", false, "don't use .part files")
+	videoInteractiveCmd.Flags().String("cookies", "", "Netscape cookie file path")
+	videoInteractiveCmd.Flags().String("proxy", "", "HTTP/SOCKS proxy URL")
+	videoInteractiveCmd.Flags().Bool("write-info-json", false, "write .info.json file")
+	videoInteractiveCmd.Flags().Bool("write-subs", false, "write subtitle files")
+	videoInteractiveCmd.Flags().Bool("no-playlist", false, "download single video only")
+	videoInteractiveCmd.Flags().Int("playlist-start", 0, "playlist start index (1-based)")
+	videoInteractiveCmd.Flags().Int("playlist-end", 0, "playlist end index")
+	videoInteractiveCmd.Flags().BoolP("verbose", "v", false, "verbose output")
+}
+
+func runVideoInteractive(cmd *cobra.Command, args []string) error {
+	opts := video.Options{}
+	opts.Format = videoStringFlag(cmd, "format")
+	opts.Output = videoStringFlag(cmd, "output")
+	opts.Quiet = videoBoolFlag(cmd, "quiet")
+	opts.NoProgress = videoBoolFlag(cmd, "no-progress")
+	opts.RateLimit = videoStringFlag(cmd, "rate-limit")
+	opts.Retries = videoIntFlag(cmd, "retries")
+	opts.Continue = videoBoolFlag(cmd, "continue")
+	opts.NoPart = videoBoolFlag(cmd, "no-part")
+	opts.CookieFile = videoStringFlag(cmd, "cookies")
+	opts.Proxy = videoStringFlag(cmd, "proxy")
+	opts.WriteInfoJSON = videoBoolFlag(cmd, "write-info-json")
+	opts.WriteSubs = videoBoolFlag(cmd, "write-subs")
+	opts.NoPlaylist = videoBoolFlag(cmd, "no-playlist")
+	opts.PlaylistStart = videoIntFlag(cmd, "playlist-start")
+	opts.PlaylistEnd = videoIntFlag(cmd, "playlist-end")
+	opts.Verbose = videoBoolFlag(cmd, "verbose")
+
+	return video.RunInteractive(cmd.OutOrStdout(), cmd.ErrOrStderr(), cmd.InOrStdin(), args, opts)
+}
+
+func videoStringFlag(cmd *cobra.Command, name string) string {
+	if cmd.Flags().Lookup(name) == nil {
+		return ""
+	}
+
+	value, _ := cmd.Flags().GetString(name)
+
+	return value
+}
+
+func videoBoolFlag(cmd *cobra.Command, name string) bool {
+	if cmd.Flags().Lookup(name) == nil {
+		return false
+	}
+
+	value, _ := cmd.Flags().GetBool(name)
+
+	return value
+}
+
+func videoIntFlag(cmd *cobra.Command, name string) int {
+	if cmd.Flags().Lookup(name) == nil {
+		return 0
+	}
+
+	value, _ := cmd.Flags().GetInt(name)
+
+	return value
 }

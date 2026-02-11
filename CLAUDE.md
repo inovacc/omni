@@ -172,7 +172,7 @@ defer func() {
 
 ## Command Categories
 
-### Implemented (148+ commands)
+### Implemented (155+ commands)
 
 | Category | Commands |
 |----------|----------|
@@ -198,6 +198,7 @@ defer func() {
 | **Video** | video download, video info, video list-formats, video search, video extractors |
 | **Cloud/DevOps** | kubectl (k), terraform (tf), aws |
 | **Git Hacks** | git (quick-commit, branch-clean, undo, amend, stash-staged, log-graph, diff-words, blame-line), gqc, gbc |
+| **Checks** | exist (file, dir, path, command, env, process, port) |
 | **Kubectl Hacks** | kga, klf, keb, kpf, kdp, krr, kge, ktp, ktn, kcs, kns, kwp, kscale, kdebug, kdrain, krun, kconfig |
 
 ### Tree Command (Advanced Features)
@@ -620,6 +621,7 @@ Current coverage: ~30.5% overall, 51.6% omni-owned (~75% avg for pkg/)
 | `pkg/pipeline/pipeline_test.go` | Orchestrator, multi-stage, context cancel, head drain |
 | `pkg/pipeline/parse_test.go` | CLI string parser, sed expressions, flag combinations |
 | `internal/cli/pipeline/pipeline_test.go` | CLI wrapper integration tests |
+| `internal/cli/exist/exist_test.go` | File, dir, path, command, env, process, port existence checks, JSON/quiet modes |
 | `internal/cli/project/project_test.go` | Project detection, deps parsing, health scoring, output formatting |
 
 ### Golden Master Tests

@@ -54,6 +54,13 @@ omni base64 -d encoded.txt
 omni uuid -n 5
 omni random -t password -l 20
 
+# Existence checks (exit code 0=exists, 1=not found)
+omni exist file config.yaml
+omni exist command docker
+omni exist env DATABASE_URL
+omni exist port 8080
+omni exist -q file .env && echo "found"
+
 # Encryption
 echo "secret" | omni encrypt -p mypass -a
 omni decrypt -p mypass -a secret.enc
@@ -270,6 +277,17 @@ omni decrypt -p mypass -a secret.enc
 | `project docs` | Documentation status check |
 | `project git` | Git repository info |
 | `project health` | Health score (0-100) with grade |
+
+### Existence Checks
+| Command | Description |
+|---------|-------------|
+| `exist file` | Check if a regular file exists |
+| `exist dir` | Check if a directory exists |
+| `exist path` | Check if any path exists (file, dir, symlink) |
+| `exist command` | Check if a command is in PATH |
+| `exist env` | Check if an environment variable is set |
+| `exist process` | Check if a process is running (by name or PID) |
+| `exist port` | Check if a TCP port is listening |
 
 ### Tooling
 | Command | Description |
@@ -496,7 +514,7 @@ _ = client.Download(ctx, "https://www.youtube.com/watch?v=...")
 
 ```
 omni/
-├── cmd/                    # Cobra CLI commands (150+ commands)
+├── cmd/                    # Cobra CLI commands (155+ commands)
 │   ├── root.go
 │   ├── ls.go
 │   ├── grep.go
@@ -551,7 +569,7 @@ omni/
 - **Omni pkg/ Average:** ~75% (16 of 31 packages above 80%)
 - **Total Test Cases:** 700+
 - **Black-box Tests:** 15 Python test suites
-- **Golden Master Tests:** 81 snapshot tests across 11 categories
+- **Golden Master Tests:** 91 snapshot tests across 12 categories
 
 ## Platform Support
 
