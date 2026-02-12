@@ -217,6 +217,7 @@ omni decrypt -p mypass -a secret.enc
 | Command | Description |
 |---------|-------------|
 | `video download` | Download video from URL |
+| `video channel` | Download all videos from a YouTube channel (incremental, SQLite tracking) |
 | `video info` | Show video metadata as JSON |
 | `video list-formats` | List available formats |
 | `video search` | Search YouTube |
@@ -410,9 +411,21 @@ omni video download -c "https://www.youtube.com/watch?v=..."
 
 # Rate-limited download
 omni video download --rate-limit 1M "https://www.youtube.com/watch?v=..."
+
+# Complete download: best quality + markdown sidecar (title, link, description)
+omni video download --complete "https://www.youtube.com/watch?v=..."
+
+# Download all videos from a YouTube channel (incremental)
+omni video channel "https://www.youtube.com/@GithubAwesome"
+
+# Limit to 5 most recent videos
+omni video channel "https://www.youtube.com/@GithubAwesome" --limit 5
+
+# Re-run skips already-downloaded videos
+omni video channel "https://www.youtube.com/@GithubAwesome"
 ```
 
-**Supported sites:** YouTube (videos, playlists, search), Generic (direct URLs, `<video>` tags, og:video)
+**Supported sites:** YouTube (videos, playlists, channels, search), Generic (direct URLs, `<video>` tags, og:video)
 
 **Protocols:** HTTPS direct download, HLS/M3U8 (with AES-128 decryption)
 

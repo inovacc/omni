@@ -16,6 +16,7 @@ var videoCmd = &cobra.Command{
 
 Subcommands:
   download      Download video(s) from URL
+  channel       Download all videos from a YouTube channel (incremental)
   info          Show video metadata as JSON
   list-formats  List available download formats
   search        Search YouTube
@@ -24,6 +25,7 @@ Subcommands:
 
 Examples:
   omni video download "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+  omni video channel "https://www.youtube.com/@GithubAwesome" --limit 5
   omni video info "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
   omni video list-formats "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
   omni video download -f worst "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
@@ -69,6 +71,7 @@ Flags:
   --playlist-start=N      Start index (1-based)
   --playlist-end=N        End index
   -v, --verbose           Verbose output
+  --complete              Best quality + write .md with description and link
 
 Format selectors:
   best          Best quality with video+audio (default)
@@ -87,7 +90,8 @@ Examples:
   omni video dl -f worst "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
   omni video dl -o "%(title)s-%(format_id)s.%(ext)s" URL
   omni video dl --rate-limit 1M URL
-  omni video dl -c URL           # resume partial download`,
+  omni video dl -c URL           # resume partial download
+  omni video dl --complete URL   # best quality + markdown sidecar`,
 	Args: cobra.MinimumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		opts := video.Options{}
@@ -107,6 +111,7 @@ Examples:
 		opts.PlaylistStart, _ = cmd.Flags().GetInt("playlist-start")
 		opts.PlaylistEnd, _ = cmd.Flags().GetInt("playlist-end")
 		opts.Verbose, _ = cmd.Flags().GetBool("verbose")
+		opts.Complete, _ = cmd.Flags().GetBool("complete")
 		return video.RunDownload(cmd.OutOrStdout(), args, opts)
 	},
 }
@@ -181,6 +186,46 @@ Examples:
 	},
 }
 
+var videoChannelCmd = &cobra.Command{
+	Use:     "channel <URL>",
+	Aliases: []string{"ch"},
+	Short:   "Download all videos from a YouTube channel (incremental)",
+	Long: `Download all videos from a YouTube channel with SQLite tracking.
+
+Downloads are stored in ~/Downloads/<ChannelName>/ with a channel.db
+database that tracks downloaded videos. Re-running the same command
+skips already-downloaded videos (incremental).
+
+Each video is downloaded in "complete" mode (best quality + .md sidecar).
+
+Flags:
+  --limit=N             Max videos to download (-1 = all)
+  --cookies=FILE        Netscape cookie file
+  --proxy=URL           HTTP/SOCKS proxy
+  -q, --quiet           Suppress progress output
+  --no-progress         Disable progress bar
+  -R, --retries=N       Number of retries (default 3)
+  -v, --verbose         Verbose output
+
+Examples:
+  omni video channel "https://www.youtube.com/@GithubAwesome"
+  omni video ch "https://www.youtube.com/channel/UCuAXFkgsw1L7xaCfnd5JJOw" --limit 5
+  omni video channel "https://www.youtube.com/c/ChannelName" --cookies cookies.txt`,
+	Args: cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		opts := video.Options{}
+		opts.Limit, _ = cmd.Flags().GetInt("limit")
+		opts.CookieFile, _ = cmd.Flags().GetString("cookies")
+		opts.Proxy, _ = cmd.Flags().GetString("proxy")
+		opts.Quiet, _ = cmd.Flags().GetBool("quiet")
+		opts.NoProgress, _ = cmd.Flags().GetBool("no-progress")
+		opts.Retries, _ = cmd.Flags().GetInt("retries")
+		opts.RateLimit, _ = cmd.Flags().GetString("rate-limit")
+		opts.Verbose, _ = cmd.Flags().GetBool("verbose")
+		return video.RunChannel(cmd.OutOrStdout(), args, opts)
+	},
+}
+
 var videoInteractiveCmd = &cobra.Command{
 	Use:     "interactive [URL]",
 	Aliases: []string{"i"},
@@ -207,6 +252,7 @@ func init() {
 	rootCmd.AddCommand(videoCmd)
 
 	videoCmd.AddCommand(videoDownloadCmd)
+	videoCmd.AddCommand(videoChannelCmd)
 	videoCmd.AddCommand(videoInfoCmd)
 	videoCmd.AddCommand(videoListFormatsCmd)
 	videoCmd.AddCommand(videoSearchCmd)
@@ -235,6 +281,17 @@ func init() {
 	videoDownloadCmd.Flags().Int("playlist-start", 0, "playlist start index (1-based)")
 	videoDownloadCmd.Flags().Int("playlist-end", 0, "playlist end index")
 	videoDownloadCmd.Flags().BoolP("verbose", "v", false, "verbose output")
+	videoDownloadCmd.Flags().Bool("complete", false, "download best quality and write .md file with description and link")
+
+	// channel flags
+	videoChannelCmd.Flags().Int("limit", -1, "max videos to download (-1 = all)")
+	videoChannelCmd.Flags().String("cookies", "", "Netscape cookie file path")
+	videoChannelCmd.Flags().String("proxy", "", "HTTP/SOCKS proxy URL")
+	videoChannelCmd.Flags().BoolP("quiet", "q", false, "suppress output")
+	videoChannelCmd.Flags().Bool("no-progress", false, "disable progress bar")
+	videoChannelCmd.Flags().IntP("retries", "R", 3, "number of retries")
+	videoChannelCmd.Flags().String("rate-limit", "", "rate limit (e.g., 1M, 500K)")
+	videoChannelCmd.Flags().BoolP("verbose", "v", false, "verbose output")
 
 	// info flags
 	videoInfoCmd.Flags().String("cookies", "", "Netscape cookie file path")
@@ -266,6 +323,7 @@ func init() {
 	videoInteractiveCmd.Flags().Int("playlist-start", 0, "playlist start index (1-based)")
 	videoInteractiveCmd.Flags().Int("playlist-end", 0, "playlist end index")
 	videoInteractiveCmd.Flags().BoolP("verbose", "v", false, "verbose output")
+	videoInteractiveCmd.Flags().Bool("complete", false, "download best quality and write .md file with description and link")
 }
 
 func runVideoInteractive(cmd *cobra.Command, args []string) error {
@@ -286,6 +344,7 @@ func runVideoInteractive(cmd *cobra.Command, args []string) error {
 	opts.PlaylistStart = videoIntFlag(cmd, "playlist-start")
 	opts.PlaylistEnd = videoIntFlag(cmd, "playlist-end")
 	opts.Verbose = videoBoolFlag(cmd, "verbose")
+	opts.Complete = videoBoolFlag(cmd, "complete")
 
 	return video.RunInteractive(cmd.OutOrStdout(), cmd.ErrOrStderr(), cmd.InOrStdin(), args, opts)
 }

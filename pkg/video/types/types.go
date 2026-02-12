@@ -41,6 +41,9 @@ type VideoInfo struct {
 	Extractor     string                `json:"extractor,omitempty"`
 	ExtractorKey  string                `json:"extractor_key,omitempty"`
 
+	// Extra metadata for extractor-specific data (e.g., channel subscriber count).
+	Metadata map[string]string `json:"metadata,omitempty"`
+
 	// Playlist fields
 	Type    string      `json:"_type,omitempty"` // "video", "playlist", "url", "url_transparent"
 	Entries []VideoInfo `json:"entries,omitempty"`
