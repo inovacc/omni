@@ -19,4 +19,6 @@ type Options struct {
 	PlaylistEnd   int
 	Verbose       bool
 	JSON          bool
+	Complete      bool
+	Limit         int // Max videos for channel command (-1 = all)
 }

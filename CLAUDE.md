@@ -195,7 +195,7 @@ defer func() {
 | **Comparison** | diff |
 | **Tooling** | lint, cmdtree, loc, cron, project (info, deps, docs, git, health) |
 | **Network** | curl |
-| **Video** | video download, video info, video list-formats, video search, video extractors |
+| **Video** | video download, video info, video list-formats, video search, video extractors, video channel |
 | **Cloud/DevOps** | kubectl (k), terraform (tf), aws |
 | **Git Hacks** | git (quick-commit, branch-clean, undo, amend, stash-staged, log-graph, diff-words, blame-line), gqc, gbc |
 | **Checks** | exist (file, dir, path, command, env, process, port) |
@@ -383,11 +383,11 @@ The `video` command is a pure Go youtube-dl/yt-dlp port under `pkg/video/`:
 pkg/video/
 ├── video.go                    # Client orchestrator (Extract, Download, DownloadInfo)
 ├── options.go                  # Functional options (WithFormat, WithProxy, etc.)
-├── types/types.go              # VideoInfo, Format, Fragment, Thumbnail, etc.
+├── types/types.go              # VideoInfo, Format, Fragment, Thumbnail, Metadata map, etc.
 ├── extractor/                  # Site-specific metadata extractors
 │   ├── extractor.go            # Extractor interface + BaseExtractor helpers
 │   ├── registry.go             # Register/Match/Names (init()-based registration)
-│   ├── youtube/                # YouTube: InnerTube API, signature decryption, playlists
+│   ├── youtube/                # YouTube: InnerTube API, signature decryption, playlists, channels
 │   └── generic/                # Fallback: direct URLs, <video> tags, og:video
 ├── downloader/                 # Download engines
 │   ├── http.go                 # HTTPS: resume via Range, .part files, retry, rate-limit
@@ -405,8 +405,14 @@ pkg/video/
 - YouTube uses InnerTube API with multiple client configs (android_vr first — no PoToken needed)
 - HLS downloader auto-resolves master playlists to highest-bandwidth variant
 - `pkg/video/` is a standalone library importable by external Go projects
+- `--complete` flag: forces `best` format + writes `.md` sidecar (title, link, description) via `WriteMarkdown` option
+- Markdown sidecar: `writeMarkdown()` in `pkg/video/video.go` creates `<video_name>.md` alongside the video file
+- Channel extractor uses InnerTube browse API (`/youtubei/v1/browse`) with `videosTabParams` for Videos tab
+- Channel pagination via continuation tokens from `continuationItemRenderer`
+- `video channel` stores metadata in SQLite (`channel.db`) inside channel folder for incremental downloads
+- `VideoInfo.Metadata` map holds extractor-specific data (subscriber count, avatar URL, etc.)
 
-**CLI wrappers:** `internal/cli/video/` (download.go, info.go, formats.go, output.go) → `cmd/video.go`
+**CLI wrappers:** `internal/cli/video/` (download.go, info.go, formats.go, output.go, channel.go, channeldb.go) → `cmd/video.go`
 
 **Dependencies:** `github.com/dop251/goja` (pure Go JS runtime for YouTube signatures)
 
@@ -617,6 +623,8 @@ Current coverage: ~30.5% overall, 51.6% omni-owned (~75% avg for pkg/)
 | `pkg/video/m3u8/parser_test.go` | M3U8 manifest parsing (master/media playlists, segments, keys) |
 | `pkg/video/utils/*_test.go` | Sanitize, HTML, URL, parse, traverse tests |
 | `pkg/video/extractor/registry_test.go` | Extractor registration and matching |
+| `pkg/video/extractor/youtube/channel_test.go` | Channel URL matching, duration/view count parsing |
+| `internal/cli/video/channel_test.go` | Channel DB init, schema, incremental tracking, upsert |
 | `testing/scripts/test_video.py` | Black-box: omni video vs yt-dlp comparison (Docker) |
 | `pkg/pipeline/pipeline_test.go` | Orchestrator, multi-stage, context cancel, head drain |
 | `pkg/pipeline/parse_test.go` | CLI string parser, sed expressions, flag combinations |
