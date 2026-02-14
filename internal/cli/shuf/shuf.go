@@ -14,11 +14,11 @@ import (
 
 // ShufOptions configures the shuf command behavior
 type ShufOptions struct {
-	Echo       bool   // -e: treat args as input lines
-	InputRange string // -i LO-HI: treat each number LO through HI as input line
-	HeadCount  int    // -n: output at most COUNT lines
-	Repeat     bool   // -r: output lines can be repeated
-	ZeroTerm   bool   // -z: line delimiter is NUL
+	Echo         bool          // -e: treat args as input lines
+	InputRange   string        // -i LO-HI: treat each number LO through HI as input line
+	HeadCount    int           // -n: output at most COUNT lines
+	Repeat       bool          // -r: output lines can be repeated
+	ZeroTerm     bool          // -z: line delimiter is NUL
 	OutputFormat output.Format // output format
 }
 

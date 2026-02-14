@@ -13,13 +13,13 @@ import (
 
 // CutOptions configures the cut command behavior
 type CutOptions struct {
-	Bytes       string // -b: select only these bytes
-	Characters  string // -c: select only these characters
-	Fields      string // -f: select only these fields
-	Delimiter   string // -d: use DELIM instead of TAB for field delimiter
-	OnlyDelim   bool   // -s: do not print lines not containing delimiters
-	OutputDelim string // --output-delimiter: use STRING as the output delimiter
-	Complement  bool   // --complement: complement the set of selected bytes/chars/fields
+	Bytes        string        // -b: select only these bytes
+	Characters   string        // -c: select only these characters
+	Fields       string        // -f: select only these fields
+	Delimiter    string        // -d: use DELIM instead of TAB for field delimiter
+	OnlyDelim    bool          // -s: do not print lines not containing delimiters
+	OutputDelim  string        // --output-delimiter: use STRING as the output delimiter
+	Complement   bool          // --complement: complement the set of selected bytes/chars/fields
 	OutputFormat output.Format // output format (text/json/table)
 }
 

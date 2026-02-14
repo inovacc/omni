@@ -6,7 +6,7 @@ import (
 )
 
 var (
-	whichAll  bool
+	whichAll bool
 )
 
 var whichCmd = &cobra.Command{

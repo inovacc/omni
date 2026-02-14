@@ -13,13 +13,13 @@ import (
 
 // Options configures the json format command behavior
 type Options struct {
-	Minify     bool   // -m: minify (compact) output
-	Indent     string // -i: indentation string (default "  ")
-	SortKeys   bool   // -s: sort object keys
-	Validate   bool   // -v: validate only, don't output
-	EscapeHTML bool   // -e: escape HTML characters
+	Minify       bool          // -m: minify (compact) output
+	Indent       string        // -i: indentation string (default "  ")
+	SortKeys     bool          // -s: sort object keys
+	Validate     bool          // -v: validate only, don't output
+	EscapeHTML   bool          // -e: escape HTML characters
 	OutputFormat output.Format // output format (for validate mode)
-	Tab        bool   // -t: use tabs for indentation
+	Tab          bool          // -t: use tabs for indentation
 }
 
 // Result represents the JSON output for validate mode

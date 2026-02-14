@@ -32,9 +32,9 @@ type Result struct {
 // Options configure the testcheck behavior.
 type Options struct {
 	OutputFormat output.Format // output format
-	ShowAll bool // Show all packages (default shows only missing)
-	Summary bool // Show only summary
-	Verbose bool // Show test file names
+	ShowAll      bool          // Show all packages (default shows only missing)
+	Summary      bool          // Show only summary
+	Verbose      bool          // Show test file names
 }
 
 // Run performs the test check on the given directory.

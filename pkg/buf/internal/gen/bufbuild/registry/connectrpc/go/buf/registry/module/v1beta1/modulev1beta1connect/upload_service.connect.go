@@ -19,9 +19,9 @@
 package modulev1beta1connect
 
 import (
+	connect "connectrpc.com/connect"
 	context "context"
 	errors "errors"
-	connect "connectrpc.com/connect"
 	v1beta1 "github.com/inovacc/omni/pkg/buf/internal/gen/bufbuild/registry/protocolbuffers/go/buf/registry/module/v1beta1"
 	http "net/http"
 	strings "strings"

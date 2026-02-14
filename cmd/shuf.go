@@ -32,11 +32,11 @@ Examples:
   omni shuf -rn 10 -e yes no      # 10 random picks with repetition`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		opts := shuf.ShufOptions{
-			Echo:       shufEcho,
-			InputRange: shufInputRange,
-			HeadCount:  shufHeadCount,
-			Repeat:     shufRepeat,
-			ZeroTerm:   shufZeroTerm,
+			Echo:         shufEcho,
+			InputRange:   shufInputRange,
+			HeadCount:    shufHeadCount,
+			Repeat:       shufRepeat,
+			ZeroTerm:     shufZeroTerm,
 			OutputFormat: getOutputOpts(cmd).GetFormat(),
 		}
 

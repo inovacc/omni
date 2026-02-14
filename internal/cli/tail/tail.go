@@ -13,12 +13,12 @@ import (
 
 // TailOptions configures the tail command behavior
 type TailOptions struct {
-	Lines   int           // -n: number of lines to print
-	Bytes   int           // -c: number of bytes to print
-	Follow  bool          // -f: output appended data as file grows
-	Quiet   bool          // -q: never print headers
-	Verbose bool          // -v: always print headers
-	Sleep   time.Duration // --sleep-interval: sleep interval for -f
+	Lines        int           // -n: number of lines to print
+	Bytes        int           // -c: number of bytes to print
+	Follow       bool          // -f: output appended data as file grows
+	Quiet        bool          // -q: never print headers
+	Verbose      bool          // -v: always print headers
+	Sleep        time.Duration // --sleep-interval: sleep interval for -f
 	OutputFormat output.Format // output format (text/json/table)
 }
 

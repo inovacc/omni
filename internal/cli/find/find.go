@@ -17,25 +17,25 @@ import (
 
 // FindOptions configures the find command behavior
 type FindOptions struct {
-	Name       string // -name pattern (shell glob)
-	IName      string // -iname pattern (case insensitive)
-	Path       string // -path pattern (match full path)
-	IPath      string // -ipath pattern (case insensitive path)
-	Regex      string // -regex pattern (full path regex)
-	IRegex     string // -iregex pattern (case insensitive regex)
-	Type       string // -type (f=file, d=dir, l=symlink)
-	Size       string // -size [+-]N[ckMG]
-	MinDepth   int    // -mindepth N
-	MaxDepth   int    // -maxdepth N (0 = unlimited)
-	MTime      string // -mtime [+-]N (days)
-	MMin       string // -mmin [+-]N (minutes)
-	ATime      string // -atime [+-]N (days)
-	AMin       string // -amin [+-]N (minutes)
-	Empty      bool   // -empty (empty files/dirs)
-	Executable bool   // -executable
-	Readable   bool   // -readable
-	Writable   bool   // -writable
-	Print0     bool   // -print0 (null separator)
+	Name         string        // -name pattern (shell glob)
+	IName        string        // -iname pattern (case insensitive)
+	Path         string        // -path pattern (match full path)
+	IPath        string        // -ipath pattern (case insensitive path)
+	Regex        string        // -regex pattern (full path regex)
+	IRegex       string        // -iregex pattern (case insensitive regex)
+	Type         string        // -type (f=file, d=dir, l=symlink)
+	Size         string        // -size [+-]N[ckMG]
+	MinDepth     int           // -mindepth N
+	MaxDepth     int           // -maxdepth N (0 = unlimited)
+	MTime        string        // -mtime [+-]N (days)
+	MMin         string        // -mmin [+-]N (minutes)
+	ATime        string        // -atime [+-]N (days)
+	AMin         string        // -amin [+-]N (minutes)
+	Empty        bool          // -empty (empty files/dirs)
+	Executable   bool          // -executable
+	Readable     bool          // -readable
+	Writable     bool          // -writable
+	Print0       bool          // -print0 (null separator)
 	OutputFormat output.Format // output format
 	// Logical operators
 	Not bool // -not (negate next condition)

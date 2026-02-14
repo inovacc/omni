@@ -12,17 +12,17 @@ import (
 
 // Options configure the ps command behavior
 type Options struct {
-	All       bool   // -a: show processes for all users
-	Full      bool   // -f: full-format listing
-	Long      bool   // -l: long format
-	User      string // -u: show processes for specified user
-	Pid       int    // -p: show process with specified PID
-	Forest    bool   // --forest: show process tree
-	NoHeaders bool   // --no-headers: don't print header line
-	Sort      string // --sort: sort by column (pid, cpu, mem, time)
-	Aux       bool   // aux: BSD-style all processes with user info
+	All          bool          // -a: show processes for all users
+	Full         bool          // -f: full-format listing
+	Long         bool          // -l: long format
+	User         string        // -u: show processes for specified user
+	Pid          int           // -p: show process with specified PID
+	Forest       bool          // --forest: show process tree
+	NoHeaders    bool          // --no-headers: don't print header line
+	Sort         string        // --sort: sort by column (pid, cpu, mem, time)
+	Aux          bool          // aux: BSD-style all processes with user info
 	OutputFormat output.Format // output format (text/json/table)
-	GoOnly    bool   // --go: show only Go processes
+	GoOnly       bool          // --go: show only Go processes
 }
 
 // Info represents information about a running process

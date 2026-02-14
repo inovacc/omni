@@ -13,7 +13,7 @@ import (
 
 // WhichOptions configures the which command behavior
 type WhichOptions struct {
-	All  bool // -a: print all matches
+	All          bool          // -a: print all matches
 	OutputFormat output.Format // output format
 }
 

@@ -14,7 +14,7 @@ import (
 // Options configures the hex encode/decode command behavior
 type Options struct {
 	OutputFormat clioutput.Format // output format (text, json, table)
-	Uppercase    bool          // --upper: use uppercase hex
+	Uppercase    bool             // --upper: use uppercase hex
 }
 
 // Result represents the output for JSON mode

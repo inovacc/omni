@@ -11,10 +11,10 @@ import (
 
 // HeadOptions configures the head command behavior
 type HeadOptions struct {
-	Lines   int  // -n: number of lines to print
-	Bytes   int  // -c: number of bytes to print
-	Quiet   bool // -q: never print headers
-	Verbose bool // -v: always print headers
+	Lines        int           // -n: number of lines to print
+	Bytes        int           // -c: number of bytes to print
+	Quiet        bool          // -q: never print headers
+	Verbose      bool          // -v: always print headers
 	OutputFormat output.Format // output format (text/json/table)
 }
 

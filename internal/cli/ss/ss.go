@@ -15,20 +15,20 @@ import (
 
 // Options configures the ss command behavior
 type Options struct {
-	All       bool   // -a: display all sockets
-	Listening bool   // -l: display listening sockets only
-	TCP       bool   // -t: display TCP sockets
-	UDP       bool   // -u: display UDP sockets
-	Unix      bool   // -x: display Unix sockets
-	Processes bool   // -p: show process using socket
-	Numeric   bool   // -n: don't resolve service names
-	IPv4      bool   // -4: display only IPv4 sockets
-	IPv6      bool   // -6: display only IPv6 sockets
-	Summary   bool   // -s: print summary statistics
-	Extended  bool   // -e: show extended socket info
-	NoHeaders bool   // --no-header: don't print headers
+	All          bool          // -a: display all sockets
+	Listening    bool          // -l: display listening sockets only
+	TCP          bool          // -t: display TCP sockets
+	UDP          bool          // -u: display UDP sockets
+	Unix         bool          // -x: display Unix sockets
+	Processes    bool          // -p: show process using socket
+	Numeric      bool          // -n: don't resolve service names
+	IPv4         bool          // -4: display only IPv4 sockets
+	IPv6         bool          // -6: display only IPv6 sockets
+	Summary      bool          // -s: print summary statistics
+	Extended     bool          // -e: show extended socket info
+	NoHeaders    bool          // --no-header: don't print headers
 	OutputFormat output.Format // output format (text/json/table)
-	State     string // state: filter by state (established, listen, etc.)
+	State        string        // state: filter by state (established, listen, etc.)
 }
 
 // Socket represents a network socket

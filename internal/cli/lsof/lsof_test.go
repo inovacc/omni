@@ -6,8 +6,8 @@ import (
 	"strings"
 	"testing"
 
-	gnet "github.com/shirou/gopsutil/v3/net"
 	"github.com/inovacc/omni/internal/cli/output"
+	gnet "github.com/shirou/gopsutil/v3/net"
 )
 
 func TestFormatConnection(t *testing.T) {

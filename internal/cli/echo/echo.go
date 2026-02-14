@@ -10,10 +10,10 @@ import (
 
 // EchoOptions holds the options for the echo command.
 type EchoOptions struct {
-	NoNewline      bool // -n: do not output trailing newline
-	EnableEscapes  bool // -e: enable interpretation of backslash escapes
-	DisableEscapes bool // -E: disable interpretation of backslash escapes (default)
-	OutputFormat output.Format // output format
+	NoNewline      bool          // -n: do not output trailing newline
+	EnableEscapes  bool          // -e: enable interpretation of backslash escapes
+	DisableEscapes bool          // -E: disable interpretation of backslash escapes (default)
+	OutputFormat   output.Format // output format
 }
 
 // EchoResult represents echo output for JSON

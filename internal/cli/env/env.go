@@ -12,10 +12,10 @@ import (
 
 // EnvOptions configures the env command behavior
 type EnvOptions struct {
-	NullTerminated bool   // -0: end each output line with NUL, not newline
-	Unset          string // -u: remove variable from the environment (for display only)
-	Ignore         bool   // -i: start with an empty environment
-	OutputFormat output.Format // output format (text/json/table)
+	NullTerminated bool          // -0: end each output line with NUL, not newline
+	Unset          string        // -u: remove variable from the environment (for display only)
+	Ignore         bool          // -i: start with an empty environment
+	OutputFormat   output.Format // output format (text/json/table)
 }
 
 // EnvVar represents an environment variable for JSON output

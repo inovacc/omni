@@ -168,4 +168,3 @@ func parsePattern(line string) *Pattern {
 func patternToRegex(pattern string) string {
 	return pkgrg.PatternToRegex(pattern)
 }
-

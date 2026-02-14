@@ -14,19 +14,19 @@ import (
 
 // Options configures the lsof command behavior
 type Options struct {
-	PID         int    // -p: show files for specific PID
-	User        string // -u: show files for specific user
-	Port        int    // -i: show files using specific port
-	Protocol    string // -i: filter by protocol (tcp, udp)
-	Network     bool   // -i: show network files only
-	Files       bool   // show file descriptors (default behavior)
-	Command     string // -c: filter by command name prefix
-	NoHeaders   bool   // -n: don't print headers
+	PID          int           // -p: show files for specific PID
+	User         string        // -u: show files for specific user
+	Port         int           // -i: show files using specific port
+	Protocol     string        // -i: filter by protocol (tcp, udp)
+	Network      bool          // -i: show network files only
+	Files        bool          // show file descriptors (default behavior)
+	Command      string        // -c: filter by command name prefix
+	NoHeaders    bool          // -n: don't print headers
 	OutputFormat output.Format // output format (text/json/table)
-	IPv4        bool   // -4: show only IPv4
-	IPv6        bool   // -6: show only IPv6
-	Listen      bool   // show only listening sockets
-	Established bool   // show only established connections
+	IPv4         bool          // -4: show only IPv4
+	IPv6         bool          // -6: show only IPv6
+	Listen       bool          // show only listening sockets
+	Established  bool          // show only established connections
 }
 
 // OpenFile represents an open file or network connection

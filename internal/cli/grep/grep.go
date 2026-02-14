@@ -14,26 +14,26 @@ import (
 
 // GrepOptions configures the grep command behavior
 type GrepOptions struct {
-	IgnoreCase     bool // -i: ignore case distinctions
-	InvertMatch    bool // -v: select non-matching lines
-	LineNumber     bool // -n: prefix each line with line number
-	Count          bool // -c: only print count of matching lines
-	FilesWithMatch bool // -l: only print file names with matches
-	FilesNoMatch   bool // -L: only print file names without matches
-	OnlyMatching   bool // -o: show only the matched part
-	Quiet          bool // -q: quiet mode, exit immediately with status 0 if match found
-	WithFilename   bool // -H: print file name with output lines
-	NoFilename     bool // -h: suppress file name prefix
-	ExtendedRegexp bool // -E: interpret pattern as extended regexp
-	FixedStrings   bool // -F: interpret pattern as fixed strings
-	WordRegexp     bool // -w: match whole words only
-	LineRegexp     bool // -x: match whole lines only
-	Context        int  // -C: print NUM lines of context
-	BeforeContext  int  // -B: print NUM lines of leading context
-	AfterContext   int  // -A: print NUM lines of trailing context
-	MaxCount       int  // -m: stop after NUM matches
-	Recursive      bool // -r/-R: search recursively
-	OutputFormat output.Format // output format
+	IgnoreCase     bool          // -i: ignore case distinctions
+	InvertMatch    bool          // -v: select non-matching lines
+	LineNumber     bool          // -n: prefix each line with line number
+	Count          bool          // -c: only print count of matching lines
+	FilesWithMatch bool          // -l: only print file names with matches
+	FilesNoMatch   bool          // -L: only print file names without matches
+	OnlyMatching   bool          // -o: show only the matched part
+	Quiet          bool          // -q: quiet mode, exit immediately with status 0 if match found
+	WithFilename   bool          // -H: print file name with output lines
+	NoFilename     bool          // -h: suppress file name prefix
+	ExtendedRegexp bool          // -E: interpret pattern as extended regexp
+	FixedStrings   bool          // -F: interpret pattern as fixed strings
+	WordRegexp     bool          // -w: match whole words only
+	LineRegexp     bool          // -x: match whole lines only
+	Context        int           // -C: print NUM lines of context
+	BeforeContext  int           // -B: print NUM lines of leading context
+	AfterContext   int           // -A: print NUM lines of trailing context
+	MaxCount       int           // -m: stop after NUM matches
+	Recursive      bool          // -r/-R: search recursively
+	OutputFormat   output.Format // output format
 }
 
 // GrepResult represents the result of a grep operation

@@ -15,19 +15,19 @@ import (
 
 // Options configures the pkill command behavior
 type Options struct {
-	Signal     string // -signal: signal to send (default: TERM)
-	Exact      bool   // -x: match exactly
-	Full       bool   // -f: match against full command line
-	Newest     bool   // -n: select only the newest process
-	Oldest     bool   // -o: select only the oldest process
-	Count      bool   // -c: count matching processes
-	ListOnly   bool   // -l: list matching processes (don't kill)
-	User       string // -u: only match processes owned by user
-	Parent     int    // -P: only match processes with given parent PID
-	Terminal   string // -t: only match processes on terminal
-	Verbose    bool   // -v: verbose output
+	Signal       string        // -signal: signal to send (default: TERM)
+	Exact        bool          // -x: match exactly
+	Full         bool          // -f: match against full command line
+	Newest       bool          // -n: select only the newest process
+	Oldest       bool          // -o: select only the oldest process
+	Count        bool          // -c: count matching processes
+	ListOnly     bool          // -l: list matching processes (don't kill)
+	User         string        // -u: only match processes owned by user
+	Parent       int           // -P: only match processes with given parent PID
+	Terminal     string        // -t: only match processes on terminal
+	Verbose      bool          // -v: verbose output
 	OutputFormat output.Format // output format (text/json/table)
-	IgnoreCase bool   // -i: case insensitive matching
+	IgnoreCase   bool          // -i: case insensitive matching
 }
 
 // Result represents the result of a pkill operation

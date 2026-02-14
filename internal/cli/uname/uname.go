@@ -12,16 +12,16 @@ import (
 
 // UnameOptions configures the uname command behavior
 type UnameOptions struct {
-	All              bool // -a: print all information
-	KernelName       bool // -s: print the kernel name
-	NodeName         bool // -n: print the network node hostname
-	KernelRelease    bool // -r: print the kernel release
-	KernelVersion    bool // -v: print the kernel version
-	Machine          bool // -m: print the machine hardware name
-	Processor        bool // -p: print the processor type
-	HardwarePlatform bool // -i: print the hardware platform
-	OperatingSystem  bool // -o: print the operating system
-	OutputFormat output.Format // output format (text/json/table)
+	All              bool          // -a: print all information
+	KernelName       bool          // -s: print the kernel name
+	NodeName         bool          // -n: print the network node hostname
+	KernelRelease    bool          // -r: print the kernel release
+	KernelVersion    bool          // -v: print the kernel version
+	Machine          bool          // -m: print the machine hardware name
+	Processor        bool          // -p: print the processor type
+	HardwarePlatform bool          // -i: print the hardware platform
+	OperatingSystem  bool          // -o: print the operating system
+	OutputFormat     output.Format // output format (text/json/table)
 }
 
 // UnameInfo contains system information

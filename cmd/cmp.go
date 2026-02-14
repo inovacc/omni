@@ -1,8 +1,8 @@
 package cmd
 
 import (
-	"github.com/inovacc/omni/internal/cli/cmp"
 	"github.com/inovacc/omni/internal/cli/cmderr"
+	"github.com/inovacc/omni/internal/cli/cmp"
 	"github.com/spf13/cobra"
 )
 
@@ -37,12 +37,12 @@ Examples:
 	Args: cobra.ExactArgs(2),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		opts := cmp.CmpOptions{
-			Silent:     cmpSilent,
-			Verbose:    cmpVerbose,
-			PrintBytes: cmpPrintBytes,
-			SkipBytes1: cmpSkipBytes,
-			SkipBytes2: cmpSkipBytes,
-			MaxBytes:   cmpMaxBytes,
+			Silent:       cmpSilent,
+			Verbose:      cmpVerbose,
+			PrintBytes:   cmpPrintBytes,
+			SkipBytes1:   cmpSkipBytes,
+			SkipBytes2:   cmpSkipBytes,
+			MaxBytes:     cmpMaxBytes,
 			OutputFormat: getOutputOpts(cmd).GetFormat(),
 		}
 
