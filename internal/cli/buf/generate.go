@@ -123,7 +123,12 @@ func runLocalPlugin(w io.Writer, dir string, files []string, plugin PluginConfig
 
 func extractPluginName(pluginPath string) string {
 	// Extract plugin name from path like "protoc-gen-go" -> "go"
-	base := filepath.Base(pluginPath)
+	// Use both separators to handle Windows paths on any platform
+	base := pluginPath
+	if i := strings.LastIndexAny(base, `/\`); i >= 0 {
+		base = base[i+1:]
+	}
+
 	if after, ok := strings.CutPrefix(base, "protoc-gen-"); ok {
 		return after
 	}

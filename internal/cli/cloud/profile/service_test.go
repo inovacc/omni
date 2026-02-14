@@ -3,25 +3,42 @@ package profile
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
+
+	"github.com/inovacc/omni/internal/cli/cloud/crypto"
 )
 
-func TestService_AddAndGetProfile(t *testing.T) {
-	// Create temp directory
+func skipIfNoMachineID(t *testing.T) {
+	t.Helper()
+
+	if _, err := crypto.GetMachineID(); err != nil {
+		t.Skipf("skipping: %v", err)
+	}
+}
+
+func newTestService(t *testing.T) (*Service, string) {
+	t.Helper()
+	skipIfNoMachineID(t)
+
 	tmpDir, err := os.MkdirTemp("", "omni-profile-test-*")
 	if err != nil {
 		t.Fatalf("failed to create temp dir: %v", err)
 	}
 
-	defer func() { _ = os.RemoveAll(tmpDir) }()
+	t.Cleanup(func() { _ = os.RemoveAll(tmpDir) })
 
-	// Create service
 	svc, err := NewServiceWithDir(tmpDir)
 	if err != nil {
 		t.Fatalf("NewServiceWithDir failed: %v", err)
 	}
 
-	// Create profile
+	return svc, tmpDir
+}
+
+func TestService_AddAndGetProfile(t *testing.T) {
+	svc, _ := newTestService(t)
+
 	profile := &CloudProfile{
 		Name:     "test-profile",
 		Provider: ProviderAWS,
@@ -33,12 +50,10 @@ func TestService_AddAndGetProfile(t *testing.T) {
 		SecretAccessKey: "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY",
 	}
 
-	// Add profile
 	if err := svc.AddProfile(profile, creds); err != nil {
 		t.Fatalf("AddProfile failed: %v", err)
 	}
 
-	// Get profile
 	loaded, err := svc.GetProfile(ProviderAWS, "test-profile")
 	if err != nil {
 		t.Fatalf("GetProfile failed: %v", err)
@@ -60,7 +75,6 @@ func TestService_AddAndGetProfile(t *testing.T) {
 		t.Errorf("token_storage: got %q, want %q", loaded.TokenStorage, TokenStorageEncrypted)
 	}
 
-	// Get credentials
 	loadedCreds, err := svc.GetCredentials(ProviderAWS, "test-profile")
 	if err != nil {
 		t.Fatalf("GetCredentials failed: %v", err)
@@ -81,19 +95,8 @@ func TestService_AddAndGetProfile(t *testing.T) {
 }
 
 func TestService_ListProfiles(t *testing.T) {
-	tmpDir, err := os.MkdirTemp("", "omni-profile-test-*")
-	if err != nil {
-		t.Fatalf("failed to create temp dir: %v", err)
-	}
+	svc, _ := newTestService(t)
 
-	defer func() { _ = os.RemoveAll(tmpDir) }()
-
-	svc, err := NewServiceWithDir(tmpDir)
-	if err != nil {
-		t.Fatalf("NewServiceWithDir failed: %v", err)
-	}
-
-	// Add multiple profiles
 	profiles := []string{"prod", "dev", "staging"}
 	for _, name := range profiles {
 		profile := &CloudProfile{
@@ -110,7 +113,6 @@ func TestService_ListProfiles(t *testing.T) {
 		}
 	}
 
-	// List profiles
 	list, err := svc.ListProfiles(ProviderAWS)
 	if err != nil {
 		t.Fatalf("ListProfiles failed: %v", err)
@@ -122,19 +124,8 @@ func TestService_ListProfiles(t *testing.T) {
 }
 
 func TestService_DeleteProfile(t *testing.T) {
-	tmpDir, err := os.MkdirTemp("", "omni-profile-test-*")
-	if err != nil {
-		t.Fatalf("failed to create temp dir: %v", err)
-	}
+	svc, tmpDir := newTestService(t)
 
-	defer func() { _ = os.RemoveAll(tmpDir) }()
-
-	svc, err := NewServiceWithDir(tmpDir)
-	if err != nil {
-		t.Fatalf("NewServiceWithDir failed: %v", err)
-	}
-
-	// Add profile
 	profile := &CloudProfile{
 		Name:     "to-delete",
 		Provider: ProviderAWS,
@@ -148,18 +139,15 @@ func TestService_DeleteProfile(t *testing.T) {
 		t.Fatalf("AddProfile failed: %v", err)
 	}
 
-	// Delete profile
 	if err := svc.DeleteProfile(ProviderAWS, "to-delete"); err != nil {
 		t.Fatalf("DeleteProfile failed: %v", err)
 	}
 
-	// Verify deleted
-	_, err = svc.GetProfile(ProviderAWS, "to-delete")
+	_, err := svc.GetProfile(ProviderAWS, "to-delete")
 	if err == nil {
 		t.Error("profile should have been deleted")
 	}
 
-	// Verify files are gone
 	profilePath := filepath.Join(tmpDir, "profiles", "aws", "to-delete.json")
 	credsPath := filepath.Join(tmpDir, "profiles", "aws", "to-delete.enc")
 
@@ -173,19 +161,8 @@ func TestService_DeleteProfile(t *testing.T) {
 }
 
 func TestService_SetDefault(t *testing.T) {
-	tmpDir, err := os.MkdirTemp("", "omni-profile-test-*")
-	if err != nil {
-		t.Fatalf("failed to create temp dir: %v", err)
-	}
+	svc, _ := newTestService(t)
 
-	defer func() { _ = os.RemoveAll(tmpDir) }()
-
-	svc, err := NewServiceWithDir(tmpDir)
-	if err != nil {
-		t.Fatalf("NewServiceWithDir failed: %v", err)
-	}
-
-	// Add two profiles
 	for _, name := range []string{"profile1", "profile2"} {
 		profile := &CloudProfile{
 			Name:     name,
@@ -201,24 +178,20 @@ func TestService_SetDefault(t *testing.T) {
 		}
 	}
 
-	// Set profile2 as default
 	if err := svc.SetDefault(ProviderAWS, "profile2"); err != nil {
 		t.Fatalf("SetDefault failed: %v", err)
 	}
 
-	// Verify default
 	defaultName := svc.GetDefault(ProviderAWS)
 	if defaultName != "profile2" {
 		t.Errorf("default: got %q, want %q", defaultName, "profile2")
 	}
 
-	// Verify profile2 has Default=true
 	p2, _ := svc.GetProfile(ProviderAWS, "profile2")
 	if !p2.Default {
 		t.Error("profile2 should have Default=true")
 	}
 
-	// Verify profile1 has Default=false
 	p1, _ := svc.GetProfile(ProviderAWS, "profile1")
 	if p1.Default {
 		t.Error("profile1 should have Default=false")
@@ -226,17 +199,7 @@ func TestService_SetDefault(t *testing.T) {
 }
 
 func TestService_AddProfile_DuplicateName(t *testing.T) {
-	tmpDir, err := os.MkdirTemp("", "omni-profile-test-*")
-	if err != nil {
-		t.Fatalf("failed to create temp dir: %v", err)
-	}
-
-	defer func() { _ = os.RemoveAll(tmpDir) }()
-
-	svc, err := NewServiceWithDir(tmpDir)
-	if err != nil {
-		t.Fatalf("NewServiceWithDir failed: %v", err)
-	}
+	svc, _ := newTestService(t)
 
 	profile := &CloudProfile{
 		Name:     "duplicate",
@@ -247,32 +210,19 @@ func TestService_AddProfile_DuplicateName(t *testing.T) {
 		SecretAccessKey: "secret",
 	}
 
-	// First add should succeed
 	if err := svc.AddProfile(profile, creds); err != nil {
 		t.Fatalf("first AddProfile failed: %v", err)
 	}
 
-	// Second add should fail
-	err = svc.AddProfile(profile, creds)
+	err := svc.AddProfile(profile, creds)
 	if err == nil {
 		t.Error("expected error for duplicate profile name")
 	}
 }
 
 func TestService_ProviderMismatch(t *testing.T) {
-	tmpDir, err := os.MkdirTemp("", "omni-profile-test-*")
-	if err != nil {
-		t.Fatalf("failed to create temp dir: %v", err)
-	}
+	svc, _ := newTestService(t)
 
-	defer func() { _ = os.RemoveAll(tmpDir) }()
-
-	svc, err := NewServiceWithDir(tmpDir)
-	if err != nil {
-		t.Fatalf("NewServiceWithDir failed: %v", err)
-	}
-
-	// AWS profile with Azure credentials should fail
 	profile := &CloudProfile{
 		Name:     "mismatch",
 		Provider: ProviderAWS,
@@ -284,8 +234,12 @@ func TestService_ProviderMismatch(t *testing.T) {
 		SubscriptionID: "sub",
 	}
 
-	err = svc.AddProfile(profile, creds)
+	err := svc.AddProfile(profile, creds)
 	if err == nil {
 		t.Error("expected error for provider mismatch")
+	}
+
+	if err != nil && !strings.Contains(err.Error(), "mismatch") {
+		t.Errorf("error should mention mismatch: %v", err)
 	}
 }
