@@ -15,13 +15,15 @@ type Options struct {
 	UserAgent     string            // Custom User-Agent
 	Headers       map[string]string // Additional HTTP headers
 	WriteInfo     bool              // Write .info.json alongside video
+	WriteMarkdown bool              // Write .md alongside video (title, link, description)
 	WriteSubs     bool              // Write subtitles
 	NoPlaylist    bool              // Don't download playlists
 	PlaylistStart int               // Playlist start index (1-based)
 	PlaylistEnd   int               // Playlist end index
 	Verbose       bool              // Verbose logging
-	CacheDir      string            // Cache directory
-	Progress      ProgressFunc      // Progress callback
+	CacheDir           string            // Cache directory
+	Progress           ProgressFunc      // Progress callback
+	CookiesFromBrowser bool              // Auto-load cookies from well-known path
 }
 
 // Option is a functional option for configuring the client.
@@ -87,6 +89,11 @@ func WithWriteInfo() Option {
 	return func(o *Options) { o.WriteInfo = true }
 }
 
+// WithWriteMarkdown enables writing a .md file alongside the video.
+func WithWriteMarkdown() Option {
+	return func(o *Options) { o.WriteMarkdown = true }
+}
+
 // WithWriteSubs enables writing subtitle files.
 func WithWriteSubs() Option {
 	return func(o *Options) { o.WriteSubs = true }
@@ -110,6 +117,12 @@ func WithVerbose() Option {
 // WithCacheDir sets the cache directory.
 func WithCacheDir(dir string) Option {
 	return func(o *Options) { o.CacheDir = dir }
+}
+
+// WithCookiesFromBrowser auto-loads cookies from the well-known path
+// (as saved by `omni video auth`).
+func WithCookiesFromBrowser() Option {
+	return func(o *Options) { o.CookiesFromBrowser = true }
 }
 
 func applyOptions(opts []Option) Options {

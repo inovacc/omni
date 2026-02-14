@@ -14,8 +14,8 @@ import (
 
 // StreamMessage represents a single NDJSON line in streaming output
 type StreamMessage struct {
-	Type string      `json:"type"`
-	Data interface{} `json:"data"`
+	Type string `json:"type"`
+	Data any    `json:"data"`
 }
 
 // StreamNodeData is the data payload for a "node" stream message

@@ -72,6 +72,7 @@ func TestEncryptDecrypt(t *testing.T) {
 
 func TestDecryptWrongPassword(t *testing.T) {
 	plaintext := []byte("secret data")
+
 	encrypted, err := Encrypt(plaintext, "correctpassword")
 	if err != nil {
 		t.Fatalf("Encrypt() error = %v", err)
@@ -174,14 +175,17 @@ func TestGenerateKey(t *testing.T) {
 
 	t.Run("uniqueness", func(t *testing.T) {
 		keys := make(map[string]bool)
+
 		for range 100 {
 			key, err := GenerateKey(32)
 			if err != nil {
 				t.Fatalf("GenerateKey() error = %v", err)
 			}
+
 			if keys[key] {
 				t.Errorf("GenerateKey() produced duplicate key")
 			}
+
 			keys[key] = true
 		}
 	})

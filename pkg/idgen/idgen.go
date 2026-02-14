@@ -28,8 +28,10 @@ func GenerateUUID(opts ...UUIDOption) (string, error) {
 		o(&cfg)
 	}
 
-	var raw string
-	var err error
+	var (
+		raw string
+		err error
+	)
 
 	switch cfg.version {
 	case V4:
@@ -67,6 +69,7 @@ func GenerateUUIDs(n int, opts ...UUIDOption) ([]string, error) {
 		if err != nil {
 			return nil, err
 		}
+
 		result = append(result, u)
 	}
 
@@ -115,6 +118,7 @@ func WithNoDashes() UUIDOption {
 
 func generateUUIDv4() (string, error) {
 	uuid := make([]byte, 16)
+
 	_, err := rand.Read(uuid)
 	if err != nil {
 		return "", err
@@ -170,6 +174,7 @@ func GenerateULID() (ULID, error) {
 // GenerateULIDWithTime generates a new ULID with the given timestamp.
 func GenerateULIDWithTime(t time.Time) (ULID, error) {
 	var u ULID
+
 	ms := uint64(t.UnixMilli())
 
 	u[0] = byte(ms >> 40)
@@ -226,6 +231,7 @@ func (u ULID) String() string {
 func (u ULID) Timestamp() time.Time {
 	ms := uint64(u[0])<<40 | uint64(u[1])<<32 | uint64(u[2])<<24 |
 		uint64(u[3])<<16 | uint64(u[4])<<8 | uint64(u[5])
+
 	return time.UnixMilli(int64(ms))
 }
 
@@ -235,6 +241,7 @@ func ULIDString() string {
 	if err != nil {
 		return ""
 	}
+
 	return u.String()
 }
 
@@ -254,6 +261,7 @@ type KSUID [ksuidTotalSize]byte
 // GenerateKSUID generates a new KSUID.
 func GenerateKSUID() (KSUID, error) {
 	var k KSUID
+
 	timestamp := uint32(time.Now().Unix() - ksuidEpoch)
 
 	k[0] = byte(timestamp >> 24)
@@ -286,6 +294,7 @@ func KSUIDString() string {
 	if err != nil {
 		return ""
 	}
+
 	return k.String()
 }
 
@@ -355,6 +364,7 @@ func GenerateNanoid(opts ...NanoidOption) (string, error) {
 	if cfg.length <= 0 {
 		cfg.length = defaultNanoidLength
 	}
+
 	if cfg.alphabet == "" {
 		cfg.alphabet = defaultNanoidAlphabet
 	}
@@ -367,6 +377,7 @@ func GenerateNanoid(opts ...NanoidOption) (string, error) {
 		if err != nil {
 			return "", err
 		}
+
 		result[i] = cfg.alphabet[idx.Int64()]
 	}
 
@@ -379,6 +390,7 @@ func NanoidString() string {
 	if err != nil {
 		return ""
 	}
+
 	return s
 }
 
@@ -445,8 +457,8 @@ func (g *SnowflakeGenerator) Generate() (int64, error) {
 }
 
 var (
-	defaultSnowflakeGen  *SnowflakeGenerator
-	snowflakeOnce        sync.Once
+	defaultSnowflakeGen *SnowflakeGenerator
+	snowflakeOnce       sync.Once
 )
 
 // GenerateSnowflake generates a new Snowflake ID using the default generator (worker 0).
@@ -454,6 +466,7 @@ func GenerateSnowflake() (int64, error) {
 	snowflakeOnce.Do(func() {
 		defaultSnowflakeGen = NewSnowflakeGenerator(0)
 	})
+
 	return defaultSnowflakeGen.Generate()
 }
 
@@ -463,6 +476,7 @@ func SnowflakeString() string {
 	if err != nil {
 		return ""
 	}
+
 	return fmt.Sprintf("%d", id)
 }
 
@@ -471,5 +485,6 @@ func ParseSnowflake(id int64) (timestamp time.Time, workerID int64, sequence int
 	timestamp = time.UnixMilli((id >> snowflakeTimestampShift) + snowflakeEpoch)
 	workerID = (id >> snowflakeWorkerIDShift) & snowflakeMaxWorkerID
 	sequence = id & snowflakeMaxSequence
+
 	return
 }

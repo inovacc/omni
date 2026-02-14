@@ -319,6 +319,7 @@ func TestFormatter_FormatJSONStream(t *testing.T) {
 	f := NewFormatter(nil)
 
 	var buf bytes.Buffer
+
 	err := f.FormatJSONStream(&buf, root, stats)
 	if err != nil {
 		t.Fatalf("FormatJSONStream() error = %v", err)
@@ -330,6 +331,7 @@ func TestFormatter_FormatJSONStream(t *testing.T) {
 	// Should have: begin, node(project), node(src), node(main.go), stats, end = 6 lines
 	if len(lines) != 6 {
 		t.Errorf("expected 6 NDJSON lines, got %d", len(lines))
+
 		for i, line := range lines {
 			t.Logf("line %d: %s", i, line)
 		}
@@ -345,6 +347,7 @@ func TestFormatter_FormatJSONStream(t *testing.T) {
 
 	// Verify first line is begin
 	var firstMsg StreamMessage
+
 	_ = json.Unmarshal([]byte(lines[0]), &firstMsg)
 
 	if firstMsg.Type != "begin" {
@@ -353,6 +356,7 @@ func TestFormatter_FormatJSONStream(t *testing.T) {
 
 	// Verify last line is end
 	var lastMsg StreamMessage
+
 	_ = json.Unmarshal([]byte(lines[len(lines)-1]), &lastMsg)
 
 	if lastMsg.Type != "end" {
@@ -361,6 +365,7 @@ func TestFormatter_FormatJSONStream(t *testing.T) {
 
 	// Verify stats line
 	var statsMsg StreamMessage
+
 	_ = json.Unmarshal([]byte(lines[len(lines)-2]), &statsMsg)
 
 	if statsMsg.Type != "stats" {
@@ -372,6 +377,7 @@ func TestFormatter_FormatJSONStream_Nil(t *testing.T) {
 	f := NewFormatter(nil)
 
 	var buf bytes.Buffer
+
 	err := f.FormatJSONStream(&buf, nil, nil)
 	if err != nil {
 		t.Fatalf("FormatJSONStream(nil) error = %v", err)
@@ -391,6 +397,7 @@ func TestFormatter_FormatJSONStream_NoStats(t *testing.T) {
 	f := NewFormatter(nil)
 
 	var buf bytes.Buffer
+
 	err := f.FormatJSONStream(&buf, root, nil)
 	if err != nil {
 		t.Fatalf("FormatJSONStream() error = %v", err)
@@ -407,6 +414,7 @@ func TestFormatter_FormatJSONStream_NoStats(t *testing.T) {
 	// Verify no stats message
 	for _, line := range lines {
 		var msg StreamMessage
+
 		_ = json.Unmarshal([]byte(line), &msg)
 
 		if msg.Type == "stats" {

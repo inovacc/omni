@@ -84,6 +84,7 @@ func Compare(left, right *models.JSONNode, cfg CompareConfig) *CompareResult {
 
 	// Phase 2: Find removed (in left, not in right)
 	var removed []Change
+
 	for path, node := range leftMap {
 		if _, exists := rightMap[path]; !exists {
 			removed = append(removed, Change{
@@ -97,6 +98,7 @@ func Compare(left, right *models.JSONNode, cfg CompareConfig) *CompareResult {
 
 	// Phase 3: Find added (in right, not in left)
 	var added []Change
+
 	for path, node := range rightMap {
 		if _, exists := leftMap[path]; !exists {
 			added = append(added, Change{
@@ -110,9 +112,11 @@ func Compare(left, right *models.JSONNode, cfg CompareConfig) *CompareResult {
 
 	// Phase 4: Detect moves (match removed+added by hash)
 	var moved []Change
+
 	if cfg.DetectMoves {
 		// Build hash -> paths maps for removed and added
 		removedByHash := make(map[string][]int) // hash -> indices in removed slice
+
 		for i, c := range removed {
 			if c.OldHash != "" {
 				removedByHash[c.OldHash] = append(removedByHash[c.OldHash], i)
@@ -157,6 +161,7 @@ func Compare(left, right *models.JSONNode, cfg CompareConfig) *CompareResult {
 		// Filter out matched entries from removed and added
 		if len(matchedRemoved) > 0 || len(matchedAdded) > 0 {
 			var filteredRemoved []Change
+
 			for i, c := range removed {
 				if !matchedRemoved[i] {
 					filteredRemoved = append(filteredRemoved, c)
@@ -166,6 +171,7 @@ func Compare(left, right *models.JSONNode, cfg CompareConfig) *CompareResult {
 			removed = filteredRemoved
 
 			var filteredAdded []Change
+
 			for i, c := range added {
 				if !matchedAdded[i] {
 					filteredAdded = append(filteredAdded, c)
@@ -178,6 +184,7 @@ func Compare(left, right *models.JSONNode, cfg CompareConfig) *CompareResult {
 
 	// Phase 5: Find modified (same path, different hash)
 	var modified []Change
+
 	for path, leftNode := range leftMap {
 		rightNode, exists := rightMap[path]
 		if !exists {

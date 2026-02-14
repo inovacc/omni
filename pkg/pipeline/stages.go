@@ -26,6 +26,7 @@ func (s *Grep) Name() string {
 	if s.Invert {
 		return "grep-v"
 	}
+
 	return "grep"
 }
 
@@ -82,6 +83,7 @@ func (s *Contains) Process(ctx context.Context, in io.Reader, out io.Writer) err
 		}
 
 		line := scanner.Text()
+
 		check := line
 		if s.IgnoreCase {
 			check = strings.ToLower(line)
@@ -250,6 +252,7 @@ func (s *Cut) Process(ctx context.Context, in io.Reader, out io.Writer) error {
 
 		line := scanner.Text()
 		parts := strings.Split(line, delim)
+
 		var selected []string
 
 		for _, f := range s.Fields {
@@ -298,6 +301,7 @@ func translateChars(s, from, to string) string {
 
 	// Build mapping
 	mapping := make(map[rune]rune)
+
 	for i, r := range fromRunes {
 		if i < len(toRunes) {
 			mapping[r] = toRunes[i]
@@ -308,6 +312,7 @@ func translateChars(s, from, to string) string {
 	}
 
 	var result strings.Builder
+
 	for _, r := range s {
 		if repl, ok := mapping[r]; ok {
 			result.WriteRune(repl)
@@ -421,6 +426,7 @@ func (s *Tee) Name() string { return "tee" }
 
 func (s *Tee) Process(ctx context.Context, in io.Reader, out io.Writer) error {
 	var writers []io.Writer
+
 	writers = append(writers, out)
 
 	if s.Path != "" {
@@ -428,6 +434,7 @@ func (s *Tee) Process(ctx context.Context, in io.Reader, out io.Writer) error {
 		if err != nil {
 			return fmt.Errorf("tee: %w", err)
 		}
+
 		defer func() { _ = f.Close() }()
 
 		writers = append(writers, f)
@@ -459,6 +466,7 @@ func (s *Filter) Name() string {
 	if s.Desc != "" {
 		return "filter(" + s.Desc + ")"
 	}
+
 	return "filter"
 }
 
@@ -490,6 +498,7 @@ func (s *Map) Name() string {
 	if s.Desc != "" {
 		return "map(" + s.Desc + ")"
 	}
+
 	return "map"
 }
 
@@ -528,10 +537,12 @@ func (s *Sort) Process(ctx context.Context, in io.Reader, out io.Writer) error {
 	if s.Numeric {
 		sort.SliceStable(lines, func(i, j int) bool {
 			a, _ := strconv.ParseFloat(strings.TrimSpace(lines[i]), 64)
+
 			b, _ := strconv.ParseFloat(strings.TrimSpace(lines[j]), 64)
 			if s.Reverse {
 				return a > b
 			}
+
 			return a < b
 		})
 	} else {
@@ -539,6 +550,7 @@ func (s *Sort) Process(ctx context.Context, in io.Reader, out io.Writer) error {
 			if s.Reverse {
 				return lines[i] > lines[j]
 			}
+
 			return lines[i] < lines[j]
 		})
 	}

@@ -35,6 +35,7 @@ func TestCompare_AddedFiles(t *testing.T) {
 	}
 
 	found := false
+
 	for _, c := range result.Changes {
 		if c.Type == Added && c.Path == "root/new.txt" {
 			found = true
@@ -71,6 +72,7 @@ func TestCompare_RemovedFiles(t *testing.T) {
 	}
 
 	found := false
+
 	for _, c := range result.Changes {
 		if c.Type == Removed && c.Path == "root/old.txt" {
 			found = true
@@ -110,6 +112,7 @@ func TestCompare_ModifiedFiles(t *testing.T) {
 	}
 
 	found := false
+
 	for _, c := range result.Changes {
 		if c.Type == Modified && c.Path == "root/file.txt" {
 			found = true
@@ -153,6 +156,7 @@ func TestCompare_DetectMoves(t *testing.T) {
 	}
 
 	found := false
+
 	for _, c := range result.Changes {
 		if c.Type == Moved {
 			found = true
@@ -324,6 +328,7 @@ func TestCompare_SortedOutput(t *testing.T) {
 
 	// All 3 files removed. Check they're sorted
 	removedPaths := []string{}
+
 	for _, c := range result.Changes {
 		if c.Type == Removed && !c.IsDir {
 			removedPaths = append(removedPaths, c.Path)

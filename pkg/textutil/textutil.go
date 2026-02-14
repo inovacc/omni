@@ -56,6 +56,7 @@ func SortLines(lines []string, opts ...SortOption) {
 	for _, opt := range opts {
 		opt(&o)
 	}
+
 	sortLines(lines, o)
 }
 
@@ -83,6 +84,7 @@ func CheckSorted(lines []string, opts SortOptions) string {
 
 		if opts.Numeric {
 			na, _ := strconv.ParseFloat(strings.TrimSpace(a), 64)
+
 			nb, _ := strconv.ParseFloat(strings.TrimSpace(b), 64)
 			if opts.Reverse {
 				outOfOrder = na < nb
@@ -114,6 +116,7 @@ func UniqueConsecutive(lines []string, ignoreCase bool) []string {
 	result := []string{lines[0]}
 	for i := 1; i < len(lines); i++ {
 		prev := result[len(result)-1]
+
 		curr := lines[i]
 		if ignoreCase {
 			if !strings.EqualFold(prev, curr) {
@@ -170,6 +173,7 @@ func sortLines(lines []string, opts SortOptions) {
 
 		if opts.Numeric {
 			na, _ := strconv.ParseFloat(strings.TrimSpace(a), 64)
+
 			nb, _ := strconv.ParseFloat(strings.TrimSpace(b), 64)
 			if opts.Reverse {
 				return na > nb

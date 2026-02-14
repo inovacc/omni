@@ -44,6 +44,7 @@ type GitignoreSet struct {
 // NewGitignoreSet creates a new empty GitignoreSet for the given base directory
 func NewGitignoreSet(basePath string) *GitignoreSet {
 	absPath, _ := filepath.Abs(basePath)
+
 	return &GitignoreSet{
 		Gitignores: make([]*Gitignore, 0),
 		BasePath:   absPath,

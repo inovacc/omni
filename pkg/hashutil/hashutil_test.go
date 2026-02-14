@@ -32,6 +32,7 @@ func TestHashString(t *testing.T) {
 
 func TestHashBytes(t *testing.T) {
 	got := HashBytes([]byte("test"), MD5)
+
 	want := "098f6bcd4621d373cade4e832627b4f6"
 	if got != want {
 		t.Errorf("HashBytes() = %v, want %v", got, want)
@@ -40,10 +41,12 @@ func TestHashBytes(t *testing.T) {
 
 func TestHashReader(t *testing.T) {
 	r := strings.NewReader("test")
+
 	got, err := HashReader(r, SHA256)
 	if err != nil {
 		t.Fatalf("HashReader() error = %v", err)
 	}
+
 	want := "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08"
 	if got != want {
 		t.Errorf("HashReader() = %v, want %v", got, want)
@@ -55,6 +58,7 @@ func TestHashFile(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	testFile := filepath.Join(tmpDir, "test.txt")
@@ -67,6 +71,7 @@ func TestHashFile(t *testing.T) {
 		if err != nil {
 			t.Fatalf("HashFile() error = %v", err)
 		}
+
 		if got != "098f6bcd4621d373cade4e832627b4f6" {
 			t.Errorf("HashFile() = %v", got)
 		}
@@ -77,6 +82,7 @@ func TestHashFile(t *testing.T) {
 		if err != nil {
 			t.Fatalf("HashFile() error = %v", err)
 		}
+
 		if got != "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08" {
 			t.Errorf("HashFile() = %v", got)
 		}
@@ -87,6 +93,7 @@ func TestHashFile(t *testing.T) {
 		if err != nil {
 			t.Fatalf("HashFile() error = %v", err)
 		}
+
 		if len(got) != 128 {
 			t.Errorf("SHA512 hash length = %d, want 128", len(got))
 		}
@@ -103,6 +110,7 @@ func TestHashFile(t *testing.T) {
 func TestHashCRC32(t *testing.T) {
 	// CRC32 (IEEE) of "test" is 0xd87f7e0c → "d87f7e0c"
 	got := HashString("test", CRC32)
+
 	want := "d87f7e0c"
 	if got != want {
 		t.Errorf("HashString(%q, CRC32) = %v, want %v", "test", got, want)
@@ -125,6 +133,7 @@ func TestHashCRC64(t *testing.T) {
 
 func TestHashCRC32Empty(t *testing.T) {
 	got := HashString("", CRC32)
+
 	want := "00000000"
 	if got != want {
 		t.Errorf("HashString(%q, CRC32) = %v, want %v", "", got, want)
@@ -133,6 +142,7 @@ func TestHashCRC32Empty(t *testing.T) {
 
 func TestHashCRC64Empty(t *testing.T) {
 	got := HashString("", CRC64)
+
 	want := "0000000000000000"
 	if got != want {
 		t.Errorf("HashString(%q, CRC64) = %v, want %v", "", got, want)
@@ -144,6 +154,7 @@ func TestHashFileCRC(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	testFile := filepath.Join(tmpDir, "test.txt")
@@ -156,6 +167,7 @@ func TestHashFileCRC(t *testing.T) {
 		if err != nil {
 			t.Fatalf("HashFile() error = %v", err)
 		}
+
 		if got != "d87f7e0c" {
 			t.Errorf("HashFile() = %v, want d87f7e0c", got)
 		}
@@ -166,6 +178,7 @@ func TestHashFileCRC(t *testing.T) {
 		if err != nil {
 			t.Fatalf("HashFile() error = %v", err)
 		}
+
 		if len(got) != 16 {
 			t.Errorf("CRC64 hash length = %d, want 16", len(got))
 		}
@@ -174,6 +187,7 @@ func TestHashFileCRC(t *testing.T) {
 
 func TestHashConsistency(t *testing.T) {
 	h1 := HashString("consistent", SHA256)
+
 	h2 := HashString("consistent", SHA256)
 	if h1 != h2 {
 		t.Error("hashing the same data should produce consistent results")
@@ -183,6 +197,7 @@ func TestHashConsistency(t *testing.T) {
 func TestDefaultAlgorithm(t *testing.T) {
 	// Unknown algorithm should fall back to SHA256
 	got := HashString("test", Algorithm("unknown"))
+
 	want := HashString("test", SHA256)
 	if got != want {
 		t.Errorf("unknown algo = %v, want sha256 default = %v", got, want)

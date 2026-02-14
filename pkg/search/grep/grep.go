@@ -62,6 +62,7 @@ func SearchWithOptions(lines []string, pattern string, opts ...Option) []string 
 	for _, opt := range opts {
 		opt(&o)
 	}
+
 	return searchWithOptions(lines, pattern, o)
 }
 

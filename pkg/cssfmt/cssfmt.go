@@ -2,7 +2,6 @@
 package cssfmt
 
 import (
-	"fmt"
 	"sort"
 	"strings"
 	"unicode"
@@ -60,6 +59,7 @@ func Format(input string, opts ...Option) string {
 	for _, opt := range opts {
 		opt(&o)
 	}
+
 	return formatCSS(input, o)
 }
 
@@ -76,12 +76,14 @@ func Validate(input string) ValidateResult {
 // Parse parses CSS input into rules.
 func Parse(input string) []Rule {
 	internal := parseCSS(input)
+
 	rules := make([]Rule, len(internal))
 	for i, r := range internal {
 		decls := make([]Declaration, len(r.declarations))
 		for j, d := range r.declarations {
 			decls[j] = Declaration{Property: d.property, Value: d.value}
 		}
+
 		rules[i] = Rule{
 			Selector:     r.selector,
 			Declarations: decls,
@@ -89,6 +91,7 @@ func Parse(input string) []Rule {
 			AtRuleBody:   r.atRuleBody,
 		}
 	}
+
 	return rules
 }
 
@@ -100,10 +103,12 @@ func RemoveComments(input string) string {
 // ParseDeclarations parses CSS declarations from a string.
 func ParseDeclarations(input string) []Declaration {
 	internal := parseDeclarations(input)
+
 	decls := make([]Declaration, len(internal))
 	for i, d := range internal {
 		decls[i] = Declaration{Property: d.property, Value: d.value}
 	}
+
 	return decls
 }
 
@@ -143,6 +148,7 @@ func formatCSS(input string, opts Options) string {
 
 			if rule.atRuleBody != "" {
 				result.WriteString(" {\n")
+
 				nestedRules := parseCSS(rule.atRuleBody)
 				for j, nested := range nestedRules {
 					if j > 0 {
@@ -285,7 +291,7 @@ func validateCSS(input string) ValidateResult {
 	if parenCount > 0 {
 		return ValidateResult{
 			Valid: false,
-			Error: fmt.Sprintf("unbalanced parentheses: missing ')'"),
+			Error: "unbalanced parentheses: missing ')'",
 		}
 	}
 

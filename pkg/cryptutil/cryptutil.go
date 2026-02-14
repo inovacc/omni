@@ -42,9 +42,11 @@ func applyOptions(opts []Option) Options {
 	for _, opt := range opts {
 		opt(&o)
 	}
+
 	if o.Iterations <= 0 {
 		o.Iterations = DefaultIter
 	}
+
 	return o
 }
 
@@ -107,6 +109,7 @@ func Decrypt(data []byte, password string, opts ...Option) ([]byte, error) {
 	// Decode base64 if needed
 	if o.Base64 {
 		var err error
+
 		input, err = base64.StdEncoding.DecodeString(string(data))
 		if err != nil {
 			return nil, fmt.Errorf("cryptutil: invalid base64: %w", err)
@@ -167,8 +170,10 @@ func DeriveKey(password string, salt []byte, iterations, keySize int) []byte {
 	if iterations <= 0 {
 		iterations = DefaultIter
 	}
+
 	if keySize <= 0 {
 		keySize = KeySize
 	}
+
 	return pbkdf2.Key([]byte(password), salt, iterations, keySize, sha256.New)
 }

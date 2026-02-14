@@ -218,6 +218,7 @@ func TestTokenize(t *testing.T) {
 				t.Errorf("Tokenize() = %v, want %v", got, tt.want)
 				return
 			}
+
 			for i := range got {
 				if got[i] != tt.want[i] {
 					t.Errorf("Tokenize()[%d] = %q, want %q", i, got[i], tt.want[i])

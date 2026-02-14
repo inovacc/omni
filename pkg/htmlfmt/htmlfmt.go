@@ -41,6 +41,7 @@ func Format(input string, opts ...Option) (string, error) {
 	for _, opt := range opts {
 		opt(&o)
 	}
+
 	return formatHTML(input, o)
 }
 

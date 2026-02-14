@@ -21,10 +21,12 @@ func TestBase64EncodeDecode(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			encoded := Base64Encode(tt.input)
+
 			decoded, err := Base64Decode(encoded)
 			if err != nil {
 				t.Fatalf("Base64Decode() error = %v", err)
 			}
+
 			if !bytes.Equal(decoded, tt.input) {
 				t.Errorf("Base64 roundtrip failed")
 			}
@@ -37,6 +39,7 @@ func TestBase64DecodeKnown(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Base64Decode() error = %v", err)
 	}
+
 	if string(decoded) != "hello world" {
 		t.Errorf("Base64Decode() = %v, want 'hello world'", string(decoded))
 	}
@@ -55,6 +58,7 @@ func TestBase64DecodeWithWhitespace(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Base64Decode() error = %v", err)
 	}
+
 	if string(decoded) != "hello world" {
 		t.Errorf("Base64Decode() = %v, want 'hello world'", string(decoded))
 	}
@@ -73,10 +77,12 @@ func TestBase32EncodeDecode(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			encoded := Base32Encode(tt.input)
+
 			decoded, err := Base32Decode(encoded)
 			if err != nil {
 				t.Fatalf("Base32Decode() error = %v", err)
 			}
+
 			if !bytes.Equal(decoded, tt.input) {
 				t.Errorf("Base32 roundtrip failed")
 			}
@@ -89,6 +95,7 @@ func TestBase32DecodeKnown(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Base32Decode() error = %v", err)
 	}
+
 	if string(decoded) != "hello" {
 		t.Errorf("Base32Decode() = %v, want 'hello'", string(decoded))
 	}

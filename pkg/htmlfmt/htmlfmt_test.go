@@ -6,7 +6,7 @@ import (
 
 func TestFormat(t *testing.T) {
 	tests := []struct {
-		name string
+		name  string
 		input string
 		opts  []Option
 		want  string
@@ -14,29 +14,29 @@ func TestFormat(t *testing.T) {
 		{
 			name:  "simple element",
 			input: "<div><p>text</p></div>",
-			want: "<html>\n  <head>\n  </head>\n  <body>\n    <div>\n      <p>text</p>\n    </div>\n  </body>\n</html>",
+			want:  "<html>\n  <head>\n  </head>\n  <body>\n    <div>\n      <p>text</p>\n    </div>\n  </body>\n</html>",
 		},
 		{
 			name:  "with attributes",
 			input: `<div class="container" id="main"><span>text</span></div>`,
-			want: "<html>\n  <head>\n  </head>\n  <body>\n    <div class=\"container\" id=\"main\">\n      <span>text</span>\n    </div>\n  </body>\n</html>",
+			want:  "<html>\n  <head>\n  </head>\n  <body>\n    <div class=\"container\" id=\"main\">\n      <span>text</span>\n    </div>\n  </body>\n</html>",
 		},
 		{
 			name:  "sort attributes",
 			input: `<div z="1" a="2" m="3"></div>`,
 			opts:  []Option{WithSortAttrs()},
-			want: "<html>\n  <head>\n  </head>\n  <body>\n    <div a=\"2\" m=\"3\" z=\"1\">\n    </div>\n  </body>\n</html>",
+			want:  "<html>\n  <head>\n  </head>\n  <body>\n    <div a=\"2\" m=\"3\" z=\"1\">\n    </div>\n  </body>\n</html>",
 		},
 		{
 			name:  "self-closing tags",
 			input: "<br><img src='test.jpg'><hr>",
-			want: "<html>\n  <head>\n  </head>\n  <body>\n    <br />\n    <img src=\"test.jpg\" />\n    <hr />\n  </body>\n</html>",
+			want:  "<html>\n  <head>\n  </head>\n  <body>\n    <br />\n    <img src=\"test.jpg\" />\n    <hr />\n  </body>\n</html>",
 		},
 		{
 			name:  "custom indent",
 			input: "<div><p>text</p></div>",
 			opts:  []Option{WithIndent("    ")},
-			want: "<html>\n    <head>\n    </head>\n    <body>\n        <div>\n            <p>text</p>\n        </div>\n    </body>\n</html>",
+			want:  "<html>\n    <head>\n    </head>\n    <body>\n        <div>\n            <p>text</p>\n        </div>\n    </body>\n</html>",
 		},
 	}
 
@@ -46,6 +46,7 @@ func TestFormat(t *testing.T) {
 			if err != nil {
 				t.Fatalf("Format() error = %v", err)
 			}
+
 			if got != tt.want {
 				t.Errorf("Format() =\n%s\nwant\n%s", got, tt.want)
 			}
@@ -82,6 +83,7 @@ func TestMinify(t *testing.T) {
 			if err != nil {
 				t.Fatalf("Minify() error = %v", err)
 			}
+
 			if got != tt.want {
 				t.Errorf("Minify() = %q, want %q", got, tt.want)
 			}

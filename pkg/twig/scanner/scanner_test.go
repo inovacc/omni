@@ -550,7 +550,7 @@ func TestScanner_Scan_ParallelWithHash(t *testing.T) {
 	for i := range 3 {
 		dir := filepath.Join(tmpDir, fmt.Sprintf("dir%d", i))
 		_ = os.MkdirAll(dir, 0755)
-		_ = os.WriteFile(filepath.Join(dir, "data.txt"), []byte(fmt.Sprintf("data%d", i)), 0644)
+		_ = os.WriteFile(filepath.Join(dir, "data.txt"), fmt.Appendf(nil, "data%d", i), 0644)
 	}
 
 	s := NewScanner(&ScanConfig{

@@ -181,7 +181,9 @@ func InnerTubeBrowseURL(apiKey string) string {
 }
 
 // InnerTubeHeaders returns additional headers to set for InnerTube requests.
-func InnerTubeHeaders(videoID string, cfg ClientConfig) map[string]string {
+// If sapisidHash is non-empty, adds Authorization and X-Goog-AuthUser headers
+// for authenticated requests (required for WEB client with cookies).
+func InnerTubeHeaders(videoID string, cfg ClientConfig, sapisidHash string) map[string]string {
 	h := map[string]string{
 		"Origin":  "https://www.youtube.com",
 		"Referer": "https://www.youtube.com/watch?v=" + videoID,
@@ -191,6 +193,11 @@ func InnerTubeHeaders(videoID string, cfg ClientConfig) map[string]string {
 	if !cfg.Android {
 		h["X-Youtube-Client-Name"] = fmt.Sprintf("%d", cfg.ClientName)
 		h["X-Youtube-Client-Version"] = cfg.Version
+	}
+
+	if sapisidHash != "" {
+		h["Authorization"] = sapisidHash
+		h["X-Goog-AuthUser"] = "0"
 	}
 
 	return h

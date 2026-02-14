@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 	"time"
@@ -67,4 +69,42 @@ func LoadNetscapeCookies(path string) ([]*http.Cookie, error) {
 	}
 
 	return cookies, nil
+}
+
+// DefaultCookiePath returns the well-known path for extracted YouTube cookies.
+//   - Windows: %LOCALAPPDATA%\omni-video\cookies\youtube.txt
+//   - Linux/macOS: ~/.cache/omni-video/cookies/youtube.txt
+func DefaultCookiePath() string {
+	return filepath.Join(defaultCookieDir(), "youtube.txt")
+}
+
+// AutoLoadCookies loads cookies from the default path if the file exists.
+// Returns nil, nil if the file does not exist.
+func AutoLoadCookies() ([]*http.Cookie, error) {
+	path := DefaultCookiePath()
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		return nil, nil
+	}
+
+	return LoadNetscapeCookies(path)
+}
+
+func defaultCookieDir() string {
+	if dir := os.Getenv("XDG_CACHE_HOME"); dir != "" {
+		return filepath.Join(dir, "omni-video", "cookies")
+	}
+
+	switch runtime.GOOS {
+	case "windows":
+		if dir := os.Getenv("LOCALAPPDATA"); dir != "" {
+			return filepath.Join(dir, "omni-video", "cookies")
+		}
+
+		home, _ := os.UserHomeDir()
+
+		return filepath.Join(home, "AppData", "Local", "omni-video", "cookies")
+	default:
+		home, _ := os.UserHomeDir()
+		return filepath.Join(home, ".cache", "omni-video", "cookies")
+	}
 }

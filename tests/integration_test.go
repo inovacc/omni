@@ -596,7 +596,7 @@ func TestUniq(t *testing.T) {
 		args     []string
 		expected string
 	}{
-		{"basic", "a\na\nb\n", []string{"uniq"}, "a\nb"},
+		{"basic", "a\n", []string{"uniq"}, "a\nb"},
 		{"count", "a\nb", []string{"uniq", "-c"}, ""},
 	}
 

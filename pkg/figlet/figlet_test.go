@@ -1,6 +1,7 @@
 package figlet
 
 import (
+	"slices"
 	"strings"
 	"testing"
 )
@@ -17,13 +18,8 @@ func TestListFonts(t *testing.T) {
 	}
 
 	for _, name := range expected {
-		found := false
-		for _, f := range fonts {
-			if f == name {
-				found = true
-				break
-			}
-		}
+		found := slices.Contains(fonts, name)
+
 		if !found {
 			t.Errorf("ListFonts() missing font %q", name)
 		}
@@ -37,9 +33,11 @@ func TestLoadEmbedded(t *testing.T) {
 			if err != nil {
 				t.Fatalf("LoadEmbedded(%q) error = %v", name, err)
 			}
+
 			if f.Height <= 0 {
 				t.Errorf("font %q height = %d, want > 0", name, f.Height)
 			}
+
 			if len(f.Characters) < 95 {
 				t.Errorf("font %q has %d chars, want >= 95 (printable ASCII)", name, len(f.Characters))
 			}
@@ -67,9 +65,11 @@ func TestRender(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Render(Hi) error = %v", err)
 	}
+
 	if result == "" {
 		t.Error("Render(Hi) returned empty string")
 	}
+
 	lines := strings.Split(result, "\n")
 	if len(lines) == 0 {
 		t.Error("Render(Hi) returned no lines")
@@ -95,6 +95,7 @@ func TestRenderWithFont(t *testing.T) {
 			if err != nil {
 				t.Fatalf("Render with font %q error = %v", name, err)
 			}
+
 			if result == "" {
 				t.Errorf("Render with font %q returned empty", name)
 			}
@@ -107,6 +108,7 @@ func TestRenderWithWidth(t *testing.T) {
 	if err != nil {
 		t.Fatalf("RenderLines with width error = %v", err)
 	}
+
 	for i, line := range lines {
 		if len(line) > 20 {
 			t.Errorf("line %d length = %d, want <= 20", i, len(line))
@@ -119,6 +121,7 @@ func TestRenderEmptyString(t *testing.T) {
 	if err != nil {
 		t.Fatalf("RenderLines('') error = %v", err)
 	}
+
 	if lines != nil {
 		t.Errorf("RenderLines('') = %v, want nil", lines)
 	}
@@ -144,10 +147,12 @@ func TestRenderWithLoadedFont(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	result, err := Render("OK", WithLoadedFont(f))
 	if err != nil {
 		t.Fatalf("Render with loaded font error = %v", err)
 	}
+
 	if result == "" {
 		t.Error("Render with loaded font returned empty")
 	}
@@ -193,11 +198,14 @@ func TestParseCodeTag(t *testing.T) {
 				if err == nil {
 					t.Error("parseCodeTag should return error")
 				}
+
 				return
 			}
+
 			if err != nil {
 				t.Fatalf("parseCodeTag error = %v", err)
 			}
+
 			if got != tt.want {
 				t.Errorf("parseCodeTag = %d, want %d", got, tt.want)
 			}

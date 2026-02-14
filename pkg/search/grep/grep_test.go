@@ -142,6 +142,7 @@ func TestCompilePattern(t *testing.T) {
 		if err != nil {
 			t.Fatalf("CompilePattern() error = %v", err)
 		}
+
 		if !re.MatchString("hello world") {
 			t.Error("CompilePattern() should match 'hello world'")
 		}
@@ -152,6 +153,7 @@ func TestCompilePattern(t *testing.T) {
 		if err != nil {
 			t.Fatalf("CompilePattern() error = %v", err)
 		}
+
 		if !re.MatchString("HELLO") {
 			t.Error("CompilePattern() case insensitive should match 'HELLO'")
 		}
@@ -169,9 +171,11 @@ func TestCompilePattern(t *testing.T) {
 		if err != nil {
 			t.Fatalf("CompilePattern() error = %v", err)
 		}
+
 		if re.MatchString("aaab") {
 			t.Error("CompilePattern() fixed strings should not match regex")
 		}
+
 		if !re.MatchString("a+b") {
 			t.Error("CompilePattern() fixed strings should match literal")
 		}
