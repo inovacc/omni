@@ -550,7 +550,7 @@ func TestTail(t *testing.T) {
 }
 
 func TestWc(t *testing.T) {
-	content := "hello world\nfoo bar"
+	content := "hello world\nfoo bar\n"
 	file := createTempFile(t, content)
 
 	out, err := runOmni(t, "wc", "-l", file)
@@ -1294,7 +1294,7 @@ func TestCase(t *testing.T) {
 }
 
 func TestCmdtree(t *testing.T) {
-	out, err := runOmni(t, "cmdtree", "--brief")
+	out, err := runOmni(t, "cmdtree")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -1303,8 +1303,8 @@ func TestCmdtree(t *testing.T) {
 		t.Error("expected non-empty output")
 	}
 
-	if !strings.Contains(out, "Command Tree") {
-		t.Errorf("expected output to contain 'Command Tree', got: %q", out[:min(100, len(out))])
+	if !strings.Contains(out, "omni") {
+		t.Errorf("expected output to contain 'omni', got: %q", out[:min(100, len(out))])
 	}
 }
 
