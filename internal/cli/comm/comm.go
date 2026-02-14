@@ -11,13 +11,13 @@ import (
 
 // CommOptions configures the comm command behavior
 type CommOptions struct {
-	Suppress1    bool   // -1: suppress column 1 (lines unique to FILE1)
-	Suppress2    bool   // -2: suppress column 2 (lines unique to FILE2)
-	Suppress3    bool   // -3: suppress column 3 (lines common to both)
-	CheckOrder   bool   // --check-order: check input is correctly sorted
-	NoCheckOrder bool   // --nocheck-order: do not check input order
-	OutputDelim  string // --output-delimiter: use STR as output delimiter
-	ZeroTerm     bool   // -z: line delimiter is NUL
+	Suppress1    bool          // -1: suppress column 1 (lines unique to FILE1)
+	Suppress2    bool          // -2: suppress column 2 (lines unique to FILE2)
+	Suppress3    bool          // -3: suppress column 3 (lines common to both)
+	CheckOrder   bool          // --check-order: check input is correctly sorted
+	NoCheckOrder bool          // --nocheck-order: do not check input order
+	OutputDelim  string        // --output-delimiter: use STR as output delimiter
+	ZeroTerm     bool          // -z: line delimiter is NUL
 	OutputFormat output.Format // output format (text/json/table)
 }
 

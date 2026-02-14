@@ -12,9 +12,9 @@ import (
 
 // SeqOptions configures the seq command behavior
 type SeqOptions struct {
-	Separator  string // -s: use STRING to separate numbers
-	Format     string // -f: use printf style FORMAT
-	EqualWidth bool   // -w: equalize width by padding with leading zeros
+	Separator    string        // -s: use STRING to separate numbers
+	Format       string        // -f: use printf style FORMAT
+	EqualWidth   bool          // -w: equalize width by padding with leading zeros
 	OutputFormat output.Format // output format
 }
 

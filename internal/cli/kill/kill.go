@@ -13,9 +13,9 @@ import (
 
 // KillOptions configures the kill command behavior
 type KillOptions struct {
-	Signal  string // -s: specify a signal to send
-	List    bool   // -l: list signal names
-	Verbose bool   // -v: verbose output
+	Signal       string        // -s: specify a signal to send
+	List         bool          // -l: list signal names
+	Verbose      bool          // -v: verbose output
 	OutputFormat output.Format // output format (text/json/table)
 }
 

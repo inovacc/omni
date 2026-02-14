@@ -30,9 +30,9 @@ Examples:
 	Args: cobra.RangeArgs(1, 3),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		opts := seq.SeqOptions{
-			Separator:  seqSeparator,
-			Format:     seqFormat,
-			EqualWidth: seqEqualWidth,
+			Separator:    seqSeparator,
+			Format:       seqFormat,
+			EqualWidth:   seqEqualWidth,
 			OutputFormat: getOutputOpts(cmd).GetFormat(),
 		}
 

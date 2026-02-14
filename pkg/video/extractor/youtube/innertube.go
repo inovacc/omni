@@ -74,14 +74,14 @@ var (
 
 	// ios — HLS live streams, 60fps formats.
 	clientIOS = ClientConfig{
-		Name:       "IOS",
-		Version:    "21.02.3",
-		ClientName: 5,
-		UserAgent:  "com.google.ios.youtube/21.02.3 (iPhone16,2; U; CPU iOS 18_3_2 like Mac OS X;)",
-		DeviceMake: "Apple",
+		Name:        "IOS",
+		Version:     "21.02.3",
+		ClientName:  5,
+		UserAgent:   "com.google.ios.youtube/21.02.3 (iPhone16,2; U; CPU iOS 18_3_2 like Mac OS X;)",
+		DeviceMake:  "Apple",
 		DeviceModel: "iPhone16,2",
-		OSName:     "iPhone",
-		OSVersion:  "18.3.2.22D82",
+		OSName:      "iPhone",
+		OSVersion:   "18.3.2.22D82",
 	}
 
 	// tv — Cobalt browser.

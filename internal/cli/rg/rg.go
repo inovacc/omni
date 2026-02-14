@@ -18,31 +18,31 @@ import (
 
 // Options configures the rg command behavior
 type Options struct {
-	IgnoreCase     bool     // -i: case insensitive search
-	SmartCase      bool     // -S: smart case (case insensitive if pattern is lowercase)
-	WordRegexp     bool     // -w: match whole words only
-	LineNumber     bool     // -n: show line numbers (default true)
-	Count          bool     // -c: only show count of matches
-	FilesWithMatch bool     // -l: only show file names with matches
-	InvertMatch    bool     // -v: show non-matching lines
-	Context        int      // -C: lines of context (before and after)
-	Before         int      // -B: lines before match
-	After          int      // -A: lines after match
-	Types          []string // -t: file types to include
-	TypesNot       []string // -T: file types to exclude
-	Glob           []string // -g: glob patterns to include
-	Hidden         bool     // --hidden: search hidden files
-	NoIgnore       bool     // --no-ignore: don't respect gitignore
-	MaxCount       int      // -m: max matches per file
-	MaxDepth       int      // --max-depth: max directory depth
-	FollowSymlinks bool     // -L: follow symlinks
-	OutputFormat output.Format // output format
-	JSONStream   bool          // --json-stream: streaming NDJSON output
-	NoHeading      bool     // --no-heading: no file name headings
-	OnlyMatching   bool     // -o: only show matching part
-	Quiet          bool     // -q: quiet mode, exit on first match
-	Fixed          bool     // -F: treat pattern as literal string
-	Threads        int      // --threads: number of worker threads (0 = auto)
+	IgnoreCase     bool          // -i: case insensitive search
+	SmartCase      bool          // -S: smart case (case insensitive if pattern is lowercase)
+	WordRegexp     bool          // -w: match whole words only
+	LineNumber     bool          // -n: show line numbers (default true)
+	Count          bool          // -c: only show count of matches
+	FilesWithMatch bool          // -l: only show file names with matches
+	InvertMatch    bool          // -v: show non-matching lines
+	Context        int           // -C: lines of context (before and after)
+	Before         int           // -B: lines before match
+	After          int           // -A: lines after match
+	Types          []string      // -t: file types to include
+	TypesNot       []string      // -T: file types to exclude
+	Glob           []string      // -g: glob patterns to include
+	Hidden         bool          // --hidden: search hidden files
+	NoIgnore       bool          // --no-ignore: don't respect gitignore
+	MaxCount       int           // -m: max matches per file
+	MaxDepth       int           // --max-depth: max directory depth
+	FollowSymlinks bool          // -L: follow symlinks
+	OutputFormat   output.Format // output format
+	JSONStream     bool          // --json-stream: streaming NDJSON output
+	NoHeading      bool          // --no-heading: no file name headings
+	OnlyMatching   bool          // -o: only show matching part
+	Quiet          bool          // -q: quiet mode, exit on first match
+	Fixed          bool          // -F: treat pattern as literal string
+	Threads        int           // --threads: number of worker threads (0 = auto)
 
 	// New options for ripgrep compatibility
 	Color      string   // --color: when to use colors (auto, always, never)

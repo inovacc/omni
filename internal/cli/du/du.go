@@ -13,17 +13,17 @@ import (
 
 // DUOptions configures the du command behavior
 type DUOptions struct {
-	All            bool  // -a: write counts for all files, not just directories
-	SummarizeOnly  bool  // -s: display only a total for each argument
-	HumanReadable  bool  // -h: print sizes in human readable format
-	ByteCount      bool  // -b: equivalent to --apparent-size --block-size=1
-	BlockSize      int64 // --block-size: scale sizes by SIZE
-	Total          bool  // -c: produce a grand total
-	MaxDepth       int   // --max-depth: print total for directory only if it is N or fewer levels
-	OneFileSystem  bool  // -x: skip directories on different file systems
-	ApparentSize   bool  // --apparent-size: print apparent sizes rather than disk usage
-	NullTerminator bool  // -0: end each output line with NUL, not newline
-	OutputFormat output.Format // output format (text/json/table)
+	All            bool          // -a: write counts for all files, not just directories
+	SummarizeOnly  bool          // -s: display only a total for each argument
+	HumanReadable  bool          // -h: print sizes in human readable format
+	ByteCount      bool          // -b: equivalent to --apparent-size --block-size=1
+	BlockSize      int64         // --block-size: scale sizes by SIZE
+	Total          bool          // -c: produce a grand total
+	MaxDepth       int           // --max-depth: print total for directory only if it is N or fewer levels
+	OneFileSystem  bool          // -x: skip directories on different file systems
+	ApparentSize   bool          // --apparent-size: print apparent sizes rather than disk usage
+	NullTerminator bool          // -0: end each output line with NUL, not newline
+	OutputFormat   output.Format // output format (text/json/table)
 }
 
 // DUResult represents the result of a du operation

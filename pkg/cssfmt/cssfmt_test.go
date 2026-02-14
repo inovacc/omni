@@ -6,7 +6,7 @@ import (
 
 func TestFormat(t *testing.T) {
 	tests := []struct {
-		name string
+		name  string
 		input string
 		opts  []Option
 		want  string
@@ -14,39 +14,39 @@ func TestFormat(t *testing.T) {
 		{
 			name:  "simple rule",
 			input: "body{margin:0;padding:0}",
-			want: "body {\n  margin: 0;\n  padding: 0;\n}",
+			want:  "body {\n  margin: 0;\n  padding: 0;\n}",
 		},
 		{
 			name:  "multiple rules",
 			input: "body{margin:0}h1{color:red}",
-			want: "body {\n  margin: 0;\n}\nh1 {\n  color: red;\n}",
+			want:  "body {\n  margin: 0;\n}\nh1 {\n  color: red;\n}",
 		},
 		{
 			name:  "sort properties",
 			input: "body{z-index:1;color:red;background:white}",
 			opts:  []Option{WithSortProps()},
-			want: "body {\n  background: white;\n  color: red;\n  z-index: 1;\n}",
+			want:  "body {\n  background: white;\n  color: red;\n  z-index: 1;\n}",
 		},
 		{
 			name:  "custom indent",
 			input: "body{margin:0}",
 			opts:  []Option{WithIndent("    ")},
-			want: "body {\n    margin: 0;\n}",
+			want:  "body {\n    margin: 0;\n}",
 		},
 		{
 			name:  "with comments removed",
 			input: "body{/* comment */margin:0}",
-			want: "body {\n  margin: 0;\n}",
+			want:  "body {\n  margin: 0;\n}",
 		},
 		{
 			name:  "media query",
 			input: "@media (max-width: 768px){body{margin:0}}",
-			want: "@media (max-width: 768px) {\n  body {\n    margin: 0;\n  }\n}",
+			want:  "@media (max-width: 768px) {\n  body {\n    margin: 0;\n  }\n}",
 		},
 		{
 			name:  "import at-rule",
 			input: "@import url('style.css');body{margin:0}",
-			want: "@import url('style.css');\nbody {\n  margin: 0;\n}",
+			want:  "@import url('style.css');\nbody {\n  margin: 0;\n}",
 		},
 	}
 

@@ -10,15 +10,15 @@ import (
 
 // DFOptions configures the df command behavior
 type DFOptions struct {
-	HumanReadable bool   // -h: print sizes in human readable format
-	Inodes        bool   // -i: list inode information instead of block usage
-	BlockSize     int64  // -B: scale sizes by SIZE
-	Total         bool   // --total: produce a grand total
-	Type          string // -t: limit listing to file systems of given TYPE
-	ExcludeType   string // -x: exclude file systems of given TYPE
-	Local         bool   // -l: limit listing to local file systems
-	Portability   bool   // -P: use POSIX output format
-	OutputFormat output.Format // output format (text/json/table)
+	HumanReadable bool          // -h: print sizes in human readable format
+	Inodes        bool          // -i: list inode information instead of block usage
+	BlockSize     int64         // -B: scale sizes by SIZE
+	Total         bool          // --total: produce a grand total
+	Type          string        // -t: limit listing to file systems of given TYPE
+	ExcludeType   string        // -x: exclude file systems of given TYPE
+	Local         bool          // -l: limit listing to local file systems
+	Portability   bool          // -P: use POSIX output format
+	OutputFormat  output.Format // output format (text/json/table)
 }
 
 // DFInfo represents disk free space information

@@ -11,8 +11,8 @@ import (
 
 // UptimeOptions configures the uptime command behavior
 type UptimeOptions struct {
-	Pretty bool // -p: show uptime in pretty format
-	Since  bool // -s: system up since
+	Pretty       bool          // -p: show uptime in pretty format
+	Since        bool          // -s: system up since
 	OutputFormat output.Format // output format (text/json/table)
 }
 

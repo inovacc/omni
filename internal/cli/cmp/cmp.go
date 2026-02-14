@@ -10,12 +10,12 @@ import (
 
 // CmpOptions configures the cmp command behavior
 type CmpOptions struct {
-	Silent     bool  // -s: suppress all output
-	Verbose    bool  // -l: output byte numbers and values
-	PrintBytes bool  // -b: print differing bytes
-	SkipBytes1 int64 // -i SKIP1: skip first SKIP1 bytes of FILE1
-	SkipBytes2 int64 // -i SKIP2: skip first SKIP2 bytes of FILE2
-	MaxBytes   int64 // -n LIMIT: compare at most LIMIT bytes
+	Silent       bool          // -s: suppress all output
+	Verbose      bool          // -l: output byte numbers and values
+	PrintBytes   bool          // -b: print differing bytes
+	SkipBytes1   int64         // -i SKIP1: skip first SKIP1 bytes of FILE1
+	SkipBytes2   int64         // -i SKIP2: skip first SKIP2 bytes of FILE2
+	MaxBytes     int64         // -n LIMIT: compare at most LIMIT bytes
 	OutputFormat output.Format // output format
 }
 

@@ -12,12 +12,12 @@ import (
 
 // IDOptions configures the id command behavior
 type IDOptions struct {
-	User     bool   // -u: print only the effective user ID
-	Group    bool   // -g: print only the effective group ID
-	Groups   bool   // -G: print all group IDs
-	Name     bool   // -n: print name instead of number (requires -u, -g, or -G)
-	Real     bool   // -r: print real ID instead of effective ID
-	Username string // username to look up (optional)
+	User         bool          // -u: print only the effective user ID
+	Group        bool          // -g: print only the effective group ID
+	Groups       bool          // -G: print all group IDs
+	Name         bool          // -n: print name instead of number (requires -u, -g, or -G)
+	Real         bool          // -r: print real ID instead of effective ID
+	Username     string        // username to look up (optional)
 	OutputFormat output.Format // output format (text/json/table)
 }
 

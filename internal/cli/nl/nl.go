@@ -12,15 +12,15 @@ import (
 
 // NlOptions configures the nl command behavior
 type NlOptions struct {
-	BodyNumbering   string // -b: body line numbering style (a=all, t=nonempty, n=none)
-	HeaderNumbering string // -h: header line numbering style
-	FooterNumbering string // -f: footer line numbering style
-	NumberFormat    string // -n: line number format (ln=left, rn=right, rz=right-zeros)
-	NumberWidth     int    // -w: line number width
-	NumberSep       string // -s: separator between number and text
-	StartingNumber  int    // -v: starting line number
-	Increment       int    // -i: line number increment
-	NoRenumber      bool   // -p: do not reset line numbers at sections
+	BodyNumbering   string        // -b: body line numbering style (a=all, t=nonempty, n=none)
+	HeaderNumbering string        // -h: header line numbering style
+	FooterNumbering string        // -f: footer line numbering style
+	NumberFormat    string        // -n: line number format (ln=left, rn=right, rz=right-zeros)
+	NumberWidth     int           // -w: line number width
+	NumberSep       string        // -s: separator between number and text
+	StartingNumber  int           // -v: starting line number
+	Increment       int           // -i: line number increment
+	NoRenumber      bool          // -p: do not reset line numbers at sections
 	OutputFormat    output.Format // output format (text/json/table)
 }
 

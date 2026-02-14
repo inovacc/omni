@@ -9,15 +9,15 @@ import (
 
 // FreeOptions configures the free command behavior
 type FreeOptions struct {
-	Bytes     bool // -b: show output in bytes
-	Kibibytes bool // -k: show output in kibibytes (default)
-	Mebibytes bool // -m: show output in mebibytes
-	Gibibytes bool // -g: show output in gibibytes
-	Human     bool // -h: show human-readable output
-	Wide      bool // -w: wide output
-	Total     bool // -t: show total for RAM + swap
-	Seconds   int  // -s: continuously display every N seconds
-	Count     int  // -c: display N times, then exit
+	Bytes        bool          // -b: show output in bytes
+	Kibibytes    bool          // -k: show output in kibibytes (default)
+	Mebibytes    bool          // -m: show output in mebibytes
+	Gibibytes    bool          // -g: show output in gibibytes
+	Human        bool          // -h: show human-readable output
+	Wide         bool          // -w: wide output
+	Total        bool          // -t: show total for RAM + swap
+	Seconds      int           // -s: continuously display every N seconds
+	Count        int           // -c: display N times, then exit
 	OutputFormat output.Format // output format (text/json/table)
 }
 

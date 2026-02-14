@@ -12,9 +12,9 @@ import (
 
 // TacOptions configures the tac command behavior
 type TacOptions struct {
-	Before    bool   // -b: attach the separator before instead of after
-	Regex     bool   // -r: interpret the separator as a regular expression
-	Separator string // -s: use STRING as the separator instead of newline
+	Before       bool          // -b: attach the separator before instead of after
+	Regex        bool          // -r: interpret the separator as a regular expression
+	Separator    string        // -s: use STRING as the separator instead of newline
 	OutputFormat output.Format // output format (text/json/table)
 }
 

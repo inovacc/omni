@@ -29,14 +29,14 @@ type LanguageInfo struct {
 
 // DepsReport aggregates dependency info across ecosystems.
 type DepsReport struct {
-	Go       *GoDeps     `json:"go,omitempty"`
-	Node     *NodeDeps   `json:"node,omitempty"`
-	Python   *PythonDeps `json:"python,omitempty"`
-	Rust     *RustDeps   `json:"rust,omitempty"`
-	Java     *JavaDeps   `json:"java,omitempty"`
-	Ruby     *RubyDeps   `json:"ruby,omitempty"`
-	PHP      *PHPDeps    `json:"php,omitempty"`
-	DotNet   *DotNetDeps `json:"dotnet,omitempty"`
+	Go     *GoDeps     `json:"go,omitempty"`
+	Node   *NodeDeps   `json:"node,omitempty"`
+	Python *PythonDeps `json:"python,omitempty"`
+	Rust   *RustDeps   `json:"rust,omitempty"`
+	Java   *JavaDeps   `json:"java,omitempty"`
+	Ruby   *RubyDeps   `json:"ruby,omitempty"`
+	PHP    *PHPDeps    `json:"php,omitempty"`
+	DotNet *DotNetDeps `json:"dotnet,omitempty"`
 }
 
 // GoDeps holds Go module dependency info.
@@ -119,20 +119,20 @@ type GitReport struct {
 
 // DocsReport holds documentation status info.
 type DocsReport struct {
-	HasReadme      bool     `json:"has_readme"`
-	ReadmeFile     string   `json:"readme_file,omitempty"`
-	HasLicense     bool     `json:"has_license"`
-	LicenseType    string   `json:"license_type,omitempty"`
-	LicenseFile    string   `json:"license_file,omitempty"`
-	HasChangelog   bool     `json:"has_changelog"`
-	HasContributing bool   `json:"has_contributing"`
-	HasClaudeMD    bool     `json:"has_claude_md"`
-	HasDocsDir     bool     `json:"has_docs_dir"`
-	HasDocGo       bool     `json:"has_doc_go"`
-	CIConfigs      []string `json:"ci_configs,omitempty"`
-	HasGitignore   bool     `json:"has_gitignore"`
-	HasEditorconfig bool   `json:"has_editorconfig"`
-	LinterConfigs  []string `json:"linter_configs,omitempty"`
+	HasReadme       bool     `json:"has_readme"`
+	ReadmeFile      string   `json:"readme_file,omitempty"`
+	HasLicense      bool     `json:"has_license"`
+	LicenseType     string   `json:"license_type,omitempty"`
+	LicenseFile     string   `json:"license_file,omitempty"`
+	HasChangelog    bool     `json:"has_changelog"`
+	HasContributing bool     `json:"has_contributing"`
+	HasClaudeMD     bool     `json:"has_claude_md"`
+	HasDocsDir      bool     `json:"has_docs_dir"`
+	HasDocGo        bool     `json:"has_doc_go"`
+	CIConfigs       []string `json:"ci_configs,omitempty"`
+	HasGitignore    bool     `json:"has_gitignore"`
+	HasEditorconfig bool     `json:"has_editorconfig"`
+	LinterConfigs   []string `json:"linter_configs,omitempty"`
 }
 
 // HealthReport holds a project health score.

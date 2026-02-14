@@ -21,5 +21,4 @@ var whoamiCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(whoamiCmd)
 
-
 }

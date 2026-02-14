@@ -14,17 +14,17 @@ import (
 
 // SortOptions configures the sort command behavior
 type SortOptions struct {
-	Reverse       bool   // -r: reverse the result of comparisons
-	Numeric       bool   // -n: compare according to string numerical value
-	Unique        bool   // -u: output only unique lines
-	IgnoreCase    bool   // -f: fold lower case to upper case characters
-	IgnoreLeading bool   // -b: ignore leading blanks
-	Dictionary    bool   // -d: consider only blanks and alphanumeric characters
-	Key           string // -k: sort via a key
-	FieldSep      string // -t: use SEP as field separator
-	Check         bool   // -c: check for sorted input
-	Stable        bool   // -s: stabilize sort by disabling last-resort comparison
-	Output        string // -o: write result to FILE
+	Reverse       bool          // -r: reverse the result of comparisons
+	Numeric       bool          // -n: compare according to string numerical value
+	Unique        bool          // -u: output only unique lines
+	IgnoreCase    bool          // -f: fold lower case to upper case characters
+	IgnoreLeading bool          // -b: ignore leading blanks
+	Dictionary    bool          // -d: consider only blanks and alphanumeric characters
+	Key           string        // -k: sort via a key
+	FieldSep      string        // -t: use SEP as field separator
+	Check         bool          // -c: check for sorted input
+	Stable        bool          // -s: stabilize sort by disabling last-resort comparison
+	Output        string        // -o: write result to FILE
 	OutputFormat  output.Format // output format (text/json/table)
 }
 
@@ -36,15 +36,15 @@ type SortResult struct {
 
 // UniqOptions configures the uniq command behavior
 type UniqOptions struct {
-	Count         bool // -c: prefix lines by the number of occurrences
-	Repeated      bool // -d: only print duplicate lines
-	AllRepeated   bool // -D: print all duplicate lines
-	IgnoreCase    bool // -i: ignore differences in case
-	Unique        bool // -u: only print unique lines
-	SkipFields    int  // -f: avoid comparing the first N fields
-	SkipChars     int  // -s: avoid comparing the first N characters
-	CheckChars    int  // -w: compare no more than N characters
-	ZeroTerminate bool // -z: line delimiter is NUL, not newline
+	Count         bool          // -c: prefix lines by the number of occurrences
+	Repeated      bool          // -d: only print duplicate lines
+	AllRepeated   bool          // -D: print all duplicate lines
+	IgnoreCase    bool          // -i: ignore differences in case
+	Unique        bool          // -u: only print unique lines
+	SkipFields    int           // -f: avoid comparing the first N fields
+	SkipChars     int           // -s: avoid comparing the first N characters
+	CheckChars    int           // -w: compare no more than N characters
+	ZeroTerminate bool          // -z: line delimiter is NUL, not newline
 	OutputFormat  output.Format // output format (text/json/table)
 }
 

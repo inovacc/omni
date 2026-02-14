@@ -11,10 +11,10 @@ import (
 
 // StringsOptions configures the strings command behavior
 type StringsOptions struct {
-	MinLength   int    // -n: print sequences of at least N characters
-	Offset      string // -t: print offset (d=decimal, o=octal, x=hex)
-	AllSections bool   // -a: scan whole file (default)
-	Encoding    string // -e: encoding (s=7-bit, S=8-bit, etc)
+	MinLength    int           // -n: print sequences of at least N characters
+	Offset       string        // -t: print offset (d=decimal, o=octal, x=hex)
+	AllSections  bool          // -a: scan whole file (default)
+	Encoding     string        // -e: encoding (s=7-bit, S=8-bit, etc)
 	OutputFormat output.Format // output format (text/json/table)
 }
 

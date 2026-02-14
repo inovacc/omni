@@ -2,25 +2,25 @@ package video
 
 // Options configures the video download client.
 type Options struct {
-	Format        string            // Format selector (e.g., "best", "worst", "bestvideo")
-	Output        string            // Output filename template
-	Quiet         bool              // Suppress progress output
-	NoProgress    bool              // Disable progress bar
-	RateLimit     int64             // Rate limit in bytes/sec
-	Retries       int               // Number of download retries
-	Continue      bool              // Resume partial downloads
-	NoPart        bool              // Don't use .part files
-	CookieFile    string            // Path to cookies.txt
-	Proxy         string            // HTTP/SOCKS proxy URL
-	UserAgent     string            // Custom User-Agent
-	Headers       map[string]string // Additional HTTP headers
-	WriteInfo     bool              // Write .info.json alongside video
-	WriteMarkdown bool              // Write .md alongside video (title, link, description)
-	WriteSubs     bool              // Write subtitles
-	NoPlaylist    bool              // Don't download playlists
-	PlaylistStart int               // Playlist start index (1-based)
-	PlaylistEnd   int               // Playlist end index
-	Verbose       bool              // Verbose logging
+	Format             string            // Format selector (e.g., "best", "worst", "bestvideo")
+	Output             string            // Output filename template
+	Quiet              bool              // Suppress progress output
+	NoProgress         bool              // Disable progress bar
+	RateLimit          int64             // Rate limit in bytes/sec
+	Retries            int               // Number of download retries
+	Continue           bool              // Resume partial downloads
+	NoPart             bool              // Don't use .part files
+	CookieFile         string            // Path to cookies.txt
+	Proxy              string            // HTTP/SOCKS proxy URL
+	UserAgent          string            // Custom User-Agent
+	Headers            map[string]string // Additional HTTP headers
+	WriteInfo          bool              // Write .info.json alongside video
+	WriteMarkdown      bool              // Write .md alongside video (title, link, description)
+	WriteSubs          bool              // Write subtitles
+	NoPlaylist         bool              // Don't download playlists
+	PlaylistStart      int               // Playlist start index (1-based)
+	PlaylistEnd        int               // Playlist end index
+	Verbose            bool              // Verbose logging
 	CacheDir           string            // Cache directory
 	Progress           ProgressFunc      // Progress callback
 	CookiesFromBrowser bool              // Auto-load cookies from well-known path

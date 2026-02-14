@@ -10,13 +10,13 @@ import (
 
 // Sentinel errors for common failure categories.
 var (
-	ErrNotFound    = errors.New("not found")
+	ErrNotFound     = errors.New("not found")
 	ErrInvalidInput = errors.New("invalid input")
-	ErrPermission  = errors.New("permission denied")
-	ErrIO          = errors.New("I/O error")
-	ErrConflict    = errors.New("conflict")
-	ErrTimeout     = errors.New("timeout")
-	ErrUnsupported = errors.New("unsupported")
+	ErrPermission   = errors.New("permission denied")
+	ErrIO           = errors.New("I/O error")
+	ErrConflict     = errors.New("conflict")
+	ErrTimeout      = errors.New("timeout")
+	ErrUnsupported  = errors.New("unsupported")
 )
 
 // ExitError wraps an error with a specific exit code.
