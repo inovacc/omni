@@ -33,6 +33,7 @@ var (
 
 func init() {
 	var err error
+
 	DefaultModuleConfigV1, err = newModuleConfig(
 		".",
 		nil,
@@ -48,6 +49,7 @@ func init() {
 	if err != nil {
 		panic(err.Error())
 	}
+
 	DefaultModuleConfigV2, err = newModuleConfig(
 		".",
 		nil,
@@ -193,13 +195,17 @@ func newModuleConfig(
 	if err != nil {
 		return nil, err
 	}
+
 	if lintConfig == nil {
 		return nil, errors.New("LintConfig was nil")
 	}
+
 	if breakingConfig == nil {
 		return nil, errors.New("BreakingConfig was nil")
 	}
+
 	lintFileVersion := lintConfig.FileVersion()
+
 	breakingFileVersion := breakingConfig.FileVersion()
 	if lintFileVersion != breakingFileVersion {
 		return nil, fmt.Errorf(
@@ -208,36 +214,46 @@ func newModuleConfig(
 			breakingFileVersion,
 		)
 	}
+
 	fileVersion := lintFileVersion
 	if fileVersion == FileVersionV1Beta1 || fileVersion == FileVersionV1 {
 		if dirPath != "." {
 			return nil, fmt.Errorf("had dirPath %q for NewModuleConfig with FileVersion %v", dirPath, fileVersion)
 		}
 	}
+
 	if fileVersion == FileVersionV1 || fileVersion == FileVersionV2 {
 		if len(rootToExcludes) != 1 {
 			return nil, fmt.Errorf("had rootToExcludes length %d for NewModuleConfig with FileVersion %v", len(rootToExcludes), fileVersion)
 		}
+
 		if _, ok := rootToExcludes["."]; !ok {
 			return nil, fmt.Errorf("had rootToExcludes without key \".\" for NewModuleConfig with FileVersion %v", fileVersion)
 		}
 	}
+
 	newRootToIncludes := make(map[string][]string)
+
 	for root, includes := range rootToIncludes {
 		includes, err := xslices.MapError(includes, normalpath.NormalizeAndValidate)
 		if err != nil {
 			return nil, err
 		}
+
 		newRootToIncludes[root] = xslices.ToUniqueSorted(includes)
 	}
+
 	newRootToExcludes := make(map[string][]string)
+
 	for root, excludes := range rootToExcludes {
 		excludes, err := xslices.MapError(excludes, normalpath.NormalizeAndValidate)
 		if err != nil {
 			return nil, err
 		}
+
 		newRootToExcludes[root] = xslices.ToUniqueSorted(excludes)
 	}
+
 	return &moduleConfig{
 		dirPath:        dirPath,
 		moduleFullName: moduleFullName,

@@ -26,6 +26,7 @@ func newStdinContainer(reader io.Reader) *stdinContainer {
 	if reader == nil {
 		reader = discardReader{}
 	}
+
 	return &stdinContainer{
 		reader: reader,
 	}

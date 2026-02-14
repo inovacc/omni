@@ -121,7 +121,7 @@ func NewModuleSetBuilder(
 	return newModuleSetBuilder(ctx, logger, moduleDataProvider, commitProvider)
 }
 
-// NewModuleSetForRemoteModule is a convenience function that build a ModuleSet for for a single
+// NewModuleSetForRemoteModule is a convenience function that build a ModuleSet for a single
 // remote Module based on ModuleKey.
 //
 // The remote Module is targeted.
@@ -137,10 +137,12 @@ func NewModuleSetForRemoteModule(
 ) (ModuleSet, error) {
 	moduleSetBuilder := NewModuleSetBuilder(ctx, logger, moduleDataProvider, commitProvider)
 	moduleSetBuilder.AddRemoteModule(moduleKey, true, options...)
+
 	graph, err := graphProvider.GetGraphForModuleKeys(ctx, []ModuleKey{moduleKey})
 	if err != nil {
 		return nil, err
 	}
+
 	if err := graph.WalkNodes(
 		func(node ModuleKey, _ []ModuleKey, _ []ModuleKey) error {
 			if node.CommitID() != moduleKey.CommitID() {
@@ -152,6 +154,7 @@ func NewModuleSetForRemoteModule(
 	); err != nil {
 		return nil, err
 	}
+
 	return moduleSetBuilder.Build()
 }
 
@@ -312,26 +315,33 @@ func (b *moduleSetBuilder) AddLocalModule(
 	if b.buildCalled.Load() {
 		return b.addError(errBuildAlreadyCalled)
 	}
+
 	if bucketID == "" {
 		return b.addError(syserror.New("bucketID is required when calling AddLocalModule"))
 	}
+
 	localModuleOptions := newLocalModuleOptions()
 	for _, option := range options {
 		option(localModuleOptions)
 	}
+
 	if localModuleOptions.moduleFullName == nil && localModuleOptions.commitID != uuid.Nil {
 		return b.addError(syserror.New("cannot set commitID without FullName when calling AddLocalModule"))
 	}
+
 	if !isTarget && (len(localModuleOptions.targetPaths) > 0 || len(localModuleOptions.targetExcludePaths) > 0) {
 		return b.addError(syserror.Newf("cannot set TargetPaths for a non-target Module when calling AddLocalModule, bucketID=%q, targetPaths=%v, targetExcludePaths=%v", bucketID, localModuleOptions.targetPaths, localModuleOptions.targetExcludePaths))
 	}
+
 	if !isTarget && localModuleOptions.protoFileTargetPath != "" {
 		return b.addError(syserror.Newf("cannot set ProtoFileTargetPath for a non-target Module when calling AddLocalModule, bucketID=%q, protoFileTargetPath=%q", bucketID, localModuleOptions.protoFileTargetPath))
 	}
+
 	if localModuleOptions.protoFileTargetPath != "" &&
 		(len(localModuleOptions.targetPaths) > 0 || len(localModuleOptions.targetExcludePaths) > 0) {
 		return b.addError(syserror.Newf("cannot set TargetPaths and ProtoFileTargetPath when calling AddLocalModule, bucketID=%q, protoFileTargetPath=%q, targetPaths=%v, targetExcludePaths=%v", bucketID, localModuleOptions.protoFileTargetPath, localModuleOptions.targetPaths, localModuleOptions.targetExcludePaths))
 	}
+
 	if localModuleOptions.protoFileTargetPath != "" &&
 		normalpath.Ext(localModuleOptions.protoFileTargetPath) != ".proto" {
 		return b.addError(syserror.Newf("proto file target %q is not a .proto file", localModuleOptions.protoFileTargetPath))
@@ -366,6 +376,7 @@ func (b *moduleSetBuilder) AddLocalModule(
 	if err != nil {
 		return b.addError(err)
 	}
+
 	b.addedModules = append(
 		b.addedModules,
 		newLocalAddedModule(
@@ -373,6 +384,7 @@ func (b *moduleSetBuilder) AddLocalModule(
 			isTarget,
 		),
 	)
+
 	return b
 }
 
@@ -384,10 +396,12 @@ func (b *moduleSetBuilder) AddRemoteModule(
 	if b.buildCalled.Load() {
 		return b.addError(errBuildAlreadyCalled)
 	}
+
 	remoteModuleOptions := newRemoteModuleOptions()
 	for _, option := range options {
 		option(remoteModuleOptions)
 	}
+
 	if !isTarget && (len(remoteModuleOptions.targetPaths) > 0 || len(remoteModuleOptions.targetExcludePaths) > 0) {
 		return b.addError(syserror.New("cannot set TargetPaths for a non-target Module when calling AddRemoteModule"))
 	}
@@ -401,6 +415,7 @@ func (b *moduleSetBuilder) AddRemoteModule(
 			isTarget,
 		),
 	)
+
 	return b
 }
 
@@ -410,9 +425,11 @@ func (b *moduleSetBuilder) Build() (ModuleSet, error) {
 	if !b.buildCalled.CompareAndSwap(false, true) {
 		return nil, errBuildAlreadyCalled
 	}
+
 	if len(b.errs) > 0 {
 		return nil, errors.Join(b.errs...)
 	}
+
 	if len(b.addedModules) == 0 {
 		// Allow an empty ModuleSet.
 		return newModuleSet(nil)
@@ -427,6 +444,7 @@ func (b *moduleSetBuilder) Build() (ModuleSet, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	modules, err := xslices.MapError(
 		addedModules,
 		func(addedModule *addedModule) (Module, error) {
@@ -436,6 +454,7 @@ func (b *moduleSetBuilder) Build() (ModuleSet, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return newModuleSet(modules)
 }
 

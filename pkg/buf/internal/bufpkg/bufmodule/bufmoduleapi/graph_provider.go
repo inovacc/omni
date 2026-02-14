@@ -18,10 +18,10 @@ import (
 	"context"
 	"log/slog"
 
+	"connectrpc.com/connect"
 	bufmodule2 "github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufmodule"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufregistryapi/bufregistryapimodule"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufregistryapi/bufregistryapiowner"
-	"connectrpc.com/connect"
 	modulev1 "github.com/inovacc/omni/pkg/buf/internal/gen/bufbuild/registry/protocolbuffers/go/buf/registry/module/v1"
 	modulev1beta1 "github.com/inovacc/omni/pkg/buf/internal/gen/bufbuild/registry/protocolbuffers/go/buf/registry/module/v1beta1"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/dag"
@@ -60,7 +60,7 @@ func GraphProviderWithLegacyFederationRegistry(legacyFederationRegistry string) 
 
 // GraphProviderWithPublicRegistry returns a new GraphProviderOption that specifies
 // the hostname of the public registry. By default this is "buf.build", however in testing,
-// this may be something else. This is needed to discern which which registry to make calls
+// this may be something else. This is needed to discern which registry to make calls
 // against in the case where there is >1 registries represented in the ModuleKeys - we always
 // want to call the non-public registry.
 func GraphProviderWithPublicRegistry(publicRegistry string) GraphProviderOption {
@@ -104,6 +104,7 @@ func newGraphProvider(
 	for _, option := range options {
 		option(graphProvider)
 	}
+
 	return graphProvider
 }
 
@@ -115,6 +116,7 @@ func (a *graphProvider) GetGraphForModuleKeys(
 	if len(moduleKeys) == 0 {
 		return graph, nil
 	}
+
 	digestType, err := bufmodule2.UniqueDigestTypeForModuleKeys(moduleKeys)
 	if err != nil {
 		return nil, err
@@ -124,10 +126,12 @@ func (a *graphProvider) GetGraphForModuleKeys(
 	// isn't an LRU cache, and the information also may change over time.
 	v1ProtoModuleProvider := newV1ProtoModuleProvider(a.logger, a.moduleClientProvider)
 	v1ProtoOwnerProvider := newV1ProtoOwnerProvider(a.logger, a.ownerClientProvider)
+
 	v1beta1ProtoGraph, err := a.getV1Beta1ProtoGraphForModuleKeys(ctx, moduleKeys, digestType)
 	if err != nil {
 		return nil, err
 	}
+
 	registryCommitIDToModuleKey, err := xslices.ToUniqueValuesMapError(
 		moduleKeys,
 		func(moduleKey bufmodule2.ModuleKey) (bufmodule2.RegistryCommitID, error) {
@@ -137,14 +141,18 @@ func (a *graphProvider) GetGraphForModuleKeys(
 	if err != nil {
 		return nil, err
 	}
-	for _, v1beta1ProtoGraphCommit := range v1beta1ProtoGraph.Commits {
-		v1beta1ProtoCommit := v1beta1ProtoGraphCommit.Commit
-		registry := v1beta1ProtoGraphCommit.Registry
-		commitID, err := uuidutil.FromDashless(v1beta1ProtoCommit.Id)
+
+	for _, v1beta1ProtoGraphCommit := range v1beta1ProtoGraph.GetCommits() {
+		v1beta1ProtoCommit := v1beta1ProtoGraphCommit.GetCommit()
+		registry := v1beta1ProtoGraphCommit.GetRegistry()
+
+		commitID, err := uuidutil.FromDashless(v1beta1ProtoCommit.GetId())
 		if err != nil {
 			return nil, err
 		}
+
 		registryCommitID := bufmodule2.NewRegistryCommitID(registry, commitID)
+
 		moduleKey, ok := registryCommitIDToModuleKey[registryCommitID]
 		if !ok {
 			universalProtoCommit, err := newUniversalProtoCommitForV1Beta1(v1beta1ProtoCommit)
@@ -163,37 +171,49 @@ func (a *graphProvider) GetGraphForModuleKeys(
 			if err != nil {
 				return nil, err
 			}
+
 			registryCommitIDToModuleKey[registryCommitID] = moduleKey
 		}
+
 		graph.AddNode(moduleKey)
 	}
-	for _, v1beta1ProtoEdge := range v1beta1ProtoGraph.Edges {
-		fromRegistry := v1beta1ProtoEdge.FromNode.Registry
-		fromCommitID, err := uuidutil.FromDashless(v1beta1ProtoEdge.FromNode.CommitId)
+
+	for _, v1beta1ProtoEdge := range v1beta1ProtoGraph.GetEdges() {
+		fromRegistry := v1beta1ProtoEdge.GetFromNode().GetRegistry()
+
+		fromCommitID, err := uuidutil.FromDashless(v1beta1ProtoEdge.GetFromNode().GetCommitId())
 		if err != nil {
 			return nil, err
 		}
+
 		fromRegistryCommitID := bufmodule2.NewRegistryCommitID(fromRegistry, fromCommitID)
+
 		fromModuleKey, ok := registryCommitIDToModuleKey[fromRegistryCommitID]
 		if !ok {
 			// We should always have this after our previous iteration.
 			// This could be an API error, but regardless we consider it a system error here.
 			return nil, syserror.Newf("did not have RegistryCommitID %v in registryCommitIDToModuleKey", fromRegistryCommitID)
 		}
-		toRegistry := v1beta1ProtoEdge.ToNode.Registry
-		toCommitID, err := uuidutil.FromDashless(v1beta1ProtoEdge.ToNode.CommitId)
+
+		toRegistry := v1beta1ProtoEdge.GetToNode().GetRegistry()
+
+		toCommitID, err := uuidutil.FromDashless(v1beta1ProtoEdge.GetToNode().GetCommitId())
 		if err != nil {
 			return nil, err
 		}
+
 		toRegistryCommitID := bufmodule2.NewRegistryCommitID(toRegistry, toCommitID)
+
 		toModuleKey, ok := registryCommitIDToModuleKey[toRegistryCommitID]
 		if !ok {
 			// We should always have this after our previous iteration.
 			// This could be an API error, but regardless we consider it a system error here.
 			return nil, syserror.Newf("did not have RegistryCommitID %v in registryCommitIDToModuleKey", toRegistryCommitID)
 		}
+
 		graph.AddEdge(fromModuleKey, toModuleKey)
 	}
+
 	return graph, nil
 }
 
@@ -210,12 +230,14 @@ func (a *graphProvider) getV1Beta1ProtoGraphForModuleKeys(
 	if err != nil {
 		return nil, err
 	}
+
 	if !legacyFederationAllowed && digestType == bufmodule2.DigestTypeB5 {
 		// Legacy federation is not allowed, and we are using b5. Call the v1 API.
 		graph, err := a.getV1ProtoGraphForRegistryAndModuleKeys(ctx, primaryRegistry, moduleKeys)
 		if err != nil {
 			return nil, err
 		}
+
 		return v1ProtoGraphToV1Beta1ProtoGraph(primaryRegistry, graph)
 	}
 
@@ -226,6 +248,7 @@ func (a *graphProvider) getV1Beta1ProtoGraphForModuleKeys(
 	if err != nil {
 		return nil, err
 	}
+
 	response, err := a.moduleClientProvider.V1Beta1GraphServiceClient(primaryRegistry).GetGraph(
 		ctx,
 		connect.NewRequest(
@@ -240,7 +263,7 @@ func (a *graphProvider) getV1Beta1ProtoGraphForModuleKeys(
 		return nil, maybeNewNotFoundError(err)
 	}
 
-	return response.Msg.Graph, nil
+	return response.Msg.GetGraph(), nil
 }
 
 func (a *graphProvider) getV1ProtoGraphForRegistryAndModuleKeys(
@@ -260,5 +283,6 @@ func (a *graphProvider) getV1ProtoGraphForRegistryAndModuleKeys(
 	if err != nil {
 		return nil, maybeNewNotFoundError(err)
 	}
-	return response.Msg.Graph, nil
+
+	return response.Msg.GetGraph(), nil
 }

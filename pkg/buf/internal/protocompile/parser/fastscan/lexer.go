@@ -86,15 +86,19 @@ func (rr *runeReader) readRune() (r rune, err error) {
 	if rr.err != nil {
 		return 0, rr.err
 	}
+
 	if len(rr.unread) > 0 {
 		r := rr.unread[len(rr.unread)-1]
 		rr.unread = rr.unread[:len(rr.unread)-1]
+
 		return r, nil
 	}
+
 	r, _, err = rr.rr.ReadRune()
 	if err != nil {
 		rr.err = err
 	}
+
 	return r, err
 }
 
@@ -159,18 +163,23 @@ func (l *lexer) Lex() (tokenType, any, error) {
 
 		l.prevTokenLine, l.prevTokenCol = l.curLine, l.curCol
 		l.adjustPos(c)
+
 		if c == '.' {
 			// decimal literals could start with a dot
 			cn, err := l.input.readRune()
 			if err != nil {
 				return tokenType(c), nil, nil
 			}
+
 			if cn >= '0' && cn <= '9' {
 				l.adjustPos(cn)
 				token := l.readNumber(c, cn)
+
 				return numberToken, token, nil
 			}
+
 			l.input.unreadRune(cn)
+
 			return tokenType(c), nil, nil
 		}
 
@@ -198,16 +207,21 @@ func (l *lexer) Lex() (tokenType, any, error) {
 			if err != nil {
 				return tokenType(c), nil, nil
 			}
+
 			if cn == '/' {
 				l.adjustPos(cn)
 				l.skipToEndOfLineComment()
+
 				continue
 			}
+
 			if cn == '*' {
 				l.adjustPos(cn)
 				l.skipToEndOfBlockComment()
+
 				continue
 			}
+
 			l.input.unreadRune(cn)
 		}
 
@@ -218,16 +232,20 @@ func (l *lexer) Lex() (tokenType, any, error) {
 func (l *lexer) readNumber(sofar ...rune) string {
 	token := sofar
 	allowExpSign := false
+
 	for {
 		c, err := l.input.readRune()
 		if err != nil {
 			break
 		}
+
 		if (c == '-' || c == '+') && !allowExpSign {
 			l.input.unreadRune(c)
 			break
 		}
+
 		allowExpSign = false
+
 		if c != '.' && c != '_' && (c < '0' || c > '9') &&
 			(c < 'a' || c > 'z') && (c < 'A' || c > 'Z') &&
 			c != '-' && c != '+' {
@@ -235,45 +253,57 @@ func (l *lexer) readNumber(sofar ...rune) string {
 			l.input.unreadRune(c)
 			break
 		}
+
 		l.adjustPos(c)
+
 		if c == 'e' || c == 'E' {
 			// scientific notation char can be followed by
 			// an exponent sign
 			allowExpSign = true
 		}
+
 		token = append(token, c)
 	}
+
 	return string(token)
 }
 
 func (l *lexer) readIdentifier(sofar ...rune) string {
 	token := sofar
+
 	for {
 		c, err := l.input.readRune()
 		if err != nil {
 			break
 		}
+
 		if c != '_' && (c < 'a' || c > 'z') && (c < 'A' || c > 'Z') && (c < '0' || c > '9') {
 			l.input.unreadRune(c)
 			break
 		}
+
 		l.adjustPos(c)
 		token = append(token, c)
 	}
+
 	return string(token)
 }
 
 func (l *lexer) readStringLiteral(quote rune) string {
 	var buf bytes.Buffer
+
 	for {
 		c, err := l.input.readRune()
 		if err != nil {
 			break
 		}
+
 		l.adjustPos(c)
+
 		if c == quote {
 			break
 		}
+
 		if c == '\\' {
 			// escape sequence
 			c, err = l.input.readRune()
@@ -281,6 +311,7 @@ func (l *lexer) readStringLiteral(quote rune) string {
 				buf.WriteByte('\\')
 				break
 			}
+
 			switch c {
 			case 'x', 'X':
 				// hex escape
@@ -288,22 +319,29 @@ func (l *lexer) readStringLiteral(quote rune) string {
 				if err != nil {
 					buf.WriteByte('\\')
 					buf.WriteRune(c)
+
 					break
 				}
+
 				c2, err := l.input.readRune()
 				if err != nil {
 					buf.WriteByte('\\')
 					buf.WriteRune(c)
 					buf.WriteRune(c1)
+
 					break
 				}
+
 				var hex string
+
 				if (c2 < '0' || c2 > '9') && (c2 < 'a' || c2 > 'f') && (c2 < 'A' || c2 > 'F') {
 					l.input.unreadRune(c2)
+
 					hex = string(c1)
 				} else {
 					hex = string([]rune{c1, c2})
 				}
+
 				i, err := strconv.ParseInt(hex, 16, 32)
 				if err != nil {
 					// just include raw, invalid hex escape
@@ -319,11 +357,15 @@ func (l *lexer) readStringLiteral(quote rune) string {
 				if err != nil {
 					buf.WriteByte('\\')
 					buf.WriteRune(c)
+
 					break
 				}
+
 				var octal string
+
 				if c2 < '0' || c2 > '7' {
 					l.input.unreadRune(c2)
+
 					octal = string(c)
 				} else {
 					c3, err := l.input.readRune()
@@ -331,15 +373,19 @@ func (l *lexer) readStringLiteral(quote rune) string {
 						buf.WriteByte('\\')
 						buf.WriteRune(c)
 						buf.WriteRune(c2)
+
 						break
 					}
+
 					if c3 < '0' || c3 > '7' {
 						l.input.unreadRune(c3)
+
 						octal = string([]rune{c, c2})
 					} else {
 						octal = string([]rune{c, c2, c3})
 					}
 				}
+
 				i, err := strconv.ParseInt(octal, 8, 32)
 				if err != nil || i > 0xff {
 					// just include raw, invalid octal escape
@@ -355,17 +401,22 @@ func (l *lexer) readStringLiteral(quote rune) string {
 					c, err := l.input.readRune()
 					if err != nil {
 						buf.WriteString("\\u")
+
 						for j := range i {
 							buf.WriteRune(u[j])
 						}
+
 						break
 					}
+
 					u[i] = c
 				}
+
 				i, err := strconv.ParseInt(string(u), 16, 32)
 				if err != nil {
 					// just include raw, invalid unicode escape
 					buf.WriteString("\\u")
+
 					for _, r := range u {
 						buf.WriteRune(r)
 					}
@@ -379,17 +430,22 @@ func (l *lexer) readStringLiteral(quote rune) string {
 					c, err := l.input.readRune()
 					if err != nil {
 						buf.WriteString("\\U")
+
 						for j := range i {
 							buf.WriteRune(u[j])
 						}
+
 						break
 					}
+
 					u[i] = c
 				}
+
 				i, err := strconv.ParseInt(string(u), 16, 32)
 				if err != nil || i > 0x10ffff || i < 0 {
 					// just include raw, invalid unicode escape
 					buf.WriteString("\\U")
+
 					for _, r := range u {
 						buf.WriteRune(r)
 					}
@@ -427,6 +483,7 @@ func (l *lexer) readStringLiteral(quote rune) string {
 			buf.WriteRune(c)
 		}
 	}
+
 	return buf.String()
 }
 
@@ -436,7 +493,9 @@ func (l *lexer) skipToEndOfLineComment() {
 		if err != nil {
 			return
 		}
+
 		l.adjustPos(c)
+
 		if c == '\n' {
 			return
 		}
@@ -449,16 +508,20 @@ func (l *lexer) skipToEndOfBlockComment() {
 		if err != nil {
 			return
 		}
+
 		l.adjustPos(c)
+
 		if c == '*' {
 			c, err := l.input.readRune()
 			if err != nil {
 				return
 			}
+
 			if c == '/' {
 				l.adjustPos(c)
 				return
 			}
+
 			l.input.unreadRune(c)
 		}
 	}

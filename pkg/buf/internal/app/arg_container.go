@@ -21,6 +21,7 @@ type argContainer struct {
 func newArgContainer(s []string) *argContainer {
 	values := make([]string, len(s))
 	copy(values, s)
+
 	return &argContainer{
 		values: values,
 	}

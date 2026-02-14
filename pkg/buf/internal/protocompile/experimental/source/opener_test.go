@@ -34,10 +34,12 @@ func TestFS(t *testing.T) {
 
 	file, err := opener.Open("testdata/hello.txt")
 	require.NoError(t, err)
+
 	expected := "hello!\n"
 	if runtime.GOOS == "windows" {
 		expected = "hello!\r\n"
 	}
+
 	assert.Equal(t, expected, file.Text())
 
 	_, err = opener.Open("missing.txt")
@@ -75,10 +77,12 @@ func TestOpeners(t *testing.T) {
 
 	file, err = opener.Open("testdata/hello.txt")
 	require.NoError(t, err)
+
 	expectedHello := "hello!\n"
 	if runtime.GOOS == "windows" {
 		expectedHello = "hello!\r\n"
 	}
+
 	assert.Equal(t, expectedHello, file.Text())
 
 	_, err = opener.Open("missing.txt")

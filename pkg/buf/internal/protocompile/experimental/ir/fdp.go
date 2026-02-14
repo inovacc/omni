@@ -39,6 +39,7 @@ import (
 // the WKTs, and all names are fully-qualified.
 func DescriptorSetBytes(files []*File, options ...DescriptorOption) ([]byte, error) {
 	var dg descGenerator
+
 	for _, opt := range options {
 		if opt != nil {
 			opt(&dg)
@@ -47,6 +48,7 @@ func DescriptorSetBytes(files []*File, options ...DescriptorOption) ([]byte, err
 
 	fds := new(descriptorpb.FileDescriptorSet)
 	dg.files(files, fds)
+
 	return proto.Marshal(fds)
 }
 
@@ -56,6 +58,7 @@ func DescriptorSetBytes(files []*File, options ...DescriptorOption) ([]byte, err
 // The resulting FileDescriptorProto is fully linked: all names are fully-qualified.
 func DescriptorProtoBytes(file *File, options ...DescriptorOption) ([]byte, error) {
 	var dg descGenerator
+
 	for _, opt := range options {
 		if opt != nil {
 			opt(&dg)
@@ -64,6 +67,7 @@ func DescriptorProtoBytes(file *File, options ...DescriptorOption) ([]byte, erro
 
 	fdp := new(descriptorpb.FileDescriptorProto)
 	dg.file(file, fdp)
+
 	return proto.Marshal(fdp)
 }
 
@@ -140,12 +144,14 @@ func (dg *descGenerator) file(file *File, fdp *descriptorpb.FileDescriptorProto)
 	slices.SortFunc(imports, cmpx.Key(func(imp Import) int {
 		return imp.Decl.KeywordToken().Span().Start
 	}))
+
 	for i, imp := range imports {
 		if !imp.Option {
 			fdp.Dependency = append(fdp.Dependency, imp.Path())
 			if imp.Public {
 				fdp.PublicDependency = append(fdp.PublicDependency, int32(i))
 			}
+
 			if imp.Weak {
 				fdp.WeakDependency = append(fdp.WeakDependency, int32(i))
 			}
@@ -163,6 +169,7 @@ func (dg *descGenerator) file(file *File, fdp *descriptorpb.FileDescriptorProto)
 			edp := new(descriptorpb.EnumDescriptorProto)
 			fdp.EnumType = append(fdp.EnumType, edp)
 			dg.enum(ty, edp)
+
 			continue
 		}
 
@@ -185,7 +192,7 @@ func (dg *descGenerator) file(file *File, fdp *descriptorpb.FileDescriptorProto)
 
 	if options := file.Options(); !iterx.Empty(options.Fields()) {
 		fdp.Options = new(descriptorpb.FileOptions)
-		dg.options(options, fdp.Options)
+		dg.options(options, fdp.GetOptions())
 	}
 
 	if dg.sourceCodeInfoExtn != nil && iterx.Empty2(dg.sourceCodeInfoExtn.ProtoReflect().Range) {
@@ -213,6 +220,7 @@ func (dg *descGenerator) message(ty Type, mdp *descriptorpb.DescriptorProto) {
 			edp := new(descriptorpb.EnumDescriptorProto)
 			mdp.EnumType = append(mdp.EnumType, edp)
 			dg.enum(ty, edp)
+
 			continue
 		}
 
@@ -231,7 +239,7 @@ func (dg *descGenerator) message(ty Type, mdp *descriptorpb.DescriptorProto) {
 
 		if options := extensions.Options(); !iterx.Empty(options.Fields()) {
 			er.Options = new(descriptorpb.ExtensionRangeOptions)
-			dg.options(options, er.Options)
+			dg.options(options, er.GetOptions())
 		}
 	}
 
@@ -265,9 +273,9 @@ func (dg *descGenerator) message(ty Type, mdp *descriptorpb.DescriptorProto) {
 				continue
 			}
 
-			fdp := mdp.Field[i]
+			fdp := mdp.GetField()[i]
 			fdp.Proto3Optional = addr(true)
-			fdp.OneofIndex = addr(int32(len(mdp.OneofDecl)))
+			fdp.OneofIndex = addr(int32(len(mdp.GetOneofDecl())))
 			mdp.OneofDecl = append(mdp.OneofDecl, &descriptorpb.OneofDescriptorProto{
 				Name: addr(names.generate(field.Name(), ty)),
 			})
@@ -276,7 +284,7 @@ func (dg *descGenerator) message(ty Type, mdp *descriptorpb.DescriptorProto) {
 
 	if options := ty.Options(); !iterx.Empty(options.Fields()) {
 		mdp.Options = new(descriptorpb.MessageOptions)
-		dg.options(options, mdp.Options)
+		dg.options(options, mdp.GetOptions())
 	}
 
 	switch exported, explicit := ty.IsExported(); {
@@ -350,7 +358,7 @@ func (dg *descGenerator) field(f Member, fdp *descriptorpb.FieldDescriptorProto)
 
 	if options := f.Options(); !iterx.Empty(options.Fields()) {
 		fdp.Options = new(descriptorpb.FieldOptions)
-		dg.options(options, fdp.Options)
+		dg.options(options, fdp.GetOptions())
 	}
 
 	fdp.JsonName = addr(f.JSONName())
@@ -385,7 +393,7 @@ func (dg *descGenerator) oneof(o Oneof, odp *descriptorpb.OneofDescriptorProto) 
 
 	if options := o.Options(); !iterx.Empty(options.Fields()) {
 		odp.Options = new(descriptorpb.OneofOptions)
-		dg.options(options, odp.Options)
+		dg.options(options, odp.GetOptions())
 	}
 }
 
@@ -413,7 +421,7 @@ func (dg *descGenerator) enum(ty Type, edp *descriptorpb.EnumDescriptorProto) {
 
 	if options := ty.Options(); !iterx.Empty(options.Fields()) {
 		edp.Options = new(descriptorpb.EnumOptions)
-		dg.options(options, edp.Options)
+		dg.options(options, edp.GetOptions())
 	}
 
 	switch exported, explicit := ty.IsExported(); {
@@ -432,7 +440,7 @@ func (dg *descGenerator) enumValue(f Member, evdp *descriptorpb.EnumValueDescrip
 
 	if options := f.Options(); !iterx.Empty(options.Fields()) {
 		evdp.Options = new(descriptorpb.EnumValueOptions)
-		dg.options(options, evdp.Options)
+		dg.options(options, evdp.GetOptions())
 	}
 }
 
@@ -447,7 +455,7 @@ func (dg *descGenerator) service(s Service, sdp *descriptorpb.ServiceDescriptorP
 
 	if options := s.Options(); !iterx.Empty(options.Fields()) {
 		sdp.Options = new(descriptorpb.ServiceOptions)
-		dg.options(options, sdp.Options)
+		dg.options(options, sdp.GetOptions())
 	}
 }
 
@@ -464,7 +472,7 @@ func (dg *descGenerator) method(m Method, mdp *descriptorpb.MethodDescriptorProt
 
 	if options := m.Options(); !iterx.Empty(options.Fields()) {
 		mdp.Options = new(descriptorpb.MethodOptions)
-		dg.options(options, mdp.Options)
+		dg.options(options, mdp.GetOptions())
 	}
 }
 

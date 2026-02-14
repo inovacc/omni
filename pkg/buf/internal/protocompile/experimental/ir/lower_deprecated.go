@@ -36,6 +36,7 @@ func checkDeprecated(file *File, r *report.Report) {
 
 	for ty := range seq.Values(file.AllTypes()) {
 		checkDeprecatedOptions(ty.Options(), r)
+
 		for o := range seq.Values(ty.Oneofs()) {
 			checkDeprecatedOptions(o.Options(), r)
 		}

@@ -76,6 +76,7 @@ func (c Corpus) Run(t *testing.T, test func(t *testing.T, path, text string, out
 
 	// Enumerate the tests to run by walking the filesystem.
 	var tests []string
+
 	err := filepath.Walk(root, func(p string, fi fs.FileInfo, err error) error {
 		if err != nil || fi.IsDir() {
 			return err
@@ -105,6 +106,7 @@ func (c Corpus) Run(t *testing.T, test func(t *testing.T, path, text string, out
 
 	// Execute the tests.
 	outer := t
+
 	for _, path := range tests {
 		// Make sure the path is normalized regardless of platform. This
 		// is necessary to avoid breakages on Windows.
@@ -134,6 +136,7 @@ func (c Corpus) Run(t *testing.T, test func(t *testing.T, path, text string, out
 			// inspect.
 
 			refresh, _ := doublestar.Match(refresh, name)
+
 			for i, output := range c.Outputs {
 				if panicVal != nil && results[i] == "" {
 					// If we panicked and the result is empty, this means there's a good
@@ -144,6 +147,7 @@ func (c Corpus) Run(t *testing.T, test func(t *testing.T, path, text string, out
 
 				path := fmt.Sprint(path, ".", output.Extension)
 				relPath := fmt.Sprint(testName, ".", output.Extension)
+
 				cmp := output.Compare
 				if cmp == nil {
 					cmp = CompareAndDiff
@@ -153,6 +157,7 @@ func (c Corpus) Run(t *testing.T, test func(t *testing.T, path, text string, out
 				if err != nil && !errors.Is(err, os.ErrNotExist) {
 					t.Logf("protocompile/golden: error while loading output file %q: %v", path, err)
 					t.Fail()
+
 					continue
 				}
 
@@ -164,11 +169,13 @@ func (c Corpus) Run(t *testing.T, test func(t *testing.T, path, text string, out
 				if !refresh {
 					t.Logf("output mismatch for %q:\n%s", path, result)
 					t.Fail()
+
 					continue
 				}
 
 				outer.Logf("regenerating: %s", relPath)
 				outer.Fail()
+
 				if results[i] == "" {
 					err := os.Remove(path)
 					if err != nil && !errors.Is(err, os.ErrNotExist) {
@@ -248,6 +255,8 @@ func catch(cb func()) (panic any, stack []byte) {
 			stack = debug.Stack()
 		}
 	}()
+
 	cb()
+
 	return
 }

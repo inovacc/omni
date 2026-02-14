@@ -28,12 +28,14 @@ func Run(w io.Writer, r io.Reader, args []string, opts Options) error {
 	}
 
 	// Determine input source
-	var input io.Reader = r
+	var input = r
+
 	if opts.File != "" {
 		f, err := os.Open(opts.File)
 		if err != nil {
 			return fmt.Errorf("pipeline: %w", err)
 		}
+
 		defer func() { _ = f.Close() }()
 
 		input = f

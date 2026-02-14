@@ -113,6 +113,7 @@ func (t TypeGeneric) Span() source.Span {
 // Despite the name, TypeList does not implement [TypeAny] because it is not a type.
 type TypeList struct {
 	withContext
+
 	raw *rawTypeList
 }
 

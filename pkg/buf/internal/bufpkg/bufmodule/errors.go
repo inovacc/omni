@@ -53,19 +53,24 @@ func (i *ImportNotExistError) Error() string {
 	if i == nil {
 		return ""
 	}
+
 	var builder strings.Builder
+
 	if i.fileInfo != nil {
 		if externalPath := i.fileInfo.ExternalPath(); externalPath != "" {
 			_, _ = builder.WriteString(externalPath)
 			_, _ = builder.WriteString(`: `)
 		}
 	}
+
 	if i.importPath != "" {
 		_, _ = builder.WriteString(`import "`)
 		_, _ = builder.WriteString(i.importPath)
 		_, _ = builder.WriteString(`": `)
 	}
+
 	_, _ = builder.WriteString(i.Unwrap().Error())
+
 	return builder.String()
 }
 
@@ -74,6 +79,7 @@ func (i *ImportNotExistError) Unwrap() error {
 	if i == nil {
 		return nil
 	}
+
 	return fs.ErrNotExist
 }
 
@@ -88,19 +94,24 @@ func (m *ModuleCycleError) Error() string {
 	if m == nil {
 		return ""
 	}
+
 	var builder strings.Builder
+
 	_, _ = builder.WriteString("cycle detected in module dependencies:\n")
+
 	for i, description := range m.Descriptions {
 		if i == 0 {
 			_, _ = builder.WriteString("    ")
 		} else {
 			_, _ = builder.WriteString(" -> ")
 		}
+
 		_, _ = builder.WriteString(description)
 		if i != len(m.Descriptions)-1 {
 			_, _ = builder.WriteString("\n")
 		}
 	}
+
 	return builder.String()
 }
 
@@ -124,17 +135,21 @@ func (d *DuplicateProtoPathError) Error() string {
 	if d == nil {
 		return ""
 	}
+
 	var builder strings.Builder
 	// Writing even if the error is malformed via d.Path being empty.
 	_, _ = builder.WriteString(d.ProtoPath)
+
 	_, _ = builder.WriteString(" is contained in multiple modules:\n")
 	for i, moduleDescription := range d.ModuleDescriptions {
 		_, _ = builder.WriteString("  ")
+
 		_, _ = builder.WriteString(moduleDescription)
 		if i != len(d.ModuleDescriptions)-1 {
 			_, _ = builder.WriteString("\n")
 		}
 	}
+
 	return builder.String()
 }
 
@@ -153,11 +168,14 @@ func (n *NoProtoFilesError) Error() string {
 	if n == nil {
 		return ""
 	}
+
 	var builder strings.Builder
+
 	_, _ = builder.WriteString(`Module "`)
 	// Writing even if the error is malformed via d.ModuleDescription being empty.
 	_, _ = builder.WriteString(n.ModuleDescription)
 	_, _ = builder.WriteString(`" had no .proto files`)
+
 	return builder.String()
 }
 
@@ -175,18 +193,24 @@ func (m *DigestMismatchError) Error() string {
 	if m == nil {
 		return ""
 	}
+
 	var builder strings.Builder
+
 	_, _ = builder.WriteString(`*** Digest verification failed`)
 	if m.FullName != nil {
 		_, _ = builder.WriteString(` for "`)
+
 		_, _ = builder.WriteString(m.FullName.String())
 		if m.CommitID != uuid.Nil {
 			_, _ = builder.WriteString(`:`)
 			_, _ = builder.WriteString(uuidutil.ToDashless(m.CommitID))
 		}
+
 		_, _ = builder.WriteString(`"`)
 	}
+
 	_, _ = builder.WriteString(` ***`)
+
 	_, _ = builder.WriteString("\n")
 	if m.ExpectedDigest != nil && m.ActualDigest != nil {
 		_, _ = builder.WriteString("\t")
@@ -200,10 +224,12 @@ func (m *DigestMismatchError) Error() string {
 		_, _ = builder.WriteString(`"`)
 		_, _ = builder.WriteString("\n")
 	}
+
 	_, _ = builder.WriteString("\t")
 	_, _ = builder.WriteString(`This may be the result of a hand-edited or corrupted buf.lock file, a corrupted local cache, and/or an attack.`)
 	_, _ = builder.WriteString("\n")
 	_, _ = builder.WriteString("\t")
 	_, _ = builder.WriteString(`To clear your local cache, run "buf registry cc".`)
+
 	return builder.String()
 }

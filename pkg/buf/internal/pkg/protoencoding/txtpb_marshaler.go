@@ -29,6 +29,7 @@ func newTxtpbMarshaler(resolver Resolver) Marshaler {
 	if resolver == nil {
 		resolver = EmptyResolver
 	}
+
 	return &txtpbMarshaler{
 		resolver: resolver,
 	}
@@ -39,9 +40,11 @@ func (m *txtpbMarshaler) Marshal(message proto.Message) ([]byte, error) {
 		Resolver: m.resolver,
 		Indent:   "  ",
 	}
+
 	data, err := options.Marshal(message)
 	if err != nil {
 		return nil, fmt.Errorf("txtpb marshal: %w", err)
 	}
+
 	return data, err
 }

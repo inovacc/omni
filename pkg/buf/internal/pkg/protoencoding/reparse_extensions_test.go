@@ -18,8 +18,8 @@ import (
 	"math"
 	"testing"
 
-	"github.com/google/go-cmp/cmp"
 	"buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go/buf/validate"
+	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/encoding/protowire"
@@ -55,9 +55,13 @@ func TestReparseExtensions(t *testing.T) {
 	}
 	proto.SetExtension(fieldOpts, validate.E_Field, fieldRules)
 	// The file will also contain an unrecognized custom option.
-	const customOptionNum = 54321
-	const customOptionVal = float32(3.14159)
+	const (
+		customOptionNum = 54321
+		customOptionVal = float32(3.14159)
+	)
+
 	var unknownOption []byte
+
 	unknownOption = protowire.AppendTag(unknownOption, customOptionNum, protowire.Fixed32Type)
 	unknownOption = protowire.AppendFixed32(unknownOption, math.Float32bits(customOptionVal))
 	fieldOpts.ProtoReflect().SetUnknown(unknownOption)
@@ -99,11 +103,14 @@ func TestReparseExtensions(t *testing.T) {
 	require.NoError(t, err)
 
 	require.Empty(t, fieldOpts.ProtoReflect().GetUnknown())
+
 	var found int
+
 	fieldOpts.ProtoReflect().Range(func(field protoreflect.FieldDescriptor, value protoreflect.Value) bool {
 		switch field.Number() {
 		case customOptionNum:
 			found++
+
 			assert.Equal(t, customOptionVal, value.Interface())
 		case protoreflect.FieldNumber(validate.E_Field.Field):
 			found++
@@ -111,17 +118,20 @@ func TestReparseExtensions(t *testing.T) {
 			assert.NotSame(t, fieldRules, msg)
 			_, isGenType := msg.(*validate.FieldRules)
 			assert.False(t, isGenType)
+
 			_, isDynamicType := msg.(*dynamicpb.Message)
 			assert.True(t, isDynamicType)
 
 			// round-trip back to gen type to check for equality with original
 			data, err := proto.Marshal(msg)
 			require.NoError(t, err)
+
 			roundTrippedRules := &validate.FieldRules{}
 			err = proto.Unmarshal(data, roundTrippedRules)
 			require.NoError(t, err)
 			require.Empty(t, cmp.Diff(fieldRules, roundTrippedRules, protocmp.Transform()))
 		}
+
 		return true
 	})
 	assert.Equal(t, 2, found)

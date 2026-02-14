@@ -43,6 +43,7 @@ func newArchiveRef(
 	if archiveType == ArchiveTypeZip && compressionType != CompressionTypeNone {
 		return nil, NewCannotSpecifyCompressionForZipError()
 	}
+
 	singleRef, err := newSingleRef(
 		format,
 		path,
@@ -52,13 +53,16 @@ func newArchiveRef(
 	if err != nil {
 		return nil, err
 	}
+
 	subDirPath, err = normalpath.NormalizeAndValidate(subDirPath)
 	if err != nil {
 		return nil, err
 	}
+
 	if subDirPath == "." {
 		subDirPath = ""
 	}
+
 	return newDirectArchiveRef(
 		singleRef.Format(),
 		singleRef.Path(),

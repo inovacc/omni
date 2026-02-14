@@ -71,21 +71,27 @@ func (o *OptionsSpec) ToOptions() (option.Options, error) {
 	if value := o.EnumZeroValueSuffix; len(value) > 0 {
 		keyToValue[enumZeroValueSuffixKey] = value
 	}
+
 	if o.RPCAllowSameRequestResponse {
 		keyToValue[rpcAllowSameRequestResponseKey] = true
 	}
+
 	if o.RPCAllowGoogleProtobufEmptyRequests {
 		keyToValue[rpcAllowGoogleProtobufEmptyRequestsKey] = true
 	}
+
 	if o.RPCAllowGoogleProtobufEmptyResponses {
 		keyToValue[rpcAllowGoogleProtobufEmptyResponsesKey] = true
 	}
+
 	if value := o.ServiceSuffix; len(value) > 0 {
 		keyToValue[serviceSuffixKey] = value
 	}
+
 	if value := o.CommentExcludes; len(value) > 0 {
 		keyToValue[commentExcludesKey] = value
 	}
+
 	return option.NewOptions(keyToValue)
 }
 
@@ -97,9 +103,11 @@ func GetEnumZeroValueSuffix(options option.Options) (string, error) {
 	if err != nil {
 		return "", err
 	}
+
 	if value != "" {
 		return value, nil
 	}
+
 	return defaultEnumZeroValueSuffix, nil
 }
 
@@ -134,9 +142,11 @@ func GetServiceSuffix(options option.Options) (string, error) {
 	if err != nil {
 		return "", err
 	}
+
 	if value != "" {
 		return value, nil
 	}
+
 	return defaultServiceSuffix, nil
 }
 

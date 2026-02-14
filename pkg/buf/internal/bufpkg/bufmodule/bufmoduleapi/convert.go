@@ -56,6 +56,7 @@ func DigestToV1Proto(digest bufmodule2.Digest) (*modulev1.Digest, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return &modulev1.Digest{
 		Type:  protoDigestType,
 		Value: digest.Value(),
@@ -67,14 +68,16 @@ func DigestToV1Proto(digest bufmodule2.Digest) (*modulev1.Digest, error) {
 // Validation is performed to ensure the DigestType is known, and the value
 // is a valid digest value for the given DigestType.
 func V1ProtoToDigest(protoDigest *modulev1.Digest) (bufmodule2.Digest, error) {
-	digestType, err := v1ProtoToDigestType(protoDigest.Type)
+	digestType, err := v1ProtoToDigestType(protoDigest.GetType())
 	if err != nil {
 		return nil, err
 	}
-	bufcasDigest, err := bufcas.NewDigest(protoDigest.Value)
+
+	bufcasDigest, err := bufcas.NewDigest(protoDigest.GetValue())
 	if err != nil {
 		return nil, err
 	}
+
 	return bufmodule2.NewDigest(digestType, bufcasDigest)
 }
 
@@ -84,6 +87,7 @@ func DigestToV1Beta1Proto(digest bufmodule2.Digest) (*modulev1beta1.Digest, erro
 	if err != nil {
 		return nil, err
 	}
+
 	return &modulev1beta1.Digest{
 		Type:  protoDigestType,
 		Value: digest.Value(),
@@ -95,14 +99,16 @@ func DigestToV1Beta1Proto(digest bufmodule2.Digest) (*modulev1beta1.Digest, erro
 // Validation is performed to ensure the DigestType is known, and the value
 // is a valid digest value for the given DigestType.
 func V1Beta1ProtoToDigest(protoDigest *modulev1beta1.Digest) (bufmodule2.Digest, error) {
-	digestType, err := v1beta1ProtoToDigestType(protoDigest.Type)
+	digestType, err := v1beta1ProtoToDigestType(protoDigest.GetType())
 	if err != nil {
 		return nil, err
 	}
-	bufcasDigest, err := bufcas.NewDigest(protoDigest.Value)
+
+	bufcasDigest, err := bufcas.NewDigest(protoDigest.GetValue())
 	if err != nil {
 		return nil, err
 	}
+
 	return bufmodule2.NewDigest(digestType, bufcasDigest)
 }
 
@@ -125,6 +131,7 @@ func digestTypeToV1Proto(digestType bufmodule2.DigestType) (modulev1.DigestType,
 	if !ok {
 		return 0, fmt.Errorf("unknown DigestType: %v", digestType)
 	}
+
 	return protoDigestType, nil
 }
 
@@ -133,6 +140,7 @@ func v1ProtoToDigestType(protoDigestType modulev1.DigestType) (bufmodule2.Digest
 	if !ok {
 		return 0, fmt.Errorf("unknown modulev1.DigestType: %v", protoDigestType)
 	}
+
 	return digestType, nil
 }
 
@@ -142,6 +150,7 @@ func digestTypeToV1Beta1Proto(digestType bufmodule2.DigestType) (modulev1beta1.D
 	if !ok {
 		return 0, fmt.Errorf("unknown DigestType: %v", digestType)
 	}
+
 	return protoDigestType, nil
 }
 
@@ -150,12 +159,14 @@ func v1beta1ProtoToDigestType(protoDigestType modulev1beta1.DigestType) (bufmodu
 	if !ok {
 		return 0, fmt.Errorf("unknown modulev1beta1.DigestType: %v", protoDigestType)
 	}
+
 	return digestType, nil
 }
 
 // It is assumed that the bucket is already filtered to just module files.
 func bucketToV1Beta1ProtoFiles(ctx context.Context, bucket storage2.ReadBucket) ([]*modulev1beta1.File, error) {
 	var protoFiles []*modulev1beta1.File
+
 	if err := storage2.WalkReadObjects(
 		ctx,
 		bucket,
@@ -177,6 +188,7 @@ func bucketToV1Beta1ProtoFiles(ctx context.Context, bucket storage2.ReadBucket) 
 	); err != nil {
 		return nil, err
 	}
+
 	return protoFiles, nil
 }
 
@@ -297,13 +309,15 @@ func v1ProtoDigestToV1Beta1ProtoDigest(
 	if v1ProtoDigest == nil {
 		return nil, nil
 	}
-	v1beta1ProtoDigestType, ok := v1ProtoDigestTypeToV1Beta1ProtoDigestType[v1ProtoDigest.Type]
+
+	v1beta1ProtoDigestType, ok := v1ProtoDigestTypeToV1Beta1ProtoDigestType[v1ProtoDigest.GetType()]
 	if !ok {
-		return nil, fmt.Errorf("unknown modulev1.DigestType: %v", v1ProtoDigest.Type)
+		return nil, fmt.Errorf("unknown modulev1.DigestType: %v", v1ProtoDigest.GetType())
 	}
+
 	return &modulev1beta1.Digest{
 		Type:  v1beta1ProtoDigestType,
-		Value: v1ProtoDigest.Value,
+		Value: v1ProtoDigest.GetValue(),
 	}, nil
 }
 
@@ -313,18 +327,20 @@ func v1ProtoCommitToV1Beta1ProtoCommit(
 	if v1ProtoCommit == nil {
 		return nil, nil
 	}
-	v1beta1ProtoDigest, err := v1ProtoDigestToV1Beta1ProtoDigest(v1ProtoCommit.Digest)
+
+	v1beta1ProtoDigest, err := v1ProtoDigestToV1Beta1ProtoDigest(v1ProtoCommit.GetDigest())
 	if err != nil {
 		return nil, err
 	}
+
 	return &modulev1beta1.Commit{
-		Id:               v1ProtoCommit.Id,
-		CreateTime:       v1ProtoCommit.CreateTime,
-		OwnerId:          v1ProtoCommit.OwnerId,
-		ModuleId:         v1ProtoCommit.ModuleId,
+		Id:               v1ProtoCommit.GetId(),
+		CreateTime:       v1ProtoCommit.GetCreateTime(),
+		OwnerId:          v1ProtoCommit.GetOwnerId(),
+		ModuleId:         v1ProtoCommit.GetModuleId(),
 		Digest:           v1beta1ProtoDigest,
-		CreatedByUserId:  v1ProtoCommit.CreatedByUserId,
-		SourceControlUrl: v1ProtoCommit.SourceControlUrl,
+		CreatedByUserId:  v1ProtoCommit.GetCreatedByUserId(),
+		SourceControlUrl: v1ProtoCommit.GetSourceControlUrl(),
 	}, nil
 }
 
@@ -335,32 +351,36 @@ func v1ProtoGraphToV1Beta1ProtoGraph(
 	if v1ProtoGraph == nil {
 		return nil, nil
 	}
+
 	v1beta1ProtoGraph := &modulev1beta1.Graph{
-		Commits: make([]*modulev1beta1.Graph_Commit, len(v1ProtoGraph.Commits)),
-		Edges:   make([]*modulev1beta1.Graph_Edge, len(v1ProtoGraph.Edges)),
+		Commits: make([]*modulev1beta1.Graph_Commit, len(v1ProtoGraph.GetCommits())),
+		Edges:   make([]*modulev1beta1.Graph_Edge, len(v1ProtoGraph.GetEdges())),
 	}
-	for i, v1ProtoCommit := range v1ProtoGraph.Commits {
+	for i, v1ProtoCommit := range v1ProtoGraph.GetCommits() {
 		v1beta1ProtoCommit, err := v1ProtoCommitToV1Beta1ProtoCommit(v1ProtoCommit)
 		if err != nil {
 			return nil, err
 		}
+
 		v1beta1ProtoGraph.Commits[i] = &modulev1beta1.Graph_Commit{
 			Commit:   v1beta1ProtoCommit,
 			Registry: registry,
 		}
 	}
-	for i, v1ProtoEdge := range v1ProtoGraph.Edges {
+
+	for i, v1ProtoEdge := range v1ProtoGraph.GetEdges() {
 		v1beta1ProtoGraph.Edges[i] = &modulev1beta1.Graph_Edge{
 			FromNode: &modulev1beta1.Graph_Node{
-				CommitId: v1ProtoEdge.FromNode.CommitId,
+				CommitId: v1ProtoEdge.GetFromNode().GetCommitId(),
 				Registry: registry,
 			},
 			ToNode: &modulev1beta1.Graph_Node{
-				CommitId: v1ProtoEdge.ToNode.CommitId,
+				CommitId: v1ProtoEdge.GetToNode().GetCommitId(),
 				Registry: registry,
 			},
 		}
 	}
+
 	return v1beta1ProtoGraph, nil
 }
 
@@ -370,6 +390,7 @@ func v1beta1ProtoModuleRefToV1ProtoModuleRef(
 	if v1beta1ProtoModuleRef == nil {
 		return nil
 	}
+
 	if id := v1beta1ProtoModuleRef.GetId(); id != "" {
 		return &modulev1.ModuleRef{
 			Value: &modulev1.ModuleRef_Id{
@@ -377,16 +398,18 @@ func v1beta1ProtoModuleRefToV1ProtoModuleRef(
 			},
 		}
 	}
+
 	if name := v1beta1ProtoModuleRef.GetName(); name != nil {
 		return &modulev1.ModuleRef{
 			Value: &modulev1.ModuleRef_Name_{
 				Name: &modulev1.ModuleRef_Name{
-					Owner:  name.Owner,
-					Module: name.Module,
+					Owner:  name.GetOwner(),
+					Module: name.GetModule(),
 				},
 			},
 		}
 	}
+
 	return nil
 }
 
@@ -396,9 +419,10 @@ func v1beta1ProtoFileToV1ProtoFile(
 	if v1beta1ProtoFile == nil {
 		return nil
 	}
+
 	return &modulev1.File{
-		Path:    v1beta1ProtoFile.Path,
-		Content: v1beta1ProtoFile.Content,
+		Path:    v1beta1ProtoFile.GetPath(),
+		Content: v1beta1ProtoFile.GetContent(),
 	}
 }
 
@@ -414,6 +438,7 @@ func v1beta1ProtoScopedLabelRefToV1ProtoScopedLabelRef(
 	if v1beta1ProtoScopedLabelRef == nil {
 		return nil
 	}
+
 	if id := v1beta1ProtoScopedLabelRef.GetId(); id != "" {
 		return &modulev1.ScopedLabelRef{
 			Value: &modulev1.ScopedLabelRef_Id{
@@ -421,6 +446,7 @@ func v1beta1ProtoScopedLabelRefToV1ProtoScopedLabelRef(
 			},
 		}
 	}
+
 	if name := v1beta1ProtoScopedLabelRef.GetName(); name != "" {
 		return &modulev1.ScopedLabelRef{
 			Value: &modulev1.ScopedLabelRef_Name{
@@ -428,6 +454,7 @@ func v1beta1ProtoScopedLabelRefToV1ProtoScopedLabelRef(
 			},
 		}
 	}
+
 	return nil
 }
 
@@ -441,9 +468,9 @@ func v1beta1ProtoUploadRequestContentToV1ProtoUploadRequestContent(
 	v1beta1ProtoUploadRequestContent *modulev1beta1.UploadRequest_Content,
 ) *modulev1.UploadRequest_Content {
 	return &modulev1.UploadRequest_Content{
-		ModuleRef:        v1beta1ProtoModuleRefToV1ProtoModuleRef(v1beta1ProtoUploadRequestContent.ModuleRef),
-		Files:            v1beta1ProtoFilesToV1ProtoFiles(v1beta1ProtoUploadRequestContent.Files),
-		ScopedLabelRefs:  v1beta1ProtoScopedLabelRefsToV1ProtoScopedLabelRefs(v1beta1ProtoUploadRequestContent.ScopedLabelRefs),
-		SourceControlUrl: v1beta1ProtoUploadRequestContent.SourceControlUrl,
+		ModuleRef:        v1beta1ProtoModuleRefToV1ProtoModuleRef(v1beta1ProtoUploadRequestContent.GetModuleRef()),
+		Files:            v1beta1ProtoFilesToV1ProtoFiles(v1beta1ProtoUploadRequestContent.GetFiles()),
+		ScopedLabelRefs:  v1beta1ProtoScopedLabelRefsToV1ProtoScopedLabelRefs(v1beta1ProtoUploadRequestContent.GetScopedLabelRefs()),
+		SourceControlUrl: v1beta1ProtoUploadRequestContent.GetSourceControlUrl(),
 	}
 }

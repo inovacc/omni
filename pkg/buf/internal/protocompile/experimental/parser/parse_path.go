@@ -50,7 +50,9 @@ func parsePath(p *parser, c *token.Cursor) ast.Path {
 	}
 
 	var done bool
+
 	end := start
+
 	for !done && !c.Done() {
 		next := c.Peek()
 		first := start == next
@@ -66,6 +68,7 @@ func parsePath(p *parser, c *token.Cursor) ast.Path {
 				// them all in one shot.
 				for {
 					prevSeparator = c.Next()
+
 					next := c.Peek()
 					if !slicesx.Among(next.Text(), ".", "/") {
 						break
@@ -93,6 +96,7 @@ func parsePath(p *parser, c *token.Cursor) ast.Path {
 
 			end = next
 			prevSeparator = token.Zero
+
 			c.Next()
 
 		case next.Keyword() == keyword.Parens:
@@ -110,6 +114,7 @@ func parsePath(p *parser, c *token.Cursor) ast.Path {
 			// extraneous tokens.
 			contents := next.Children()
 			parsePath(p, contents)
+
 			if tok := contents.Peek(); !tok.IsZero() {
 				p.Error(errtoken.Unexpected{
 					What:  start,
@@ -119,6 +124,7 @@ func parsePath(p *parser, c *token.Cursor) ast.Path {
 
 			end = next
 			prevSeparator = token.Zero
+
 			c.Next()
 
 		default:

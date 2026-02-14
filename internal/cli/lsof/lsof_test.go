@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	gnet "github.com/shirou/gopsutil/v3/net"
+	"github.com/inovacc/omni/internal/cli/output"
 )
 
 func TestFormatConnection(t *testing.T) {
@@ -89,17 +90,21 @@ func TestPrintFiles(t *testing.T) {
 
 	t.Run("with_headers", func(t *testing.T) {
 		var buf bytes.Buffer
+
 		err := printFiles(&buf, files, Options{})
 		if err != nil {
 			t.Fatal(err)
 		}
+
 		output := buf.String()
 		if !strings.Contains(output, "COMMAND") {
 			t.Error("expected COMMAND header")
 		}
+
 		if !strings.Contains(output, "nginx") {
 			t.Error("expected nginx in output")
 		}
+
 		if !strings.Contains(output, "postgres") {
 			t.Error("expected postgres in output")
 		}
@@ -107,14 +112,17 @@ func TestPrintFiles(t *testing.T) {
 
 	t.Run("no_headers", func(t *testing.T) {
 		var buf bytes.Buffer
+
 		err := printFiles(&buf, files, Options{NoHeaders: true})
 		if err != nil {
 			t.Fatal(err)
 		}
+
 		output := buf.String()
 		if strings.Contains(output, "COMMAND") {
 			t.Error("expected no header")
 		}
+
 		lines := strings.Split(strings.TrimSpace(output), "\n")
 		if len(lines) != 2 {
 			t.Errorf("expected 2 data lines, got %d", len(lines))
@@ -133,11 +141,14 @@ func TestPrintFiles(t *testing.T) {
 				Name:    "*:80->*:0 (LISTEN)",
 			},
 		}
+
 		var buf bytes.Buffer
+
 		err := printFiles(&buf, longFiles, Options{NoHeaders: true})
 		if err != nil {
 			t.Fatal(err)
 		}
+
 		output := buf.String()
 		// Command should be truncated to 16 chars
 		if strings.Contains(output, "very-long-command-name-exceeds") {
@@ -148,6 +159,7 @@ func TestPrintFiles(t *testing.T) {
 
 func TestRun_Default(t *testing.T) {
 	var buf bytes.Buffer
+
 	err := Run(&buf, Options{})
 	if err != nil {
 		t.Fatal(err)
@@ -161,10 +173,12 @@ func TestRun_Default(t *testing.T) {
 
 func TestRun_JSON(t *testing.T) {
 	var buf bytes.Buffer
-	err := Run(&buf, Options{JSON: true})
+
+	err := Run(&buf, Options{OutputFormat: output.FormatJSON})
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	var files []OpenFile
 	if err := json.Unmarshal(buf.Bytes(), &files); err != nil {
 		t.Errorf("expected valid JSON output, got error: %v", err)
@@ -174,10 +188,11 @@ func TestRun_JSON(t *testing.T) {
 func TestRun_PortFilter(t *testing.T) {
 	var buf bytes.Buffer
 	// Use a port unlikely to have connections
-	err := Run(&buf, Options{Port: 59999, JSON: true})
+	err := Run(&buf, Options{Port: 59999, OutputFormat: output.FormatJSON})
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	var files []OpenFile
 	if err := json.Unmarshal(buf.Bytes(), &files); err != nil {
 		t.Errorf("expected valid JSON, got error: %v", err)
@@ -192,10 +207,12 @@ func TestRun_PortFilter(t *testing.T) {
 
 func TestRunByPort(t *testing.T) {
 	var buf bytes.Buffer
-	err := RunByPort(&buf, 80, Options{JSON: true})
+
+	err := RunByPort(&buf, 80, Options{OutputFormat: output.FormatJSON})
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	var files []OpenFile
 	if err := json.Unmarshal(buf.Bytes(), &files); err != nil {
 		t.Errorf("expected valid JSON, got error: %v", err)
@@ -205,10 +222,11 @@ func TestRunByPort(t *testing.T) {
 func TestRunByPID(t *testing.T) {
 	var buf bytes.Buffer
 	// Use own PID
-	err := RunByPID(&buf, 1, Options{JSON: true})
+	err := RunByPID(&buf, 1, Options{OutputFormat: output.FormatJSON})
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	var files []OpenFile
 	if err := json.Unmarshal(buf.Bytes(), &files); err != nil {
 		t.Errorf("expected valid JSON, got error: %v", err)
@@ -217,14 +235,17 @@ func TestRunByPID(t *testing.T) {
 
 func TestRun_ProtocolFilter(t *testing.T) {
 	var buf bytes.Buffer
-	err := Run(&buf, Options{Protocol: "tcp", JSON: true})
+
+	err := Run(&buf, Options{Protocol: "tcp", OutputFormat: output.FormatJSON})
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	var files []OpenFile
 	if err := json.Unmarshal(buf.Bytes(), &files); err != nil {
 		t.Errorf("expected valid JSON, got error: %v", err)
 	}
+
 	for _, f := range files {
 		if f.Protocol != "TCP" {
 			t.Errorf("expected TCP protocol, got %s", f.Protocol)
@@ -234,14 +255,17 @@ func TestRun_ProtocolFilter(t *testing.T) {
 
 func TestRun_IPv4Only(t *testing.T) {
 	var buf bytes.Buffer
-	err := Run(&buf, Options{IPv4: true, JSON: true})
+
+	err := Run(&buf, Options{IPv4: true, OutputFormat: output.FormatJSON})
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	var files []OpenFile
 	if err := json.Unmarshal(buf.Bytes(), &files); err != nil {
 		t.Errorf("expected valid JSON, got error: %v", err)
 	}
+
 	for _, f := range files {
 		if f.Type != "IPv4" {
 			t.Errorf("expected IPv4 type, got %s", f.Type)

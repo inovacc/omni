@@ -29,5 +29,6 @@ func GetBufWorkYAMLFileForDirPath(
 	if err != nil {
 		return nil, err
 	}
+
 	return bufconfig.GetBufWorkYAMLFileForPrefix(ctx, bucket, ".")
 }

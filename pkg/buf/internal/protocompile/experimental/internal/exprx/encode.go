@@ -103,7 +103,9 @@ func (c *protoEncoder) expr(e expr.Expr) *exprpb.Expr {
 	}
 
 	pb := new(exprpb.Expr)
+
 	defer c.checkCycle(e)()
+
 	switch e.Kind() {
 	case expr.KindBlock:
 		pb.Expr = &exprpb.Expr_Block{Block: c.block(e.AsBlock())}
@@ -143,6 +145,7 @@ func (c *protoEncoder) block(e expr.Block) *exprpb.Block {
 	for expr := range seq.Values(e.Exprs()) {
 		pb.Exprs = append(pb.Exprs, c.expr(expr))
 	}
+
 	return pb
 }
 
@@ -164,6 +167,7 @@ func (c *protoEncoder) control(e expr.Control) *exprpb.Control {
 	}
 
 	var kind exprpb.Control_Kind
+
 	switch e.Kind() {
 	case keyword.Return:
 		kind = exprpb.Control_RETURN
@@ -236,6 +240,7 @@ func (c *protoEncoder) op(e expr.Op) *exprpb.Op {
 	}
 
 	var op exprpb.Op_Kind
+
 	switch e.Operator() {
 	case keyword.Assign:
 		op = exprpb.Op_ASSIGN
@@ -324,6 +329,7 @@ func (c *protoEncoder) switch_(e expr.Switch) *exprpb.Switch {
 			ColonSpan: c.span(p.Colon()),
 		})
 	}
+
 	return pb
 }
 
@@ -347,6 +353,7 @@ func (c *protoEncoder) token(e expr.Token) *exprpb.Token {
 	case token.Ident:
 		pb.Value = &exprpb.Token_Ident{Ident: e.Name()}
 	}
+
 	return pb
 }
 
@@ -356,6 +363,7 @@ func (c *protoEncoder) params(e expr.Params) *exprpb.Params {
 	}
 
 	var brackets exprpb.Brackets
+
 	switch e.Brackets().Keyword() {
 	case keyword.Parens:
 		brackets = exprpb.Brackets_BRACKETS_PARENS
@@ -381,5 +389,6 @@ func (c *protoEncoder) params(e expr.Params) *exprpb.Params {
 			IfSpan:    c.span(p.If),
 		})
 	}
+
 	return pb
 }

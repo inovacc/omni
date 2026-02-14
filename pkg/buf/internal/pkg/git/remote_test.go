@@ -24,48 +24,56 @@ func TestGetSourceControlURL(t *testing.T) {
 	t.Parallel()
 	t.Run("ssh, bitbucket", func(t *testing.T) {
 		t.Parallel()
+
 		hostname, repositoryPath := parseRawRemoteURL("ssh://user@bitbucket.org:1234/user/repo.git")
 		require.Equal(t, "bitbucket.org", hostname)
 		require.Equal(t, "/user/repo", repositoryPath)
 	})
 	t.Run("ssh, github", func(t *testing.T) {
 		t.Parallel()
+
 		hostname, repositoryPath := parseRawRemoteURL("ssh://git@github.com/user/repo.git")
 		require.Equal(t, "github.com", hostname)
 		require.Equal(t, "/user/repo", repositoryPath)
 	})
 	t.Run("scp-like ssh, github", func(t *testing.T) {
 		t.Parallel()
+
 		hostname, repositoryPath := parseRawRemoteURL("git@github.com:user/repo.git")
 		require.Equal(t, "github.com", hostname)
 		require.Equal(t, "/user/repo", repositoryPath)
 	})
 	t.Run("ssh, gitlab", func(t *testing.T) {
 		t.Parallel()
+
 		hostname, repositoryPath := parseRawRemoteURL("ssh://user@gitlab.mycompany.com:1234/user/repo.git")
 		require.Equal(t, "gitlab.mycompany.com", hostname)
 		require.Equal(t, "/user/repo", repositoryPath)
 	})
 	t.Run("scp-like ssh, gitlab", func(t *testing.T) {
 		t.Parallel()
+
 		hostname, repositoryPath := parseRawRemoteURL("git@gitlab.com:user/repo.git")
 		require.Equal(t, "gitlab.com", hostname)
 		require.Equal(t, "/user/repo", repositoryPath)
 	})
 	t.Run("https, bitbucket", func(t *testing.T) {
 		t.Parallel()
+
 		hostname, repositoryPath := parseRawRemoteURL("https://bitbucket.mycompany.com/user/repo.git")
 		require.Equal(t, "bitbucket.mycompany.com", hostname)
 		require.Equal(t, "/user/repo", repositoryPath)
 	})
 	t.Run("https, github", func(t *testing.T) {
 		t.Parallel()
+
 		hostname, repositoryPath := parseRawRemoteURL("https://github.mycompany.com:4321/user/repo.git")
 		require.Equal(t, "github.mycompany.com", hostname)
 		require.Equal(t, "/user/repo", repositoryPath)
 	})
 	t.Run("https, gitlab", func(t *testing.T) {
 		t.Parallel()
+
 		hostname, repositoryPath := parseRawRemoteURL("https://gitlab.com/user/repo.git")
 		require.Equal(t, "gitlab.com", hostname)
 		require.Equal(t, "/user/repo", repositoryPath)

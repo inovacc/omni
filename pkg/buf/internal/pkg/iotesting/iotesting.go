@@ -35,5 +35,6 @@ type writer struct {
 func (t *writer) Write(in []byte) (int, error) {
 	t.tb.Helper()
 	t.tb.Log(strings.TrimSpace(string(in)))
+
 	return len(in), nil
 }

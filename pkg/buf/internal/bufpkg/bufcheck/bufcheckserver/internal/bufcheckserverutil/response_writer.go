@@ -71,11 +71,13 @@ func (w *responseWriter) AddProtosourceAnnotationf(
 			check.WithFileName(inputFileName),
 		)
 	}
+
 	if againstLocation != nil {
 		addAnnotationOptions = append(
 			addAnnotationOptions,
 			check.WithAgainstFileNameAndSourcePath(againstLocation.FilePath(), againstLocation.SourcePath()),
 		)
 	}
-	w.ResponseWriter.AddAnnotation(addAnnotationOptions...)
+
+	w.AddAnnotation(addAnnotationOptions...)
 }

@@ -1,19 +1,19 @@
 package snowflake
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"time"
 
+	"github.com/inovacc/omni/internal/cli/output"
 	"github.com/inovacc/omni/pkg/idgen"
 )
 
 // Options configures the snowflake command behavior
 type Options struct {
-	Count    int   // -n: generate N Snowflake IDs
-	WorkerID int64 // -w: worker ID (0-1023)
-	JSON     bool  // --json: output as JSON
+	Count        int           // -n: generate N Snowflake IDs
+	WorkerID     int64         // -w: worker ID (0-1023)
+	OutputFormat output.Format // output format (text, json, table)
 }
 
 // Result represents snowflake output for JSON
@@ -36,6 +36,7 @@ func RunSnowflake(w io.Writer, opts Options) error {
 	}
 
 	gen := idgen.NewSnowflakeGenerator(opts.WorkerID)
+	f := output.New(w, opts.OutputFormat)
 
 	var snowflakes []int64
 
@@ -45,15 +46,15 @@ func RunSnowflake(w io.Writer, opts Options) error {
 			return fmt.Errorf("snowflake: %w", err)
 		}
 
-		if opts.JSON {
+		if f.IsJSON() {
 			snowflakes = append(snowflakes, id)
 		} else {
 			_, _ = fmt.Fprintln(w, id)
 		}
 	}
 
-	if opts.JSON {
-		return json.NewEncoder(w).Encode(Result{Snowflakes: snowflakes, Count: len(snowflakes)})
+	if f.IsJSON() {
+		return f.Print(Result{Snowflakes: snowflakes, Count: len(snowflakes)})
 	}
 
 	return nil

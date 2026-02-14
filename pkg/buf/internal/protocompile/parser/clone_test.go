@@ -34,6 +34,7 @@ func TestClone(t *testing.T) {
 
 	data, err := os.ReadFile("../internal/testdata/desc_test_complex.proto")
 	require.NoError(t, err)
+
 	handler := reporter.NewHandler(nil)
 	fileNode, err := Parse("desc_test_complex.proto", bytes.NewReader(data), handler)
 	require.NoError(t, err)
@@ -73,6 +74,7 @@ func checkClone(t *testing.T, orig, clone Result, isProtoClone bool) {
 	t.Helper()
 	require.NotSame(t, orig, clone)
 	require.NotSame(t, orig.FileDescriptorProto(), clone.FileDescriptorProto())
+
 	if !proto.Equal(orig.FileDescriptorProto(), clone.FileDescriptorProto()) {
 		diff := cmp.Diff(orig.FileDescriptorProto(), clone.FileDescriptorProto(), protocmp.Transform())
 		require.Empty(t, diff)
@@ -82,8 +84,8 @@ func checkClone(t *testing.T, orig, clone Result, isProtoClone bool) {
 	// AST is expected to be equal since it is never mutated by compilation
 	require.Same(t, orig.AST(), clone.AST())
 
-	origRes := orig.(*result)   //nolint:errcheck
-	cloneRes := clone.(*result) //nolint:errcheck
+	origRes := orig.(*result)
+	cloneRes := clone.(*result)
 
 	if origRes.file == nil {
 		require.Empty(t, cloneRes.nodes)
@@ -99,13 +101,17 @@ func checkClone(t *testing.T, orig, clone Result, isProtoClone bool) {
 
 	// clone index may be bigger due to extension range options (see below for more info)
 	assert.GreaterOrEqual(t, len(cloneRes.nodes), len(origRes.nodes))
+
 	cloneRevIndex := map[ast.Node][]proto.Message{}
 	for msg, node := range cloneRes.nodes {
 		cloneRevIndex[node] = append(cloneRevIndex[node], msg)
 	}
+
 	cloneSyntheticMapFields, cloneSyntheticOneofs := 0, 0
+
 	for node, cloneMsgs := range cloneRevIndex {
 		origMsgs := origRevIndex[node]
+
 		if isProtoClone {
 			// For option nodes and field reference nodes, the original may have 1
 			// message but the clone may have >1. This is because when we build a
@@ -115,12 +121,14 @@ func checkClone(t *testing.T, orig, clone Result, isProtoClone bool) {
 			// site. So if 4 extension ranges share the same options, we'd see just
 			// 1 message in the original and 4 messages in the clone.
 			allowMismatch := false
+
 			switch node.(type) {
 			case *ast.OptionNode:
 				allowMismatch = true
 			case *ast.FieldReferenceNode:
 				allowMismatch = true
 			}
+
 			if allowMismatch && len(origMsgs) == 1 && len(cloneMsgs) > 1 {
 				continue
 			}
@@ -130,6 +138,7 @@ func checkClone(t *testing.T, orig, clone Result, isProtoClone bool) {
 			// and oneof nodes. So we may have nodes in the clone that have no entries
 			// in original.
 			allowMismatch := false
+
 			switch node.(type) {
 			case *ast.SyntheticMapField:
 				cloneSyntheticMapFields++
@@ -138,21 +147,27 @@ func checkClone(t *testing.T, orig, clone Result, isProtoClone bool) {
 				cloneSyntheticOneofs++
 				allowMismatch = true
 			}
+
 			if allowMismatch && len(origMsgs) == 0 {
 				continue
 			}
 		}
+
 		assert.Equal(t, len(origMsgs), len(cloneMsgs), "mismatch for number of messages associated with %T (expect %+v, got %+v)", node, origMsgs, cloneMsgs)
 	}
+
 	origSyntheticMapFields, origSyntheticOneofs := 0, 0
+
 	for node, origMsgs := range origRevIndex {
 		cloneMsgs := cloneRevIndex[node]
+
 		if !isProtoClone {
 			// If we didn't use proto.Clone but instead rebuilt the file descriptor,
 			// then we would have synthesized different values for synthetic map field
 			// and oneof nodes. So we may have nodes in the original that have no
 			// entries in clone.
 			allowMismatch := false
+
 			switch node.(type) {
 			case *ast.SyntheticMapField:
 				origSyntheticMapFields++
@@ -161,6 +176,7 @@ func checkClone(t *testing.T, orig, clone Result, isProtoClone bool) {
 				origSyntheticOneofs++
 				allowMismatch = true
 			}
+
 			if allowMismatch && len(cloneMsgs) == 0 {
 				continue
 			}
@@ -188,6 +204,7 @@ type otherResultImpl struct {
 
 type customCloneResultImpl struct {
 	Result
+
 	clone       Result
 	cloneCalled int
 }
@@ -197,5 +214,6 @@ func (c *customCloneResultImpl) Clone() Result {
 	if c.clone == nil {
 		c.clone = otherResultImpl{c.Result}
 	}
+
 	return c.clone
 }

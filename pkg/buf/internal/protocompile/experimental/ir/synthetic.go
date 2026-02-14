@@ -90,5 +90,6 @@ func (sn *syntheticNames) generateIn(candidate string, table *intern.Table) stri
 	for !intern.Set(*sn).Add(table, candidate) {
 		candidate = "X" + candidate
 	}
+
 	return candidate
 }

@@ -74,6 +74,7 @@ func (p *pluginDataProvider) GetPluginDatasForPluginKeys(
 	if err != nil {
 		return nil, err
 	}
+
 	if err := p.store.PutPluginDatas(ctx, delegateValues); err != nil {
 		return nil, err
 	}
@@ -90,14 +91,17 @@ func (p *pluginDataProvider) GetPluginDatasForPluginKeys(
 	if err != nil {
 		return nil, err
 	}
+
 	indexedValues, err := xslices.MapError(
 		append(foundValues, delegateValues...),
 		func(value bufplugin2.PluginData) (xslices.Indexed[bufplugin2.PluginData], error) {
 			commitID := value.PluginKey().CommitID()
+
 			indexedKey, ok := commitIDToIndexedKey[commitID]
 			if !ok {
 				return xslices.Indexed[bufplugin2.PluginData]{}, syserror.Newf("did not get value from store with commitID %q", uuidutil.ToDashless(commitID))
 			}
+
 			return xslices.Indexed[bufplugin2.PluginData]{
 				Value: value,
 				Index: indexedKey.Index,
@@ -107,5 +111,6 @@ func (p *pluginDataProvider) GetPluginDatasForPluginKeys(
 	if err != nil {
 		return nil, err
 	}
+
 	return xslices.IndexedToSortedValues(indexedValues), nil
 }

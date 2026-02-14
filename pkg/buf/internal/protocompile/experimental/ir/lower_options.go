@@ -41,6 +41,7 @@ func resolveEarlyOptions(file *File) {
 			if def.IsZero() || def.Classify() != ast.DefKindOption {
 				continue
 			}
+
 			option := def.AsOption().Option
 
 			// If this option's path has more than one component, skip.
@@ -51,6 +52,7 @@ func resolveEarlyOptions(file *File) {
 
 			// Resolve the name of this option.
 			var name intern.ID
+
 			if ident := first.AsIdent(); !ident.IsZero() {
 				switch ident.Text() {
 				case "message_set_wire_format":
@@ -92,6 +94,7 @@ func resolveOptions(file *File, r *report.Report) {
 			if def.IsZero() || def.Classify() != ast.DefKindOption {
 				return ast.Option{}, false
 			}
+
 			return def.AsOption().Option, true
 		})
 	}
@@ -111,6 +114,7 @@ func resolveOptions(file *File, r *report.Report) {
 
 	// Reusable space for duplicating options values between extension ranges.
 	extnOpts := make(map[ast.DeclRange]id.ID[Value])
+
 	for ty := range seq.Values(file.AllTypes()) {
 		if !ty.MapField().IsZero() {
 			// Map entries already come with options pre-calculated.
@@ -122,6 +126,7 @@ func resolveOptions(file *File, r *report.Report) {
 			if ty.IsEnum() {
 				options = builtins.EnumOptions
 			}
+
 			optionRef{
 				File:   file,
 				Report: r,
@@ -140,6 +145,7 @@ func resolveOptions(file *File, r *report.Report) {
 				if ty.IsEnum() {
 					options = builtins.EnumValueOptions
 				}
+
 				optionRef{
 					File:   file,
 					Report: r,
@@ -153,6 +159,7 @@ func resolveOptions(file *File, r *report.Report) {
 				}.resolve()
 			}
 		}
+
 		for oneof := range seq.Values(ty.Oneofs()) {
 			for def := range bodyOptions(oneof.AST().Body().Decls()) {
 				optionRef{
@@ -169,6 +176,7 @@ func resolveOptions(file *File, r *report.Report) {
 		}
 
 		clear(extnOpts)
+
 		for extns := range seq.Values(ty.ExtensionRanges()) {
 			decl := extns.DeclAST()
 			if p := extnOpts[decl]; !p.IsZero() {
@@ -192,6 +200,7 @@ func resolveOptions(file *File, r *report.Report) {
 			extnOpts[decl] = extns.Raw().options
 		}
 	}
+
 	for field := range seq.Values(file.AllExtensions()) {
 		for def := range seq.Values(field.AST().Options().Entries()) {
 			optionRef{
@@ -207,6 +216,7 @@ func resolveOptions(file *File, r *report.Report) {
 			}.resolve()
 		}
 	}
+
 	for service := range seq.Values(file.Services()) {
 		for def := range bodyOptions(service.AST().Body().Decls()) {
 			optionRef{
@@ -244,6 +254,7 @@ func populateOptionTargets(file *File, _ *report.Report) {
 	populate := func(m Member) {
 		for target := range seq.Values(m.Options().Field(targets).Elements()) {
 			n, _ := target.AsInt()
+
 			target := OptionTarget(n)
 			if target == OptionTargetInvalid || target >= optionTargetMax {
 				continue
@@ -276,10 +287,13 @@ func validateOptionTargets(f *File, r *report.Report) {
 		if ty.IsEnum() {
 			tyTarget, memberTarget = OptionTargetEnum, OptionTargetEnumValue
 		}
+
 		validateOptionTargetsInValue(ty.Options(), ty.AST().Name().Span(), tyTarget, r)
+
 		for member := range seq.Values(ty.Members()) {
 			validateOptionTargetsInValue(member.Options(), member.AST().Name().Span(), memberTarget, r)
 		}
+
 		for oneof := range seq.Values(ty.Oneofs()) {
 			validateOptionTargetsInValue(oneof.Options(), oneof.AST().Name().Span(), OptionTargetOneof, r)
 		}
@@ -302,8 +316,11 @@ func validateOptionTargetsInValue(m MessageValue, decl source.Span, target Optio
 	for value := range m.Fields() {
 		field := value.Field()
 		if !field.CanTarget(target) {
-			var nouns taxa.Set
-			var targets int
+			var (
+				nouns   taxa.Set
+				targets int
+			)
+
 			for target := range field.Targets() {
 				switch target {
 				case OptionTargetFile:
@@ -325,6 +342,7 @@ func validateOptionTargetsInValue(m MessageValue, decl source.Span, target Optio
 				case OptionTargetMethod:
 					nouns = nouns.With(taxa.Method)
 				}
+
 				targets++
 			}
 
@@ -333,6 +351,7 @@ func validateOptionTargetsInValue(m MessageValue, decl source.Span, target Optio
 			constraints := field.Options().Field(m.Context().builtins().OptionTargets)
 
 			key := value.KeyAST()
+
 			span := key.Span()
 			if path := key.AsPath(); !path.IsZero() {
 				// Pull out the last component.
@@ -391,8 +410,12 @@ func (r optionRef) resolve() {
 
 	current := id.Wrap(r.File, *r.raw)
 	field := current.Field()
-	var path ast.Path
-	var raw slot
+
+	var (
+		path ast.Path
+		raw  slot
+	)
+
 	for pc := range r.def.Path.Components {
 		// If this is the first iteration, use the *Options value as the current
 		// message.
@@ -404,12 +427,14 @@ func (r optionRef) resolve() {
 		// Calculate the corresponding member for this path component, which may
 		// be either a simple path or an extension name.
 		prev := field
+
 		pseudo := pc.IsFirst() &&
 			r.field.InternedFullName() == ids.FieldOptions &&
 			pc.AsIdent().Keyword().IsPseudoOption()
 		if pseudo {
 			// Check if this is a pseudo-option.
 			m := current.AsMessage()
+
 			switch pc.AsIdent().Keyword() {
 			case keyword.Default:
 				field = r.target
@@ -479,6 +504,7 @@ func (r optionRef) resolve() {
 				if !pc.IsFirst() {
 					d.Apply(report.Snippetf(prev.AST().Type(), "`%s` specified here", message.FullName()))
 				}
+
 				return
 			}
 		}
@@ -528,6 +554,7 @@ func (r optionRef) resolve() {
 		if !pseudo {
 			raw = parent.slot(field)
 		}
+
 		if !raw.IsZero() {
 			value := raw.Value()
 			switch {
@@ -542,6 +569,7 @@ func (r optionRef) resolve() {
 					second: path,
 					root:   pc.IsFirst(),
 				})
+
 				return
 
 			case prev.Element().IsMessage():
@@ -549,6 +577,7 @@ func (r optionRef) resolve() {
 					current = value
 					continue
 				}
+
 				fallthrough
 
 			default:
@@ -558,6 +587,7 @@ func (r optionRef) resolve() {
 					second: path,
 					root:   pc.IsFirst(),
 				})
+
 				return
 			}
 		}
@@ -581,6 +611,7 @@ func (r optionRef) resolve() {
 				gotName:  message.FullName(),
 				spec:     field.TypeAST(),
 			})
+
 			return
 		}
 
@@ -594,6 +625,7 @@ func (r optionRef) resolve() {
 				gotName:  message.FullName(),
 				spec:     field.TypeAST().RemovePrefixes(),
 			})
+
 			return
 		}
 
@@ -635,10 +667,13 @@ type errSetMultipleTimes struct {
 }
 
 func (e errSetMultipleTimes) Diagnose(d *report.Diagnostic) {
-	var what any
-	var name FullName
-	var note string
-	var def source.Spanner
+	var (
+		what any
+		name FullName
+		note string
+		def  source.Spanner
+	)
+
 	switch member := e.member.(type) {
 	case Member:
 		if !member.IsExtension() && e.root {
@@ -650,6 +685,7 @@ func (e errSetMultipleTimes) Diagnose(d *report.Diagnostic) {
 			name = member.FullName()
 			what = member.noun()
 		}
+
 		note = "a non-`repeated` option may be set at most once"
 		def = member.AST().Name()
 	case Oneof:

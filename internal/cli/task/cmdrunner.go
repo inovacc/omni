@@ -145,6 +145,7 @@ func (r *ShellCommandRunner) Run(ctx context.Context, w io.Writer, args []string
 
 	// Capture output
 	var stdout, stderr bytes.Buffer
+
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
 

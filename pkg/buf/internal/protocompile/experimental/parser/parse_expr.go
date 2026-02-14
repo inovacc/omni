@@ -46,6 +46,7 @@ func parseExprInfix(p *parser, c *token.Cursor, where taxa.Place, lhs ast.ExprAn
 	}
 
 	next := peekTokenExpr(p, c)
+
 	switch prec {
 	case 0:
 		if where.Subject() == taxa.Array || where.Subject() == taxa.Dict {
@@ -59,6 +60,7 @@ func parseExprInfix(p *parser, c *token.Cursor, where taxa.Place, lhs ast.ExprAn
 					}),
 					report.Notef("a %s use `=`, not `:`, for setting fields", taxa.Dict),
 				)
+
 				fallthrough
 			case keyword.Colon:
 				return p.NewExprField(ast.ExprFieldArgs{
@@ -139,6 +141,7 @@ func parseExprPrefix(p *parser, c *token.Cursor, where taxa.Place) ast.ExprAny {
 	case next.Keyword() == keyword.Sub:
 		c.Next()
 		inner := parseExprPrefix(p, c, taxa.Noun(keyword.Sub).After())
+
 		return p.NewExprPrefixed(ast.ExprPrefixedArgs{
 			Prefix: next,
 			Expr:   inner,
@@ -167,6 +170,7 @@ func parseExprSolo(p *parser, c *token.Cursor, where taxa.Place) ast.ExprAny {
 
 	case slicesx.Among(next.Keyword(), keyword.Braces, keyword.Lt, keyword.Brackets):
 		body := c.Next()
+
 		in := taxa.Dict
 		if body.Keyword() == keyword.Brackets {
 			in = taxa.Array
@@ -176,6 +180,7 @@ func parseExprSolo(p *parser, c *token.Cursor, where taxa.Place) ast.ExprAny {
 		// lexer, we need to perform rather complicated parsing here to handle
 		// <a: b> syntax messages. (ugh)
 		angles := body.Keyword() == keyword.Lt
+
 		children := c
 		if !angles {
 			children = body.Children()
@@ -209,10 +214,12 @@ func parseExprSolo(p *parser, c *token.Cursor, where taxa.Place) ast.ExprAny {
 
 			array := p.NewExprArray(body)
 			elems.appendTo(array.Elements())
+
 			return array.AsAny()
 		}
 
 		dict := p.NewExprDict(body)
+
 		for expr, comma := range elems.iter {
 			field := expr.AsField()
 			if field.IsZero() {
@@ -254,6 +261,7 @@ func peekTokenExpr(p *parser, c *token.Cursor) token.Token {
 	next := c.Peek()
 	if next.IsZero() {
 		token, span := c.SeekToEnd()
+
 		err := errtoken.Unexpected{
 			What:  span,
 			Where: taxa.Expr.In(),
@@ -266,5 +274,6 @@ func peekTokenExpr(p *parser, c *token.Cursor) token.Token {
 
 		p.Error(err)
 	}
+
 	return next
 }

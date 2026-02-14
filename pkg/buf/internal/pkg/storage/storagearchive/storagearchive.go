@@ -47,9 +47,11 @@ func Tar(
 	writer io.Writer,
 ) (retErr error) {
 	tarWriter := tar.NewWriter(writer)
+
 	defer func() {
 		retErr = errors.Join(retErr, tarWriter.Close())
 	}()
+
 	return storage2.WalkReadObjects(
 		ctx,
 		readBucket,
@@ -59,6 +61,7 @@ func Tar(
 			if err != nil {
 				return err
 			}
+
 			if err := tarWriter.WriteHeader(
 				&tar.Header{
 					Typeflag: tar.TypeReg,
@@ -70,7 +73,9 @@ func Tar(
 			); err != nil {
 				return err
 			}
+
 			_, err = tarWriter.Write(data)
+
 			return err
 		},
 	)
@@ -93,35 +98,45 @@ func Untar(
 	for _, option := range options {
 		option(untarOptions)
 	}
+
 	tarReader := tar.NewReader(reader)
 	walkChecker := storageutil.NewWalkChecker()
+
 	for tarHeader, err := tarReader.Next(); err != io.EOF; tarHeader, err = tarReader.Next() {
 		if err != nil {
 			return err
 		}
+
 		if err := walkChecker.Check(ctx); err != nil {
 			return err
 		}
+
 		if tarHeader.Size < 0 {
 			return fmt.Errorf("invalid size for tar file %s: %d", tarHeader.Name, tarHeader.Size)
 		}
+
 		if isAppleExtendedAttributesFile(tarHeader.FileInfo()) {
 			continue
 		}
+
 		path, ok, err := unmapArchivePath(tarHeader.Name, untarOptions.filePathMatcher, untarOptions.stripComponentCount)
 		if err != nil {
 			return err
 		}
+
 		if !ok || !tarHeader.FileInfo().Mode().IsRegular() {
 			continue
 		}
+
 		if untarOptions.maxFileSize != 0 && tarHeader.Size > untarOptions.maxFileSize {
 			return fmt.Errorf("%w %s:%d", ErrFileSizeLimit, tarHeader.Name, tarHeader.Size)
 		}
+
 		if err := storage2.CopyReader(ctx, writeBucket, tarReader, path); err != nil {
 			return err
 		}
 	}
+
 	return nil
 }
 
@@ -164,9 +179,11 @@ func Zip(
 	compressed bool,
 ) (retErr error) {
 	zipWriter := zip.NewWriter(writer)
+
 	defer func() {
 		retErr = errors.Join(retErr, zipWriter.Close())
 	}()
+
 	return storage2.WalkReadObjects(
 		ctx,
 		readBucket,
@@ -176,15 +193,19 @@ func Zip(
 			if compressed {
 				method = zip.Deflate
 			}
+
 			header := &zip.FileHeader{
 				Name:   readObject.Path(),
 				Method: method,
 			}
+
 			writer, err := zipWriter.CreateHeader(header)
 			if err != nil {
 				return err
 			}
+
 			_, err = io.Copy(writer, readObject)
+
 			return err
 		},
 	)
@@ -208,38 +229,47 @@ func Unzip(
 	for _, option := range options {
 		option(unzipOptions)
 	}
+
 	if size < 0 {
 		return fmt.Errorf("unknown size to unzip: %d", int(size))
 	}
+
 	if size == 0 {
 		return nil
 	}
+
 	zipReader, err := zip.NewReader(readerAt, size)
 	if err != nil {
 		return err
 	}
+
 	walkChecker := storageutil.NewWalkChecker()
 	// reads can be done concurrently in the future
 	for _, zipFile := range zipReader.File {
 		if err := walkChecker.Check(ctx); err != nil {
 			return err
 		}
+
 		path, ok, err := unmapArchivePath(zipFile.Name, unzipOptions.filePathMatcher, unzipOptions.stripComponentCount)
 		if err != nil {
 			return err
 		}
+
 		if !ok {
 			continue
 		}
+
 		if isAppleExtendedAttributesFile(zipFile.FileInfo()) {
 			continue
 		}
+
 		if zipFile.FileInfo().Mode().IsRegular() {
 			if err := copyZipFile(ctx, writeBucket, zipFile, path); err != nil {
 				return err
 			}
 		}
 	}
+
 	return nil
 }
 
@@ -287,9 +317,11 @@ func copyZipFile(
 	if err != nil {
 		return err
 	}
+
 	defer func() {
 		retErr = errors.Join(retErr, readCloser.Close())
 	}()
+
 	return storage2.CopyReader(ctx, writeBucket, readCloser, path)
 }
 
@@ -301,20 +333,25 @@ func unmapArchivePath(
 	if archivePath == "" {
 		return "", false, errors.New("empty archive file name")
 	}
+
 	fullPath, err := normalpath2.NormalizeAndValidate(archivePath)
 	if err != nil {
 		return "", false, err
 	}
+
 	if fullPath == "." {
 		return "", false, nil
 	}
+
 	fullPath, ok := normalpath2.StripComponents(fullPath, stripComponentCount)
 	if !ok {
 		return "", false, nil
 	}
+
 	if filePathMatcher != nil && !filePathMatcher(fullPath) {
 		return "", false, nil
 	}
+
 	return fullPath, true, nil
 }
 

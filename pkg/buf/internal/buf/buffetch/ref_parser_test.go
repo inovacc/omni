@@ -1444,6 +1444,7 @@ func testGetParsedRef(
 		}
 	} else {
 		assert.NoError(t, err)
+
 		if err == nil {
 			assert.Equal(t, expectedParsedRef, parsedRef)
 		}
@@ -1469,6 +1470,7 @@ func testGetParsedDirOrProtoFileRef(
 		}
 	} else {
 		assert.NoError(t, err)
+
 		if err == nil {
 			assert.Equal(t, expectedParsedRef, parsedRef)
 		}
@@ -1484,5 +1486,6 @@ func testNewModuleRef(
 ) bufparse.Ref {
 	moduleRef, err := bufparse.NewRef(registry, owner, name, ref)
 	require.NoError(t, err)
+
 	return moduleRef
 }

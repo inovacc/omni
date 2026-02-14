@@ -44,6 +44,7 @@ func (s StringToken) Text() string {
 	if s.Raw() != nil && s.Raw().Text != "" {
 		return s.Raw().Text
 	}
+
 	return s.RawContent().Text()
 }
 
@@ -77,7 +78,7 @@ func (s StringToken) IsConcatenated() bool {
 // IsPure returns whether the string required post-processing (escaping or
 // concatenation) after lexing.
 func (s StringToken) IsPure() bool {
-	return s.Raw() == nil || !(s.Raw().Escapes != nil || s.Raw().Concatenated)
+	return s.Raw() == nil || (s.Raw().Escapes == nil && !s.Raw().Concatenated)
 }
 
 // Prefix returns an arbitrary prefix attached to this string (the prefix will
@@ -89,6 +90,7 @@ func (s StringToken) Prefix() source.Span {
 
 	span := s.Token().LeafSpan()
 	span.End = span.Start + int(s.Raw().Prefix)
+
 	return span
 }
 
@@ -115,6 +117,7 @@ func (s StringToken) Quotes() (open, close source.Span) {
 		// metadata.
 		open.End = open.Start + 1
 		close.Start = close.End - 1
+
 		return open, close
 	}
 
@@ -143,5 +146,6 @@ func (s StringToken) RawContent() source.Span {
 	open, close := s.Quotes() //nolint:revive,predeclared
 	open.Start = open.End
 	open.End = close.Start
+
 	return open
 }

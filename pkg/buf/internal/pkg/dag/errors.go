@@ -30,5 +30,6 @@ func (c *CycleError[Key]) Error() string {
 	for i, key := range c.Keys {
 		strs[i] = fmt.Sprintf("%v", key)
 	}
+
 	return fmt.Sprintf("cycle error: %s", strings.Join(strs, " -> "))
 }

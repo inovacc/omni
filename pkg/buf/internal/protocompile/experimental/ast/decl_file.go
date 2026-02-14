@@ -59,6 +59,7 @@ func (d DeclSyntax) AsAny() DeclAny {
 	if d.IsZero() {
 		return DeclAny{}
 	}
+
 	return id.WrapDyn(d.Context(), id.NewDyn(DeclKindSyntax, id.ID[DeclAny](d.ID())))
 }
 
@@ -186,6 +187,7 @@ func (d DeclPackage) AsAny() DeclAny {
 	if d.IsZero() {
 		return DeclAny{}
 	}
+
 	return id.WrapDyn(d.Context(), id.NewDyn(DeclKindPackage, id.ID[DeclAny](d.ID())))
 }
 
@@ -285,6 +287,7 @@ func (d DeclImport) AsAny() DeclAny {
 	if d.IsZero() {
 		return DeclAny{}
 	}
+
 	return id.WrapDyn(d.Context(), id.NewDyn(DeclKindImport, id.ID[DeclAny](d.ID())))
 }
 

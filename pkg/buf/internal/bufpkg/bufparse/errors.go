@@ -54,21 +54,26 @@ func (p *ParseError) Error() string {
 	if p == nil {
 		return ""
 	}
+
 	var builder strings.Builder
+
 	_, _ = builder.WriteString(`could not parse`)
 	if p.typeString != "" {
 		_, _ = builder.WriteString(` `)
 		_, _ = builder.WriteString(p.typeString)
 	}
+
 	if p.input != "" {
 		_, _ = builder.WriteString(` "`)
 		_, _ = builder.WriteString(p.input)
 		_, _ = builder.WriteString(`"`)
 	}
+
 	if p.err != nil {
 		_, _ = builder.WriteString(`: `)
 		_, _ = builder.WriteString(p.err.Error())
 	}
+
 	return builder.String()
 }
 
@@ -77,6 +82,7 @@ func (p *ParseError) Unwrap() error {
 	if p == nil {
 		return nil
 	}
+
 	return p.err
 }
 
@@ -85,5 +91,6 @@ func (p *ParseError) Input() string {
 	if p == nil {
 		return ""
 	}
+
 	return p.input
 }

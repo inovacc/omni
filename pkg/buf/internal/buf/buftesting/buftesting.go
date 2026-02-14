@@ -65,6 +65,7 @@ func GetGoogleapisDirPath(t *testing.T, buftestingDirPath string) string {
 			testGoogleapisCommit,
 		),
 	)
+
 	return googleapisDirPath
 }
 
@@ -75,6 +76,7 @@ func GetGoogleapisDirPath(t *testing.T, buftestingDirPath string) string {
 func GetProtocFilePaths(t *testing.T, dirPath string, limit int) []string {
 	realFilePaths, err := GetProtocFilePathsErr(context.Background(), dirPath, limit)
 	require.NoError(t, err)
+
 	return realFilePaths
 }
 
@@ -92,6 +94,7 @@ func GetProtocFilePathsErr(ctx context.Context, dirPath string, limit int) ([]st
 	if err != nil {
 		return nil, err
 	}
+
 	targetFileInfos, err := bufmodule2.GetTargetFileInfos(
 		ctx,
 		bufmodule2.ModuleSetToModuleReadBucketWithOnlyProtoFiles(
@@ -101,12 +104,15 @@ func GetProtocFilePathsErr(ctx context.Context, dirPath string, limit int) ([]st
 	if err != nil {
 		return nil, err
 	}
+
 	realFilePaths := make([]string, len(targetFileInfos))
 	for i, fileInfo := range targetFileInfos {
 		realFilePaths[i] = normalpath.Unnormalize(normalpath.Join(dirPath, fileInfo.Path()))
 	}
+
 	if limit > 0 && len(realFilePaths) > limit {
 		realFilePaths = realFilePaths[:limit]
 	}
+
 	return realFilePaths, nil
 }

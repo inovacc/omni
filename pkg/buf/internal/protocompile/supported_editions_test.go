@@ -26,6 +26,7 @@ func TestIsEditionSupported(t *testing.T) {
 	t.Parallel()
 
 	var minEdition, maxEdition descriptorpb.Edition
+
 	minEdition = math.MaxInt32
 
 	for editionNum := range descriptorpb.Edition_name {
@@ -34,6 +35,7 @@ func TestIsEditionSupported(t *testing.T) {
 			if edition < minEdition {
 				minEdition = edition
 			}
+
 			if edition > maxEdition {
 				maxEdition = edition
 			}

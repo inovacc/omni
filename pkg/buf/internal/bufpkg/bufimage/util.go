@@ -43,14 +43,17 @@ func imageWithOnlyPaths(image Image, fileOrDirPaths []string, excludeFileOrDirPa
 	if err := normalpath2.ValidatePathsNormalizedValidatedUnique(fileOrDirPaths); err != nil {
 		return nil, err
 	}
+
 	if err := normalpath2.ValidatePathsNormalizedValidatedUnique(excludeFileOrDirPaths); err != nil {
 		return nil, err
 	}
+
 	excludeFileOrDirPathMap := xslices.ToStructMap(excludeFileOrDirPaths)
 	// These are the files that fileOrDirPaths actually reference and will
 	// result in the non-imports in our resulting Image. The Image will also include
 	// the ImageFiles that the nonImportImageFiles import
 	nonImportPaths := make(map[string]struct{})
+
 	var nonImportImageFiles []ImageFile
 	// We have only exclude paths, and therefore all other paths are target paths.
 	if len(fileOrDirPaths) == 0 && len(excludeFileOrDirPaths) > 0 {
@@ -69,6 +72,7 @@ func imageWithOnlyPaths(image Image, fileOrDirPaths []string, excludeFileOrDirPa
 				return nil, err
 			}
 		}
+
 		return getImageWithImports(image, nonImportPaths, nonImportImageFiles)
 	}
 	// We do a check here to ensure that no paths are duplicated as a target and an exclude.
@@ -86,11 +90,13 @@ func imageWithOnlyPaths(image Image, fileOrDirPaths []string, excludeFileOrDirPa
 	// is not an ImageFile, the path ending in .proto could be a directory
 	// that itself contains ImageFiles, i.e. a/b.proto/c.proto is valid if not dumb
 	var potentialDirPaths []string
+
 	for _, fileOrDirPath := range fileOrDirPaths {
 		// this is not allowed, this is the equivalent of a root
 		if fileOrDirPath == "." {
 			return nil, errors.New(`"." is not a valid path value`)
 		}
+
 		if normalpath2.Ext(fileOrDirPath) != ".proto" {
 			// not a .proto file, therefore must be a directory
 			potentialDirPaths = append(potentialDirPaths, fileOrDirPath)
@@ -103,6 +109,7 @@ func imageWithOnlyPaths(image Image, fileOrDirPaths []string, excludeFileOrDirPa
 				// add to the nonImportImageFiles if does not already exist
 				if _, ok := nonImportPaths[fileOrDirPath]; !ok {
 					nonImportPaths[fileOrDirPath] = struct{}{}
+
 					nonImportImageFiles = append(nonImportImageFiles, imageFile)
 				}
 			} else {
@@ -112,6 +119,7 @@ func imageWithOnlyPaths(image Image, fileOrDirPaths []string, excludeFileOrDirPa
 			}
 		}
 	}
+
 	if len(potentialDirPaths) == 0 {
 		// We had no potential directory paths as we were able to get
 		// an ImageFile for all fileOrDirPaths, so we can return an Image now.
@@ -128,6 +136,7 @@ func imageWithOnlyPaths(image Image, fileOrDirPaths []string, excludeFileOrDirPa
 				return nil, err
 			}
 		}
+
 		return getImageWithImports(image, nonImportPaths, nonImportImageFiles)
 	}
 	// we have potential directory paths, do the expensive operation
@@ -143,8 +152,10 @@ func imageWithOnlyPaths(image Image, fileOrDirPaths []string, excludeFileOrDirPa
 	matchingPotentialDirPathMap := make(map[string]struct{})
 	// the same thing is done for exclude paths
 	matchingPotentialExcludePathMap := make(map[string]struct{})
+
 	for _, imageFile := range image.Files() {
 		imageFilePath := imageFile.Path()
+
 		fileMatchingExcludePathMap := normalpath2.MapAllEqualOrContainingPathMap(
 			excludeFileOrDirPathMap,
 			imageFilePath,
@@ -164,6 +175,7 @@ func imageWithOnlyPaths(image Image, fileOrDirPaths []string, excludeFileOrDirPa
 		if shouldExcludeFile(fileMatchingPathMap, fileMatchingExcludePathMap) {
 			continue
 		}
+
 		if len(fileMatchingPathMap) > 0 {
 			// we had a match, this means that some path in potentialDirPaths matched
 			// the imageFilePath, add all the paths in potentialDirPathMap that
@@ -174,6 +186,7 @@ func imageWithOnlyPaths(image Image, fileOrDirPaths []string, excludeFileOrDirPa
 			// then, add the file to non-imports if it is not added
 			if _, ok := nonImportPaths[imageFilePath]; !ok {
 				nonImportPaths[imageFilePath] = struct{}{}
+
 				nonImportImageFiles = append(nonImportImageFiles, imageFile)
 			}
 		}
@@ -188,6 +201,7 @@ func imageWithOnlyPaths(image Image, fileOrDirPaths []string, excludeFileOrDirPa
 				return nil, fmt.Errorf("path %q has no matching file in the image", potentialDirPath)
 			}
 		}
+
 		for excludeFileOrDirPath := range excludeFileOrDirPathMap {
 			if _, ok := matchingPotentialExcludePathMap[excludeFileOrDirPath]; !ok {
 				// no match, this is an error given that allowNotExist is false
@@ -225,6 +239,7 @@ func getImageWithImports(
 	nonImportImageFiles []ImageFile,
 ) (Image, error) {
 	var imageFiles []ImageFile
+
 	seenPaths := make(map[string]struct{})
 	for _, nonImportImageFile := range nonImportImageFiles {
 		imageFiles = addFileWithImports(
@@ -235,6 +250,7 @@ func getImageWithImports(
 			nonImportImageFile,
 		)
 	}
+
 	return NewImage(imageFiles)
 }
 
@@ -251,6 +267,7 @@ func addFileWithImports(
 	if _, ok := seenPaths[path]; ok {
 		return accumulator
 	}
+
 	seenPaths[path] = struct{}{}
 
 	// then, add imports first, for proper ordering
@@ -273,23 +290,27 @@ func addFileWithImports(
 		accumulator,
 		ImageFileWithIsImport(imageFile, !isNotImport),
 	)
+
 	return accumulator
 }
 
 func checkExcludePathsExistInImage(image Image, excludeFileOrDirPaths []string) error {
 	for _, excludeFileOrDirPath := range excludeFileOrDirPaths {
 		var foundPath bool
+
 		for _, imageFile := range image.Files() {
 			if normalpath2.EqualsOrContainsPath(excludeFileOrDirPath, imageFile.Path(), normalpath2.Relative) {
 				foundPath = true
 				break
 			}
 		}
+
 		if !foundPath {
 			// no match, this is an error given that allowNotExist is false
 			return fmt.Errorf("path %q has no matching file in the image", excludeFileOrDirPath)
 		}
 	}
+
 	return nil
 }
 
@@ -298,6 +319,7 @@ func imageFilesToFileDescriptorProtos(imageFiles []ImageFile) []*descriptorpb.Fi
 	for i, imageFile := range imageFiles {
 		fileDescriptorProtos[i] = imageFile.FileDescriptorProto()
 	}
+
 	return fileDescriptorProtos
 }
 
@@ -306,6 +328,7 @@ func imageFileToProtoImageFile(imageFile ImageFile) (*imagev1.ImageFile, error) 
 	if imageFile.CommitID() != uuid.Nil {
 		protoCommitID = uuidutil.ToDashless(imageFile.CommitID())
 	}
+
 	return fileDescriptorProtoToProtoImageFile(
 		imageFile.FileDescriptorProto(),
 		imageFile.IsImport(),
@@ -338,9 +361,11 @@ func fileDescriptorProtoToProtoImageFile(
 			protoModuleInfo.SetCommit(moduleProtoCommitID)
 		}
 	}
+
 	if len(unusedDependencyIndexes) == 0 {
 		unusedDependencyIndexes = nil
 	}
+
 	resultFile := imagev1.ImageFile_builder{
 		Name:             fileDescriptorProto.Name,
 		Package:          fileDescriptorProto.Package,
@@ -365,6 +390,7 @@ func fileDescriptorProtoToProtoImageFile(
 		}.Build(),
 	}.Build()
 	resultFile.ProtoReflect().SetUnknown(stripBufExtensionField(fileDescriptorProto.ProtoReflect().GetUnknown()))
+
 	return resultFile
 }
 
@@ -374,6 +400,7 @@ func stripBufExtensionField(unknownFields protoreflect.RawFields) protoreflect.R
 	// trying to strip). So result will be left nil and initialized lazily if-and-only-if
 	// we actually need to strip data from unknownFields.
 	var result protoreflect.RawFields
+
 	bytesRemaining := unknownFields
 	for len(bytesRemaining) > 0 {
 		num, wireType, n := protowire.ConsumeTag(bytesRemaining)
@@ -381,10 +408,12 @@ func stripBufExtensionField(unknownFields protoreflect.RawFields) protoreflect.R
 			// shouldn't be possible unless explicitly set to invalid bytes via reflection
 			return unknownFields
 		}
+
 		var skip bool
 		if num == bufExtensionFieldNumber {
 			// We need to strip this field.
 			skip = true
+
 			if result == nil {
 				// Lazily initialize result to the preface that we've already examined.
 				result = append(
@@ -396,20 +425,26 @@ func stripBufExtensionField(unknownFields protoreflect.RawFields) protoreflect.R
 			// accumulate data in result as we go
 			result = append(result, bytesRemaining[:n]...)
 		}
+
 		bytesRemaining = bytesRemaining[n:]
+
 		n = protowire.ConsumeFieldValue(num, wireType, bytesRemaining)
 		if n < 0 {
 			return unknownFields
 		}
+
 		if !skip && result != nil {
 			result = append(result, bytesRemaining[:n]...)
 		}
+
 		bytesRemaining = bytesRemaining[n:]
 	}
+
 	if result == nil {
 		// we did not have to remove anything
 		return unknownFields
 	}
+
 	return result
 }
 
@@ -423,6 +458,7 @@ func imageToCodeGeneratorRequest(
 	nonImportPaths map[string]struct{},
 ) (*pluginpb.CodeGeneratorRequest, error) {
 	imageFiles := image.Files()
+
 	request := &pluginpb.CodeGeneratorRequest{
 		ProtoFile:       make([]*descriptorpb.FileDescriptorProto, len(imageFiles)),
 		CompilerVersion: compilerVersion,
@@ -430,6 +466,7 @@ func imageToCodeGeneratorRequest(
 	if parameter != "" {
 		request.Parameter = proto.String(parameter)
 	}
+
 	for i, imageFile := range imageFiles {
 		fileDescriptorProto := imageFile.FileDescriptorProto()
 		// ProtoFile should include only runtime-retained options for files to generate.
@@ -445,13 +482,16 @@ func imageToCodeGeneratorRequest(
 			request.SourceFileDescriptors = append(request.SourceFileDescriptors, fileDescriptorProto)
 			// And the corresponding descriptor in ProtoFile will have source-retention options stripped.
 			var err error
+
 			fileDescriptorProto, err = protopluginutil.StripSourceRetentionOptions(fileDescriptorProto)
 			if err != nil {
 				return nil, fmt.Errorf("failed to strip source-retention options for file %q when constructing a CodeGeneratorRequest: %w", imageFile.Path(), err)
 			}
 		}
+
 		request.ProtoFile[i] = fileDescriptorProto
 	}
+
 	return request, nil
 }
 
@@ -471,21 +511,25 @@ func isFileToGenerate(
 		// this is a non-import in this image, we always want to generate
 		return true
 	}
+
 	if !includeImports {
 		// we don't want to include imports
 		return false
 	}
+
 	if !includeWellKnownTypes && datawkt.Exists(path) {
 		// we don't want to generate wkt even if includeImports is set unless
 		// includeWellKnownTypes is set
 		return false
 	}
+
 	if alreadyUsedPaths != nil {
 		if _, ok := alreadyUsedPaths[path]; ok {
 			// this was already added for generate to another image
 			return false
 		}
 	}
+
 	if nonImportPaths != nil {
 		if _, ok := nonImportPaths[path]; ok {
 			// this is a non-import in another image so it will be generated
@@ -498,5 +542,6 @@ func isFileToGenerate(
 		// set as already used
 		alreadyUsedPaths[path] = struct{}{}
 	}
+
 	return true
 }

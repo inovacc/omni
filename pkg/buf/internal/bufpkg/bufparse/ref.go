@@ -49,6 +49,7 @@ func NewRef(
 	if err != nil {
 		return nil, err
 	}
+
 	return newRef(fullName, ref)
 }
 
@@ -79,6 +80,7 @@ func newRef(
 	if fullName == nil {
 		return nil, errors.New("nil FullName when constructing Ref")
 	}
+
 	return &ref{
 		fullName:  fullName,
 		reference: reference,
@@ -97,6 +99,7 @@ func (m *ref) String() string {
 	if m.reference == "" {
 		return m.fullName.String()
 	}
+
 	return m.fullName.String() + ":" + m.reference
 }
 

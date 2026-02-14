@@ -39,6 +39,7 @@ func NewConfig(httpClient connect.HTTPClient, options ...ConfigOption) *Config {
 	for _, opt := range options {
 		opt(cfg)
 	}
+
 	return cfg
 }
 
@@ -77,8 +78,10 @@ func Make[T any](cfg *Config, address string, factory StubFactory[T]) T {
 		interceptor := cfg.authInterceptorProvider(address)
 		interceptors = append(interceptors, interceptor)
 	}
+
 	if cfg.addressMapper != nil {
 		address = cfg.addressMapper(address)
 	}
+
 	return factory(cfg.httpClient, address, connect.WithInterceptors(interceptors...))
 }

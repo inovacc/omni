@@ -52,6 +52,7 @@ func (s Service) AST() ast.DeclDef {
 	if s.IsZero() {
 		return ast.DeclDef{}
 	}
+
 	return id.Wrap(s.Context().AST(), s.Raw().def)
 }
 
@@ -66,6 +67,7 @@ func (s Service) FullName() FullName {
 	if s.IsZero() {
 		return ""
 	}
+
 	return FullName(s.Context().session.intern.Value(s.Raw().fqn))
 }
 
@@ -74,6 +76,7 @@ func (s Service) InternedName() intern.ID {
 	if s.IsZero() {
 		return 0
 	}
+
 	return s.Raw().name
 }
 
@@ -82,6 +85,7 @@ func (s Service) InternedFullName() intern.ID {
 	if s.IsZero() {
 		return 0
 	}
+
 	return s.Raw().fqn
 }
 
@@ -90,6 +94,7 @@ func (s Service) Options() MessageValue {
 	if s.IsZero() {
 		return MessageValue{}
 	}
+
 	return id.Wrap(s.Context(), s.Raw().options).AsMessage()
 }
 
@@ -98,6 +103,7 @@ func (s Service) FeatureSet() FeatureSet {
 	if s.IsZero() {
 		return FeatureSet{}
 	}
+
 	return id.Wrap(s.Context(), s.Raw().features)
 }
 
@@ -107,11 +113,14 @@ func (s Service) Deprecated() Value {
 	if s.IsZero() {
 		return Value{}
 	}
+
 	builtins := s.Context().builtins()
+
 	d := s.Options().Field(builtins.ServiceDeprecated)
 	if b, _ := d.AsBool(); b {
 		return d
 	}
+
 	return Value{}
 }
 
@@ -135,6 +144,7 @@ func (m Method) AST() ast.DeclDef {
 	if m.IsZero() {
 		return ast.DeclDef{}
 	}
+
 	return id.Wrap(m.Context().AST(), m.Raw().def)
 }
 
@@ -149,6 +159,7 @@ func (m Method) FullName() FullName {
 	if m.IsZero() {
 		return ""
 	}
+
 	return FullName(m.Context().session.intern.Value(m.Raw().fqn))
 }
 
@@ -157,6 +168,7 @@ func (m Method) InternedName() intern.ID {
 	if m.IsZero() {
 		return 0
 	}
+
 	return m.Raw().name
 }
 
@@ -165,6 +177,7 @@ func (m Method) InternedFullName() intern.ID {
 	if m.IsZero() {
 		return 0
 	}
+
 	return m.Raw().fqn
 }
 
@@ -173,6 +186,7 @@ func (m Method) Options() MessageValue {
 	if m.IsZero() {
 		return MessageValue{}
 	}
+
 	return id.Wrap(m.Context(), m.Raw().options).AsMessage()
 }
 
@@ -181,6 +195,7 @@ func (m Method) FeatureSet() FeatureSet {
 	if m.IsZero() {
 		return FeatureSet{}
 	}
+
 	return id.Wrap(m.Context(), m.Raw().features)
 }
 
@@ -190,11 +205,14 @@ func (m Method) Deprecated() Value {
 	if m.IsZero() {
 		return Value{}
 	}
+
 	builtins := m.Context().builtins()
+
 	d := m.Options().Field(builtins.MethodDeprecated)
 	if b, _ := d.AsBool(); b {
 		return d
 	}
+
 	return Value{}
 }
 
@@ -203,6 +221,7 @@ func (m Method) Service() Service {
 	if m.IsZero() {
 		return Service{}
 	}
+
 	return id.Wrap(m.Context(), m.Raw().service)
 }
 

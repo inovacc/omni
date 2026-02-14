@@ -100,6 +100,7 @@ func fieldDescriptorTypePrettyString(descriptor protoreflect.FieldDescriptor) st
 		// Kind will be set to "group", but it's really a "delimited-encoded message"
 		return "message (delimited encoding)"
 	}
+
 	return descriptor.Kind().String()
 }
 
@@ -112,6 +113,7 @@ func getDescriptorAndLocationForDeletedElement(
 		if err != nil {
 			return nil, nil, err
 		}
+
 		split := strings.Split(previousNestedName, ".")
 		for i := len(split) - 1; i > 0; i-- {
 			if message, ok := nestedNameToMessage[strings.Join(split[0:i], ".")]; ok {
@@ -119,6 +121,7 @@ func getDescriptorAndLocationForDeletedElement(
 			}
 		}
 	}
+
 	return file, nil, nil
 }
 
@@ -135,6 +138,7 @@ func getDescriptorAndLocationForDeletedMessage(
 			}
 		}
 	}
+
 	return file, nil
 }
 
@@ -143,7 +147,9 @@ func getSortedEnumValueNames(nameToEnumValue map[string]bufprotosource.EnumValue
 	for name := range nameToEnumValue {
 		names = append(names, name)
 	}
+
 	sort.Strings(names)
+
 	return names
 }
 
@@ -152,10 +158,12 @@ func getEnumByFullName(files []bufprotosource.File, enumFullName string) (bufpro
 	if err != nil {
 		return nil, err
 	}
+
 	enum, ok := fullNameToEnum[enumFullName]
 	if !ok {
 		return nil, fmt.Errorf("expected enum %q to exist but was not found", enumFullName)
 	}
+
 	return enum, nil
 }
 
@@ -165,19 +173,23 @@ func withBackupLocation(locs ...bufprotosource.Location) bufprotosource.Location
 			return loc
 		}
 	}
+
 	return nil
 }
 
 func findFeatureField(name protoreflect.Name, expectedKind protoreflect.Kind) (protoreflect.FieldDescriptor, error) {
 	featureSetDescriptor := (*descriptorpb.FeatureSet)(nil).ProtoReflect().Descriptor()
+
 	featureField := featureSetDescriptor.Fields().ByName(name)
 	if featureField == nil {
 		return nil, fmt.Errorf("unable to resolve field descriptor for %s.%s", featureSetDescriptor.FullName(), name)
 	}
+
 	if featureField.Kind() != expectedKind || featureField.IsList() {
 		return nil, fmt.Errorf("resolved field descriptor for %s.%s has unexpected type: expected optional %s, got %s %s",
 			featureSetDescriptor.FullName(), name, expectedKind, featureField.Cardinality(), featureField.Kind())
 	}
+
 	return featureField, nil
 }
 
@@ -205,10 +217,12 @@ func fieldCppStringType(field bufprotosource.Field, descriptor protoreflect.Fiel
 			}
 		}
 	}
+
 	val, err := customfeatures.ResolveCppFeature(descriptor, cppFeatureNameStringType, protoreflect.EnumKind)
 	if err != nil {
 		return 0, false, err
 	}
+
 	return protobuf2.CppFeatures_StringType(val.Enum()), false, nil
 }
 
@@ -217,6 +231,7 @@ func fieldCppStringTypeLocation(field bufprotosource.Field) bufprotosource.Locat
 	if ext.Message() == nil {
 		return nil
 	}
+
 	return getCustomFeatureLocation(field, ext, cppFeatureNameStringType)
 }
 
@@ -225,10 +240,12 @@ func fieldJavaUTF8Validation(field protoreflect.FieldDescriptor) (descriptorpb.F
 	if err != nil {
 		return 0, err
 	}
+
 	val, err := protoutil.ResolveFeature(field, standardFeatureField)
 	if err != nil {
 		return 0, fmt.Errorf("unable to resolve value of %s feature: %w", standardFeatureField.Name(), err)
 	}
+
 	defaultValue := descriptorpb.FeatureSet_Utf8Validation(val.Enum())
 
 	opts, _ := field.ParentFile().Options().(*descriptorpb.FileOptions)
@@ -236,6 +253,7 @@ func fieldJavaUTF8Validation(field protoreflect.FieldDescriptor) (descriptorpb.F
 		if opts.GetJavaStringCheckUtf8() {
 			return descriptorpb.FeatureSet_VERIFY, nil
 		}
+
 		return defaultValue, nil
 	}
 
@@ -243,9 +261,11 @@ func fieldJavaUTF8Validation(field protoreflect.FieldDescriptor) (descriptorpb.F
 	if err != nil {
 		return 0, err
 	}
+
 	if protobuf2.JavaFeatures_Utf8Validation(val.Enum()) == protobuf2.JavaFeatures_VERIFY {
 		return descriptorpb.FeatureSet_VERIFY, nil
 	}
+
 	return defaultValue, nil
 }
 
@@ -254,6 +274,7 @@ func fieldJavaUTF8ValidationLocation(field bufprotosource.Field) bufprotosource.
 	if ext.Message() == nil {
 		return nil
 	}
+
 	return getCustomFeatureLocation(field, ext, javaFeatureNameUTF8Validation)
 }
 
@@ -261,15 +282,18 @@ func getCustomFeatureLocation(field bufprotosource.Field, extension protoreflect
 	if extension.Message() == nil {
 		return nil
 	}
+
 	feature := extension.Message().Fields().ByName(fieldName)
 	if feature == nil {
 		return nil
 	}
+
 	featureField := (*descriptorpb.FieldOptions)(nil).ProtoReflect().Descriptor().Fields().ByName(featuresFieldName)
 	if featureField == nil {
 		// should not be possible
 		return nil
 	}
+
 	return field.OptionLocation(featureField, int32(extension.Number()), int32(feature.Number()))
 }
 
@@ -281,6 +305,7 @@ func fieldDescription(field bufprotosource.Field) string {
 	} else {
 		name = field.Name()
 	}
+
 	return fieldDescriptionWithName(field, name)
 }
 
@@ -290,6 +315,7 @@ func fieldDescriptionWithName(field bufprotosource.Field, name string) string {
 	}
 	// otherwise prints as hex
 	numberString := strconv.FormatInt(int64(field.Number()), 10)
+
 	var kind, message string
 	if field.Extendee() != "" {
 		kind = "Extension"
@@ -298,6 +324,7 @@ func fieldDescriptionWithName(field bufprotosource.Field, name string) string {
 		kind = "Field"
 		message = field.ParentMessage().Name()
 	}
+
 	return fmt.Sprintf("%s %q%s on message %q", kind, numberString, name, message)
 }
 

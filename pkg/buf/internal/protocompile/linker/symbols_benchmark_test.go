@@ -24,7 +24,8 @@ func BenchmarkSymbols(b *testing.B) {
 	s := &Symbols{}
 	_, err := s.importPackages(nil, "foo.bar.baz.fizz.buzz.frob.nitz", nil)
 	require.NoError(b, err)
-	for range b.N {
+
+	for b.Loop() {
 		pkg := s.getPackage("foo.bar.baz.fizz.buzz.frob.nitz", true)
 		require.NotNil(b, pkg)
 	}

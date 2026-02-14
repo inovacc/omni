@@ -162,9 +162,11 @@ func newWorkspaceBucketConfig(options []WorkspaceBucketOption) (*workspaceBucket
 	for _, option := range options {
 		option.applyToWorkspaceBucketConfig(config)
 	}
+
 	if config.protoFileTargetPath != "" {
 		config.protoFileTargetPath = normalpath2.Normalize(config.protoFileTargetPath)
 	}
+
 	return config, nil
 }
 
@@ -179,7 +181,9 @@ func newWorkspaceModuleKeyConfig(options []WorkspaceModuleKeyOption) (*workspace
 	for _, option := range options {
 		option.applyToWorkspaceModuleKeyConfig(config)
 	}
+
 	var err error
+
 	config.targetPaths, err = xslices.MapError(
 		config.targetPaths,
 		normalpath2.NormalizeAndValidate,
@@ -187,6 +191,7 @@ func newWorkspaceModuleKeyConfig(options []WorkspaceModuleKeyOption) (*workspace
 	if err != nil {
 		return nil, err
 	}
+
 	config.targetExcludePaths, err = xslices.MapError(
 		config.targetExcludePaths,
 		normalpath2.NormalizeAndValidate,
@@ -194,5 +199,6 @@ func newWorkspaceModuleKeyConfig(options []WorkspaceModuleKeyOption) (*workspace
 	if err != nil {
 		return nil, err
 	}
+
 	return config, nil
 }

@@ -76,6 +76,7 @@ type Diagnose interface {
 func (r *Report) Error(err Diagnose) *Diagnostic {
 	d := r.push(1, Error)
 	err.Diagnose(d)
+
 	return d
 }
 
@@ -89,6 +90,7 @@ func (r *Report) SoftError(hard bool, err Diagnose) *Diagnostic {
 
 	d := r.push(1, level)
 	err.Diagnose(d)
+
 	return d
 }
 
@@ -96,6 +98,7 @@ func (r *Report) SoftError(hard bool, err Diagnose) *Diagnostic {
 func (r *Report) Warn(err Diagnose) *Diagnostic {
 	d := r.push(1, Warning)
 	err.Diagnose(d)
+
 	return d
 }
 
@@ -103,6 +106,7 @@ func (r *Report) Warn(err Diagnose) *Diagnostic {
 func (r *Report) Remark(err Diagnose) *Diagnostic {
 	d := r.push(1, Remark)
 	err.Diagnose(d)
+
 	return d
 }
 
@@ -110,6 +114,7 @@ func (r *Report) Remark(err Diagnose) *Diagnostic {
 func (r *Report) Level(level Level, err Diagnose) *Diagnostic {
 	d := r.push(1, level)
 	err.Diagnose(d)
+
 	return d
 }
 
@@ -132,6 +137,7 @@ func (r *Report) SoftErrorf(hard bool, format string, args ...any) *Diagnostic {
 	if hard {
 		level = Error
 	}
+
 	return r.push(1, level).Apply(Message(format, args...))
 }
 
@@ -157,7 +163,9 @@ func (r *Report) Levelf(level Level, format string, args ...any) *Diagnostic {
 // r.Options to the value it had before it was called.
 func (r *Report) SaveOptions(body func()) {
 	prev := r.Options
+
 	body()
+
 	r.Options = prev
 }
 
@@ -211,6 +219,7 @@ func (r *Report) CatchICE(resume bool, diagnose func(*Diagnostic)) {
 
 type icePanic struct {
 	error
+
 	options []DiagnosticOption
 }
 
@@ -280,7 +289,9 @@ func (r *Report) Canonicalize() {
 		span source.Span
 		tag  string
 	}
+
 	var cur key
+
 	slices.Backward(r.Diagnostics)(func(i int, d Diagnostic) bool {
 		if d.tag == "" {
 			return true
@@ -311,6 +322,7 @@ func (r *Report) ToProto() proto.Message {
 	proto := new(compilerpb.Report)
 
 	fileToIndex := map[string]uint32{}
+
 	for _, d := range r.Diagnostics {
 		dProto := &compilerpb.Diagnostic{
 			Message: d.message,
@@ -325,7 +337,7 @@ func (r *Report) ToProto() proto.Message {
 		for _, snip := range d.snippets {
 			file, ok := fileToIndex[snip.Path()]
 			if !ok {
-				file = uint32(len(proto.Files))
+				file = uint32(len(proto.GetFiles()))
 				fileToIndex[snip.Path()] = file
 
 				proto.Files = append(proto.Files, &compilerpb.Report_File{
@@ -370,16 +382,17 @@ func (r *Report) AppendFromProto(deserialize func(proto.Message) error) error {
 		return err
 	}
 
-	files := make([]*source.File, len(proto.Files))
-	for i, fProto := range proto.Files {
-		files[i] = source.NewFile(fProto.Path, string(fProto.Text))
+	files := make([]*source.File, len(proto.GetFiles()))
+	for i, fProto := range proto.GetFiles() {
+		files[i] = source.NewFile(fProto.GetPath(), string(fProto.GetText()))
 	}
 
-	for i, dProto := range proto.Diagnostics {
-		if dProto.Message == "" {
+	for i, dProto := range proto.GetDiagnostics() {
+		if dProto.GetMessage() == "" {
 			return fmt.Errorf("protocompile/report: missing message for diagnostic[%d]", i)
 		}
-		level := Level(dProto.Level)
+
+		level := Level(dProto.GetLevel())
 		switch level {
 		case Error, Warning, Remark:
 		default:
@@ -387,54 +400,55 @@ func (r *Report) AppendFromProto(deserialize func(proto.Message) error) error {
 		}
 
 		d := Diagnostic{
-			tag:     dProto.Tag,
-			message: dProto.Message,
+			tag:     dProto.GetTag(),
+			message: dProto.GetMessage(),
 			level:   level,
-			inFile:  dProto.InFile,
-			notes:   dProto.Notes,
-			help:    dProto.Help,
-			debug:   dProto.Debug,
+			inFile:  dProto.GetInFile(),
+			notes:   dProto.GetNotes(),
+			help:    dProto.GetHelp(),
+			debug:   dProto.GetDebug(),
 		}
 
 		var havePrimary bool
-		for j, snip := range dProto.Annotations {
-			if int(snip.File) >= len(proto.Files) {
+
+		for j, snip := range dProto.GetAnnotations() {
+			if int(snip.GetFile()) >= len(proto.GetFiles()) {
 				return fmt.Errorf(
 					"protocompile/report: invalid file index for diagnostic[%d].annotation[%d]: %d",
-					i, j, snip.File,
+					i, j, snip.GetFile(),
 				)
 			}
 
-			file := files[snip.File]
-			if int(snip.Start) >= len(file.Text()) ||
-				int(snip.End) > len(file.Text()) ||
-				snip.Start > snip.End {
+			file := files[snip.GetFile()]
+			if int(snip.GetStart()) >= len(file.Text()) ||
+				int(snip.GetEnd()) > len(file.Text()) ||
+				snip.GetStart() > snip.GetEnd() {
 				return fmt.Errorf(
 					"protocompile/report: out-of-bounds span for diagnostic[%d].annotation[%d]: [%d:%d]",
-					i, j, snip.Start, snip.End,
+					i, j, snip.GetStart(), snip.GetEnd(),
 				)
 			}
 
 			snippet := snippet{
 				Span: source.Span{
 					File:  file,
-					Start: int(snip.Start),
-					End:   int(snip.End),
+					Start: int(snip.GetStart()),
+					End:   int(snip.GetEnd()),
 				},
-				message:   snip.Message,
-				primary:   snip.Primary,
-				pageBreak: snip.PageBreak,
+				message:   snip.GetMessage(),
+				primary:   snip.GetPrimary(),
+				pageBreak: snip.GetPageBreak(),
 			}
-			for _, edit := range snip.Edits {
+			for _, edit := range snip.GetEdits() {
 				snippet.edits = append(snippet.edits, Edit{
-					Start:   int(edit.Start),
-					End:     int(edit.End),
-					Replace: edit.Replace,
+					Start:   int(edit.GetStart()),
+					End:     int(edit.GetEnd()),
+					Replace: edit.GetReplace(),
 				})
 			}
 
 			d.snippets = append(d.snippets, snippet)
-			havePrimary = havePrimary || snip.Primary
+			havePrimary = havePrimary || snip.GetPrimary()
 		}
 
 		if !havePrimary && len(d.snippets) > 0 {
@@ -456,7 +470,6 @@ func (r *Report) push(skip int, level Level) *Diagnostic {
 	// that callers of this function within this package can specify
 	// can specify how deeply-nested they are, even if they all have
 	// the same level of nesting right now.
-
 	if level >= Warning && r.SuppressWarnings {
 		return &Diagnostic{}
 	}
@@ -478,14 +491,17 @@ func (r *Report) push(skip int, level Level) *Diagnostic {
 			zero runtime.Frame
 			buf  strings.Builder
 		)
+
 		frames := runtime.CallersFrames(pc)
 		for range r.Tracing {
 			frame, more := frames.Next()
 			if frame == zero || !more {
 				break
 			}
+
 			fmt.Fprintf(&buf, "at %s\n  %s:%d\n", frame.Function, frame.File, frame.Line)
 		}
+
 		d.Apply(Debugf("%s", buf.String()))
 	}
 

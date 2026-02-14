@@ -94,6 +94,7 @@ func (f *file) Manager() *fileManager {
 // Reset clears all bookkeeping information on this file and resets it.
 func (f *file) Reset(ctx context.Context) {
 	f.lsp.logger.DebugContext(ctx, "resetting file", slog.String("uri", f.uri.Filename()))
+
 	if f.workspace != nil {
 		f.workspace.Release()
 		f.workspace = nil
@@ -133,7 +134,9 @@ func (f *file) ReadFromWorkspace(ctx context.Context) (err error) {
 	}
 
 	fileName := f.uri.Filename()
+
 	var reader io.ReadCloser
+
 	switch info := f.objectInfo.(type) {
 	case bufmodule.FileInfo:
 		reader, err = info.Module().GetFile(ctx, info.Path())
@@ -142,20 +145,24 @@ func (f *file) ReadFromWorkspace(ctx context.Context) (err error) {
 	default:
 		return fmt.Errorf("unsupported objectInfo type %T", f.objectInfo)
 	}
+
 	if err != nil {
 		return fmt.Errorf("read file %q from workspace", err)
 	}
+
 	defer reader.Close()
 
 	var builder strings.Builder
 	if _, err := io.Copy(&builder, reader); err != nil {
 		return fmt.Errorf("could not read file %q from workspace", err)
 	}
+
 	text := builder.String()
 
 	f.version = -1
 	f.file = source.NewFile(fileName, text)
 	f.hasText = true
+
 	return nil
 }
 
@@ -187,6 +194,7 @@ func (f *file) RefreshWorkspace(ctx context.Context) {
 		slog.String("file", f.uri.Filename()),
 		slog.Int("version", int(f.version)),
 	)
+
 	if f.workspace != nil {
 		if err := f.workspace.Refresh(ctx); err != nil {
 			f.lsp.logger.Error(
@@ -203,8 +211,10 @@ func (f *file) RefreshWorkspace(ctx context.Context) {
 				slog.String("uri", string(f.uri)),
 				xslog.ErrorAttr(err),
 			)
+
 			return
 		}
+
 		f.workspace = workspace
 	}
 }
@@ -234,6 +244,7 @@ func (f *file) RefreshIR(ctx context.Context) {
 	// Opener creates a cached view of all files in the workspace.
 	pathToFiles := f.workspace.PathToFile()
 	files := make([]*file, 0, len(pathToFiles))
+
 	var evictQueryKeys []any
 
 	openerMap := f.lsp.opener.Get()
@@ -248,6 +259,7 @@ func (f *file) RefreshIR(ctx context.Context) {
 				evictQueryKeys = append(evictQueryKeys, file.queryFileKeys()...)
 			}
 		}
+
 		files = append(files, file)
 	}
 	// Remove paths that are no longer in the current workspace and evict stale query keys.
@@ -256,6 +268,7 @@ func (f *file) RefreshIR(ctx context.Context) {
 			delete(openerMap, path)
 		}
 	}
+
 	f.lsp.queryExecutor.Evict(evictQueryKeys...)
 
 	queries := xslices.Map(files, func(file *file) incremental.Query[*ir.File] {
@@ -274,8 +287,10 @@ func (f *file) RefreshIR(ctx context.Context) {
 			slog.Int("version", int(f.version)),
 			xslog.ErrorAttr(err),
 		)
+
 		return
 	}
+
 	for i, file := range files {
 		file.ir = results[i].Value
 		if f != file {
@@ -290,6 +305,7 @@ func (f *file) RefreshIR(ctx context.Context) {
 	fileDiagnostics := xslices.Filter(diagnosticReport.Diagnostics, func(d report.Diagnostic) bool {
 		return d.Primary().Path() == f.objectInfo.Path()
 	})
+
 	diagnostics, err := xslices.MapError(
 		fileDiagnostics,
 		reportDiagnosticToProtocolDiagnostic,
@@ -300,6 +316,7 @@ func (f *file) RefreshIR(ctx context.Context) {
 			xslog.ErrorAttr(err),
 		)
 	}
+
 	f.diagnostics = diagnostics
 	f.lsp.logger.DebugContext(
 		ctx, "ir diagnostic(s)",
@@ -313,6 +330,7 @@ func (f *file) queryIR() incremental.Query[*ir.File] {
 	if f.objectInfo == nil {
 		return nil
 	}
+
 	return queries.IR{
 		Opener:  f.lsp.opener,
 		Path:    f.objectInfo.Path(),
@@ -328,6 +346,7 @@ func (f *file) queryFileKeys() []any {
 	if f.objectInfo == nil {
 		return nil
 	}
+
 	return []any{
 		queries.File{
 			Opener:      f.lsp.opener,
@@ -375,6 +394,7 @@ func (f *file) IndexSymbols(ctx context.Context) {
 		if !ok {
 			continue
 		}
+
 		f.referenceableSymbols[sym.ir.FullName()] = sym
 	}
 
@@ -385,11 +405,13 @@ func (f *file) IndexSymbols(ctx context.Context) {
 		switch kind := sym.kind.(type) {
 		case *reference:
 			def := f.resolveASTDefinition(kind.def, kind.fullName)
+
 			sym.def = def
 			if def == nil {
 				// In the case where the symbol is not resolved, we continue
 				continue
 			}
+
 			referenceable, ok := def.kind.(*referenceable)
 			if !ok {
 				// This shouldn't happen, logging a warning
@@ -398,11 +420,14 @@ func (f *file) IndexSymbols(ctx context.Context) {
 					slog.String("file", f.uri.Filename()),
 					slog.Any("symbol", def),
 				)
+
 				continue
 			}
+
 			referenceable.references = append(referenceable.references, sym)
 		case *option:
 			def := f.resolveASTDefinition(kind.def, kind.defFullName)
+
 			sym.def = def
 			if def != nil {
 				referenceable, ok := def.kind.(*referenceable)
@@ -417,6 +442,7 @@ func (f *file) IndexSymbols(ctx context.Context) {
 					referenceable.references = append(referenceable.references, sym)
 				}
 			}
+
 			typeDef := f.resolveASTDefinition(kind.typeDef, kind.typeDefFullName)
 			sym.typeDef = typeDef
 		default:
@@ -434,18 +460,22 @@ func (f *file) IndexSymbols(ctx context.Context) {
 		if f == file {
 			continue // ignore self
 		}
+
 		for _, sym := range file.referenceSymbols {
 			var fullName ir.FullName
+
 			switch kind := sym.kind.(type) {
 			case *reference:
 				if kind.def.Span().Path() != f.objectInfo.LocalPath() {
 					continue
 				}
+
 				fullName = kind.fullName
 			case *option:
 				if kind.def.Span().Path() != f.objectInfo.LocalPath() {
 					continue
 				}
+
 				fullName = kind.defFullName
 			default:
 				// This shouldn't happen, logging a warning
@@ -454,8 +484,10 @@ func (f *file) IndexSymbols(ctx context.Context) {
 					slog.String("file", f.uri.Filename()),
 					slog.Any("symbol", sym),
 				)
+
 				continue
 			}
+
 			def, ok := f.referenceableSymbols[fullName]
 			if !ok {
 				// This shouldn't happen, if a symbol is pointing at this file, all definitions
@@ -465,8 +497,10 @@ func (f *file) IndexSymbols(ctx context.Context) {
 					slog.String("file", f.uri.Filename()),
 					slog.Any("reference", sym),
 				)
+
 				continue
 			}
+
 			referenceable, ok := def.kind.(*referenceable)
 			if !ok {
 				// This shouldn't happen, logging a warning
@@ -475,8 +509,10 @@ func (f *file) IndexSymbols(ctx context.Context) {
 					slog.String("file", f.uri.Filename()),
 					slog.Any("symbol", def),
 				)
+
 				continue
 			}
+
 			referenceable.references = append(referenceable.references, sym)
 		}
 	}
@@ -487,6 +523,7 @@ func (f *file) IndexSymbols(ctx context.Context) {
 		if diff == 0 {
 			return s1.span.End - s2.span.End
 		}
+
 		return diff
 	})
 
@@ -501,16 +538,19 @@ func (f *file) IndexSymbols(ctx context.Context) {
 // For unresolved symbols, we need to track the definition we're attempting to resolve.
 func (f *file) indexSymbols() ([]*symbol, []*symbol) {
 	var resolved, unresolved []*symbol
+
 	for i := range f.ir.Symbols().Len() {
 		// We only index the symbols for this file.
 		symbol := f.ir.Symbols().At(i)
 		if symbol.Context().Path() != f.objectInfo.Path() {
 			continue
 		}
+
 		resolvedSyms, unresolvedSyms := f.irToSymbols(symbol)
 		resolved = append(resolved, resolvedSyms...)
 		unresolved = append(unresolved, unresolvedSyms...)
 	}
+
 	return resolved, unresolved
 }
 
@@ -607,6 +647,7 @@ func (f *file) irToSymbols(irSymbol ir.Symbol) ([]*symbol, []*symbol) {
 						file: f,
 						span: keyPath.Span(),
 					}
+
 					kind, needsResolution := getKindForMapType(keyType, irSymbol.AsMember(), true)
 					if kind != nil {
 						keySymbol.kind = kind
@@ -627,6 +668,7 @@ func (f *file) irToSymbols(irSymbol ir.Symbol) ([]*symbol, []*symbol) {
 						file: f,
 						span: valuePath.Span(),
 					}
+
 					kind, needsResolution := getKindForMapType(valueType, irSymbol.AsMember(), false)
 					if kind != nil {
 						valueSymbol.kind = kind
@@ -646,12 +688,14 @@ func (f *file) irToSymbols(irSymbol ir.Symbol) ([]*symbol, []*symbol) {
 			if typeSpan.IsZero() {
 				typeSpan = irSymbol.AsMember().TypeAST().RemovePrefixes().Span()
 			}
+
 			typ := &symbol{
 				ir:   irSymbol,
 				file: f,
 				span: typeSpan,
 			}
 			kind, needsResolution := getKindForMember(irSymbol.AsMember())
+
 			typ.kind = kind
 			if needsResolution {
 				unresolved = append(unresolved, typ)
@@ -686,12 +730,14 @@ func (f *file) irToSymbols(irSymbol ir.Symbol) ([]*symbol, []*symbol) {
 		if typeSpan.IsZero() {
 			typeSpan = irSymbol.AsMember().TypeAST().RemovePrefixes().Span()
 		}
+
 		typ := &symbol{
 			ir:   irSymbol,
 			file: f,
 			span: typeSpan,
 		}
 		kind, needsResolution := getKindForMember(irSymbol.AsMember())
+
 		typ.kind = kind
 		if needsResolution {
 			unresolved = append(unresolved, typ)
@@ -755,6 +801,7 @@ func (f *file) irToSymbols(irSymbol ir.Symbol) ([]*symbol, []*symbol) {
 			if inputSpan.IsZero() {
 				inputSpan = inputAST.RemovePrefixes().Span()
 			}
+
 			inputSym := &symbol{
 				ir:   irSymbol,
 				file: f,
@@ -766,6 +813,7 @@ func (f *file) irToSymbols(irSymbol ir.Symbol) ([]*symbol, []*symbol) {
 			}
 			unresolved = append(unresolved, inputSym)
 		}
+
 		output, _ := irSymbol.AsMethod().Output()
 		// Method output must be a single message type.
 		if astOutputs := irSymbol.AsMethod().AST().AsMethod().Signature.Outputs(); astOutputs.Len() == 1 {
@@ -775,6 +823,7 @@ func (f *file) irToSymbols(irSymbol ir.Symbol) ([]*symbol, []*symbol) {
 			if outputSpan.IsZero() {
 				outputSpan = outputAST.RemovePrefixes().Span()
 			}
+
 			outputSym := &symbol{
 				ir:   irSymbol,
 				file: f,
@@ -786,8 +835,10 @@ func (f *file) irToSymbols(irSymbol ir.Symbol) ([]*symbol, []*symbol) {
 			}
 			unresolved = append(unresolved, outputSym)
 		}
+
 		unresolved = append(unresolved, f.messageToSymbols(irSymbol.AsMethod().Options())...)
 	}
+
 	return resolved, unresolved
 }
 
@@ -802,6 +853,7 @@ func getKindForMember(member ir.Member) (kind, bool) {
 			predeclared: member.TypeAST().RemovePrefixes().AsPath().AsPredeclared(),
 		}, false
 	}
+
 	return &reference{
 		def:      member.Element().AST(),
 		fullName: member.Element().FullName(),
@@ -853,7 +905,7 @@ func (f *file) importToSymbol(imp ir.Import) *symbol {
 		file: f,
 		span: imp.Decl.ImportPath().Span(),
 		kind: &imported{
-			file: f.workspace.PathToFile()[imp.File.Path()],
+			file: f.workspace.PathToFile()[imp.Path()],
 		},
 	}
 }
@@ -866,6 +918,7 @@ func (f *file) messageToSymbols(msg ir.MessageValue) []*symbol {
 // messageToSymbolsHelper is a recursive helper for extracting the symbols from a [ir.MessageValue].
 func (f *file) messageToSymbolsHelper(msg ir.MessageValue, index int, parents []*symbol) []*symbol {
 	var symbols []*symbol
+
 	for field := range msg.Fields() {
 		if field.ValueAST().IsZero() {
 			continue
@@ -910,6 +963,7 @@ func (f *file) messageToSymbolsHelper(msg ir.MessageValue, index int, parents []
 			if len(components) == 0 {
 				continue
 			}
+
 			var span source.Span
 			// This covers the first case in the example above where the path is relative,
 			// e.g. field_a is a relative path within { } for (option).message.
@@ -919,6 +973,7 @@ func (f *file) messageToSymbolsHelper(msg ir.MessageValue, index int, parents []
 				// Otherwise, we get the component for the corresponding index.
 				span = components[index].Span()
 			}
+
 			span = trimLeadingDot(span)
 			sym := &symbol{
 				// NOTE: no [ir.Symbol] for option elements
@@ -931,6 +986,7 @@ func (f *file) messageToSymbolsHelper(msg ir.MessageValue, index int, parents []
 					typeDefFullName: element.Type().FullName(),
 				},
 			}
+
 			symbols = append(symbols, sym)
 			if !element.AsMessage().IsZero() {
 				symbols = append(symbols, f.messageToSymbolsHelper(element.AsMessage(), index+1, symbols)...)
@@ -942,18 +998,22 @@ func (f *file) messageToSymbolsHelper(msg ir.MessageValue, index int, parents []
 			// among the parent symbols.
 			if len(components) > 1 {
 				parentType := element.Value().Container()
+
 				for _, component := range slices.Backward(components) {
 					if component.IsLast() {
 						continue
 					}
+
 					componentSpan := trimLeadingDot(component.Span())
 					found := false
+
 					for _, parent := range parents {
 						if parent.span == componentSpan {
 							found = true
 							break
 						}
 					}
+
 					if !found {
 						sym := &symbol{
 							// NOTE: no [ir.Symbol] for option elements
@@ -968,11 +1028,13 @@ func (f *file) messageToSymbolsHelper(msg ir.MessageValue, index int, parents []
 						}
 						symbols = append(symbols, sym)
 					}
+
 					parentType = parentType.AsValue().Container()
 				}
 			}
 		}
 	}
+
 	return symbols
 }
 
@@ -987,11 +1049,13 @@ func (f *file) resolveASTDefinition(def ast.DeclDef, defName ir.FullName) *symbo
 	if f.workspace == nil {
 		return nil
 	}
+
 	for _, file := range f.workspace.PathToFile() {
 		if file.file.Path() == def.Span().Path() {
 			return file.referenceableSymbols[defName]
 		}
 	}
+
 	return nil
 }
 
@@ -1006,6 +1070,7 @@ func (f *file) SymbolAt(ctx context.Context, cursor protocol.Position) *symbol {
 		if sym.span.Start <= offset {
 			return -1
 		}
+
 		return 1
 	})
 	// Walk backwards from symbol with Start > offset to find the smallest symbol.
@@ -1013,13 +1078,16 @@ func (f *file) SymbolAt(ctx context.Context, cursor protocol.Position) *symbol {
 	// For example: the following spans A[0,10], B[0,15], C[0,20], D[20,30] and a
 	// target offset 12, binary search returns 3 (D), and the minimum node is B.
 	var symbol *symbol
+
 	for _, before := range slices.Backward(f.symbols[:idx]) {
 		// Offset is past the end. Range is half-open [Start, End)
 		if offset > before.span.End {
 			break
 		}
+
 		symbol = before
 	}
+
 	if symbol != nil {
 		f.lsp.logger.DebugContext(
 			ctx,
@@ -1029,6 +1097,7 @@ func (f *file) SymbolAt(ctx context.Context, cursor protocol.Position) *symbol {
 			slog.Any("symbol", symbol),
 		)
 	}
+
 	return symbol
 }
 
@@ -1045,6 +1114,7 @@ func (f *file) RunChecks(ctx context.Context) {
 	if f.IsWKT() || !f.IsOpenInEditor() {
 		return // Must be open and not a WKT.
 	}
+
 	f.CancelChecks(ctx)
 
 	for _, diagnostic := range f.diagnostics {
@@ -1053,17 +1123,20 @@ func (f *file) RunChecks(ctx context.Context) {
 				ctx, "checks skipped on diagnostic severity",
 				slog.String("severity", diagnostic.Severity.String()),
 			)
+
 			return // Skip on not buildable images.
 		}
 	}
 
 	workspace := f.workspace.Workspace()
 	module := f.workspace.GetModule(f.uri)
+
 	checkClient := f.workspace.CheckClient()
 	if workspace == nil || module == nil || checkClient == nil || f.objectInfo == nil {
 		f.lsp.logger.Debug("checks skipped", slog.String("uri", f.uri.Filename()))
 		return
 	}
+
 	path := f.objectInfo.Path()
 
 	opener := make(fileOpener)
@@ -1072,14 +1145,17 @@ func (f *file) RunChecks(ctx context.Context) {
 	}
 
 	const checkTimeout = 30 * time.Second
+
 	ctx, cancel := context.WithTimeout(context.WithoutCancel(ctx), checkTimeout)
 	f.cancelChecks = cancel
 
 	go func() {
 		var annotations []bufanalysis.FileAnnotation
+
 		image, diagnostics := buildImage(ctx, path, f.lsp.logger, opener)
 		if image != nil {
 			f.lsp.logger.DebugContext(ctx, "checks running lint", slog.String("uri", f.uri.Filename()), slog.String("module", module.OpaqueID()))
+
 			if err := checkClient.Lint(
 				ctx,
 				workspace.GetLintConfigForOpaqueID(module.OpaqueID()),
@@ -1096,8 +1172,10 @@ func (f *file) RunChecks(ctx context.Context) {
 					} else {
 						f.lsp.logger.WarnContext(ctx, "checks failed", slog.String("uri", f.uri.Filename()), xslog.ErrorAttr(err))
 					}
+
 					return
 				}
+
 				if len(fileAnnotationSet.FileAnnotations()) == 0 {
 					f.lsp.logger.DebugContext(ctx, "checks lint passed", slog.String("uri", f.uri.Filename()))
 				} else {
@@ -1128,6 +1206,7 @@ func (f *file) RunChecks(ctx context.Context) {
 			// TODO: prefer diagnostics from the old compiler to the new compiler to remove duplicates from both.
 			f.diagnostics = diagnostics
 		}
+
 		f.appendAnnotations("buf lint", annotations)
 		f.PublishDiagnostics(ctx)
 	}()
@@ -1203,10 +1282,12 @@ func (f *file) GetSymbols(query string) iter.Seq[protocol.SymbolInformation] {
 			// Only include definitions: static and referenceable symbols.
 			// Skip references, imports, builtins, and tags
 			_, isStatic := sym.kind.(*static)
+
 			_, isReferenceable := sym.kind.(*referenceable)
 			if !isStatic && !isReferenceable {
 				continue
 			}
+
 			symbolInfo := sym.GetSymbolInformation()
 			if symbolInfo.Name == "" {
 				continue // Symbol information not supported for this symbol.
@@ -1215,6 +1296,7 @@ func (f *file) GetSymbols(query string) iter.Seq[protocol.SymbolInformation] {
 			if query != "" && !strings.Contains(strings.ToLower(symbolInfo.Name), query) {
 				continue
 			}
+
 			if !yield(symbolInfo) {
 				return
 			}
@@ -1237,5 +1319,6 @@ func trimLeadingDot(span source.Span) source.Span {
 			End:   span.End,
 		}
 	}
+
 	return span
 }

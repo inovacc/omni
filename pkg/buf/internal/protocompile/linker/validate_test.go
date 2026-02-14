@@ -22,6 +22,7 @@ import (
 
 func TestCanonicalEnumName(t *testing.T) {
 	t.Parallel()
+
 	testCases := map[string]string{
 		"FOO_BAR___foo_bar_baz":     "FooBarBaz",
 		"foo__bar__baz":             "Baz",
@@ -35,6 +36,7 @@ func TestCanonicalEnumName(t *testing.T) {
 		"foobarbaz":                 "Baz",
 		"FOOBARFOOBARBAZ":           "Foobarbaz",
 	}
+
 	const enumName = "FooBar"
 	for k, v := range testCases {
 		name := canonicalEnumValueName(k, enumName)

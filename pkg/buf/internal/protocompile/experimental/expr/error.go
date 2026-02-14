@@ -36,6 +36,7 @@ func (e Error) AsAny() Expr {
 	if e.IsZero() {
 		return Expr{}
 	}
+
 	return id.WrapDyn(e.Context(), id.NewDyn(KindError, id.ID[Expr](e.ID())))
 }
 
@@ -44,5 +45,6 @@ func (e Error) Span() source.Span {
 	if e.IsZero() {
 		return source.Span{}
 	}
+
 	return e.Raw().span
 }

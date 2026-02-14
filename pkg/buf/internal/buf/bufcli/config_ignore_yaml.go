@@ -37,36 +37,45 @@ func PrintFileAnnotationSetLintConfigIgnoreYAMLV1(
 	fileAnnotationSet bufanalysis.FileAnnotationSet,
 ) error {
 	ignoreIDToPathMap := make(map[string]map[string]struct{})
+
 	for _, fileAnnotation := range fileAnnotationSet.FileAnnotations() {
 		fileInfo := fileAnnotation.FileInfo()
 		if fileInfo == nil || fileAnnotation.Type() == "" {
 			continue
 		}
+
 		pathMap, ok := ignoreIDToPathMap[fileAnnotation.Type()]
 		if !ok {
 			pathMap = make(map[string]struct{})
 			ignoreIDToPathMap[fileAnnotation.Type()] = pathMap
 		}
+
 		pathMap[fileInfo.Path()] = struct{}{}
 	}
+
 	if len(ignoreIDToPathMap) == 0 {
 		return nil
 	}
 
 	sortedIgnoreIDs := make([]string, 0, len(ignoreIDToPathMap))
+
 	ignoreIDToSortedPaths := make(map[string][]string, len(ignoreIDToPathMap))
 	for id, pathMap := range ignoreIDToPathMap {
 		sortedIgnoreIDs = append(sortedIgnoreIDs, id)
+
 		paths := make([]string, 0, len(pathMap))
 		for path := range pathMap {
 			paths = append(paths, path)
 		}
+
 		sort.Strings(paths)
 		ignoreIDToSortedPaths[id] = paths
 	}
+
 	sort.Strings(sortedIgnoreIDs)
 
 	buffer := bytes.NewBuffer(nil)
+
 	_, _ = buffer.WriteString(`version: v1
 lint:
   ignore_only:
@@ -74,6 +83,7 @@ lint:
 	for _, id := range sortedIgnoreIDs {
 		_, _ = buffer.WriteString("    ")
 		_, _ = buffer.WriteString(id)
+
 		_, _ = buffer.WriteString(":\n")
 		for _, rootPath := range ignoreIDToSortedPaths[id] {
 			_, _ = buffer.WriteString("      - ")
@@ -81,6 +91,8 @@ lint:
 			_, _ = buffer.WriteString("\n")
 		}
 	}
+
 	_, err := writer.Write(buffer.Bytes())
+
 	return err
 }

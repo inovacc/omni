@@ -95,13 +95,16 @@ func (f *fileAnnotation) String() string {
 	if f == nil {
 		return ""
 	}
+
 	path := "<input>"
 	line := atLeast1(f.startLine)
 	column := atLeast1(f.startColumn)
+
 	message := f.message
 	if f.fileInfo != nil {
 		path = f.fileInfo.ExternalPath()
 	}
+
 	if message == "" {
 		message = f.typeString
 		// should never happen but just in case
@@ -109,6 +112,7 @@ func (f *fileAnnotation) String() string {
 			message = "FAILURE"
 		}
 	}
+
 	buffer := bytes.NewBuffer(nil)
 	_, _ = buffer.WriteString(path)
 	_, _ = buffer.WriteRune(':')
@@ -116,20 +120,25 @@ func (f *fileAnnotation) String() string {
 	_, _ = buffer.WriteRune(':')
 	_, _ = buffer.WriteString(strconv.Itoa(column))
 	_, _ = buffer.WriteRune(':')
+
 	_, _ = buffer.WriteString(message)
 	if f.pluginName != "" || f.policyName != "" {
 		_, _ = buffer.WriteString(" (")
 		if f.pluginName != "" {
 			_, _ = buffer.WriteString(f.pluginName)
 		}
+
 		if f.pluginName != "" && f.policyName != "" {
 			_, _ = buffer.WriteString(", ")
 		}
+
 		if f.policyName != "" {
 			_, _ = buffer.WriteString(f.policyName)
 		}
+
 		_, _ = buffer.WriteRune(')')
 	}
+
 	return buffer.String()
 }
 

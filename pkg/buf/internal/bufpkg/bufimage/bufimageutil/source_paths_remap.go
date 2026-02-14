@@ -63,8 +63,10 @@ func (t *sourcePathsRemapTrie) doTrieInsert(oldPath []int32, newIndex int32, noC
 	if t == nil {
 		return
 	}
+
 	items := *t
 	searchIndex := oldPath[0]
+
 	idx, found := sort.Find(len(items), func(i int) int {
 		return int(searchIndex - items[i].oldIndex)
 	})
@@ -72,6 +74,7 @@ func (t *sourcePathsRemapTrie) doTrieInsert(oldPath []int32, newIndex int32, noC
 		// shouldn't usually need to sort because incoming items are often in order
 		needSort := len(items) > 0 && searchIndex < items[len(items)-1].oldIndex
 		idx = len(items)
+
 		items = append(items, &sourcePathsRemapTrieNode{
 			oldIndex: searchIndex,
 			newIndex: searchIndex,
@@ -85,12 +88,15 @@ func (t *sourcePathsRemapTrie) doTrieInsert(oldPath []int32, newIndex int32, noC
 				return int(searchIndex - items[i].oldIndex)
 			})
 		}
+
 		*t = items
 	}
+
 	if len(oldPath) > 1 {
 		items[idx].children.doTrieInsert(oldPath[1:], newIndex, noComment)
 		return
 	}
+
 	if noComment {
 		items[idx].noComment = noComment
 	} else {
@@ -109,20 +115,25 @@ func (t *sourcePathsRemapTrie) newPath(oldPath []int32) (path []int32, noComment
 		// get confused for "delete this entry"
 		return []int32{}, false
 	}
+
 	if t == nil {
 		return oldPath, false
 	}
+
 	newPath := make([]int32, len(oldPath))
+
 	keep, noComment := t.fix(oldPath, newPath)
 	if !keep {
 		return nil, false
 	}
+
 	return newPath, noComment
 }
 
 func (t *sourcePathsRemapTrie) fix(oldPath, newPath []int32) (keep, noComment bool) {
 	items := *t
 	searchIndex := oldPath[0]
+
 	idx, found := sort.Find(len(items), func(i int) int {
 		return int(searchIndex - items[i].oldIndex)
 	})
@@ -130,16 +141,20 @@ func (t *sourcePathsRemapTrie) fix(oldPath, newPath []int32) (keep, noComment bo
 		copy(newPath, oldPath)
 		return true, false
 	}
+
 	item := items[idx]
 	if item.newIndex == -1 {
 		return false, false
 	}
+
 	newPath[0] = item.newIndex
 	if len(oldPath) > 1 {
 		if item.newIndex == -1 {
 			newPath[0] = item.oldIndex
 		}
+
 		return item.children.fix(oldPath[1:], newPath[1:])
 	}
+
 	return true, item.noComment
 }

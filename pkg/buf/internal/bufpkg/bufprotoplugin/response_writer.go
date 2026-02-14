@@ -53,11 +53,13 @@ func (h *responseWriter) WriteResponse(
 	for _, option := range options {
 		option(writeResponseOptions)
 	}
-	for _, file := range response.File {
+
+	for _, file := range response.GetFile() {
 		if file.GetInsertionPoint() != "" {
 			if writeResponseOptions.insertionPointReadBucket == nil {
 				return &fs.PathError{Op: "stat", Path: file.GetName(), Err: fs.ErrNotExist}
 			}
+
 			if err := applyInsertionPoint(ctx, file, writeResponseOptions.insertionPointReadBucket, writeBucket); err != nil {
 				return err
 			}
@@ -65,6 +67,7 @@ func (h *responseWriter) WriteResponse(
 			return err
 		}
 	}
+
 	return nil
 }
 
@@ -82,9 +85,11 @@ func applyInsertionPoint(
 	if err != nil {
 		return err
 	}
+
 	defer func() {
 		retErr = errors.Join(retErr, targetReadObjectCloser.Close())
 	}()
+
 	resultData, err := writeInsertionPoint(ctx, file, targetReadObjectCloser)
 	if err != nil {
 		return err
@@ -110,12 +115,15 @@ func writeInsertionPoint(
 	// doing 2 full scans of the file (if it is a single line), or implementing
 	// bufio.Scanner.Scan() inline
 	newline := []byte{'\n'}
+
 	var found bool
+
 	for i := 0; targetScanner.Scan(); i++ {
 		if i > 0 {
 			// These writes cannot fail, they will panic if they cannot allocate.
 			_, _ = postInsertionContent.Write(newline)
 		}
+
 		targetLine := targetScanner.Bytes()
 		if !bytes.Contains(targetLine, match) {
 			// These writes cannot fail, they will panic if they cannot allocate.
@@ -140,12 +148,15 @@ func writeInsertionPoint(
 		_, _ = postInsertionContent.Write(targetLine)
 		found = true
 	}
+
 	if err := targetScanner.Err(); err != nil {
 		return nil, err
 	}
+
 	if !found {
 		return nil, fmt.Errorf("could not find insertion point %q in %q", insertionPointFile.GetInsertionPoint(), insertionPointFile.GetName())
 	}
+
 	return postInsertionContent.Bytes(), nil
 }
 
@@ -156,6 +167,7 @@ func writeInsertionPoint(
 //	leadingWhitespace("\u205F   foo ") -> "\u205F   "
 func leadingWhitespace(buf []byte) []byte {
 	leadingSize := 0
+
 	iterBuf := buf
 	for len(iterBuf) > 0 {
 		r, size := utf8.DecodeRune(iterBuf)
@@ -166,11 +178,14 @@ func leadingWhitespace(buf []byte) []byte {
 		if !unicode.IsSpace(r) {
 			out := make([]byte, leadingSize)
 			copy(out, buf)
+
 			return out
 		}
+
 		leadingSize += size
 		iterBuf = iterBuf[size:]
 	}
+
 	return buf
 }
 

@@ -34,5 +34,6 @@ func (f *fileInfo) ExternalPath() string {
 	if f.externalPath != "" {
 		return f.externalPath
 	}
+
 	return f.path
 }

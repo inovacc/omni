@@ -33,10 +33,12 @@ func newPackageVersionForPackage(pkg string, options ...PackageVersionOption) (*
 	if pkg == "" {
 		return nil, false
 	}
+
 	parts := strings.Split(pkg, ".")
 	if len(parts) < 2 {
 		return nil, false
 	}
+
 	return newPackageVersionForComponent(parts[len(parts)-1], options...)
 }
 
@@ -45,6 +47,7 @@ func newPackageVersionForComponent(component string, options ...PackageVersionOp
 	for _, option := range options {
 		option(packageVersionOptions)
 	}
+
 	minMajorVersionNumber := 1
 	if packageVersionOptions.allowV0 {
 		minMajorVersionNumber = 0
@@ -57,6 +60,7 @@ func newPackageVersionForComponent(component string, options ...PackageVersionOp
 	if len(component) < 2 {
 		return nil, false
 	}
+
 	if component[0] != 'v' {
 		return nil, false
 	}
@@ -72,15 +76,19 @@ func newPackageVersionForComponent(component string, options ...PackageVersionOp
 		if len(split) != 2 {
 			return nil, false
 		}
+
 		major, ok := getNumber(split[0], minMajorVersionNumber)
 		if !ok {
 			return nil, false
 		}
+
 		return newPackageVersion(major, StabilityLevelTest, 0, 0, split[1]), true
 	}
 
 	var stabilityLevel StabilityLevel
+
 	containsAlpha := strings.Contains(version, "alpha")
+
 	containsBeta := strings.Contains(version, "beta")
 	switch {
 	case !containsAlpha && !containsBeta:
@@ -92,6 +100,7 @@ func newPackageVersionForComponent(component string, options ...PackageVersionOp
 	case containsAlpha && containsBeta:
 		return nil, false
 	}
+
 	if stabilityLevel != StabilityLevelStable {
 		// 1alpha1 -> [1, 1]
 		// 1p1alpha1 ->[1p1, 1]
@@ -100,7 +109,9 @@ func newPackageVersionForComponent(component string, options ...PackageVersionOp
 		if len(split) != 2 {
 			return nil, false
 		}
+
 		minor := 0
+
 		var ok bool
 		if split[1] != "" {
 			minor, ok = getNumber(split[1], 1)
@@ -108,10 +119,12 @@ func newPackageVersionForComponent(component string, options ...PackageVersionOp
 				return nil, false
 			}
 		}
+
 		major, patch, ok := getAlphaBetaMajorPatch(split[0], minMajorVersionNumber)
 		if !ok {
 			return nil, false
 		}
+
 		return newPackageVersion(major, stabilityLevel, minor, patch, ""), true
 	}
 
@@ -120,6 +133,7 @@ func newPackageVersionForComponent(component string, options ...PackageVersionOp
 	if !ok {
 		return nil, false
 	}
+
 	return newPackageVersion(major, StabilityLevelStable, 0, 0, ""), true
 }
 
@@ -163,17 +177,22 @@ func (p *packageVersion) String() string {
 	var builder strings.Builder
 	builder.WriteRune('v')
 	builder.WriteString(strconv.Itoa(p.major))
+
 	if p.patch > 0 {
 		builder.WriteRune('p')
 		builder.WriteString(strconv.Itoa(p.patch))
 	}
+
 	builder.WriteString(p.stabilityLevel.String())
+
 	if p.minor > 0 {
 		builder.WriteString(strconv.Itoa(p.minor))
 	}
+
 	if p.suffix != "" {
 		builder.WriteString(p.suffix)
 	}
+
 	return builder.String()
 }
 
@@ -186,14 +205,17 @@ func getAlphaBetaMajorPatch(remainder string, minMajorVersionNumber int) (int, i
 		if len(patchSplit) != 2 {
 			return 0, 0, false
 		}
+
 		major, ok := getNumber(patchSplit[0], minMajorVersionNumber)
 		if !ok {
 			return 0, 0, false
 		}
+
 		patch, ok := getNumber(patchSplit[1], 1)
 		if !ok {
 			return 0, 0, false
 		}
+
 		return major, patch, true
 	}
 	// no patch, make sure just a number
@@ -201,6 +223,7 @@ func getAlphaBetaMajorPatch(remainder string, minMajorVersionNumber int) (int, i
 	if !ok {
 		return 0, 0, false
 	}
+
 	return major, 0, true
 }
 
@@ -208,13 +231,16 @@ func getNumber(s string, minimum int) (int, bool) {
 	if s == "" {
 		return 0, false
 	}
+
 	value, err := strconv.ParseInt(s, 10, 32)
 	if err != nil {
 		return 0, false
 	}
+
 	if value < int64(minimum) {
 		return 0, false
 	}
+
 	return int(value), true
 }
 

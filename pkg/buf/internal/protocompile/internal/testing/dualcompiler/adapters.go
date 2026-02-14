@@ -48,6 +48,7 @@ func (r *resolverOpener) Open(path string) (*source.File, error) {
 		if err != nil {
 			return nil, err
 		}
+
 		return source.NewFile(path, string(data)), nil
 	}
 
@@ -61,9 +62,11 @@ func (r *resolverOpener) Open(path string) (*source.File, error) {
 	if result.AST != nil {
 		return nil, fs.ErrNotExist
 	}
+
 	if result.Proto != nil {
 		return nil, fs.ErrNotExist
 	}
+
 	if result.Desc != nil {
 		// Return not found so the Openers can try the next opener (WKTs)
 		return nil, fs.ErrNotExist

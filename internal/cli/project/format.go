@@ -21,7 +21,7 @@ func formatReport(w io.Writer, report *ProjectReport, opts Options) error {
 	return formatText(w, report)
 }
 
-func formatJSON(w io.Writer, v interface{}) error {
+func formatJSON(w io.Writer, v any) error {
 	enc := json.NewEncoder(w)
 	enc.SetIndent("", "  ")
 
@@ -36,6 +36,7 @@ func formatText(w io.Writer, r *ProjectReport) error {
 	// Project types
 	if len(r.Types) > 0 {
 		_, _ = fmt.Fprintln(w, "Project Types:")
+
 		for _, t := range r.Types {
 			line := fmt.Sprintf("  %s (%s)", t.Language, t.BuildFile)
 			if len(t.Frameworks) > 0 {
@@ -236,6 +237,7 @@ func formatDepsMarkdown(w io.Writer, report *DepsReport) error {
 
 	if report.Rust != nil {
 		_, _ = fmt.Fprintf(w, "### Rust\n\n")
+
 		_, _ = fmt.Fprintf(w, "- **Name:** %s@%s\n", report.Rust.Name, report.Rust.Version)
 		if report.Rust.Edition != "" {
 			_, _ = fmt.Fprintf(w, "- **Edition:** %s\n", report.Rust.Edition)

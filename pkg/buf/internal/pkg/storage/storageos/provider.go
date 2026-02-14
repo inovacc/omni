@@ -27,6 +27,7 @@ func newProvider(options ...ProviderOption) *provider {
 	for _, option := range options {
 		option(provider)
 	}
+
 	return provider
 }
 

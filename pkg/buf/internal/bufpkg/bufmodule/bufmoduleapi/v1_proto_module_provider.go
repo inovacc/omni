@@ -19,8 +19,8 @@ import (
 	"fmt"
 	"log/slog"
 
-	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufregistryapi/bufregistryapimodule"
 	"connectrpc.com/connect"
+	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufregistryapi/bufregistryapimodule"
 	modulev1 "github.com/inovacc/omni/pkg/buf/internal/gen/bufbuild/registry/protocolbuffers/go/buf/registry/module/v1"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/cache"
 )
@@ -71,10 +71,12 @@ func (a *v1ProtoModuleProvider) getV1ProtoModuleForProtoModuleID(
 			if err != nil {
 				return nil, err
 			}
-			if len(response.Msg.Modules) != 1 {
-				return nil, fmt.Errorf("expected 1 Module, got %d", len(response.Msg.Modules))
+
+			if len(response.Msg.GetModules()) != 1 {
+				return nil, fmt.Errorf("expected 1 Module, got %d", len(response.Msg.GetModules()))
 			}
-			return response.Msg.Modules[0], nil
+
+			return response.Msg.GetModules()[0], nil
 		},
 	)
 }

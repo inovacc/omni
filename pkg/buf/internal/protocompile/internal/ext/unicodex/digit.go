@@ -33,5 +33,6 @@ func Digit(d rune, base byte) (value byte, ok bool) {
 	if value >= base {
 		return 0, false
 	}
+
 	return value, true
 }

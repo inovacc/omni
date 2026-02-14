@@ -51,6 +51,7 @@ func CombineResolvers(resolvers ...Resolver) Resolver {
 	for i := range resolvers {
 		encodingResolvers[i] = resolvers[i]
 	}
+
 	return &combinedResolver{
 		Resolver:  protoencoding.CombineResolvers(encodingResolvers...),
 		resolvers: resolvers,
@@ -59,46 +60,55 @@ func CombineResolvers(resolvers ...Resolver) Resolver {
 
 type imageResolver struct {
 	protoencoding.Resolver
+
 	image bufimage.Image
 }
 
 func (i *imageResolver) ListServices() ([]protoreflect.FullName, error) {
 	var names []protoreflect.FullName
+
 	for _, file := range i.image.Files() {
 		fileDescriptor := file.FileDescriptorProto()
-		for _, service := range fileDescriptor.Service {
+		for _, service := range fileDescriptor.GetService() {
 			var serviceName string
 			if fileDescriptor.Package != nil {
 				serviceName = fileDescriptor.GetPackage() + "." + service.GetName()
 			} else {
 				serviceName = service.GetName()
 			}
+
 			names = append(names, protoreflect.FullName(serviceName))
 		}
 	}
+
 	return names, nil
 }
 
 type combinedResolver struct {
 	protoencoding.Resolver // underlying resolver is already combined
-	resolvers              []Resolver
+
+	resolvers []Resolver
 }
 
 func (c *combinedResolver) ListServices() ([]protoreflect.FullName, error) {
 	names := map[protoreflect.FullName]struct{}{}
+
 	for _, resolver := range c.resolvers {
 		serviceNames, err := resolver.ListServices()
 		if err != nil {
 			return nil, err
 		}
+
 		for _, serviceName := range serviceNames {
 			names[serviceName] = struct{}{}
 		}
 	}
+
 	serviceNames := make([]protoreflect.FullName, 0, len(names))
 	for serviceName := range names {
 		serviceNames = append(serviceNames, serviceName)
 	}
+
 	return serviceNames, nil
 }
 
@@ -117,7 +127,9 @@ func NewWKTResolver(ctx context.Context, logger *slog.Logger) (Resolver, error) 
 	if err != nil {
 		return nil, err
 	}
+
 	module := bufmodule2.ModuleSetToModuleReadBucketWithOnlyProtoFiles(moduleSet)
+
 	image, err := bufimage.BuildImage(
 		ctx,
 		logger,
@@ -127,5 +139,6 @@ func NewWKTResolver(ctx context.Context, logger *slog.Logger) (Resolver, error) 
 	if err != nil {
 		return nil, err
 	}
+
 	return ResolverForImage(image), nil
 }

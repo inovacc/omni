@@ -19,6 +19,11 @@ func RunDownload(w io.Writer, args []string, opts Options) error {
 
 	rateLimit, _ := utils.ParseFilesize(opts.RateLimit)
 
+	// --complete forces best format and writes a markdown sidecar.
+	if opts.Complete {
+		opts.Format = "best"
+	}
+
 	clientOpts := []video.Option{
 		video.WithFormat(orDefault(opts.Format, "best")),
 		video.WithRetries(max(opts.Retries, 3)),
@@ -64,12 +69,20 @@ func RunDownload(w io.Writer, args []string, opts Options) error {
 		clientOpts = append(clientOpts, video.WithWriteSubs())
 	}
 
+	if opts.Complete {
+		clientOpts = append(clientOpts, video.WithWriteMarkdown())
+	}
+
 	if opts.NoPlaylist {
 		clientOpts = append(clientOpts, video.WithNoPlaylist())
 	}
 
 	if opts.Verbose {
 		clientOpts = append(clientOpts, video.WithVerbose())
+	}
+
+	if opts.CookiesFromBrowser {
+		clientOpts = append(clientOpts, video.WithCookiesFromBrowser())
 	}
 
 	// Add progress callback.

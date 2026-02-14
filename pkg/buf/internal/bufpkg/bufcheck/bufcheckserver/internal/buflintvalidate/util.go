@@ -17,8 +17,8 @@ package buflintvalidate
 import (
 	"fmt"
 
-	"github.com/google/cel-go/cel"
 	"buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go/buf/validate"
+	"github.com/google/cel-go/cel"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/protoencoding"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -34,13 +34,16 @@ func resolveExtension[C proto.Message](
 	resolver protoencoding.Resolver,
 ) (constraints C, retErr error) {
 	num := extType.TypeDescriptor().Number()
+
 	var message proto.Message
 
 	proto.RangeExtensions(options, func(typ protoreflect.ExtensionType, i any) bool {
 		if num != typ.TypeDescriptor().Number() {
 			return true
 		}
+
 		message, _ = i.(proto.Message)
+
 		return false
 	})
 
@@ -49,15 +52,19 @@ func resolveExtension[C proto.Message](
 	} else if m, ok := message.(C); ok {
 		return m, nil
 	}
+
 	var ok bool
+
 	constraints, ok = constraints.ProtoReflect().New().Interface().(C)
 	if !ok {
 		return constraints, fmt.Errorf("unexpected type for constraints %T", constraints)
 	}
+
 	b, err := protoencoding.NewWireMarshaler().Marshal(message)
 	if err != nil {
 		return constraints, err
 	}
+
 	return constraints, protoencoding.NewWireUnmarshaler(resolver).Unmarshal(b, constraints)
 }
 

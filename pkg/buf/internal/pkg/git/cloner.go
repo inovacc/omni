@@ -60,6 +60,7 @@ func (c *cloner) CloneToBucket(
 	defer xslog.DebugProfile(c.logger)()
 
 	var err error
+
 	switch {
 	case strings.HasPrefix(url, "http://"),
 		strings.HasPrefix(url, "https://"),
@@ -89,6 +90,7 @@ func (c *cloner) CloneToBucket(
 	if err != nil {
 		return err
 	}
+
 	defer func() {
 		retErr = errors.Join(retErr, baseDir.Close())
 	}()
@@ -106,6 +108,7 @@ func (c *cloner) CloneToBucket(
 	}
 
 	buffer.Reset()
+
 	if err := xexec.Run(
 		ctx,
 		"git",
@@ -118,6 +121,7 @@ func (c *cloner) CloneToBucket(
 	}
 
 	var gitConfigAuthArgs []string
+
 	if strings.HasPrefix(url, "https://") {
 		// These extraArgs MUST be first, as the -c flag potentially produced
 		// is only a flag on the parent git command, not on git fetch.
@@ -125,6 +129,7 @@ func (c *cloner) CloneToBucket(
 		if err != nil {
 			return err
 		}
+
 		gitConfigAuthArgs = append(gitConfigAuthArgs, extraArgs...)
 	}
 
@@ -138,6 +143,7 @@ func (c *cloner) CloneToBucket(
 	// Build the args for the fetch command.
 	fetchArgs := []string{}
 	fetchArgs = append(fetchArgs, gitConfigAuthArgs...)
+
 	fetchArgs = append(
 		fetchArgs,
 		"fetch",
@@ -153,8 +159,11 @@ func (c *cloner) CloneToBucket(
 	// will try to fetch the fallback ref with a depth to allow resolving partial
 	// refs locally. If the fetch fails, we will return an error.
 	var usedFallback bool
+
 	fetchRef, fallbackRef, checkoutRef := getRefspecsForName(options.Name)
+
 	buffer.Reset()
+
 	if err := xexec.Run(
 		ctx,
 		"git",
@@ -169,7 +178,9 @@ func (c *cloner) CloneToBucket(
 		}
 		// Failed to fetch the ref directly, try to fetch the fallback ref.
 		usedFallback = true
+
 		buffer.Reset()
+
 		if err := xexec.Run(
 			ctx,
 			"git",
@@ -185,6 +196,7 @@ func (c *cloner) CloneToBucket(
 	// As a further optimization, if a filter is applied with a subdir, we run
 	// a sparse checkout to reduce the size of the working directory.
 	buffer.Reset()
+
 	if options.Filter != "" && options.SubDir != "" {
 		// Set the subdir for sparse checkout.
 		if err := xexec.Run(
@@ -202,6 +214,7 @@ func (c *cloner) CloneToBucket(
 	// Always checkout the FETCH_HEAD to populate the working directory.
 	// This allows for referencing HEAD in checkouts.
 	buffer.Reset()
+
 	if err := xexec.Run(
 		ctx,
 		"git",
@@ -216,6 +229,7 @@ func (c *cloner) CloneToBucket(
 	// from the fetch ref.
 	if checkoutRef != "" && (usedFallback || checkoutRef != fetchRef) {
 		buffer.Reset()
+
 		if err := xexec.Run(
 			ctx,
 			"git",
@@ -230,6 +244,7 @@ func (c *cloner) CloneToBucket(
 
 	if options.RecurseSubmodules {
 		buffer.Reset()
+
 		if err := xexec.Run(
 			ctx,
 			"git",
@@ -256,11 +271,14 @@ func (c *cloner) CloneToBucket(
 	if err != nil {
 		return err
 	}
+
 	var readBucket storage2.ReadBucket = tmpReadWriteBucket
 	if options.Matcher != nil {
 		readBucket = storage2.FilterReadBucket(readBucket, options.Matcher)
 	}
+
 	_, err = storage2.Copy(ctx, readBucket, writeBucket)
+
 	return err
 }
 
@@ -268,15 +286,20 @@ func (c *cloner) getArgsForHTTPSCommand(envContainer app.EnvContainer) ([]string
 	if c.options.HTTPSUsernameEnvKey == "" || c.options.HTTPSPasswordEnvKey == "" {
 		return nil, nil
 	}
+
 	httpsUsernameSet := envContainer.Env(c.options.HTTPSUsernameEnvKey) != ""
+
 	httpsPasswordSet := envContainer.Env(c.options.HTTPSPasswordEnvKey) != ""
 	if !httpsUsernameSet {
 		if httpsPasswordSet {
 			return nil, fmt.Errorf("%s set but %s not set", c.options.HTTPSPasswordEnvKey, c.options.HTTPSUsernameEnvKey)
 		}
+
 		return nil, nil
 	}
+
 	c.logger.Debug("git_credential_helper_override")
+
 	return []string{
 		"-c",
 		fmt.Sprintf(
@@ -301,8 +324,10 @@ func (c *cloner) getEnvContainerWithGitSSHCommand(envContainer app.EnvContainer)
 	if err != nil {
 		return nil, err
 	}
+
 	if gitSSHCommand != "" {
 		c.logger.Debug("git_ssh_command_override")
+
 		return app.NewEnvContainerWithOverrides(
 			envContainer,
 			map[string]string{
@@ -310,18 +335,22 @@ func (c *cloner) getEnvContainerWithGitSSHCommand(envContainer app.EnvContainer)
 			},
 		), nil
 	}
+
 	return envContainer, nil
 }
 
 func (c *cloner) getGitSSHCommand(envContainer app.EnvContainer) (string, error) {
 	sshKeyFilePath := envContainer.Env(c.options.SSHKeyFileEnvKey)
+
 	sshKnownHostsFiles := envContainer.Env(c.options.SSHKnownHostsFilesEnvKey)
 	if sshKeyFilePath == "" {
 		if sshKnownHostsFiles != "" {
 			return "", fmt.Errorf("%s set but %s not set", c.options.SSHKnownHostsFilesEnvKey, c.options.SSHKeyFileEnvKey)
 		}
+
 		return "", nil
 	}
+
 	if sshKnownHostsFilePaths := getSSHKnownHostsFilePaths(sshKnownHostsFiles); len(sshKnownHostsFilePaths) > 0 {
 		return fmt.Sprintf(
 			`ssh -q -i "%s" -o "IdentitiesOnly=yes" -o "UserKnownHostsFile=%s"`,
@@ -342,13 +371,16 @@ func getSSHKnownHostsFilePaths(sshKnownHostsFiles string) []string {
 	if sshKnownHostsFiles == "" {
 		return nil
 	}
+
 	var filePaths []string
-	for _, filePath := range strings.Split(sshKnownHostsFiles, ":") {
+
+	for filePath := range strings.SplitSeq(sshKnownHostsFiles, ":") {
 		filePath = strings.TrimSpace(filePath)
 		if filePath != "" {
 			filePaths = append(filePaths, filePath)
 		}
 	}
+
 	return filePaths
 }
 
@@ -361,6 +393,7 @@ func getRefspecsForName(gitName Name) (fetchRef string, fallbackRef string, chec
 	if gitName == nil {
 		return "HEAD", "", ""
 	}
+
 	checkout, cloneBranch := gitName.checkout(), gitName.cloneBranch()
 	if checkout != "" && cloneBranch != "" {
 		// If a branch, tag, or commit is specified, we fetch the ref directly.
@@ -374,6 +407,7 @@ func getRefspecsForName(gitName Name) (fetchRef string, fallbackRef string, chec
 		// We checkout the ref after the fetch if the fallback was used.
 		return checkout, "HEAD", checkout
 	}
+
 	return "HEAD", "", ""
 }
 

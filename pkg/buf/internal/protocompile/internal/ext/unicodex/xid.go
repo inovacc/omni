@@ -31,6 +31,7 @@ func IsASCIIIdent(s string) bool {
 			return false
 		}
 	}
+
 	return len(s) > 0
 }
 

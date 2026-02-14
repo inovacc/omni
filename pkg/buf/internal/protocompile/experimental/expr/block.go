@@ -41,6 +41,7 @@ func (e Block) AsAny() Expr {
 	if e.IsZero() {
 		return Expr{}
 	}
+
 	return id.WrapDyn(e.Context(), id.NewDyn(KindBlock, id.ID[Expr](e.ID())))
 }
 
@@ -49,6 +50,7 @@ func (e Block) Braces() token.Token {
 	if e.IsZero() {
 		return token.Zero
 	}
+
 	return id.Wrap(e.Context().Stream(), e.Raw().braces)
 }
 
@@ -58,6 +60,7 @@ func (e Block) Exprs() seq.Inserter[Expr] {
 	if !e.IsZero() {
 		tags = &e.Raw().tags
 	}
+
 	return tags.Inserter(e.Context())
 }
 

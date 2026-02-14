@@ -36,6 +36,7 @@ func (r *result) ValidateOptions(handler *reporter.Handler, symbols *Symbols) er
 	if err := r.validateFile(handler); err != nil {
 		return err
 	}
+
 	return walk.Descriptors(r, func(d protoreflect.Descriptor) error {
 		switch d := d.(type) {
 		case protoreflect.FieldDescriptor:
@@ -46,6 +47,7 @@ func (r *result) ValidateOptions(handler *reporter.Handler, symbols *Symbols) er
 			if symbols == nil {
 				symbols = &Symbols{}
 			}
+
 			if err := r.validateMessage(d, handler, symbols); err != nil {
 				return err
 			}
@@ -54,6 +56,7 @@ func (r *result) ValidateOptions(handler *reporter.Handler, symbols *Symbols) er
 				return err
 			}
 		}
+
 		return nil
 	})
 }
@@ -65,10 +68,12 @@ func (r *result) validateFile(handler *reporter.Handler) error {
 		imports := r.Imports()
 		for i, length := 0, imports.Len(); i < length; i++ {
 			dep := imports.Get(i)
+
 			depOpts, ok := dep.Options().(*descriptorpb.FileOptions)
 			if !ok {
 				continue // what else to do?
 			}
+
 			if depOpts.GetOptimizeFor() == descriptorpb.FileOptions_LITE_RUNTIME {
 				err := handler.HandleErrorf(r.getImportLocation(dep.Path()), "a file that does not use optimize_for=LITE_RUNTIME may not import file %q that does", dep.Path())
 				if err != nil {
@@ -77,23 +82,28 @@ func (r *result) validateFile(handler *reporter.Handler) error {
 			}
 		}
 	}
+
 	if isEditions(r) {
 		// Validate features
 		if opts.GetFeatures().GetFieldPresence() == descriptorpb.FeatureSet_LEGACY_REQUIRED {
 			span := r.findOptionSpan(r, internal.FileOptionsFeaturesTag, internal.FeatureSetFieldPresenceTag)
+
 			err := handler.HandleErrorf(span, "LEGACY_REQUIRED field presence cannot be set as the default for a file")
 			if err != nil {
 				return err
 			}
 		}
+
 		if opts != nil && opts.JavaStringCheckUtf8 != nil {
 			span := r.findOptionSpan(r, internal.FileOptionsJavaStringCheckUTF8Tag)
+
 			err := handler.HandleErrorf(span, `file option java_string_check_utf8 is not allowed with editions; import "google/protobuf/java_features.proto" and use (pb.java).utf8_validation instead`)
 			if err != nil {
 				return err
 			}
 		}
 	}
+
 	return nil
 }
 
@@ -101,6 +111,7 @@ func (r *result) validateField(fld protoreflect.FieldDescriptor, handler *report
 	if xtd, ok := fld.(protoreflect.ExtensionTypeDescriptor); ok {
 		fld = xtd.Descriptor()
 	}
+
 	fd, ok := fld.(*fldDescriptor)
 	if !ok {
 		// should not be possible
@@ -110,6 +121,7 @@ func (r *result) validateField(fld protoreflect.FieldDescriptor, handler *report
 	if err := r.validatePacked(fd, handler); err != nil {
 		return err
 	}
+
 	if fd.Kind() == protoreflect.EnumKind {
 		requiresOpen := !fd.IsList() && !fd.HasPresence()
 		if requiresOpen && fd.Enum().IsClosed() {
@@ -120,20 +132,24 @@ func (r *result) validateField(fld protoreflect.FieldDescriptor, handler *report
 			//       value is zero, NOT based on if it's open vs closed.
 			//       https://github.com/protocolbuffers/protobuf/issues/16249
 			file := r.FileNode()
+
 			info := file.NodeInfo(r.FieldNode(fd.proto).FieldType())
 			if err := handler.HandleErrorf(info, "cannot use closed enum %s in a field with implicit presence", fd.Enum().FullName()); err != nil {
 				return err
 			}
 		}
 	}
+
 	if fd.HasDefault() && !fd.HasPresence() {
 		span := r.findScalarOptionSpan(r.FieldNode(fd.proto), "default")
+
 		err := handler.HandleErrorf(span, "default value is not allowed on fields with implicit presence")
 		if err != nil {
 			return err
 		}
 	}
-	if fd.proto.Options != nil && fd.proto.Options.Ctype != nil {
+
+	if fd.proto.GetOptions() != nil && fd.proto.Options.Ctype != nil {
 		if descriptorpb.Edition(r.Edition()) >= descriptorpb.Edition_EDITION_2024 {
 			// We don't support edition 2024 yet, but we went ahead and mimic'ed this check
 			// from protoc, which currently has experimental support for 2024.
@@ -143,17 +159,23 @@ func (r *result) validateField(fld protoreflect.FieldDescriptor, handler *report
 			}
 		}
 	}
-	if (fd.proto.Options.GetLazy() || fd.proto.Options.GetUnverifiedLazy()) && fd.Kind() != protoreflect.MessageKind {
-		var span ast.SourceSpan
-		var optionName string
-		if fd.proto.Options.GetLazy() {
+
+	if (fd.proto.GetOptions().GetLazy() || fd.proto.GetOptions().GetUnverifiedLazy()) && fd.Kind() != protoreflect.MessageKind {
+		var (
+			span       ast.SourceSpan
+			optionName string
+		)
+
+		if fd.proto.GetOptions().GetLazy() {
 			span = r.findOptionSpan(fd, internal.FieldOptionsLazyTag)
 			optionName = "lazy"
 		} else {
 			span = r.findOptionSpan(fd, internal.FieldOptionsUnverifiedLazyTag)
 			optionName = "unverified_lazy"
 		}
+
 		var suffix string
+
 		if fd.Kind() == protoreflect.GroupKind {
 			if isEditions(r) {
 				suffix = " that use length-prefixed encoding"
@@ -161,23 +183,27 @@ func (r *result) validateField(fld protoreflect.FieldDescriptor, handler *report
 				suffix = ", not groups"
 			}
 		}
+
 		if err := handler.HandleErrorf(span, "%s option can only be used with message fields%s", optionName, suffix); err != nil {
 			return err
 		}
 	}
-	if fd.proto.Options.GetJstype() != descriptorpb.FieldOptions_JS_NORMAL {
+
+	if fd.proto.GetOptions().GetJstype() != descriptorpb.FieldOptions_JS_NORMAL {
 		switch fd.Kind() {
 		case protoreflect.Int64Kind, protoreflect.Uint64Kind, protoreflect.Sint64Kind,
 			protoreflect.Fixed64Kind, protoreflect.Sfixed64Kind:
 			// allowed only for 64-bit integer types
 		default:
 			span := r.findOptionSpan(fd, internal.FieldOptionsJSTypeTag)
+
 			err := handler.HandleErrorf(span, "only 64-bit integer fields (int64, uint64, sint64, fixed64, and sfixed64) can specify a jstype other than JS_NORMAL")
 			if err != nil {
 				return err
 			}
 		}
 	}
+
 	if isEditions(r) {
 		if err := r.validateFieldFeatures(fd, handler); err != nil {
 			return err
@@ -199,20 +225,23 @@ func (r *result) validateExtension(fd *fldDescriptor, handler *reporter.Handler)
 	// But it requires linking to resolve the extendee, so we can interrogate
 	// its descriptor.
 	msg := fd.ContainingMessage()
-	if msg.Options().(*descriptorpb.MessageOptions).GetMessageSetWireFormat() { //nolint:errcheck
+	if msg.Options().(*descriptorpb.MessageOptions).GetMessageSetWireFormat() {
 		// Message set wire format requires that all extensions be messages
 		// themselves (no scalar extensions)
 		if fd.Kind() != protoreflect.MessageKind {
 			file := r.FileNode()
 			info := file.NodeInfo(r.FieldNode(fd.proto).FieldType())
+
 			err := handler.HandleErrorf(info, "messages with message-set wire format cannot contain scalar extensions, only messages")
 			if err != nil {
 				return err
 			}
 		}
+
 		if fd.Cardinality() == protoreflect.Repeated {
 			file := r.FileNode()
 			info := file.NodeInfo(r.FieldNode(fd.proto).FieldLabel())
+
 			err := handler.HandleErrorf(info, "messages with message-set wire format cannot contain repeated extensions, only optional")
 			if err != nil {
 				return err
@@ -224,6 +253,7 @@ func (r *result) validateExtension(fd *fldDescriptor, handler *reporter.Handler)
 		// and, if not, enforce tighter limit.
 		file := r.FileNode()
 		info := file.NodeInfo(r.FieldNode(fd.proto).FieldTag())
+
 		err := handler.HandleErrorf(info, "tag number %d is higher than max allowed tag number (%d)", fd.Number(), internal.MaxNormalTag)
 		if err != nil {
 			return err
@@ -236,6 +266,7 @@ func (r *result) validateExtension(fd *fldDescriptor, handler *reporter.Handler)
 		if extendeeFileOpts.GetOptimizeFor() != descriptorpb.FileOptions_LITE_RUNTIME {
 			file := r.FileNode()
 			info := file.NodeInfo(r.FieldNode(fd.proto))
+
 			err := handler.HandleErrorf(info, "extensions in a file that uses optimize_for=LITE_RUNTIME may not extend messages in file %q which does not", msg.ParentFile().Path())
 			if err != nil {
 				return err
@@ -245,79 +276,97 @@ func (r *result) validateExtension(fd *fldDescriptor, handler *reporter.Handler)
 
 	// If the extendee uses extension declarations, make sure this extension matches.
 	md := protoutil.ProtoFromMessageDescriptor(msg)
-	for i, extRange := range md.ExtensionRange {
+	for i, extRange := range md.GetExtensionRange() {
 		if int32(fd.Number()) < extRange.GetStart() || int32(fd.Number()) >= extRange.GetEnd() {
 			continue
 		}
+
 		extRangeOpts := extRange.GetOptions()
 		if extRangeOpts == nil {
 			break
 		}
-		if len(extRangeOpts.Declaration) == 0 && extRangeOpts.GetVerification() != descriptorpb.ExtensionRangeOptions_DECLARATION {
+
+		if len(extRangeOpts.GetDeclaration()) == 0 && extRangeOpts.GetVerification() != descriptorpb.ExtensionRangeOptions_DECLARATION {
 			break
 		}
+
 		var found bool
-		for j, extDecl := range extRangeOpts.Declaration {
+
+		for j, extDecl := range extRangeOpts.GetDeclaration() {
 			if extDecl.GetNumber() != int32(fd.Number()) {
 				continue
 			}
+
 			found = true
+
 			if extDecl.GetReserved() {
 				file := r.FileNode()
 				info := file.NodeInfo(r.FieldNode(fd.proto).FieldTag())
 				span, _ := findExtensionRangeOptionSpan(msg.ParentFile(), msg, i, extRange,
 					internal.ExtensionRangeOptionsDeclarationTag, int32(j), internal.ExtensionRangeOptionsDeclarationReservedTag)
+
 				err := handler.HandleErrorf(info, "cannot use field number %d for an extension because it is reserved in declaration at %v",
 					fd.Number(), span.Start())
 				if err != nil {
 					return err
 				}
+
 				break
 			}
+
 			if extDecl.GetFullName() != "."+string(fd.FullName()) {
 				file := r.FileNode()
 				info := file.NodeInfo(r.FieldNode(fd.proto).FieldName())
 				span, _ := findExtensionRangeOptionSpan(msg.ParentFile(), msg, i, extRange,
 					internal.ExtensionRangeOptionsDeclarationTag, int32(j), internal.ExtensionRangeOptionsDeclarationFullNameTag)
+
 				err := handler.HandleErrorf(info, "expected extension with number %d to be named %s, not %s, per declaration at %v",
 					fd.Number(), strings.TrimPrefix(extDecl.GetFullName(), "."), fd.FullName(), span.Start())
 				if err != nil {
 					return err
 				}
 			}
+
 			if extDecl.GetType() != getTypeName(fd) {
 				file := r.FileNode()
 				info := file.NodeInfo(r.FieldNode(fd.proto).FieldType())
 				span, _ := findExtensionRangeOptionSpan(msg.ParentFile(), msg, i, extRange,
 					internal.ExtensionRangeOptionsDeclarationTag, int32(j), internal.ExtensionRangeOptionsDeclarationTypeTag)
+
 				err := handler.HandleErrorf(info, "expected extension with number %d to have type %s, not %s, per declaration at %v",
 					fd.Number(), strings.TrimPrefix(extDecl.GetType(), "."), getTypeName(fd), span.Start())
 				if err != nil {
 					return err
 				}
 			}
+
 			if extDecl.GetRepeated() != (fd.Cardinality() == protoreflect.Repeated) {
 				expected, actual := "repeated", "optional"
 				if !extDecl.GetRepeated() {
 					expected, actual = actual, expected
 				}
+
 				file := r.FileNode()
 				info := file.NodeInfo(r.FieldNode(fd.proto).FieldLabel())
 				span, _ := findExtensionRangeOptionSpan(msg.ParentFile(), msg, i, extRange,
 					internal.ExtensionRangeOptionsDeclarationTag, int32(j), internal.ExtensionRangeOptionsDeclarationRepeatedTag)
+
 				err := handler.HandleErrorf(info, "expected extension with number %d to be %s, not %s, per declaration at %v",
 					fd.Number(), expected, actual, span.Start())
 				if err != nil {
 					return err
 				}
 			}
+
 			break
 		}
+
 		if !found {
 			file := r.FileNode()
 			info := file.NodeInfo(r.FieldNode(fd.proto).FieldTag())
 			span, _ := findExtensionRangeOptionSpan(fd.ParentFile(), msg, i, extRange,
 				internal.ExtensionRangeOptionsVerificationTag)
+
 			err := handler.HandleErrorf(info, "expected extension with number %d to be declared in type %s, but no declaration found at %v",
 				fd.Number(), fd.ContainingMessage().FullName(), span.Start())
 			if err != nil {
@@ -330,35 +379,42 @@ func (r *result) validateExtension(fd *fldDescriptor, handler *reporter.Handler)
 }
 
 func (r *result) validatePacked(fd *fldDescriptor, handler *reporter.Handler) error {
-	if fd.proto.Options != nil && fd.proto.Options.Packed != nil && isEditions(r) {
+	if fd.proto.GetOptions() != nil && fd.proto.Options.Packed != nil && isEditions(r) {
 		span := r.findOptionSpan(fd, internal.FieldOptionsPackedTag)
+
 		err := handler.HandleErrorf(span, "packed option cannot be used with editions; use features.repeated_field_encoding=PACKED instead")
 		if err != nil {
 			return err
 		}
 	}
+
 	if !fd.proto.GetOptions().GetPacked() {
 		// if packed isn't true, nothing to validate
 		return nil
 	}
+
 	if fd.proto.GetLabel() != descriptorpb.FieldDescriptorProto_LABEL_REPEATED {
 		file := r.FileNode()
 		info := file.NodeInfo(r.FieldNode(fd.proto).FieldLabel())
+
 		err := handler.HandleErrorf(info, "packed option is only allowed on repeated fields")
 		if err != nil {
 			return err
 		}
 	}
+
 	switch fd.proto.GetType() {
 	case descriptorpb.FieldDescriptorProto_TYPE_STRING, descriptorpb.FieldDescriptorProto_TYPE_BYTES,
 		descriptorpb.FieldDescriptorProto_TYPE_MESSAGE, descriptorpb.FieldDescriptorProto_TYPE_GROUP:
 		file := r.FileNode()
 		info := file.NodeInfo(r.FieldNode(fd.proto).FieldType())
+
 		err := handler.HandleErrorf(info, "packed option is only allowed on numeric, boolean, and enum fields")
 		if err != nil {
 			return err
 		}
 	}
+
 	return nil
 }
 
@@ -369,11 +425,13 @@ func (r *result) validateFieldFeatures(fld *fldDescriptor, handler *reporter.Han
 		// really only apply to the map field and not to a key or value entry field.
 		return nil
 	}
+
 	features := fld.proto.GetOptions().GetFeatures()
 	if features == nil {
 		// No features to validate.
 		return nil
 	}
+
 	if features.FieldPresence != nil {
 		switch {
 		case fld.proto.OneofIndex != nil:
@@ -398,6 +456,7 @@ func (r *result) validateFieldFeatures(fld *fldDescriptor, handler *reporter.Han
 			}
 		}
 	}
+
 	if features.RepeatedFieldEncoding != nil {
 		if fld.Cardinality() != protoreflect.Repeated {
 			span := r.findOptionSpan(fld, internal.FieldOptionsFeaturesTag, internal.FeatureSetRepeatedFieldEncodingTag)
@@ -411,6 +470,7 @@ func (r *result) validateFieldFeatures(fld *fldDescriptor, handler *reporter.Han
 			}
 		}
 	}
+
 	if features.Utf8Validation != nil {
 		isMap := fld.IsMap()
 		if (!isMap && fld.Kind() != protoreflect.StringKind) ||
@@ -423,6 +483,7 @@ func (r *result) validateFieldFeatures(fld *fldDescriptor, handler *reporter.Han
 			}
 		}
 	}
+
 	if features.MessageEncoding != nil {
 		if fld.Message() == nil || fld.IsMap() {
 			span := r.findOptionSpan(fld, internal.FieldOptionsFeaturesTag, internal.FeatureSetMessageEncodingTag)
@@ -431,6 +492,7 @@ func (r *result) validateFieldFeatures(fld *fldDescriptor, handler *reporter.Han
 			}
 		}
 	}
+
 	return nil
 }
 
@@ -452,9 +514,11 @@ func (r *result) validateJSONNamesInMessage(md *msgDescriptor, handler *reporter
 	if err := r.validateFieldJSONNames(md, false, handler); err != nil {
 		return err
 	}
+
 	if err := r.validateFieldJSONNames(md, true, handler); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -472,11 +536,13 @@ func (r *result) validateEnum(d protoreflect.EnumDescriptor, handler *reporter.H
 		//       allowed values are open or closed.
 		//       https://github.com/protocolbuffers/protobuf/issues/16249
 		file := r.FileNode()
+
 		evd, ok := firstValue.(*enValDescriptor)
 		if !ok {
 			// should not be possible
 			return fmt.Errorf("enum value descriptor is wrong type: expecting %T, got %T", (*enValDescriptor)(nil), firstValue)
 		}
+
 		info := file.NodeInfo(r.EnumValueNode(evd.proto).GetNumber())
 		if err := handler.HandleErrorf(info, "first value of open enum %s must have numeric value zero", ed.FullName()); err != nil {
 			return err
@@ -492,6 +558,7 @@ func (r *result) validateEnum(d protoreflect.EnumDescriptor, handler *reporter.H
 
 func (r *result) validateJSONNamesInEnum(ed *enumDescriptor, handler *reporter.Handler) error {
 	seen := map[string]*descriptorpb.EnumValueDescriptorProto{}
+
 	for _, evd := range ed.proto.GetValue() {
 		scope := "enum value " + ed.proto.GetName() + "." + evd.GetName()
 
@@ -513,6 +580,7 @@ func (r *result) validateJSONNamesInEnum(ed *enumDescriptor, handler *reporter.H
 			seen[name] = evd
 		}
 	}
+
 	return nil
 }
 
@@ -522,6 +590,7 @@ func (r *result) validateFieldJSONNames(md *msgDescriptor, useCustom bool, handl
 		// true if orig is a custom JSON name (vs. the field's default JSON name)
 		custom bool
 	}
+
 	seen := map[string]jsonName{}
 
 	for _, fd := range md.proto.GetField() {
@@ -529,6 +598,7 @@ func (r *result) validateFieldJSONNames(md *msgDescriptor, useCustom bool, handl
 		defaultName := internal.JSONName(fd.GetName())
 		name := defaultName
 		custom := false
+
 		if useCustom {
 			n := fd.GetJsonName()
 			if n != defaultName || r.hasCustomJSONName(fd) {
@@ -536,19 +606,23 @@ func (r *result) validateFieldJSONNames(md *msgDescriptor, useCustom bool, handl
 				custom = true
 			}
 		}
+
 		if existing, ok := seen[name]; ok {
 			// When useCustom is true, we'll only report an issue when a conflict is
 			// due to a custom name. That way, we don't double report conflicts on
 			// non-custom names.
 			if !useCustom || custom || existing.custom {
 				fldNode := r.FieldNode(fd)
+
 				customStr, srcCustomStr := "custom", "custom"
 				if !custom {
 					customStr = "default"
 				}
+
 				if !existing.custom {
 					srcCustomStr = "default"
 				}
+
 				info := r.FileNode().NodeInfo(fldNode)
 				conflictErr := reporter.Errorf(info, "%s: %s JSON name %q conflicts with %s JSON name of field %s, defined at %v",
 					scope, customStr, name, srcCustomStr, existing.source.GetName(), r.FileNode().NodeInfo(r.FieldNode(existing.source)).Start())
@@ -566,11 +640,12 @@ func (r *result) validateFieldJSONNames(md *msgDescriptor, useCustom bool, handl
 			seen[name] = jsonName{source: fd, custom: custom}
 		}
 	}
+
 	return nil
 }
 
 func (r *result) validateExtensionDeclarations(md *msgDescriptor, handler *reporter.Handler, symbols *Symbols) error {
-	for i, extRange := range md.proto.ExtensionRange {
+	for i, extRange := range md.proto.GetExtensionRange() {
 		opts := extRange.GetOptions()
 		if len(opts.GetDeclaration()) == 0 {
 			// nothing to check
@@ -584,11 +659,14 @@ func (r *result) validateExtensionDeclarations(md *msgDescriptor, handler *repor
 			if !ok {
 				span, _ = findExtensionRangeOptionSpan(r, md, i, extRange, internal.ExtensionRangeOptionsDeclarationTag, 0)
 			}
+
 			if err := handler.HandleErrorf(span, "extension range cannot have declarations and have verification of %s", opts.GetVerification()); err != nil {
 				return err
 			}
 		}
+
 		declsByTag := map[int32]ast.SourcePos{}
+
 		for i, extDecl := range extRange.GetOptions().GetDeclaration() {
 			if extDecl.Number == nil {
 				span, _ := findExtensionRangeOptionSpan(r, md, i, extRange, internal.ExtensionRangeOptionsDeclarationTag, int32(i))
@@ -603,10 +681,13 @@ func (r *result) validateExtensionDeclarations(md *msgDescriptor, handler *repor
 					// See if one of the other ranges on the same extends statement includes the number,
 					// so we can provide a helpful message.
 					var suffix string
+
 					if extRange, ok := r.ExtensionsNode(extRange).(*ast.ExtensionRangeNode); ok {
 						for _, rng := range extRange.Ranges {
 							start, _ := rng.StartVal.AsInt64()
+
 							var end int64
+
 							switch {
 							case rng.Max != nil:
 								end = math.MaxInt64
@@ -615,6 +696,7 @@ func (r *result) validateExtensionDeclarations(md *msgDescriptor, handler *repor
 							default:
 								end = start
 							}
+
 							if int64(extDecl.GetNumber()) >= start && int64(extDecl.GetNumber()) <= end {
 								// Found another range that matches
 								suffix = "; when using declarations, extends statements should indicate only a single span of field numbers"
@@ -622,6 +704,7 @@ func (r *result) validateExtensionDeclarations(md *msgDescriptor, handler *repor
 							}
 						}
 					}
+
 					err := handler.HandleErrorf(extensionNumberSpan, "extension declaration has number outside the range: %d not in [%d,%d]%s",
 						extDecl.GetNumber(), extRange.GetStart(), extRange.GetEnd()-1, suffix)
 					if err != nil {
@@ -648,21 +731,25 @@ func (r *result) validateExtensionDeclarations(md *msgDescriptor, handler *repor
 				}
 			} else if extDecl.FullName != nil {
 				var extensionFullName protoreflect.FullName
+
 				extensionNameSpan, _ := findExtensionRangeOptionSpan(r, md, i, extRange,
 					internal.ExtensionRangeOptionsDeclarationTag, int32(i), internal.ExtensionRangeOptionsDeclarationFullNameTag)
 				if !strings.HasPrefix(extDecl.GetFullName(), ".") {
 					if err := handler.HandleErrorf(extensionNameSpan, "extension declaration full name %q should start with a leading dot (.)", extDecl.GetFullName()); err != nil {
 						return err
 					}
+
 					extensionFullName = protoreflect.FullName(extDecl.GetFullName())
 				} else {
 					extensionFullName = protoreflect.FullName(extDecl.GetFullName()[1:])
 				}
+
 				if !extensionFullName.IsValid() {
 					if err := handler.HandleErrorf(extensionNameSpan, "extension declaration full name %q is not a valid qualified name", extDecl.GetFullName()); err != nil {
 						return err
 					}
 				}
+
 				if err := symbols.AddExtensionDeclaration(extensionFullName, md.FullName(), protoreflect.FieldNumber(extDecl.GetNumber()), extensionNameSpan, handler); err != nil {
 					return err
 				}
@@ -698,6 +785,7 @@ func (r *result) validateExtensionDeclarations(md *msgDescriptor, handler *repor
 				} else {
 					fieldTag = internal.ExtensionRangeOptionsDeclarationTypeTag
 				}
+
 				span, _ := findExtensionRangeOptionSpan(r, md, i, extRange,
 					internal.ExtensionRangeOptionsDeclarationTag, int32(i), fieldTag)
 				if err := handler.HandleErrorf(span, "extension declarations that are reserved should specify both full_name and type or neither"); err != nil {
@@ -706,6 +794,7 @@ func (r *result) validateExtensionDeclarations(md *msgDescriptor, handler *repor
 			}
 		}
 	}
+
 	return nil
 }
 
@@ -717,6 +806,7 @@ func (r *result) hasCustomJSONName(fdProto *descriptorpb.FieldDescriptorProto) b
 	if opts == nil {
 		return false
 	}
+
 	for _, opt := range opts.Options {
 		if len(opt.Name.Parts) == 1 &&
 			opt.Name.Parts[0].Name.AsIdentifier() == "json_name" &&
@@ -724,6 +814,7 @@ func (r *result) hasCustomJSONName(fdProto *descriptorpb.FieldDescriptorProto) b
 			return true
 		}
 	}
+
 	return false
 }
 
@@ -767,12 +858,11 @@ func findExtensionRangeOptionSpan(
 	// thus extension range options for declarations) could be in some other file, which
 	// could be provided to the compiler as an already-compiled descriptor. So this
 	// function can fallback to using source code info if an AST is not available.
-
 	if r, ok := file.(Result); ok && r.AST() != nil {
 		// Find the location using the AST, which will generally be higher fidelity
 		// than what we might find in a file descriptor's source code info.
 		exts := r.ExtensionsNode(extRange)
-		return findOptionSpan(r.FileNode(), exts, extRange.Options.ProtoReflect().Descriptor(), path...)
+		return findOptionSpan(r.FileNode(), exts, extRange.GetOptions().ProtoReflect().Descriptor(), path...)
 	}
 
 	srcLocs := file.SourceLocations()
@@ -782,6 +872,7 @@ func findExtensionRangeOptionSpan(
 		// an alternate path, since we won't be able to do any better.
 		return ast.UnknownSpan(file.Path()), true
 	}
+
 	msgPath, ok := internal.ComputePath(extended)
 	if !ok {
 		// Same as above: return true since no subsequent query can do better.
@@ -792,6 +883,7 @@ func findExtensionRangeOptionSpan(
 	extRangePath := append(msgPath, internal.MessageExtensionRangesTag, int32(extRangeIndex))
 	optsPath := append(extRangePath, internal.ExtensionRangeOptionsTag) //nolint:gocritic
 	fullPath := append(optsPath, path...)                               //nolint:gocritic
+
 	srcLoc := srcLocs.ByPath(fullPath)
 	if srcLoc.Path != nil {
 		// found it
@@ -802,8 +894,11 @@ func findExtensionRangeOptionSpan(
 	// We look for longest matching path that is at least len(extRangePath)
 	// long. If we find a path that is longer (meaning a path that points INSIDE
 	// the request element), accept the first such location.
-	var bestMatch protoreflect.SourceLocation
-	var bestMatchPathLen int
+	var (
+		bestMatch        protoreflect.SourceLocation
+		bestMatchPathLen int
+	)
+
 	for i, length := 0, srcLocs.Len(); i < length; i++ {
 		srcLoc := srcLocs.Get(i)
 		if len(srcLoc.Path) >= len(extRangePath) &&
@@ -815,9 +910,11 @@ func findExtensionRangeOptionSpan(
 			return asSpan(file.Path(), srcLoc), false
 		}
 	}
+
 	if bestMatchPathLen > 0 {
 		return asSpan(file.Path(), bestMatch), false
 	}
+
 	return ast.UnknownSpan(file.Path()), false
 }
 
@@ -832,8 +929,10 @@ func (r *result) findScalarOptionSpan(
 			match = n
 			return false
 		}
+
 		return true
 	})
+
 	return r.FileNode().NodeInfo(match)
 }
 
@@ -842,11 +941,14 @@ func (r *result) findOptionSpan(
 	path ...int32,
 ) ast.SourceSpan {
 	node := r.Node(d.AsProto())
+
 	nodeWithOpts, ok := node.(ast.NodeWithOptions)
 	if !ok {
 		return r.FileNode().NodeInfo(node)
 	}
+
 	span, _ := findOptionSpan(r.FileNode(), nodeWithOpts, d.Options().ProtoReflect().Descriptor(), path...)
+
 	return span
 }
 
@@ -857,32 +959,38 @@ func findOptionSpan(
 	path ...int32,
 ) (ast.SourceSpan, bool) {
 	bestMatch := ast.Node(root)
-	var bestMatchLen int
-	var repeatedIndices []int
+
+	var (
+		bestMatchLen    int
+		repeatedIndices []int
+	)
+
 	root.RangeOptions(func(n *ast.OptionNode) bool {
 		desc := md
-		limit := len(n.Name.Parts)
-		if limit > len(path) {
-			limit = len(path)
-		}
+
+		limit := min(len(n.Name.Parts), len(path))
+
 		var nextIsIndex bool
 		for i := range limit {
 			if desc == nil || nextIsIndex {
 				// Can't match anymore. Try next option.
 				return true
 			}
+
 			wantField := desc.Fields().ByNumber(protoreflect.FieldNumber(path[i]))
 			if wantField == nil {
 				// Should not be possible... next option won't fare any better since
 				// it's a disagreement between given path and given descriptor so bail.
 				return false
 			}
+
 			if n.Name.Parts[i].Open != nil ||
 				string(n.Name.Parts[i].Name.AsIdentifier()) != string(wantField.Name()) {
 				// This is an extension/custom option or indicates the wrong name.
 				// Try the next one.
 				return true
 			}
+
 			desc = wantField.Message()
 			nextIsIndex = wantField.Cardinality() == protoreflect.Repeated
 		}
@@ -893,6 +1001,7 @@ func findOptionSpan(
 			// is a keeper.
 			bestMatch = n.Name.Parts[len(path)-1]
 			bestMatchLen = len(n.Name.Parts)
+
 			return false
 		}
 		// We've got more path elements to try to match with the value.
@@ -910,8 +1019,10 @@ func findOptionSpan(
 				bestMatch, bestMatchLen = match, totalMatchLen
 			}
 		}
+
 		return bestMatchLen != len(path) // no exact match, so keep looking
 	})
+
 	return file.NodeInfo(bestMatch), bestMatchLen == len(path)
 }
 
@@ -924,8 +1035,11 @@ func findMatchingValueNode(
 	node ast.Node,
 	val ast.ValueNode,
 ) (ast.Node, int) {
-	var matchLen int
-	var index int
+	var (
+		matchLen int
+		index    int
+	)
+
 	if currIsRepeated {
 		// Compute the index of the current value (or, if an array literal, the
 		// index of the first value in the array).
@@ -936,6 +1050,7 @@ func findMatchingValueNode(
 			*repeatedIndices = append(*repeatedIndices, 0)
 			index = 0
 		}
+
 		repeatedCount++
 	}
 
@@ -944,11 +1059,13 @@ func findMatchingValueNode(
 			// This should not happen.
 			return nil, 0
 		}
+
 		offset := int(path[0]) - index
 		if offset >= len(arrayVal.Elements) {
 			// The index we are looking for is not in this array.
 			return nil, 0
 		}
+
 		elem := arrayVal.Elements[offset]
 		// We've matched the index!
 		matchLen++
@@ -963,6 +1080,7 @@ func findMatchingValueNode(
 			elem,
 			elem,
 		)
+
 		return nextMatch, nextMatchLen + matchLen
 	}
 
@@ -973,6 +1091,7 @@ func findMatchingValueNode(
 		}
 		// We've matched the index!
 		matchLen++
+
 		path = path[1:]
 		if len(path) == 0 {
 			// We're done matching!
@@ -990,11 +1109,13 @@ func findMatchingValueNode(
 	if md != nil {
 		wantField = md.Fields().ByNumber(protoreflect.FieldNumber(path[0]))
 	}
+
 	if wantField == nil {
 		// Should not be possible... next option won't fare any better since
 		// it's a disagreement between given path and given descriptor so bail.
 		return nil, 0
 	}
+
 	for _, field := range msgValue.Elements {
 		if field.Name.Open != nil ||
 			string(field.Name.Name.AsIdentifier()) != string(wantField.Name()) {
@@ -1004,11 +1125,13 @@ func findMatchingValueNode(
 		}
 		// We've matched this field.
 		matchLen++
+
 		path = path[1:]
 		if len(path) == 0 {
 			// Perfect match!
 			return field, matchLen
 		}
+
 		nextMatch, nextMatchLen := findMatchingValueNode(
 			wantField.Message(),
 			path,
@@ -1018,6 +1141,7 @@ func findMatchingValueNode(
 			field,
 			field.Val,
 		)
+
 		return nextMatch, nextMatchLen + matchLen
 	}
 
@@ -1029,11 +1153,13 @@ func isDescendantPath(descendant, ancestor protoreflect.SourcePath) bool {
 	if len(descendant) < len(ancestor) {
 		return false
 	}
+
 	for i := range ancestor {
 		if descendant[i] != ancestor[i] {
 			return false
 		}
 	}
+
 	return true
 }
 
@@ -1057,11 +1183,13 @@ func (r *result) getImportLocation(path string) ast.SourceSpan {
 	if !ok {
 		return ast.UnknownSpan(path)
 	}
+
 	for _, decl := range node.Decls {
 		imp, ok := decl.(*ast.ImportNode)
 		if !ok {
 			continue
 		}
+
 		if imp.Name.AsString() == path {
 			return node.NodeInfo(imp.Name)
 		}

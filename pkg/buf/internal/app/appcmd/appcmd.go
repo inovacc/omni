@@ -199,7 +199,9 @@ func run(
 		if err != nil {
 			return err
 		}
+
 		cobraCommand.AddCommand(shellCobraCommand)
+
 		manpagesCobraCommand, err := commandToCobra(
 			ctx,
 			container,
@@ -223,6 +225,7 @@ func run(
 		if err != nil {
 			return err
 		}
+
 		cobraCommand.AddCommand(manpagesCobraCommand)
 	}
 
@@ -261,6 +264,7 @@ func run(
 	if len(args) > 0 && strings.HasPrefix(args[0], "__complete") {
 		cobraCommand.SetOut(container.Stdout())
 	}
+
 	cobraCommand.SetArgs(args)
 	// SetErr sets the output location for error messages.
 	cobraCommand.SetErr(container.Stderr())
@@ -269,6 +273,7 @@ func run(
 	if err := cobraCommand.Execute(); err != nil {
 		return err
 	}
+
 	return runErr
 }
 
@@ -281,10 +286,12 @@ func commandToCobra(
 	if err := commandValidate(command); err != nil {
 		return nil, err
 	}
+
 	var cobraPositionalArgs cobra.PositionalArgs
 	if command.Args != nil {
 		cobraPositionalArgs = command.Args.cobra()
 	}
+
 	cobraCommand := &cobra.Command{
 		Use:        command.Use,
 		Aliases:    command.Aliases,
@@ -305,21 +312,27 @@ func commandToCobra(
 			}
 		},
 	)
+
 	if command.Long != "" {
 		cobraCommand.Long = strings.TrimSpace(command.Long)
 	}
+
 	if command.BindFlags != nil {
 		command.BindFlags(cobraCommand.Flags())
 	}
+
 	if command.BindPersistentFlags != nil {
 		command.BindPersistentFlags(cobraCommand.PersistentFlags())
 	}
+
 	if command.NormalizeFlag != nil {
 		cobraCommand.Flags().SetNormalizeFunc(normalizeFunc(command.NormalizeFlag))
 	}
+
 	if command.NormalizePersistentFlag != nil {
 		cobraCommand.PersistentFlags().SetNormalizeFunc(normalizeFunc(command.NormalizePersistentFlag))
 	}
+
 	if command.Run != nil {
 		cobraCommand.Run = func(_ *cobra.Command, args []string) {
 			runErr := command.Run(ctx, app.NewContainerForArgs(container, args...))
@@ -329,28 +342,35 @@ func commandToCobra(
 				// to the command executed.
 				printUsage(container, cobraCommand.UsageString())
 			}
+
 			*runErrAddr = runErr
 		}
 	}
+
 	if len(command.SubCommands) > 0 {
 		// command.Run will not be set per validation
 		cobraCommand.Run = func(_ *cobra.Command, args []string) {
 			printUsage(container, cobraCommand.UsageString())
+
 			if len(args) == 0 {
 				*runErrAddr = errors.New("Sub-command required.")
 			} else {
 				*runErrAddr = fmt.Errorf("Unknown sub-command: %s", strings.Join(args, " "))
 			}
 		}
+
 		for _, subCommand := range command.SubCommands {
 			subCobraCommand, err := commandToCobra(ctx, container, subCommand, runErrAddr)
 			if err != nil {
 				return nil, err
 			}
+
 			cobraCommand.AddCommand(subCobraCommand)
 		}
+
 		addHelpTreeFlag(container, cobraCommand, runErrAddr)
 	}
+
 	if command.Version != "" {
 		doVersion := false
 		oldRun := cobraCommand.Run
@@ -364,13 +384,16 @@ func commandToCobra(
 			if doVersion {
 				_, err := container.Stdout().Write([]byte(command.Version + "\n"))
 				*runErrAddr = err
+
 				return
 			}
+
 			oldRun(cmd, args)
 		}
 	}
 	// appcommand prints errors, disable to prevent duplicates.
 	cobraCommand.SilenceErrors = true
+
 	return cobraCommand, nil
 }
 
@@ -378,15 +401,19 @@ func commandValidate(command *Command) error {
 	if command.Use == "" {
 		return errors.New("must set Command.Use")
 	}
+
 	if command.Long != "" && command.Short == "" {
 		return errors.New("must set Command.Short if Command.Long is set")
 	}
+
 	if command.Run != nil && len(command.SubCommands) > 0 {
 		return errors.New("cannot set both Command.Run and Command.SubCommands")
 	}
+
 	if command.Run == nil && len(command.SubCommands) == 0 {
 		return errors.New("must set one of Command.Run and Command.SubCommands")
 	}
+
 	return nil
 }
 
@@ -417,8 +444,10 @@ func addHelpTreeFlag(
 		if helpTree {
 			_, err := container.Stdout().Write([]byte(helpTreeString(cmd)))
 			*runErrAddr = err
+
 			return
 		}
+
 		oldRun(cmd, args)
 	}
 }
@@ -426,6 +455,7 @@ func addHelpTreeFlag(
 func helpTreeString(cmd *cobra.Command) string {
 	var builder strings.Builder
 	helpTreeStringRec(cmd, &builder, maxPaddingRec(cmd, 0), 0)
+
 	return builder.String()
 }
 
@@ -433,6 +463,7 @@ func helpTreeStringRec(cmd *cobra.Command, builder *strings.Builder, maxPadding 
 	if cmd.Hidden {
 		return
 	}
+
 	if name := cmd.Name(); name != "" {
 		_, _ = builder.WriteString(strings.Repeat(" ", curIndentCount*2))
 		_, _ = builder.WriteString(name)
@@ -441,6 +472,7 @@ func helpTreeStringRec(cmd *cobra.Command, builder *strings.Builder, maxPadding 
 		_, _ = builder.WriteString(cmd.Short)
 		_, _ = builder.WriteString("\n")
 	}
+
 	for _, child := range cmd.Commands() {
 		helpTreeStringRec(child, builder, maxPadding, curIndentCount+1)
 	}
@@ -453,6 +485,7 @@ func maxPaddingRec(cmd *cobra.Command, curIndentCount int) int {
 			maxPadding = maxInt(maxPadding, maxPaddingRec(child, curIndentCount+1))
 		}
 	}
+
 	return maxPadding
 }
 
@@ -460,5 +493,6 @@ func maxInt(i int, j int) int {
 	if i > j {
 		return i
 	}
+
 	return j
 }

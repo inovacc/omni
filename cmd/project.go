@@ -117,6 +117,7 @@ func projectOpts(cmd *cobra.Command) project.Options {
 	opts.Markdown, _ = cmd.Flags().GetBool("markdown")
 	opts.Verbose, _ = cmd.Flags().GetBool("verbose")
 	opts.Limit, _ = cmd.Flags().GetInt("limit")
+
 	return opts
 }
 

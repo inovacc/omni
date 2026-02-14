@@ -49,9 +49,11 @@ func (s Symbol) FullName() FullName {
 	if s.IsZero() {
 		return ""
 	}
+
 	if s.Kind() == SymbolKindScalar {
 		return s.AsType().FullName()
 	}
+
 	return FullName(s.Context().session.intern.Value(s.Raw().fqn))
 }
 
@@ -60,6 +62,7 @@ func (s Symbol) InternedFullName() intern.ID {
 	if s.IsZero() {
 		return 0
 	}
+
 	return s.Raw().fqn
 }
 
@@ -68,6 +71,7 @@ func (s Symbol) Kind() SymbolKind {
 	if s.IsZero() {
 		return SymbolKindInvalid
 	}
+
 	return s.Raw().kind
 }
 
@@ -76,6 +80,7 @@ func (s Symbol) AsType() Type {
 	if !s.Kind().IsType() {
 		return Type{}
 	}
+
 	return id.Wrap(s.Context(), id.ID[Type](s.Raw().data))
 }
 
@@ -84,6 +89,7 @@ func (s Symbol) AsMember() Member {
 	if !s.Kind().IsMember() {
 		return Member{}
 	}
+
 	return id.Wrap(s.Context(), id.ID[Member](s.Raw().data))
 }
 
@@ -92,6 +98,7 @@ func (s Symbol) AsOneof() Oneof {
 	if s.Kind() != SymbolKindOneof {
 		return Oneof{}
 	}
+
 	return id.Wrap(s.Context(), id.ID[Oneof](s.Raw().data))
 }
 
@@ -100,6 +107,7 @@ func (s Symbol) AsService() Service {
 	if s.Kind() != SymbolKindService {
 		return Service{}
 	}
+
 	return id.Wrap(s.Context(), id.ID[Service](s.Raw().data))
 }
 
@@ -108,6 +116,7 @@ func (s Symbol) AsMethod() Method {
 	if s.Kind() != SymbolKindMethod {
 		return Method{}
 	}
+
 	return id.Wrap(s.Context(), id.ID[Method](s.Raw().data))
 }
 
@@ -166,7 +175,7 @@ func (s Symbol) Visible(in *File, allowOptions bool) bool {
 	}
 
 	imp := in.imports.files[idx]
-	if !imp.visible || !(allowOptions || !imp.option) {
+	if !imp.visible || (!allowOptions && imp.option) {
 		return false
 	}
 
@@ -347,6 +356,7 @@ func (s symtab) sort(file *File) {
 	slices.SortFunc(s, func(a, b Ref[Symbol]) int {
 		symA := GetRef(file, a)
 		symB := GetRef(file, b)
+
 		return cmp.Compare(symA.InternedFullName(), symB.InternedFullName())
 	})
 }
@@ -369,6 +379,7 @@ func (s symtab) lookupBytes(file *File, fqn []byte) Ref[Symbol] {
 	if !ok {
 		return Ref[Symbol]{}
 	}
+
 	idx, ok := slicesx.BinarySearchKey(s, id, func(r Ref[Symbol]) intern.ID {
 		return GetRef(file, r).InternedFullName()
 	})
@@ -462,7 +473,6 @@ func (s symtab) resolve(
 	//
 	// It is not clear why protoc does this, but it does mean we need to be
 	// careful in how we resolve partial names.
-
 	scopeSearch := !name.IsIdent()
 	first := name.First()
 
@@ -472,14 +482,16 @@ func (s symtab) resolve(
 	// To avoid the cost of allocating a tiny slice every time we come through
 	// here, we us a sync.Pool. This also means we don't have to constantly
 	// zero memory that we're going to immediately overwrite.
-	buf := resolveScratch.Get().(*[]byte) //nolint:errcheck
+	buf := resolveScratch.Get().(*[]byte)
 	candidate := (*buf)[:0]
+
 	defer func() {
 		// Re-using the buf pointer here allows us to avoid needing to
 		// re-allocate a *[]byte to stick back into the pool.
 		*buf = candidate
 		resolveScratch.Put(buf)
 	}()
+
 	candidate = scope.appendToBytes(candidate, first)
 
 	// Adapt skipIfNot to account for scopeSearch and to be ok to call if nil.
@@ -487,6 +499,7 @@ func (s symtab) resolve(
 		if scopeSearch {
 			return kind.IsScope()
 		}
+
 		return skipIfNot == nil || skipIfNot(kind)
 	}
 
@@ -497,6 +510,7 @@ again:
 
 		if !r.IsZero() {
 			found = r
+
 			sym := GetRef(file, r)
 			if sym.Visible(file, true) && accept(sym.Kind()) {
 				// If the symbol is not visible, keep looking; we may find
@@ -509,7 +523,9 @@ again:
 			// Out of places to look. This is probably a fail.
 			break
 		}
+
 		oldLen := len(scope)
+
 		scope = scope.Parent()
 		if scope == "" {
 			oldLen++
@@ -521,6 +537,7 @@ again:
 	if scopeSearch {
 		// Now search for the full name inside of the scope we found.
 		candidate = append(candidate, name[len(first):]...)
+
 		found = s.lookupBytes(file, candidate)
 		if found.IsZero() {
 			// Try again, this time using the full candidate name. This happens
@@ -530,6 +547,7 @@ again:
 			// error message where we say that we found the parent scope.
 			found = Ref[Symbol]{}
 			expected = FullName(candidate)
+
 			goto again
 		}
 	}

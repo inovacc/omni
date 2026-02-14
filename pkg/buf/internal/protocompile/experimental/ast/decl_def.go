@@ -91,6 +91,7 @@ func (d DeclDef) AsAny() DeclAny {
 	if d.IsZero() {
 		return DeclAny{}
 	}
+
 	return id.WrapDyn(d.Context(), id.NewDyn(DeclKindDef, id.ID[DeclAny](d.ID())))
 }
 
@@ -133,6 +134,7 @@ func (d DeclDef) KeywordToken() token.Token {
 	// modifiers, such as groups and types. Any def that can have a body
 	// is permitted to have modifiers, because that is unambiguous with a field.
 	mods := false
+
 	ty := d.Type()
 	for ty.Kind() == TypeKindPrefixed {
 		mods = true
@@ -144,7 +146,7 @@ func (d DeclDef) KeywordToken() token.Token {
 		return token.Zero
 	}
 
-	ident := path.Path.AsIdent()
+	ident := path.AsIdent()
 	switch ident.Keyword() {
 	case keyword.Option:
 		if !mods { // NOTE: Options with modifiers are treated as fields by protoc.
@@ -161,6 +163,7 @@ func (d DeclDef) KeywordToken() token.Token {
 			return ident
 		}
 	}
+
 	return token.Zero
 }
 
@@ -174,6 +177,7 @@ func (d DeclDef) Prefixes() iter.Seq[TypePrefixed] {
 			if !yield(prefixed) {
 				break
 			}
+
 			ty = prefixed.Type()
 		}
 	}
@@ -220,6 +224,7 @@ func (d DeclDef) WithSignature() Signature {
 	if !d.IsZero() && d.Signature().IsZero() {
 		d.Raw().signature = new(rawSignature)
 	}
+
 	return d.Signature()
 }
 
@@ -537,6 +542,7 @@ func (d DeclDef) Span() source.Span {
 // Signatures may have multiple inputs and outputs.
 type Signature struct {
 	withContext
+
 	raw *rawSignature
 }
 

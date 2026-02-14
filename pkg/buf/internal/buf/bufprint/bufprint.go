@@ -104,6 +104,7 @@ func PrintNames(writer io.Writer, format Format, entities ...Entity) error {
 				return err
 			}
 		}
+
 		return nil
 	case FormatText:
 		for _, entity := range entities {
@@ -111,6 +112,7 @@ func PrintNames(writer io.Writer, format Format, entities ...Entity) error {
 				return err
 			}
 		}
+
 		return nil
 	default:
 		return syserror.Newf("unknown format: %s", format)
@@ -128,9 +130,12 @@ func PrintPage(
 	if len(entities) == 0 {
 		return nil
 	}
+
 	var entitiesName string
+
 	for _, entity := range entities {
 		var currentEntitiesName string
+
 		switch entity.(type) {
 		case outputLabel:
 			currentEntitiesName = "labels"
@@ -143,19 +148,24 @@ func PrintPage(
 		default:
 			return syserror.Newf("unknown implementation of Entity: %T", entity)
 		}
+
 		if currentEntitiesName != entitiesName && entitiesName != "" {
 			return syserror.Newf("the page has both %s and %s", currentEntitiesName, entitiesName)
 		}
+
 		entitiesName = currentEntitiesName
 	}
+
 	switch format {
 	case FormatText:
 		if err := PrintNames(writer, format, entities...); err != nil {
 			return err
 		}
+
 		if nextPageToken == "" {
 			return nil
 		}
+
 		_, err := fmt.Fprintf(
 			writer,
 			"\nMore than %d %s found, run %q to list more\n",
@@ -163,6 +173,7 @@ func PrintPage(
 			entitiesName,
 			nextPageCommand,
 		)
+
 		return err
 	case FormatJSON:
 		return json.NewEncoder(writer).Encode(&entityPage{
@@ -188,6 +199,7 @@ func PrintEntity(writer io.Writer, format Format, entity Entity) error {
 		if err != nil {
 			return err
 		}
+
 		return WithTabWriter(
 			writer,
 			fieldNames,
@@ -209,10 +221,12 @@ func NewLabelEntity(label interface {
 	GetArchiveTime() *timestamppb.Timestamp
 }, moduleFullName bufparse.FullName) Entity {
 	var archiveTime *time.Time
+
 	if label.GetArchiveTime() != nil {
 		timeValue := label.GetArchiveTime().AsTime()
 		archiveTime = &timeValue
 	}
+
 	return outputLabel{
 		Name:           label.GetName(),
 		Commit:         label.GetCommitId(),
@@ -243,13 +257,13 @@ func NewCommitEntity(
 // NewModuleEntity returns a new module entity to print.
 func NewModuleEntity(module *modulev1.Module, moduleFullName bufparse.FullName) Entity {
 	return outputModule{
-		ID:               module.Id,
+		ID:               module.GetId(),
 		Remote:           moduleFullName.Registry(),
 		Owner:            moduleFullName.Owner(),
 		Name:             moduleFullName.Name(),
 		FullName:         moduleFullName.String(),
-		CreateTime:       module.CreateTime.AsTime(),
-		State:            module.State.String(),
+		CreateTime:       module.GetCreateTime().AsTime(),
+		State:            module.GetState().String(),
 		DefaultLabelName: module.GetDefaultLabelName(),
 	}
 }
@@ -257,35 +271,35 @@ func NewModuleEntity(module *modulev1.Module, moduleFullName bufparse.FullName) 
 // NewOrganizationEntity returns a new organization entity to print.
 func NewOrganizationEntity(organization *ownerv1.Organization, remote string) Entity {
 	return outputOrganization{
-		ID:         organization.Id,
+		ID:         organization.GetId(),
 		Remote:     remote,
-		Name:       organization.Name,
-		FullName:   fmt.Sprintf("%s/%s", remote, organization.Name),
-		CreateTime: organization.CreateTime.AsTime(),
+		Name:       organization.GetName(),
+		FullName:   fmt.Sprintf("%s/%s", remote, organization.GetName()),
+		CreateTime: organization.GetCreateTime().AsTime(),
 	}
 }
 
 // NewPluginEntity returns a new plugin entity to print.
 func NewPluginEntity(plugin *pluginv1beta1.Plugin, pluginFullName bufparse.FullName) Entity {
 	return outputPlugin{
-		ID:         plugin.Id,
+		ID:         plugin.GetId(),
 		Remote:     pluginFullName.Registry(),
 		Owner:      pluginFullName.Owner(),
 		Name:       pluginFullName.Name(),
 		FullName:   pluginFullName.String(),
-		CreateTime: plugin.CreateTime.AsTime(),
+		CreateTime: plugin.GetCreateTime().AsTime(),
 	}
 }
 
 // NewPolicyEntity returns a new plugin entity to print.
 func NewPolicyEntity(policy *policyv1beta1.Policy, policyFullName bufparse.FullName) Entity {
 	return outputPolicy{
-		ID:         policy.Id,
+		ID:         policy.GetId(),
 		Remote:     policyFullName.Registry(),
 		Owner:      policyFullName.Owner(),
 		Name:       policyFullName.Name(),
 		FullName:   policyFullName.String(),
-		CreateTime: policy.CreateTime.AsTime(),
+		CreateTime: policy.GetCreateTime().AsTime(),
 	}
 }
 
@@ -364,12 +378,15 @@ func WithTabWriter(
 	f func(TabWriter) error,
 ) (retErr error) {
 	tabWriter := newTabWriter(writer)
+
 	defer func() {
 		retErr = errors.Join(retErr, tabWriter.Flush())
 	}()
+
 	if err := tabWriter.Write(header...); err != nil {
 		return err
 	}
+
 	return f(tabWriter)
 }
 
@@ -381,7 +398,9 @@ func printProtoMessageJSON(writer io.Writer, message proto.Message) error {
 	if err != nil {
 		return err
 	}
+
 	_, err = writer.Write(append(data, []byte("\n")...))
+
 	return err
 }
 
@@ -390,18 +409,28 @@ func getFieldNamesAndValuesForInfo(entity any) ([]string, []string, error) {
 	if reflectType.Kind() != reflect.Struct {
 		return nil, nil, syserror.Newf("%T is not a struct", entity)
 	}
+
 	numField := reflectType.NumField()
 	reflectValue := reflect.ValueOf(entity)
-	var fieldNames []string
-	var fieldValues []string
+
+	var (
+		fieldNames  []string
+		fieldValues []string
+	)
+
 	for i := range numField {
 		field := reflectType.Field(i)
+
 		bufprintTag, ok := field.Tag.Lookup("bufprint")
 		if !ok {
 			continue
 		}
-		var fieldName string
-		var omitEmpty bool
+
+		var (
+			fieldName string
+			omitEmpty bool
+		)
+
 		parts := strings.SplitN(bufprintTag, ",", 2)
 		switch len(parts) {
 		case 1:
@@ -411,36 +440,44 @@ func getFieldNamesAndValuesForInfo(entity any) ([]string, []string, error) {
 			if parts[1] != "omitempty" {
 				return nil, nil, syserror.Newf("unknown bufprint tag value: %s", parts[1])
 			}
+
 			omitEmpty = true
 		default:
 			return nil, nil, syserror.Newf("unexpected number of parts in bufprint tag: %s", bufprintTag)
 		}
+
 		value := reflectValue.Field(i)
 		switch t := value.Interface().(type) {
 		case string:
 			if omitEmpty && t == "" {
 				continue
 			}
+
 			fieldValues = append(fieldValues, t)
 		case *time.Time:
 			if omitEmpty && t == nil {
 				continue
 			}
+
 			var value string
 			if t != nil {
 				value = t.Format(time.RFC3339)
 			}
+
 			fieldValues = append(fieldValues, value)
 		case time.Time:
 			if omitEmpty && (t.Equal(time.Time{}) || t.Equal((&timestamppb.Timestamp{}).AsTime())) {
 				continue
 			}
+
 			fieldValues = append(fieldValues, t.Format(time.RFC3339))
 		default:
 			return nil, nil, syserror.Newf("unexpected data type: %T", t)
 		}
+
 		fieldNames = append(fieldNames, fieldName)
 	}
+
 	return fieldNames, fieldValues, nil
 }
 
@@ -454,6 +491,7 @@ type entityPage struct {
 func (p *entityPage) MarshalJSON() ([]byte, error) {
 	value := reflect.ValueOf(*p)
 	t := value.Type()
+
 	fields := make([]reflect.StructField, 0)
 	for i := range t.NumField() {
 		fields = append(fields, t.Field(i))
@@ -461,8 +499,10 @@ func (p *entityPage) MarshalJSON() ([]byte, error) {
 			fields[i].Tag = reflect.StructTag(fmt.Sprintf(`json:"%s"`, p.pluralEntityName))
 		}
 	}
+
 	newType := reflect.StructOf(fields)
 	newValue := value.Convert(newType)
+
 	return json.Marshal(newValue.Interface())
 }
 

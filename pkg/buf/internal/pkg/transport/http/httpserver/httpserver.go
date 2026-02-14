@@ -113,10 +113,12 @@ func Run(
 	for _, option := range options {
 		option(s)
 	}
+
 	protocols := new(http.Protocols)
 	protocols.SetHTTP1(true)
 	protocols.SetHTTP2(true)
 	protocols.SetUnencryptedHTTP2(!s.disableH2C)
+
 	httpServer := &http.Server{
 		Handler:           handler,
 		ReadHeaderTimeout: s.readHeaderTimeout,
@@ -140,16 +142,22 @@ func Run(
 	})
 	eg.Go(func() error {
 		<-ctx.Done()
+
 		start := time.Now()
+
 		logger.Info("shutdown_starting", slog.Duration("shutdown_timeout", s.shutdownTimeout))
+
 		defer func() {
 			logger.Info("shutdown_finished", slog.Duration("duration", time.Since(start)))
 		}()
+
 		if s.shutdownTimeout != 0 {
 			ctx, cancel := context.WithTimeout(context.Background(), s.shutdownTimeout)
 			defer cancel()
+
 			return httpServer.Shutdown(ctx)
 		}
+
 		return httpServer.Close()
 	})
 
@@ -159,9 +167,11 @@ func Run(
 		slog.Duration("shutdown_timeout", s.shutdownTimeout),
 		slog.Bool("tls", s.tlsConfig != nil),
 	)
+
 	if err := eg.Wait(); err != http.ErrServerClosed {
 		return err
 	}
+
 	return nil
 }
 
@@ -169,5 +179,6 @@ func httpServe(httpServer *http.Server, listener net.Listener) error {
 	if httpServer.TLSConfig != nil {
 		return httpServer.ServeTLS(listener, "", "")
 	}
+
 	return httpServer.Serve(listener)
 }

@@ -28,6 +28,7 @@ func (a *invalidArgumentError) Error() string {
 	if a == nil {
 		return ""
 	}
+
 	return a.err.Error()
 }
 
@@ -35,5 +36,6 @@ func (a *invalidArgumentError) Unwrap() error {
 	if a == nil {
 		return nil
 	}
+
 	return a.err
 }

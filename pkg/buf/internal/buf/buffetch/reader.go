@@ -153,6 +153,7 @@ func (a *reader) GetSourceReadBucketCloser(
 	for _, option := range options {
 		option(getReadBucketCloserOptions)
 	}
+
 	var internalGetReadBucketCloserOptions []internal.GetReadBucketCloserOption
 	if !getReadBucketCloserOptions.noSearch {
 		internalGetReadBucketCloserOptions = append(
@@ -160,12 +161,14 @@ func (a *reader) GetSourceReadBucketCloser(
 			internal.WithGetReadBucketCloserTerminateFunc(buftarget2.TerminateAtControllingWorkspace),
 		)
 	}
+
 	if getReadBucketCloserOptions.copyToInMemory {
 		internalGetReadBucketCloserOptions = append(
 			internalGetReadBucketCloserOptions,
 			internal.WithGetReadBucketCloserCopyToInMemory(),
 		)
 	}
+
 	internalGetReadBucketCloserOptions = append(
 		internalGetReadBucketCloserOptions,
 		internal.WithGetReadBucketCloserTargetPaths(getReadBucketCloserOptions.targetPaths),
@@ -174,6 +177,7 @@ func (a *reader) GetSourceReadBucketCloser(
 		internalGetReadBucketCloserOptions,
 		internal.WithGetReadBucketCloserTargetExcludePaths(getReadBucketCloserOptions.targetExcludePaths),
 	)
+
 	return a.internalReader.GetReadBucketCloser(
 		ctx,
 		container,
@@ -192,6 +196,7 @@ func (a *reader) GetDirReadWriteBucket(
 	for _, option := range options {
 		option(getReadWriteBucketOptions)
 	}
+
 	var internalGetReadWriteBucketOptions []internal.GetReadWriteBucketOption
 	if !getReadWriteBucketOptions.noSearch {
 		internalGetReadWriteBucketOptions = append(
@@ -199,6 +204,7 @@ func (a *reader) GetDirReadWriteBucket(
 			internal.WithGetReadWriteBucketTerminateFunc(buftarget2.TerminateAtControllingWorkspace),
 		)
 	}
+
 	internalGetReadWriteBucketOptions = append(
 		internalGetReadWriteBucketOptions,
 		internal.WithGetReadWriteBucketTargetPaths(getReadWriteBucketOptions.targetPaths),
@@ -207,6 +213,7 @@ func (a *reader) GetDirReadWriteBucket(
 		internalGetReadWriteBucketOptions,
 		internal.WithGetReadWriteBucketTargetExcludePaths(getReadWriteBucketOptions.targetExcludePaths),
 	)
+
 	return a.internalReader.GetReadWriteBucket(
 		ctx,
 		container,

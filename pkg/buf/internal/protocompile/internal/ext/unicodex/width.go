@@ -71,8 +71,10 @@ func (w *Width) WriteString(text string) (int, error) {
 		if w.Out != nil {
 			m, err := w.Out.WriteString(s)
 			n += m
+
 			return err
 		}
+
 		return nil
 	}
 
@@ -118,6 +120,7 @@ func (w *Width) WriteString(text string) (int, error) {
 			}
 
 			var chunk string
+
 			chunk, next = next[:nextNonPrint], next[nextNonPrint:]
 
 			var escape string
@@ -133,6 +136,7 @@ func (w *Width) WriteString(text string) (int, error) {
 			if err := write(chunk); err != nil {
 				return n, err
 			}
+
 			if err := write(escape); err != nil {
 				return n, err
 			}
@@ -150,8 +154,11 @@ func (w *Width) WordWrap(text string, maxWidth int) iter.Seq[string] {
 		// to change.
 		for line := range stringsx.Lines(text) {
 			w.Column = 0
-			var nextIsSpace bool
-			var cursor int
+
+			var (
+				nextIsSpace bool
+				cursor      int
+			)
 
 			for start, chunk := range stringsx.PartitionKey(line, unicode.IsSpace) {
 				isSpace := nextIsSpace
@@ -171,6 +178,7 @@ func (w *Width) WordWrap(text string, maxWidth int) iter.Seq[string] {
 				}
 
 				w.Column = 0
+
 				if isSpace {
 					cursor = start + len(chunk)
 				} else {

@@ -27,6 +27,7 @@ func Walk(root Node, v Visitor, opts ...WalkOption) error {
 	for _, opt := range opts {
 		opt(&wOpts)
 	}
+
 	return walk(root, v, wOpts)
 }
 
@@ -69,6 +70,7 @@ func walk(root Node, v Visitor, opts walkOptions) (err error) {
 			return err
 		}
 	}
+
 	if opts.after != nil {
 		defer func() {
 			if afterErr := opts.after(root); afterErr != nil {
@@ -92,6 +94,7 @@ func walk(root Node, v Visitor, opts walkOptions) (err error) {
 			}
 		}
 	}
+
 	return nil
 }
 
@@ -220,6 +223,7 @@ func (t *AncestorTracker) Parent() Node {
 	if len(t.ancestors) <= 1 {
 		return nil
 	}
+
 	return t.ancestors[len(t.ancestors)-2]
 }
 
@@ -232,6 +236,7 @@ func VisitChildren(n CompositeNode, v Visitor) error {
 			return err
 		}
 	}
+
 	return nil
 }
 
@@ -661,6 +666,7 @@ func (v *SimpleVisitor) VisitFileNode(node *FileNode) error {
 	if v.DoVisitFileNode != nil {
 		return v.DoVisitFileNode(node)
 	}
+
 	return v.visitInterface(node)
 }
 
@@ -668,6 +674,7 @@ func (v *SimpleVisitor) VisitSyntaxNode(node *SyntaxNode) error {
 	if v.DoVisitSyntaxNode != nil {
 		return v.DoVisitSyntaxNode(node)
 	}
+
 	return v.visitInterface(node)
 }
 
@@ -675,6 +682,7 @@ func (v *SimpleVisitor) VisitEditionNode(node *EditionNode) error {
 	if v.DoVisitEditionNode != nil {
 		return v.DoVisitEditionNode(node)
 	}
+
 	return v.visitInterface(node)
 }
 
@@ -682,6 +690,7 @@ func (v *SimpleVisitor) VisitPackageNode(node *PackageNode) error {
 	if v.DoVisitPackageNode != nil {
 		return v.DoVisitPackageNode(node)
 	}
+
 	return v.visitInterface(node)
 }
 
@@ -689,6 +698,7 @@ func (v *SimpleVisitor) VisitImportNode(node *ImportNode) error {
 	if v.DoVisitImportNode != nil {
 		return v.DoVisitImportNode(node)
 	}
+
 	return v.visitInterface(node)
 }
 
@@ -696,6 +706,7 @@ func (v *SimpleVisitor) VisitOptionNode(node *OptionNode) error {
 	if v.DoVisitOptionNode != nil {
 		return v.DoVisitOptionNode(node)
 	}
+
 	return v.visitInterface(node)
 }
 
@@ -703,6 +714,7 @@ func (v *SimpleVisitor) VisitOptionNameNode(node *OptionNameNode) error {
 	if v.DoVisitOptionNameNode != nil {
 		return v.DoVisitOptionNameNode(node)
 	}
+
 	return v.visitInterface(node)
 }
 
@@ -710,6 +722,7 @@ func (v *SimpleVisitor) VisitFieldReferenceNode(node *FieldReferenceNode) error 
 	if v.DoVisitFieldReferenceNode != nil {
 		return v.DoVisitFieldReferenceNode(node)
 	}
+
 	return v.visitInterface(node)
 }
 
@@ -717,6 +730,7 @@ func (v *SimpleVisitor) VisitCompactOptionsNode(node *CompactOptionsNode) error 
 	if v.DoVisitCompactOptionsNode != nil {
 		return v.DoVisitCompactOptionsNode(node)
 	}
+
 	return v.visitInterface(node)
 }
 
@@ -724,6 +738,7 @@ func (v *SimpleVisitor) VisitMessageNode(node *MessageNode) error {
 	if v.DoVisitMessageNode != nil {
 		return v.DoVisitMessageNode(node)
 	}
+
 	return v.visitInterface(node)
 }
 
@@ -731,6 +746,7 @@ func (v *SimpleVisitor) VisitExtendNode(node *ExtendNode) error {
 	if v.DoVisitExtendNode != nil {
 		return v.DoVisitExtendNode(node)
 	}
+
 	return v.visitInterface(node)
 }
 
@@ -738,6 +754,7 @@ func (v *SimpleVisitor) VisitExtensionRangeNode(node *ExtensionRangeNode) error 
 	if v.DoVisitExtensionRangeNode != nil {
 		return v.DoVisitExtensionRangeNode(node)
 	}
+
 	return v.visitInterface(node)
 }
 
@@ -745,6 +762,7 @@ func (v *SimpleVisitor) VisitReservedNode(node *ReservedNode) error {
 	if v.DoVisitReservedNode != nil {
 		return v.DoVisitReservedNode(node)
 	}
+
 	return v.visitInterface(node)
 }
 
@@ -752,6 +770,7 @@ func (v *SimpleVisitor) VisitRangeNode(node *RangeNode) error {
 	if v.DoVisitRangeNode != nil {
 		return v.DoVisitRangeNode(node)
 	}
+
 	return v.visitInterface(node)
 }
 
@@ -759,6 +778,7 @@ func (v *SimpleVisitor) VisitFieldNode(node *FieldNode) error {
 	if v.DoVisitFieldNode != nil {
 		return v.DoVisitFieldNode(node)
 	}
+
 	return v.visitInterface(node)
 }
 
@@ -766,6 +786,7 @@ func (v *SimpleVisitor) VisitGroupNode(node *GroupNode) error {
 	if v.DoVisitGroupNode != nil {
 		return v.DoVisitGroupNode(node)
 	}
+
 	return v.visitInterface(node)
 }
 
@@ -773,6 +794,7 @@ func (v *SimpleVisitor) VisitMapFieldNode(node *MapFieldNode) error {
 	if v.DoVisitMapFieldNode != nil {
 		return v.DoVisitMapFieldNode(node)
 	}
+
 	return v.visitInterface(node)
 }
 
@@ -780,6 +802,7 @@ func (v *SimpleVisitor) VisitMapTypeNode(node *MapTypeNode) error {
 	if v.DoVisitMapTypeNode != nil {
 		return v.DoVisitMapTypeNode(node)
 	}
+
 	return v.visitInterface(node)
 }
 
@@ -787,6 +810,7 @@ func (v *SimpleVisitor) VisitOneofNode(node *OneofNode) error {
 	if v.DoVisitOneofNode != nil {
 		return v.DoVisitOneofNode(node)
 	}
+
 	return v.visitInterface(node)
 }
 
@@ -794,6 +818,7 @@ func (v *SimpleVisitor) VisitEnumNode(node *EnumNode) error {
 	if v.DoVisitEnumNode != nil {
 		return v.DoVisitEnumNode(node)
 	}
+
 	return v.visitInterface(node)
 }
 
@@ -801,6 +826,7 @@ func (v *SimpleVisitor) VisitEnumValueNode(node *EnumValueNode) error {
 	if v.DoVisitEnumValueNode != nil {
 		return v.DoVisitEnumValueNode(node)
 	}
+
 	return v.visitInterface(node)
 }
 
@@ -808,6 +834,7 @@ func (v *SimpleVisitor) VisitServiceNode(node *ServiceNode) error {
 	if v.DoVisitServiceNode != nil {
 		return v.DoVisitServiceNode(node)
 	}
+
 	return v.visitInterface(node)
 }
 
@@ -815,6 +842,7 @@ func (v *SimpleVisitor) VisitRPCNode(node *RPCNode) error {
 	if v.DoVisitRPCNode != nil {
 		return v.DoVisitRPCNode(node)
 	}
+
 	return v.visitInterface(node)
 }
 
@@ -822,6 +850,7 @@ func (v *SimpleVisitor) VisitRPCTypeNode(node *RPCTypeNode) error {
 	if v.DoVisitRPCTypeNode != nil {
 		return v.DoVisitRPCTypeNode(node)
 	}
+
 	return v.visitInterface(node)
 }
 
@@ -829,6 +858,7 @@ func (v *SimpleVisitor) VisitIdentNode(node *IdentNode) error {
 	if v.DoVisitIdentNode != nil {
 		return v.DoVisitIdentNode(node)
 	}
+
 	return v.visitInterface(node)
 }
 
@@ -836,6 +866,7 @@ func (v *SimpleVisitor) VisitCompoundIdentNode(node *CompoundIdentNode) error {
 	if v.DoVisitCompoundIdentNode != nil {
 		return v.DoVisitCompoundIdentNode(node)
 	}
+
 	return v.visitInterface(node)
 }
 
@@ -843,6 +874,7 @@ func (v *SimpleVisitor) VisitStringLiteralNode(node *StringLiteralNode) error {
 	if v.DoVisitStringLiteralNode != nil {
 		return v.DoVisitStringLiteralNode(node)
 	}
+
 	return v.visitInterface(node)
 }
 
@@ -850,6 +882,7 @@ func (v *SimpleVisitor) VisitCompoundStringLiteralNode(node *CompoundStringLiter
 	if v.DoVisitCompoundStringLiteralNode != nil {
 		return v.DoVisitCompoundStringLiteralNode(node)
 	}
+
 	return v.visitInterface(node)
 }
 
@@ -857,6 +890,7 @@ func (v *SimpleVisitor) VisitUintLiteralNode(node *UintLiteralNode) error {
 	if v.DoVisitUintLiteralNode != nil {
 		return v.DoVisitUintLiteralNode(node)
 	}
+
 	return v.visitInterface(node)
 }
 
@@ -864,6 +898,7 @@ func (v *SimpleVisitor) VisitNegativeIntLiteralNode(node *NegativeIntLiteralNode
 	if v.DoVisitNegativeIntLiteralNode != nil {
 		return v.DoVisitNegativeIntLiteralNode(node)
 	}
+
 	return v.visitInterface(node)
 }
 
@@ -871,6 +906,7 @@ func (v *SimpleVisitor) VisitFloatLiteralNode(node *FloatLiteralNode) error {
 	if v.DoVisitFloatLiteralNode != nil {
 		return v.DoVisitFloatLiteralNode(node)
 	}
+
 	return v.visitInterface(node)
 }
 
@@ -878,6 +914,7 @@ func (v *SimpleVisitor) VisitSpecialFloatLiteralNode(node *SpecialFloatLiteralNo
 	if v.DoVisitSpecialFloatLiteralNode != nil {
 		return v.DoVisitSpecialFloatLiteralNode(node)
 	}
+
 	return v.visitInterface(node)
 }
 
@@ -885,6 +922,7 @@ func (v *SimpleVisitor) VisitSignedFloatLiteralNode(node *SignedFloatLiteralNode
 	if v.DoVisitSignedFloatLiteralNode != nil {
 		return v.DoVisitSignedFloatLiteralNode(node)
 	}
+
 	return v.visitInterface(node)
 }
 
@@ -892,6 +930,7 @@ func (v *SimpleVisitor) VisitArrayLiteralNode(node *ArrayLiteralNode) error {
 	if v.DoVisitArrayLiteralNode != nil {
 		return v.DoVisitArrayLiteralNode(node)
 	}
+
 	return v.visitInterface(node)
 }
 
@@ -899,6 +938,7 @@ func (v *SimpleVisitor) VisitMessageLiteralNode(node *MessageLiteralNode) error 
 	if v.DoVisitMessageLiteralNode != nil {
 		return v.DoVisitMessageLiteralNode(node)
 	}
+
 	return v.visitInterface(node)
 }
 
@@ -906,6 +946,7 @@ func (v *SimpleVisitor) VisitMessageFieldNode(node *MessageFieldNode) error {
 	if v.DoVisitMessageFieldNode != nil {
 		return v.DoVisitMessageFieldNode(node)
 	}
+
 	return v.visitInterface(node)
 }
 
@@ -913,6 +954,7 @@ func (v *SimpleVisitor) VisitKeywordNode(node *KeywordNode) error {
 	if v.DoVisitKeywordNode != nil {
 		return v.DoVisitKeywordNode(node)
 	}
+
 	return v.visitInterface(node)
 }
 
@@ -920,6 +962,7 @@ func (v *SimpleVisitor) VisitRuneNode(node *RuneNode) error {
 	if v.DoVisitRuneNode != nil {
 		return v.DoVisitRuneNode(node)
 	}
+
 	return v.visitInterface(node)
 }
 
@@ -927,5 +970,6 @@ func (v *SimpleVisitor) VisitEmptyDeclNode(node *EmptyDeclNode) error {
 	if v.DoVisitEmptyDeclNode != nil {
 		return v.DoVisitEmptyDeclNode(node)
 	}
+
 	return v.visitInterface(node)
 }

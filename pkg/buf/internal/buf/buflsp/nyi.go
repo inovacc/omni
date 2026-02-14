@@ -216,6 +216,7 @@ func (nyi) WorkDoneProgressCancel(ctx context.Context, params *protocol.WorkDone
 // nyi returns a "not yet implemented" error containing the name of the function that called it.
 func newNYIError() error {
 	caller := "<unknown function>"
+
 	if pc, _, _, ok := runtime.Caller(1); ok {
 		if fn := runtime.FuncForPC(pc); fn != nil {
 			caller = fn.Name()

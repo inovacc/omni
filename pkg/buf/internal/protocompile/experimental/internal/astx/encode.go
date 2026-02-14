@@ -78,6 +78,7 @@ func (c *protoEncoder) checkCycle(v source.Spanner) func() {
 		for _, v := range c.stack {
 			c.stackMap[v] = struct{}{}
 		}
+
 		c.stack = nil
 	}
 
@@ -113,6 +114,7 @@ func (c *protoEncoder) file(file *ast.File) *compilerpb.File {
 			Text: []byte(file.Stream().Text()),
 		}
 	}
+
 	return proto
 }
 
@@ -147,6 +149,7 @@ func (c *protoEncoder) commas(cs commas) []*compilerpb.Span {
 	for i := range spans {
 		spans[i] = c.span(cs.Comma(i))
 	}
+
 	return spans
 }
 
@@ -161,12 +164,14 @@ func (c *protoEncoder) path(path ast.Path) *compilerpb.Path {
 	}
 	for pc := range path.Components {
 		component := new(compilerpb.Path_Component)
+
 		switch pc.Separator().Text() {
 		case ".":
 			component.Separator = compilerpb.Path_Component_SEPARATOR_DOT
 		case "/":
 			component.Separator = compilerpb.Path_Component_SEPARATOR_SLASH
 		}
+
 		component.SeparatorSpan = c.span(pc.Separator())
 
 		if extn := pc.AsExtension(); !extn.IsZero() {
@@ -180,6 +185,7 @@ func (c *protoEncoder) path(path ast.Path) *compilerpb.Path {
 
 		proto.Components = append(proto.Components, component)
 	}
+
 	return proto
 }
 
@@ -192,6 +198,7 @@ func (c *protoEncoder) decl(decl ast.DeclAny) *compilerpb.Decl {
 	switch k := decl.Kind(); k {
 	case ast.DeclKindEmpty:
 		decl := decl.AsEmpty()
+
 		return &compilerpb.Decl{Decl: &compilerpb.Decl_Empty_{Empty: &compilerpb.Decl_Empty{
 			Span: c.span(decl),
 		}}}
@@ -200,6 +207,7 @@ func (c *protoEncoder) decl(decl ast.DeclAny) *compilerpb.Decl {
 		decl := decl.AsSyntax()
 
 		var kind compilerpb.Decl_Syntax_Kind
+
 		switch {
 		case decl.IsSyntax():
 			kind = compilerpb.Decl_Syntax_KIND_SYNTAX
@@ -231,8 +239,10 @@ func (c *protoEncoder) decl(decl ast.DeclAny) *compilerpb.Decl {
 	case ast.DeclKindImport:
 		decl := decl.AsImport()
 
-		var mods []compilerpb.Decl_Import_Modifier
-		var modSpans []*compilerpb.Span
+		var (
+			mods     []compilerpb.Decl_Import_Modifier
+			modSpans []*compilerpb.Span
+		)
 
 		for mod := range seq.Values(decl.ModifierTokens()) {
 			switch mod.Keyword() {
@@ -260,6 +270,7 @@ func (c *protoEncoder) decl(decl ast.DeclAny) *compilerpb.Decl {
 
 	case ast.DeclKindBody:
 		decl := decl.AsBody()
+
 		return &compilerpb.Decl{Decl: &compilerpb.Decl_Body_{Body: &compilerpb.Decl_Body{
 			Span:  c.span(decl),
 			Decls: slices.Collect(seq.Map(decl.Decls(), c.decl)),
@@ -288,6 +299,7 @@ func (c *protoEncoder) decl(decl ast.DeclAny) *compilerpb.Decl {
 		decl := decl.AsDef()
 
 		var kind compilerpb.Def_Kind
+
 		switch decl.Classify() {
 		case ast.DefKindMessage:
 			kind = compilerpb.Def_KIND_MESSAGE
@@ -425,6 +437,7 @@ func (c *protoEncoder) expr(expr ast.ExprAny) *compilerpb.Expr {
 		expr := expr.AsRange()
 
 		start, end := expr.Bounds()
+
 		return &compilerpb.Expr{Expr: &compilerpb.Expr_Range_{Range: &compilerpb.Expr_Range{
 			Start:  c.expr(start),
 			End:    c.expr(end),
@@ -435,6 +448,7 @@ func (c *protoEncoder) expr(expr ast.ExprAny) *compilerpb.Expr {
 	case ast.ExprKindArray:
 		expr := expr.AsArray()
 		a, b := expr.Brackets().StartEnd()
+
 		return &compilerpb.Expr{Expr: &compilerpb.Expr_Array_{Array: &compilerpb.Expr_Array{
 			Span:       c.span(expr),
 			OpenSpan:   c.span(a.LeafSpan()),
@@ -446,6 +460,7 @@ func (c *protoEncoder) expr(expr ast.ExprAny) *compilerpb.Expr {
 	case ast.ExprKindDict:
 		expr := expr.AsDict()
 		a, b := expr.Braces().StartEnd()
+
 		return &compilerpb.Expr{Expr: &compilerpb.Expr_Dict_{Dict: &compilerpb.Expr_Dict{
 			Span:       c.span(expr),
 			OpenSpan:   c.span(a.LeafSpan()),
@@ -492,6 +507,7 @@ func (c *protoEncoder) type_(ty ast.TypeAny) *compilerpb.Type {
 		ty := ty.AsPrefixed()
 
 		var prefix compilerpb.Type_Prefixed_Prefix
+
 		switch ty.Prefix() {
 		case keyword.Optional:
 			prefix = compilerpb.Type_Prefixed_PREFIX_OPTIONAL
@@ -514,6 +530,7 @@ func (c *protoEncoder) type_(ty ast.TypeAny) *compilerpb.Type {
 		ty := ty.AsGeneric()
 
 		a, b := ty.Args().Brackets().StartEnd()
+
 		return &compilerpb.Type{Type: &compilerpb.Type_Generic_{Generic: &compilerpb.Type_Generic{
 			Path:       c.path(ty.Path()),
 			Span:       c.span(ty),

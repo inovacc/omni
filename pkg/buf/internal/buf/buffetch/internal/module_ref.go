@@ -37,20 +37,25 @@ func newModuleRef(
 	if path == "" {
 		return nil, NewNoPathError()
 	}
+
 	if app.IsDevStderr(path) {
 		return nil, NewInvalidPathError(format, path)
 	}
+
 	if path == "-" || app.IsDevNull(path) || app.IsDevStdin(path) || app.IsDevStdout(path) {
 		return nil, NewInvalidPathError(format, path)
 	}
+
 	if strings.Contains(path, "://") {
 		return nil, NewInvalidPathError(format, path)
 	}
+
 	moduleRef, err := bufparse.ParseRef(path)
 	if err != nil {
 		// TODO: this is dumb
 		return nil, NewInvalidPathError(format, path)
 	}
+
 	return newDirectModuleRef(format, moduleRef), nil
 }
 

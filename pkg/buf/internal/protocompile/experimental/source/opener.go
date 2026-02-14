@@ -53,6 +53,7 @@ func NewMap(m map[string]*File) Map {
 	if m == nil {
 		m = make(map[string]*File)
 	}
+
 	return Map(cmpx.NewMapWrapper(m))
 }
 
@@ -74,6 +75,7 @@ func (m Map) Open(path string) (*File, error) {
 	if !ok {
 		return nil, fs.ErrNotExist
 	}
+
 	return file, nil
 }
 
@@ -99,10 +101,12 @@ func (fs *FS) Open(path string) (*File, error) {
 	defer file.Close()
 
 	var buf strings.Builder
+
 	_, err = io.Copy(&buf, file)
 	if err != nil {
 		return nil, err
 	}
+
 	return NewFile(path, buf.String()), nil
 }
 
@@ -119,7 +123,9 @@ func (o *Openers) Open(path string) (*File, error) {
 		if errors.Is(err, fs.ErrNotExist) {
 			continue
 		}
+
 		return file, err
 	}
+
 	return nil, fs.ErrNotExist
 }

@@ -61,6 +61,7 @@ func (f FileVersion) String() string {
 	if !ok {
 		return strconv.Itoa(int(f))
 	}
+
 	return s
 }
 
@@ -78,6 +79,7 @@ func getFileVersionForData(
 	if err := getUnmarshalNonStrict(allowJSON)(data, &externalFileVersion); err != nil {
 		return 0, err
 	}
+
 	return parseFileVersion(
 		externalFileVersion.Version,
 		"",
@@ -101,17 +103,21 @@ func parseFileVersion(
 		if fileVersionRequired {
 			return 0, newNoFileVersionError(suggestedFileVersion)
 		}
+
 		return defaultFileVersion, nil
 	}
+
 	c, ok := stringToFileVersion[s]
 	if !ok {
 		return 0, fmt.Errorf("unknown file version: %q", s)
 	}
+
 	if fileName != "" {
 		if err := validateSupportedFileVersion(fileName, c, fileNameToSupportedFileVersions); err != nil {
 			return 0, err
 		}
 	}
+
 	return c, nil
 }
 
@@ -121,9 +127,11 @@ func validateSupportedFileVersion(fileName string, fileVersion FileVersion, file
 		// This should never happen.
 		return syserror.Newf("unknown configuration file name: %q", fileName)
 	}
+
 	if _, ok := supportedFileVersions[fileVersion]; !ok {
 		return newUnsupportedFileVersionError(fileName, fileVersion)
 	}
+
 	return nil
 }
 
@@ -143,5 +151,6 @@ func newUnsupportedFileVersionError(name string, fileVersion FileVersion) error 
 	if name == "" {
 		return fmt.Errorf("%s is not supported", fileVersion.String())
 	}
+
 	return fmt.Errorf("%s is not supported for %s files", fileVersion.String(), name)
 }

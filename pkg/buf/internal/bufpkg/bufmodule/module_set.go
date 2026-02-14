@@ -152,6 +152,7 @@ func ModuleSetTargetLocalModulesAndTransitiveLocalDeps(moduleSet ModuleSet) ([]M
 	// includes our result Modules, but we want the visited map to include everything
 	// we have visited so we can stop recursion.
 	visitedOpaqueIDs := make(map[string]struct{})
+
 	resultOpaqueIDToLocalModule := make(map[string]Module)
 	for _, module := range targetLocalModules {
 		if err := moduleSetTargetLocalModulesAndTransitiveLocalDepsRec(
@@ -162,6 +163,7 @@ func ModuleSetTargetLocalModulesAndTransitiveLocalDeps(moduleSet ModuleSet) ([]M
 			return nil, err
 		}
 	}
+
 	resultLocalModules := xslices.MapValuesToSlice(resultOpaqueIDToLocalModule)
 	sort.Slice(
 		resultLocalModules,
@@ -169,6 +171,7 @@ func ModuleSetTargetLocalModulesAndTransitiveLocalDeps(moduleSet ModuleSet) ([]M
 			return resultLocalModules[i].OpaqueID() < resultLocalModules[j].OpaqueID()
 		},
 	)
+
 	return resultLocalModules, nil
 }
 
@@ -221,12 +224,14 @@ func ModuleSetToDAG(moduleSet ModuleSet, options ...ModuleSetToDAGOption) (*dag.
 	for _, option := range options {
 		option(moduleSetToDAGOptions)
 	}
+
 	graph := dag.NewGraph[string, Module](Module.OpaqueID)
 	for _, module := range ModuleSetTargetModules(moduleSet) {
 		if err := moduleSetToDAGRec(module, graph, moduleSetToDAGOptions.remoteOnly); err != nil {
 			return nil, err
 		}
 	}
+
 	return graph, nil
 }
 
@@ -266,6 +271,7 @@ func newModuleSet(
 	opaqueIDToModule := make(map[string]Module, len(modules))
 	descriptionToModule := make(map[string]Module, len(modules))
 	bucketIDToModule := make(map[string]Module, len(modules))
+
 	commitIDToModule := make(map[uuid.UUID]Module, len(modules))
 	for _, module := range modules {
 		if moduleFullName := module.FullName(); moduleFullName != nil {
@@ -274,37 +280,47 @@ func newModuleSet(
 				// This should never happen.
 				return nil, syserror.Newf("duplicate FullName %q when constructing ModuleSet", moduleFullNameString)
 			}
+
 			moduleFullNameStringToModule[moduleFullNameString] = module
 		}
+
 		opaqueID := module.OpaqueID()
 		if _, ok := opaqueIDToModule[opaqueID]; ok {
 			// This should never happen.
 			return nil, syserror.Newf("duplicate OpaqueID %q when constructing ModuleSet", opaqueID)
 		}
+
 		opaqueIDToModule[opaqueID] = module
+
 		description := module.Description()
 		if _, ok := descriptionToModule[description]; ok {
 			// This should never happen if we construct descriptions appropriately.
 			return nil, syserror.Newf("duplicate Description %q when constructing ModuleSet", description)
 		}
+
 		descriptionToModule[description] = module
+
 		bucketID := module.BucketID()
 		if bucketID != "" {
 			if _, ok := bucketIDToModule[bucketID]; ok {
 				// This should never happen.
 				return nil, syserror.Newf("duplicate BucketID %q when constructing ModuleSet", bucketID)
 			}
+
 			bucketIDToModule[bucketID] = module
 		}
+
 		commitID := module.CommitID()
 		if commitID != uuid.Nil {
 			if _, ok := commitIDToModule[commitID]; ok {
 				// This should never happen.
 				return nil, syserror.Newf("duplicate CommitID %q when constructing ModuleSet", uuidutil.ToDashless(commitID))
 			}
+
 			commitIDToModule[commitID] = module
 		}
 	}
+
 	moduleSet := &moduleSet{
 		modules:                      modules,
 		moduleFullNameStringToModule: moduleFullNameStringToModule,
@@ -315,12 +331,14 @@ func newModuleSet(
 	for _, module := range modules {
 		module.setModuleSet(moduleSet)
 	}
+
 	return moduleSet, nil
 }
 
 func (m *moduleSet) Modules() []Module {
 	c := make([]Module, len(m.modules))
 	copy(c, m.modules)
+
 	return c
 }
 
@@ -344,7 +362,9 @@ func (m *moduleSet) WithTargetOpaqueIDs(opaqueIDs ...string) (ModuleSet, error) 
 	if len(opaqueIDs) == 0 {
 		return nil, errors.New("at least one Module must be targeted")
 	}
+
 	opaqueIDMap := xslices.ToStructMap(opaqueIDs)
+
 	modules := make([]Module, len(m.modules))
 	for i, module := range m.modules {
 		_, isTarget := opaqueIDMap[module.OpaqueID()]
@@ -353,8 +373,10 @@ func (m *moduleSet) WithTargetOpaqueIDs(opaqueIDs ...string) (ModuleSet, error) 
 		if err != nil {
 			return nil, err
 		}
+
 		modules[i] = module
 	}
+
 	return newModuleSet(modules)
 }
 
@@ -383,6 +405,7 @@ func (m *moduleSet) getModuleForFilePathUncached(ctx context.Context, filePath s
 			return nil, err
 		}
 	}
+
 	switch len(matchingOpaqueIDToModule) {
 	case 0:
 		// This will happen if there is a file path we cannot find in our modules, which will result
@@ -395,6 +418,7 @@ func (m *moduleSet) getModuleForFilePathUncached(ctx context.Context, filePath s
 		var matchingOpaqueID string
 		for matchingOpaqueID = range matchingOpaqueIDToModule {
 		}
+
 		return m.GetModuleForOpaqueID(matchingOpaqueID), nil
 	default:
 		// This actually could happen, and we will want to make this error message as clear as possible.
@@ -432,14 +456,17 @@ func moduleSetTargetLocalModulesAndTransitiveLocalDepsRec(
 	if _, ok := visitedOpaqueIDs[opaqueID]; ok {
 		return nil
 	}
+
 	visitedOpaqueIDs[opaqueID] = struct{}{}
 	if module.IsLocal() {
 		resultOpaqueIDToLocalModule[opaqueID] = module
 	}
+
 	moduleDeps, err := module.ModuleDeps()
 	if err != nil {
 		return err
 	}
+
 	for _, moduleDep := range moduleDeps {
 		// We want to recurse on both local and remote deps.
 		//
@@ -454,6 +481,7 @@ func moduleSetTargetLocalModulesAndTransitiveLocalDepsRec(
 			return err
 		}
 	}
+
 	return nil
 }
 
@@ -470,10 +498,12 @@ func moduleSetToDAGRec(
 	if !remoteOnly || !module.IsLocal() {
 		graph.AddNode(module)
 	}
+
 	directModuleDeps, err := ModuleDirectModuleDeps(module)
 	if err != nil {
 		return err
 	}
+
 	for _, directModuleDep := range directModuleDeps {
 		// If remoteOnly is set, then we only want to add the edge if both the module _and_ the
 		// dependency are remote.
@@ -485,6 +515,7 @@ func moduleSetToDAGRec(
 			return err
 		}
 	}
+
 	return nil
 }
 

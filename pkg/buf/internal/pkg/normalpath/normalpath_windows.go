@@ -43,6 +43,7 @@ func NormalizeAndValidate(path string) (string, error) {
 		normalizedPath == normalizedRelPathJumpContextPath {
 		return "", NewError(path, errOutsideContextDir)
 	}
+
 	return normalizedPath, nil
 }
 
@@ -56,17 +57,22 @@ func NormalizeAndValidate(path string) (string, error) {
 // The path and value are expected to be normalized and absolute if Absolute is used.
 func EqualsOrContainsPath(value string, path string, pathType PathType) bool {
 	curPath := path
+
 	var lastSeen string
+
 	for {
 		if strings.EqualFold(value, curPath) {
 			return true
 		}
+
 		curPath = Dir(curPath)
 		if lastSeen == curPath {
 			break
 		}
+
 		lastSeen = curPath
 	}
+
 	return false
 }
 
@@ -109,6 +115,7 @@ func MapAllEqualOrContainingPathMap(m map[string]struct{}, path string, pathType
 			n[potentialMatch] = struct{}{}
 		}
 	}
+
 	return n
 }
 
@@ -145,6 +152,7 @@ func Components(path string) []string {
 		// intention of `Split` so we ensure they always mean "the root of this volume".
 		volumeComponent = volumeComponent + stringOSPathSeparator
 	}
+
 	if len(volumeComponent) < 1 && dir[0] == os.PathSeparator {
 		// If we didn't extract a volume name then the path is either
 		// absolute and starts with an os.PathSeparator (it must be exactly 1
@@ -153,8 +161,10 @@ func Components(path string) []string {
 		// otherwise we leave it as an empty string.
 		volumeComponent = stringOSPathSeparator
 	}
+
 	for {
 		var file string
+
 		dir, file = filepath.Split(dir)
 		// puts in reverse
 		components = append(components, file)
@@ -163,14 +173,18 @@ func Components(path string) []string {
 			if volumeComponent != "" {
 				components = append(components, dir)
 			}
+
 			break
 		}
 
 		dir = strings.TrimSuffix(dir, stringOSPathSeparator)
 	}
+
 	slices.Reverse(components)
+
 	for i, component := range components {
 		components[i] = Normalize(component)
 	}
+
 	return components
 }

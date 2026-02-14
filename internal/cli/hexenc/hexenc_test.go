@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"strings"
 	"testing"
+
+	"github.com/inovacc/omni/internal/cli/output"
 )
 
 func TestRunEncode(t *testing.T) {
@@ -160,7 +162,7 @@ func TestRunDecode(t *testing.T) {
 func TestRunEncodeJSON(t *testing.T) {
 	var buf bytes.Buffer
 
-	opts := Options{JSON: true}
+	opts := Options{OutputFormat: output.FormatJSON}
 
 	err := RunEncode(&buf, []string{"hello"}, opts)
 	if err != nil {
@@ -188,7 +190,7 @@ func TestRunEncodeJSON(t *testing.T) {
 func TestRunDecodeJSON(t *testing.T) {
 	var buf bytes.Buffer
 
-	opts := Options{JSON: true}
+	opts := Options{OutputFormat: output.FormatJSON}
 
 	err := RunDecode(&buf, []string{"68656c6c6f"}, opts)
 	if err != nil {

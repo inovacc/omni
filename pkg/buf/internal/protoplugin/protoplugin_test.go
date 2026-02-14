@@ -58,11 +58,13 @@ func TestBasic(t *testing.T) {
 					for i, descriptorProto := range fileDescriptorProto.GetMessageType() {
 						topLevelMessageNames[i] = descriptorProto.GetName()
 					}
+
 					responseWriter.AddFile(
 						fileDescriptorProto.GetName()+".txt",
 						strings.Join(topLevelMessageNames, "\n")+"\n",
 					)
 				}
+
 				return nil
 			},
 		),
@@ -89,10 +91,12 @@ func TestWithVersionOption(t *testing.T) {
 			HandlerFunc(func(_ context.Context, _ PluginEnv, _ ResponseWriter, _ Request) error { return nil }),
 			runOptions...,
 		)
+
 		return stdout.String(), err
 	}
 
 	var unknownArgumentsError *unknownArgumentsError
+
 	_, err := run([]string{"--unsupported"})
 	require.ErrorAs(t, err, &unknownArgumentsError)
 	_, err = run([]string{"--unsupported"}, WithVersion("0.0.1"))
@@ -127,6 +131,7 @@ func TestWithExtensionTypeResolverOption(t *testing.T) {
 		Resolver: &protocompile.SourceResolver{
 			Accessor: func(path string) (io.ReadCloser, error) {
 				var source []byte
+
 				switch path {
 				case "google/protobuf/descriptor.proto":
 					source = fakeDescriptorProto
@@ -135,6 +140,7 @@ func TestWithExtensionTypeResolverOption(t *testing.T) {
 				default:
 					t.Fatal("Unexpected path ", path)
 				}
+
 				return io.NopCloser(bytes.NewReader(source)), nil
 			},
 		},
@@ -239,10 +245,11 @@ func testBasic(
 	codeGeneratorResponse := &pluginpb.CodeGeneratorResponse{}
 	err = proto.Unmarshal(stdout.Bytes(), codeGeneratorResponse)
 	require.NoError(t, err)
-	require.Nil(t, codeGeneratorResponse.Error)
+	require.Nil(t, codeGeneratorResponse.GetError())
 
 	pathToContent := make(map[string]string)
-	for _, file := range codeGeneratorResponse.File {
+
+	for _, file := range codeGeneratorResponse.GetFile() {
 		require.NotEmpty(t, file.GetName())
 		pathToContent[file.GetName()] = file.GetContent()
 	}
@@ -258,22 +265,28 @@ func compile(ctx context.Context, pathToData map[string][]byte) ([]*descriptorpb
 				if !ok {
 					return nil, &fs.PathError{Op: "read", Path: path, Err: fs.ErrNotExist}
 				}
+
 				return io.NopCloser(bytes.NewReader(data)), nil
 			},
 		},
 	}
+
 	paths := make([]string, 0, len(pathToData))
 	for path := range pathToData {
 		paths = append(paths, path)
 	}
+
 	sort.Strings(paths)
+
 	files, err := compiler.Compile(ctx, paths...)
 	if err != nil {
 		return nil, err
 	}
+
 	fileDescriptorProtos := make([]*descriptorpb.FileDescriptorProto, len(files))
 	for i, file := range files {
 		fileDescriptorProtos[i] = protoutil.ProtoFromFileDescriptor(file)
 	}
+
 	return fileDescriptorProtos, nil
 }

@@ -118,6 +118,7 @@ func (s *symbol) Definition() protocol.Location {
 			URI: imported.file.uri,
 		}
 	}
+
 	if s.def == nil {
 		// The definition does not have a span, so we just jump to the span of the symbol itself
 		// as a fallback.
@@ -126,6 +127,7 @@ func (s *symbol) Definition() protocol.Location {
 			Range: s.Range(),
 		}
 	}
+
 	return protocol.Location{
 		URI:   s.def.file.uri,
 		Range: s.def.Range(),
@@ -138,6 +140,7 @@ func (s *symbol) TypeDefinition() protocol.Location {
 	if _, ok := s.kind.(*option); !ok {
 		return s.Definition()
 	}
+
 	if s.typeDef == nil {
 		// The type definition does not have a span, so we just jump to the span of the symbol
 		// itself as a fallback.
@@ -146,6 +149,7 @@ func (s *symbol) TypeDefinition() protocol.Location {
 			Range: s.Range(),
 		}
 	}
+
 	return protocol.Location{
 		URI:   s.typeDef.file.uri,
 		Range: s.typeDef.Range(),
@@ -158,12 +162,14 @@ func (s *symbol) TypeDefinition() protocol.Location {
 // of the symbol is included as a reference.
 func (s *symbol) References(includeDeclaration bool) []protocol.Location {
 	var references []protocol.Location
+
 	referenceableKind, ok := s.kind.(*referenceable)
 	if !ok && s.def != nil {
 		// If the symbol isn't referenceable itself, but has a referenceable definition, use the
 		// definition for the references.
 		referenceableKind, ok = s.def.kind.(*referenceable)
 	}
+
 	if ok {
 		for _, reference := range referenceableKind.references {
 			references = append(references, protocol.Location{
@@ -178,6 +184,7 @@ func (s *symbol) References(includeDeclaration bool) []protocol.Location {
 			Range: s.Range(),
 		})
 	}
+
 	if includeDeclaration {
 		// Add the definition of the symbol to the list of references.
 		if s.def != nil {
@@ -187,6 +194,7 @@ func (s *symbol) References(includeDeclaration bool) []protocol.Location {
 			})
 		}
 	}
+
 	return references
 }
 
@@ -206,6 +214,7 @@ func (s *symbol) DocumentHighlights() []protocol.DocumentHighlight {
 		// definition for the references.
 		referenceableKind, ok = s.def.kind.(*referenceable)
 	}
+
 	if !ok {
 		return nil
 	}
@@ -250,12 +259,14 @@ func (s *symbol) LogValue() slog.Value {
 	if s == nil {
 		return slog.AnyValue(nil)
 	}
+
 	loc := func(loc source.Location) slog.Value {
 		return slog.GroupValue(
 			slog.Int("line", loc.Line),
 			slog.Int("column", loc.Column),
 		)
 	}
+
 	attrs := []slog.Attr{
 		slog.String("path", s.span.Path()),
 		slog.Any("start", loc(s.span.StartLoc())),
@@ -270,6 +281,7 @@ func (s *symbol) LogValue() slog.Value {
 			slog.Any("end", loc(s.span.EndLoc())),
 		)
 	}
+
 	return slog.GroupValue(attrs...)
 }
 
@@ -288,6 +300,7 @@ func (s *symbol) FormatDocs() string {
 		return irMemberDoc(s.ir.AsMember())
 	case *builtin:
 		builtin, _ := s.kind.(*builtin)
+
 		comments, ok := builtinDocs[builtin.predeclared.String()]
 		if ok {
 			// Use specific anchor for map, generic anchor for other builtins
@@ -295,6 +308,7 @@ func (s *symbol) FormatDocs() string {
 			if builtin.predeclared.String() == "map" {
 				anchor = "maps"
 			}
+
 			comments = append(
 				comments,
 				"",
@@ -304,12 +318,15 @@ func (s *symbol) FormatDocs() string {
 					anchor,
 				),
 			)
+
 			return strings.Join(comments, "\n")
 		}
+
 		return ""
 	case *referenceable, *static, *reference, *option:
 		return s.getDocsFromComments()
 	}
+
 	return ""
 }
 
@@ -323,6 +340,7 @@ func (s *symbol) GetSymbolInformation() protocol.SymbolInformation {
 	if name == "" {
 		return protocol.SymbolInformation{}
 	}
+
 	parentFullName := name.Parent()
 	containerName := string(parentFullName)
 
@@ -333,6 +351,7 @@ func (s *symbol) GetSymbolInformation() protocol.SymbolInformation {
 
 	// Determine the symbol kind for LSP.
 	var kind protocol.SymbolKind
+
 	switch s.ir.Kind() {
 	case ir.SymbolKindMessage:
 		kind = protocol.SymbolKindClass // Messages are like classes
@@ -355,10 +374,12 @@ func (s *symbol) GetSymbolInformation() protocol.SymbolInformation {
 	default:
 		kind = protocol.SymbolKindVariable
 	}
+
 	var isDeprecated bool
 	if _, ok := s.ir.Deprecated().AsBool(); ok {
 		isDeprecated = true
 	}
+
 	return protocol.SymbolInformation{
 		Name:          string(name),
 		Kind:          kind,
@@ -372,20 +393,24 @@ func (s *symbol) GetSymbolInformation() protocol.SymbolInformation {
 // Rename returns the [protocol.WorkspaceEdit] for renaming the symbol.
 func (s *symbol) Rename(newName string) (*protocol.WorkspaceEdit, error) {
 	var edits protocol.WorkspaceEdit
+
 	switch s.kind.(type) {
 	case *referenceable:
 		if err := checkRenameConflicts(s, newName); err != nil {
 			return nil, err
 		}
+
 		changes, err := renameChangesForReferenceableSymbol(s, newName)
 		if err != nil {
 			return nil, err
 		}
+
 		edits.Changes = changes
 	case *static:
 		if err := checkRenameConflicts(s, newName); err != nil {
 			return nil, err
 		}
+
 		edits.Changes = map[protocol.DocumentURI][]protocol.TextEdit{
 			s.file.uri: {{
 				Range:   reportSpanToProtocolRange(s.span),
@@ -399,10 +424,12 @@ func (s *symbol) Rename(newName string) (*protocol.WorkspaceEdit, error) {
 			if err := checkRenameConflicts(s.def, newName); err != nil {
 				return nil, err
 			}
+
 			changes, err := renameChangesForReferenceableSymbol(s.def, newName)
 			if err != nil {
 				return nil, err
 			}
+
 			edits.Changes = changes
 		}
 	}
@@ -427,6 +454,7 @@ func renameChangesForReferenceableSymbol(s *symbol, newName string) (map[protoco
 		// definition for the references.
 		referenceableKind, ok = s.def.kind.(*referenceable)
 	}
+
 	if ok {
 		for _, reference := range referenceableKind.references {
 			newText := newName
@@ -459,6 +487,7 @@ func renameChangesForReferenceableSymbol(s *symbol, newName string) (map[protoco
 					newText = prefix + newName + suffix
 				}
 			}
+
 			changes[reference.file.uri] = append(changes[reference.file.uri], protocol.TextEdit{
 				Range:   reportSpanToProtocolRange(reference.span),
 				NewText: newText,
@@ -467,6 +496,7 @@ func renameChangesForReferenceableSymbol(s *symbol, newName string) (map[protoco
 	} else {
 		return nil, fmt.Errorf("attempting to rename a non-referenceble symbol as a referenceable symbol: %v", s)
 	}
+
 	return changes, nil
 }
 
@@ -476,6 +506,7 @@ func checkRenameConflicts(target *symbol, newName string) error {
 	parent := target.ir.FullName().Parent()
 	if parent != "" {
 		var existing source.Span
+
 		newFullName := parent.Append(newName)
 		containsFunc := func(s *symbol) bool {
 			existing = s.span
@@ -494,6 +525,7 @@ func checkRenameConflicts(target *symbol, newName string) error {
 				existing.StartLoc().Column,
 			)
 		}
+
 		for _, file := range target.file.workspace.PathToFile() {
 			if slices.ContainsFunc(file.symbols, containsFunc) {
 				return fmt.Errorf(
@@ -507,6 +539,7 @@ func checkRenameConflicts(target *symbol, newName string) error {
 			}
 		}
 	}
+
 	return nil
 }
 
@@ -520,6 +553,7 @@ func protowireTypeForPredeclared(name predeclared.Name) protowire.Type {
 	case predeclared.Fixed64, predeclared.SFixed64, predeclared.Double:
 		return protowire.Fixed64Type
 	}
+
 	return protowire.BytesType
 }
 
@@ -531,7 +565,9 @@ func (s *symbol) getDocsFromComments() string {
 	if s.def == nil {
 		return ""
 	}
+
 	var def ast.DeclDef
+
 	switch s.kind.(type) {
 	case *referenceable:
 		referenceable, _ := s.kind.(*referenceable)
@@ -546,6 +582,7 @@ func (s *symbol) getDocsFromComments() string {
 		option, _ := s.kind.(*option)
 		def = option.def
 	}
+
 	if def.IsZero() {
 		return ""
 	}
@@ -555,7 +592,9 @@ func (s *symbol) getDocsFromComments() string {
 	// traversing backwards for leading comments only.
 	tok, _ := def.Context().Stream().Around(def.Span().Start)
 	cursor := token.NewCursorAt(tok)
+
 	var seenNewline bool
+
 	for {
 		t := cursor.PrevSkippable()
 		if t.Kind() == token.Comment {
@@ -563,19 +602,23 @@ func (s *symbol) getDocsFromComments() string {
 			if seenNewline {
 				text += "\n"
 			}
+
 			seenNewline = false
+
 			comments = append(comments, text)
 		} else if t.Kind() == token.Space {
 			if strings.Contains(t.Text(), "\n") {
 				if seenNewline {
 					break
 				}
+
 				seenNewline = true
 			}
 		} else {
 			break
 		}
 	}
+
 	comments = lineUpComments(comments)
 	// Reverse the list and return joined.
 	slices.Reverse(comments)
@@ -590,6 +633,7 @@ func (s *symbol) getDocsFromComments() string {
 		// In the BSR, messages, enums, and service definitions support anchor tags in the link.
 		// Otherwise, we use the anchor for the parent type.
 		var hasAnchor, isExtension bool
+
 		switch def.Classify() {
 		case ast.DefKindMessage, ast.DefKindEnum, ast.DefKindService:
 			hasAnchor = true
@@ -598,8 +642,11 @@ func (s *symbol) getDocsFromComments() string {
 			hasAnchor = isExtension
 		}
 
-		var module bufmodule2.Module
-		var bsrHost string
+		var (
+			module  bufmodule2.Module
+			bsrHost string
+		)
+
 		if s.def.file.IsWKT() {
 			bsrHost = bufconnect.DefaultRemote + "/protocolbuffers/wellknowntypes"
 		} else if fileInfo, ok := s.def.file.objectInfo.(bufmodule2.FileInfo); ok {
@@ -611,6 +658,7 @@ func (s *symbol) getDocsFromComments() string {
 		if !hasAnchor {
 			defFullName = defFullName.Parent()
 		}
+
 		bsrAnchor := string(defFullName)
 		// For extensions, we use the anchor for the extensions section in the BSR docs.
 		if isExtension {
@@ -619,6 +667,7 @@ func (s *symbol) getDocsFromComments() string {
 
 		if bsrHost != "" {
 			packageName := string(s.def.file.ir.Package())
+
 			var url string
 			if s.def.file.IsWKT() {
 				// WKT uses special bsrHost format
@@ -630,6 +679,7 @@ func (s *symbol) getDocsFromComments() string {
 				// Use bsrURL for non-WKT modules
 				url = bsrURL(module, packageName, bsrAnchor, bsrTabTypeDocs)
 			}
+
 			if url != "" {
 				fmt.Fprintf(
 					&docs,
@@ -640,18 +690,20 @@ func (s *symbol) getDocsFromComments() string {
 			}
 		}
 	}
+
 	return docs.String()
 }
 
 // commentToMarkdown processes comment strings and formats them for markdown display.
 func commentToMarkdown(comment string) string {
-	if strings.HasPrefix(comment, "//") {
+	if after, ok := strings.CutPrefix(comment, "//"); ok {
 		// NOTE: We do not trim the space here, because indentation is
 		// significant for Markdown code fences, and if every line
 		// starts with a space, Markdown will trim it for us, even off
 		// of code blocks.
-		return strings.TrimPrefix(comment, "//")
+		return after
 	}
+
 	if strings.HasPrefix(comment, "/**") && !strings.HasPrefix(comment, "/**/") {
 		// NOTE: Doxygen-style comments (/** ... */) to Markdown format
 		// by removing comment delimiters and formatting the content.
@@ -662,12 +714,14 @@ func commentToMarkdown(comment string) string {
 		//  * with multiple lines
 		//  */
 		comment = strings.TrimSuffix(strings.TrimPrefix(comment, "/**"), "*/")
+
 		lines := strings.Split(strings.TrimSpace(comment), "\n")
 		for i, line := range lines {
 			line = strings.TrimSpace(line)
 			line = strings.TrimPrefix(line, "*")
 			lines[i] = line
 		}
+
 		return strings.Join(lines, "\n")
 	}
 	// Handle standard multi-line comments (/* ... */)
@@ -704,11 +758,13 @@ func lineUpComments(comments []string) []string {
 			if !strings.HasPrefix(comment, " ") {
 				return comments
 			}
+
 			linedUp[i] = strings.TrimPrefix(comment, " ")
 		} else {
 			linedUp[i] = comment
 		}
 	}
+
 	return linedUp
 }
 
@@ -717,6 +773,7 @@ func irMemberDoc(irMember ir.Member) string {
 	number := irMember.Number()
 	if irMember.IsEnumValue() {
 		varint := protowire.AppendVarint(nil, uint64(number))
+
 		return fmt.Sprintf(
 			"`0x%x`, `0b%b`\n\nencoded (hex): `%X` (%d byte%s)",
 			number,
@@ -732,11 +789,13 @@ func irMemberDoc(irMember ir.Member) string {
 		ty      protowire.Type
 		packed  bool
 	)
+
 	typeAST := irMember.TypeAST()
 	if irMember.IsGroup() {
 		ty = protowire.StartGroupType
 	} else if typeAST.Kind() == ast.TypeKindPrefixed {
 		prefixed := typeAST.AsPrefixed()
+
 		prefixedType := prefixed.Type()
 		if prefixedType.Kind() == ast.TypeKindPath {
 			ty = protowireTypeForPredeclared(prefixedType.AsPath().AsPredeclared())
@@ -752,12 +811,14 @@ func irMemberDoc(irMember ir.Member) string {
 		// All other cases, use protowire.BytesType
 		ty = protowire.BytesType
 	}
+
 	varint := protowire.AppendTag(nil, protowire.Number(number), ty)
 	fmt.Fprintf(
 		&builder,
 		"encoded (hex): `%X` (%d byte%s)",
 		varint, len(varint), plural(len(varint)),
 	)
+
 	if packed {
 		packed := protowire.AppendTag(nil, protowire.Number(number), protowire.BytesType)
 		fmt.Fprintf(
@@ -765,14 +826,17 @@ func irMemberDoc(irMember ir.Member) string {
 			"\n\npacked (hex): `%X` (%d byte%s)",
 			packed, len(packed), plural(len(varint)),
 		)
+
 		return builder.String()
 	}
+
 	return builder.String()
 }
 
 func reportSpanToProtocolRange(span source.Span) protocol.Range {
-	startLocation := span.File.Location(span.Start, positionalEncoding)
-	endLocation := span.File.Location(span.End, positionalEncoding)
+	startLocation := span.Location(span.Start, positionalEncoding)
+	endLocation := span.Location(span.End, positionalEncoding)
+
 	return reportLocationsToProtocolRange(startLocation, endLocation)
 }
 
@@ -793,5 +857,6 @@ func plural(i int) string {
 	if i == 1 {
 		return ""
 	}
+
 	return "s"
 }

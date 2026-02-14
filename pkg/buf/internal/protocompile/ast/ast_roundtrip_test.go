@@ -31,18 +31,22 @@ import (
 
 func TestASTRoundTrips(t *testing.T) {
 	t.Parallel()
+
 	err := filepath.Walk("../internal/testdata", func(path string, _ os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
+
 		if filepath.Ext(path) == ".proto" {
 			t.Run(path, func(t *testing.T) {
 				t.Parallel()
+
 				data, err := os.ReadFile(path)
 				require.NoError(t, err)
 				testASTRoundTrip(t, path, data)
 			})
 		}
+
 		return nil
 	})
 	assert.NoError(t, err) //nolint:testifylint // we want to continue even if err!=nil
@@ -58,7 +62,9 @@ func testASTRoundTrip(t *testing.T, path string, data []byte) {
 	filename := filepath.Base(path)
 	root, err := parser.Parse(filename, bytes.NewReader(data), reporter.NewHandler(nil))
 	require.NoError(t, err)
+
 	var buf bytes.Buffer
+
 	err = printAST(&buf, root)
 	require.NoError(t, err)
 	// see if file survived round trip!
@@ -75,6 +81,7 @@ func printAST(w io.Writer, file *ast.FileNode) error {
 	if !ok {
 		sw = &strWriter{w}
 	}
+
 	err := ast.Walk(file, &ast.SimpleVisitor{
 		DoVisitTerminalNode: func(token ast.TerminalNode) error {
 			info := file.NodeInfo(token)
@@ -96,6 +103,7 @@ func printAST(w io.Writer, file *ast.FileNode) error {
 	if err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -105,10 +113,12 @@ func printComments(sw stringWriter, comments ast.Comments) error {
 		if _, err := sw.WriteString(comment.LeadingWhitespace()); err != nil {
 			return err
 		}
+
 		if _, err := sw.WriteString(comment.RawText()); err != nil {
 			return err
 		}
 	}
+
 	return nil
 }
 
@@ -126,5 +136,6 @@ func (s *strWriter) WriteString(str string) (int, error) {
 	if str == "" {
 		return 0, nil
 	}
+
 	return s.Write([]byte(str))
 }

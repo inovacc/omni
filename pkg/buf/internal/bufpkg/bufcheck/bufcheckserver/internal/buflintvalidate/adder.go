@@ -15,8 +15,8 @@
 package buflintvalidate
 
 import (
-	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufprotosource"
 	"buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go/buf/validate"
+	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufprotosource"
 	"google.golang.org/protobuf/encoding/protowire"
 )
 
@@ -97,25 +97,31 @@ func (a *adder) fieldName() string {
 func (a *adder) getFieldRuleName(path ...int32) string {
 	name := "(buf.validate.field)"
 	fields := fieldRulesDescriptor.Fields()
+
 	combinedPath := path
 	if len(a.basePath) > 0 {
 		combinedPath = make([]int32, len(a.basePath), len(a.basePath)+len(path))
 		copy(combinedPath, a.basePath)
 		combinedPath = append(combinedPath, path...)
 	}
+
 	for _, fieldNumber := range combinedPath {
 		subField := fields.ByNumber(protowire.Number(fieldNumber))
 		if subField == nil {
 			return name
 		}
+
 		name += "."
 		name += string(subField.Name())
+
 		subFieldMessage := subField.Message()
 		if subFieldMessage == nil {
 			return name
 		}
+
 		fields = subField.Message().Fields()
 	}
+
 	return name
 }
 
@@ -126,7 +132,9 @@ func deduplicateLocations(locations []bufprotosource.Location) []bufprotosource.
 		endLine     int
 		endColumn   int
 	}
+
 	exactLocations := map[locationFields]struct{}{}
+
 	uniqueLocations := make([]bufprotosource.Location, 0, len(locations))
 	for _, location := range locations {
 		var locationValue locationFields
@@ -138,11 +146,15 @@ func deduplicateLocations(locations []bufprotosource.Location) []bufprotosource.
 				endColumn:   location.EndColumn(),
 			}
 		}
+
 		if _, ok := exactLocations[locationValue]; ok {
 			continue
 		}
+
 		exactLocations[locationValue] = struct{}{}
+
 		uniqueLocations = append(uniqueLocations, location)
 	}
+
 	return uniqueLocations
 }

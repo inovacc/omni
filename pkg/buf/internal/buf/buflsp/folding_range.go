@@ -80,8 +80,10 @@ func (s *server) foldingRange(file *file) []protocol.FoldingRange {
 
 // commentFoldingRanges creates folding ranges for multi-line comment blocks.
 func (s *server) commentFoldingRanges(astFile *ast.File) []protocol.FoldingRange {
-	var ranges []protocol.FoldingRange
-	var commentBlock []token.Token
+	var (
+		ranges       []protocol.FoldingRange
+		commentBlock []token.Token
+	)
 
 	stream := astFile.Stream()
 	if stream == nil {
@@ -90,6 +92,7 @@ func (s *server) commentFoldingRanges(astFile *ast.File) []protocol.FoldingRange
 
 	// Collect all comment tokens first
 	var commentTokens []token.Token
+
 	for tok := range stream.All() {
 		if tok.Kind() == token.Comment {
 			commentTokens = append(commentTokens, tok)
@@ -136,10 +139,13 @@ func (s *server) commentFoldingRanges(astFile *ast.File) []protocol.FoldingRange
 
 // importGroupFoldingRanges creates folding ranges for groups of consecutive imports.
 func (s *server) importGroupFoldingRanges(astFile *ast.File) []protocol.FoldingRange {
-	var ranges []protocol.FoldingRange
-	var importGroup []ast.DeclImport
+	var (
+		ranges      []protocol.FoldingRange
+		importGroup []ast.DeclImport
+	)
 
 	// Collect all imports and group consecutive ones
+
 	for imp := range astFile.Imports() {
 		if len(importGroup) == 0 {
 			importGroup = append(importGroup, imp)
@@ -198,6 +204,7 @@ func (s *server) optionBlockFoldingRanges(astFile *ast.File) []protocol.FoldingR
 		startLine int
 		endLine   int
 	}
+
 	seen := make(map[spanKey]bool)
 
 	// Iterate through all tokens looking for multi-line bracket pairs
@@ -212,6 +219,7 @@ func (s *server) optionBlockFoldingRanges(astFile *ast.File) []protocol.FoldingR
 				key := spanKey{startLine: startLine, endLine: endLine}
 				if !seen[key] {
 					seen[key] = true
+
 					ranges = append(ranges, createFoldingRange(span, protocol.RegionFoldingRange))
 				}
 			}

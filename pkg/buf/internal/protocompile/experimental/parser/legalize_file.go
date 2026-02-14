@@ -61,8 +61,10 @@ func legalizeFile(p *parser, file *ast.File) {
 	}
 
 	var pkg ast.DeclPackage
+
 	for i, decl := range seq.All(file.Decls()) {
 		file := classified{file, taxa.TopLevel}
+
 		switch decl.Kind() {
 		case ast.DeclKindSyntax:
 			continue // Already did this one in the loop above.
@@ -101,7 +103,8 @@ func legalizeSyntax(p *parser, parent classified, idx int, first *ast.DeclSyntax
 		return
 	}
 
-	file := parent.Spanner.(*ast.File) //nolint:errcheck // Implied by == taxa.TopLevel.
+	file := parent.Spanner.(*ast.File)
+
 	switch {
 	case !first.IsZero():
 		p.Errorf("unexpected %s", in).Apply(
@@ -114,6 +117,7 @@ func legalizeSyntax(p *parser, parent classified, idx int, first *ast.DeclSyntax
 			),
 			report.Notef("a file may contain at most one `syntax` or `edition` declaration"),
 		)
+
 		return
 	case idx > 0:
 		p.Errorf("unexpected %s", in).Apply(
@@ -123,6 +127,7 @@ func legalizeSyntax(p *parser, parent classified, idx int, first *ast.DeclSyntax
 			report.Notef("a %s must be the first declaration in a file", in),
 		)
 		*first = decl
+
 		return
 	default:
 		*first = decl
@@ -133,7 +138,9 @@ func legalizeSyntax(p *parser, parent classified, idx int, first *ast.DeclSyntax
 	}
 
 	expr := decl.Value()
+
 	var name string
+
 	switch expr.Kind() {
 	case ast.ExprKindLiteral:
 		if text := expr.AsLiteral().AsString(); !text.IsZero() {
@@ -152,11 +159,13 @@ func legalizeSyntax(p *parser, parent classified, idx int, first *ast.DeclSyntax
 			Where: in.In(),
 			Want:  taxa.String.AsSet(),
 		})
+
 		return
 	}
 
 	value := syntax.Lookup(name)
 	lit := expr.AsLiteral()
+
 	switch {
 	case !value.IsValid():
 		values := iterx.FilterMap(syntax.All(), func(s syntax.Syntax) (string, bool) {
@@ -241,7 +250,8 @@ func legalizePackage(p *parser, parent classified, idx int, first *ast.DeclPacka
 		return
 	}
 
-	file := parent.Spanner.(*ast.File) //nolint:errcheck // Implied by == taxa.TopLevel.
+	file := parent.Spanner.(*ast.File)
+
 	switch {
 	case !first.IsZero():
 		p.Errorf("unexpected %s", taxa.Package).Apply(
@@ -254,6 +264,7 @@ func legalizePackage(p *parser, parent classified, idx int, first *ast.DeclPacka
 			),
 			report.Notef("a file must contain exactly one %s", taxa.Package),
 		)
+
 		return
 	case idx > 0:
 		if idx > 1 || file.Decls().At(0).Kind() != ast.DeclKindSyntax {
@@ -266,8 +277,10 @@ func legalizePackage(p *parser, parent classified, idx int, first *ast.DeclPacka
 					taxa.Package,
 				),
 			)
+
 			return
 		}
+
 		fallthrough
 	default:
 		*first = decl
@@ -306,6 +319,7 @@ func legalizeImport(p *parser, parent classified, decl ast.DeclImport) {
 	}
 
 	in := taxa.Classify(decl)
+
 	expr := decl.ImportPath()
 	switch expr.Kind() {
 	case ast.ExprKindLiteral:
@@ -316,6 +330,7 @@ func legalizeImport(p *parser, parent classified, decl ast.DeclImport) {
 					p.Warn(errtoken.ImpureString{Token: lit.Token(), Where: in.In()})
 				}
 			}
+
 			break
 		}
 
@@ -324,6 +339,7 @@ func legalizeImport(p *parser, parent classified, decl ast.DeclImport) {
 			Where: in.In(),
 			Want:  taxa.String.AsSet(),
 		})
+
 		return
 
 	case ast.ExprKindPath:
@@ -338,6 +354,7 @@ func legalizeImport(p *parser, parent classified, decl ast.DeclImport) {
 			report.Helpf("Protobuf does not support importing symbols by name, instead, " +
 				"try importing a file, e.g. `import \"google/protobuf/descriptor.proto\";`"),
 		)
+
 		return
 
 	case ast.ExprKindInvalid:
@@ -350,6 +367,7 @@ func legalizeImport(p *parser, parent classified, decl ast.DeclImport) {
 		p.Errorf("missing import path in %s", in).Apply(
 			report.Snippet(decl),
 		)
+
 		return
 
 	default:
@@ -358,10 +376,12 @@ func legalizeImport(p *parser, parent classified, decl ast.DeclImport) {
 			Where: in.In(),
 			Want:  taxa.String.AsSet(),
 		})
+
 		return
 	}
 
 	var isOption bool
+
 	for i, mod := range seq.All(decl.ModifierTokens()) {
 		if i > 0 {
 			p.Errorf("unexpected `%s` modifier in %s", mod.Text(), in).Apply(
@@ -371,6 +391,7 @@ func legalizeImport(p *parser, parent classified, decl ast.DeclImport) {
 					decl.ModifierTokens().At(0),
 				), "already modified here"),
 			)
+
 			continue
 		}
 

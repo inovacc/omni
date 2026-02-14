@@ -72,7 +72,7 @@ func newMigrateBuilder(
 }
 
 // addBufGenYAML adds a buf.gen.yaml to the list of files to migrate. It returns nil
-// nil if the file is already in v2.
+// if the file is already in v2.
 //
 // If the file is in v1 and has a 'types' section on the top level, this function will
 // ignore 'types' and print a warning, while migrating everything else in the file.
@@ -82,23 +82,28 @@ func (m *migrateBuilder) addBufGenYAML(ctx context.Context, bufGenYAMLFilePath s
 	if _, ok := m.addedBufGenYAMLFilePaths[bufGenYAMLFilePath]; ok {
 		return nil
 	}
+
 	m.addedBufGenYAMLFilePaths[bufGenYAMLFilePath] = struct{}{}
 
 	file, err := m.bucket.Get(ctx, bufGenYAMLFilePath)
 	if err != nil {
 		return err
 	}
+
 	defer func() {
 		retErr = errors.Join(retErr, file.Close())
 	}()
+
 	bufGenYAML, err := bufconfig2.ReadBufGenYAMLFile(file)
 	if err != nil {
 		return err
 	}
+
 	if bufGenYAML.FileVersion() == bufconfig2.FileVersionV2 {
 		m.logger.Warn(fmt.Sprintf("%s is a v2 file, no migration required", bufGenYAMLFilePath))
 		return nil
 	}
+
 	if typeConfig := bufGenYAML.GenerateConfig().GenerateTypeConfig(); typeConfig != nil && len(typeConfig.IncludeTypes()) > 0 {
 		// TODO FUTURE: what does this sentence mean? Get someone else to read it and understand it without any explanation.
 		m.logger.Warn(fmt.Sprintf(
@@ -120,6 +125,7 @@ func (m *migrateBuilder) addBufGenYAML(ctx context.Context, bufGenYAMLFilePath s
 	// Even though we're just writing over this, we store this so that Diff can pick it up.
 	m.pathsToDelete[bufGenYAMLFilePath] = struct{}{}
 	m.pathToMigratedBufGenYAMLFile[bufGenYAMLFilePath] = migratedBufGenYAMLFile
+
 	return nil
 }
 
@@ -132,25 +138,30 @@ func (m *migrateBuilder) addWorkspace(ctx context.Context, workspaceDirPath stri
 	if _, ok := m.addedWorkspaceDirPaths[workspaceDirPath]; ok {
 		return nil
 	}
+
 	m.addedWorkspaceDirPaths[workspaceDirPath] = struct{}{}
 
 	bufWorkYAML, err := bufconfig2.GetBufWorkYAMLFileForPrefix(ctx, m.bucket, workspaceDirPath)
 	if errors.Is(err, fs.ErrNotExist) {
 		return fmt.Errorf("%q does not have a workspace configuration file (i.e. typically a buf.work.yaml)", workspaceDirPath)
 	}
+
 	if err != nil {
 		return err
 	}
+
 	objectData := bufWorkYAML.ObjectData()
 	if objectData == nil {
 		return syserror.New("ObjectData was nil on BufWorkYAMLFile created for prefix")
 	}
+
 	m.pathsToDelete[normalpath.Join(workspaceDirPath, objectData.Name())] = struct{}{}
 	for _, moduleDirRelativeToWorkspace := range bufWorkYAML.DirPaths() {
 		if err := m.addModule(ctx, normalpath.Join(workspaceDirPath, moduleDirRelativeToWorkspace)); err != nil {
 			return err
 		}
 	}
+
 	return nil
 }
 
@@ -163,6 +174,7 @@ func (m *migrateBuilder) addModule(ctx context.Context, moduleDirPath string) (r
 	if _, ok := m.addedModuleDirPaths[moduleDirPath]; ok {
 		return nil
 	}
+
 	m.addedModuleDirPaths[moduleDirPath] = struct{}{}
 
 	// First get module configs from the buf.yaml at moduleDir.
@@ -174,6 +186,7 @@ func (m *migrateBuilder) addModule(ctx context.Context, moduleDirPath string) (r
 		if err != nil {
 			return err
 		}
+
 		emptyModuleConfig, err := bufconfig2.NewModuleConfig(
 			moduleRootRelativeToDestination,
 			nil,
@@ -209,6 +222,7 @@ func (m *migrateBuilder) addModule(ctx context.Context, moduleDirPath string) (r
 		if err != nil {
 			return err
 		}
+
 		if err := m.appendModuleConfig(
 			emptyModuleConfig,
 			normalpath.Join(moduleDirPath, bufconfig2.DefaultBufYAMLFileName),
@@ -219,13 +233,16 @@ func (m *migrateBuilder) addModule(ctx context.Context, moduleDirPath string) (r
 		// we return early here.
 		return nil
 	}
+
 	if err != nil {
 		return err
 	}
+
 	objectData := bufYAMLFile.ObjectData()
 	if objectData == nil {
 		return syserror.New("ObjectData was nil on BufYAMLFile created for prefix")
 	}
+
 	bufYAMLFilePath := normalpath.Join(moduleDirPath, objectData.Name())
 	// If this module is already visited, we don't add it for a second time. It's
 	// possible to visit the same module directory twice when the user specifies both
@@ -233,12 +250,14 @@ func (m *migrateBuilder) addModule(ctx context.Context, moduleDirPath string) (r
 	if _, ok := m.pathsToDelete[bufYAMLFilePath]; ok {
 		return nil
 	}
+
 	switch bufYAMLFile.FileVersion() {
 	case bufconfig2.FileVersionV1Beta1:
 		if len(bufYAMLFile.ModuleConfigs()) != 1 {
 			// This should never happen because it's guaranteed by the bufYAMLFile interface.
 			return syserror.Newf("expect exactly 1 module config from buf yaml, got %d", len(bufYAMLFile.ModuleConfigs()))
 		}
+
 		moduleConfig := bufYAMLFile.ModuleConfigs()[0]
 		moduleFullName := moduleConfig.FullName()
 		// If a buf.yaml v1beta1 has a non-empty name and multiple roots, the
@@ -264,14 +283,17 @@ func (m *migrateBuilder) addModule(ctx context.Context, moduleDirPath string) (r
 			if err != nil {
 				return err
 			}
+
 			lintConfigForRoot, err := equivalentLintConfigInV2(ctx, m.logger, moduleConfig.LintConfig())
 			if err != nil {
 				return err
 			}
+
 			breakingConfigForRoot, err := equivalentBreakingConfigInV2(ctx, m.logger, moduleConfig.BreakingConfig())
 			if err != nil {
 				return err
 			}
+
 			moduleConfigForRoot, err := bufconfig2.NewModuleConfig(
 				moduleRootRelativeToDestination,
 				moduleFullName,
@@ -285,29 +307,36 @@ func (m *migrateBuilder) addModule(ctx context.Context, moduleDirPath string) (r
 			if err != nil {
 				return err
 			}
+
 			if err := m.appendModuleConfig(moduleConfigForRoot, bufYAMLFilePath); err != nil {
 				return err
 			}
 		}
+
 		m.configuredDepModuleRefs = append(m.configuredDepModuleRefs, bufYAMLFile.ConfiguredDepModuleRefs()...)
 	case bufconfig2.FileVersionV1:
 		if len(bufYAMLFile.ModuleConfigs()) != 1 {
 			// This should never happen because it's guaranteed by the bufYAMLFile interface.
 			return syserror.Newf("expect exactly 1 module config from buf yaml, got %d", len(bufYAMLFile.ModuleConfigs()))
 		}
+
 		moduleConfig := bufYAMLFile.ModuleConfigs()[0]
+
 		moduleRootRelativeToDestination, err := normalpath.Rel(m.destinationDirPath, normalpath.Dir(bufYAMLFilePath))
 		if err != nil {
 			return err
 		}
+
 		lintConfig, err := equivalentLintConfigInV2(ctx, m.logger, moduleConfig.LintConfig())
 		if err != nil {
 			return err
 		}
+
 		breakingConfig, err := equivalentBreakingConfigInV2(ctx, m.logger, moduleConfig.BreakingConfig())
 		if err != nil {
 			return err
 		}
+
 		moduleConfig, err = bufconfig2.NewModuleConfig(
 			moduleRootRelativeToDestination,
 			moduleConfig.FullName(),
@@ -321,9 +350,11 @@ func (m *migrateBuilder) addModule(ctx context.Context, moduleDirPath string) (r
 		if err != nil {
 			return err
 		}
+
 		if err := m.appendModuleConfig(moduleConfig, bufYAMLFilePath); err != nil {
 			return err
 		}
+
 		m.configuredDepModuleRefs = append(m.configuredDepModuleRefs, bufYAMLFile.ConfiguredDepModuleRefs()...)
 	case bufconfig2.FileVersionV2:
 		m.logger.Warn(fmt.Sprintf("%s is a v2 file, no migration required", bufYAMLFilePath))
@@ -331,6 +362,7 @@ func (m *migrateBuilder) addModule(ctx context.Context, moduleDirPath string) (r
 	default:
 		return syserror.Newf("unexpected version: %v", bufYAMLFile.FileVersion())
 	}
+
 	m.pathsToDelete[bufYAMLFilePath] = struct{}{}
 	// Now we read buf.lock and add its lock entries to the list of candidate lock entries
 	// for the migrated buf.lock. These lock entries are candidates because different buf.locks
@@ -345,10 +377,12 @@ func (m *migrateBuilder) addModule(ctx context.Context, moduleDirPath string) (r
 				if err != nil {
 					return nil, err
 				}
+
 				commits, err := m.commitProvider.GetCommitsForCommitKeys(ctx, []bufmodule2.CommitKey{commitKey})
 				if err != nil {
 					return nil, err
 				}
+
 				return commits[0].ModuleKey().Digest()
 			},
 		),
@@ -356,19 +390,23 @@ func (m *migrateBuilder) addModule(ctx context.Context, moduleDirPath string) (r
 	if errors.Is(errors.Unwrap(err), fs.ErrNotExist) {
 		return nil
 	}
+
 	if err != nil {
 		return err
 	}
+
 	objectData = bufLockFile.ObjectData()
 	if objectData == nil {
 		return syserror.New("ObjectData was nil on BufLockFile created for prefix")
 	}
+
 	bufLockFilePath := normalpath.Join(moduleDirPath, objectData.Name())
 	// We don't need to check whether it's already in the map, but because if it were,
 	// its co-resident buf.yaml would also have been a duplicate and made this
 	// function return at an earlier point.
 	m.pathsToDelete[bufLockFilePath] = struct{}{}
 	m.hasSeenBufLockFile = true
+
 	switch bufLockFile.FileVersion() {
 	case bufconfig2.FileVersionV1Beta1, bufconfig2.FileVersionV1:
 		m.depModuleKeys = append(m.depModuleKeys, bufLockFile.DepModuleKeys()...)
@@ -378,6 +416,7 @@ func (m *migrateBuilder) addModule(ctx context.Context, moduleDirPath string) (r
 	default:
 		return syserror.Newf("unrecognized version: %v", bufLockFile.FileVersion())
 	}
+
 	return nil
 }
 
@@ -386,9 +425,12 @@ func (m *migrateBuilder) appendModuleConfig(moduleConfig bufconfig2.ModuleConfig
 	if moduleConfig.FullName() == nil {
 		return nil
 	}
+
 	if file, ok := m.moduleFullNameStringToParentPath[moduleConfig.FullName().String()]; ok {
 		return fmt.Errorf("module %s is found in both %s and %s", moduleConfig.FullName(), file, parentPath)
 	}
+
 	m.moduleFullNameStringToParentPath[moduleConfig.FullName().String()] = parentPath
+
 	return nil
 }

@@ -36,6 +36,7 @@ func IsFloatText(digits string) bool {
 	if strings.HasPrefix(digits, "0x") || strings.HasPrefix(digits, "0X") {
 		needle = ".Pp"
 	}
+
 	return strings.ContainsAny(digits, needle)
 }
 
@@ -53,6 +54,7 @@ func Classify(node source.Spanner) Noun {
 			if kw := node.Keyword(); kw != keyword.Unknown {
 				return Noun(kw)
 			}
+
 			return Ident
 		case token.String:
 			return String
@@ -60,6 +62,7 @@ func Classify(node source.Spanner) Noun {
 			if node.AsNumber().IsFloat() {
 				return Float
 			}
+
 			return Int
 		case token.Keyword:
 			return Noun(node.Keyword())
@@ -74,6 +77,7 @@ func Classify(node source.Spanner) Noun {
 			if id := first.AsIdent(); !id.IsZero() {
 				return Classify(id)
 			}
+
 			if !first.AsExtension().IsZero() {
 				return ExtensionName
 			}
@@ -110,6 +114,7 @@ func Classify(node source.Spanner) Noun {
 		if node.IsEdition() {
 			return Edition
 		}
+
 		return Syntax
 	case ast.DeclPackage:
 		return Package
@@ -119,6 +124,7 @@ func Classify(node source.Spanner) Noun {
 		if node.IsExtensions() {
 			return Extensions
 		}
+
 		return Reserved
 	case ast.DeclBody:
 		return Body
@@ -158,13 +164,16 @@ func Classify(node source.Spanner) Noun {
 		return Extend
 	case ast.DefOption:
 		var first ast.PathComponent
+
 		node.Path.Components(func(pc ast.PathComponent) bool {
 			first = pc
 			return false
 		})
+
 		if !first.AsExtension().IsZero() {
 			return CustomOption
 		}
+
 		return Option
 	case ast.DefField:
 		return Field

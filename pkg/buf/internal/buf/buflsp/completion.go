@@ -59,12 +59,14 @@ func getCompletionItems(
 			"no AST found for completion",
 			slog.String("file", file.uri.Filename()),
 		)
+
 		return nil
 	}
 
 	// This grabs the contents of the file as the top-level [ast.DeclBody], see [ast.File].Decls()
 	// for reference.
 	offset := positionToOffset(file, position)
+
 	declPath := getDeclForOffset(id.Wrap(file.ir.AST(), id.ID[ast.DeclBody](1)), offset)
 	if len(declPath) > 0 {
 		decl := declPath[len(declPath)-1]
@@ -142,6 +144,7 @@ func completionItemsForSyntax(ctx context.Context, file *file, syntaxDecl ast.De
 			slog.Int("line", int(position.Line)),
 			slog.Int("character", int(position.Character)),
 		)
+
 		return nil // outside value
 	}
 
@@ -150,6 +153,7 @@ func completionItemsForSyntax(ctx context.Context, file *file, syntaxDecl ast.De
 	suffix := valueText[index:]
 
 	var additionalTextEdits []protocol.TextEdit
+
 	if syntaxDecl.Equals().IsZero() {
 		valueRange := reportSpanToProtocolRange(valueSpan)
 		additionalTextEdits = append(additionalTextEdits, protocol.TextEdit{
@@ -161,6 +165,7 @@ func completionItemsForSyntax(ctx context.Context, file *file, syntaxDecl ast.De
 			},
 		})
 	}
+
 	if syntaxDecl.Semicolon().IsZero() {
 		additionalTextEdits = append(additionalTextEdits, protocol.TextEdit{
 			NewText: ";",
@@ -187,12 +192,15 @@ func completionItemsForSyntax(ctx context.Context, file *file, syntaxDecl ast.De
 				yield(syntax.Proto3)
 		}
 	}
+
 	var items []protocol.CompletionItem
+
 	for syntax := range syntaxes {
 		suggest := fmt.Sprintf("%q", syntax)
 		if !strings.HasPrefix(suggest, prefix) || !strings.HasSuffix(suggest, suffix) {
 			continue
 		}
+
 		items = append(items, protocol.CompletionItem{
 			Label: syntax.String(),
 			Kind:  protocol.CompletionItemKindValue,
@@ -206,6 +214,7 @@ func completionItemsForSyntax(ctx context.Context, file *file, syntaxDecl ast.De
 			AdditionalTextEdits: additionalTextEdits,
 		})
 	}
+
 	return items
 }
 
@@ -214,12 +223,15 @@ func completionItemsForSyntax(ctx context.Context, file *file, syntaxDecl ast.De
 // Suggest the package name based on the filepath.
 func completionItemsForPackage(ctx context.Context, file *file, syntaxPackage ast.DeclPackage) []protocol.CompletionItem {
 	components := normalpath.Components(file.objectInfo.Path())
+
 	suggested := components[:len(components)-1] // Strip the filename.
 	if len(suggested) == 0 {
 		file.lsp.logger.DebugContext(ctx, "completion: package at root, no suggestions")
 		return nil // File is at root, return no suggestions.
 	}
+
 	file.lsp.logger.DebugContext(ctx, "completion: package suggestion", slog.String("package", strings.Join(suggested, ".")))
+
 	return []protocol.CompletionItem{{
 		Label: strings.Join(suggested, ".") + ";",
 		Kind:  protocol.CompletionItemKindModule,
@@ -236,6 +248,7 @@ func completionItemsForDef(ctx context.Context, file *file, declPath []ast.DeclA
 	if len(declPath) >= 2 {
 		parentDef = declPath[len(declPath)-2].AsDef()
 	}
+
 	if inBody {
 		parentDef = def
 		def = ast.DeclDef{} // Mark current def as invalid.
@@ -288,9 +301,11 @@ func completionItemsForDef(ctx context.Context, file *file, declPath []ast.DeclA
 				hasStart = true
 				return false
 			}
+
 			if hasBeforeGap {
 				beforeCount += 1
 				hasBeforeGap = false
+
 				if kw := tok.Keyword(); kw != keyword.Unknown {
 					_, isDeclaration := declarationSet[tok.Keyword()]
 					hasDeclaration = hasDeclaration || isDeclaration
@@ -298,10 +313,12 @@ func completionItemsForDef(ctx context.Context, file *file, declPath []ast.DeclA
 					hasTypeModifier = hasTypeModifier || isFieldModifier
 				}
 			}
+
 			if isTokenSpace(tok) {
 				hasBeforeGap = true
 				return true
 			}
+
 			return isTokenType(tok) || isTokenParen(tok)
 		},
 		func(tok token.Token) bool {
@@ -309,13 +326,16 @@ func completionItemsForDef(ctx context.Context, file *file, declPath []ast.DeclA
 				afterCount += 1
 				hasAfterGap = false
 			}
+
 			if isTokenTypeDelimiter(tok) {
 				return false
 			}
+
 			if isTokenSpace(tok) {
 				hasAfterGap = true
 				return true
 			}
+
 			return isTokenType(tok) || isTokenParen(tok)
 		},
 	)
@@ -383,6 +403,7 @@ func completionItemsForDef(ctx context.Context, file *file, declPath []ast.DeclA
 			"completion: ignoring definition type unable to find start",
 			slog.String("kind", def.Classify().String()),
 		)
+
 		return nil
 	}
 
@@ -397,6 +418,7 @@ func completionItemsForDef(ctx context.Context, file *file, declPath []ast.DeclA
 			slog.String("kind", def.Classify().String()),
 			slog.String("text", typeSpan.Text()),
 		)
+
 		return completionItemsForOptions(ctx, file, parentDef, def, offset)
 	}
 
@@ -405,6 +427,7 @@ func completionItemsForDef(ctx context.Context, file *file, declPath []ast.DeclA
 		showKeywords := beforeCount == 0
 		if showKeywords {
 			file.lsp.logger.DebugContext(ctx, "completion: definition returning top-level keywords")
+
 			return slices.Collect(keywordToCompletionItem(
 				topLevelKeywords(),
 				protocol.CompletionItemKindKeyword,
@@ -412,18 +435,21 @@ func completionItemsForDef(ctx context.Context, file *file, declPath []ast.DeclA
 				offset,
 			))
 		}
+
 		return nil // unknown
 	}
 
 	var iters []iter.Seq[protocol.CompletionItem]
+
 	switch parentDef.Classify() {
 	case ast.DefKindMessage:
 		// Limit completions based on the following heuristics:
 		// - Show keywords for the first values (but not when inside map key position)
 		// - Show types if no type declaration and at first, or second position with field modifier.
 		// - Always show types if cursor is inside map<...> angle brackets
-		showKeywords := beforeCount == 0 && !(insideMapType && isMapKeyPosition)
+		showKeywords := beforeCount == 0 && (!insideMapType || !isMapKeyPosition)
 		showTypes := insideMapType || (!hasDeclaration && (beforeCount == 0 || (hasTypeModifier && beforeCount == 1)))
+
 		if showKeywords {
 			isProto2 := isProto2(file)
 			iters = append(iters,
@@ -441,6 +467,7 @@ func completionItemsForDef(ctx context.Context, file *file, declPath []ast.DeclA
 				),
 			)
 		}
+
 		if showTypes {
 			// When inside map angle brackets, use only the prefix of the tokenSpan for filtering
 			completionSpan := tokenSpan
@@ -456,6 +483,7 @@ func completionItemsForDef(ctx context.Context, file *file, declPath []ast.DeclA
 			// For map key position, only show valid map key types
 			if insideMapType && isMapKeyPosition {
 				file.lsp.logger.DebugContext(ctx, "completion: map key position detected, showing only valid map key types")
+
 				iters = append(iters,
 					keywordToCompletionItem(
 						mapKeyTypeKeywords(),
@@ -537,6 +565,7 @@ func completionItemsForDef(ctx context.Context, file *file, declPath []ast.DeclA
 				),
 			)
 		}
+
 		if showTypes {
 			iters = append(iters,
 				typeReferencesToCompletionItems(
@@ -575,9 +604,11 @@ func completionItemsForDef(ctx context.Context, file *file, declPath []ast.DeclA
 	default:
 		return nil
 	}
+
 	if len(iters) == 0 {
 		return nil
 	}
+
 	return slices.Collect(joinSequences(iters...))
 }
 
@@ -607,6 +638,7 @@ func completionItemsForImport(ctx context.Context, file *file, declImport ast.De
 			slog.Int("line", int(position.Line)),
 			slog.Int("character", int(position.Character)),
 		)
+
 		return nil
 	}
 
@@ -635,6 +667,7 @@ func completionItemsForImport(ctx context.Context, file *file, declImport ast.De
 	}
 
 	var items []protocol.CompletionItem
+
 	for importPath, importFile := range file.workspace.PathToFile() {
 		if file == importFile {
 			continue // ignore self
@@ -649,6 +682,7 @@ func completionItemsForImport(ctx context.Context, file *file, declImport ast.De
 		if _, ok := importFile.ir.Deprecated().AsBool(); ok {
 			importFileIsDeprecated = true
 		}
+
 		items = append(items, protocol.CompletionItem{
 			Label: importPath,
 			Kind:  protocol.CompletionItemKindFile,
@@ -663,6 +697,7 @@ func completionItemsForImport(ctx context.Context, file *file, declImport ast.De
 			Deprecated:          importFileIsDeprecated,
 		})
 	}
+
 	return items
 }
 
@@ -675,6 +710,7 @@ func completionItemsForOptions(
 	offset int,
 ) []protocol.CompletionItem {
 	file.lsp.logger.DebugContext(ctx, "completion: options", slog.Int("offset", offset))
+
 	optionSpan, optionSpanParts := parseOptionSpan(file, offset)
 	if optionSpan.IsZero() {
 		file.lsp.logger.DebugContext(
@@ -682,8 +718,10 @@ func completionItemsForOptions(
 			"completion: ignoring compact option unable to parse declaration",
 			slog.String("kind", def.Classify().String()),
 		)
+
 		return nil
 	}
+
 	optionsTypeName, targetKind := defKindToOptionType(parentDef.Classify())
 	if targetKind == ir.OptionTargetInvalid {
 		file.lsp.logger.DebugContext(
@@ -691,40 +729,49 @@ func completionItemsForOptions(
 			"completion: unknown def kind for options",
 			slog.String("kind", parentDef.Classify().String()),
 		)
+
 		return nil
 	}
 	// Find the options message type in the workspace by looking through all types.
 	var optionsType ir.Type
+
 	for _, importedFile := range file.workspace.PathToFile() {
 		irSymbol := importedFile.ir.FindSymbol(optionsTypeName)
+
 		optionsType = irSymbol.AsType()
 		if !optionsType.IsZero() {
 			break
 		}
 	}
+
 	if optionsType.IsZero() {
 		file.lsp.logger.DebugContext(
 			ctx,
 			"completion: could not find options type in workspace",
 			slog.String("options_type_name", string(optionsTypeName)),
 		)
+
 		return nil
 	}
 	// Complete options within the value or the path.
 	if offsetInSpan(offset, def.Value().Span()) == 0 {
 		parentType := findTypeBySpan(file, parentDef.Span())
+
 		optionType, isOptionType := getOptionValueType(file, ctx, parentType.Options(), offset)
 		if !isOptionType {
 			file.lsp.logger.DebugContext(
 				ctx,
 				"completion: could not find options type within value",
 			)
+
 			return nil
 		}
+
 		return slices.Collect(
 			messageFieldCompletionItems(file, optionType, optionSpan, offset, true),
 		)
 	}
+
 	return slices.Collect(
 		optionNamesToCompletionItems(file, optionSpanParts, offset, optionsType, targetKind),
 	)
@@ -746,6 +793,7 @@ func completionItemsForCompactOptions(
 			"completion: ignoring compact option unable to parse declaration",
 			slog.String("kind", def.Classify().String()),
 		)
+
 		return nil
 	}
 	// Find the parent containing type for the definition.
@@ -756,6 +804,7 @@ func completionItemsForCompactOptions(
 			"completion: unknown def kind for options",
 			slog.String("kind", def.Classify().String()),
 		)
+
 		return nil
 	}
 	// Search for the option message in the IR.
@@ -773,21 +822,26 @@ func completionItemsForCompactOptions(
 	}
 	// Find the options message type in the workspace by looking through all types.
 	var optionsType ir.Type
+
 	for _, importedFile := range file.workspace.PathToFile() {
 		irSymbol := importedFile.ir.FindSymbol(optionsTypeName)
+
 		optionsType = irSymbol.AsType()
 		if !optionsType.IsZero() {
 			break
 		}
 	}
+
 	if optionsType.IsZero() {
 		file.lsp.logger.DebugContext(
 			ctx,
 			"completion: could not find options type in workspace",
 			slog.String("options_type_name", string(optionsTypeName)),
 		)
+
 		return nil
 	}
+
 	return slices.Collect(
 		optionNamesToCompletionItems(file, optionSpanParts, offset, optionsType, targetKind),
 	)
@@ -938,11 +992,13 @@ func keywordToCompletionItem(
 	return func(yield func(protocol.CompletionItem) bool) {
 		editRange := reportSpanToProtocolRange(span)
 		prefix, suffix := splitSpan(span, offset)
+
 		for keyword := range keywords {
 			suggest := keyword.String()
 			if !strings.HasPrefix(suggest, prefix) || !strings.HasSuffix(suggest, suffix) {
 				continue
 			}
+
 			if !yield(protocol.CompletionItem{
 				Label: suggest,
 				Kind:  kind,
@@ -974,12 +1030,16 @@ func typeReferencesToCompletionItems(
 			}
 		}
 	}
+
 	var lastImportLine int64
+
 	currentImportPaths := map[string]struct{}{}
+
 	for currentFileImport := range seq.Values(current.ir.Imports()) {
 		lastImportLine = max(lastImportLine, int64(currentFileImport.Decl.Span().EndLoc().Line))
 		currentImportPaths[currentFileImport.Path()] = struct{}{}
 	}
+
 	if lastImportLine == 0 {
 		// If lastImportLine is 0, we have no imports in this file; put it after `package`, if
 		// package exists. Otherwise, after `syntax`, if it exists. Otherwise, balk.
@@ -992,9 +1052,11 @@ func typeReferencesToCompletionItems(
 			lastImportLine = int64(current.ir.AST().Syntax().Span().EndLoc().Line)
 		}
 	}
+
 	if lastImportLine < 0 || lastImportLine > math.MaxUint32 {
 		lastImportLine = 0 // Default to insert at top of page.
 	}
+
 	importInsertPosition := protocol.Position{
 		Line:      uint32(lastImportLine),
 		Character: 0,
@@ -1003,6 +1065,7 @@ func typeReferencesToCompletionItems(
 	packagePrefix := string(current.ir.Package()) + "."
 	// Check if we're completing an absolute type reference (starting with '.').
 	isAbsoluteReference := strings.HasPrefix(span.Text(), ".")
+
 	return func(yield func(protocol.CompletionItem) bool) {
 		editRange := reportSpanToProtocolRange(span)
 		prefix, _ := splitSpan(span, offset)
@@ -1011,10 +1074,12 @@ func typeReferencesToCompletionItems(
 		if !isAbsoluteReference {
 			prefix = prefix[:strings.LastIndexByte(prefix, '.')+1]
 		}
+
 		for _, symbol := range fileSymbolTypesIter {
 			// We only support types in this completion instance, and not scalar values, which leaves us
 			// with messages and enums.
 			var kind protocol.CompletionItemKind
+
 			switch symbol.ir.Kind() {
 			case ir.SymbolKindMessage:
 				kind = protocol.CompletionItemKindClass // Messages are like classes
@@ -1022,10 +1087,12 @@ func typeReferencesToCompletionItems(
 				if !allowEnums {
 					continue
 				}
+
 				kind = protocol.CompletionItemKindEnum
 			default:
 				continue // Unsupported kind, skip it.
 			}
+
 			label := string(symbol.ir.FullName())
 			if isAbsoluteReference {
 				// For absolute references, prepend '.' to make the label fully qualified.
@@ -1038,15 +1105,19 @@ func typeReferencesToCompletionItems(
 					label = label[len(packagePrefix):]
 				}
 			}
+
 			if !strings.HasPrefix(label, prefix) {
 				continue
 			}
+
 			var isDeprecated bool
 			if _, ok := symbol.ir.Deprecated().AsBool(); ok {
 				isDeprecated = true
 			}
+
 			symbolFile := symbol.ir.Context().Path()
 			_, hasImport := currentImportPaths[symbolFile]
+
 			var additionalTextEdits []protocol.TextEdit
 			if !hasImport && symbolFile != current.ir.Path() {
 				additionalTextEdits = append(additionalTextEdits, protocol.TextEdit{
@@ -1057,6 +1128,7 @@ func typeReferencesToCompletionItems(
 					},
 				})
 			}
+
 			if !yield(protocol.CompletionItem{
 				Label: label,
 				Kind:  kind,
@@ -1083,6 +1155,7 @@ func optionToCompletionItems(
 	targetKind ir.OptionTarget,
 ) iter.Seq[protocol.CompletionItem] {
 	prefix, _ := splitSpan(span, offset)
+
 	return func(yield func(protocol.CompletionItem) bool) {
 		// Add standard option fields (non-extensions) from the options type
 		// Filter by option targets to only show options that can be applied to this symbol kind
@@ -1097,17 +1170,22 @@ func optionToCompletionItems(
 					slog.String("option", member.Name()),
 					slog.String("target_kind", targetKind.String()),
 				)
+
 				continue
 			}
+
 			label := member.Name()
 			if !strings.HasPrefix(label, prefix) {
 				continue
 			}
+
 			var isDeprecated bool
 			if _, ok := member.Deprecated().AsBool(); ok {
 				isDeprecated = true
 			}
+
 			var detail string
+
 			fieldType := member.Element()
 			if !fieldType.IsZero() {
 				if fieldType.IsPredeclared() {
@@ -1116,6 +1194,7 @@ func optionToCompletionItems(
 					detail = string(fieldType.FullName())
 				}
 			}
+
 			item := protocol.CompletionItem{
 				Label: label,
 				Kind:  protocol.CompletionItemKindField,
@@ -1143,6 +1222,7 @@ func extensionToCompletionItems(
 	targetKind ir.OptionTarget,
 ) iter.Seq[protocol.CompletionItem] {
 	prefix, _ := splitSpan(span, offset)
+
 	return func(yield func(protocol.CompletionItem) bool) {
 		// Find all extensions in the workspace that extend the options type.
 		for _, importedFile := range current.workspace.PathToFile() {
@@ -1155,6 +1235,7 @@ func extensionToCompletionItems(
 				if container.IsZero() {
 					continue
 				}
+
 				if container.FullName() != optionsType.FullName() {
 					continue
 				}
@@ -1165,6 +1246,7 @@ func extensionToCompletionItems(
 						slog.String("extension", string(extension.FullName())),
 						slog.String("target_kind", targetKind.String()),
 					)
+
 					continue
 				}
 				// Extensions are referenced with parentheses, e.g., (my.extension)
@@ -1172,11 +1254,14 @@ func extensionToCompletionItems(
 				if !strings.HasPrefix(label, prefix) {
 					continue
 				}
+
 				var isDeprecated bool
 				if _, ok := extension.Deprecated().AsBool(); ok {
 					isDeprecated = true
 				}
+
 				var detail string
+
 				fieldType := extension.Element()
 				if !fieldType.IsZero() {
 					if fieldType.IsPredeclared() {
@@ -1185,6 +1270,7 @@ func extensionToCompletionItems(
 						detail = string(fieldType.FullName())
 					}
 				}
+
 				item := protocol.CompletionItem{
 					Label: label,
 					Kind:  protocol.CompletionItemKindProperty,
@@ -1220,21 +1306,26 @@ func optionNamesToCompletionItems(
 	rootSpan := pathSpans[0]
 	rootText := rootSpan.Text()
 	isExtension := strings.HasPrefix(rootText, "(") && strings.HasSuffix(rootText, ")")
+
 	rootFieldName := rootText
 	if isExtension {
 		// Remove parentheses: "(foo.bar.Extension)" -> "foo.bar.Extension"
 		rootFieldName = rootText[1 : len(rootText)-1]
 	}
+
 	if len(pathSpans) == 1 {
 		if isExtension {
 			return extensionToCompletionItems(current, rootSpan, offset, optionType, targetKind)
 		}
+
 		return optionToCompletionItems(current, rootSpan, offset, optionType, targetKind)
 	}
+
 	tokenSpan := pathSpans[len(pathSpans)-1]
 	pathSpans = pathSpans[1 : len(pathSpans)-1]
 
 	var currentField ir.Member
+
 	if isExtension {
 		// Search for extension across all files in workspace
 		for _, importedFile := range current.workspace.PathToFile() {
@@ -1242,15 +1333,18 @@ func optionNamesToCompletionItems(
 				if !extension.IsExtension() {
 					continue
 				}
+
 				container := extension.Container()
 				if container.IsZero() || container.FullName() != optionType.FullName() {
 					continue
 				}
+
 				if string(extension.FullName()) == rootFieldName && extension.CanTarget(targetKind) {
 					currentField = extension
 					break
 				}
 			}
+
 			if !currentField.IsZero() {
 				break
 			}
@@ -1261,12 +1355,14 @@ func optionNamesToCompletionItems(
 			if member.IsExtension() {
 				continue
 			}
+
 			if member.Name() == rootFieldName && member.CanTarget(targetKind) {
 				currentField = member
 				break
 			}
 		}
 	}
+
 	if currentField.IsZero() {
 		current.lsp.logger.Debug(
 			"completion: could not find root field",
@@ -1275,6 +1371,7 @@ func optionNamesToCompletionItems(
 	}
 	// Walk through each path segment to navigate nested messages.
 	currentType := currentField.Element()
+
 	for i, pathSegment := range pathSpans {
 		segmentName := pathSegment.Text()
 		current.lsp.logger.Debug(
@@ -1289,18 +1386,22 @@ func optionNamesToCompletionItems(
 				"completion: current type is not a message, cannot continue path",
 				slog.String("segment", segmentName),
 			)
+
 			break
 		}
 		// Find the field with this name in the current message
 		var found bool
+
 		for member := range seq.Values(currentType.Members()) {
 			if member.Name() == segmentName {
 				currentField = member
 				currentType = member.Element()
 				found = true
+
 				break
 			}
 		}
+
 		if !found {
 			current.lsp.logger.Debug(
 				"completion: could not find field in path",
@@ -1308,9 +1409,11 @@ func optionNamesToCompletionItems(
 				slog.String("type", string(currentType.FullName())),
 			)
 			currentType = ir.Type{}
+
 			break
 		}
 	}
+
 	return messageFieldCompletionItems(current, currentType, tokenSpan, offset, false)
 }
 
@@ -1329,6 +1432,7 @@ func messageFieldCompletionItems(
 				"completion: final type is not a message, no completions",
 				slog.String("type", string(messageType.FullName())),
 			)
+
 			return
 		}
 
@@ -1347,19 +1451,23 @@ func messageFieldCompletionItems(
 			if !strings.HasPrefix(label, prefix) {
 				continue
 			}
+
 			if member.IsExtension() {
 				label = "(" + label + ")"
 			}
+
 			newText := label
 			if isValueType {
 				newText += ":"
 			}
+
 			var isDeprecated bool
 			if _, ok := member.Deprecated().AsBool(); ok {
 				isDeprecated = true
 			}
 			// Add detail string based on field type for better context
 			var detail string
+
 			fieldType := member.Element()
 			if !fieldType.IsZero() {
 				if fieldType.IsPredeclared() {
@@ -1368,6 +1476,7 @@ func messageFieldCompletionItems(
 					detail = string(fieldType.FullName())
 				}
 			}
+
 			item := protocol.CompletionItem{
 				Label: label,
 				Kind:  protocol.CompletionItemKindField,
@@ -1409,12 +1518,14 @@ func getDeclForOffset(body ast.DeclBody, offset int) []ast.DeclAny {
 // getDeclForOffsetHelper is the recursive helper for getDeclForOffset.
 func getDeclForOffsetHelper(body ast.DeclBody, offset int, path []ast.DeclAny) []ast.DeclAny {
 	smallestSize := -1
+
 	var bestPath []ast.DeclAny
 
 	for decl := range seq.Values(body.Decls()) {
 		if decl.IsZero() {
 			continue
 		}
+
 		span := decl.Span()
 		if span.IsZero() {
 			continue
@@ -1423,6 +1534,7 @@ func getDeclForOffsetHelper(body ast.DeclBody, offset int, path []ast.DeclAny) [
 		if offsetInSpan(offset, span) == 0 {
 			// Build the new path including this declaration.
 			newPath := append(append([]ast.DeclAny(nil), path...), decl)
+
 			size := span.End - span.Start
 			if smallestSize == -1 || size < smallestSize {
 				bestPath = newPath
@@ -1442,6 +1554,7 @@ func getDeclForOffsetHelper(body ast.DeclBody, offset int, path []ast.DeclAny) [
 			}
 		}
 	}
+
 	return bestPath
 }
 
@@ -1450,7 +1563,9 @@ func getDeclForOffsetHelper(body ast.DeclBody, offset int, path []ast.DeclAny) [
 // partial syntax.
 func parseOptionSpan(file *file, offset int) (source.Span, []source.Span) {
 	hasStart, hasGap := false, false
+
 	var tokens []token.Token
+
 	typeSpan := extractAroundOffset(
 		file, offset,
 		func(tok token.Token) bool {
@@ -1468,12 +1583,15 @@ func parseOptionSpan(file *file, offset int) (source.Span, []source.Span) {
 					hasStart = tok.Keyword() == keyword.Option
 					return false
 				}
+
 				tokens = append(tokens, tok)
+
 				return isTokenType(tok) || isTokenParen(tok)
 			}
 		},
 		isTokenType,
 	)
+
 	if !hasStart {
 		return source.Span{}, nil
 	}
@@ -1482,7 +1600,9 @@ func parseOptionSpan(file *file, offset int) (source.Span, []source.Span) {
 		emptySpan := source.Span{File: file.file, Start: offset, End: offset}
 		return emptySpan, []source.Span{emptySpan}
 	}
+
 	slices.Reverse(tokens)
+
 	if typeSpan.Start > 0 && file.file.Text()[typeSpan.Start-1] == '(' {
 		// Within parens, caputure the type as the full path. One root span.
 		// The offset is within the child span. We expand the span to capture the
@@ -1491,15 +1611,19 @@ func parseOptionSpan(file *file, offset int) (source.Span, []source.Span) {
 		if strings.HasPrefix(file.file.Text()[typeSpan.End:], ")") {
 			typeSpan.End += 1
 		}
+
 		return typeSpan, []source.Span{typeSpan}
 	}
+
 	pathSpans := []source.Span{tokens[0].Span()}
 	for i := 1; i < len(tokens)-1; i += 2 {
 		dotToken := tokens[i]
+
 		identToken := tokens[i+1]
 		if dotToken.Text() != "." || identToken.Kind() != token.Ident {
 			return source.Span{}, nil
 		}
+
 		pathSpans = append(pathSpans, identToken.Span())
 	}
 	// Append an empty span on trailing "." token at it's position.
@@ -1511,6 +1635,7 @@ func parseOptionSpan(file *file, offset int) (source.Span, []source.Span) {
 			pathSpans = append(pathSpans, lastSpan)
 		}
 	}
+
 	return typeSpan, pathSpans
 }
 
@@ -1560,6 +1685,7 @@ func defToOptionMessage(file *file, def ast.DeclDef) ir.MessageValue {
 				}
 			}
 		}
+
 		for extension := range seq.Values(file.ir.AllExtensions()) {
 			if extension.AST().Span() == defSpan {
 				return extension.Options()
@@ -1596,6 +1722,7 @@ func defToOptionMessage(file *file, def ast.DeclDef) ir.MessageValue {
 			}
 		}
 	}
+
 	return ir.MessageValue{}
 }
 
@@ -1612,6 +1739,7 @@ func isAfterEqualsSign(file *file, offset int) bool {
 	if isTokenSpace(before) {
 		before = cursor.PrevSkippable()
 	}
+
 	return isTokenEqual(before)
 }
 
@@ -1647,6 +1775,7 @@ func isTokenEqual(tok token.Token) bool {
 // A delimiter is a newline or start of stream. This handles invalid partial declarations.
 func isTokenTypeDelimiter(tok token.Token) bool {
 	kind := tok.Kind()
+
 	return (kind == token.Unrecognized && tok.IsZero()) ||
 		(kind == token.Space && strings.IndexByte(tok.Text(), '\n') != -1) ||
 		(kind == token.Comment && strings.HasSuffix(tok.Text(), "\n"))
@@ -1658,6 +1787,7 @@ func isInsideMapType(file *file, def ast.DeclDef, offset int) (bool, bool) {
 	// Try AST-based detection first for valid field declarations
 	if def.Classify() == ast.DefKindField {
 		field := def.AsField()
+
 		genericType := field.Type.RemovePrefixes().AsGeneric()
 		if !genericType.IsZero() {
 			keyType, valueType := genericType.AsMap()
@@ -1673,6 +1803,7 @@ func isInsideMapType(file *file, def ast.DeclDef, offset int) (bool, bool) {
 					if offset <= keySpan.End {
 						return true, true // In key type
 					}
+
 					if offset >= valueSpan.Start {
 						return true, false // In value type
 					}
@@ -1701,6 +1832,7 @@ func isInsideMapType(file *file, def ast.DeclDef, offset int) (bool, bool) {
 			if angleDepth == 0 {
 				return true, !commaFound
 			}
+
 			angleDepth--
 		case ',':
 			if angleDepth == 0 {
@@ -1719,10 +1851,12 @@ func extractAroundOffset(file *file, offset int, isTokenBefore, isTokenAfter fun
 	if file.ir.AST() == nil {
 		return source.Span{}
 	}
+
 	stream := file.ir.AST().Stream()
 	if stream == nil {
 		return source.Span{}
 	}
+
 	before, after := stream.Around(offset)
 	if before.IsZero() && after.IsZero() {
 		return source.Span{}
@@ -1733,6 +1867,7 @@ func extractAroundOffset(file *file, offset int, isTokenBefore, isTokenAfter fun
 		Start: offset,
 		End:   offset,
 	}
+
 	if !before.IsZero() && isTokenBefore != nil {
 		var firstToken token.Token
 		for cursor := token.NewCursorAt(before); isTokenBefore(before); before = cursor.PrevSkippable() {
@@ -1740,15 +1875,18 @@ func extractAroundOffset(file *file, offset int, isTokenBefore, isTokenAfter fun
 			span.Start = firstToken.Span().Start
 		}
 	}
+
 	if !after.IsZero() && isTokenAfter != nil {
 		var lastToken token.Token
 		for cursor := token.NewCursorAt(after); isTokenAfter(after); after = cursor.NextSkippable() {
 			lastToken = after
 		}
+
 		if !lastToken.IsZero() {
 			span.End = lastToken.Span().End
 		}
 	}
+
 	return span
 }
 
@@ -1756,8 +1894,10 @@ func splitSpan(span source.Span, offset int) (prefix string, suffix string) {
 	if offsetInSpan(offset, span) != 0 {
 		return "", ""
 	}
+
 	index := offset - span.Start
 	text := span.Text()
+
 	return text[:index], text[index:]
 }
 
@@ -1768,6 +1908,7 @@ func offsetInSpan(offset int, span source.Span) int {
 		// End is inclusive for completions
 		return 1
 	}
+
 	return 0
 }
 
@@ -1788,11 +1929,13 @@ func findTypeBySpan(file *file, span source.Span) ir.Type {
 	if span.IsZero() {
 		return ir.Type{}
 	}
+
 	for t := range seq.Values(file.ir.AllTypes()) {
 		if t.AST().Span() == span {
 			return t
 		}
 	}
+
 	return ir.Type{}
 }
 
@@ -1802,11 +1945,13 @@ func findTypeFullName(file *file, declDef ast.DeclDef) ir.FullName {
 	if declDefSpan.IsZero() {
 		return ""
 	}
+
 	irType := findTypeBySpan(file, declDefSpan)
 	if !irType.IsZero() {
 		file.lsp.logger.Debug("completion: found parent type", slog.String("parent", string(irType.FullName())))
 		return irType.FullName()
 	}
+
 	return ""
 }
 
@@ -1818,6 +1963,7 @@ func getOptionValueType(file *file, ctx context.Context, optionValue ir.MessageV
 ) {
 	for field := range optionValue.Fields() {
 		keySpan := field.KeyAST().Span()
+
 		valueSpan := field.ValueAST().Span()
 		for element := range seq.Values(field.Elements()) {
 			if msg := element.AsMessage(); !msg.IsZero() {
@@ -1833,6 +1979,7 @@ func getOptionValueType(file *file, ctx context.Context, optionValue ir.MessageV
 			}
 		}
 	}
+
 	return ir.Type{}, false
 }
 
@@ -1867,6 +2014,7 @@ func completionItemsForFieldNumber(
 				// Can't allocate beyond open-ended range
 				return nil
 			}
+
 			if start > 0 {
 				ranges = append(ranges, numberRange[uint64]{
 					start: uint64(start),
@@ -1883,6 +2031,7 @@ func completionItemsForFieldNumber(
 		} else if a.start > b.start {
 			return 1
 		}
+
 		return 0
 	})
 
@@ -1963,6 +2112,7 @@ func completionItemsForEnumNumber(
 				}
 			}
 		}
+
 		num := member.Number()
 		ranges = append(ranges, numberRange[int32]{start: num, end: num})
 	}
@@ -1974,6 +2124,7 @@ func completionItemsForEnumNumber(
 			// Can't allocate beyond open-ended range
 			return nil
 		}
+
 		ranges = append(ranges, numberRange[int32]{
 			start: start,
 			end:   end,
@@ -1987,6 +2138,7 @@ func completionItemsForEnumNumber(
 		} else if a.start > b.start {
 			return 1
 		}
+
 		return 0
 	})
 
@@ -2009,6 +2161,7 @@ func completionItemsForEnumNumber(
 				// Can't find next value after MaxInt32
 				return nil
 			}
+
 			nextNumber = r.end + 1
 		}
 	}

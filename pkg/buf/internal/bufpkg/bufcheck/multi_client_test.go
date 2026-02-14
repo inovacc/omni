@@ -97,6 +97,7 @@ func testMultiClientSimple(t *testing.T, cacheRules bool) {
 	if cacheRules {
 		clientForSpecOptions = append(clientForSpecOptions, check.ClientWithCaching())
 	}
+
 	fieldLowerSnakeCaseClient, err := check.NewClientForSpec(fieldLowerSnakeCaseSpec, clientForSpecOptions...)
 	require.NoError(t, err)
 	timestampSuffixClient, err := check.NewClientForSpec(timestampSuffixSpec, clientForSpecOptions...)
@@ -121,6 +122,7 @@ func testMultiClientSimple(t *testing.T, cacheRules bool) {
 		},
 		xslices.Map(rules, Rule.ID),
 	)
+
 	annotations, err := multiClient.Check(ctx, request)
 	require.NoError(t, err)
 	checktest.AssertAnnotationsEqual(
@@ -316,6 +318,7 @@ func checkFieldLowerSnakeCase(
 	fieldDescriptor protoreflect.FieldDescriptor,
 ) error {
 	fieldName := string(fieldDescriptor.Name())
+
 	fieldNameToLowerSnakeCase := xstrings.ToLowerSnakeCase(fieldName)
 	if fieldName != fieldNameToLowerSnakeCase {
 		responseWriter.AddAnnotation(
@@ -323,6 +326,7 @@ func checkFieldLowerSnakeCase(
 			check.WithDescriptor(fieldDescriptor),
 		)
 	}
+
 	return nil
 }
 
@@ -333,10 +337,12 @@ func checkTimestampSuffix(
 	fieldDescriptor protoreflect.FieldDescriptor,
 ) error {
 	timestampSuffix := defaultTimestampSuffix
+
 	timestampSuffixOptionValue, err := option.GetStringValue(request.Options(), timestampSuffixOptionKey)
 	if err != nil {
 		return err
 	}
+
 	if timestampSuffixOptionValue != "" {
 		timestampSuffix = timestampSuffixOptionValue
 	}
@@ -345,14 +351,17 @@ func checkTimestampSuffix(
 	if fieldDescriptorType == nil {
 		return nil
 	}
+
 	if string(fieldDescriptorType.FullName()) != "google.protobuf.Timestamp" {
 		return nil
 	}
+
 	if !strings.HasSuffix(string(fieldDescriptor.Name()), timestampSuffix) {
 		responseWriter.AddAnnotation(
 			check.WithMessagef("Fields of type google.protobuf.Timestamp must end in %q but field name was %q.", timestampSuffix, string(fieldDescriptor.Name())),
 			check.WithDescriptor(fieldDescriptor),
 		)
 	}
+
 	return nil
 }

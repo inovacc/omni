@@ -35,6 +35,7 @@ import (
 // hit that case is not currently necessary.
 func RequireSameLayout(t *testing.T, a, b reflect.Type) {
 	t.Helper()
+
 	if a == b {
 		return // No need to check further.
 	}

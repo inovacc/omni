@@ -53,9 +53,11 @@ func newMethod(
 	if inputTypeName == "" {
 		return nil, fmt.Errorf("no inputTypeName on %q", namedDescriptor.name)
 	}
+
 	if outputTypeName == "" {
 		return nil, fmt.Errorf("no outputTypeName on %q", namedDescriptor.name)
 	}
+
 	return &method{
 		namedDescriptor:           namedDescriptor,
 		optionExtensionDescriptor: optionExtensionDescriptor,

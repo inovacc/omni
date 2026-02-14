@@ -27,6 +27,7 @@ func TestIndex(t *testing.T) {
 	assert := assert.New(t)
 
 	x := []int{1, 2, 3, 4}
+
 	assert.Equal(-1, slicesx.PointerIndex[[]int](nil, nil))
 	assert.Equal(-1, slicesx.PointerIndex(x, nil))
 	assert.Equal(-1, slicesx.PointerIndex(x, new(int)))

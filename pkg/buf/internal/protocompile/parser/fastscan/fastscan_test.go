@@ -24,6 +24,7 @@ import (
 
 func TestScan(t *testing.T) {
 	t.Parallel()
+
 	testCases := []struct {
 		name            string
 		input           string
@@ -163,16 +164,20 @@ func TestScan(t *testing.T) {
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
+
 			result, err := Scan("", strings.NewReader(testCase.input))
 			assert.Equal(t, testCase.expectedPackage, result.PackageName)
 			assert.Equal(t, testCase.expectedImports, result.Imports)
+
 			if len(testCase.expectedErrors) == 0 {
 				require.NoError(t, err)
 				return
 			}
+
 			var syntaxErr SyntaxError
 			require.ErrorAs(t, err, &syntaxErr)
 			assert.Len(t, syntaxErr, len(testCase.expectedErrors))
+
 			for i := 0; i < len(testCase.expectedErrors) && i < len(syntaxErr); i++ {
 				assert.ErrorContains(t, syntaxErr[i], testCase.expectedErrors[i])
 			}

@@ -124,6 +124,7 @@ func NewResponseWriter(options ...ResponseWriterOption) ResponseWriter {
 	for _, option := range options {
 		option(responseWriter)
 	}
+
 	return responseWriter
 }
 
@@ -189,9 +190,11 @@ func (r *responseWriter) AddError(message string) {
 	if message == "" {
 		return
 	}
+
 	if existingError := r.codeGeneratorResponse.GetError(); existingError != "" {
 		message = existingError + "; " + message
 	}
+
 	r.codeGeneratorResponse.Error = proto.String(message)
 }
 
@@ -256,11 +259,13 @@ func (r *responseWriter) ToCodeGeneratorResponse() (*pluginpb.CodeGeneratorRespo
 		// This is an edge case - ResponseWriters are given to Handlers, so to reuse one would be very weird.
 		return nil, errors.New("ResponseWriter cannot be reused")
 	}
+
 	r.written = true
 
 	if err := validateAndNormalizeCodeGeneratorResponse(r.codeGeneratorResponse, r.lenientValidateErrorFunc); err != nil {
 		return nil, err
 	}
+
 	return r.codeGeneratorResponse, nil
 }
 

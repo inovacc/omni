@@ -27,6 +27,7 @@ func NewModuleKeyProvider(container appext.Container) (bufmodule.ModuleKeyProvid
 	if err != nil {
 		return nil, err
 	}
+
 	return bufmoduleapi.NewModuleKeyProvider(
 		container.Logger(),
 		bufregistryapimodule.NewClientProvider(

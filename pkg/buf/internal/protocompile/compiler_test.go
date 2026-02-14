@@ -55,6 +55,7 @@ func TestParseFilesWithDependencies(t *testing.T) {
 		if !ok {
 			return SearchResult{}, os.ErrNotExist
 		}
+
 		return SearchResult{Source: strings.NewReader(s)}, nil
 	})
 
@@ -73,6 +74,7 @@ func TestParseFilesWithDependencies(t *testing.T) {
 				if f == "desc_test_wellknowntypes.proto" {
 					return SearchResult{Desc: wktDesc}, nil
 				}
+
 				return baseResolver.FindFileByPath(f)
 			}),
 		}
@@ -87,6 +89,7 @@ func TestParseFilesWithDependencies(t *testing.T) {
 				if f == "desc_test_wellknowntypes.proto" {
 					return SearchResult{Proto: wktDescProto}, nil
 				}
+
 				return baseResolver.FindFileByPath(f)
 			})),
 		}
@@ -128,27 +131,33 @@ func TestParseFilesWithDependencies(t *testing.T) {
 }
 
 func findAndLink(t *testing.T, filename string, fdset *descriptorpb.FileDescriptorSet, soFar *protoregistry.Files) (protoreflect.FileDescriptor, *descriptorpb.FileDescriptorProto) {
-	for _, fd := range fdset.File {
+	for _, fd := range fdset.GetFile() {
 		if fd.GetName() == filename {
 			if soFar == nil {
 				soFar = &protoregistry.Files{}
 			}
+
 			for _, dep := range fd.GetDependency() {
 				depDesc, _ := findAndLink(t, dep, fdset, soFar)
 				err := soFar.RegisterFile(depDesc)
 				require.NoError(t, err)
 			}
+
 			desc, err := protodesc.NewFile(fd, soFar)
 			require.NoError(t, err)
+
 			return desc, fd
 		}
 	}
+
 	assert.FailNow(t, "could not find dependency %q in proto set", filename)
+
 	return nil, nil // make compiler happy
 }
 
 func TestDataRace(t *testing.T) {
 	t.Parallel()
+
 	if !internal.IsRace {
 		t.Skip("only useful when race detector enabled")
 		return
@@ -168,10 +177,12 @@ func TestDataRace(t *testing.T) {
 		SourceInfoMode: SourceInfoStandard,
 	}).Compile(t.Context(), "desc_test_complex.proto")
 	require.NoError(t, err)
-	resolvedProto := files[0].(linker.Result).FileDescriptorProto() //nolint:errcheck
+
+	resolvedProto := files[0].(linker.Result).FileDescriptorProto()
 
 	descriptor, err := protoregistry.GlobalFiles.FindFileByPath(descriptorProtoPath)
 	require.NoError(t, err)
+
 	descriptorProto := protodesc.ToFileDescriptorProto(descriptor)
 
 	// We will share this descriptor/parse result (which needs to be modified by the linker
@@ -189,6 +200,7 @@ func TestDataRace(t *testing.T) {
 						Proto: parseResult.FileDescriptorProto(),
 					}, nil
 				}
+
 				return SearchResult{}, os.ErrNotExist
 			})),
 		},
@@ -200,6 +212,7 @@ func TestDataRace(t *testing.T) {
 						Proto: resolvedProto,
 					}, nil
 				}
+
 				return SearchResult{}, os.ErrNotExist
 			})),
 		},
@@ -211,6 +224,7 @@ func TestDataRace(t *testing.T) {
 						ParseResult: parseResult,
 					}, nil
 				}
+
 				return SearchResult{}, os.ErrNotExist
 			})),
 		},
@@ -239,6 +253,7 @@ func TestDataRace(t *testing.T) {
 		testCase := testCases[i]
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
+
 			compiler1 := &Compiler{
 				Resolver:       testCase.resolver,
 				SourceInfoMode: SourceInfoStandard,
@@ -256,10 +271,12 @@ func TestDataRace(t *testing.T) {
 				_, err := compiler2.Compile(ctx, "desc_test_complex.proto")
 				return err
 			})
+
 			err := grp.Wait()
 			if panicErr := new(PanicError); errors.As(err, panicErr) {
 				t.Log(panicErr.Stack)
 			}
+
 			require.NoError(t, err)
 		})
 	}
@@ -267,9 +284,10 @@ func TestDataRace(t *testing.T) {
 
 func TestPanicHandling(t *testing.T) {
 	t.Parallel()
+
 	c := Compiler{
 		Resolver: ResolverFunc(func(string) (SearchResult, error) {
-			panic(errors.New("mui mui bad"))
+			panic(errors.New("mui bad"))
 		}),
 	}
 	_, err := c.Compile(t.Context(), "test.proto")

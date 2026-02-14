@@ -83,25 +83,32 @@ func TestConsoleLogOutput(t *testing.T) {
 
 func testConsolLogOutput(t *testing.T, run func(logger *slog.Logger), expects []map[string]any, options ...consoleHandlerOption) {
 	t.Helper()
-	var buf bytes.Buffer
-	consoleHandler := newConsoleHandler(&buf, slog.LevelInfo, options...)
+	
+var buf bytes.Buffer
+	
+consoleHandler := newConsoleHandler(&buf, slog.LevelInfo, options...)
 	logger := slog.New(consoleHandler)
 	run(logger)
 
 	var outputs []map[string]any
-	for _, line := range bytes.Split(buf.Bytes(), []byte{'\n'}) {
+	
+for line := range bytes.SplitSeq(buf.Bytes(), []byte{'\n'}) {
 		if len(line) == 0 {
 			continue
 		}
-		lineAttrs, err := testParseLogLine(line)
+		
+lineAttrs, err := testParseLogLine(line)
 		if !assert.NoError(t, err) {
 			continue
 		}
-		outputs = append(outputs, lineAttrs)
+		
+outputs = append(outputs, lineAttrs)
 	}
-	t.Log(buf.String())
+	
+t.Log(buf.String())
 	require.Equal(t, len(expects), len(outputs))
-	for i := range len(outputs) {
+	
+for i := range len(outputs) {
 		output, expect := outputs[i], expects[i]
 		assert.Equal(t, expect, output)
 	}
@@ -112,18 +119,20 @@ func testParseLogLine(lineBytes []byte) (map[string]any, error) {
 	top := map[string]any{}
 	line := string(bytes.TrimSpace(lineBytes))
 	index, line, _ := strings.Cut(line, consoleSeparator)
-	top[slog.LevelKey] = index
+	
+top[slog.LevelKey] = index
 	if len(line) == 0 {
 		return top, nil
 	}
-	message, line := line, ""
+	
+message, line := line, ""
 	// Find the JSON attributes by looking for the first space followed by a '{'.
 	// This may fail for complex messages but fine for testing.
-	if jsonIndex := strings.Index(message, consoleSeparator+"{"); jsonIndex >= 0 {
-		message, line = message[:jsonIndex], message[jsonIndex+1:]
-	}
-	top[slog.MessageKey] = message
-	if len(line) > 0 {
+	if message, line, ok = strings.Cut(message, consoleSeparator+"{"); ok { ... }
+	
+top[slog.MessageKey] = message
+	
+if len(line) > 0 {
 		// Capture the JSON attributes.
 		var attrs map[string]any
 		if err := json.Unmarshal([]byte(line), &attrs); err != nil {
@@ -134,8 +143,10 @@ func testParseLogLine(lineBytes []byte) (map[string]any, error) {
 			if _, ok := top[key]; ok {
 				return nil, fmt.Errorf("duplicate key %q in JSON attributes", key)
 			}
-			top[key] = value
+			
+top[key] = value
 		}
 	}
-	return top, nil
+	
+return top, nil
 }

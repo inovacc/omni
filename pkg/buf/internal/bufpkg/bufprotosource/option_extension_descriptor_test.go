@@ -30,6 +30,7 @@ import (
 
 func TestOptionExtensionLocation(t *testing.T) {
 	t.Parallel()
+
 	locations := []*descriptorpb.SourceCodeInfo_Location{
 		{
 			Path:            []int32{1, 2, 3, 4, 5, 1099, 100, 101, 102},
@@ -127,20 +128,23 @@ func checkLocation(t *testing.T, loc Location, sourceCodeInfoLoc *descriptorpb.S
 	assert.Greater(t, loc.StartLine(), math.MinInt32)
 	assert.Less(t, loc.StartColumn(), math.MaxInt32)
 	assert.Greater(t, loc.StartLine(), math.MinInt32)
+
 	span := []int32{int32(loc.StartLine() - 1), int32(loc.StartColumn() - 1)}
 	if loc.EndLine() != loc.StartLine() {
 		assert.Less(t, loc.EndLine(), math.MaxInt32)
 		assert.Greater(t, loc.EndLine(), math.MinInt32)
 		span = append(span, int32(loc.EndLine()-1))
 	}
+
 	assert.Less(t, loc.EndColumn(), math.MaxInt32)
 	assert.Greater(t, loc.EndColumn(), math.MinInt32)
 	span = append(span, int32(loc.EndColumn()-1))
-	assert.Equal(t, sourceCodeInfoLoc.Span, span)
+	assert.Equal(t, sourceCodeInfoLoc.GetSpan(), span)
 }
 
 func makeCustomOption(t *testing.T, tag int32) protoreflect.ExtensionType {
 	t.Helper()
+
 	fileDescriptorProto := &descriptorpb.FileDescriptorProto{
 		Name:       proto.String("test.proto"),
 		Syntax:     proto.String("proto2"),
@@ -157,5 +161,6 @@ func makeCustomOption(t *testing.T, tag int32) protoreflect.ExtensionType {
 	}
 	fileDescriptor, err := protodesc.NewFile(fileDescriptorProto, protoregistry.GlobalFiles)
 	require.NoError(t, err)
+
 	return dynamicpb.NewExtensionType(fileDescriptor.Extensions().Get(0))
 }

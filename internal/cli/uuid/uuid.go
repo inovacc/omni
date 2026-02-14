@@ -1,20 +1,20 @@
 package uuid
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 
+	"github.com/inovacc/omni/internal/cli/output"
 	"github.com/inovacc/omni/pkg/idgen"
 )
 
 // UUIDOptions configures the uuid command behavior
 type UUIDOptions struct {
-	Count    int  // -n: generate N UUIDs
-	Upper    bool // -u: output in uppercase
-	NoDashes bool // -x: output without dashes
-	Version  int  // -v: UUID version (4 = random, default)
-	JSON     bool // --json: output as JSON
+	Count        int           // -n: generate N UUIDs
+	Upper        bool          // -u: output in uppercase
+	NoDashes     bool          // -x: output without dashes
+	Version      int           // -v: UUID version (4 = random, default)
+	OutputFormat output.Format // output format (text, json, table)
 }
 
 // UUIDResult represents uuid output for JSON
@@ -57,8 +57,10 @@ func RunUUID(w io.Writer, opts UUIDOptions) error {
 		return fmt.Errorf("uuid: %w", err)
 	}
 
-	if opts.JSON {
-		return json.NewEncoder(w).Encode(UUIDResult{UUIDs: uuids, Count: len(uuids)})
+	f := output.New(w, opts.OutputFormat)
+
+	if f.IsJSON() {
+		return f.Print(UUIDResult{UUIDs: uuids, Count: len(uuids)})
 	}
 
 	for _, u := range uuids {

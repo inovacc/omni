@@ -32,6 +32,7 @@ func MaskReadBucket(readBucket ReadBucket, includePrefixes, excludePrefixes []st
 	if len(includePrefixes) == 0 && len(excludePrefixes) == 0 {
 		return readBucket, nil
 	}
+
 	return newMaskReadBucketCloser(readBucket, nil, includePrefixes, excludePrefixes)
 }
 
@@ -45,6 +46,7 @@ func MaskReadBucketCloser(readBucketCloser ReadBucketCloser, includePrefixes, ex
 	if len(includePrefixes) == 0 && len(excludePrefixes) == 0 {
 		return readBucketCloser, nil
 	}
+
 	return newMaskReadBucketCloser(readBucketCloser, readBucketCloser.Close, includePrefixes, excludePrefixes)
 }
 
@@ -64,10 +66,12 @@ func newMaskReadBucketCloser(
 	if err != nil {
 		return nil, err
 	}
+
 	normalizedExcludes, err := normalizeValidateAndCompactPrefixes(excludePrefixes)
 	if err != nil {
 		return nil, err
 	}
+
 	return &maskReadBucketCloser{
 		delegate:        delegate,
 		closeFunc:       closeFunc,
@@ -81,9 +85,11 @@ func (r *maskReadBucketCloser) Get(ctx context.Context, path string) (ReadObject
 	if err != nil {
 		return nil, err
 	}
+
 	if !r.matchPath(path) {
 		return nil, &fs.PathError{Op: "read", Path: path, Err: fs.ErrNotExist}
 	}
+
 	return r.delegate.Get(ctx, path)
 }
 
@@ -92,9 +98,11 @@ func (r *maskReadBucketCloser) Stat(ctx context.Context, path string) (ObjectInf
 	if err != nil {
 		return nil, err
 	}
+
 	if !r.matchPath(path) {
 		return nil, &fs.PathError{Op: "read", Path: path, Err: fs.ErrNotExist}
 	}
+
 	return r.delegate.Stat(ctx, path)
 }
 
@@ -103,6 +111,7 @@ func (r *maskReadBucketCloser) Walk(ctx context.Context, prefix string, f func(O
 	if err != nil {
 		return err
 	}
+
 	for _, excludePrefix := range r.excludePrefixes {
 		isChild := normalpath2.EqualsOrContainsPath(excludePrefix, prefix, normalpath2.Relative)
 		if isChild {
@@ -110,10 +119,12 @@ func (r *maskReadBucketCloser) Walk(ctx context.Context, prefix string, f func(O
 			return nil
 		}
 	}
+
 	walkFunc := func(objectInfo ObjectInfo) error {
 		if !r.matchPath(objectInfo.Path()) {
 			return nil
 		}
+
 		return f(objectInfo)
 	}
 	if len(r.includePrefixes) == 0 {
@@ -122,12 +133,14 @@ func (r *maskReadBucketCloser) Walk(ctx context.Context, prefix string, f func(O
 	}
 	// Find all include prefixes under the requests root prefix.
 	var effectivePrefixes []string
+
 	for _, includePrefix := range r.includePrefixes {
 		isParent := normalpath2.EqualsOrContainsPath(includePrefix, prefix, normalpath2.Relative)
 		if isParent {
 			// The requested prefix is under an include prefix, so walk normally.
 			return r.delegate.Walk(ctx, prefix, walkFunc)
 		}
+
 		isChild := normalpath2.EqualsOrContainsPath(prefix, includePrefix, normalpath2.Relative)
 		if isChild {
 			effectivePrefixes = append(effectivePrefixes, includePrefix)
@@ -141,6 +154,7 @@ func (r *maskReadBucketCloser) Walk(ctx context.Context, prefix string, f func(O
 			return err
 		}
 	}
+
 	return nil
 }
 
@@ -148,6 +162,7 @@ func (r *maskReadBucketCloser) Close() error {
 	if r.closeFunc != nil {
 		return r.closeFunc()
 	}
+
 	return nil
 }
 
@@ -171,6 +186,7 @@ func (r *maskReadBucketCloser) matchPath(path string) bool {
 			return true
 		}
 	}
+
 	return false
 }
 
@@ -181,14 +197,18 @@ func normalizeValidateAndCompactPrefixes(prefixes []string) ([]string, error) {
 	if len(prefixes) == 0 {
 		return nil, nil
 	}
+
 	var normalized []string
+
 	for _, prefix := range prefixes {
 		normalizedPrefix, err := normalpath2.NormalizeAndValidate(prefix)
 		if err != nil {
 			return nil, err
 		}
+
 		normalized = append(normalized, normalizedPrefix)
 	}
+
 	slices.Sort(normalized)
 	// Remove redundant child prefixes that are covered by parent prefixes.
 	// For example, ["bar", "foo", "foo/v1", "foo/v1/v2"] becomes ["bar", "foo"].
@@ -198,5 +218,6 @@ func normalizeValidateAndCompactPrefixes(prefixes []string) ([]string, error) {
 			reduced = append(reduced, prefix)
 		}
 	}
+
 	return reduced, nil
 }

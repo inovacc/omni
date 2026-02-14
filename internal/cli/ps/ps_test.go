@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"strings"
 	"testing"
+
+	"github.com/inovacc/omni/internal/cli/output"
 )
 
 func TestRun(t *testing.T) {
@@ -96,7 +98,7 @@ func TestRun(t *testing.T) {
 	t.Run("JSON output", func(t *testing.T) {
 		var buf bytes.Buffer
 
-		err := Run(&buf, Options{JSON: true})
+		err := Run(&buf, Options{OutputFormat: output.FormatJSON})
 		if err != nil {
 			t.Fatalf("Run() error = %v", err)
 		}
@@ -182,7 +184,7 @@ func TestRunTop(t *testing.T) {
 	t.Run("top JSON", func(t *testing.T) {
 		var buf bytes.Buffer
 
-		err := RunTop(&buf, Options{JSON: true}, 5)
+		err := RunTop(&buf, Options{OutputFormat: output.FormatJSON}, 5)
 		if err != nil {
 			t.Fatalf("RunTop() error = %v", err)
 		}
@@ -265,14 +267,14 @@ func TestFilterGoProcesses(t *testing.T) {
 	}
 }
 
-func TestPrintJSON(t *testing.T) {
+func TestOutputJSON(t *testing.T) {
 	procs := []Info{
 		{PID: 1, Command: "test", CPU: 1.0, MEM: 2.0},
 	}
 
 	var buf bytes.Buffer
 
-	err := printJSON(&buf, procs)
+	err := output.New(&buf, output.FormatJSON).Print(procs)
 	if err != nil {
 		t.Fatalf("printJSON() error = %v", err)
 	}
@@ -292,6 +294,7 @@ func TestGetProcessList(t *testing.T) {
 	if err != nil {
 		t.Fatalf("GetProcessList() error = %v", err)
 	}
+
 	if len(procs) == 0 {
 		t.Error("GetProcessList() should return at least one process")
 	}
@@ -305,10 +308,12 @@ func TestGetProcessList(t *testing.T) {
 
 func TestRun_SortByMem(t *testing.T) {
 	var buf bytes.Buffer
+
 	err := Run(&buf, Options{Sort: "mem"})
 	if err != nil {
 		t.Fatalf("Run() error = %v", err)
 	}
+
 	if buf.Len() == 0 {
 		t.Error("Run() --sort=mem should produce output")
 	}
@@ -316,10 +321,12 @@ func TestRun_SortByMem(t *testing.T) {
 
 func TestRun_SortByTime(t *testing.T) {
 	var buf bytes.Buffer
+
 	err := Run(&buf, Options{Sort: "time"})
 	if err != nil {
 		t.Fatalf("Run() error = %v", err)
 	}
+
 	if buf.Len() == 0 {
 		t.Error("Run() --sort=time should produce output")
 	}
@@ -332,17 +339,19 @@ func TestRun_CombinedFlags(t *testing.T) {
 	}{
 		{"all_long", Options{All: true, Long: true}},
 		{"all_full", Options{All: true, Full: true}},
-		{"aux_json", Options{Aux: true, JSON: true}},
+		{"aux_json", Options{Aux: true, OutputFormat: output.FormatJSON}},
 		{"noheader_sort_cpu", Options{NoHeaders: true, Sort: "cpu"}},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var buf bytes.Buffer
+
 			err := Run(&buf, tt.opts)
 			if err != nil {
 				t.Fatalf("Run() error = %v", err)
 			}
+
 			if buf.Len() == 0 {
 				t.Error("Run() should produce output")
 			}
@@ -352,6 +361,7 @@ func TestRun_CombinedFlags(t *testing.T) {
 
 func TestRunTop_Zero(t *testing.T) {
 	var buf bytes.Buffer
+
 	err := RunTop(&buf, Options{}, 0)
 	if err != nil {
 		t.Fatalf("RunTop() error = %v", err)
@@ -383,19 +393,21 @@ func TestSortProcesses_Default(t *testing.T) {
 	}
 }
 
-func TestPrintJSON_Empty(t *testing.T) {
+func TestOutputJSON_Empty(t *testing.T) {
 	var buf bytes.Buffer
-	err := printJSON(&buf, nil)
+
+	err := output.New(&buf, output.FormatJSON).Print(nil)
 	if err != nil {
 		t.Fatalf("printJSON() error = %v", err)
 	}
+
 	output := strings.TrimSpace(buf.String())
 	if output != "null" && output != "[]" {
 		t.Logf("printJSON() for nil: %s", output)
 	}
 }
 
-func TestPrintJSON_MultipleProcesses(t *testing.T) {
+func TestOutputJSON_MultipleProcesses(t *testing.T) {
 	procs := []Info{
 		{PID: 1, Command: "a", CPU: 10.0, MEM: 5.0},
 		{PID: 2, Command: "b", CPU: 20.0, MEM: 10.0},
@@ -403,7 +415,8 @@ func TestPrintJSON_MultipleProcesses(t *testing.T) {
 	}
 
 	var buf bytes.Buffer
-	err := printJSON(&buf, procs)
+
+	err := output.New(&buf, output.FormatJSON).Print(procs)
 	if err != nil {
 		t.Fatalf("printJSON() error = %v", err)
 	}
@@ -426,6 +439,7 @@ func TestFilterGoProcesses_NoneGo(t *testing.T) {
 		{PID: 1, IsGo: false},
 		{PID: 2, IsGo: false},
 	}
+
 	result := filterGoProcesses(procs)
 	if len(result) != 0 {
 		t.Errorf("expected 0 Go processes, got %d", len(result))

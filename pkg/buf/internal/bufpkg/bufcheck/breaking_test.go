@@ -1317,6 +1317,7 @@ func testBreaking(
 ) {
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second) // Increased timeout for Wasm runtime
 	defer cancel()
+
 	logger := slogtestext.NewLogger(t)
 
 	baseDirPath := filepath.Join("testdata", "breaking", "current")
@@ -1392,13 +1393,16 @@ func testBreaking(
 
 	opaqueID, err := testGetRootOpaqueID(workspace, ".")
 	require.NoError(t, err)
+
 	breakingConfig := workspace.GetBreakingConfigForOpaqueID(opaqueID)
 	require.NotNil(t, breakingConfig)
+
 	wasmRuntime, err := wasm.NewRuntime(ctx)
 	require.NoError(t, err)
 	t.Cleanup(func() {
 		require.NoError(t, wasmRuntime.Close(ctx))
 	})
+
 	client, err := bufcheck.NewClient(
 		logger,
 		bufcheck.ClientWithRunnerProvider(bufcheck.NewLocalRunnerProvider(wasmRuntime)),
@@ -1409,6 +1413,7 @@ func testBreaking(
 		}),
 	)
 	require.NoError(t, err)
+
 	err = client.Breaking(
 		ctx,
 		breakingConfig,
@@ -1433,11 +1438,13 @@ func testBreaking(
 
 func testGetRootOpaqueID(workspace bufworkspace2.Workspace, prefix string) (string, error) {
 	var rootModules []bufmodule2.Module
+
 	for _, module := range workspace.Modules() {
 		if strings.HasPrefix(module.OpaqueID(), prefix) {
 			rootModules = append(rootModules, module)
 		}
 	}
+
 	switch len(rootModules) {
 	case 0:
 		return "", errors.New("no module with opaque ID starting with \".\"")

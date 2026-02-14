@@ -107,11 +107,14 @@ func TestSort(t *testing.T) {
 	}
 
 	var mu sync.Mutex
+
 	s := toposort.Sorter[int, int]{Key: func(n int) int { return n }}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Serialize the tests, but run them in an arbitrary order.
 			t.Parallel()
+
 			mu.Lock()
 			defer mu.Unlock()
 

@@ -26,7 +26,7 @@ import (
 
 func BenchmarkDescriptors(b *testing.B) {
 	file := (*descriptorpb.FileDescriptorProto)(nil).ProtoReflect().Descriptor().ParentFile()
-	for range b.N {
+	for b.Loop() {
 		err := Descriptors(file, func(_ protoreflect.Descriptor) error {
 			return nil
 		})
@@ -36,7 +36,7 @@ func BenchmarkDescriptors(b *testing.B) {
 
 func BenchmarkDescriptorProtos(b *testing.B) {
 	file := protodesc.ToFileDescriptorProto((*descriptorpb.FileDescriptorProto)(nil).ProtoReflect().Descriptor().ParentFile())
-	for range b.N {
+	for b.Loop() {
 		err := DescriptorProtos(file, func(_ protoreflect.FullName, _ proto.Message) error {
 			return nil
 		})

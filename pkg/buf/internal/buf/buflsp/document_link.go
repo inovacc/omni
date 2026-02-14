@@ -53,6 +53,7 @@ func (s *server) documentLink(file *file) []protocol.DocumentLink {
 				// Try to get BSR module information for non-WKT imports
 				module := file.workspace.GetModule(imported.file.uri)
 				filePath := imported.file.objectInfo.Path()
+
 				url := bsrURL(module, filePath, "", bsrTabTypeFile)
 				if url != "" {
 					targetURI = protocol.DocumentURI(url)
@@ -90,6 +91,7 @@ func bsrURL(module bufmodule.Module, pathOrPackage string, anchor string, tabTyp
 	if module == nil {
 		return ""
 	}
+
 	fullName := module.FullName()
 	if fullName == nil {
 		return ""
@@ -108,6 +110,7 @@ func bsrURL(module bufmodule.Module, pathOrPackage string, anchor string, tabTyp
 	if anchor != "" {
 		url += "#" + anchor
 	}
+
 	return url
 }
 

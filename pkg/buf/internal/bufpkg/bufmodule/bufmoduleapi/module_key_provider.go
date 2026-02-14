@@ -81,6 +81,7 @@ func (a *moduleKeyProvider) GetModuleKeysForModuleRefs(
 		},
 	)
 	indexedModuleKeys := make([]xslices.Indexed[bufmodule2.ModuleKey], 0, len(moduleRefs))
+
 	for registry, indexedModuleRefs := range registryToIndexedModuleRefs {
 		indexedRegistryModuleKeys, err := a.getIndexedModuleKeysForRegistryAndIndexedModuleRefs(
 			ctx,
@@ -91,8 +92,10 @@ func (a *moduleKeyProvider) GetModuleKeysForModuleRefs(
 		if err != nil {
 			return nil, err
 		}
+
 		indexedModuleKeys = append(indexedModuleKeys, indexedRegistryModuleKeys...)
 	}
+
 	return xslices.IndexedToSortedValues(indexedModuleKeys), nil
 }
 
@@ -106,12 +109,15 @@ func (a *moduleKeyProvider) getIndexedModuleKeysForRegistryAndIndexedModuleRefs(
 	if err != nil {
 		return nil, err
 	}
+
 	indexedModuleKeys := make([]xslices.Indexed[bufmodule2.ModuleKey], len(indexedModuleRefs))
+
 	for i, universalProtoCommit := range universalProtoCommits {
 		commitID, err := uuidutil.FromDashless(universalProtoCommit.ID)
 		if err != nil {
 			return nil, err
 		}
+
 		moduleKey, err := bufmodule2.NewModuleKey(
 			// Note we don't have to resolve owner_name and module_name since we already have them.
 			indexedModuleRefs[i].Value.FullName(),
@@ -124,10 +130,12 @@ func (a *moduleKeyProvider) getIndexedModuleKeysForRegistryAndIndexedModuleRefs(
 		if err != nil {
 			return nil, err
 		}
+
 		indexedModuleKeys[i] = xslices.Indexed[bufmodule2.ModuleKey]{
 			Value: moduleKey,
 			Index: indexedModuleRefs[i].Index,
 		}
 	}
+
 	return indexedModuleKeys, nil
 }

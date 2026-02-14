@@ -488,6 +488,7 @@ func TestRunPackageNoImportCycle(t *testing.T) {
 			// Testing that import cycles are still detected via imports, but are
 			// not reported for imports, only for non-imports.
 			var newImageFiles []bufimage.ImageFile
+
 			for _, imageFile := range image.Files() {
 				if imageFile.FileDescriptorProto().GetPackage() == "b" {
 					newImageFiles = append(newImageFiles, bufimage.ImageFileWithIsImport(imageFile, true))
@@ -496,8 +497,10 @@ func TestRunPackageNoImportCycle(t *testing.T) {
 					newImageFiles = append(newImageFiles, imageFile)
 				}
 			}
+
 			newImage, err := bufimage.NewImage(newImageFiles)
 			require.NoError(t, err)
+
 			return newImage
 		},
 		bufanalysistesting.NewFileAnnotation(t, "c1.proto", 5, 1, 5, 19, "PACKAGE_NO_IMPORT_CYCLE"),
@@ -511,6 +514,7 @@ func TestRunPackageNoImportCycle(t *testing.T) {
 			// Testing that import cycles are still detected via imports, but are
 			// not reported for imports, only for non-imports.
 			var newImageFiles []bufimage.ImageFile
+
 			for _, imageFile := range image.Files() {
 				if imageFile.FileDescriptorProto().GetPackage() == "b" {
 					newImageFiles = append(newImageFiles, bufimage.ImageFileWithIsImport(imageFile, true))
@@ -519,8 +523,10 @@ func TestRunPackageNoImportCycle(t *testing.T) {
 					newImageFiles = append(newImageFiles, imageFile)
 				}
 			}
+
 			newImage, err := bufimage.NewImage(newImageFiles)
 			require.NoError(t, err)
+
 			return newImage
 		},
 		bufanalysistesting.NewFileAnnotation(t, "c1.proto", 5, 1, 5, 19, "PACKAGE_NO_IMPORT_CYCLE"),
@@ -1328,9 +1334,11 @@ func TestRunLintCustomPlugins(t *testing.T) {
 func TestRunLintCustomWasmPlugins(t *testing.T) {
 	t.Skip("Requires WASM plugin binaries that are not available")
 	t.Parallel()
+
 	if testing.Short() {
 		t.Skip("skipping test in short mode")
 	}
+
 	testLintWithOptions(
 		t,
 		"custom_wasm_plugins",
@@ -1574,6 +1582,7 @@ func testLintWithOptions(
 	// build the image for the specified module string (opaqueID)
 	moduleSet, err := workspace.WithTargetOpaqueIDs(opaqueID)
 	require.NoError(t, err)
+
 	moduleReadBucket := bufmodule2.ModuleSetToModuleReadBucketWithOnlyProtoFiles(moduleSet)
 	image, err := bufimage.BuildImage(
 		ctx,
@@ -1581,17 +1590,20 @@ func testLintWithOptions(
 		moduleReadBucket,
 	)
 	require.NoError(t, err)
+
 	if imageModifier != nil {
 		image = imageModifier(image)
 	}
 
 	lintConfig := workspace.GetLintConfigForOpaqueID(opaqueID)
 	require.NotNil(t, lintConfig)
+
 	wasmRuntime, err := wasm.NewRuntime(ctx)
 	require.NoError(t, err)
 	t.Cleanup(func() {
 		require.NoError(t, wasmRuntime.Close(ctx))
 	})
+
 	client, err := bufcheck.NewClient(
 		logger,
 		bufcheck.ClientWithRunnerProvider(bufcheck.NewLocalRunnerProvider(wasmRuntime)),
@@ -1602,6 +1614,7 @@ func testLintWithOptions(
 		}),
 	)
 	require.NoError(t, err)
+
 	err = client.Lint(
 		ctx,
 		lintConfig,

@@ -30,6 +30,7 @@ func GetMeta[M tokenmeta.Meta](token Token) *M {
 	if meta, ok := stream.meta[token.ID()].(*M); ok {
 		return meta
 	}
+
 	return nil
 }
 

@@ -29,6 +29,7 @@ type FeatureSet id.Node[FeatureSet, *File, *rawFeatureSet]
 // Feature is a feature setting retrieved from a [FeatureSet].
 type Feature struct {
 	withContext
+
 	raw rawFeature
 }
 
@@ -37,6 +38,7 @@ type Feature struct {
 // on a field.
 type FeatureInfo struct {
 	withContext
+
 	raw *rawFeatureInfo
 }
 
@@ -74,6 +76,7 @@ func (fs FeatureSet) Parent() FeatureSet {
 	if fs.IsZero() {
 		return FeatureSet{}
 	}
+
 	return id.Wrap(fs.Context(), fs.Raw().parent)
 }
 
@@ -83,6 +86,7 @@ func (fs FeatureSet) Options() MessageValue {
 	if fs.IsZero() {
 		return MessageValue{}
 	}
+
 	return id.Wrap(fs.Context(), fs.Raw().options).AsMessage()
 }
 
@@ -136,7 +140,9 @@ func (fs FeatureSet) LookupCustom(extension, field Member) Feature {
 	if fs.Raw().features == nil {
 		fs.Raw().features = make(map[featureKey]rawFeature)
 	}
+
 	fs.Raw().features[key] = raw
+
 	return Feature{id.WrapContext(fs.Context()), raw}
 }
 
@@ -190,6 +196,7 @@ func (f FeatureInfo) Default(edition syntax.Syntax) Value {
 	if !ok && idx > 0 {
 		idx-- // We're looking for the greatest lower bound.
 	}
+
 	return id.Wrap(f.Context(), f.raw.defaults[idx].value)
 }
 
@@ -198,6 +205,7 @@ func (f FeatureInfo) Introduced() syntax.Syntax {
 	if f.IsZero() {
 		return syntax.Unknown
 	}
+
 	return f.raw.introduced
 }
 
@@ -212,6 +220,7 @@ func (f FeatureInfo) Deprecated() syntax.Syntax {
 	if f.IsZero() {
 		return syntax.Unknown
 	}
+
 	return f.raw.deprecated
 }
 
@@ -226,6 +235,7 @@ func (f FeatureInfo) Removed() syntax.Syntax {
 	if f.IsZero() {
 		return syntax.Unknown
 	}
+
 	return f.raw.removed
 }
 
@@ -240,5 +250,6 @@ func (f FeatureInfo) DeprecationWarning() string {
 	if f.IsZero() {
 		return ""
 	}
+
 	return f.raw.deprecationWarning
 }

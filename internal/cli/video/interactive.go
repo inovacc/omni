@@ -87,6 +87,7 @@ func RunInteractive(out io.Writer, prompt io.Writer, in io.Reader, args []string
 			if selector == "" {
 				_, _ = fmt.Fprintln(prompt, "Format selector is required.")
 				_, _ = fmt.Fprintln(prompt)
+
 				continue
 			}
 
@@ -99,6 +100,7 @@ func RunInteractive(out io.Writer, prompt io.Writer, in io.Reader, args []string
 
 		case "3", "formats", "list-formats":
 			listOpts := opts
+
 			listOpts.JSON = false
 			if err := RunListFormats(out, []string{url}, listOpts); err != nil {
 				_, _ = fmt.Fprintf(prompt, "[error] %v\n", err)
@@ -117,6 +119,7 @@ func RunInteractive(out io.Writer, prompt io.Writer, in io.Reader, args []string
 		case "6", "extractors", "sites":
 			names := pkgvideo.ListExtractors()
 			sort.Strings(names)
+
 			_, _ = fmt.Fprintln(out, "Supported extractors:")
 			for _, name := range names {
 				_, _ = fmt.Fprintf(out, "  - %s\n", name)
@@ -151,6 +154,10 @@ func runNerdStats(out io.Writer, url string, opts Options) error {
 
 	if opts.Verbose {
 		clientOpts = append(clientOpts, pkgvideo.WithVerbose())
+	}
+
+	if opts.CookiesFromBrowser {
+		clientOpts = append(clientOpts, pkgvideo.WithCookiesFromBrowser())
 	}
 
 	client, err := pkgvideo.New(clientOpts...)
@@ -191,18 +198,21 @@ func runNerdStats(out io.Writer, url string, opts Options) error {
 		if protocol == "" {
 			protocol = "unknown"
 		}
+
 		protocolCounts[protocol]++
 
 		ext := f.Ext
 		if ext == "" {
 			ext = "unknown"
 		}
+
 		extensionCounts[ext]++
 
 		container := f.Container
 		if container == "" {
 			container = "unknown"
 		}
+
 		containerCounts[container]++
 	}
 
@@ -210,6 +220,7 @@ func runNerdStats(out io.Writer, url string, opts Options) error {
 	for lang := range info.Subtitles {
 		subtitleLangs = append(subtitleLangs, lang)
 	}
+
 	sort.Strings(subtitleLangs)
 
 	videoType := info.Type
@@ -227,6 +238,7 @@ func runNerdStats(out io.Writer, url string, opts Options) error {
 	_, _ = fmt.Fprintf(out, "  playlist_entries: %d\n", len(info.Entries))
 	_, _ = fmt.Fprintf(out, "  thumbnails: %d\n", len(info.Thumbnails))
 	_, _ = fmt.Fprintf(out, "  chapters: %d\n", len(info.Chapters))
+
 	_, _ = fmt.Fprintf(out, "  subtitle_langs: %d\n", len(subtitleLangs))
 	if len(subtitleLangs) > 0 {
 		_, _ = fmt.Fprintf(out, "  subtitle_codes: %s\n", strings.Join(subtitleLangs, ", "))
@@ -236,13 +248,11 @@ func runNerdStats(out io.Writer, url string, opts Options) error {
 	_, _ = fmt.Fprintf(out, "  extensions: %s\n", renderCounts(extensionCounts))
 	_, _ = fmt.Fprintf(out, "  containers: %s\n", renderCounts(containerCounts))
 
-	limit := len(info.Formats)
-	if limit > 5 {
-		limit = 5
-	}
+	limit := min(len(info.Formats), 5)
 
 	if limit > 0 {
 		_, _ = fmt.Fprintln(out, "  sample_formats:")
+
 		for i := 0; i < limit; i++ {
 			f := info.Formats[i]
 			_, _ = fmt.Fprintf(out, "    - %s | %s | v=%s a=%s | %s\n",
@@ -267,6 +277,7 @@ func renderCounts(counts map[string]int) string {
 	for key := range counts {
 		keys = append(keys, key)
 	}
+
 	sort.Strings(keys)
 
 	parts := make([]string, 0, len(keys))

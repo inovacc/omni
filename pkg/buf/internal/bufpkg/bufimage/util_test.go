@@ -32,6 +32,7 @@ import (
 
 func TestStripBufExtensionField(t *testing.T) {
 	t.Parallel()
+
 	file := imagev1.ImageFile_builder{
 		BufExtension: imagev1.ImageFileExtension_builder{
 			IsImport:         proto.Bool(true),
@@ -64,6 +65,7 @@ func TestStripBufExtensionField(t *testing.T) {
 		otherData = protowire.AppendTag(otherData, 2, protowire.BytesType)
 		otherData = protowire.AppendBytes(otherData, []byte("foo-bar-baz"))
 	}
+
 	otherData = protowire.AppendTag(otherData, 126, protowire.EndGroupType)
 
 	testCases := []struct {
@@ -101,6 +103,7 @@ func TestStripBufExtensionField(t *testing.T) {
 		testCase := testCases[i]
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
+
 			stripped := stripBufExtensionField(testCase.input)
 			require.Equal(t, testCase.expectedOutput, []byte(stripped))
 		})
@@ -109,6 +112,7 @@ func TestStripBufExtensionField(t *testing.T) {
 
 func TestImageToProtoPreservesUnrecognizedFields(t *testing.T) {
 	t.Parallel()
+
 	fileDescriptor := &descriptorpb.FileDescriptorProto{
 		Name:    proto.String("foo/bar/baz.proto"),
 		Package: proto.String("foo.bar.baz"),

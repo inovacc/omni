@@ -51,6 +51,7 @@ func TestSymbolsPackages(t *testing.T) {
 	// verify that trie was created correctly:
 	//   each package has just one entry, which is its immediate sub-package
 	cur := &s.pkgTrie
+
 	pkgNames := []protoreflect.FullName{"build", "build.buf", "build.buf.foo", "build.buf.foo.bar", "build.buf.foo.bar.baz"}
 	for _, pkgName := range pkgNames {
 		assert.Len(t, cur.children, 1)
@@ -71,6 +72,7 @@ func TestSymbolsPackages(t *testing.T) {
 
 		cur = next
 	}
+
 	assert.Equal(t, pkg, cur)
 }
 
@@ -109,6 +111,7 @@ func TestSymbolsImport(t *testing.T) {
 			t.Parallel()
 
 			var s Symbols
+
 			err := s.Import(fd, h)
 			require.NoError(t, err)
 
@@ -123,6 +126,7 @@ func TestSymbolsImport(t *testing.T) {
 			assert.Contains(t, syms, protoreflect.FullName("foo.bar.f"))
 			assert.Contains(t, syms, protoreflect.FullName("foo.bar.s"))
 			assert.Contains(t, syms, protoreflect.FullName("foo.bar.xtra"))
+
 			exts := pkg.exts
 			assert.Len(t, exts, 2)
 			assert.Contains(t, exts, extNumber{"foo.bar.Foo", 10})
@@ -152,11 +156,13 @@ func TestSymbolExtensions(t *testing.T) {
 
 	t.Run("mismatch", func(t *testing.T) {
 		t.Parallel()
+
 		err := addExt("bar.baz", "foo.bar.Foo", 11)
 		require.ErrorContains(t, err, "does not match package")
 	})
 	t.Run("missing package", func(t *testing.T) {
 		t.Parallel()
+
 		err := addExt("bar.baz", "bar.baz.Bar", 11)
 		require.ErrorContains(t, err, "missing package symbols")
 	})
@@ -194,6 +200,7 @@ func TestSymbolExtensions(t *testing.T) {
 
 func parseAndLink(t *testing.T, contents string) Result {
 	t.Helper()
+
 	h := reporter.NewHandler(nil)
 	fileAst, err := parser.Parse("test.proto", strings.NewReader(contents), h)
 	require.NoError(t, err)
@@ -203,8 +210,10 @@ func parseAndLink(t *testing.T, contents string) Result {
 	require.NoError(t, err)
 	depAsFile, err := NewFileRecursive(dep)
 	require.NoError(t, err)
+
 	depFiles := Files{depAsFile}
 	linkResult, err := Link(parseResult, depFiles, nil, h)
 	require.NoError(t, err)
+
 	return linkResult
 }

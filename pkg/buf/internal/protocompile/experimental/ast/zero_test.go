@@ -74,6 +74,7 @@ func TestZero(t *testing.T) {
 // zero span.
 func testZero[Node source.Spanner](t *testing.T) {
 	t.Helper()
+
 	var z Node
 
 	t.Run(fmt.Sprintf("%T", z), func(t *testing.T) {
@@ -84,16 +85,19 @@ func testZero[Node source.Spanner](t *testing.T) {
 		// 1. Does not panic.
 		// 2. Returns zero values.
 		v := reflect.ValueOf(z)
+
 		ty := v.Type()
 		for i := range ty.NumMethod() {
 			m := ty.Method(i)
 			if m.Func.Type().NumIn() != 1 || m.Func.Type().NumOut() == 0 {
 				continue // NumIn includes the receiver.
 			}
+
 			switch m.Name {
 			case "IsZero", "String", "Next", "Prev":
 				continue
 			}
+
 			for i, r := range m.Func.Call([]reflect.Value{v}) {
 				if r.Type().Kind() == reflect.Func {
 					continue

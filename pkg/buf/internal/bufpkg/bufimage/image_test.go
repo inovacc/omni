@@ -28,6 +28,7 @@ import (
 
 func TestCloneImage(t *testing.T) {
 	t.Parallel()
+
 	protoImage := imagev1.Image_builder{
 		File: []*imagev1.ImageFile{
 			imagev1.ImageFile_builder{
@@ -139,6 +140,7 @@ func TestCloneImage(t *testing.T) {
 		cloneFile := clone.GetFile(imageFile.Path())
 		require.NotSame(t, imageFile.FileDescriptorProto(), cloneFile.FileDescriptorProto())
 		unused := reflect.ValueOf(imageFile.UnusedDependencyIndexes()).Pointer()
+
 		cloneUnused := reflect.ValueOf(cloneFile.UnusedDependencyIndexes()).Pointer()
 		if unused != 0 || cloneUnused != 0 {
 			// They can both be nil. But otherwise must not be equal since that

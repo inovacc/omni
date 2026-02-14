@@ -45,6 +45,7 @@ type ComparableGraph[Value comparable] struct {
 func NewComparableGraph[Value comparable]() *ComparableGraph[Value] {
 	comparableGraph := &ComparableGraph[Value]{}
 	comparableGraph.init()
+
 	return comparableGraph
 }
 

@@ -87,6 +87,7 @@ func (t *Test) Unmarshal(path string, text string) error {
 	switch filepath.Ext(path) {
 	case ".proto":
 		config := new(bytes.Buffer)
+
 		for line := range strings.Lines(text) {
 			if line, ok := strings.CutPrefix(line, "//% "); ok {
 				config.WriteString(line)
@@ -123,6 +124,7 @@ func (l *List[T]) UnmarshalYAML(value *yaml.Node) error {
 		*l = make([]T, 1)
 		return value.Decode(&(*l)[0])
 	}
+
 	return value.Decode((*[]T)(l))
 }
 
@@ -130,6 +132,7 @@ func TestIR(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		t.Skip("Skipped on Windows: golden files have Unix line endings affecting byte offsets")
 	}
+
 	t.Parallel()
 
 	corpus := golden.Corpus{
@@ -170,6 +173,7 @@ func TestIR(t *testing.T) {
 				if f.Import {
 					return nil, false
 				}
+
 				return queries.IR{
 					Opener:  files,
 					Session: session,
@@ -195,8 +199,10 @@ func TestIR(t *testing.T) {
 			ShowDebug: true,
 		}.RenderString(r)
 		t.Log(stderr)
+
 		outputs[0], _, _ = report.Renderer{}.RenderString(r)
 		assert.NotContains(t, outputs[0], "unexpected panic; this is a bug")
+
 		if !test.Descriptor && !test.Symtab {
 			require.NotEmpty(t, outputs[0], "test must emit diagnostics")
 			return
@@ -243,25 +249,30 @@ func symtabProto(files []*ir.File) *compilerpb.SymbolSet {
 			}
 		}
 		dumpFeatureExtns(file.FeatureSet().Options())
+
 		for ty := range seq.Values(file.AllTypes()) {
 			dumpFeatureExtns(ty.FeatureSet().Options())
 
 			for v := range seq.Values(ty.Members()) {
 				dumpFeatureExtns(v.FeatureSet().Options())
 			}
+
 			for v := range seq.Values(ty.Oneofs()) {
 				dumpFeatureExtns(v.FeatureSet().Options())
 			}
+
 			for v := range seq.Values(ty.ExtensionRanges()) {
 				dumpFeatureExtns(v.FeatureSet().Options())
 			}
 		}
+
 		for v := range seq.Values(file.AllExtensions()) {
 			dumpFeatureExtns(v.FeatureSet().Options())
 		}
 
 		dumpFeatures := func(features ir.FeatureSet, target ir.OptionTarget) []*compilerpb.Feature {
 			var out []*compilerpb.Feature
+
 			dumpMessage := func(extn ir.Member, ty ir.Type) {
 				for field := range seq.Values(ty.Members()) {
 					if field.FeatureInfo().IsZero() || !field.CanTarget(target) {
@@ -270,12 +281,15 @@ func symtabProto(files []*ir.File) *compilerpb.SymbolSet {
 
 					feature := features.LookupCustom(extn, field)
 					ty := feature.Type()
+
 					var valueString string
+
 					switch {
 					case feature.IsZero():
 						continue
 					case ty.IsEnum():
 						n, _ := feature.Value().AsInt()
+
 						ev := ty.MemberByNumber(int32(n))
 						if !ev.IsZero() {
 							valueString = ev.Name()
@@ -299,15 +313,17 @@ func symtabProto(files []*ir.File) *compilerpb.SymbolSet {
 			}
 
 			dumpMessage(ir.Member{}, file.FindSymbol("google.protobuf.FeatureSet").AsType())
+
 			for extn := range featureExtns {
 				dumpMessage(extn, extn.Element())
 			}
 
 			slices.SortStableFunc(out, cmpx.Join(
-				cmpx.Map(func(f *compilerpb.Feature) bool { return !f.Explicit }, cmpx.Bool),
+				cmpx.Map(func(f *compilerpb.Feature) bool { return !f.GetExplicit() }, cmpx.Bool),
 				cmpx.Key((*compilerpb.Feature).GetExtn),
 				cmpx.Key((*compilerpb.Feature).GetName),
 			))
+
 			return out
 		}
 
@@ -338,7 +354,8 @@ func symtabProto(files []*ir.File) *compilerpb.SymbolSet {
 				Visible:    imp.Visible,
 			})
 		}
-		slices.SortFunc(symtab.Imports, cmpx.Key(func(x *compilerpb.Import) string { return x.Path }))
+
+		slices.SortFunc(symtab.GetImports(), cmpx.Key(func(x *compilerpb.Import) string { return x.GetPath() }))
 
 		for sym := range seq.Values(file.Symbols()) {
 			if strings.HasPrefix(sym.Context().Path(), "google/protobuf/") {
@@ -346,6 +363,7 @@ func symtabProto(files []*ir.File) *compilerpb.SymbolSet {
 			}
 
 			var options ir.MessageValue
+
 			switch sym.Kind() {
 			case ir.SymbolKindMessage, ir.SymbolKindEnum:
 				options = sym.AsType().Options()
@@ -366,11 +384,12 @@ func symtabProto(files []*ir.File) *compilerpb.SymbolSet {
 				Features:   dumpFeatures(sym.FeatureSet(), sym.Kind().OptionTarget()),
 			})
 		}
-		slices.SortFunc(symtab.Symbols,
+
+		slices.SortFunc(symtab.GetSymbols(),
 			cmpx.Join(
-				cmpx.Key(func(x *compilerpb.Symbol) string { return x.File }),
-				cmpx.Key(func(x *compilerpb.Symbol) compilerpb.Symbol_Kind { return x.Kind }),
-				cmpx.Key(func(x *compilerpb.Symbol) uint32 { return x.Index }),
+				cmpx.Key(func(x *compilerpb.Symbol) string { return x.GetFile() }),
+				cmpx.Key(func(x *compilerpb.Symbol) compilerpb.Symbol_Kind { return x.GetKind() }),
+				cmpx.Key(func(x *compilerpb.Symbol) uint32 { return x.GetIndex() }),
 			),
 		)
 
@@ -389,6 +408,7 @@ func (ow *optionWalker) message(v ir.MessageValue) *compilerpb.Value {
 	if v.IsZero() {
 		return nil
 	}
+
 	if depth, ok := ow.path[v]; ok {
 		return &compilerpb.Value{Value: &compilerpb.Value_Cycle{Cycle: int32(ow.depth - depth)}}
 	}
@@ -396,8 +416,10 @@ func (ow *optionWalker) message(v ir.MessageValue) *compilerpb.Value {
 	if ow.path == nil {
 		ow.path = make(map[ir.MessageValue]int)
 	}
+
 	ow.path[v] = ow.depth
 	ow.depth++
+
 	defer func() {
 		ow.depth--
 		delete(ow.path, v)
@@ -411,16 +433,19 @@ func (ow *optionWalker) message(v ir.MessageValue) *compilerpb.Value {
 	}
 
 	m := new(compilerpb.Value_Message)
+
 	for elem := range v.Fields() {
 		if elem.Field().IsExtension() {
 			if m.Extns == nil {
 				m.Extns = make(map[string]*compilerpb.Value)
 			}
+
 			m.Extns[string(elem.Field().FullName())] = ow.value(elem)
 		} else {
 			if m.Fields == nil {
 				m.Fields = make(map[string]*compilerpb.Value)
 			}
+
 			m.Fields[elem.Field().Name()] = ow.value(elem)
 		}
 	}
@@ -477,6 +502,7 @@ func (ow *optionWalker) value(v ir.Value) *compilerpb.Value {
 		for elem := range seq.Values(v.Elements()) {
 			r.Values = append(r.Values, element(elem))
 		}
+
 		return &compilerpb.Value{Value: &compilerpb.Value_Repeated_{Repeated: r}}
 	}
 

@@ -33,6 +33,7 @@ func ValidateHostname(hostname string) (string, error) {
 	if len(hostname) == 0 {
 		return "", errors.New("must not be empty")
 	}
+
 	if len(hostname) < domainNameMinLength || len(hostname) > domainNameMaxLength {
 		return "", fmt.Errorf("must be at least %d and at most %d characters", domainNameMinLength, domainNameMaxLength)
 	}
@@ -45,13 +46,16 @@ func ValidateHostname(hostname string) (string, error) {
 			parsedHost = host
 		}
 	}
+
 	if net.ParseIP(parsedHost) != nil {
 		// hostname is a valid IP address
 		return hostname, nil
 	}
+
 	if err := isValidDomainName(parsedHost); err != nil {
 		return "", fmt.Errorf("must either be a valid IP address or domain name: invalid domain name %q, %w", hostname, err)
 	}
+
 	return hostname, nil
 }
 
@@ -65,6 +69,7 @@ func isValidDomainName(hostname string) error {
 	previous := rune('.')
 	nonNumeric := false
 	segmentLen := 0
+
 	for _, char := range hostname {
 		switch {
 		case '0' <= char && char <= '9':
@@ -76,31 +81,38 @@ func isValidDomainName(hostname string) error {
 			if previous == '.' {
 				return fmt.Errorf("cannot begin a segment after a period (.) with a hyphen (-)")
 			}
+
 			nonNumeric = true
 			segmentLen++
 		case char == '.':
 			if previous == '.' {
 				return fmt.Errorf("cannot contain two periods (.) in a row")
 			}
+
 			if previous == '-' {
 				return fmt.Errorf("cannot have a hyphen (-) immediately before a period (.)")
 			}
+
 			if segmentLen > maxSegmentLength {
 				return fmt.Errorf("cannot have segments greater than %v characters between periods (.)", maxSegmentLength)
 			}
+
 			segmentLen = 0
 		default:
 			return fmt.Errorf("included invalid character %q, must only contain letters, digits, periods (.), hyphens (-), or underscores (_)", char)
 		}
+
 		previous = char
 	}
 
 	if previous == '-' {
 		return fmt.Errorf("cannot have a hyphen (-) as the final character")
 	}
+
 	if segmentLen > maxSegmentLength {
 		return fmt.Errorf("cannot have segments greater than %v characters between periods (.)", maxSegmentLength)
 	}
+
 	if !nonNumeric {
 		return errors.New("must have at least one non-numeric character")
 	}

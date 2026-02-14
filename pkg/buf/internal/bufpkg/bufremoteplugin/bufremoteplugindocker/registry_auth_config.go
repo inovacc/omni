@@ -33,14 +33,18 @@ type RegistryAuthConfig struct {
 // This is suitable for passing to the Docker API as the X-Registry-Auth header.
 func (r *RegistryAuthConfig) ToHeader() (string, error) {
 	var buffer strings.Builder
+
 	writer := base64.NewEncoder(base64.URLEncoding, &buffer)
+
 	err := json.NewEncoder(writer).Encode(r)
 	if err != nil {
 		return "", err
 	}
+
 	if err := writer.Close(); err != nil {
 		return "", err
 	}
+
 	return buffer.String(), nil
 }
 
@@ -50,5 +54,6 @@ func (r *RegistryAuthConfig) fromHeader(encoded string) error {
 	if err := json.NewDecoder(base64Reader).Decode(r); err != nil {
 		return err
 	}
+
 	return nil
 }

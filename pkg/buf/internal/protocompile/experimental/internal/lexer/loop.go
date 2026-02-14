@@ -49,6 +49,7 @@ func loop(l *lexer) {
 
 	for !l.done() {
 		mp.check()
+
 		if unicode.In(l.peek(), unicode.Pattern_White_Space) {
 			// Whitespace. Consume as much whitespace as possible and mint a
 			// whitespace token.
@@ -60,12 +61,16 @@ func loop(l *lexer) {
 			// keywords. At the end, we will convert newlines that we want to
 			// eliminate into spaces.
 			for {
-				var space string
-				var newline bool
+				var (
+					space   string
+					newline bool
+				)
+
 				space, whitespace, newline = strings.Cut(whitespace, "\n")
 				if space != "" {
 					l.push(len(space), token.Space)
 				}
+
 				if !newline {
 					break
 				}
@@ -80,8 +85,11 @@ func loop(l *lexer) {
 		}
 
 		// Find the next valid keyword.
-		var what OnKeyword
-		var kw keyword.Keyword
+		var (
+			what OnKeyword
+			kw   keyword.Keyword
+		)
+
 		for k := range keyword.Prefixes(l.rest()) {
 			n := l.OnKeyword(k)
 			if n != DiscardKeyword {
@@ -101,6 +109,7 @@ func loop(l *lexer) {
 			}
 
 			kind := token.Keyword
+
 			if kw.IsReservedWord() {
 				if what == SoftKeyword {
 					kind = token.Ident
@@ -119,6 +128,7 @@ func loop(l *lexer) {
 			if what == BracketKeyword {
 				l.braces = append(l.braces, tok.ID())
 			}
+
 			continue
 
 		case LineComment:
@@ -133,9 +143,11 @@ func loop(l *lexer) {
 			}
 
 			var newline bool
+
 			text, newline = strings.CutSuffix(text, "\n")
 
 			l.keyword(len(word)+len(text), token.Comment, kw)
+
 			if newline {
 				if l.EmitNewline == nil {
 					// No need to actually emit a keyword in this case.
@@ -165,6 +177,7 @@ func loop(l *lexer) {
 				l.Error(errtoken.Unmatched{Span: tok.Span(), Keyword: kw}).Apply(
 					report.Notef("nested `%s` comments are not supported", fused),
 				)
+
 				continue
 			}
 
@@ -179,6 +192,7 @@ func loop(l *lexer) {
 				})
 				text = l.seekEOF()
 			}
+
 			l.keyword(len(word)+len(text), token.Comment, fused)
 
 			continue
@@ -213,6 +227,7 @@ func loop(l *lexer) {
 					report.Snippet(tok),
 					report.Debugf("%v, %v, %q", tok.ID(), tok.Span(), tok.Text()),
 				)
+
 				continue
 			}
 
@@ -223,6 +238,7 @@ func loop(l *lexer) {
 				l.IsAffix != nil && l.IsAffix(rawIdent, token.String, false) {
 				l.cursor -= len(rawIdent)
 				lexString(l, rawIdent)
+
 				continue
 			}
 
@@ -266,6 +282,7 @@ func lexPrelude(l *lexer) bool {
 		l.Errorf("files larger than 2GB (%d bytes) are not supported", MaxFileSize).Apply(
 			report.InFile(l.Path()),
 		)
+
 		return false
 	}
 
@@ -277,27 +294,35 @@ func lexPrelude(l *lexer) bool {
 	//    contain a NUL in the first two bytes, so this is probably a UTF-16-encoded
 	//    ASCII rune.
 	bom16 := strings.HasPrefix(l.Text(), "\xfe\xff") || strings.HasPrefix(l.Text(), "\xff\xfe")
+
 	ascii16 := len(l.Text()) >= 2 && (l.Text()[0] == 0 || l.Text()[1] == 0)
 	if bom16 || ascii16 {
 		l.Errorf("input appears to be encoded with UTF-16").Apply(
 			report.InFile(l.Path()),
 			report.Notef("Protobuf files must be UTF-8 encoded"),
 		)
+
 		return false
 	}
 
 	// Check that the text of the file is actually UTF-8.
-	var idx int
-	var count int
+	var (
+		idx   int
+		count int
+	)
+
 	for i, r := range stringsx.Runes(l.Text()) {
 		if r != -1 {
 			continue
 		}
+
 		if count == 0 {
 			idx = i
 		}
+
 		count++
 	}
+
 	frac := float64(count) / float64(len(l.Text()))
 	switch {
 	case frac == 0:
@@ -310,6 +335,7 @@ func lexPrelude(l *lexer) bool {
 			report.Notef("non-UTF-8 byte occurs at offset %d (%#x)", idx, idx),
 			report.Notef("Protobuf files must be UTF-8 encoded"),
 		)
+
 		return false
 	default:
 		l.Errorf("input appears to be a binary file").Apply(
@@ -317,6 +343,7 @@ func lexPrelude(l *lexer) bool {
 			report.Notef("non-UTF-8 byte occurs at offset %d (%#x)", idx, idx),
 			report.Notef("Protobuf files must be UTF-8 encoded"),
 		)
+
 		return false
 	}
 
@@ -332,12 +359,13 @@ func lexPrelude(l *lexer) bool {
 // l.braces.
 func fuseBraces(l *lexer) {
 	var opens []token.ID
+
 	for i := 0; i < len(l.braces); i++ {
 		// At most four tokens are considered for fusion in one loop iteration,
 		// named t0 through t3. The first token we extract is the third in this
 		// sequence and thus is named t2.
-
 		t2 := id.Wrap(l.Stream, l.braces[i])
+
 		open, _, _ := t2.Keyword().Brackets()
 		if t2.Keyword() == open {
 			opens = append(opens, t2.ID())
@@ -354,7 +382,9 @@ func fuseBraces(l *lexer) {
 		if t1.Keyword() == open {
 			// Common case: the braces match.
 			token.Fuse(t1, t2)
+
 			opens = opens[:len(opens)-1]
+
 			continue
 		}
 
@@ -396,6 +426,7 @@ func fuseBraces(l *lexer) {
 				Keyword: t1.Keyword(),
 			})
 			token.Fuse(t0, t2) // t1 does not get fused in this case.
+
 			opens = opens[:len(opens)-2]
 		case rightMatch:
 			l.Error(errtoken.Unmatched{
@@ -439,12 +470,16 @@ func fuseStrings(l *lexer) {
 			return
 		}
 
-		var escapes []tokenmeta.Escape
-		var buf strings.Builder
+		var (
+			escapes []tokenmeta.Escape
+			buf     strings.Builder
+		)
+
 		for i := start.ID(); i <= end.ID(); i++ {
 			tok := id.Wrap(l.Stream, i)
 			if s := tok.AsString(); !s.IsZero() {
 				buf.WriteString(s.Text())
+
 				if s.Raw() != nil {
 					escapes = append(escapes, s.Raw().Escapes...)
 				}
@@ -460,6 +495,7 @@ func fuseStrings(l *lexer) {
 	}
 
 	var start, end token.Token
+
 	for tok := range l.All() {
 		switch tok.Kind() {
 		case token.Space, token.Comment:
@@ -478,6 +514,7 @@ func fuseStrings(l *lexer) {
 					)
 				}
 			}
+
 			end = tok
 
 		default:
@@ -496,23 +533,29 @@ func newlines(l *lexer, tree token.Token) {
 		return
 	}
 
-	var prev, next token.Token
-	var cursor *token.Cursor
+	var (
+		prev, next token.Token
+		cursor     *token.Cursor
+	)
+
 	if tree.IsZero() {
-		cursor = l.Stream.Cursor()
+		cursor = l.Cursor()
 	} else {
 		cursor = tree.Children()
 		prev, next = tree.StartEnd()
 	}
+
 	end := next
 
 	needNext := true
+
 	for !cursor.Done() {
 		tok := cursor.Next()
 		if tok.Keyword() != keyword.Newline {
 			prev = tok
 			next = end
 			needNext = true
+
 			continue
 		}
 
@@ -525,6 +568,7 @@ func newlines(l *lexer, tree token.Token) {
 					break
 				}
 			}
+
 			needNext = false
 		}
 

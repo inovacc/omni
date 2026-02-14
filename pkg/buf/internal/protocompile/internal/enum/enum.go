@@ -63,6 +63,7 @@ func (e *Enum) Init() {
 		e.Values[i].Parent = e
 		e.Values[i].Idx = i
 	}
+
 	for i := range e.Methods {
 		e.Methods[i].Parent = e
 	}
@@ -89,6 +90,7 @@ func (v Value) String() string {
 	if v.String_ == "" {
 		return v.Name
 	}
+
 	return v.String_
 }
 
@@ -96,9 +98,11 @@ func (v Value) Docs() string {
 	if v.Docs_ != "" {
 		return v.Docs_
 	}
+
 	if v.Parent.DocIsString {
 		return v.String_
 	}
+
 	return ""
 }
 
@@ -147,8 +151,10 @@ type Range struct{ Start, End int }
 
 // Returns the ranges (exclusive) of values not skipped by this method.
 func (m Method) Ranges() []Range {
-	var out []Range //nolint:prealloc // This lint is completely wrong here.
+	var out []Range
+
 	var aliases int
+
 	for i, v := range m.Parent.Values {
 		if v.Alias != "" {
 			aliases++
@@ -160,6 +166,7 @@ func (m Method) Ranges() []Range {
 		}
 
 		i -= aliases
+
 		last := slicesx.LastPointer(out)
 		if last != nil && last.End == i {
 			last.End++
@@ -168,6 +175,7 @@ func (m Method) Ranges() []Range {
 
 		out = append(out, Range{i, i + 1})
 	}
+
 	return out
 }
 
@@ -190,16 +198,19 @@ func makeDocs(data, indent string) string {
 	}
 
 	var out strings.Builder
-	for _, line := range strings.Split(strings.TrimSpace(data), "\n") {
+	for line := range strings.SplitSeq(strings.TrimSpace(data), "\n") {
 		out.WriteString(indent)
+
 		if line == "" {
 			out.WriteString("//\n")
 			continue
 		}
+
 		out.WriteString("// ")
 		out.WriteString(line)
 		out.WriteString("\n")
 	}
+
 	return out.String()
 }
 
@@ -212,6 +223,7 @@ func Main(config string) error {
 		Binary, Package, Path, Config string
 		YAML                          []Enum
 	}
+
 	input.Package = os.Getenv("GOPACKAGE")
 	input.Config = config
 	input.Path = strings.TrimSuffix(config, ".yaml") + ".go"
@@ -220,15 +232,18 @@ func Main(config string) error {
 	if err != nil {
 		return err
 	}
+
 	input.Binary = buildinfo.Path
 
 	text, err := os.ReadFile(config)
 	if err != nil {
 		return err
 	}
+
 	if err := yaml.Unmarshal(text, &input.YAML); err != nil {
 		return err
 	}
+
 	for i := range input.YAML {
 		input.YAML[i].Init()
 	}
@@ -256,9 +271,11 @@ func Main(config string) error {
 
 func main() {
 	var failed bool
+
 	for _, config := range os.Args[1:] {
 		if err := Main(config); err != nil {
 			fmt.Fprintf(os.Stderr, "%s: %s", config, err)
+
 			failed = true
 		}
 	}

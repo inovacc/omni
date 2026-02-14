@@ -45,6 +45,7 @@ func (s Set) Len() int {
 	for _, v := range s.bits {
 		n += bits.OnesCount64(v)
 	}
+
 	return n
 }
 
@@ -55,6 +56,7 @@ func (s Set) Has(w Noun) bool {
 	}
 
 	has := s.bits[int(w)/64] & (uint64(1) << (int(w) % 64))
+
 	return has != 0
 }
 
@@ -69,6 +71,7 @@ func (s Set) With(subjects ...Noun) Set {
 
 		s.bits[int(v)/64] |= uint64(1) << (int(v) % 64)
 	}
+
 	return s
 }
 
@@ -77,6 +80,7 @@ func (s Set) Keywords() Set {
 	for i, bits := range s.NonKeywords().bits {
 		s.bits[i] &^= bits
 	}
+
 	return s
 }
 
@@ -86,6 +90,7 @@ func (s Set) NonKeywords() Set {
 		mask := uint64(1<<bits) - 1
 		s.bits[(keywordCount-bits)/64] &^= mask
 	}
+
 	return s
 }
 
@@ -99,11 +104,14 @@ func (s Set) String() string {
 		if !first {
 			buf.WriteString(", ")
 		}
+
 		first = false
+
 		buf.WriteString(Noun(bit).GoString())
 	}
 
 	buf.WriteString("}")
+
 	return buf.String()
 }
 
@@ -121,6 +129,7 @@ func (s Set) All() iter.Seq[Noun] {
 				return
 			}
 		}
+
 		for bit := range s.Keywords().setBits() {
 			if !yield(Noun(bit)) {
 				return
@@ -157,6 +166,7 @@ func (s Set) Join(conj string) string {
 	elems := slices.Collect(s.All())
 
 	var out strings.Builder
+
 	switch len(elems) {
 	case 0:
 	case 1:
@@ -167,6 +177,7 @@ func (s Set) Join(conj string) string {
 		for _, v := range elems[:len(elems)-1] {
 			fmt.Fprintf(&out, "%v, ", v)
 		}
+
 		fmt.Fprintf(&out, "%s %v", conj, elems[len(elems)-1])
 	}
 

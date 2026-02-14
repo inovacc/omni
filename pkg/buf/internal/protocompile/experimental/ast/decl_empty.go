@@ -38,6 +38,7 @@ func (d DeclEmpty) AsAny() DeclAny {
 	if d.IsZero() {
 		return DeclAny{}
 	}
+
 	return id.WrapDyn(d.Context(), id.NewDyn(DeclKindEmpty, id.ID[DeclAny](d.ID())))
 }
 

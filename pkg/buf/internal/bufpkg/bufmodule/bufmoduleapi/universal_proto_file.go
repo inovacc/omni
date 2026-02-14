@@ -30,15 +30,15 @@ type universalProtoFile struct {
 
 func newUniversalProtoFileForV1(v1File *modulev1.File) *universalProtoFile {
 	return &universalProtoFile{
-		Path:    v1File.Path,
-		Content: v1File.Content,
+		Path:    v1File.GetPath(),
+		Content: v1File.GetContent(),
 	}
 }
 
 func newUniversalProtoFileForV1Beta1(v1beta1File *modulev1beta1.File) *universalProtoFile {
 	return &universalProtoFile{
-		Path:    v1beta1File.Path,
-		Content: v1beta1File.Content,
+		Path:    v1beta1File.GetPath(),
+		Content: v1beta1File.GetContent(),
 	}
 }
 
@@ -47,6 +47,7 @@ func universalProtoFilesToBucket(universalProtoFiles []*universalProtoFile) (sto
 	for _, universalProtoFile := range universalProtoFiles {
 		pathToData[universalProtoFile.Path] = universalProtoFile.Content
 	}
+
 	return storagemem.NewReadBucket(pathToData)
 }
 
@@ -54,5 +55,6 @@ func universalProtoFileToObjectData(universalProtoFile *universalProtoFile) (buf
 	if universalProtoFile == nil {
 		return nil, nil
 	}
+
 	return bufmodule.NewObjectData(normalpath.Base(universalProtoFile.Path), universalProtoFile.Content)
 }

@@ -65,6 +65,39 @@ See CLAUDE.md for the full command inventory.
 
 ---
 
+## Medium-Low Priority (P1.5)
+
+### Video Enhancements
+- [ ] `omni video ydl <ID>` / `omni video id <ID>` — shortcut to download by video ID instead of full URL
+  - Also support `omni video download <ID>` resolving to `https://youtube.com/watch?v=<ID>`
+  - Add `--description` flag to include video description in output/sidecar
+
+### Tree Enhancements
+- [ ] `omni tree` optimize with multi-analyzer architecture
+  - Spawn multiple analyzers writing to temp files, then assemble final structure
+  - Add `--longest-path` flag to find and display the longest path in the tree
+
+### Curl Enhancements
+- [ ] `omni curl --json <url>` — flag to indicate the response is JSON (pretty-print, parse, colorize)
+
+### Tool Analysis & Enhancement
+- [ ] Audit all 155+ tools for consistency, missing features, edge cases
+- [ ] `omni sqlite` — enhance with interactive mode, query history, output formats
+
+### Windows Features
+- [ ] `omni regedit` — Windows registry mapping/viewer
+  - Read/write/list registry keys, export/import, search
+
+### Note Enhancements
+- [ ] `omni note open` — open temporary file in `$EDITOR`, then copy content into the note file on save/close
+
+### P2P Chat
+- [ ] `omni mini chat` — peer-to-peer chat using gossip protocol
+  - Invite key logic extracted from Syncthing discovery/relay model
+  - Encrypted, decentralized, no server required
+
+---
+
 ## Low Priority (P2)
 
 ### Advanced Features

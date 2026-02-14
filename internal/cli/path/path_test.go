@@ -8,6 +8,8 @@ import (
 	"runtime"
 	"strings"
 	"testing"
+
+	"github.com/inovacc/omni/internal/cli/output"
 )
 
 func TestRealpath(t *testing.T) {
@@ -182,6 +184,7 @@ func TestAbs(t *testing.T) {
 
 	t.Run("relative subdir", func(t *testing.T) {
 		cwd, _ := os.Getwd()
+
 		result, err := Abs("./test")
 		if err != nil {
 			t.Fatalf("Abs() error = %v", err)
@@ -215,12 +218,14 @@ func TestAbs(t *testing.T) {
 func TestRunClean(t *testing.T) {
 	t.Run("single path", func(t *testing.T) {
 		var buf bytes.Buffer
+
 		err := RunClean(&buf, []string{"foo/bar/../baz"}, CleanOptions{})
 		if err != nil {
 			t.Fatal(err)
 		}
 
 		got := strings.TrimSpace(buf.String())
+
 		expected := filepath.FromSlash("foo/baz")
 		if got != expected {
 			t.Errorf("RunClean() = %q, want %q", got, expected)
@@ -229,6 +234,7 @@ func TestRunClean(t *testing.T) {
 
 	t.Run("multiple paths", func(t *testing.T) {
 		var buf bytes.Buffer
+
 		err := RunClean(&buf, []string{"./foo", "bar//baz"}, CleanOptions{})
 		if err != nil {
 			t.Fatal(err)
@@ -251,7 +257,8 @@ func TestRunClean(t *testing.T) {
 
 	t.Run("json output", func(t *testing.T) {
 		var buf bytes.Buffer
-		err := RunClean(&buf, []string{"foo//bar"}, CleanOptions{JSON: true})
+
+		err := RunClean(&buf, []string{"foo//bar"}, CleanOptions{OutputFormat: output.FormatJSON})
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -277,6 +284,7 @@ func TestRunClean(t *testing.T) {
 
 	t.Run("missing operand", func(t *testing.T) {
 		var buf bytes.Buffer
+
 		err := RunClean(&buf, nil, CleanOptions{})
 		if err == nil {
 			t.Error("expected error for missing operand")
@@ -287,6 +295,7 @@ func TestRunClean(t *testing.T) {
 func TestRunAbs(t *testing.T) {
 	t.Run("relative path", func(t *testing.T) {
 		var buf bytes.Buffer
+
 		err := RunAbs(&buf, []string{"./test"}, AbsOptions{})
 		if err != nil {
 			t.Fatal(err)
@@ -298,6 +307,7 @@ func TestRunAbs(t *testing.T) {
 		}
 
 		cwd, _ := os.Getwd()
+
 		expected := filepath.Join(cwd, "test")
 		if got != expected {
 			t.Errorf("RunAbs() = %q, want %q", got, expected)
@@ -306,12 +316,14 @@ func TestRunAbs(t *testing.T) {
 
 	t.Run("dot resolves to cwd", func(t *testing.T) {
 		var buf bytes.Buffer
+
 		err := RunAbs(&buf, []string{"."}, AbsOptions{})
 		if err != nil {
 			t.Fatal(err)
 		}
 
 		got := strings.TrimSpace(buf.String())
+
 		cwd, _ := os.Getwd()
 		if got != cwd {
 			t.Errorf("RunAbs('.') = %q, want %q", got, cwd)
@@ -320,7 +332,8 @@ func TestRunAbs(t *testing.T) {
 
 	t.Run("json output", func(t *testing.T) {
 		var buf bytes.Buffer
-		err := RunAbs(&buf, []string{"./test"}, AbsOptions{JSON: true})
+
+		err := RunAbs(&buf, []string{"./test"}, AbsOptions{OutputFormat: output.FormatJSON})
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -345,6 +358,7 @@ func TestRunAbs(t *testing.T) {
 
 	t.Run("missing operand", func(t *testing.T) {
 		var buf bytes.Buffer
+
 		err := RunAbs(&buf, nil, AbsOptions{})
 		if err == nil {
 			t.Error("expected error for missing operand")

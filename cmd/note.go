@@ -98,6 +98,7 @@ func noteStringFlag(cmd *cobra.Command, name string) string {
 	}
 
 	value, _ := cmd.Flags().GetString(name)
+
 	return value
 }
 
@@ -108,6 +109,7 @@ func noteBoolFlag(cmd *cobra.Command, name string) bool {
 	}
 
 	value, _ := cmd.Flags().GetBool(name)
+
 	return value
 }
 
@@ -118,5 +120,6 @@ func noteIntFlag(cmd *cobra.Command, name string) int {
 	}
 
 	value, _ := cmd.Flags().GetInt(name)
+
 	return value
 }

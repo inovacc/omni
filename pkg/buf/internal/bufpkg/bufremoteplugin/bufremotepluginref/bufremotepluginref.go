@@ -52,6 +52,7 @@ func PluginIdentityForString(path string) (PluginIdentity, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return NewPluginIdentity(remote, owner, plugin)
 }
 
@@ -105,6 +106,7 @@ func ParsePluginIdentityOptionalVersion(rawReference string) (PluginIdentity, st
 	if err != nil {
 		return nil, "", fmt.Errorf("invalid remote plugin %s", rawReference)
 	}
+
 	return identity, "", nil
 }
 
@@ -114,9 +116,11 @@ func IsPluginReferenceOrIdentity(plugin string) bool {
 	if _, err := PluginReferenceForString(plugin, 0); err == nil {
 		return true
 	}
+
 	if _, err := PluginIdentityForString(plugin); err == nil {
 		return true
 	}
+
 	return false
 }
 
@@ -125,18 +129,22 @@ func parsePluginIdentityComponents(path string) (remote string, owner string, pl
 	if len(slashSplit) != 3 {
 		return "", "", "", newInvalidPluginIdentityStringError(path)
 	}
+
 	remote = strings.TrimSpace(slashSplit[0])
 	if remote == "" {
 		return "", "", "", newInvalidPluginIdentityStringError(path)
 	}
+
 	owner = strings.TrimSpace(slashSplit[1])
 	if owner == "" {
 		return "", "", "", newInvalidPluginIdentityStringError(path)
 	}
+
 	plugin = strings.TrimSpace(slashSplit[2])
 	if plugin == "" || strings.ContainsRune(plugin, ':') {
 		return "", "", "", newInvalidPluginIdentityStringError(path)
 	}
+
 	return remote, owner, plugin, nil
 }
 
@@ -149,10 +157,13 @@ func parsePluginReference(reference string, revision int) (PluginReference, erro
 	if index == -1 {
 		return nil, fmt.Errorf("plugin references must be specified as \"<name>:<version>\" strings")
 	}
+
 	name, version := reference[:index], reference[index+1:]
+
 	identity, err := PluginIdentityForString(name)
 	if err != nil {
 		return nil, err
 	}
+
 	return NewPluginReference(identity, version, revision)
 }

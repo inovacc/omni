@@ -174,16 +174,19 @@ func readBufGenYAMLFile(
 	if err != nil {
 		return nil, err
 	}
+
 	switch fileVersion {
 	case FileVersionV1Beta1:
 		var externalGenYAMLFile externalBufGenYAMLFileV1Beta1
 		if err := getUnmarshalStrict(allowJSON)(data, &externalGenYAMLFile); err != nil {
 			return nil, err
 		}
+
 		generateConfig, err := newGenerateConfigFromExternalFileV1Beta1(externalGenYAMLFile)
 		if err != nil {
 			return nil, err
 		}
+
 		return newBufGenYAMLFile(
 			fileVersion,
 			objectData,
@@ -195,10 +198,12 @@ func readBufGenYAMLFile(
 		if err := getUnmarshalStrict(allowJSON)(data, &externalGenYAMLFile); err != nil {
 			return nil, err
 		}
+
 		generateConfig, err := newGenerateConfigFromExternalFileV1(externalGenYAMLFile)
 		if err != nil {
 			return nil, err
 		}
+
 		return newBufGenYAMLFile(
 			fileVersion,
 			objectData,
@@ -210,10 +215,12 @@ func readBufGenYAMLFile(
 		if err := getUnmarshalStrict(allowJSON)(data, &externalGenYAMLFile); err != nil {
 			return nil, err
 		}
+
 		generateConfig, err := newGenerateConfigFromExternalFileV2(externalGenYAMLFile)
 		if err != nil {
 			return nil, err
 		}
+
 		inputConfigs, err := xslices.MapError(
 			externalGenYAMLFile.Inputs,
 			newInputConfigFromExternalV2,
@@ -221,6 +228,7 @@ func readBufGenYAMLFile(
 		if err != nil {
 			return nil, err
 		}
+
 		return newBufGenYAMLFile(
 			fileVersion,
 			objectData,
@@ -242,12 +250,14 @@ func writeBufGenYAMLFile(writer io.Writer, bufGenYAMLFile BufGenYAMLFile) error 
 	if err != nil {
 		return err
 	}
+
 	externalManagedConfigV2, err := newExternalManagedConfigV2FromGenerateManagedConfig(
 		bufGenYAMLFile.GenerateConfig().GenerateManagedConfig(),
 	)
 	if err != nil {
 		return err
 	}
+
 	externalInputConfigsV2, err := xslices.MapError(
 		bufGenYAMLFile.InputConfigs(),
 		newExternalInputConfigV2FromInputConfig,
@@ -255,6 +265,7 @@ func writeBufGenYAMLFile(writer io.Writer, bufGenYAMLFile BufGenYAMLFile) error 
 	if err != nil {
 		return err
 	}
+
 	externalBufGenYAMLFileV2 := externalBufGenYAMLFileV2{
 		Version: FileVersionV2.String(),
 		Clean:   bufGenYAMLFile.GenerateConfig().CleanPluginOuts(),
@@ -262,11 +273,14 @@ func writeBufGenYAMLFile(writer io.Writer, bufGenYAMLFile BufGenYAMLFile) error 
 		Managed: externalManagedConfigV2,
 		Inputs:  externalInputConfigsV2,
 	}
+
 	data, err := encoding.MarshalYAML(&externalBufGenYAMLFileV2)
 	if err != nil {
 		return err
 	}
+
 	_, err = writer.Write(data)
+
 	return err
 }
 
@@ -357,6 +371,7 @@ func (e *externalJavaPackagePrefixConfigV1) UnmarshalJSON(data []byte) error {
 	unmarshal := func(v any) error {
 		return json.Unmarshal(data, v)
 	}
+
 	return e.unmarshalWith(unmarshal)
 }
 
@@ -367,10 +382,13 @@ func (e *externalJavaPackagePrefixConfigV1) unmarshalWith(unmarshal func(any) er
 		e.Default = prefix
 		return nil
 	}
+
 	type rawExternalJavaPackagePrefixConfigV1 externalJavaPackagePrefixConfigV1
+
 	if err := unmarshal((*rawExternalJavaPackagePrefixConfigV1)(e)); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -400,6 +418,7 @@ func (e *externalOptimizeForConfigV1) UnmarshalJSON(data []byte) error {
 	unmarshal := func(v any) error {
 		return json.Unmarshal(data, v)
 	}
+
 	return e.unmarshalWith(unmarshal)
 }
 
@@ -410,10 +429,13 @@ func (e *externalOptimizeForConfigV1) unmarshalWith(unmarshal func(any) error) e
 		e.Default = optimizeFor
 		return nil
 	}
+
 	type rawExternalOptimizeForConfigV1 externalOptimizeForConfigV1
+
 	if err := unmarshal((*rawExternalOptimizeForConfigV1)(e)); err != nil {
 		return err
 	}
+
 	return nil
 }
 

@@ -40,17 +40,21 @@ func TestSourceCodeInfo(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		t.Skip("Skipped on Windows: protoset files have Unix line endings which affect span positions")
 	}
+
 	t.Parallel()
+
 	compiler := protocompile.Compiler{
 		Resolver: protocompile.WithStandardImports(&protocompile.SourceResolver{
 			ImportPaths: []string{"../internal/testdata"},
 		}),
 		SourceInfoMode: protocompile.SourceInfoStandard,
 	}
+
 	fds, err := compiler.Compile(t.Context(), "desc_test_comments.proto", "desc_test_complex.proto")
 	if pe, ok := err.(protocompile.PanicError); ok {
 		t.Fatalf("panic! %v\n%v", pe, pe.Stack)
 	}
+
 	require.NoError(t, err)
 	// also test that imported files have source code info
 	// (desc_test_comments.proto imports desc_test_options.proto)
@@ -66,19 +70,22 @@ func TestSourceCodeInfo(t *testing.T) {
 		},
 	}
 
-	for _, actualFd := range actualFdset.File {
+	for _, actualFd := range actualFdset.GetFile() {
 		var expectedFd *descriptorpb.FileDescriptorProto
-		for _, fd := range fdset.File {
+
+		for _, fd := range fdset.GetFile() {
 			if fd.GetName() == actualFd.GetName() {
 				expectedFd = fd
 				break
 			}
 		}
+
 		if !assert.NotNil(t, expectedFd, "file %q not found in source_info.protoset", actualFd.GetName()) {
 			continue
 		}
-		fixupProtocSourceCodeInfo(expectedFd.SourceCodeInfo)
-		prototest.AssertMessagesEqual(t, expectedFd.SourceCodeInfo, actualFd.SourceCodeInfo, expectedFd.GetName())
+
+		fixupProtocSourceCodeInfo(expectedFd.GetSourceCodeInfo())
+		prototest.AssertMessagesEqual(t, expectedFd.GetSourceCodeInfo(), actualFd.GetSourceCodeInfo(), expectedFd.GetName())
 	}
 }
 
@@ -107,7 +114,7 @@ var protocFixers = []struct {
 			regexp.MustCompile(`^4,\d+,(?:3,\d+,)*2,\d+,10$`),
 		},
 		fixer: func(allLocs []*descriptorpb.SourceCodeInfo_Location, currentIndex int) *descriptorpb.SourceCodeInfo_Location {
-			if currentIndex > 0 && pathsEqual(allLocs[currentIndex].Path, allLocs[currentIndex-1].Path) {
+			if currentIndex > 0 && pathsEqual(allLocs[currentIndex].GetPath(), allLocs[currentIndex-1].GetPath()) {
 				// second span for json_name is not useful; remove it
 				return nil
 			}
@@ -120,39 +127,45 @@ func pathsEqual(a, b []int32) bool {
 	if len(a) != len(b) {
 		return false
 	}
+
 	for i := range a {
 		if b[i] != a[i] {
 			return false
 		}
 	}
+
 	return true
 }
 
 func fixupProtocSourceCodeInfo(info *descriptorpb.SourceCodeInfo) {
-	for i := 0; i < len(info.Location); i++ {
-		loc := info.Location[i]
+	for i := 0; i < len(info.GetLocation()); i++ {
+		loc := info.GetLocation()[i]
 
-		pathStrs := make([]string, len(loc.Path))
-		for j, val := range loc.Path {
+		pathStrs := make([]string, len(loc.GetPath()))
+		for j, val := range loc.GetPath() {
 			pathStrs[j] = strconv.FormatInt(int64(val), 10)
 		}
+
 		pathStr := strings.Join(pathStrs, ",")
 
 		for _, fixerEntry := range protocFixers {
 			match := false
+
 			for _, pattern := range fixerEntry.pathPatterns {
 				if pattern.MatchString(pathStr) {
 					match = true
 					break
 				}
 			}
+
 			if !match {
 				continue
 			}
-			newLoc := fixerEntry.fixer(info.Location, i)
+
+			newLoc := fixerEntry.fixer(info.GetLocation(), i)
 			if newLoc == nil {
 				// remove this entry
-				info.Location = append(info.Location[:i], info.Location[i+1:]...)
+				info.Location = append(info.Location[:i], info.GetLocation()[i+1:]...)
 				i--
 			} else {
 				info.Location[i] = newLoc
@@ -167,27 +180,33 @@ func TestSourceCodeInfoOptions(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		t.Skip("Skipped on Windows: golden files have Unix line endings which affect span positions")
 	}
+
 	t.Parallel()
 
 	regenerateGoldenOutputFile := os.Getenv("PROTOCOMPILE_REFRESH") != ""
 
 	generateSourceInfoText := func(t *testing.T, filename string, mode protocompile.SourceInfoMode) string {
 		t.Helper()
+
 		compiler := protocompile.Compiler{
 			Resolver: protocompile.WithStandardImports(&protocompile.SourceResolver{
 				ImportPaths: []string{"../internal/testdata"},
 			}),
 			SourceInfoMode: mode,
 		}
+
 		fds, err := compiler.Compile(t.Context(), filename)
 		if pe, ok := err.(protocompile.PanicError); ok {
 			t.Fatalf("panic! %v\n%v", pe, pe.Stack)
 		}
+
 		require.NoError(t, err)
 
 		file, err := linker.NewFileRecursive(fds[0])
 		require.NoError(t, err)
+
 		resolver := linker.ResolverFromFile(file)
+
 		return describeSourceCodeInfo(file.Path(), file.SourceLocations(), resolver)
 	}
 
@@ -221,6 +240,7 @@ func TestSourceCodeInfoOptions(t *testing.T) {
 				output := generateSourceInfoText(t, testCase.filename, protocompile.SourceInfoStandard)
 				err = os.WriteFile(fmt.Sprintf("testdata/%s.standard.txt", baseName), []byte(output), 0644)
 				require.NoError(t, err)
+
 				return
 			}
 
@@ -239,34 +259,42 @@ var pathRoot = (&descriptorpb.FileDescriptorProto{}).ProtoReflect().Descriptor()
 
 func describeSourceCodeInfo(fileName string, locs protoreflect.SourceLocations, resolver linker.Resolver) string {
 	var buf bytes.Buffer
+
 	for i := range locs.Len() {
 		if i > 0 {
 			buf.WriteString("\n")
 		}
+
 		buf.WriteString(fileName)
 		describeLocation(&buf, locs.Get(i), resolver)
 	}
+
 	return buf.String()
 }
 
 func describeLocation(buf *bytes.Buffer, loc protoreflect.SourceLocation, resolver linker.Resolver) {
 	describePath(buf, loc.Path, pathRoot, resolver)
+
 	_, _ = fmt.Fprintf(buf, "   Span: %d:%d -> %d:%d\n",
 		loc.StartLine+1, loc.StartColumn+1, loc.EndLine+1, loc.EndColumn+1)
 	if len(loc.LeadingDetachedComments) > 0 {
 		_, _ = fmt.Fprintf(buf, "   Detached Comments:\n")
+
 		for i, cmt := range loc.LeadingDetachedComments {
 			if i > 0 {
 				buf.WriteString("\n")
 			}
+
 			cmt = strings.TrimSuffix(cmt, "\n")
 			_, _ = fmt.Fprintf(buf, "%s\n", cmt)
 		}
 	}
+
 	if loc.LeadingComments != "" {
 		cmt := strings.TrimSuffix(loc.LeadingComments, "\n")
 		_, _ = fmt.Fprintf(buf, "   Leading Comments:\n%s\n", cmt)
 	}
+
 	if loc.TrailingComments != "" {
 		cmt := strings.TrimSuffix(loc.TrailingComments, "\n")
 		_, _ = fmt.Fprintf(buf, "   Trailing Comments:\n%s\n", cmt)
@@ -281,7 +309,9 @@ func describePath(buf *bytes.Buffer, path protoreflect.SourcePath, md protorefle
 
 	fieldNumber := protoreflect.FieldNumber(path[0])
 	path = path[1:]
+
 	var next protoreflect.MessageDescriptor
+
 	fd := resolveNumber(fieldNumber, md, resolver)
 	if fd == nil {
 		_, _ = fmt.Fprintf(buf, " > %d?", fieldNumber)
@@ -291,13 +321,16 @@ func describePath(buf *bytes.Buffer, path protoreflect.SourcePath, md protorefle
 		} else {
 			_, _ = fmt.Fprintf(buf, " > %s", fd.Name())
 		}
+
 		if fd.Cardinality() == protoreflect.Repeated && len(path) > 0 {
 			index := path[0]
 			path = path[1:]
 			_, _ = fmt.Fprintf(buf, "[%d]", index)
 		}
+
 		next = fd.Message()
 	}
+
 	describePath(buf, path, next, resolver)
 }
 
@@ -305,13 +338,16 @@ func resolveNumber(num protoreflect.FieldNumber, md protoreflect.MessageDescript
 	if md == nil {
 		return nil
 	}
+
 	fld := md.Fields().ByNumber(num)
 	if fld != nil {
 		return fld
 	}
+
 	xt, err := resolver.FindExtensionByNumber(md.FullName(), num)
 	if err != nil {
 		return nil
 	}
+
 	return xt.TypeDescriptor()
 }

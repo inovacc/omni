@@ -29,6 +29,7 @@ import (
 type IR struct {
 	source.Opener // Must be comparable.
 	*ir.Session
+
 	Path string
 
 	// Used for tracking if this IR request was triggered by an import, for
@@ -45,12 +46,13 @@ func (i IR) Key() any {
 		s    *ir.Session
 		path string
 	}
+
 	return key{i.Opener, i.Session, i.Path}
 }
 
 // Execute implements [incremental.Query].
 func (i IR) Execute(t *incremental.Task) (*ir.File, error) {
-	t.Report().Options.Stage += stageIR
+	t.Report().Stage += stageIR
 
 	r, err := incremental.Resolve(t, AST{
 		Opener: i.Opener,
@@ -59,6 +61,7 @@ func (i IR) Execute(t *incremental.Task) (*ir.File, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	file := r[0].Value
 
 	// Check for descriptor.proto in the opener. If it's not present, that's
@@ -71,6 +74,7 @@ func (i IR) Execute(t *incremental.Task) (*ir.File, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	if dp[0].Fatal != nil {
 		t.Report().Fatalf("could not import `%s`", ir.DescriptorProtoPath).Apply(
 			report.Notef("protocompile is not configured correctly"),
@@ -79,6 +83,7 @@ func (i IR) Execute(t *incremental.Task) (*ir.File, error) {
 				"If you are using protocompile as a library, you may be missing a "+
 				"source.WKTs() in your source.Opener setup."),
 		)
+
 		return nil, dp[0].Fatal
 	}
 
@@ -88,6 +93,7 @@ func (i IR) Execute(t *incremental.Task) (*ir.File, error) {
 		// descriptor.proto query.
 		iterx.Count(file.Imports())+1)
 	errors := make([]error, len(queries))
+
 	for j, decl := range iterx.Enumerate(file.Imports()) {
 		lit := decl.ImportPath().AsLiteral().AsString()
 		path := lit.Text()
@@ -113,6 +119,7 @@ func (i IR) Execute(t *incremental.Task) (*ir.File, error) {
 		if err := r[0].Fatal; err != nil {
 			queries[j] = incremental.ZeroQuery[*ir.File]{}
 			errors[j] = r[0].Fatal
+
 			continue
 		}
 
@@ -151,11 +158,13 @@ func (i IR) Execute(t *incremental.Task) (*ir.File, error) {
 			// We need to walk the cycle and extract which imports are
 			// responsible for the failure.
 			cyc := new(ir.ErrCycle)
+
 			for _, q := range err.Cycle {
 				irq, ok := incremental.AsTyped[IR](q)
 				if !ok {
 					continue
 				}
+
 				if !irq.request.IsZero() {
 					cyc.Cycle = append(cyc.Cycle, irq.request)
 				}
@@ -168,6 +177,7 @@ func (i IR) Execute(t *incremental.Task) (*ir.File, error) {
 		}
 	}
 
-	ir, _ := i.Session.Lower(file, t.Report(), importer)
+	ir, _ := i.Lower(file, t.Report(), importer)
+
 	return ir, nil
 }

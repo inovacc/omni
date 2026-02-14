@@ -48,6 +48,7 @@ func (s StabilityLevel) String() string {
 	if ok {
 		return value
 	}
+
 	return strconv.Itoa(int(s))
 }
 

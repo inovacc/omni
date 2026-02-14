@@ -47,6 +47,7 @@ func newWriter(
 	for _, option := range options {
 		option(writer)
 	}
+
 	return writer
 }
 
@@ -60,6 +61,7 @@ func (w *writer) PutFile(
 	for _, option := range options {
 		option(putFileOptions)
 	}
+
 	switch t := fileRef.(type) {
 	case SingleRef:
 		return w.putSingle(
@@ -108,19 +110,23 @@ func (w *writer) putFileWriteCloser(
 	if err != nil {
 		return nil, err
 	}
+
 	defer func() {
 		if retErr != nil {
 			retErr = errors.Join(retErr, writeCloser.Close())
 		}
 	}()
+
 	if noFileCompression {
 		return writeCloser, nil
 	}
+
 	switch compressionType := fileRef.CompressionType(); compressionType {
 	case CompressionTypeNone:
 		return writeCloser, nil
 	case CompressionTypeGzip:
 		gzipWriteCloser := gzip.NewWriter(writeCloser)
+
 		return xio.CompositeWriteCloser(
 			gzipWriteCloser,
 			xio.ChainCloser(
@@ -133,6 +139,7 @@ func (w *writer) putFileWriteCloser(
 		if err != nil {
 			return nil, err
 		}
+
 		return xio.CompositeWriteCloser(
 			zstdWriteCloser,
 			xio.ChainCloser(
@@ -155,21 +162,25 @@ func (w *writer) putFileWriteCloserPotentiallyUncompressed(
 		if !w.httpEnabled {
 			return nil, NewWriteHTTPDisabledError()
 		}
+
 		return nil, fmt.Errorf("http not supported for writes: %v", fileRef.Path())
 	case FileSchemeHTTPS:
 		if !w.httpEnabled {
 			return nil, NewWriteHTTPDisabledError()
 		}
+
 		return nil, fmt.Errorf("https not supported for writes: %v", fileRef.Path())
 	case FileSchemeLocal:
 		if !w.localEnabled {
 			return nil, NewWriteLocalDisabledError()
 		}
+
 		return os.Create(fileRef.Path())
 	case FileSchemeStdio, FileSchemeStdout:
 		if !w.stdioEnabled {
 			return nil, NewWriteStdioDisabledError()
 		}
+
 		return xio.NopWriteCloser(container.Stdout()), nil
 	case FileSchemeStdin:
 		return nil, errors.New("cannot write to stdin")

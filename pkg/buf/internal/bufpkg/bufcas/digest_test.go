@@ -32,6 +32,7 @@ import (
 
 func TestNewDigestForContent(t *testing.T) {
 	t.Parallel()
+
 	digest, err := bufcas.NewDigestForContent(bytes.NewBuffer(nil))
 	require.NoError(t, err)
 	assert.NotEqual(t, bufcas.DigestType(0), digest.Type())
@@ -55,8 +56,10 @@ func TestParseDigestError(t *testing.T) {
 	testParseDigestError(t, "foo", true)
 	testParseDigestError(t, "shake256 foo", true)
 	testParseDigestError(t, "shake256:_", true)
+
 	validDigest, err := bufcas.NewDigestForContent(bytes.NewBuffer(nil))
 	require.NoError(t, err)
+
 	validDigestHex := hex.EncodeToString(validDigest.Value())
 	testParseDigestError(t, fmt.Sprintf("%s:%s", validDigest.Type(), validDigestHex[:10]), true)
 	testParseDigestError(t, fmt.Sprintf("md5:%s", validDigestHex), true)
@@ -64,6 +67,7 @@ func TestParseDigestError(t *testing.T) {
 
 func TestDigestEqual(t *testing.T) {
 	t.Parallel()
+
 	fileContent := "one line\nanother line\nyet another one\n"
 	d1, err := bufcas.NewDigestForContent(strings.NewReader(fileContent))
 	require.NoError(t, err)
@@ -79,7 +83,9 @@ func TestDigestEqual(t *testing.T) {
 func testParseDigestError(t *testing.T, digestString string, expectParseError bool) {
 	_, err := bufcas.ParseDigest(digestString)
 	assert.Error(t, err)
+
 	parseError := &bufparse.ParseError{}
+
 	isParseError := errors.As(err, &parseError)
 	if expectParseError {
 		assert.True(t, isParseError)

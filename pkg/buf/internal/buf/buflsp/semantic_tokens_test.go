@@ -355,7 +355,9 @@ func TestSemanticTokensKeywords(t *testing.T) {
 			testProtoPath, err := filepath.Abs(tc.file)
 			require.NoError(t, err)
 			clientJSONConn, testURI := setupLSPServer(t, testProtoPath)
+
 			var semanticTokens *protocol.SemanticTokens
+
 			_, err = clientJSONConn.Call(ctx, "textDocument/semanticTokens/full", protocol.SemanticTokensParams{
 				TextDocument: protocol.TextDocumentIdentifier{
 					URI: testURI,
@@ -372,7 +374,9 @@ func TestSemanticTokensKeywords(t *testing.T) {
 				startChar uint32
 				length    uint32
 			}
+
 			seenSpans := make(map[spanKey]int)
+
 			for i, token := range tokens {
 				key := spanKey{token.line, token.startChar, token.length}
 				if prevIdx, exists := seenSpans[key]; exists {
@@ -380,6 +384,7 @@ func TestSemanticTokensKeywords(t *testing.T) {
 						"Token %d and token %d have the same span (line=%d, col=%d, len=%d). Token %d type=%d, Token %d type=%d",
 						prevIdx, i, token.line, token.startChar, token.length, prevIdx, tokens[prevIdx].tokenType, i, token.tokenType)
 				}
+
 				seenSpans[key] = i
 			}
 
@@ -428,8 +433,10 @@ type semanticToken struct {
 
 // decodeSemanticTokens converts the delta-encoded token array into absolute positions.
 func decodeSemanticTokens(data []uint32) []semanticToken {
-	var tokens []semanticToken
-	var line, startChar uint32
+	var (
+		tokens          []semanticToken
+		line, startChar uint32
+	)
 
 	for i := 0; i < len(data); i += 5 {
 		deltaLine := data[i]

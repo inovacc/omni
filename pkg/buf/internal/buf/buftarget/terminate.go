@@ -67,25 +67,31 @@ func terminateAtControllingWorkspace(
 	if err != nil && !errors.Is(err, fs.ErrNotExist) {
 		return nil, err
 	}
+
 	bufWorkYAMLExists := err == nil
+
 	bufYAMLFile, err := bufconfig2.GetBufYAMLFileForPrefix(ctx, bucket, prefix)
 	if err != nil && !errors.Is(err, fs.ErrNotExist) {
 		return nil, err
 	}
+
 	bufYAMLExists := err == nil
 	if bufWorkYAMLExists && bufYAMLExists {
 		// This isn't actually the external directory path, but we do the best we can here for now.
 		return nil, fmt.Errorf("cannot have a buf.work.yaml and buf.yaml in the same directory %q", prefix)
 	}
+
 	relInputPath, err := normalpath2.Rel(prefix, originalInputPath)
 	if err != nil {
 		return nil, err
 	}
+
 	if bufYAMLExists && bufYAMLFile.FileVersion() == bufconfig2.FileVersionV2 {
 		// A input directory with a v2 buf.yaml is the controlling workspace for itself.
 		if prefix == originalInputPath {
 			return newControllingWorkspace(prefix, nil, bufYAMLFile), nil
 		}
+
 		for _, moduleConfig := range bufYAMLFile.ModuleConfigs() {
 			// For a prefix/buf.yaml with:
 			//  version: v2
@@ -113,11 +119,13 @@ func terminateAtControllingWorkspace(
 			}
 		}
 	}
+
 	if bufWorkYAMLExists {
 		// A input directory with a buf.work.yaml is the controlling workspace for itself.
 		if prefix == originalInputPath {
 			return newControllingWorkspace(prefix, bufWorkYAMLFile, nil), nil
 		}
+
 		for _, dirPath := range bufWorkYAMLFile.DirPaths() {
 			// Unlike v2 workspaces, we only check whether the input is a module path or is contained
 			// in a module path.
@@ -126,6 +134,7 @@ func terminateAtControllingWorkspace(
 			}
 		}
 	}
+
 	return nil, nil
 }
 
@@ -139,8 +148,10 @@ func terminateAtV1Module(
 	if err != nil && !errors.Is(err, fs.ErrNotExist) {
 		return nil, err
 	}
+
 	if err == nil && bufYAMLFile.FileVersion() == bufconfig2.FileVersionV1 {
 		return newControllingWorkspace(prefix, nil, bufYAMLFile), nil
 	}
+
 	return nil, nil
 }

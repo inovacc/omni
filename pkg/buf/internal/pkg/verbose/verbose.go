@@ -58,6 +58,7 @@ func NewPrinterForFlagValue(writer io.Writer, prefix string, verboseValue bool) 
 	if verboseValue {
 		return NewPrinter(writer, prefix)
 	}
+
 	return NopPrinter
 }
 
@@ -81,6 +82,7 @@ func newWritePrinter(writer io.Writer, prefix string) *writePrinter {
 	if prefix != "" {
 		prefix = prefix + ": "
 	}
+
 	return &writePrinter{
 		writer: writer,
 		prefix: prefix,

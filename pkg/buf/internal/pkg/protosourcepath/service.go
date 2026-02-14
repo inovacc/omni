@@ -42,11 +42,13 @@ func services(
 			childAssociatedPath(fullSourcePath, index, serviceNameTypeTag),
 		)
 	}
+
 	if len(fullSourcePath) == +1 {
 		// This does not extend beyond the declaration, return associated paths and
 		// terminate here.
 		return nil, associatedPaths, nil
 	}
+
 	return service, associatedPaths, nil
 }
 
@@ -63,11 +65,13 @@ func service(token int32, fullSourcePath protoreflect.SourcePath, index int, _ b
 		if len(fullSourcePath) < index+2 {
 			return nil, nil, newInvalidSourcePathError(fullSourcePath, "cannot have method declaration without index")
 		}
+
 		return methods, nil, nil
 	case serviceOptionTypeTag:
 		// For options, we add the full path and then return the options state to validate
 		// the path.
 		return options, []protoreflect.SourcePath{slices.Clone(fullSourcePath)}, nil
 	}
+
 	return nil, nil, newInvalidSourcePathError(fullSourcePath, "invalid service path")
 }

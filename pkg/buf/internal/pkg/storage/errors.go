@@ -58,7 +58,9 @@ func IsExistsMultipleLocations(err error) bool {
 	if err == nil {
 		return false
 	}
+
 	asErr := &errorExistsMultipleLocations{}
+
 	return errors.As(err, &asErr)
 }
 
@@ -67,7 +69,9 @@ func IsWriteLimitReached(err error) bool {
 	if err == nil {
 		return false
 	}
+
 	asErr := &errWriteLimitReached{}
+
 	return errors.As(err, &asErr)
 }
 

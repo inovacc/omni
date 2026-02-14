@@ -113,6 +113,7 @@ func TestWorkspaceSymbol(t *testing.T) {
 			t.Parallel()
 
 			var symbols []protocol.SymbolInformation
+
 			_, symErr := clientJSONConn.Call(ctx, protocol.MethodWorkspaceSymbol, protocol.WorkspaceSymbolParams{
 				Query: tt.query,
 			}, &symbols)

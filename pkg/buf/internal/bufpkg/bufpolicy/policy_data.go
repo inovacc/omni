@@ -75,14 +75,17 @@ func newPolicyData(
 		if err != nil {
 			return err
 		}
+
 		actualDigest, err := getO1Digest(policyConfig)
 		if err != nil {
 			return err
 		}
+
 		expectedDigest, err := policyKey.Digest()
 		if err != nil {
 			return err
 		}
+
 		if !DigestEqual(actualDigest, expectedDigest) {
 			return &DigestMismatchError{
 				FullName:       policyKey.FullName(),
@@ -91,8 +94,10 @@ func newPolicyData(
 				ActualDigest:   actualDigest,
 			}
 		}
+
 		return nil
 	})
+
 	return policyData, nil
 }
 
@@ -104,6 +109,7 @@ func (p *policyData) Config() (PolicyConfig, error) {
 	if err := p.checkDigest(); err != nil {
 		return nil, err
 	}
+
 	return p.getConfig()
 }
 

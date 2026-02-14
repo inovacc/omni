@@ -87,6 +87,7 @@ func TestDeduplicate(t *testing.T) {
 
 func TestDeduplicateAny(t *testing.T) {
 	t.Parallel()
+
 	f := func(i int) int { return i / 2 }
 	assert.Equal(t, []int{}, DeduplicateAny([]int{}, f))
 	assert.Equal(t, []int{1}, DeduplicateAny([]int{1}, f))

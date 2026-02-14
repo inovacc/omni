@@ -174,18 +174,21 @@ func (f *functionOptions) getGetReadBucketCloserOptions() []buffetch.GetReadBuck
 			buffetch.GetReadBucketCloserWithCopyToInMemory(),
 		)
 	}
+
 	if len(f.targetPaths) > 0 {
 		getReadBucketCloserOptions = append(
 			getReadBucketCloserOptions,
 			buffetch.GetReadBucketCloserWithTargetPaths(f.targetPaths),
 		)
 	}
+
 	if len(f.targetExcludePaths) > 0 {
 		getReadBucketCloserOptions = append(
 			getReadBucketCloserOptions,
 			buffetch.GetReadBucketCloserWithTargetExcludePaths(f.targetExcludePaths),
 		)
 	}
+
 	if f.configOverride != "" {
 		// If we have a config override, we do not search for buf.yamls or buf.work.yamls,
 		// instead acting as if the config override was the only configuration file available.
@@ -200,6 +203,7 @@ func (f *functionOptions) getGetReadBucketCloserOptions() []buffetch.GetReadBuck
 			buffetch.GetReadBucketCloserWithNoSearch(),
 		)
 	}
+
 	return getReadBucketCloserOptions
 }
 
@@ -217,5 +221,6 @@ func (f *functionOptions) getGetReadWriteBucketOptions() []buffetch.GetReadWrite
 			buffetch.GetReadWriteBucketWithNoSearch(),
 		}
 	}
+
 	return nil
 }

@@ -39,27 +39,34 @@ func FileAnnotationForErrorWithPos(
 		option(fileAnnotationOptions)
 	}
 
-	var fileInfo bufanalysis.FileInfo
-	var startLine int
-	var startColumn int
-	var endLine int
-	var endColumn int
+	var (
+		fileInfo    bufanalysis.FileInfo
+		startLine   int
+		startColumn int
+		endLine     int
+		endColumn   int
+	)
+
 	sourcePos := errorWithPos.GetPosition()
 	if sourcePos.Filename != "" {
 		path, err := normalpath.NormalizeAndValidate(sourcePos.Filename)
 		if err != nil {
 			return nil, err
 		}
+
 		externalPath := path
 		if fileAnnotationOptions.externalPathResolver != nil {
 			externalPath = fileAnnotationOptions.externalPathResolver(path)
 		}
+
 		fileInfo = newFileInfo(path, externalPath)
 	}
+
 	if sourcePos.Line > 0 {
 		startLine = sourcePos.Line
 		endLine = sourcePos.Line
 	}
+
 	if sourcePos.Col > 0 {
 		startColumn = sourcePos.Col
 		endColumn = sourcePos.Col
@@ -111,6 +118,7 @@ func FileAnnotationSetForErrorsWithPos(
 	if err != nil {
 		return nil, err
 	}
+
 	return bufanalysis.NewFileAnnotationSet(fileAnnotations...), nil
 }
 

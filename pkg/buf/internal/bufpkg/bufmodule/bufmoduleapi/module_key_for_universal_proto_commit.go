@@ -41,10 +41,12 @@ func getModuleKeyForUniversalProtoCommit(
 	if err != nil {
 		return nil, err
 	}
+
 	commitID, err := uuidutil.FromDashless(universalProtoCommit.ID)
 	if err != nil {
 		return nil, err
 	}
+
 	return bufmodule2.NewModuleKey(
 		moduleFullName,
 		commitID,
@@ -72,6 +74,7 @@ func getFullNameForRegistryProtoOwnerIDProtoModuleID(
 	if err != nil {
 		return nil, err
 	}
+
 	v1ProtoOwner, err := v1ProtoOwnerProvider.getV1ProtoOwnerForProtoOwnerID(
 		ctx,
 		registry,
@@ -80,18 +83,21 @@ func getFullNameForRegistryProtoOwnerIDProtoModuleID(
 	if err != nil {
 		return nil, err
 	}
+
 	var ownerName string
+
 	switch {
 	case v1ProtoOwner.GetUser() != nil:
-		ownerName = v1ProtoOwner.GetUser().Name
+		ownerName = v1ProtoOwner.GetUser().GetName()
 	case v1ProtoOwner.GetOrganization() != nil:
-		ownerName = v1ProtoOwner.GetOrganization().Name
+		ownerName = v1ProtoOwner.GetOrganization().GetName()
 	default:
 		return nil, fmt.Errorf("proto Owner did not have a User or Organization: %v", v1ProtoOwner)
 	}
+
 	return bufparse.NewFullName(
 		registry,
 		ownerName,
-		v1ProtoModule.Name,
+		v1ProtoModule.GetName(),
 	)
 }

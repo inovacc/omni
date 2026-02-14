@@ -26,9 +26,9 @@ import (
 	"net/http/httptest"
 	"sync"
 
+	"connectrpc.com/connect"
 	"github.com/inovacc/omni/pkg/buf/internal/app"
 	"github.com/inovacc/omni/pkg/buf/internal/app/appext"
-	"connectrpc.com/connect"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/protoencoding"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/verbose"
 	"google.golang.org/protobuf/proto"
@@ -51,6 +51,7 @@ func (p protoCodec) Marshal(a any) ([]byte, error) {
 	if !ok {
 		return nil, fmt.Errorf("cannot marshal: %T does not implement proto.Message", a)
 	}
+
 	return protoencoding.NewWireMarshaler().Marshal(protoMessage)
 }
 
@@ -59,12 +60,15 @@ func (p protoCodec) Unmarshal(bytes []byte, a any) error {
 		// must make a copy since Connect framework will re-use the byte slice
 		deferred.data = make([]byte, len(bytes))
 		copy(deferred.data, bytes)
+
 		return nil
 	}
+
 	protoMessage, ok := a.(proto.Message)
 	if !ok {
 		return fmt.Errorf("cannot unmarshal: %T does not implement proto.Message", a)
 	}
+
 	return protoencoding.NewWireUnmarshaler(nil).Unmarshal(bytes, protoMessage)
 }
 
@@ -106,6 +110,7 @@ func (inv *invoker) Invoke(ctx context.Context, dataSource string, data io.Reade
 	// request's user-agent header(s) get overwritten by protocol, so we stash them in the
 	// context so that underlying transport can restore them
 	ctx = withUserAgent(ctx, headers)
+
 	switch {
 	case inv.md.IsStreamingServer() && inv.md.IsStreamingClient():
 		return inv.handleBidiStream(ctx, dataSource, data, headers)
@@ -120,6 +125,7 @@ func (inv *invoker) Invoke(ctx context.Context, dataSource string, data io.Reade
 
 func (inv *invoker) handleUnary(ctx context.Context, dataSource string, data io.Reader, headers http.Header) error {
 	provider := newMessageProvider(dataSource, data, inv.res)
+
 	msg := dynamicpb.NewMessage(inv.md.Input())
 	if err := provider.next(msg); err != nil {
 		return err
@@ -132,15 +138,19 @@ func (inv *invoker) handleUnary(ctx context.Context, dataSource string, data io.
 
 	req := connect.NewRequest(msg)
 	maps.Copy(req.Header(), headers)
+
 	resp, err := inv.client.CallUnary(ctx, req)
 	if err != nil {
 		var connErr *connect.Error
 		if !errors.As(err, &connErr) {
 			return err
 		}
+
 		err := inv.handleErrorResponse(connErr)
+
 		return err
 	}
+
 	return inv.handleResponse(resp.Msg.data, nil)
 }
 
@@ -149,6 +159,7 @@ func (inv *invoker) handleClientStream(ctx context.Context, dataSource string, d
 	msg := dynamicpb.NewMessage(inv.md.Input())
 	stream := inv.client.CallClientStream(ctx)
 	maps.Copy(stream.RequestHeader(), headers)
+
 	defer func() {
 		if retErr != nil {
 			var connErr *connect.Error
@@ -157,6 +168,7 @@ func (inv *invoker) handleClientStream(ctx context.Context, dataSource string, d
 			}
 		}
 	}()
+
 	if err, isStreamError := inv.handleStreamRequest(provider, msg, stream); err != nil {
 		if isStreamError {
 			_, recvErr := stream.CloseAndReceive()
@@ -166,17 +178,21 @@ func (inv *invoker) handleClientStream(ctx context.Context, dataSource string, d
 				return recvErr
 			}
 		}
+
 		return err
 	}
+
 	resp, err := stream.CloseAndReceive()
 	if err != nil {
 		return err
 	}
+
 	return inv.handleResponse(resp.Msg.data, nil)
 }
 
 func (inv *invoker) handleServerStream(ctx context.Context, dataSource string, data io.Reader, headers http.Header) (retErr error) {
 	provider := newMessageProvider(dataSource, data, inv.res)
+
 	msg := dynamicpb.NewMessage(inv.md.Input())
 	if err := provider.next(msg); err != nil {
 		return err
@@ -189,6 +205,7 @@ func (inv *invoker) handleServerStream(ctx context.Context, dataSource string, d
 
 	req := connect.NewRequest(msg)
 	maps.Copy(req.Header(), headers)
+
 	defer func() {
 		if retErr != nil {
 			var connErr *connect.Error
@@ -202,6 +219,7 @@ func (inv *invoker) handleServerStream(ctx context.Context, dataSource string, d
 	if err != nil {
 		return err
 	}
+
 	return inv.handleStreamResponse(&serverStreamAdapter{stream: stream})
 }
 
@@ -221,18 +239,25 @@ func (inv *invoker) handleBidiStream(ctx context.Context, dataSource string, dat
 		}
 	}()
 
-	var recvErr error
-	var wg sync.WaitGroup
+	var (
+		recvErr error
+		wg      sync.WaitGroup
+	)
+
 	wg.Add(1)
+
 	go func() {
 		defer wg.Done()
 		defer cancel()
+
 		if err := inv.handleStreamResponse(stream); err != nil {
 			recvErr = err
 		}
 	}()
+
 	defer func() {
 		wg.Wait()
+
 		if recvErr != nil {
 			// may just get io.EOF or cancel error when trying to write to closed
 			// request stream whereas actual error details will be seen on the read side
@@ -241,7 +266,9 @@ func (inv *invoker) handleBidiStream(ctx context.Context, dataSource string, dat
 			}
 		}
 	}()
+
 	shouldCancel := true
+
 	defer func() {
 		if shouldCancel {
 			cancel()
@@ -249,10 +276,12 @@ func (inv *invoker) handleBidiStream(ctx context.Context, dataSource string, dat
 	}()
 
 	err, isStreamError := inv.handleStreamRequest(provider, msg, stream)
+
 	shouldCancel = err != nil && !isStreamError
 	if err != nil {
 		return err
 	}
+
 	return stream.CloseRequest()
 }
 
@@ -260,10 +289,12 @@ func isCancelled(err error) bool {
 	if errors.Is(err, context.Canceled) {
 		return true
 	}
+
 	var connErr *connect.Error
 	if errors.As(err, &connErr) {
 		return connErr.Code() == connect.CodeCanceled
 	}
+
 	return false
 }
 
@@ -271,9 +302,11 @@ func (inv *invoker) handleResponse(data []byte, msg *dynamicpb.Message) error {
 	if msg == nil {
 		msg = dynamicpb.NewMessage(inv.md.Output())
 	}
+
 	if err := protoencoding.NewWireUnmarshaler(inv.res).Unmarshal(data, msg); err != nil {
 		return err
 	}
+
 	jsonMarshalerOptions := []protoencoding.JSONMarshalerOption{
 		protoencoding.JSONMarshalerWithIndent(),
 	}
@@ -283,16 +316,20 @@ func (inv *invoker) handleResponse(data []byte, msg *dynamicpb.Message) error {
 			protoencoding.JSONMarshalerWithEmitUnpopulated(),
 		)
 	}
+
 	unrecognized := countUnrecognized(msg.ProtoReflect())
 	if unrecognized > 0 {
 		inv.printer.Printf("Response message (%s) contained %d bytes of unrecognized fields.",
 			msg.ProtoReflect().Descriptor().FullName(), unrecognized)
 	}
+
 	outputBytes, err := protoencoding.NewJSONMarshaler(inv.res, jsonMarshalerOptions...).Marshal(msg)
 	if err != nil {
 		return err
 	}
+
 	_, err = fmt.Fprintf(inv.output, "%s\n", outputBytes)
+
 	return err
 }
 
@@ -315,8 +352,10 @@ func (ssa *serverStreamAdapter) Receive() (*deferredMessage, error) {
 		if err == nil {
 			err = io.EOF
 		}
+
 		return nil, err
 	}
+
 	return ssa.stream.Msg(), nil
 }
 
@@ -331,10 +370,12 @@ func (inv *invoker) handleStreamRequest(provider messageProvider, msg *dynamicpb
 		} else if err != nil {
 			return err, false
 		}
+
 		if err := stream.Send(msg); err != nil {
 			return err, true
 		}
 	}
+
 	return nil, false
 }
 
@@ -345,7 +386,9 @@ func (inv *invoker) handleStreamResponse(stream serverStream) (retError error) {
 			retError = err
 		}
 	}()
+
 	msg := dynamicpb.NewMessage(inv.md.Output())
+
 	for {
 		responseMsg, err := stream.Receive()
 		if errors.Is(err, io.EOF) {
@@ -353,6 +396,7 @@ func (inv *invoker) handleStreamResponse(stream serverStream) (retError error) {
 		} else if err != nil {
 			return err
 		}
+
 		if err := inv.handleResponse(responseMsg.data, msg); err != nil {
 			return err
 		}
@@ -371,20 +415,24 @@ func (inv *invoker) handleErrorResponse(connErr *connect.Error) error {
 	req := &http.Request{
 		Header: http.Header{},
 	}
-	req.Header.Add("content-type", "application/json")
+	req.Header.Add("Content-Type", "application/json")
 
 	w := connect.NewErrorWriter()
 	responseWriter := httptest.NewRecorder()
+
 	err := w.Write(responseWriter, req, connErr)
 	if err != nil {
 		return err
 	}
+
 	var prettyPrinted bytes.Buffer
 	if err := json.Indent(&prettyPrinted, responseWriter.Body.Bytes(), "", "   "); err != nil {
 		return err
 	}
+
 	_, _ = inv.errOutput.Write(prettyPrinted.Bytes())
 	_, _ = inv.errOutput.Write([]byte("\n"))
+
 	return app.NewError(int(connErr.Code()*8), "")
 }
 
@@ -393,6 +441,7 @@ func newStreamMessageProvider(dataSource string, data io.Reader, res protoencodi
 		// if no data provided, treat as empty input
 		data = bytes.NewBuffer(nil)
 	}
+
 	return &streamMessageProvider{name: dataSource, dec: json.NewDecoder(data), res: res}
 }
 
@@ -418,6 +467,7 @@ func (s *singleEmptyMessageProvider) next(_ proto.Message) error {
 		s.read = true
 		return nil
 	}
+
 	return io.EOF
 }
 
@@ -433,8 +483,10 @@ func (s *streamMessageProvider) next(msg proto.Message) error {
 		if err == io.EOF {
 			return err
 		}
+
 		return fmt.Errorf("%s at offset %d: %w", s.name, s.dec.InputOffset(), err)
 	}
+
 	return protoencoding.NewJSONUnmarshaler(
 		s.res, protoencoding.JSONUnmarshalerWithDisallowUnknown(),
 	).Unmarshal(jsonData, msg)
@@ -442,6 +494,7 @@ func (s *streamMessageProvider) next(msg proto.Message) error {
 
 func countUnrecognized(msg protoreflect.Message) int {
 	var count int
+
 	msg.Range(func(field protoreflect.FieldDescriptor, val protoreflect.Value) bool {
 		switch {
 		case field.IsMap():
@@ -460,6 +513,7 @@ func countUnrecognized(msg protoreflect.Message) int {
 			if !isMessageKind(field.Kind()) {
 				break
 			}
+
 			listVal := val.List()
 			for i, length := 0, listVal.Len(); i < length; i++ {
 				count += countUnrecognized(listVal.Get(i).Message())
@@ -467,8 +521,10 @@ func countUnrecognized(msg protoreflect.Message) int {
 		case isMessageKind(field.Kind()):
 			count += countUnrecognized(val.Message())
 		}
+
 		return true
 	})
+
 	return count + len(msg.GetUnknown())
 }
 

@@ -86,6 +86,7 @@ func testFormatNoDiff(t *testing.T, path string) {
 		require.NoError(t, err)
 		formatBucket, err := FormatModuleSet(ctx, moduleSet)
 		require.NoError(t, err)
+
 		assertGolden := func(formatBucket storage2.ReadBucket) {
 			err := storage2.WalkReadObjects(
 				ctx,
@@ -94,12 +95,14 @@ func testFormatNoDiff(t *testing.T, path string) {
 				func(formattedFile storage2.ReadObject) error {
 					formattedData, err := io.ReadAll(formattedFile)
 					require.NoError(t, err)
+
 					expectedPath := strings.Replace(formattedFile.Path(), ".proto", ".golden", 1)
 					expectedData, err := storage2.ReadPath(ctx, bucket, expectedPath)
 					require.NoError(t, err)
 					fileDiff, err := diff.Diff(ctx, expectedData, formattedData, expectedPath, formattedFile.Path()+" (formatted)")
 					require.NoError(t, err)
 					require.Empty(t, string(fileDiff))
+
 					return nil
 				},
 			)

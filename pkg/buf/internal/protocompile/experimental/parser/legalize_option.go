@@ -40,6 +40,7 @@ func legalizeCompactOptions(p *parser, opts ast.CompactOptions) {
 		p.Errorf("%s cannot be empty", taxa.CompactOptions).Apply(
 			report.Snippetf(opts, "help: remove this"),
 		)
+
 		return
 	}
 
@@ -83,7 +84,6 @@ func legalizeOptionEntry(p *parser, opt ast.Option, decl source.Span) {
 func legalizeValue(p *parser, decl source.Span, parent ast.ExprAny, value ast.ExprAny, where taxa.Place) {
 	// TODO: Some diagnostics emitted by this function must be suppressed by type
 	// checking, which generates more precise diagnostics.
-
 	if slicesx.Among(value.Kind(), ast.ExprKindInvalid, ast.ExprKindError) {
 		// Diagnosed elsewhere.
 		return
@@ -102,6 +102,7 @@ func legalizeValue(p *parser, decl source.Span, parent ast.ExprAny, value ast.Ex
 		// evaluation, so repeating that logic here is somewhat redundant.
 	case ast.ExprKindArray:
 		array := value.AsArray().Elements()
+
 		switch {
 		case parent.IsZero() && where.Subject() == taxa.OptionValue:
 			err := p.Error(errtoken.Unexpected{
@@ -130,8 +131,10 @@ func legalizeValue(p *parser, decl source.Span, parent ast.ExprAny, value ast.Ex
 						report.Edit{Start: 0, End: 1},
 						report.Edit{Start: value.Span().Len() - 1, End: value.Span().Len()},
 					))
+
 					break
 				}
+
 				fallthrough
 			default:
 				// TODO: generate a suggestion for this.
@@ -188,12 +191,14 @@ func legalizeValue(p *parser, decl source.Span, parent ast.ExprAny, value ast.Ex
 
 		for kv := range seq.Values(dict.Elements()) {
 			want := taxa.NewSet(taxa.FieldName, taxa.ExtensionName, taxa.TypeURL)
+
 			switch kv.Key().Kind() {
 			case ast.ExprKindLiteral:
 				legalizeLiteral(p, kv.Key().AsLiteral())
 
 			case ast.ExprKindPath:
 				path := kv.Key().AsPath()
+
 				first, _ := iterx.First(path.Components)
 				if !first.AsExtension().IsZero() {
 					// TODO: move this into ir/lower_eval.go
@@ -209,6 +214,7 @@ func legalizeValue(p *parser, decl source.Span, parent ast.ExprAny, value ast.Ex
 
 			case ast.ExprKindArray:
 				elem, ok := iterx.OnlyOne(seq.Values(kv.Key().AsArray().Elements()))
+
 				path := elem.AsPath().Path
 				if !ok || path.IsZero() {
 					if !elem.AsLiteral().IsZero() {
@@ -222,6 +228,7 @@ func legalizeValue(p *parser, decl source.Span, parent ast.ExprAny, value ast.Ex
 						Where: taxa.DictField.In(),
 						Want:  want,
 					})
+
 					break
 				}
 
@@ -259,6 +266,7 @@ func legalizeValue(p *parser, decl source.Span, parent ast.ExprAny, value ast.Ex
 					if e.Kind() == ast.ExprKindDict {
 						continue
 					}
+
 					p.Error(errtoken.Unexpected{
 						What:  e,
 						Where: taxa.Array.In(),
@@ -296,7 +304,9 @@ func legalizeLiteral(p *parser, value ast.ExprLiteral) {
 		}
 
 		base := n.Base()
+
 		var validBase bool
+
 		switch base {
 		case 2:
 			validBase = false
@@ -324,6 +334,7 @@ func legalizeLiteral(p *parser, value ast.ExprLiteral) {
 						}),
 						report.Notef("Protobuf does not support binary literals"),
 					)
+
 					return
 
 				case 8:
@@ -331,11 +342,13 @@ func legalizeLiteral(p *parser, value ast.ExprLiteral) {
 						report.SuggestEdits(value, "remove the `o`", report.Edit{Start: 1, End: 2}),
 						report.Notef("octal literals are prefixed with `0`, not `0o`"),
 					)
+
 					return
 				}
 			}
 
 			var name string
+
 			switch base {
 			case 2:
 				name = "binary"
@@ -349,6 +362,7 @@ func legalizeLiteral(p *parser, value ast.ExprLiteral) {
 				report.Snippet(value),
 				report.Notef("Protobuf does not support %s %ss", name, what),
 			)
+
 			return
 		}
 
@@ -359,6 +373,7 @@ func legalizeLiteral(p *parser, value ast.ExprLiteral) {
 					End:   len(suffix.Text()),
 				}),
 			)
+
 			return
 		}
 
@@ -371,6 +386,7 @@ func legalizeLiteral(p *parser, value ast.ExprLiteral) {
 				}),
 				report.Notef("Protobuf does not support Go/Java/Rust-style thousands separators"),
 			)
+
 			return
 		}
 

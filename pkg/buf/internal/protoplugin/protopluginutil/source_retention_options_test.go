@@ -31,6 +31,7 @@ import (
 
 func TestStripSourceRetentionOptions(t *testing.T) {
 	t.Parallel()
+
 	makeCustomOptionSet := func(startTag int32, extendee string, prefix string, label descriptorpb.FieldDescriptorProto_Label) []*descriptorpb.FieldDescriptorProto {
 		return []*descriptorpb.FieldDescriptorProto{
 			{
@@ -101,7 +102,9 @@ func TestStripSourceRetentionOptions(t *testing.T) {
 
 	applyCustomOptionSet := func(all, retained protoreflect.Message, prefix protoreflect.Name, isList bool, file protoreflect.FileDescriptor) {
 		extType := dynamicpb.NewExtensionType(file.Extensions().ByName(prefix + "no_retention"))
+
 		var val protoreflect.Value
+
 		if isList {
 			listVal := extType.New().List()
 			listVal.Append(protoreflect.ValueOfString("foo"))
@@ -110,6 +113,7 @@ func TestStripSourceRetentionOptions(t *testing.T) {
 		} else {
 			val = protoreflect.ValueOfString("abc")
 		}
+
 		all.Set(extType.TypeDescriptor(), val)
 		retained.Set(extType.TypeDescriptor(), val)
 
@@ -122,6 +126,7 @@ func TestStripSourceRetentionOptions(t *testing.T) {
 		} else {
 			val = protoreflect.ValueOfBool(true)
 		}
+
 		all.Set(extType.TypeDescriptor(), val)
 		retained.Set(extType.TypeDescriptor(), val)
 
@@ -134,6 +139,7 @@ func TestStripSourceRetentionOptions(t *testing.T) {
 		} else {
 			val = protoreflect.ValueOfBytes([]byte{0, 1, 2, 3})
 		}
+
 		all.Set(extType.TypeDescriptor(), val)
 		retained.Set(extType.TypeDescriptor(), val)
 
@@ -146,6 +152,7 @@ func TestStripSourceRetentionOptions(t *testing.T) {
 		} else {
 			val = protoreflect.ValueOfInt32(123)
 		}
+
 		all.Set(extType.TypeDescriptor(), val)
 		// don't set retained because this is a source-only option (won't be retained)
 	}
@@ -154,6 +161,7 @@ func TestStripSourceRetentionOptions(t *testing.T) {
 		strippedRef := proto.Clone(message).ProtoReflect()
 		applyCustomOptionSet(allRef, strippedRef, prefix, false, file)
 		applyCustomOptionSet(allRef, strippedRef, prefix+"rep_", true, file)
+
 		return allRef.Interface(), strippedRef.Interface()
 	}
 
@@ -516,6 +524,7 @@ func TestStripSourceRetentionOptions(t *testing.T) {
 
 func TestStripSourceRetentionOptionsFromProtoMessage(t *testing.T) {
 	t.Parallel()
+
 	optsFileProto := &descriptorpb.FileDescriptorProto{
 		Name:       proto.String("opts.proto"),
 		Package:    proto.String("foo.bar"),
@@ -563,6 +572,7 @@ func TestStripSourceRetentionOptionsFromProtoMessage(t *testing.T) {
 	}
 	optsFile, err := protodesc.NewFile(optsFileProto, protoregistry.GlobalFiles)
 	require.NoError(t, err)
+
 	extNoRetention := dynamicpb.NewExtensionType(optsFile.Extensions().ByName("no_retention"))
 	extUnknownRetention := dynamicpb.NewExtensionType(optsFile.Extensions().ByName("unknown_retention"))
 	extRuntimeRetention := dynamicpb.NewExtensionType(optsFile.Extensions().ByName("runtime_retention"))
@@ -572,6 +582,7 @@ func TestStripSourceRetentionOptionsFromProtoMessage(t *testing.T) {
 	optionsMsg := &descriptorpb.FileOptions{}
 	options := optionsMsg.ProtoReflect()
 	options.Set(extNoRetention.TypeDescriptor(), protoreflect.ValueOfString("abc"))
+
 	listVal := extUnknownRetention.New().List()
 	listVal.Append(protoreflect.ValueOfString("foo"))
 	listVal.Append(protoreflect.ValueOfString("bar"))
@@ -621,12 +632,15 @@ func TestStripOptionsFromAll(t *testing.T) {
 		if value == nil {
 			return proto.Int32(-1), nil
 		}
+
 		if *value <= -100 {
 			return nil, errInvalid
 		}
+
 		if *value > 5 {
 			return proto.Int32(*value * 2), nil
 		}
+
 		return value, nil
 	}
 
@@ -638,6 +652,7 @@ func TestStripOptionsFromAll(t *testing.T) {
 	newVals, changed, err := stripOptionsFromAll(vals, updateFunc, nil, nil)
 	require.NoError(t, err)
 	require.True(t, changed)
+
 	expected := []*int32{
 		proto.Int32(0), proto.Int32(1), proto.Int32(2),
 		proto.Int32(3), proto.Int32(4), proto.Int32(5),
@@ -652,6 +667,7 @@ func TestStripOptionsFromAll(t *testing.T) {
 	newVals, changed, err = stripOptionsFromAll(vals, updateFunc, nil, nil)
 	require.NoError(t, err)
 	require.True(t, changed)
+
 	expected = []*int32{
 		proto.Int32(-1), proto.Int32(1), proto.Int32(2),
 		proto.Int32(3), proto.Int32(4), proto.Int32(5),
@@ -682,5 +698,6 @@ func testCombineAll[T any](slices ...[]T) []T {
 	for _, exts := range slices[1:] {
 		result = append(result, exts...)
 	}
+
 	return result
 }

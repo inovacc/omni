@@ -35,6 +35,7 @@ var markers = []markerFile{
 // detectProjectTypes checks for known marker files and returns detected project types.
 func detectProjectTypes(dir string) []ProjectType {
 	var types []ProjectType
+
 	seen := make(map[string]bool)
 
 	for _, m := range markers {
@@ -131,6 +132,7 @@ func matchFrameworks(deps []string, markers []frameworkMarker) []string {
 	}
 
 	var found []string
+
 	seen := make(map[string]bool)
 
 	for _, m := range markers {
@@ -240,6 +242,7 @@ func countLanguages(dir string) []LanguageInfo {
 		}
 
 		ext := filepath.Ext(name)
+
 		lang, ok := extLang[ext]
 		if !ok {
 			return nil
@@ -301,6 +304,7 @@ func detectBuildTools(dir string) []string {
 	}
 
 	var found []string
+
 	seen := make(map[string]bool)
 
 	for _, c := range checks {

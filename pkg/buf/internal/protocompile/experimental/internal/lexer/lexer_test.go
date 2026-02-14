@@ -82,6 +82,7 @@ func (c *Config) Parse(t *testing.T, text string) {
 	t.Helper()
 
 	config := new(bytes.Buffer)
+
 	for line := range strings.Lines(text) {
 		if line, ok := strings.CutPrefix(line, "//% "); ok {
 			config.WriteString(line)
@@ -110,6 +111,7 @@ func TestLexer(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		t.Skip("Skipped on Windows: golden files have Unix line endings affecting byte offsets")
 	}
+
 	t.Parallel()
 
 	corpus := golden.Corpus{
@@ -141,12 +143,14 @@ func TestLexer(t *testing.T) {
 					if suffix {
 						return slices.Contains(config.Suffixes.Numbers, affix)
 					}
+
 					return slices.Contains(config.Prefixes.Numbers, affix)
 
 				case token.String:
 					if suffix {
 						return slices.Contains(config.Suffixes.Strings, affix)
 					}
+
 					return slices.Contains(config.Prefixes.Strings, affix)
 
 				default:
@@ -184,11 +188,16 @@ func TestLexer(t *testing.T) {
 			ShowDebug: true,
 		}.RenderString(r)
 		t.Log(stderr)
+
 		outputs[1], _, _ = report.Renderer{}.RenderString(r)
 
-		var tsv strings.Builder
-		var count int
+		var (
+			tsv   strings.Builder
+			count int
+		)
+
 		tsv.WriteString("#\t\tkind\t\tkeyword\t\toffsets\t\tlinecol\t\ttext\n")
+
 		for tok := range stream.All() {
 			count++
 
@@ -212,6 +221,7 @@ func TestLexer(t *testing.T) {
 				} else {
 					fmt.Fprintf(&tsv, "\t\tint:%.0f", n.Value())
 				}
+
 				fmt.Fprintf(&tsv, "/%v/%v", n.Base(), n.ExpBase())
 
 				if prefix := n.Prefix().Text(); prefix != "" {
@@ -241,6 +251,7 @@ func TestLexer(t *testing.T) {
 
 			tsv.WriteByte('\n')
 		}
+
 		if count > 0 {
 			outputs[0] = tsv.String()
 		}
@@ -255,6 +266,7 @@ var escapePat = regexp.MustCompile(`\$([ux])\{(\w+)\}`)
 func unescapeTestCase(s string) string {
 	return escapePat.ReplaceAllStringFunc(s, func(needle string) string {
 		groups := escapePat.FindStringSubmatch(needle)
+
 		value, err := strconv.ParseInt(groups[2], 16, 32)
 		if err != nil {
 			panic(err)
@@ -263,6 +275,7 @@ func unescapeTestCase(s string) string {
 		if groups[1] == "x" {
 			return string([]byte{byte(value)})
 		}
+
 		return string(rune(value))
 	})
 }

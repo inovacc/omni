@@ -85,5 +85,6 @@ func (e ExprRange) Span() source.Span {
 	}
 
 	lo, hi := e.Bounds()
+
 	return source.Join(lo, e.Keyword(), hi)
 }

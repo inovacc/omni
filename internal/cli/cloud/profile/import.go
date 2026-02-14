@@ -27,6 +27,7 @@ func NewAWSImporter() (*AWSImporter, error) {
 	if err != nil {
 		return nil, fmt.Errorf("getting home directory: %w", err)
 	}
+
 	return &AWSImporter{homeDir: home}, nil
 }
 
@@ -50,6 +51,7 @@ func (i *AWSImporter) Import(opts ImportOptions) (*CloudProfile, *AWSCredentials
 
 	// Parse credentials file
 	credsPath := filepath.Join(i.homeDir, ".aws", "credentials")
+
 	creds, err := i.parseAWSCredentials(credsPath, sourceProfile)
 	if err != nil {
 		return nil, nil, err
@@ -75,11 +77,14 @@ func (i *AWSImporter) parseINIProfiles(path string) ([]string, error) {
 		if os.IsNotExist(err) {
 			return nil, fmt.Errorf("AWS credentials file not found: %s", path)
 		}
+
 		return nil, err
 	}
+
 	defer func() { _ = file.Close() }()
 
 	var profiles []string
+
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
@@ -98,8 +103,10 @@ func (i *AWSImporter) parseAWSCredentials(path, profileName string) (*AWSCredent
 		if os.IsNotExist(err) {
 			return nil, fmt.Errorf("AWS credentials file not found: %s", path)
 		}
+
 		return nil, err
 	}
+
 	defer func() { _ = file.Close() }()
 
 	creds := &AWSCredentials{}
@@ -118,6 +125,7 @@ func (i *AWSImporter) parseAWSCredentials(path, profileName string) (*AWSCredent
 		if strings.HasPrefix(line, "[") && strings.HasSuffix(line, "]") {
 			profile := strings.TrimPrefix(strings.TrimSuffix(line, "]"), "[")
 			inProfile = (profile == profileName)
+
 			continue
 		}
 
@@ -160,6 +168,7 @@ func (i *AWSImporter) parseAWSConfigRegion(path, profileName string) string {
 	if err != nil {
 		return ""
 	}
+
 	defer func() { _ = file.Close() }()
 
 	// In config file, non-default profiles are prefixed with "profile "
@@ -181,6 +190,7 @@ func (i *AWSImporter) parseAWSConfigRegion(path, profileName string) string {
 		if strings.HasPrefix(line, "[") && strings.HasSuffix(line, "]") {
 			section := strings.TrimPrefix(strings.TrimSuffix(line, "]"), "[")
 			inProfile = (section == targetSection)
+
 			continue
 		}
 
@@ -215,6 +225,7 @@ func NewGCPImporter() (*GCPImporter, error) {
 	if err != nil {
 		return nil, fmt.Errorf("getting home directory: %w", err)
 	}
+
 	return &GCPImporter{homeDir: home}, nil
 }
 
@@ -250,6 +261,7 @@ func (i *GCPImporter) Import(opts ImportOptions) (*CloudProfile, *GCPCredentials
 	}
 
 	var credPath string
+
 	switch source {
 	case "application_default_credentials", "adc":
 		credPath = i.getADCPath()
@@ -324,6 +336,7 @@ func NewAzureImporter() (*AzureImporter, error) {
 	if err != nil {
 		return nil, fmt.Errorf("getting home directory: %w", err)
 	}
+
 	return &AzureImporter{homeDir: home}, nil
 }
 
@@ -336,6 +349,7 @@ func (i *AzureImporter) ListSubscriptions() ([]AzureSubscriptionInfo, error) {
 		if os.IsNotExist(err) {
 			return nil, fmt.Errorf("Azure profile not found: %s (run 'az login' first)", profilePath)
 		}
+
 		return nil, err
 	}
 

@@ -18,11 +18,11 @@ import (
 	"fmt"
 	"strings"
 
+	"buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go/buf/validate"
 	celpv "buf.build/go/protovalidate/cel"
 	"github.com/google/cel-go/cel"
 	"github.com/google/cel-go/common/types"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufprotosource"
-	"buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go/buf/validate"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/types/dynamicpb"
 )
@@ -47,12 +47,14 @@ func checkCELForMessage(
 	if len(messageRules.GetCel()) == 0 && len(messageRules.GetCelExpression()) == 0 {
 		return nil
 	}
+
 	celEnv, err := cel.NewEnv(
 		cel.Lib(celpv.NewLibrary()),
 	)
 	if err != nil {
 		return err
 	}
+
 	celEnv, err = celEnv.Extend(
 		cel.Types(dynamicpb.NewMessage(messageDescriptor)),
 		cel.Variable("this", cel.ObjectType(string(messageDescriptor.FullName()))),
@@ -60,6 +62,7 @@ func checkCELForMessage(
 	if err != nil {
 		return err
 	}
+
 	checkCEL(
 		celEnv,
 		messageRules.GetCel(),
@@ -76,6 +79,7 @@ func checkCELForMessage(
 		},
 		false, // isCELExpression
 	)
+
 	if len(messageRules.GetCelExpression()) > 0 {
 		celExpressionRules := make([]*validate.Rule, len(messageRules.GetCelExpression()))
 		for i, expr := range messageRules.GetCelExpression() {
@@ -83,6 +87,7 @@ func checkCELForMessage(
 				Expression: &expr,
 			}
 		}
+
 		checkCEL(
 			celEnv,
 			celExpressionRules,
@@ -100,6 +105,7 @@ func checkCELForMessage(
 			true, // isCELExpression
 		)
 	}
+
 	return nil
 }
 
@@ -113,12 +119,14 @@ func checkCELForField(
 	if len(fieldRules.GetCel()) == 0 && len(fieldRules.GetCelExpression()) == 0 {
 		return nil
 	}
+
 	celEnv, err := cel.NewEnv(
 		cel.Lib(celpv.NewLibrary()),
 	)
 	if err != nil {
 		return err
 	}
+
 	celEnv, err = celEnv.Extend(
 		append(
 			celpv.RequiredEnvOptions(fieldDescriptor),
@@ -128,6 +136,7 @@ func checkCELForField(
 	if err != nil {
 		return err
 	}
+
 	checkCEL(
 		celEnv,
 		fieldRules.GetCel(),
@@ -143,6 +152,7 @@ func checkCELForField(
 		},
 		false, // isCELExpression
 	)
+
 	if len(fieldRules.GetCelExpression()) > 0 {
 		celExpressionRules := make([]*validate.Rule, len(fieldRules.GetCelExpression()))
 		for i, expr := range fieldRules.GetCelExpression() {
@@ -150,6 +160,7 @@ func checkCELForField(
 				Expression: &expr,
 			}
 		}
+
 		checkCEL(
 			celEnv,
 			celExpressionRules,
@@ -166,6 +177,7 @@ func checkCELForField(
 			true, // isCELExpression
 		)
 	}
+
 	return nil
 }
 
@@ -181,10 +193,12 @@ func checkCEL(
 ) bool {
 	allCelExpressionsCompile := true
 	idToConstraintIndices := make(map[string][]int, len(celRules))
+
 	expressionField := celName + ".expression"
 	if isCELExpression {
 		expressionField = celName
 	}
+
 	for i, celConstraint := range celRules {
 		if celID := celConstraint.GetId(); celID != "" {
 			for _, char := range celID {
@@ -197,20 +211,25 @@ func checkCEL(
 				} else if char == '_' || char == '-' || char == '.' {
 					continue
 				}
+
 				add(
 					i,
 					"%s has invalid characters for %s.id. IDs must contain only characters a-z, A-Z, 0-9, '.', '_', '-'.",
 					parentNameCapitalized,
 					celName,
 				)
+
 				break
 			}
+
 			idToConstraintIndices[celID] = append(idToConstraintIndices[celID], i)
 		}
+
 		if len(strings.TrimSpace(celConstraint.GetExpression())) == 0 {
 			add(i, "%s has an empty %s. Expressions should always be specified.", parentNameCapitalized, expressionField)
 			continue
 		}
+
 		ast, compileIssues := celEnv.Compile(celConstraint.GetExpression())
 		switch {
 		case ast.OutputType().IsAssignableType(cel.BoolType):
@@ -235,8 +254,10 @@ func checkCEL(
 				cel.FormatCELType(ast.OutputType()),
 			)
 		}
+
 		if compileIssues.Err() != nil {
 			allCelExpressionsCompile = false
+
 			for _, parsedIssue := range parseCelIssuesText(compileIssues.Err().Error()) {
 				add(
 					i,
@@ -248,10 +269,12 @@ func checkCEL(
 			}
 		}
 	}
+
 	for celID, constraintIndices := range idToConstraintIndices {
 		if len(constraintIndices) <= 1 {
 			continue
 		}
+
 		for _, constraintIndex := range constraintIndices {
 			add(
 				constraintIndex,
@@ -262,6 +285,7 @@ func checkCEL(
 			)
 		}
 	}
+
 	return allCelExpressionsCompile
 }
 
@@ -283,6 +307,7 @@ func checkCEL(
 // | .....................^"]
 func parseCelIssuesText(issuesText string) []string {
 	issues := strings.Split(issuesText, "ERROR: <input>:")
+
 	parsedIssues := make([]string, 0, len(issues)-1)
 	for _, issue := range issues {
 		issue = strings.TrimSpace(issue)
@@ -293,5 +318,6 @@ func parseCelIssuesText(issuesText string) []string {
 		parts := strings.SplitAfterN(issue, ":", 3)
 		parsedIssues = append(parsedIssues, strings.TrimSpace(parts[len(parts)-1]))
 	}
+
 	return parsedIssues
 }

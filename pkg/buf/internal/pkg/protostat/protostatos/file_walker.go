@@ -37,16 +37,20 @@ func (f *fileWalker) Walk(ctx context.Context, fu func(io.Reader) error) error {
 		if filepath.Ext(filename) != ".proto" {
 			continue
 		}
+
 		file, err := os.Open(filename)
 		if err != nil {
 			return err
 		}
+
 		if err := fu(file); err != nil {
 			return errors.Join(err, file.Close())
 		}
+
 		if err := file.Close(); err != nil {
 			return err
 		}
 	}
+
 	return nil
 }

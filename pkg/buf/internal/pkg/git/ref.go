@@ -32,6 +32,7 @@ func (r *ref) checkout() string {
 	if r == nil {
 		return ""
 	}
+
 	return r.ref
 }
 

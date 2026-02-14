@@ -55,6 +55,7 @@ func testExpectedSubset(
 	}
 
 	assert.Equal(t, len(expectedMissing), len(actualMissing), fmt.Sprint(actualMissing))
+
 	if len(expectedMissing) == len(actualMissing) {
 		for i := range actualMissing {
 			assert.Equal(t, expectedMissing[i], actualMissing[i])
@@ -68,22 +69,27 @@ func stringToTestRanges(rangesString string) []TagRange {
 	if rangesString == "" {
 		return results
 	}
-	rangeStrings := strings.Split(rangesString, ",")
-	for _, rangeString := range rangeStrings {
+
+	rangeStrings := strings.SplitSeq(rangesString, ",")
+	for rangeString := range rangeStrings {
 		beginString, endString, hasEnd := strings.Cut(rangeString, "-")
 		if !hasEnd {
 			endString = beginString
 		}
+
 		begin, err := strconv.Atoi(beginString)
 		if err != nil {
 			panic(err)
 		}
+
 		end, err := strconv.Atoi(endString)
 		if err != nil {
 			panic(err)
 		}
+
 		results = append(results, testTagRange{begin, end})
 	}
+
 	return results
 }
 

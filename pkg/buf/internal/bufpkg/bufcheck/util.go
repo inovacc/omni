@@ -15,8 +15,8 @@
 package bufcheck
 
 import (
-	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufimage"
 	descriptorv1 "buf.build/gen/go/bufbuild/bufplugin/protocolbuffers/go/buf/plugin/descriptor/v1"
+	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufimage"
 	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
 )
 
@@ -24,6 +24,7 @@ func imageToProtoFileDescriptors(image bufimage.Image) []*descriptorv1.FileDescr
 	if image == nil {
 		return nil
 	}
+
 	return xslices.Map(image.Files(), imageToProtoFileDescriptor)
 }
 
@@ -43,10 +44,12 @@ func imageToProtoFileDescriptor(imageFile bufimage.ImageFile) *descriptorv1.File
 // check.Annotations. This is used in annotationToFileAnnotation.
 func imageToPathToExternalPath(image bufimage.Image) map[string]string {
 	imageFiles := image.Files()
+
 	pathToExternalPath := make(map[string]string, len(imageFiles))
 	for _, imageFile := range imageFiles {
 		// We know that Images do not have overlapping paths.
 		pathToExternalPath[imageFile.Path()] = imageFile.ExternalPath()
 	}
+
 	return pathToExternalPath
 }

@@ -34,6 +34,7 @@ func newFileImport(
 	if imp == "" {
 		return nil, fmt.Errorf("no dependency value in %q", descriptor.File().Path())
 	}
+
 	return &fileImport{
 		descriptor: descriptor,
 		imp:        imp,

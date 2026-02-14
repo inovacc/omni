@@ -30,18 +30,22 @@ import (
 
 func TestTokens(t *testing.T) {
 	t.Parallel()
+
 	err := filepath.Walk("../internal/testdata", func(path string, _ os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
+
 		if filepath.Ext(path) == ".proto" {
 			t.Run(path, func(t *testing.T) {
 				t.Parallel()
+
 				data, err := os.ReadFile(path)
 				require.NoError(t, err)
 				testTokensSequence(t, path, data)
 			})
 		}
+
 		return nil
 	})
 	assert.NoError(t, err) //nolint:testifylint // we want to continue even if err!=nil
@@ -57,13 +61,16 @@ func testTokensSequence(t *testing.T, path string, data []byte) {
 	filename := filepath.Base(path)
 	root, err := parser.Parse(filename, bytes.NewReader(data), reporter.NewHandler(nil))
 	require.NoError(t, err)
+
 	tokens := leavesAsSlice(root)
+
 	require.NoError(t, err)
 	// Make sure sequence matches the actual leaves in the tree
 	seq := root.Tokens()
 	// Both forwards
 	token, ok := seq.First()
 	require.True(t, ok)
+
 	for _, astToken := range tokens {
 		require.Equal(t, astToken, token)
 		token, _ = seq.Next(token)
@@ -71,6 +78,7 @@ func testTokensSequence(t *testing.T, path string, data []byte) {
 	// And backwards
 	token, ok = seq.Last()
 	require.True(t, ok)
+
 	for i := len(tokens) - 1; i >= 0; i-- {
 		astToken := tokens[i]
 		require.Equal(t, astToken, token)
@@ -80,11 +88,13 @@ func testTokensSequence(t *testing.T, path string, data []byte) {
 
 func leavesAsSlice(file *ast.FileNode) []ast.Token {
 	var tokens []ast.Token
+
 	_ = ast.Walk(file, &ast.SimpleVisitor{
 		DoVisitTerminalNode: func(n ast.TerminalNode) error {
 			tokens = append(tokens, n.Token())
 			return nil
 		},
 	})
+
 	return tokens
 }

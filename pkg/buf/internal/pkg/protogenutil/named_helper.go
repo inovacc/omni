@@ -70,6 +70,7 @@ func (h *namedHelper) NewGlobalGoImportPath(
 	if !ok {
 		return "", fmt.Errorf("no %s specified for plugin %s", namedHelperGoPackageOptionKey, pluginName)
 	}
+
 	return protogen.GoImportPath(goPackage), nil
 }
 
@@ -82,6 +83,7 @@ func (h *namedHelper) NewGeneratedFile(
 	if err != nil {
 		return nil, err
 	}
+
 	goPackageName := h.NewGoPackageName(file.GoPackageName, pluginName)
 	generatedFilePath := path.Dir(file.GeneratedFilenamePrefix) +
 		"/" + string(goPackageName) +
@@ -90,6 +92,7 @@ func (h *namedHelper) NewGeneratedFile(
 
 	generatedFile := plugin.NewGeneratedFile(generatedFilePath, goImportPath)
 	printGeneratedFileNamedHelperHeader(generatedFile, goPackageName, pluginName)
+
 	return generatedFile, nil
 }
 
@@ -102,6 +105,7 @@ func (h *namedHelper) NewPackageGeneratedFile(
 	if err != nil {
 		return nil, err
 	}
+
 	goPackageName := h.NewGoPackageName(goPackageFileSet.GoPackageName, pluginName)
 	fileBaseName := string(goPackageName)
 	// make sure this file name would not overlap with any actual file name
@@ -112,6 +116,7 @@ func (h *namedHelper) NewPackageGeneratedFile(
 			// packagename_pkg.proto, packagename_pkg_pkg.proto, etc
 		}
 	}
+
 	generatedFilePath := goPackageFileSet.GeneratedDir +
 		"/" + string(goPackageName) +
 		"/" + fileBaseName +
@@ -119,6 +124,7 @@ func (h *namedHelper) NewPackageGeneratedFile(
 
 	generatedFile := plugin.NewGeneratedFile(generatedFilePath, goImportPath)
 	printGeneratedFileNamedHelperHeader(generatedFile, goPackageName, pluginName)
+
 	return generatedFile, nil
 }
 
@@ -130,11 +136,13 @@ func (h *namedHelper) NewGlobalGeneratedFile(
 	if err != nil {
 		return nil, err
 	}
+
 	goPackageName := h.NewGoPackageName("", pluginName)
 	generatedFilePath := string(goPackageName) + ".pb.go"
 
 	generatedFile := plugin.NewGeneratedFile(generatedFilePath, goImportPath)
 	printGeneratedFileNamedHelperHeader(generatedFile, goPackageName, pluginName)
+
 	return generatedFile, nil
 }
 
@@ -147,6 +155,7 @@ func (h *namedHelper) newGoImportPath(
 	if !ok {
 		return "", fmt.Errorf("no %s specified for plugin %s", namedHelperGoPackageOptionKey, pluginName)
 	}
+
 	return protogen.GoImportPath(goPackage +
 		"/" + generatedDir +
 		"/" + string(h.NewGoPackageName(baseGoPackageName, pluginName))), nil
@@ -156,11 +165,14 @@ func (h *namedHelper) handleOption(key string, value string) error {
 	if key != namedHelperGoPackageOptionKey {
 		return nil
 	}
+
 	split := strings.Split(value, "=")
 	if len(split) != 2 {
 		return fmt.Errorf("unknown value for %s: %s", namedHelperGoPackageOptionKey, value)
 	}
+
 	h.pluginNameToGoPackage[split[0]] = split[1]
+
 	return nil
 }
 

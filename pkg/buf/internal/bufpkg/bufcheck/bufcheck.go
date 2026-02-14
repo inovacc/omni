@@ -353,20 +353,25 @@ func GetDeprecatedIDToReplacementIDs[R RuleOrCategory](rulesOrCategories []R) (m
 	if err != nil {
 		return nil, err
 	}
+
 	idToReplacementIDs := make(map[string][]string)
+
 	for _, ruleOrCategory := range rulesOrCategories {
 		if ruleOrCategory.Deprecated() {
 			replacementIDs := ruleOrCategory.ReplacementIDs()
 			if replacementIDs == nil {
 				replacementIDs = []string{}
 			}
+
 			for _, replacementID := range replacementIDs {
 				if _, ok := idToRuleOrCategory[replacementID]; !ok {
 					return nil, syserror.Newf("unknown rule or category ID given as a replacement ID: %q", replacementID)
 				}
 			}
+
 			idToReplacementIDs[ruleOrCategory.ID()] = replacementIDs
 		}
 	}
+
 	return idToReplacementIDs, nil
 }

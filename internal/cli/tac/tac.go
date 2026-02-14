@@ -2,12 +2,12 @@ package tac
 
 import (
 	"bufio"
-	"encoding/json"
 	"fmt"
 	"io"
 	"strings"
 
 	"github.com/inovacc/omni/internal/cli/input"
+	"github.com/inovacc/omni/internal/cli/output"
 )
 
 // TacOptions configures the tac command behavior
@@ -15,7 +15,7 @@ type TacOptions struct {
 	Before    bool   // -b: attach the separator before instead of after
 	Regex     bool   // -r: interpret the separator as a regular expression
 	Separator string // -s: use STRING as the separator instead of newline
-	JSON      bool   // --json: output as JSON
+	OutputFormat output.Format // output format (text/json/table)
 }
 
 // TacResult represents tac output for JSON
@@ -33,10 +33,13 @@ func RunTac(w io.Writer, r io.Reader, args []string, opts TacOptions) error {
 	}
 	defer input.CloseAll(sources)
 
+	f := output.New(w, opts.OutputFormat)
+	jsonMode := f.IsJSON()
+
 	var allLines []string
 
 	for _, src := range sources {
-		if opts.JSON {
+		if jsonMode {
 			lines, err := tacReaderLines(src.Reader, opts)
 			if err != nil {
 				return err
@@ -50,8 +53,8 @@ func RunTac(w io.Writer, r io.Reader, args []string, opts TacOptions) error {
 		}
 	}
 
-	if opts.JSON {
-		return json.NewEncoder(w).Encode(TacResult{Lines: allLines, Count: len(allLines)})
+	if jsonMode {
+		return f.Print(TacResult{Lines: allLines, Count: len(allLines)})
 	}
 
 	return nil

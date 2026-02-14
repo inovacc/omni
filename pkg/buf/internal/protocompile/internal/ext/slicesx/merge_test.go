@@ -26,6 +26,7 @@ func TestMerge(t *testing.T) {
 	t.Parallel()
 
 	type V [2]int
+
 	first := func(_ int, x V) int { return x[0] }
 	tests := []struct {
 		slices [][]V

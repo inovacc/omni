@@ -50,6 +50,7 @@ func (p fileOpener) Open(path string) (io.ReadCloser, error) {
 	if !ok {
 		return nil, fmt.Errorf("%s: %w", path, fs.ErrNotExist)
 	}
+
 	return io.NopCloser(strings.NewReader(text)), nil
 }
 
@@ -62,9 +63,12 @@ func buildImage(
 	logger *slog.Logger,
 	opener fileOpener,
 ) (bufimage.Image, []protocol.Diagnostic) {
-	var errorsWithPos []reporter.ErrorWithPos
-	var warningErrorsWithPos []reporter.ErrorWithPos
-	var symbols linker.Symbols
+	var (
+		errorsWithPos        []reporter.ErrorWithPos
+		warningErrorsWithPos []reporter.ErrorWithPos
+		symbols              linker.Symbols
+	)
+
 	compiler := protocompile.Compiler{
 		SourceInfoMode: protocompile.SourceInfoExtraOptionLocations,
 		Resolver:       &protocompile.SourceResolver{Accessor: opener.Open},
@@ -81,37 +85,45 @@ func buildImage(
 	}
 
 	var diagnostics []protocol.Diagnostic
+
 	compiled, err := compiler.Compile(ctx, path)
 	if err != nil {
 		logger.Warn("error building image", slog.String("path", path), xslog.ErrorAttr(err))
+
 		if len(errorsWithPos) > 0 {
 			diagnostics = xslices.Map(errorsWithPos, func(errorWithPos reporter.ErrorWithPos) protocol.Diagnostic {
 				return newDiagnostic(errorWithPos, false, opener, logger)
 			})
 		}
 	}
+
 	if len(compiled) == 0 || compiled[0] == nil {
 		return nil, diagnostics // Image failed to build.
 	}
+
 	compiledFile := compiled[0]
 
 	syntaxMissing := make(map[string]bool)
 	pathToUnusedImports := make(map[string]map[string]bool)
+
 	for _, warningErrorWithPos := range warningErrorsWithPos {
 		if warningErrorWithPos.Unwrap() == parser.ErrNoSyntax {
 			syntaxMissing[warningErrorWithPos.GetPosition().Filename] = true
 		} else if unusedImport, ok := warningErrorWithPos.Unwrap().(linker.ErrorUnusedImport); ok {
 			path := warningErrorWithPos.GetPosition().Filename
+
 			unused, ok := pathToUnusedImports[path]
 			if !ok {
 				unused = map[string]bool{}
 				pathToUnusedImports[path] = unused
 			}
+
 			unused[unusedImport.UnusedImport()] = true
 		}
 	}
 
 	var imageFiles []bufimage.ImageFile
+
 	seen := map[string]bool{}
 
 	queue := []protoreflect.FileDescriptor{compiledFile}
@@ -122,9 +134,11 @@ func buildImage(
 		if seen[descriptor.Path()] {
 			continue
 		}
+
 		seen[descriptor.Path()] = true
 
 		unused, ok := pathToUnusedImports[descriptor.Path()]
+
 		var unusedIndices []int32
 		if ok {
 			unusedIndices = make([]int32, 0, len(unused))
@@ -154,6 +168,7 @@ func buildImage(
 		}
 
 		var imageFile bufimage.ImageFile
+
 		imageFile, err = bufimage.NewImageFile(
 			descriptorProto,
 			nil,
@@ -169,6 +184,7 @@ func buildImage(
 		}
 
 		imageFiles = append(imageFiles, imageFile)
+
 		logger.Debug(fmt.Sprintf("added image file for %s", descriptor.Path()))
 	}
 

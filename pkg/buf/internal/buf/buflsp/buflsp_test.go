@@ -68,6 +68,7 @@ func setupLSPServer(
 
 	nameContainer, err := appext.NewNameContainer(appContainer, "buf-test")
 	require.NoError(t, err)
+
 	appextContainer := appext.NewContainer(nameContainer, logger)
 
 	graphProvider := bufmodule2.NopGraphProvider
@@ -114,6 +115,7 @@ func setupLSPServer(
 	queryExecutor := incremental.New()
 
 	serverConn, clientConn := net.Pipe()
+
 	t.Cleanup(func() {
 		require.NoError(t, serverConn.Close())
 		require.NoError(t, clientConn.Close())
@@ -136,6 +138,7 @@ func setupLSPServer(
 			t.Errorf("Failed to start server: %v", err)
 			return
 		}
+
 		t.Cleanup(func() {
 			require.NoError(t, conn.Close())
 		})
@@ -153,7 +156,9 @@ func setupLSPServer(
 
 	testWorkspaceDir := filepath.Dir(testProtoPath)
 	testURI := uri.New(testProtoPath)
+
 	var initResult protocol.InitializeResult
+
 	_, initErr := clientJSONConn.Call(ctx, protocol.MethodInitialize, &protocol.InitializeParams{
 		RootURI: uri.New(testWorkspaceDir),
 		Capabilities: protocol.ClientCapabilities{

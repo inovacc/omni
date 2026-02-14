@@ -29,14 +29,19 @@ import (
 
 func TestBasic(t *testing.T) {
 	t.Parallel()
-	var foo string
-	var bar int
 
-	var actualArgs []string
-	var actualFoo string
-	var actualBar int
-	var actualStdin string
-	var actualEnvValue string
+	var (
+		foo string
+		bar int
+	)
+
+	var (
+		actualArgs     []string
+		actualFoo      string
+		actualBar      int
+		actualStdin    string
+		actualEnvValue string
+	)
 
 	rootCommand := &Command{
 		Use: "test",
@@ -53,12 +58,15 @@ func TestBasic(t *testing.T) {
 					actualArgs = app.Args(container)
 					actualFoo = foo
 					actualBar = bar
+
 					data, err := io.ReadAll(container.Stdin())
 					if err != nil {
 						return err
 					}
+
 					actualStdin = string(data)
 					actualEnvValue = container.Env("KEY")
+
 					return nil
 				},
 			},
@@ -88,6 +96,7 @@ func TestBasic(t *testing.T) {
 
 func TestError(t *testing.T) {
 	t.Parallel()
+
 	rootCommand := &Command{
 		Use: "test",
 		SubCommands: []*Command{
@@ -112,6 +121,7 @@ func TestError(t *testing.T) {
 
 func TestVersionToStdout(t *testing.T) {
 	t.Parallel()
+
 	version := "0.0.1-dev"
 	rootCommand := &Command{
 		Use:     "test",
@@ -159,6 +169,7 @@ func TestVersionToStdout(t *testing.T) {
 
 func TestHelpToStdout(t *testing.T) {
 	t.Parallel()
+
 	rootCommand := &Command{
 		Use: "test",
 		// need a sub-command for "help" to work
@@ -205,6 +216,7 @@ func TestHelpToStdout(t *testing.T) {
 
 func TestIncorrectFlagEmptyStdout(t *testing.T) {
 	t.Parallel()
+
 	rootCommand := &Command{
 		Use: "test",
 		Run: func(context.Context, app.Container) error {

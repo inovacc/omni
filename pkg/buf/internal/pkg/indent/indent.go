@@ -75,6 +75,7 @@ func (p *printer) P(args ...any) {
 	if p.err != nil {
 		return
 	}
+
 	p.pString(fmt.Sprint(args...))
 }
 
@@ -82,6 +83,7 @@ func (p *printer) Pf(format string, args ...any) {
 	if p.err != nil {
 		return
 	}
+
 	p.pString(fmt.Sprintf(format, args...))
 }
 
@@ -89,6 +91,7 @@ func (p *printer) In() {
 	if p.err != nil {
 		return
 	}
+
 	p.curIndentCount++
 }
 
@@ -96,10 +99,12 @@ func (p *printer) Out() {
 	if p.err != nil {
 		return
 	}
+
 	if p.curIndentCount <= 0 {
 		p.err = syserror.New("printer indent count is 0 and Out called")
 		return
 	}
+
 	p.curIndentCount--
 }
 
@@ -107,6 +112,7 @@ func (p *printer) String() (string, error) {
 	if p.err != nil {
 		return "", p.err
 	}
+
 	return p.buffer.String(), nil
 }
 
@@ -114,6 +120,7 @@ func (p *printer) Bytes() ([]byte, error) {
 	if p.err != nil {
 		return nil, p.err
 	}
+
 	return p.buffer.Bytes(), nil
 }
 
@@ -123,13 +130,16 @@ func (p *printer) pString(s string) {
 		_, _ = p.buffer.WriteRune('\n')
 		return
 	}
+
 	if p.curIndentCount > 0 {
 		s = strings.Repeat(p.indent, p.curIndentCount) + s
 	}
+
 	s = strings.TrimRightFunc(s, unicode.IsSpace)
 	if strings.TrimSpace(s) != "" {
 		_, _ = p.buffer.WriteString(s)
 	}
+
 	_, _ = p.buffer.WriteRune('\n')
 }
 

@@ -50,6 +50,7 @@ func TestRunAIContext_Markdown(t *testing.T) {
 	root := createTestCommand()
 
 	var buf bytes.Buffer
+
 	opts := Options{}
 
 	err := RunAIContext(&buf, root, opts)
@@ -85,6 +86,7 @@ func TestRunAIContext_JSON(t *testing.T) {
 	root := createTestCommand()
 
 	var buf bytes.Buffer
+
 	opts := Options{JSON: true}
 
 	err := RunAIContext(&buf, root, opts)
@@ -115,12 +117,15 @@ func TestRunAIContext_JSON(t *testing.T) {
 	}
 
 	var foundCat bool
+
 	for _, cmd := range coreCmds {
 		if cmd.Cmd == "cat" {
 			foundCat = true
+
 			if len(cmd.Flags) == 0 {
 				t.Error("cat command should have flags")
 			}
+
 			break
 		}
 	}
@@ -134,6 +139,7 @@ func TestRunAIContext_NoStructure(t *testing.T) {
 	root := createTestCommand()
 
 	var buf bytes.Buffer
+
 	opts := Options{NoStructure: true}
 
 	err := RunAIContext(&buf, root, opts)
@@ -153,6 +159,7 @@ func TestRunAIContext_CategoryFilter(t *testing.T) {
 	root := createTestCommand()
 
 	var buf bytes.Buffer
+
 	opts := Options{Category: "text"}
 
 	err := RunAIContext(&buf, root, opts)

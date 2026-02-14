@@ -35,6 +35,7 @@ func LintConfigToBufConfig(lintConfig bufpolicy.LintConfig) (bufconfig2.LintConf
 	if err != nil {
 		return nil, err
 	}
+
 	return bufconfig2.NewLintConfig(
 		checkConfig,
 		lintConfig.EnumZeroValueSuffix(),
@@ -59,6 +60,7 @@ func BreakingConfigToBufConfig(breakingConfig bufpolicy.BreakingConfig) (bufconf
 	if err != nil {
 		return nil, err
 	}
+
 	return bufconfig2.NewBreakingConfig(
 		checkConfig,
 		breakingConfig.IgnoreUnstablePackages(),
@@ -69,9 +71,11 @@ func BreakingConfigToBufConfig(breakingConfig bufpolicy.BreakingConfig) (bufconf
 func PluginConfigsToBufConfig(pluginConfigs []bufpolicy.PluginConfig) ([]bufconfig2.PluginConfig, error) {
 	return xslices.MapError(pluginConfigs, func(pluginConfig bufpolicy.PluginConfig) (bufconfig2.PluginConfig, error) {
 		options := make(map[string]any)
+
 		pluginConfig.Options().Range(func(key string, value any) {
 			options[key] = value
 		})
+
 		args := pluginConfig.Args()
 		switch {
 		case pluginConfig.Ref() != nil:

@@ -43,11 +43,13 @@ func (w *writer) Write(data []byte) (int, error) {
 
 func (w *writer) WriteSpaces(n int) {
 	w.buf = slices.Grow(w.buf, n)
+
 	const spaces = "                                        "
 	for n > len(spaces) {
 		w.buf = append(w.buf, spaces...)
 		n -= len(spaces)
 	}
+
 	w.buf = append(w.buf, spaces[:n]...)
 }
 
@@ -58,8 +60,10 @@ func (w *writer) WriteString(data string) (int, error) {
 		if i > 0 {
 			w.flush(true)
 		}
+
 		w.buf = append(w.buf, line...)
 	}
+
 	return len(data), nil
 }
 
@@ -71,6 +75,7 @@ func (w *writer) WriteWrapped(data string, width int) {
 	// NOTE: We currently assume that WriteWrapped is never called with user-
 	// provided text as a prefix; this avoids a fussy call to stringWidth.
 	var margin int
+
 	for i := 0; i < len(w.buf); i++ {
 		// Need to skip any ANSI color codes.
 		if esc := ansiEscapePat.Find(w.buf[i:]); esc != nil {
@@ -87,6 +92,7 @@ func (w *writer) WriteWrapped(data string, width int) {
 			_, _ = w.WriteString("\n")
 			w.WriteSpaces(margin)
 		}
+
 		_, _ = w.WriteString(line)
 	}
 }
@@ -108,6 +114,7 @@ func (w *writer) flush(withNewline bool) error {
 	}
 
 	orig := w.buf
+
 	w.buf = bytes.TrimRightFunc(w.buf, unicode.IsSpace)
 	if withNewline {
 		w.buf = append(w.buf, '\n')
@@ -131,6 +138,7 @@ func (w *writer) flush(withNewline bool) error {
 	//
 	// gocritic has a noisy warning about writing a = append(b, ...).
 	w.buf = append(orig[:0], orig[len(w.buf):]...) //nolint:gocritic
+
 	return w.err
 }
 
@@ -142,5 +150,6 @@ func (p plural) String() string {
 	if p == 1 {
 		return ""
 	}
+
 	return "s"
 }

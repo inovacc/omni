@@ -25,19 +25,24 @@ func sortViolations(violations []Violation) {
 		violations,
 		func(i int, j int) bool {
 			one := violations[i]
+
 			two := violations[j]
 			if one.Package() < two.Package() {
 				return true
 			}
+
 			if one.Package() > two.Package() {
 				return false
 			}
+
 			if one.Dep() < two.Dep() {
 				return true
 			}
+
 			if one.Dep() > two.Dep() {
 				return false
 			}
+
 			return one.Note() < two.Note()
 		},
 	)
@@ -45,11 +50,13 @@ func sortViolations(violations []Violation) {
 
 func getNonEmptyLines(s string) []string {
 	var lines []string
-	for _, line := range strings.Split(s, "\n") {
+
+	for line := range strings.SplitSeq(s, "\n") {
 		if line := strings.TrimSpace(line); line != "" {
 			lines = append(lines, line)
 		}
 	}
+
 	return lines
 }
 

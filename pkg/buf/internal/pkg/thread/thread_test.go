@@ -28,7 +28,9 @@ func TestParallelizeWithImmediateCancellation(t *testing.T) {
 	// reproduce, but we can test the most basic use case.
 	t.Run("RegularRun", func(t *testing.T) {
 		t.Parallel()
+
 		const jobsToExecute = 10
+
 		var (
 			executed atomic.Int64
 			jobs     = make([]func(context.Context) error, 0, jobsToExecute)
@@ -39,22 +41,29 @@ func TestParallelizeWithImmediateCancellation(t *testing.T) {
 				return nil
 			})
 		}
+
 		err := Parallelize(context.Background(), jobs)
 		assert.NoError(t, err)
 		assert.Equal(t, int64(jobsToExecute), executed.Load(), "jobs executed")
 	})
 	t.Run("WithCtxCancellation", func(t *testing.T) {
 		t.Parallel()
-		var executed atomic.Int64
-		var jobs []func(context.Context) error
+
+		var (
+			executed atomic.Int64
+			jobs     []func(context.Context) error
+		)
+
 		for range 10 {
 			jobs = append(jobs, func(_ context.Context) error {
 				executed.Add(1)
 				return nil
 			})
 		}
+
 		ctx, cancel := context.WithCancel(context.Background())
 		cancel()
+
 		err := Parallelize(ctx, jobs)
 		assert.Error(t, err)
 		assert.Equal(t, int64(0), executed.Load(), "jobs executed")

@@ -40,9 +40,11 @@ func (o *optionExtensionDescriptor) OptionExtension(extensionType protoreflect.E
 	if extensionType.TypeDescriptor().ContainingMessage().FullName() != o.message.ProtoReflect().Descriptor().FullName() {
 		return nil, false
 	}
+
 	if !proto.HasExtension(o.message, extensionType) {
 		return nil, false
 	}
+
 	return proto.GetExtension(o.message, extensionType), true
 }
 
@@ -54,25 +56,31 @@ func (o *optionExtensionDescriptor) OptionLocation(field protoreflect.FieldDescr
 	if field.ContainingMessage().FullName() != o.message.ProtoReflect().Descriptor().FullName() {
 		return nil
 	}
+
 	if o.locationStore == nil {
 		return nil
 	}
+
 	path := make([]int32, len(o.optionsPath), len(o.optionsPath)+1+len(extraPath))
 	copy(path, o.optionsPath)
 	path = append(path, int32(field.Number()))
 	extensionPathLen := len(path) // length of path to extension (without extraPath)
 	path = append(path, extraPath...)
+
 	loc := o.locationStore.getLocation(path)
 	if loc != nil {
 		// Found an exact match!
 		return loc
 	}
+
 	return o.locationStore.getBestMatchOptionExtensionLocation(path, extensionPathLen)
 }
 
 func (o *optionExtensionDescriptor) PresentExtensionNumbers() []int32 {
 	fieldNumbersSet := map[int32]struct{}{}
+
 	var fieldNumbers []int32
+
 	addFieldNumber := func(fieldNo int32) {
 		if _, ok := fieldNumbersSet[fieldNo]; !ok {
 			fieldNumbersSet[fieldNo] = struct{}{}
@@ -80,12 +88,14 @@ func (o *optionExtensionDescriptor) PresentExtensionNumbers() []int32 {
 		}
 	}
 	msg := o.message.ProtoReflect()
+
 	extensionRanges := msg.Descriptor().ExtensionRanges()
 	for b := msg.GetUnknown(); len(b) > 0; {
 		fieldNo, _, n := protowire.ConsumeField(b)
 		if extensionRanges.Has(fieldNo) {
 			addFieldNumber(int32(fieldNo))
 		}
+
 		b = b[n:]
 	}
 	// Extensions for google.protobuf.*Options are a bit of a special case
@@ -97,6 +107,7 @@ func (o *optionExtensionDescriptor) PresentExtensionNumbers() []int32 {
 		if fieldDescriptor.IsExtension() {
 			addFieldNumber(int32(fieldDescriptor.Number()))
 		}
+
 		return true
 	})
 

@@ -40,6 +40,7 @@ func TestResolveFeature(t *testing.T) {
 
 func TestResolveFeature_Dynamic(t *testing.T) {
 	t.Parallel()
+
 	descriptorProto := protodesc.ToFileDescriptorProto(
 		(*descriptorpb.FileDescriptorProto)(nil).ProtoReflect().Descriptor().ParentFile(),
 	)
@@ -50,9 +51,11 @@ func TestResolveFeature_Dynamic(t *testing.T) {
 	// Also test with an extra field (not recognized by descriptorpb).
 	t.Run("editions-new-field", func(t *testing.T) {
 		t.Parallel()
+
 		var found bool
-		descriptorProto := proto.Clone(descriptorProto).(*descriptorpb.FileDescriptorProto) //nolint:errcheck
-		for _, msg := range descriptorProto.MessageType {
+
+		descriptorProto := proto.Clone(descriptorProto).(*descriptorpb.FileDescriptorProto)
+		for _, msg := range descriptorProto.GetMessageType() {
 			if msg.GetName() == "FeatureSet" {
 				msg.Field = append(msg.Field, &descriptorpb.FieldDescriptorProto{
 					Name:     proto.String("fubar"),
@@ -101,9 +104,11 @@ func TestResolveFeature_Dynamic(t *testing.T) {
 					},
 				})
 				found = true
+
 				break
 			}
 		}
+
 		require.True(t, found)
 
 		sourceResolver := &protocompile.SourceResolver{
@@ -239,6 +244,7 @@ func testResolveFeature(t *testing.T, deps ...*descriptorpb.FileDescriptorProto)
 
 func TestResolveCustomFeature(t *testing.T) {
 	t.Parallel()
+
 	descriptorProto := protodesc.ToFileDescriptorProto(
 		(*descriptorpb.FileDescriptorProto)(nil).ProtoReflect().Descriptor().ParentFile(),
 	)
@@ -308,6 +314,7 @@ func TestResolveCustomFeature(t *testing.T) {
 	for _, testCase := range testCases {
 		t.Run(testCase.syntax, func(t *testing.T) {
 			t.Parallel()
+
 			sourceResolver := &protocompile.SourceResolver{
 				Accessor: protocompile.SourceAccessorFromMap(map[string]string{
 					"options.proto": optionsSource,
@@ -329,8 +336,8 @@ func TestResolveCustomFeature(t *testing.T) {
 				}
 
 				optionsFile := file.FindImportByPath("options.proto")
-				extType := dynamicpb.NewExtensionType(optionsFile.FindDescriptorByName("test.custom").(protoreflect.ExtensionDescriptor)) //nolint:errcheck
-				feature := optionsFile.FindDescriptorByName("test.CustomFeatures.encabulate").(protoreflect.FieldDescriptor)              //nolint:errcheck
+				extType := dynamicpb.NewExtensionType(optionsFile.FindDescriptorByName("test.custom").(protoreflect.ExtensionDescriptor))
+				feature := optionsFile.FindDescriptorByName("test.CustomFeatures.encabulate").(protoreflect.FieldDescriptor)
 
 				val, err := protoutil.ResolveCustomFeature(file, extType, feature)
 				require.NoError(t, err)
@@ -344,7 +351,7 @@ func TestResolveCustomFeature(t *testing.T) {
 				require.Equal(t, testCase.expectedEncabulate, val.Bool())
 
 				// Check the other feature field, too
-				feature = optionsFile.FindDescriptorByName("test.CustomFeatures.nitz").(protoreflect.FieldDescriptor) //nolint:errcheck
+				feature = optionsFile.FindDescriptorByName("test.CustomFeatures.nitz").(protoreflect.FieldDescriptor)
 				val, err = protoutil.ResolveCustomFeature(file, extType, feature)
 				require.NoError(t, err)
 				require.Equal(t, protoreflect.EnumNumber(testCase.expectedNitz), val.Enum())
@@ -358,6 +365,7 @@ func TestResolveCustomFeature(t *testing.T) {
 
 	t.Run("editions", func(t *testing.T) {
 		t.Parallel()
+
 		sourceResolver := &protocompile.SourceResolver{
 			Accessor: protocompile.SourceAccessorFromMap(map[string]string{
 				"options.proto": optionsSource,
@@ -386,8 +394,8 @@ func TestResolveCustomFeature(t *testing.T) {
 			}
 
 			optionsFile := file.FindImportByPath("options.proto")
-			extType := dynamicpb.NewExtensionType(optionsFile.FindDescriptorByName("test.custom").(protoreflect.ExtensionDescriptor)) //nolint:errcheck
-			feature := optionsFile.FindDescriptorByName("test.CustomFeatures.encabulate").(protoreflect.FieldDescriptor)              //nolint:errcheck
+			extType := dynamicpb.NewExtensionType(optionsFile.FindDescriptorByName("test.custom").(protoreflect.ExtensionDescriptor))
+			feature := optionsFile.FindDescriptorByName("test.CustomFeatures.encabulate").(protoreflect.FieldDescriptor)
 
 			val, err := protoutil.ResolveCustomFeature(file, extType, feature)
 			require.NoError(t, err)
@@ -402,7 +410,7 @@ func TestResolveCustomFeature(t *testing.T) {
 			require.True(t, val.Bool())
 
 			// Check the other feature field, too
-			feature = optionsFile.FindDescriptorByName("test.CustomFeatures.nitz").(protoreflect.FieldDescriptor) //nolint:errcheck
+			feature = optionsFile.FindDescriptorByName("test.CustomFeatures.nitz").(protoreflect.FieldDescriptor)
 			val, err = protoutil.ResolveCustomFeature(file, extType, feature)
 			require.NoError(t, err)
 			require.Equal(t, protoreflect.EnumNumber(3), val.Enum())
@@ -416,6 +424,7 @@ func TestResolveCustomFeature(t *testing.T) {
 
 func TestResolveCustomFeature_Generated(t *testing.T) {
 	t.Parallel()
+
 	descriptorProto := protodesc.ToFileDescriptorProto(
 		(*descriptorpb.FileDescriptorProto)(nil).ProtoReflect().Descriptor().ParentFile(),
 	)
@@ -441,6 +450,7 @@ func TestResolveCustomFeature_Generated(t *testing.T) {
 	for _, testCase := range preEditionsTestCases {
 		t.Run(testCase.syntax, func(t *testing.T) {
 			t.Parallel()
+
 			sourceResolver := &protocompile.SourceResolver{
 				Accessor: protocompile.SourceAccessorFromMap(map[string]string{
 					"test.proto": `
@@ -555,31 +565,37 @@ func compileFile(
 	deps ...*descriptorpb.FileDescriptorProto,
 ) (result linker.File, featureSet protoreflect.MessageDescriptor) {
 	t.Helper()
+
 	if sources == nil {
 		sources = &protocompile.SourceResolver{
 			ImportPaths: []string{"../internal/testdata"},
 		}
 	}
+
 	resolver := protocompile.Resolver(sources)
 	if len(deps) > 0 {
 		resolver = addDepsToResolver(resolver, deps...)
 	}
+
 	compiler := &protocompile.Compiler{Resolver: resolver}
 	names := make([]string, len(deps)+1)
+
 	names[0] = filename
 	for i := range deps {
 		names[i+1] = deps[i].GetName()
 	}
+
 	files, err := compiler.Compile(t.Context(), names...)
 	require.NoError(t, err)
 
 	// See if compile included version of google.protobuf.FeatureSet
 	var featureSetDescriptor protoreflect.MessageDescriptor
+
 	desc, err := files.AsResolver().FindDescriptorByName(editions.FeatureSetDescriptor.FullName())
 	if err != nil {
 		featureSetDescriptor = editions.FeatureSetDescriptor
 	} else {
-		featureSetDescriptor = desc.(protoreflect.MessageDescriptor) //nolint:errcheck
+		featureSetDescriptor = desc.(protoreflect.MessageDescriptor)
 	}
 
 	return files[0], featureSetDescriptor
@@ -589,15 +605,18 @@ func addDepsToResolver(resolver protocompile.Resolver, deps ...*descriptorpb.Fil
 	if len(deps) == 0 {
 		return resolver
 	}
+
 	depsByPath := make(map[string]*descriptorpb.FileDescriptorProto, len(deps))
 	for _, dep := range deps {
 		depsByPath[dep.GetName()] = dep
 	}
+
 	return protocompile.ResolverFunc(func(path string) (protocompile.SearchResult, error) {
 		file := depsByPath[path]
 		if file != nil {
 			return protocompile.SearchResult{Proto: file}, nil
 		}
+
 		return resolver.FindFileByPath(path)
 	})
 }
@@ -609,6 +628,7 @@ func clearKnownExtensionsFromFile(t *testing.T, file *descriptorpb.FileDescripto
 		switch element := element.(type) {
 		case *descriptorpb.DescriptorProto:
 			clearKnownExtensionsFromOptions(t, element.GetOptions())
+
 			for _, extRange := range element.GetExtensionRange() {
 				clearKnownExtensionsFromOptions(t, extRange.GetOptions())
 			}
@@ -625,6 +645,7 @@ func clearKnownExtensionsFromFile(t *testing.T, file *descriptorpb.FileDescripto
 		case *descriptorpb.MethodDescriptorProto:
 			clearKnownExtensionsFromOptions(t, element.GetOptions())
 		}
+
 		return nil
 	})
 	require.NoError(t, err)
@@ -632,9 +653,11 @@ func clearKnownExtensionsFromFile(t *testing.T, file *descriptorpb.FileDescripto
 
 func clearKnownExtensionsFromOptions(t *testing.T, options proto.Message) {
 	t.Helper()
+
 	if options == nil || !options.ProtoReflect().IsValid() {
 		return // nothing to do
 	}
+
 	data, err := proto.Marshal(options)
 	require.NoError(t, err)
 	// We unmarshal from bytes, with a nil resolver, so all extensions

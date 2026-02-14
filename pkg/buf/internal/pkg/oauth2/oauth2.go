@@ -53,12 +53,15 @@ func (e *Error) Error() string {
 	if e == nil {
 		return ""
 	}
+
 	s := fmt.Sprintf("oauth2: %q", e.ErrorCode)
 	if e.ErrorDescription != "" {
 		s += fmt.Sprintf(" %q", e.ErrorDescription)
 	}
+
 	if e.ErrorURI != "" {
 		s += fmt.Sprintf(" %q", e.ErrorURI)
 	}
+
 	return s
 }
