@@ -29,6 +29,7 @@ import (
 
 func TestImageWithoutMessageSetWireFormatResolution(t *testing.T) {
 	t.Parallel()
+
 	file := getTestFileWithMessageSets()
 	imageFile, err := bufimage.NewImageFile(
 		file,
@@ -88,6 +89,7 @@ func TestFindMessageInFile(t *testing.T) {
 	t.Parallel()
 	t.Run("no-package", func(t *testing.T) {
 		t.Parallel()
+
 		file := getTestFile("" /* no package */)
 
 		doFindMessageInFile(t, "Foo", file, true)
@@ -104,6 +106,7 @@ func TestFindMessageInFile(t *testing.T) {
 	})
 	t.Run("with-package", func(t *testing.T) {
 		t.Parallel()
+
 		file := getTestFile("buf.build.test")
 
 		doFindMessageInFile(t, "buf.build.test.Foo", file, true)
@@ -134,17 +137,20 @@ func (c resultChecker) succeeds(result any, err error) {
 
 func (c resultChecker) fails(_ any, err error) {
 	c.t.Helper()
+
 	var msgSetErr *messageSetNotSupportedError
 	require.ErrorAs(c.t, err, &msgSetErr)
 }
 
 func doFindMessageInFile(t *testing.T, name protoreflect.FullName, file *descriptorpb.FileDescriptorProto, expectToFind bool) {
 	t.Helper()
+
 	descriptor := findMessageInFile(name, file)
 	if !expectToFind {
 		require.Nil(t, descriptor)
 		return
 	}
+
 	require.NotNil(t, descriptor)
 	require.Equal(t, descriptor.GetName(), string(name.Name()))
 }
@@ -154,6 +160,7 @@ func getTestFile(pkg string) *descriptorpb.FileDescriptorProto {
 	if pkg != "" {
 		protoPkg = proto.String(pkg)
 	}
+
 	return &descriptorpb.FileDescriptorProto{
 		Name:    proto.String("test.proto"),
 		Package: protoPkg,

@@ -58,9 +58,11 @@ func (e ExprArray) Brackets() token.Token {
 // Elements returns the sequence of expressions in this array.
 func (e ExprArray) Elements() Commas[ExprAny] {
 	type slice = commas[ExprAny, id.Dyn[ExprAny, ExprKind]]
+
 	if e.IsZero() {
 		return slice{}
 	}
+
 	return slice{
 		file: e.Context(),
 		SliceInserter: seq.NewSliceInserter(

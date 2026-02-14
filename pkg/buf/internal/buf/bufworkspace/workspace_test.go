@@ -85,12 +85,14 @@ func testBasic(t *testing.T, subDirPath string, isV2 bool) {
 		bucketTargeting,
 	)
 	require.NoError(t, err)
+
 	module := workspace.GetModuleForOpaqueID("buf.testing/acme/bond")
 	require.NotNil(t, module)
 	require.False(t, module.IsTarget())
 	module = workspace.GetModuleForOpaqueID("finance/portfolio/proto")
 	require.NotNil(t, module)
 	require.True(t, module.IsTarget())
+
 	graph, err := bufmodule2.ModuleSetToDAG(workspace)
 	require.NoError(t, err)
 	dagtest.RequireGraphEqual(
@@ -130,6 +132,7 @@ func testBasic(t *testing.T, subDirPath string, isV2 bool) {
 		graph,
 		bufmodule2.Module.OpaqueID,
 	)
+
 	graphRemoteOnly, err := bufmodule2.ModuleSetToDAG(workspace, bufmodule2.ModuleSetToDAGWithRemoteOnly())
 	require.NoError(t, err)
 	dagtest.RequireGraphEqual(
@@ -148,6 +151,7 @@ func testBasic(t *testing.T, subDirPath string, isV2 bool) {
 		graphRemoteOnly,
 		bufmodule2.Module.OpaqueID,
 	)
+
 	module = workspace.GetModuleForOpaqueID("buf.testing/acme/bond")
 	require.NotNil(t, module)
 	_, err = module.StatFileInfo(ctx, "acme/bond/real/v1/bond.proto")
@@ -184,6 +188,7 @@ func testBasic(t *testing.T, subDirPath string, isV2 bool) {
 		bucketTargeting,
 	)
 	require.NoError(t, err)
+
 	module = workspace.GetModuleForOpaqueID("buf.testing/acme/money")
 	require.NotNil(t, module)
 	require.True(t, module.IsTarget())
@@ -199,6 +204,7 @@ func testBasic(t *testing.T, subDirPath string, isV2 bool) {
 
 func TestUnusedDep(t *testing.T) {
 	t.Parallel()
+
 	ctx := context.Background()
 
 	// This represents some external dependencies from the BSR.
@@ -249,6 +255,7 @@ func TestUnusedDep(t *testing.T) {
 
 func TestDuplicatePath(t *testing.T) {
 	t.Parallel()
+
 	ctx := context.Background()
 
 	// This represents some external dependencies from the BSR.
@@ -317,6 +324,7 @@ func TestDuplicatePath(t *testing.T) {
 func testNewWorkspaceProvider(t *testing.T, testModuleDatas ...bufmoduletesting.ModuleData) WorkspaceProvider {
 	bsrProvider, err := bufmoduletesting.NewOmniProvider(testModuleDatas...)
 	require.NoError(t, err)
+
 	return NewWorkspaceProvider(
 		slogtestext.NewLogger(t),
 		bsrProvider,
@@ -329,12 +337,15 @@ func testNewWorkspaceProvider(t *testing.T, testModuleDatas ...bufmoduletesting.
 
 func requireModuleContainFileNames(t *testing.T, module bufmodule2.Module, expectedFileNames ...string) {
 	fileNamesToBeSeen := xslices.ToStructMap(expectedFileNames)
+
 	require.NoError(t, module.WalkFileInfos(context.Background(), func(fi bufmodule2.FileInfo) error {
 		path := fi.Path()
 		if _, ok := fileNamesToBeSeen[path]; !ok {
 			return fmt.Errorf("module has unexpected file: %s", path)
 		}
+
 		delete(fileNamesToBeSeen, path)
+
 		return nil
 	}))
 	require.Emptyf(t, fileNamesToBeSeen, "expect %s from module", xstrings.JoinSliceQuoted(xslices.MapKeysToSlice(fileNamesToBeSeen), ","))
@@ -372,6 +383,7 @@ func testLicenseAndDoc(t *testing.T, ctx context.Context, workspace Workspace, i
 		_, err := module.StatFileInfo(ctx, "README.md")
 		require.ErrorIs(t, err, fs.ErrNotExist)
 	}
+
 	_, err := module.StatFileInfo(ctx, "buf.md")
 	require.ErrorIs(t, err, fs.ErrNotExist)
 

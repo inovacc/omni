@@ -70,6 +70,7 @@ func (c styleSheet) ColorForLevel(l Level) string {
 		if c.r.WarningsAreErrors {
 			return c.nError
 		}
+
 		return c.nWarning
 	case Remark:
 		return c.nRemark
@@ -90,6 +91,7 @@ func (c styleSheet) BoldForLevel(l Level) string {
 		if c.r.WarningsAreErrors {
 			return c.nError
 		}
+
 		return c.bWarning
 	case Remark:
 		return c.bRemark

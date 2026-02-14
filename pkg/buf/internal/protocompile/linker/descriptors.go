@@ -151,6 +151,7 @@ func init() {
 type result struct {
 	protoreflect.FileDescriptor
 	parser.Result
+
 	prefix string
 	deps   Files
 
@@ -246,7 +247,7 @@ func (r *result) IsPlaceholder() bool {
 }
 
 func (r *result) Options() protoreflect.ProtoMessage {
-	return r.FileDescriptorProto().Options
+	return r.FileDescriptorProto().GetOptions()
 }
 
 func (r *result) Path() string {
@@ -289,17 +290,19 @@ func (r *result) SourceLocations() protoreflect.SourceLocations {
 func asSourceLocations(srcInfoProtos []*descriptorpb.SourceCodeInfo_Location) ([]protoreflect.SourceLocation, map[sourcePathKey]int) {
 	locs := make([]protoreflect.SourceLocation, len(srcInfoProtos))
 	index := make(map[sourcePathKey]int, len(srcInfoProtos))
+
 	prev := make(map[sourcePathKey]*protoreflect.SourceLocation, len(srcInfoProtos))
 	for i, loc := range srcInfoProtos {
 		var stLin, stCol, enLin, enCol int
-		if len(loc.Span) == 3 {
-			stLin, stCol, enCol = int(loc.Span[0]), int(loc.Span[1]), int(loc.Span[2])
+		if len(loc.GetSpan()) == 3 {
+			stLin, stCol, enCol = int(loc.GetSpan()[0]), int(loc.GetSpan()[1]), int(loc.GetSpan()[2])
 			enLin = stLin
 		} else {
-			stLin, stCol, enLin, enCol = int(loc.Span[0]), int(loc.Span[1]), int(loc.Span[2]), int(loc.Span[3])
+			stLin, stCol, enLin, enCol = int(loc.GetSpan()[0]), int(loc.GetSpan()[1]), int(loc.GetSpan()[2]), int(loc.GetSpan()[3])
 		}
+
 		locs[i] = protoreflect.SourceLocation{
-			Path:                    loc.Path,
+			Path:                    loc.GetPath(),
 			LeadingComments:         loc.GetLeadingComments(),
 			LeadingDetachedComments: loc.GetLeadingDetachedComments(),
 			TrailingComments:        loc.GetTrailingComments(),
@@ -308,33 +311,40 @@ func asSourceLocations(srcInfoProtos []*descriptorpb.SourceCodeInfo_Location) ([
 			EndLine:                 enLin,
 			EndColumn:               enCol,
 		}
-		str := pathKey(loc.Path)
+		str := pathKey(loc.GetPath())
+
 		pr := prev[str]
 		if pr == nil {
 			index[str] = i
 		} else {
 			pr.Next = i
 		}
+
 		prev[str] = &locs[i]
 	}
+
 	return locs, index
 }
 
 type fileImports struct {
 	protoreflect.FileImports
+
 	files []protoreflect.FileImport
 }
 
 func (r *result) createImports() fileImports {
 	fd := r.FileDescriptorProto()
-	imps := r.createBasicImports(fd.Dependency)
-	for _, publicIndex := range fd.PublicDependency {
+
+	imps := r.createBasicImports(fd.GetDependency())
+	for _, publicIndex := range fd.GetPublicDependency() {
 		imps[int(publicIndex)].IsPublic = true
 	}
-	for _, weakIndex := range fd.WeakDependency {
+
+	for _, weakIndex := range fd.GetWeakDependency() {
 		//nolint:staticcheck // yes, is_weak is deprecated; but we still have to set it to compile the file
 		imps[int(weakIndex)].IsWeak = true
 	}
+
 	return fileImports{files: imps}
 }
 
@@ -344,6 +354,7 @@ func (r *result) createBasicImports(deps []string) []protoreflect.FileImport {
 		desc := r.deps.FindFileByPath(dep)
 		imps[i] = protoreflect.FileImport{FileDescriptor: unwrap(desc)}
 	}
+
 	return imps
 }
 
@@ -354,10 +365,12 @@ func unwrap(descriptor protoreflect.FileDescriptor) protoreflect.FileDescriptor 
 	if !ok {
 		return descriptor
 	}
+
 	unwrapped := wrapped.Unwrap()
 	if unwrapped == nil {
 		return descriptor // shouldn't ever happen
 	}
+
 	return unwrapped
 }
 
@@ -371,6 +384,7 @@ func (f *fileImports) Get(i int) protoreflect.FileImport {
 
 type srcLocs struct {
 	protoreflect.SourceLocations
+
 	file  *result
 	locs  []protoreflect.SourceLocation
 	index map[sourcePathKey]int
@@ -389,6 +403,7 @@ func (s *srcLocs) ByPath(p protoreflect.SourcePath) protoreflect.SourceLocation 
 	if !ok {
 		return protoreflect.SourceLocation{}
 	}
+
 	return s.locs[index]
 }
 
@@ -396,15 +411,18 @@ func (s *srcLocs) ByDescriptor(d protoreflect.Descriptor) protoreflect.SourceLoc
 	if d.ParentFile() != s.file {
 		return protoreflect.SourceLocation{}
 	}
+
 	path, ok := internal.ComputePath(d)
 	if !ok {
 		return protoreflect.SourceLocation{}
 	}
+
 	return s.ByPath(path)
 }
 
 type msgDescriptors struct {
 	protoreflect.MessageDescriptors
+
 	msgs []msgDescriptor
 }
 
@@ -413,6 +431,7 @@ func (r *result) createMessages(prefix string, parent protoreflect.Descriptor, m
 	for i, msgProto := range msgProtos {
 		r.createMessageDescriptor(&msgs[i], msgProto, parent, i, prefix+msgProto.GetName(), pool)
 	}
+
 	return msgDescriptors{msgs: msgs}
 }
 
@@ -431,11 +450,13 @@ func (m *msgDescriptors) ByName(s protoreflect.Name) protoreflect.MessageDescrip
 			return msg
 		}
 	}
+
 	return nil
 }
 
 type msgDescriptor struct {
 	protoreflect.MessageDescriptor
+
 	file   *result
 	parent protoreflect.Descriptor
 	index  int
@@ -469,14 +490,14 @@ func (r *result) createMessageDescriptor(ret *msgDescriptor, md *descriptorpb.De
 	prefix := fqn + "."
 	// NB: We MUST create fields before oneofs so that we can populate the
 	//  set of fields that belong to the oneof
-	ret.fields = r.createFields(prefix, ret, md.Field, pool)
-	ret.oneofs = r.createOneofs(prefix, ret, md.OneofDecl, pool)
-	ret.nestedMessages = r.createMessages(prefix, ret, md.NestedType, pool)
-	ret.nestedEnums = r.createEnums(prefix, ret, md.EnumType, pool)
-	ret.nestedExtensions = r.createExtensions(prefix, ret, md.Extension, pool)
-	ret.extRanges = createFieldRanges(md.ExtensionRange)
-	ret.rsvdRanges = createFieldRanges(md.ReservedRange)
-	ret.rsvdNames = names{s: md.ReservedName}
+	ret.fields = r.createFields(prefix, ret, md.GetField(), pool)
+	ret.oneofs = r.createOneofs(prefix, ret, md.GetOneofDecl(), pool)
+	ret.nestedMessages = r.createMessages(prefix, ret, md.GetNestedType(), pool)
+	ret.nestedEnums = r.createEnums(prefix, ret, md.GetEnumType(), pool)
+	ret.nestedExtensions = r.createExtensions(prefix, ret, md.GetExtension(), pool)
+	ret.extRanges = createFieldRanges(md.GetExtensionRange())
+	ret.rsvdRanges = createFieldRanges(md.GetReservedRange())
+	ret.rsvdNames = names{s: md.GetReservedName()}
 }
 
 func (m *msgDescriptor) MessageDescriptorProto() *descriptorpb.DescriptorProto {
@@ -520,11 +541,11 @@ func (m *msgDescriptor) Visibility() int32 {
 }
 
 func (m *msgDescriptor) Options() protoreflect.ProtoMessage {
-	return m.proto.Options
+	return m.proto.GetOptions()
 }
 
 func (m *msgDescriptor) IsMapEntry() bool {
-	return m.proto.Options.GetMapEntry()
+	return m.proto.GetOptions().GetMapEntry()
 }
 
 func (m *msgDescriptor) Fields() protoreflect.FieldDescriptors {
@@ -545,11 +566,13 @@ func (m *msgDescriptor) ReservedRanges() protoreflect.FieldRanges {
 
 func (m *msgDescriptor) RequiredNumbers() protoreflect.FieldNumbers {
 	var indexes fieldNums
-	for _, fld := range m.proto.Field {
+
+	for _, fld := range m.proto.GetField() {
 		if fld.GetLabel() == descriptorpb.FieldDescriptorProto_LABEL_REQUIRED {
 			indexes.s = append(indexes.s, fld.GetNumber())
 		}
 	}
+
 	return indexes
 }
 
@@ -558,7 +581,7 @@ func (m *msgDescriptor) ExtensionRanges() protoreflect.FieldRanges {
 }
 
 func (m *msgDescriptor) ExtensionRangeOptions(i int) protoreflect.ProtoMessage {
-	return m.proto.ExtensionRange[i].Options
+	return m.proto.GetExtensionRange()[i].GetOptions()
 }
 
 func (m *msgDescriptor) Enums() protoreflect.EnumDescriptors {
@@ -575,6 +598,7 @@ func (m *msgDescriptor) Extensions() protoreflect.ExtensionDescriptors {
 
 type names struct {
 	protoreflect.Names
+
 	s []string
 }
 
@@ -587,16 +611,13 @@ func (n names) Get(i int) protoreflect.Name {
 }
 
 func (n names) Has(s protoreflect.Name) bool {
-	for _, name := range n.s {
-		if name == string(s) {
-			return true
-		}
-	}
-	return false
+
+	return slices.Contains(n.s, string(s))
 }
 
 type fieldNums struct {
 	protoreflect.FieldNumbers
+
 	s []int32
 }
 
@@ -609,16 +630,13 @@ func (n fieldNums) Get(i int) protoreflect.FieldNumber {
 }
 
 func (n fieldNums) Has(s protoreflect.FieldNumber) bool {
-	for _, num := range n.s {
-		if num == int32(s) {
-			return true
-		}
-	}
-	return false
+
+	return slices.Contains(n.s, int32(s))
 }
 
 type fieldRanges struct {
 	protoreflect.FieldRanges
+
 	ranges [][2]protoreflect.FieldNumber
 }
 
@@ -635,6 +653,7 @@ func createFieldRanges[T fieldRange](rangeProtos []T) fieldRanges {
 			protoreflect.FieldNumber(r.GetEnd()),
 		}
 	}
+
 	return fieldRanges{ranges: ranges}
 }
 
@@ -652,11 +671,13 @@ func (f fieldRanges) Has(n protoreflect.FieldNumber) bool {
 			return true
 		}
 	}
+
 	return false
 }
 
 type enumDescriptors struct {
 	protoreflect.EnumDescriptors
+
 	enums []enumDescriptor
 }
 
@@ -665,6 +686,7 @@ func (r *result) createEnums(prefix string, parent protoreflect.Descriptor, enum
 	for i, enumProto := range enumProtos {
 		r.createEnumDescriptor(&enums[i], enumProto, parent, i, prefix+enumProto.GetName(), pool)
 	}
+
 	return enumDescriptors{enums: enums}
 }
 
@@ -683,11 +705,13 @@ func (e *enumDescriptors) ByName(s protoreflect.Name) protoreflect.EnumDescripto
 			return enum
 		}
 	}
+
 	return nil
 }
 
 type enumDescriptor struct {
 	protoreflect.EnumDescriptor
+
 	file   *result
 	parent protoreflect.Descriptor
 	index  int
@@ -718,9 +742,9 @@ func (r *result) createEnumDescriptor(ret *enumDescriptor, ed *descriptorpb.Enum
 	// the enum's parent element. This follows C++ scoping rules for
 	// enum values.
 	prefix := strings.TrimSuffix(fqn, ed.GetName())
-	ret.values = r.createEnumValues(prefix, ret, ed.Value, pool)
-	ret.rsvdRanges = createEnumRanges(ed.ReservedRange)
-	ret.rsvdNames = names{s: ed.ReservedName}
+	ret.values = r.createEnumValues(prefix, ret, ed.GetValue(), pool)
+	ret.rsvdRanges = createEnumRanges(ed.GetReservedRange())
+	ret.rsvdNames = names{s: ed.GetReservedName()}
 }
 
 func (e *enumDescriptor) EnumDescriptorProto() *descriptorpb.EnumDescriptorProto {
@@ -764,7 +788,7 @@ func (e *enumDescriptor) Visibility() int32 {
 }
 
 func (e *enumDescriptor) Options() protoreflect.ProtoMessage {
-	return e.proto.Options
+	return e.proto.GetOptions()
 }
 
 func (e *enumDescriptor) Values() protoreflect.EnumValueDescriptors {
@@ -786,6 +810,7 @@ func (e *enumDescriptor) IsClosed() bool {
 
 type enumRanges struct {
 	protoreflect.EnumRanges
+
 	ranges [][2]protoreflect.EnumNumber
 }
 
@@ -797,6 +822,7 @@ func createEnumRanges(rangeProtos []*descriptorpb.EnumDescriptorProto_EnumReserv
 			protoreflect.EnumNumber(r.GetEnd()),
 		}
 	}
+
 	return enumRanges{ranges: ranges}
 }
 
@@ -814,11 +840,13 @@ func (e enumRanges) Has(n protoreflect.EnumNumber) bool {
 			return true
 		}
 	}
+
 	return false
 }
 
 type enValDescriptors struct {
 	protoreflect.EnumValueDescriptors
+
 	vals []enValDescriptor
 }
 
@@ -827,6 +855,7 @@ func (r *result) createEnumValues(prefix string, parent *enumDescriptor, enValPr
 	for i, enValProto := range enValProtos {
 		r.createEnumValueDescriptor(&vals[i], enValProto, parent, i, prefix+enValProto.GetName())
 	}
+
 	return enValDescriptors{vals: vals}
 }
 
@@ -845,6 +874,7 @@ func (e *enValDescriptors) ByName(s protoreflect.Name) protoreflect.EnumValueDes
 			return val
 		}
 	}
+
 	return nil
 }
 
@@ -855,11 +885,13 @@ func (e *enValDescriptors) ByNumber(n protoreflect.EnumNumber) protoreflect.Enum
 			return val
 		}
 	}
+
 	return nil
 }
 
 type enValDescriptor struct {
 	protoreflect.EnumValueDescriptor
+
 	file   *result
 	parent *enumDescriptor
 	index  int
@@ -917,7 +949,7 @@ func (e *enValDescriptor) IsPlaceholder() bool {
 }
 
 func (e *enValDescriptor) Options() protoreflect.ProtoMessage {
-	return e.proto.Options
+	return e.proto.GetOptions()
 }
 
 func (e *enValDescriptor) Number() protoreflect.EnumNumber {
@@ -926,6 +958,7 @@ func (e *enValDescriptor) Number() protoreflect.EnumNumber {
 
 type extDescriptors struct {
 	protoreflect.ExtensionDescriptors
+
 	exts []extTypeDescriptor
 }
 
@@ -934,6 +967,7 @@ func (r *result) createExtensions(prefix string, parent protoreflect.Descriptor,
 	for i, extProto := range extProtos {
 		r.createExtTypeDescriptor(&exts[i], extProto, parent, i, prefix+extProto.GetName())
 	}
+
 	return extDescriptors{exts: exts}
 }
 
@@ -952,11 +986,13 @@ func (e *extDescriptors) ByName(s protoreflect.Name) protoreflect.ExtensionDescr
 			return ext
 		}
 	}
+
 	return nil
 }
 
 type extTypeDescriptor struct {
 	protoreflect.ExtensionTypeDescriptor
+
 	field fldDescriptor
 }
 
@@ -978,6 +1014,7 @@ func (e *extTypeDescriptor) AsProto() proto.Message {
 
 type fldDescriptors struct {
 	protoreflect.FieldDescriptors
+
 	// We use pointers here, instead of flattened slice, because oneofs
 	// also have fields, but need to point to values in the parent
 	// message's fields. Even though they are pointers, in the containing
@@ -989,11 +1026,13 @@ type fldDescriptors struct {
 
 func (r *result) createFields(prefix string, parent *msgDescriptor, fldProtos []*descriptorpb.FieldDescriptorProto, pool *allocPool) fldDescriptors {
 	fields := pool.getFields(len(fldProtos))
+
 	fieldPtrs := make([]*fldDescriptor, len(fldProtos))
 	for i, fldProto := range fldProtos {
 		r.createFieldDescriptor(&fields[i], fldProto, parent, i, prefix+fldProto.GetName())
 		fieldPtrs[i] = &fields[i]
 	}
+
 	return fldDescriptors{fields: fieldPtrs}
 }
 
@@ -1011,6 +1050,7 @@ func (f *fldDescriptors) ByName(s protoreflect.Name) protoreflect.FieldDescripto
 			return fld
 		}
 	}
+
 	return nil
 }
 
@@ -1020,6 +1060,7 @@ func (f *fldDescriptors) ByJSONName(s string) protoreflect.FieldDescriptor {
 			return fld
 		}
 	}
+
 	return nil
 }
 
@@ -1034,6 +1075,7 @@ func (f *fldDescriptors) ByTextName(s string) protoreflect.FieldDescriptor {
 			return fld
 		}
 	}
+
 	return nil
 }
 
@@ -1043,11 +1085,13 @@ func (f *fldDescriptors) ByNumber(n protoreflect.FieldNumber) protoreflect.Field
 			return fld
 		}
 	}
+
 	return nil
 }
 
 type fldDescriptor struct {
 	protoreflect.FieldDescriptor
+
 	file   *result
 	parent protoreflect.Descriptor
 	index  int
@@ -1110,7 +1154,7 @@ func (f *fldDescriptor) IsPlaceholder() bool {
 }
 
 func (f *fldDescriptor) Options() protoreflect.ProtoMessage {
-	return f.proto.Options
+	return f.proto.GetOptions()
 }
 
 func (f *fldDescriptor) Number() protoreflect.FieldNumber {
@@ -1132,6 +1176,7 @@ func (f *fldDescriptor) Cardinality() protoreflect.Cardinality {
 				return protoreflect.Required
 			}
 		}
+
 		return protoreflect.Optional
 	default:
 		return 0
@@ -1148,6 +1193,7 @@ func (f *fldDescriptor) Kind() protoreflect.Kind {
 			return protoreflect.GroupKind
 		}
 	}
+
 	return protoreflect.Kind(f.proto.GetType())
 }
 
@@ -1159,6 +1205,7 @@ func (f *fldDescriptor) JSONName() string {
 	if f.IsExtension() {
 		return f.TextName()
 	}
+
 	return f.proto.GetJsonName()
 }
 
@@ -1166,10 +1213,12 @@ func (f *fldDescriptor) TextName() string {
 	if f.IsExtension() {
 		return fmt.Sprintf("[%s]", f.FullName())
 	}
+
 	if f.looksLikeGroup() {
 		// groups use the type name
 		return string(protoreflect.FullName(f.proto.GetTypeName()).Name())
 	}
+
 	return string(f.Name())
 }
 
@@ -1185,12 +1234,15 @@ func (f *fldDescriptor) HasPresence() bool {
 	if f.proto.GetLabel() == descriptorpb.FieldDescriptorProto_LABEL_REPEATED {
 		return false
 	}
+
 	if f.IsExtension() ||
 		f.Kind() == protoreflect.MessageKind || f.Kind() == protoreflect.GroupKind ||
 		f.proto.OneofIndex != nil {
 		return true
 	}
+
 	fieldPresence := descriptorpb.FeatureSet_FieldPresence(resolveFeature(f, fieldPresenceField).Enum())
+
 	return fieldPresence == descriptorpb.FeatureSet_EXPLICIT || fieldPresence == descriptorpb.FeatureSet_LEGACY_REQUIRED
 }
 
@@ -1202,6 +1254,7 @@ func (f *fldDescriptor) HasOptionalKeyword() bool {
 	if f.proto.GetLabel() != descriptorpb.FieldDescriptorProto_LABEL_OPTIONAL {
 		return false
 	}
+
 	if f.proto.GetProto3Optional() {
 		// NB: This smells weird to return false here. If the proto3_optional field
 		// is set, it's because the keyword WAS present. However, the Go runtime
@@ -1214,19 +1267,22 @@ func (f *fldDescriptor) HasOptionalKeyword() bool {
 }
 
 func (f *fldDescriptor) IsWeak() bool {
-	return f.proto.Options.GetWeak() //nolint:staticcheck // yes, is_weak is deprecated; but we still have to query it to implement this interface
+	return f.proto.GetOptions().GetWeak() //nolint:staticcheck // yes, is_weak is deprecated; but we still have to query it to implement this interface
 }
 
 func (f *fldDescriptor) IsPacked() bool {
 	if f.Cardinality() != protoreflect.Repeated || !internal.CanPack(f.Kind()) {
 		return false
 	}
+
 	opts := f.proto.GetOptions()
 	if opts != nil && opts.Packed != nil {
 		// packed option is set explicitly
-		return *opts.Packed
+		return opts.GetPacked()
 	}
+
 	fieldEncoding := resolveFeature(f, repeatedFieldEncodingField)
+
 	return descriptorpb.FeatureSet_RepeatedFieldEncoding(fieldEncoding.Enum()) == descriptorpb.FeatureSet_PACKED
 }
 
@@ -1234,6 +1290,7 @@ func (f *fldDescriptor) IsList() bool {
 	if f.proto.GetLabel() != descriptorpb.FieldDescriptorProto_LABEL_REPEATED {
 		return false
 	}
+
 	return !f.isMapEntry()
 }
 
@@ -1241,9 +1298,11 @@ func (f *fldDescriptor) IsMap() bool {
 	if f.proto.GetLabel() != descriptorpb.FieldDescriptorProto_LABEL_REPEATED {
 		return false
 	}
+
 	if f.IsExtension() {
 		return false
 	}
+
 	return f.isMapEntry()
 }
 
@@ -1251,6 +1310,7 @@ func (f *fldDescriptor) isMapEntry() bool {
 	if f.proto.GetType() != descriptorpb.FieldDescriptorProto_TYPE_MESSAGE {
 		return false
 	}
+
 	return f.Message().IsMapEntry()
 }
 
@@ -1263,6 +1323,7 @@ func (f *fldDescriptor) MapKey() protoreflect.FieldDescriptor {
 	if !f.IsMap() {
 		return nil
 	}
+
 	return f.Message().Fields().ByNumber(1)
 }
 
@@ -1270,6 +1331,7 @@ func (f *fldDescriptor) MapValue() protoreflect.FieldDescriptor {
 	if !f.IsMap() {
 		return nil
 	}
+
 	return f.Message().Fields().ByNumber(2)
 }
 
@@ -1328,6 +1390,7 @@ func (f *fldDescriptor) parseDefaultValue(val string) protoreflect.Value {
 		if vd != nil {
 			return protoreflect.ValueOfEnum(vd.Number())
 		}
+
 		return protoreflect.Value{}
 	case protoreflect.BoolKind:
 		switch val {
@@ -1346,31 +1409,37 @@ func (f *fldDescriptor) parseDefaultValue(val string) protoreflect.Value {
 		if f, err := strconv.ParseFloat(val, 32); err == nil {
 			return protoreflect.ValueOfFloat32(float32(f))
 		}
+
 		return protoreflect.Value{}
 	case protoreflect.DoubleKind:
 		if f, err := strconv.ParseFloat(val, 64); err == nil {
 			return protoreflect.ValueOfFloat64(f)
 		}
+
 		return protoreflect.Value{}
 	case protoreflect.Int32Kind, protoreflect.Sint32Kind, protoreflect.Sfixed32Kind:
 		if i, err := strconv.ParseInt(val, 10, 32); err == nil {
 			return protoreflect.ValueOfInt32(int32(i))
 		}
+
 		return protoreflect.Value{}
 	case protoreflect.Uint32Kind, protoreflect.Fixed32Kind:
 		if i, err := strconv.ParseUint(val, 10, 32); err == nil {
 			return protoreflect.ValueOfUint32(uint32(i))
 		}
+
 		return protoreflect.Value{}
 	case protoreflect.Int64Kind, protoreflect.Sint64Kind, protoreflect.Sfixed64Kind:
 		if i, err := strconv.ParseInt(val, 10, 64); err == nil {
 			return protoreflect.ValueOfInt64(i)
 		}
+
 		return protoreflect.Value{}
 	case protoreflect.Uint64Kind, protoreflect.Fixed64Kind:
 		if i, err := strconv.ParseUint(val, 10, 64); err == nil {
 			return protoreflect.ValueOfUint64(i)
 		}
+
 		return protoreflect.Value{}
 	default:
 		return protoreflect.Value{}
@@ -1381,15 +1450,20 @@ func unescape(s string) string {
 	// protoc encodes default values for 'bytes' fields using C escaping,
 	// so this function reverses that escaping
 	out := make([]byte, 0, len(s))
+
 	var buf [4]byte
+
 	for len(s) > 0 {
 		if s[0] != '\\' || len(s) < 2 {
 			// not escape sequence, or too short to be well-formed escape
 			out = append(out, s[0])
 			s = s[1:]
+
 			continue
 		}
+
 		nextIndex := 2 // by default, skip '\' + escaped character
+
 		switch s[1] {
 		case 'x', 'X':
 			n := matchPrefix(s[2:], 2, isHex)
@@ -1404,16 +1478,19 @@ func unescape(s string) string {
 				} else {
 					out = append(out, byte(c))
 				}
+
 				nextIndex = 2 + n
 			}
 		case '0', '1', '2', '3', '4', '5', '6', '7':
 			n := 1 + matchPrefix(s[2:], 2, isOctal)
+
 			c, err := strconv.ParseUint(s[1:1+n], 8, 8)
 			if err != nil || c > 0xff {
 				out = append(out, s[:1+n]...)
 			} else {
 				out = append(out, byte(c))
 			}
+
 			nextIndex = 1 + n
 		case 'u':
 			if len(s) < 6 {
@@ -1429,6 +1506,7 @@ func unescape(s string) string {
 					w := utf8.EncodeRune(buf[:], rune(c))
 					out = append(out, buf[:w]...)
 				}
+
 				nextIndex = 6
 			}
 		case 'U':
@@ -1445,6 +1523,7 @@ func unescape(s string) string {
 					w := utf8.EncodeRune(buf[:], rune(c))
 					out = append(out, buf[:w]...)
 				}
+
 				nextIndex = 10
 			}
 		case 'a':
@@ -1467,8 +1546,10 @@ func unescape(s string) string {
 			// invalid escape, just copy it as-is
 			out = append(out, s[:2]...)
 		}
+
 		s = s[nextIndex:]
 	}
+
 	return string(out)
 }
 
@@ -1477,16 +1558,15 @@ func isHex(b byte) bool {
 	return (b >= '0' && b <= '9') || (b >= 'a' && b <= 'f') || (b >= 'A' && b <= 'F')
 }
 func matchPrefix(s string, limit int, fn func(byte) bool) int {
-	l := len(s)
-	if l > limit {
-		l = limit
-	}
+	l := min(len(s), limit)
+
 	i := 0
 	for ; i < l; i++ {
 		if !fn(s[i]) {
 			return i
 		}
 	}
+
 	return i
 }
 
@@ -1495,6 +1575,7 @@ func (f *fldDescriptor) DefaultEnumValue() protoreflect.EnumValueDescriptor {
 	if ed == nil {
 		return nil
 	}
+
 	if f.proto.DefaultValue != nil {
 		if val := ed.Values().ByName(protoreflect.Name(f.proto.GetDefaultValue())); val != nil {
 			return val
@@ -1512,7 +1593,8 @@ func (f *fldDescriptor) ContainingMessage() protoreflect.MessageDescriptor {
 	if f.extendee != nil {
 		return f.extendee
 	}
-	return f.parent.(protoreflect.MessageDescriptor) //nolint:errcheck
+
+	return f.parent.(protoreflect.MessageDescriptor)
 }
 
 func (f *fldDescriptor) Enum() protoreflect.EnumDescriptor {
@@ -1525,6 +1607,7 @@ func (f *fldDescriptor) Message() protoreflect.MessageDescriptor {
 
 type oneofDescriptors struct {
 	protoreflect.OneofDescriptors
+
 	oneofs []oneofDescriptor
 }
 
@@ -1533,6 +1616,7 @@ func (r *result) createOneofs(prefix string, parent *msgDescriptor, ooProtos []*
 	for i, fldProto := range ooProtos {
 		r.createOneofDescriptor(&oos[i], fldProto, parent, i, prefix+fldProto.GetName())
 	}
+
 	return oneofDescriptors{oneofs: oos}
 }
 
@@ -1551,11 +1635,13 @@ func (o *oneofDescriptors) ByName(s protoreflect.Name) protoreflect.OneofDescrip
 			return oo
 		}
 	}
+
 	return nil
 }
 
 type oneofDescriptor struct {
 	protoreflect.OneofDescriptor
+
 	file   *result
 	parent *msgDescriptor
 	index  int
@@ -1583,6 +1669,7 @@ func (r *result) createOneofDescriptor(ret *oneofDescriptor, ood *descriptorpb.O
 			fields = append(fields, fld)
 		}
 	}
+
 	ret.fields = fldDescriptors{fields: fields}
 }
 
@@ -1623,7 +1710,7 @@ func (o *oneofDescriptor) IsPlaceholder() bool {
 }
 
 func (o *oneofDescriptor) Options() protoreflect.ProtoMessage {
-	return o.proto.Options
+	return o.proto.GetOptions()
 }
 
 func (o *oneofDescriptor) IsSynthetic() bool {
@@ -1632,6 +1719,7 @@ func (o *oneofDescriptor) IsSynthetic() bool {
 			return fld.GetProto3Optional()
 		}
 	}
+
 	return false // NB: we should never get here
 }
 
@@ -1641,6 +1729,7 @@ func (o *oneofDescriptor) Fields() protoreflect.FieldDescriptors {
 
 type svcDescriptors struct {
 	protoreflect.ServiceDescriptors
+
 	svcs []svcDescriptor
 }
 
@@ -1649,6 +1738,7 @@ func (r *result) createServices(prefix string, svcProtos []*descriptorpb.Service
 	for i, svcProto := range svcProtos {
 		r.createServiceDescriptor(&svcs[i], svcProto, i, prefix+svcProto.GetName(), pool)
 	}
+
 	return svcDescriptors{svcs: svcs}
 }
 
@@ -1667,11 +1757,13 @@ func (s *svcDescriptors) ByName(n protoreflect.Name) protoreflect.ServiceDescrip
 			return svc
 		}
 	}
+
 	return nil
 }
 
 type svcDescriptor struct {
 	protoreflect.ServiceDescriptor
+
 	file  *result
 	index int
 	proto *descriptorpb.ServiceDescriptorProto
@@ -1692,7 +1784,7 @@ func (r *result) createServiceDescriptor(ret *svcDescriptor, sd *descriptorpb.Se
 	ret.fqn = fqn
 
 	prefix := fqn + "."
-	ret.methods = r.createMethods(prefix, ret, sd.Method, pool)
+	ret.methods = r.createMethods(prefix, ret, sd.GetMethod(), pool)
 }
 
 func (s *svcDescriptor) ServiceDescriptorProto() *descriptorpb.ServiceDescriptorProto {
@@ -1732,7 +1824,7 @@ func (s *svcDescriptor) IsPlaceholder() bool {
 }
 
 func (s *svcDescriptor) Options() protoreflect.ProtoMessage {
-	return s.proto.Options
+	return s.proto.GetOptions()
 }
 
 func (s *svcDescriptor) Methods() protoreflect.MethodDescriptors {
@@ -1741,6 +1833,7 @@ func (s *svcDescriptor) Methods() protoreflect.MethodDescriptors {
 
 type mtdDescriptors struct {
 	protoreflect.MethodDescriptors
+
 	mtds []mtdDescriptor
 }
 
@@ -1749,6 +1842,7 @@ func (r *result) createMethods(prefix string, parent *svcDescriptor, mtdProtos [
 	for i, mtdProto := range mtdProtos {
 		r.createMethodDescriptor(&mtds[i], mtdProto, parent, i, prefix+mtdProto.GetName())
 	}
+
 	return mtdDescriptors{mtds: mtds}
 }
 
@@ -1767,11 +1861,13 @@ func (m *mtdDescriptors) ByName(n protoreflect.Name) protoreflect.MethodDescript
 			return mtd
 		}
 	}
+
 	return nil
 }
 
 type mtdDescriptor struct {
 	protoreflect.MethodDescriptor
+
 	file   *result
 	parent *svcDescriptor
 	index  int
@@ -1831,7 +1927,7 @@ func (m *mtdDescriptor) IsPlaceholder() bool {
 }
 
 func (m *mtdDescriptor) Options() protoreflect.ProtoMessage {
-	return m.proto.Options
+	return m.proto.GetOptions()
 }
 
 func (m *mtdDescriptor) Input() protoreflect.MessageDescriptor {
@@ -1866,6 +1962,7 @@ func (r *result) FindDescriptorByName(name protoreflect.FullName) protoreflect.D
 func (r *result) hasSource() bool {
 	n := r.FileNode()
 	_, ok := n.(*ast.FileNode)
+
 	return ok
 }
 
@@ -1883,11 +1980,14 @@ func resolveFeature(element protoreflect.Descriptor, feature protoreflect.FieldD
 		defaults := editions.GetEditionDefaults(edition)
 		return defaults.ProtoReflect().Get(feature) // returns default value if field is not present
 	}
+
 	val, err := editions.ResolveFeature(element, feature)
 	if err == nil && val.IsValid() {
 		return val
 	}
+
 	defaults := editions.GetEditionDefaults(edition)
+
 	return defaults.ProtoReflect().Get(feature)
 }
 

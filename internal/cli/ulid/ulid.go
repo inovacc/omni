@@ -1,20 +1,20 @@
 package ulid
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"strings"
 	"time"
 
+	"github.com/inovacc/omni/internal/cli/output"
 	"github.com/inovacc/omni/pkg/idgen"
 )
 
 // Options configures the ulid command behavior
 type Options struct {
-	Count int  // -n: generate N ULIDs
-	Lower bool // -l: output in lowercase
-	JSON  bool // --json: output as JSON
+	Count        int           // -n: generate N ULIDs
+	Lower        bool          // -l: output in lowercase
+	OutputFormat output.Format // output format (text, json, table)
 }
 
 // Result represents ulid output for JSON
@@ -32,6 +32,8 @@ func RunULID(w io.Writer, opts Options) error {
 		opts.Count = 1
 	}
 
+	f := output.New(w, opts.OutputFormat)
+
 	var ulids []string
 
 	for i := 0; i < opts.Count; i++ {
@@ -45,15 +47,15 @@ func RunULID(w io.Writer, opts Options) error {
 			encoded = strings.ToLower(encoded)
 		}
 
-		if opts.JSON {
+		if f.IsJSON() {
 			ulids = append(ulids, encoded)
 		} else {
 			_, _ = fmt.Fprintln(w, encoded)
 		}
 	}
 
-	if opts.JSON {
-		return json.NewEncoder(w).Encode(Result{ULIDs: ulids, Count: len(ulids)})
+	if f.IsJSON() {
+		return f.Print(Result{ULIDs: ulids, Count: len(ulids)})
 	}
 
 	return nil

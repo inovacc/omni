@@ -39,10 +39,12 @@ func stripLegacyOptions(files []*descriptorpb.FileDescriptorProto) error {
 		if err != nil {
 			return err
 		}
+
 		if newDescriptor != nil {
 			files[i] = newDescriptor
 		}
 	}
+
 	return nil
 }
 
@@ -51,34 +53,43 @@ func stripLegacyOptions(files []*descriptorpb.FileDescriptorProto) error {
 // it returns a clone of file with legacy options removed.
 func stripLegacyOptionsFromFile(file *descriptorpb.FileDescriptorProto) (*descriptorpb.FileDescriptorProto, error) {
 	var cloned bool
-	for i, message := range file.MessageType {
+
+	for i, message := range file.GetMessageType() {
 		newDescriptor, err := stripLegacyOptionsFromMessage(message)
 		if err != nil {
 			return nil, err
 		}
+
 		if newDescriptor == nil {
 			continue
 		}
+
 		if !cloned {
 			file = proto.CloneOf(file)
 			cloned = true
 		}
+
 		file.MessageType[i] = newDescriptor
 	}
-	newExts, err := stripLegacyOptionsFromExtensions(file.Extension)
+
+	newExts, err := stripLegacyOptionsFromExtensions(file.GetExtension())
 	if err != nil {
 		return nil, err
 	}
+
 	if newExts != nil {
 		if !cloned {
 			file = proto.CloneOf(file)
 			cloned = true
 		}
+
 		file.Extension = newExts
 	}
+
 	if cloned {
 		return file, nil
 	}
+
 	return nil, nil // nothing changed
 }
 
@@ -87,6 +98,7 @@ func stripLegacyOptionsFromFile(file *descriptorpb.FileDescriptorProto) (*descri
 // it returns a clone of message with legacy options removed.
 func stripLegacyOptionsFromMessage(message *descriptorpb.DescriptorProto) (*descriptorpb.DescriptorProto, error) {
 	var cloned bool
+
 	if message.GetOptions().GetMessageSetWireFormat() {
 		// Strip this option since the Go runtime does not support
 		// creating protoreflect.Descriptor instances with this set.
@@ -94,60 +106,75 @@ func stripLegacyOptionsFromMessage(message *descriptorpb.DescriptorProto) (*desc
 		cloned = true
 		message.Options.MessageSetWireFormat = nil
 	}
-	for i, field := range message.Field {
+
+	for i, field := range message.GetField() {
 		newDescriptor, err := stripLegacyOptionsFromField(field)
 		if err != nil {
 			return nil, err
 		}
+
 		if newDescriptor == nil {
 			continue
 		}
+
 		if !cloned {
 			message = proto.CloneOf(message)
 			cloned = true
 		}
+
 		message.Field[i] = newDescriptor
 	}
 
-	for i, nested := range message.NestedType {
+	for i, nested := range message.GetNestedType() {
 		newDescriptor, err := stripLegacyOptionsFromMessage(nested)
 		if err != nil {
 			return nil, err
 		}
+
 		if newDescriptor == nil {
 			continue
 		}
+
 		if !cloned {
 			message = proto.CloneOf(message)
 			cloned = true
 		}
+
 		message.NestedType[i] = newDescriptor
 	}
-	newExtRanges, err := stripLegacyOptionsFromExtensionRanges(message.ExtensionRange)
+
+	newExtRanges, err := stripLegacyOptionsFromExtensionRanges(message.GetExtensionRange())
 	if err != nil {
 		return nil, err
 	}
+
 	if newExtRanges != nil {
 		if !cloned {
 			message = proto.CloneOf(message)
 			cloned = true
 		}
+
 		message.ExtensionRange = newExtRanges
 	}
-	newExts, err := stripLegacyOptionsFromExtensions(message.Extension)
+
+	newExts, err := stripLegacyOptionsFromExtensions(message.GetExtension())
 	if err != nil {
 		return nil, err
 	}
+
 	if newExts != nil {
 		if !cloned {
 			message = proto.CloneOf(message)
 			cloned = true
 		}
+
 		message.Extension = newExts
 	}
+
 	if cloned {
 		return message, nil
 	}
+
 	return nil, nil // nothing changed
 }
 
@@ -164,6 +191,7 @@ func stripLegacyOptionsFromField(field *descriptorpb.FieldDescriptorProto) (*des
 	// there should be no practical consequences of removing this.
 	newField := proto.CloneOf(field)
 	newField.Options.Weak = nil
+
 	return newField, nil
 }
 
@@ -178,6 +206,7 @@ func stripLegacyOptionsFromExtensions(exts []*descriptorpb.FieldDescriptorProto)
 	// (by removing one with a tag that is too high are or by stripping
 	// the weak option from one).
 	var newExts []*descriptorpb.FieldDescriptorProto
+
 	for i, ext := range exts {
 		// Message-set extensions could be out of range. We simply remove them.
 		// This could possibly
@@ -187,25 +216,32 @@ func stripLegacyOptionsFromExtensions(exts []*descriptorpb.FieldDescriptorProto)
 				newExts = make([]*descriptorpb.FieldDescriptorProto, i, len(exts)-1)
 				copy(newExts, exts)
 			}
+
 			continue
 		}
+
 		newDescriptor, err := stripLegacyOptionsFromField(ext)
 		if err != nil {
 			return nil, err
 		}
+
 		if newDescriptor != nil {
 			if newExts == nil {
 				// initialize to everything so far except current item (that we're replacing)
 				newExts = make([]*descriptorpb.FieldDescriptorProto, i, len(exts))
 				copy(newExts, exts)
 			}
+
 			newExts = append(newExts, newDescriptor)
+
 			continue
 		}
+
 		if newExts != nil {
 			newExts = append(newExts, ext)
 		}
 	}
+
 	return newExts, nil
 }
 
@@ -222,6 +258,7 @@ func stripLegacyOptionsFromExtensionRanges(extRanges []*descriptorpb.DescriptorP
 	// (by removing one with a tag that is too high are or by stripping
 	// the weak option from one).
 	var newExtRanges []*descriptorpb.DescriptorProto_ExtensionRange
+
 	for i, extRange := range extRanges {
 		// Message-set extensions could be out of range. We simply remove them.
 		// This could possibly
@@ -231,22 +268,29 @@ func stripLegacyOptionsFromExtensionRanges(extRanges []*descriptorpb.DescriptorP
 				newExtRanges = make([]*descriptorpb.DescriptorProto_ExtensionRange, i, len(extRanges)-1)
 				copy(newExtRanges, extRanges)
 			}
+
 			continue
 		}
+
 		if extRange.GetEnd() > maxTagNumber+1 /* extension range end is exclusive */ {
 			newExtRange := proto.CloneOf(extRange)
 			newExtRange.End = proto.Int32(maxTagNumber + 1)
+
 			if newExtRanges == nil {
 				// initialize to everything so far except current item (that we're replacing)
 				newExtRanges = make([]*descriptorpb.DescriptorProto_ExtensionRange, i, len(extRanges))
 				copy(newExtRanges, extRanges)
 			}
+
 			newExtRanges = append(newExtRanges, newExtRange)
+
 			continue
 		}
+
 		if newExtRanges != nil {
 			newExtRanges = append(newExtRanges, extRange)
 		}
 	}
+
 	return newExtRanges, nil
 }

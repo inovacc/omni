@@ -86,7 +86,9 @@ func Serve(
 	if err != nil {
 		return nil, err
 	}
+
 	conn.Go(ctx, handler)
+
 	return conn, nil
 }
 
@@ -133,6 +135,7 @@ func (l *lsp) init(_ context.Context, params *protocol.InitializeParams) error {
 	if l.initParams.Load() != nil {
 		return fmt.Errorf("called the %q method more than once", protocol.MethodInitialize)
 	}
+
 	l.initParams.Store(params)
 
 	// TODO: set up logging. We need to forward everything from server.logger through to
@@ -149,7 +152,9 @@ func (l *lsp) newHandler() (jsonrpc2.Handler, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	actual := protocol.ServerHandler(server, nil)
+
 	return jsonrpc2.AsyncHandler(func(ctx context.Context, reply jsonrpc2.Replier, req jsonrpc2.Request) error {
 		l.logger.Debug(
 			"handling request",
@@ -169,7 +174,9 @@ func (l *lsp) newHandler() (jsonrpc2.Handler, error) {
 			err = replier(ctx, nil, fmt.Errorf("the first call to the server must be the %q method", protocol.MethodInitialize))
 		} else {
 			l.lock.Lock()
+
 			err = actual(ctx, replier, req)
+
 			l.lock.Unlock()
 		}
 
@@ -180,6 +187,7 @@ func (l *lsp) newHandler() (jsonrpc2.Handler, error) {
 				xslog.ErrorAttr(err),
 			)
 		}
+
 		return nil
 	}), nil
 }

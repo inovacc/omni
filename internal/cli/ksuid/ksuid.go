@@ -1,18 +1,18 @@
 package ksuid
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"time"
 
+	"github.com/inovacc/omni/internal/cli/output"
 	"github.com/inovacc/omni/pkg/idgen"
 )
 
 // Options configures the ksuid command behavior
 type Options struct {
-	Count int  // -n: generate N KSUIDs
-	JSON  bool // --json: output as JSON
+	Count        int           // -n: generate N KSUIDs
+	OutputFormat output.Format // output format (text, json, table)
 }
 
 // Result represents ksuid output for JSON
@@ -30,6 +30,8 @@ func RunKSUID(w io.Writer, opts Options) error {
 		opts.Count = 1
 	}
 
+	f := output.New(w, opts.OutputFormat)
+
 	var ksuids []string
 
 	for i := 0; i < opts.Count; i++ {
@@ -39,15 +41,15 @@ func RunKSUID(w io.Writer, opts Options) error {
 		}
 
 		encoded := k.String()
-		if opts.JSON {
+		if f.IsJSON() {
 			ksuids = append(ksuids, encoded)
 		} else {
 			_, _ = fmt.Fprintln(w, encoded)
 		}
 	}
 
-	if opts.JSON {
-		return json.NewEncoder(w).Encode(Result{KSUIDs: ksuids, Count: len(ksuids)})
+	if f.IsJSON() {
+		return f.Print(Result{KSUIDs: ksuids, Count: len(ksuids)})
 	}
 
 	return nil

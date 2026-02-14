@@ -49,6 +49,7 @@ func TestRename(t *testing.T) {
 		endCharacter   uint32
 		newText        string // Optional: if set, verify the NewText matches
 	}
+
 	tests := []struct {
 		name          string
 		targetURI     protocol.URI
@@ -300,7 +301,9 @@ func TestRename(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
+
 			var workspaceEdit protocol.WorkspaceEdit
+
 			_, renameErr := clientJSONConn.Call(ctx, protocol.MethodTextDocumentRename, protocol.RenameParams{
 				TextDocumentPositionParams: protocol.TextDocumentPositionParams{
 					TextDocument: protocol.TextDocumentIdentifier{
@@ -318,7 +321,9 @@ func TestRename(t *testing.T) {
 			} else {
 				require.NoError(t, renameErr)
 				require.NotNil(t, workspaceEdit.Changes)
+
 				var allEdits []editLocation
+
 				for uri, edits := range workspaceEdit.Changes {
 					for _, edit := range edits {
 						allEdits = append(allEdits, editLocation{
@@ -330,13 +335,17 @@ func TestRename(t *testing.T) {
 						})
 					}
 				}
+
 				if len(allEdits) != len(tt.expectedEdits) {
 					t.Logf("Expected %d edits, got %d", len(tt.expectedEdits), len(allEdits))
+
 					for _, e := range allEdits {
 						t.Logf("  actual: %s:%d:%d-%d (newText: %q)", e.uri, e.line, e.startCharacter, e.endCharacter, e.newText)
 					}
 				}
+
 				require.Len(t, allEdits, len(tt.expectedEdits))
+
 				for _, expectedEdit := range tt.expectedEdits {
 					idx := slices.IndexFunc(allEdits, func(e editLocation) bool {
 						return e.uri == expectedEdit.uri && e.line == expectedEdit.line && e.startCharacter == expectedEdit.startCharacter
@@ -344,6 +353,7 @@ func TestRename(t *testing.T) {
 					require.NotEqual(t, -1, idx, "expected edit at %s:%d:%d not found", expectedEdit.uri, expectedEdit.line, expectedEdit.startCharacter)
 					assert.Equal(t, expectedEdit.startCharacter, allEdits[idx].startCharacter)
 					assert.Equal(t, expectedEdit.endCharacter, allEdits[idx].endCharacter)
+
 					if expectedEdit.newText != "" {
 						assert.Equal(t, expectedEdit.newText, allEdits[idx].newText, "NewText mismatch at %s:%d:%d", expectedEdit.uri, expectedEdit.line, expectedEdit.startCharacter)
 					}
@@ -483,6 +493,7 @@ func TestPrepareRename(t *testing.T) {
 
 			// Determine which URI to use based on protoFile
 			var targetURI protocol.URI
+
 			switch tt.protoFile {
 			case "testdata/rename/rename.proto":
 				targetURI = testURI
@@ -506,6 +517,7 @@ func TestPrepareRename(t *testing.T) {
 			}
 
 			var rnge *protocol.Range
+
 			_, prepareErr := clientJSONConn.Call(ctx, protocol.MethodTextDocumentPrepareRename, protocol.PrepareRenameParams{
 				TextDocumentPositionParams: protocol.TextDocumentPositionParams{
 					TextDocument: protocol.TextDocumentIdentifier{
@@ -521,7 +533,9 @@ func TestPrepareRename(t *testing.T) {
 				require.Error(t, prepareErr, "expected error for non-local file")
 				return
 			}
+
 			require.NoError(t, prepareErr)
+
 			if tt.expectRange {
 				require.NotNil(t, rnge)
 				assert.Equal(t, tt.expectedStart, rnge.Start)

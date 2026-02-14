@@ -61,6 +61,7 @@ func (t TypeAny) AsError() TypeError {
 	if t.Kind() != TypeKindError {
 		return TypeError{}
 	}
+
 	return id.Wrap(t.Context(), id.ID[TypeError](t.ID().Value()))
 }
 
@@ -74,6 +75,7 @@ func (t TypeAny) AsPath() TypePath {
 	}
 
 	start, end := t.ID().Raw()
+
 	return TypePath{Path: PathID{start: token.ID(start), end: token.ID(end)}.In(t.Context())}
 }
 
@@ -85,6 +87,7 @@ func (t TypeAny) AsPrefixed() TypePrefixed {
 	if t.Kind() != TypeKindPrefixed {
 		return TypePrefixed{}
 	}
+
 	return id.Wrap(t.Context(), id.ID[TypePrefixed](t.ID().Value()))
 }
 
@@ -96,6 +99,7 @@ func (t TypeAny) AsGeneric() TypeGeneric {
 	if t.Kind() != TypeKindGeneric {
 		return TypeGeneric{}
 	}
+
 	return id.Wrap(t.Context(), id.ID[TypeGeneric](t.ID().Value()))
 }
 
@@ -107,6 +111,7 @@ func (t TypeAny) Prefixes() iter.Seq[TypePrefixed] {
 			if !yield(prefixed) {
 				return
 			}
+
 			t = prefixed.Type()
 		}
 	}
@@ -117,6 +122,7 @@ func (t TypeAny) RemovePrefixes() TypeAny {
 	for t.Kind() == TypeKindPrefixed {
 		t = t.AsPrefixed().Type()
 	}
+
 	return t
 }
 

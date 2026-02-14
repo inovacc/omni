@@ -29,6 +29,7 @@ func newTxtpbUnmarshaler(resolver Resolver) Unmarshaler {
 	if resolver == nil {
 		resolver = EmptyResolver
 	}
+
 	return &txtpbUnmarshaler{
 		resolver: resolver,
 	}
@@ -43,5 +44,6 @@ func (m *txtpbUnmarshaler) Unmarshal(data []byte, message proto.Message) error {
 	if err := options.Unmarshal(data, message); err != nil {
 		return fmt.Errorf("txtpb unmarshal: %w", err)
 	}
+
 	return nil
 }

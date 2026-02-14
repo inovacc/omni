@@ -90,9 +90,11 @@ func NewUploadOptions(options []UploadOption) (UploadOptions, error) {
 	for _, option := range options {
 		option(uploadOptions)
 	}
+
 	if err := uploadOptions.validate(); err != nil {
 		return nil, err
 	}
+
 	return uploadOptions, nil
 }
 
@@ -137,10 +139,12 @@ func (u *uploadOptions) validate() error {
 	if u.createIfNotExist && u.createPolicyVisibility == 0 {
 		return errors.New("must set a valid PolicyVisibility if CreateIfNotExist was specified")
 	}
+
 	if u.sourceControlURL != "" {
 		if _, err := url.Parse(u.sourceControlURL); err != nil {
 			return fmt.Errorf("must set a valid url for the source control url: %w", err)
 		}
 	}
+
 	return nil
 }

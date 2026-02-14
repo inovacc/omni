@@ -31,12 +31,14 @@ func newYAMLUnmarshaler(resolver Resolver, options ...YAMLUnmarshalerOption) Unm
 	if resolver == nil {
 		resolver = EmptyResolver
 	}
+
 	result := &yamlUnmarshaler{
 		resolver: resolver,
 	}
 	for _, option := range options {
 		option(result)
 	}
+
 	return result
 }
 
@@ -49,5 +51,6 @@ func (m *yamlUnmarshaler) Unmarshal(data []byte, message proto.Message) error {
 	if err := options.Unmarshal(data, message); err != nil {
 		return fmt.Errorf("yaml unmarshal: %w", err)
 	}
+
 	return nil
 }

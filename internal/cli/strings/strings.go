@@ -1,11 +1,12 @@
 package strings
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"os"
 	"strings"
+
+	"github.com/inovacc/omni/internal/cli/output"
 )
 
 // StringsOptions configures the strings command behavior
@@ -14,7 +15,7 @@ type StringsOptions struct {
 	Offset      string // -t: print offset (d=decimal, o=octal, x=hex)
 	AllSections bool   // -a: scan whole file (default)
 	Encoding    string // -e: encoding (s=7-bit, S=8-bit, etc)
-	JSON        bool   // --json: output as JSON
+	OutputFormat output.Format // output format (text/json/table)
 }
 
 // StringEntry represents a single string found
@@ -35,10 +36,13 @@ func RunStrings(w io.Writer, args []string, opts StringsOptions) error {
 		opts.MinLength = 4 // default minimum string length
 	}
 
+	f := output.New(w, opts.OutputFormat)
+	jsonMode := f.IsJSON()
+
 	var allStrings []StringEntry
 
 	if len(args) == 0 {
-		if opts.JSON {
+		if jsonMode {
 			entries, err := stringsReaderJSON(os.Stdin, opts)
 			if err != nil {
 				return err
@@ -64,7 +68,7 @@ func RunStrings(w io.Writer, args []string, opts StringsOptions) error {
 				r = f
 			}
 
-			if opts.JSON {
+			if jsonMode {
 				entries, err := stringsReaderJSON(r, opts)
 				if err != nil {
 					return err
@@ -79,8 +83,8 @@ func RunStrings(w io.Writer, args []string, opts StringsOptions) error {
 		}
 	}
 
-	if opts.JSON {
-		return json.NewEncoder(w).Encode(StringsResult{Strings: allStrings, Count: len(allStrings)})
+	if jsonMode {
+		return f.Print(StringsResult{Strings: allStrings, Count: len(allStrings)})
 	}
 
 	return nil

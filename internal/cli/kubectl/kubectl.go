@@ -36,6 +36,7 @@ func DefaultIOStreams() genericiooptions.IOStreams {
 func Run(args []string) error {
 	kubectlCmd := NewKubectlCommand()
 	kubectlCmd.SetArgs(args)
+
 	return kubectlCmd.Execute()
 }
 
@@ -43,5 +44,6 @@ func Run(args []string) error {
 func RunWithStreams(args []string, streams genericiooptions.IOStreams) error {
 	kubectlCmd := NewKubectlCommandWithStreams(streams)
 	kubectlCmd.SetArgs(args)
+
 	return kubectlCmd.Execute()
 }

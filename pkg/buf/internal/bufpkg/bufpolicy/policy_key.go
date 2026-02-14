@@ -77,10 +77,12 @@ func UniqueDigestTypeForPolicyKeys(policyKeys []PolicyKey) (DigestType, error) {
 	if len(policyKeys) == 0 {
 		return 0, syserror.New("empty policyKeys passed to UniqueDigestTypeForPolicyKeys")
 	}
+
 	digests, err := xslices.MapError(policyKeys, PolicyKey.Digest)
 	if err != nil {
 		return 0, err
 	}
+
 	digestType := digests[0].Type()
 	for _, digest := range digests[1:] {
 		if digestType != digest.Type() {
@@ -92,6 +94,7 @@ func UniqueDigestTypeForPolicyKeys(policyKeys []PolicyKey) (DigestType, error) {
 			)
 		}
 	}
+
 	return digestType, nil
 }
 
@@ -112,9 +115,11 @@ func newPolicyKey(
 	if policyFullName == nil {
 		return nil, errors.New("nil FullName when constructing PolicyKey")
 	}
+
 	if commitID == uuid.Nil {
 		return nil, errors.New("empty commitID when constructing PolicyKey")
 	}
+
 	return &policyKey{
 		policyFullName: policyFullName,
 		commitID:       commitID,

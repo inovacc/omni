@@ -29,11 +29,13 @@ func LimitWriteBucket(writeBucket WriteBucket, limit int) WriteBucket {
 	if limit < 0 {
 		limit = 0
 	}
+
 	return newLimitedWriteBucket(writeBucket, int64(limit))
 }
 
 type limitedWriteBucket struct {
 	WriteBucket
+
 	currentSize *atomic.Int64
 	limit       int64
 }
@@ -51,6 +53,7 @@ func (w *limitedWriteBucket) Put(ctx context.Context, path string, opts ...PutOp
 	if err != nil {
 		return nil, err
 	}
+
 	return newLimitedWriteObjectCloser(writeObjectCloser, w.currentSize, w.limit), nil
 }
 
@@ -75,17 +78,21 @@ func newLimitedWriteObjectCloser(
 
 func (o *limitedWriteObjectCloser) Write(p []byte) (int, error) {
 	writeSize := int64(len(p))
+
 	newBucketSize := o.bucketSize.Add(writeSize)
 	if newBucketSize > o.limit {
 		o.bucketSize.Add(-writeSize)
+
 		return 0, &errWriteLimitReached{
 			Limit:       o.limit,
 			ExceedingBy: newBucketSize - o.limit,
 		}
 	}
+
 	writtenSize, err := o.WriteObjectCloser.Write(p)
 	if int64(writtenSize) < writeSize {
 		o.bucketSize.Add(-(writeSize - int64(writtenSize)))
 	}
+
 	return writtenSize, err
 }

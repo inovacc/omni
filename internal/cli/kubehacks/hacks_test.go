@@ -15,12 +15,15 @@ func clusterAvailable() bool {
 	if err != nil {
 		return false
 	}
+
 	_ = conn.Close()
+
 	return true
 }
 
 func skipIfNoCluster(t *testing.T) {
 	t.Helper()
+
 	if !clusterAvailable() {
 		t.Skip("no k8s cluster available at localhost:8080")
 	}

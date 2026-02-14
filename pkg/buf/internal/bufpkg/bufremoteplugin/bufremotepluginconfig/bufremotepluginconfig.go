@@ -330,17 +330,22 @@ func ExistingConfigFilePath(ctx context.Context, readBucket storage2.ReadBucket)
 		if err != nil {
 			return "", err
 		}
+
 		if exists {
 			return configFilePath, nil
 		}
 	}
+
 	return "", nil
 }
 
 // ParseConfig parses the file at the given path as a Config.
 func ParseConfig(config string, options ...ConfigOption) (*Config, error) {
-	var data []byte
-	var err error
+	var (
+		data []byte
+		err  error
+	)
+
 	switch filepath.Ext(config) {
 	case ".json", ".yaml", ".yml":
 		data, err = os.ReadFile(config)
@@ -350,14 +355,17 @@ func ParseConfig(config string, options ...ConfigOption) (*Config, error) {
 	default:
 		return nil, fmt.Errorf("invalid extension %s, must be .json, .yaml or .yml", filepath.Ext(config))
 	}
+
 	var externalConfig ExternalConfig
 	if err := encoding.UnmarshalJSONOrYAMLStrict(data, &externalConfig); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal plugin config: %w", err)
 	}
+
 	switch externalConfig.Version {
 	case V1Version:
 		return newConfig(externalConfig, options)
 	}
+
 	return nil, fmt.Errorf("invalid plugin configuration version: must be one of %v", AllConfigFilePaths)
 }
 
@@ -366,6 +374,7 @@ func PluginOptionsToOptionsSlice(pluginOptions map[string]string) []string {
 	if pluginOptions == nil {
 		return nil
 	}
+
 	options := make([]string, 0, len(pluginOptions))
 	for key, value := range pluginOptions {
 		if len(value) > 0 {
@@ -374,7 +383,9 @@ func PluginOptionsToOptionsSlice(pluginOptions map[string]string) []string {
 			options = append(options, key)
 		}
 	}
+
 	sort.Strings(options)
+
 	return options
 }
 
@@ -384,6 +395,7 @@ func OptionsSliceToPluginOptions(options []string) map[string]string {
 	if options == nil {
 		return nil
 	}
+
 	pluginOptions := make(map[string]string, len(options))
 	for _, option := range options {
 		fields := strings.SplitN(option, "=", 2)
@@ -393,6 +405,7 @@ func OptionsSliceToPluginOptions(options []string) map[string]string {
 			pluginOptions[option] = ""
 		}
 	}
+
 	return pluginOptions
 }
 

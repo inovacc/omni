@@ -42,12 +42,14 @@ func GetFeatureDefault(edition descriptorpb.Edition, feature protoreflect.FieldD
 		return protoreflect.Value{}, fmt.Errorf("feature %s is a field of %s but should be a field of %s",
 			feature.Name(), feature.ContainingMessage().FullName(), editions.FeatureSetDescriptor.FullName())
 	}
+
 	var msgType protoreflect.MessageType
 	if feature.ContainingMessage() == editions.FeatureSetDescriptor {
 		msgType = editions.FeatureSetType
 	} else {
 		msgType = dynamicpb.NewMessageType(feature.ContainingMessage())
 	}
+
 	return editions.GetFeatureDefault(edition, msgType, feature)
 }
 
@@ -61,22 +63,27 @@ func GetCustomFeatureDefault(edition descriptorpb.Edition, extension protoreflec
 	if extDesc.ContainingMessage().FullName() != editions.FeatureSetDescriptor.FullName() {
 		return protoreflect.Value{}, fmt.Errorf("extension %s does not extend %s", extDesc.FullName(), editions.FeatureSetDescriptor.FullName())
 	}
+
 	if extDesc.Message() == nil {
 		return protoreflect.Value{}, fmt.Errorf("extensions of %s should be messages; %s is instead %s",
 			editions.FeatureSetDescriptor.FullName(), extDesc.FullName(), extDesc.Kind().String())
 	}
+
 	if feature.IsExtension() {
 		return protoreflect.Value{}, fmt.Errorf("feature %s is an extension, but feature extension %s may not itself have extensions",
 			feature.FullName(), extDesc.FullName())
 	}
+
 	if feature.ContainingMessage().FullName() != extDesc.Message().FullName() {
 		return protoreflect.Value{}, fmt.Errorf("feature %s is a field of %s but should be a field of %s",
 			feature.Name(), feature.ContainingMessage().FullName(), extDesc.Message().FullName())
 	}
+
 	if feature.ContainingMessage() != extDesc.Message() {
 		return protoreflect.Value{}, fmt.Errorf("feature %s has a different message descriptor from the given extension type for %s",
 			feature.Name(), extDesc.Message().FullName())
 	}
+
 	return editions.GetFeatureDefault(edition, extension.Zero().Message().Type(), feature)
 }
 
@@ -91,10 +98,12 @@ func GetCustomFeatureDefault(edition descriptorpb.Edition, extension protoreflec
 // dynamically built descriptor.
 func ResolveFeature(element protoreflect.Descriptor, feature protoreflect.FieldDescriptor) (protoreflect.Value, error) {
 	edition := editions.GetEdition(element)
+
 	defaultVal, err := GetFeatureDefault(edition, feature)
 	if err != nil {
 		return protoreflect.Value{}, err
 	}
+
 	return resolveFeature(edition, defaultVal, element, feature)
 }
 
@@ -111,10 +120,12 @@ func ResolveFeature(element protoreflect.Descriptor, feature protoreflect.FieldD
 // ancestors override the given feature, the relevant default is returned.
 func ResolveCustomFeature(element protoreflect.Descriptor, extension protoreflect.ExtensionType, feature protoreflect.FieldDescriptor) (protoreflect.Value, error) {
 	edition := editions.GetEdition(element)
+
 	defaultVal, err := GetCustomFeatureDefault(edition, extension, feature)
 	if err != nil {
 		return protoreflect.Value{}, err
 	}
+
 	return resolveFeature(edition, defaultVal, element, extension.TypeDescriptor(), feature)
 }
 
@@ -129,12 +140,15 @@ func resolveFeature(
 		// through the descriptor hierarchy for feature overrides
 		return defaultVal, nil
 	}
+
 	val, err := editions.ResolveFeature(element, fields...)
 	if err != nil {
 		return protoreflect.Value{}, err
 	}
+
 	if val.IsValid() {
 		return val, nil
 	}
+
 	return defaultVal, nil
 }

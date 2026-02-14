@@ -33,14 +33,16 @@ var (
 // Validation is performed to ensure the DigestType is known, and the value
 // is a valid digest value for the given DigestType.
 func V1Beta1ProtoToDigest(protoDigest *pluginv1beta1.Digest) (bufplugin2.Digest, error) {
-	digestType, err := v1beta1ProtoToDigestType(protoDigest.Type)
+	digestType, err := v1beta1ProtoToDigestType(protoDigest.GetType())
 	if err != nil {
 		return nil, err
 	}
-	bufcasDigest, err := bufcas.NewDigest(protoDigest.Value)
+
+	bufcasDigest, err := bufcas.NewDigest(protoDigest.GetValue())
 	if err != nil {
 		return nil, err
 	}
+
 	return bufplugin2.NewDigest(digestType, bufcasDigest)
 }
 
@@ -71,5 +73,6 @@ func v1beta1ProtoToDigestType(protoDigestType pluginv1beta1.DigestType) (bufplug
 	if !ok {
 		return 0, fmt.Errorf("unknown pluginv1beta1.DigestType: %v", protoDigestType)
 	}
+
 	return digestType, nil
 }

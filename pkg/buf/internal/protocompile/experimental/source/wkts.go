@@ -33,5 +33,6 @@ func (wkts) Open(path string) (*File, error) {
 	}
 
 	file.path = "<built-in>/" + path
+
 	return file, nil
 }

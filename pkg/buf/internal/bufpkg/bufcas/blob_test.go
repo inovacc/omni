@@ -24,6 +24,7 @@ import (
 
 func TestNewBlobForContent(t *testing.T) {
 	t.Parallel()
+
 	content := "some file content"
 	digest, err := NewDigestForContent(strings.NewReader(content))
 	require.NoError(t, err)

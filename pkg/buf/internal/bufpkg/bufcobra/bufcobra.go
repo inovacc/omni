@@ -61,6 +61,7 @@ files with Docusaurus compatible front matter, use --%s flag.`,
 		false,
 		"Include Docusaurus compatible front matter in generated markdown.",
 	)
+
 	return webpagesCommand
 }
 
@@ -77,16 +78,19 @@ func run(
 	if err != nil {
 		return err
 	}
+
 	excludes := xslices.ToStructMap(config.ExcludeCommands)
 	for _, command := range cobraCommand.Commands() {
 		if _, ok := excludes[command.CommandPath()]; ok {
 			command.Hidden = true
 		}
 	}
+
 	includeFrontMatter, err := flags.GetBool(includeFrontMatterFlagName)
 	if err != nil {
 		return err
 	}
+
 	return generateMarkdownTree(
 		cobraCommand,
 		config,

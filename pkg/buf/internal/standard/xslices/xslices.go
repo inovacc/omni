@@ -37,6 +37,7 @@ func Filter[T any](s []T, f func(T) bool) []T {
 			sf = append(sf, e)
 		}
 	}
+
 	return sf
 }
 
@@ -50,10 +51,12 @@ func FilterError[T any](s []T, f func(T) (bool, error)) ([]T, error) {
 		if err != nil {
 			return nil, err
 		}
+
 		if ok {
 			sf = append(sf, e)
 		}
 	}
+
 	return sf, nil
 }
 
@@ -63,6 +66,7 @@ func Map[T1, T2 any](s []T1, f func(T1) T2) []T2 {
 	for i, e := range s {
 		sm[i] = f(e)
 	}
+
 	return sm
 }
 
@@ -76,8 +80,10 @@ func MapError[T1, T2 any](s []T1, f func(T1) (T2, error)) ([]T2, error) {
 		if err != nil {
 			return nil, err
 		}
+
 		sm[i] = em
 	}
+
 	return sm, nil
 }
 
@@ -87,6 +93,7 @@ func Reduce[T1, T2 any](s []T1, f func(T2, T1) T2, initialValue T2) T2 {
 	for _, e := range s {
 		value = f(value, e)
 	}
+
 	return value
 }
 
@@ -95,6 +102,7 @@ func Reduce[T1, T2 any](s []T1, f func(T2, T1) T2, initialValue T2) T2 {
 // Returns error the first time f returns error.
 func ReduceError[T1, T2 any](s []T1, f func(T2, T1) (T2, error), initialValue T2) (T2, error) {
 	value := initialValue
+
 	var err error
 	for _, e := range s {
 		value, err = f(value, e)
@@ -102,17 +110,20 @@ func ReduceError[T1, T2 any](s []T1, f func(T2, T1) (T2, error), initialValue T2
 			return value, err
 		}
 	}
+
 	return value, nil
 }
 
 // Count returns the number of elements in s where f returns true.
 func Count[T any](s []T, f func(T) bool) int {
 	count := 0
+
 	for _, e := range s {
 		if f(e) {
 			count++
 		}
 	}
+
 	return count
 }
 
@@ -121,15 +132,18 @@ func Count[T any](s []T, f func(T) bool) int {
 // Returns error the first time f returns error.
 func CountError[T any](s []T, f func(T) (bool, error)) (int, error) {
 	count := 0
+
 	for _, e := range s {
 		ok, err := f(e)
 		if err != nil {
 			return 0, err
 		}
+
 		if ok {
 			count++
 		}
 	}
+
 	return count, nil
 }
 
@@ -139,6 +153,7 @@ func ToStructMap[T comparable](s []T) map[T]struct{} {
 	for _, e := range s {
 		m[e] = struct{}{}
 	}
+
 	return m
 }
 
@@ -149,12 +164,14 @@ func ToStructMap[T comparable](s []T) map[T]struct{} {
 // TODO FUTURE: Make ToStructMap use this logic, remove ToStructMapOmitEmpty, to match other functions.
 func ToStructMapOmitEmpty[T comparable](s []T) map[T]struct{} {
 	var zero T
+
 	m := make(map[T]struct{}, len(s))
 	for _, e := range s {
 		if e != zero {
 			m[e] = struct{}{}
 		}
 	}
+
 	return m
 }
 
@@ -165,13 +182,16 @@ func ToStructMapOmitEmpty[T comparable](s []T) map[T]struct{} {
 // Duplicate values of type K will result in a single map entry.
 func ToValuesMap[K comparable, V any](s []V, f func(V) K) map[K][]V {
 	var zero K
+
 	m := make(map[K][]V)
+
 	for _, v := range s {
 		k := f(v)
 		if k != zero {
 			m[k] = append(m[k], v)
 		}
 	}
+
 	return m
 }
 
@@ -184,16 +204,20 @@ func ToValuesMap[K comparable, V any](s []V, f func(V) K) map[K][]V {
 // Returns error the first time f returns error.
 func ToValuesMapError[K comparable, V any](s []V, f func(V) (K, error)) (map[K][]V, error) {
 	var zero K
+
 	m := make(map[K][]V)
+
 	for _, v := range s {
 		k, err := f(v)
 		if err != nil {
 			return nil, err
 		}
+
 		if k != zero {
 			m[k] = append(m[k], v)
 		}
 	}
+
 	return m, nil
 }
 
@@ -214,19 +238,24 @@ func ToUniqueValuesMap[K comparable, V any](s []V, f func(V) K) (map[K]V, error)
 // Otherwise returns error the first time f returns error.
 func ToUniqueValuesMapError[K comparable, V any](s []V, f func(V) (K, error)) (map[K]V, error) {
 	var zero K
+
 	m := make(map[K]V)
+
 	for _, v := range s {
 		k, err := f(v)
 		if err != nil {
 			return nil, err
 		}
+
 		if k != zero {
 			if _, ok := m[k]; ok {
 				return nil, fmt.Errorf("duplicate key: %v", k)
 			}
+
 			m[k] = v
 		}
 	}
+
 	return m, nil
 }
 
@@ -236,6 +265,7 @@ func ToIndexed[T any](s []T) []Indexed[T] {
 	for i, e := range s {
 		si[i] = Indexed[T]{Value: e, Index: i}
 	}
+
 	return si
 }
 
@@ -269,6 +299,7 @@ func IndexedToSortedValues[T any](s []Indexed[T]) []T {
 	c := make([]Indexed[T], len(s))
 	copy(c, s)
 	sort.Slice(c, func(i int, j int) bool { return c[i].Index < c[j].Index })
+
 	return IndexedToValues(c)
 }
 
@@ -276,6 +307,7 @@ func IndexedToSortedValues[T any](s []Indexed[T]) []T {
 func MapKeysToSortedSlice[M ~map[K]V, K cmp.Ordered, V any](m M) []K {
 	s := MapKeysToSlice(m)
 	slices.Sort(s)
+
 	return s
 }
 
@@ -285,6 +317,7 @@ func MapKeysToSlice[K comparable, V any](m map[K]V) []K {
 	for k := range m {
 		s = append(s, k)
 	}
+
 	return s
 }
 
@@ -295,6 +328,7 @@ func MapKeysToSlice[K comparable, V any](m map[K]V) []K {
 func MapValuesToSortedSlice[K comparable, V cmp.Ordered](m map[K]V) []V {
 	s := MapValuesToSlice(m)
 	slices.Sort(s)
+
 	return s
 }
 
@@ -307,6 +341,7 @@ func MapValuesToSlice[K comparable, V any](m map[K]V) []V {
 	for _, v := range m {
 		s = append(s, v)
 	}
+
 	return s
 }
 
@@ -320,6 +355,7 @@ func ToString[S ~[]T, T fmt.Stringer](s S) string {
 	if len(s) == 0 {
 		return ""
 	}
+
 	return "[" + strings.Join(Map(s, T.String), ",") + "]"
 }
 
@@ -330,25 +366,30 @@ func ToString[S ~[]T, T fmt.Stringer](s S) string {
 // If an element is the zero value, it is not added to duplicates.
 func Duplicates[T comparable](s []T) []T {
 	var zero T
+
 	count := make(map[T]int, len(s))
 	// Needed instead of var declaration to make tests pass.
 	duplicates := make([]T, 0)
+
 	for _, e := range s {
 		if e == zero {
 			continue
 		}
+
 		count[e]++
 		if count[e] == 2 {
 			// Only insert the first time this is found.
 			duplicates = append(duplicates, e)
 		}
 	}
+
 	return duplicates
 }
 
 // Deduplicate returns the unique values of s.
 func Deduplicate[V comparable](s []V) []V {
 	seen := make(map[V]struct{})
+
 	result := make([]V, 0, len(s))
 	for _, e := range s {
 		if _, ok := seen[e]; !ok {
@@ -356,6 +397,7 @@ func Deduplicate[V comparable](s []V) []V {
 			seen[e] = struct{}{}
 		}
 	}
+
 	return result
 }
 
@@ -364,6 +406,7 @@ func Deduplicate[V comparable](s []V) []V {
 // Earlier occurrences of a value are returned and later occurrences are dropped.
 func DeduplicateAny[K comparable, V any](s []V, f func(V) K) []V {
 	seen := make(map[K]struct{})
+
 	result := make([]V, 0, len(s))
 	for _, e := range s {
 		k := f(e)
@@ -372,6 +415,7 @@ func DeduplicateAny[K comparable, V any](s []V, f func(V) K) []V {
 			seen[k] = struct{}{}
 		}
 	}
+
 	return result
 }
 
@@ -384,9 +428,11 @@ func ToChunks[T any](s []T, chunkSize int) [][]T {
 	if len(s) == 0 {
 		return chunks
 	}
+
 	if chunkSize <= 0 {
 		return [][]T{s}
 	}
+
 	return slices.Collect(slices.Chunk(s, chunkSize))
 }
 
@@ -400,6 +446,7 @@ func ElementsContained[T comparable](superset []T, subset []T) bool {
 			return false
 		}
 	}
+
 	return true
 }
 

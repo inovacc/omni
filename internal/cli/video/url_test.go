@@ -8,6 +8,7 @@ import (
 func TestNormalizeVideoURL_RemovesTQuery(t *testing.T) {
 	in := "https://www.youtube.com/watch?v=YqHNOVlyIjU&t=208s"
 	got := normalizeVideoURL(in)
+
 	want := "https://www.youtube.com/watch?v=YqHNOVlyIjU"
 	if got != want {
 		t.Fatalf("normalizeVideoURL() = %q, want %q", got, want)
@@ -17,6 +18,7 @@ func TestNormalizeVideoURL_RemovesTQuery(t *testing.T) {
 func TestNormalizeVideoURL_RemovesTFragment(t *testing.T) {
 	in := "https://www.youtube.com/watch?v=YqHNOVlyIjU#t=208s"
 	got := normalizeVideoURL(in)
+
 	want := "https://www.youtube.com/watch?v=YqHNOVlyIjU"
 	if got != want {
 		t.Fatalf("normalizeVideoURL() = %q, want %q", got, want)
@@ -25,6 +27,7 @@ func TestNormalizeVideoURL_RemovesTFragment(t *testing.T) {
 
 func TestNormalizeVideoURL_LeavesNonHTTPUntouched(t *testing.T) {
 	in := "ytsearch:golang tutorial"
+
 	got := normalizeVideoURL(in)
 	if got != in {
 		t.Fatalf("normalizeVideoURL() = %q, want %q", got, in)

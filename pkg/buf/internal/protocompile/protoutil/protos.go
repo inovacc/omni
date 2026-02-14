@@ -102,6 +102,7 @@ func ProtoFromDescriptor(d protoreflect.Descriptor) proto.Message {
 		if res, ok := d.(DescriptorProtoWrapper); ok {
 			return res.AsProto()
 		}
+
 		return nil
 	}
 }
@@ -114,17 +115,20 @@ func ProtoFromFileDescriptor(d protoreflect.FileDescriptor) *descriptorpb.FileDe
 	if imp, ok := d.(protoreflect.FileImport); ok {
 		d = imp.FileDescriptor
 	}
+
 	type canProto interface {
 		FileDescriptorProto() *descriptorpb.FileDescriptorProto
 	}
 	if res, ok := d.(canProto); ok {
 		return res.FileDescriptorProto()
 	}
+
 	if res, ok := d.(DescriptorProtoWrapper); ok {
 		if fd, ok := res.AsProto().(*descriptorpb.FileDescriptorProto); ok {
 			return fd
 		}
 	}
+
 	return protodesc.ToFileDescriptorProto(d)
 }
 
@@ -139,11 +143,13 @@ func ProtoFromMessageDescriptor(d protoreflect.MessageDescriptor) *descriptorpb.
 	if res, ok := d.(canProto); ok {
 		return res.MessageDescriptorProto()
 	}
+
 	if res, ok := d.(DescriptorProtoWrapper); ok {
 		if md, ok := res.AsProto().(*descriptorpb.DescriptorProto); ok {
 			return md
 		}
 	}
+
 	return protodesc.ToDescriptorProto(d)
 }
 
@@ -158,11 +164,13 @@ func ProtoFromFieldDescriptor(d protoreflect.FieldDescriptor) *descriptorpb.Fiel
 	if res, ok := d.(canProto); ok {
 		return res.FieldDescriptorProto()
 	}
+
 	if res, ok := d.(DescriptorProtoWrapper); ok {
 		if fd, ok := res.AsProto().(*descriptorpb.FieldDescriptorProto); ok {
 			return fd
 		}
 	}
+
 	return protodesc.ToFieldDescriptorProto(d)
 }
 
@@ -177,11 +185,13 @@ func ProtoFromOneofDescriptor(d protoreflect.OneofDescriptor) *descriptorpb.Oneo
 	if res, ok := d.(canProto); ok {
 		return res.OneofDescriptorProto()
 	}
+
 	if res, ok := d.(DescriptorProtoWrapper); ok {
 		if ood, ok := res.AsProto().(*descriptorpb.OneofDescriptorProto); ok {
 			return ood
 		}
 	}
+
 	return protodesc.ToOneofDescriptorProto(d)
 }
 
@@ -196,11 +206,13 @@ func ProtoFromEnumDescriptor(d protoreflect.EnumDescriptor) *descriptorpb.EnumDe
 	if res, ok := d.(canProto); ok {
 		return res.EnumDescriptorProto()
 	}
+
 	if res, ok := d.(DescriptorProtoWrapper); ok {
 		if ed, ok := res.AsProto().(*descriptorpb.EnumDescriptorProto); ok {
 			return ed
 		}
 	}
+
 	return protodesc.ToEnumDescriptorProto(d)
 }
 
@@ -215,11 +227,13 @@ func ProtoFromEnumValueDescriptor(d protoreflect.EnumValueDescriptor) *descripto
 	if res, ok := d.(canProto); ok {
 		return res.EnumValueDescriptorProto()
 	}
+
 	if res, ok := d.(DescriptorProtoWrapper); ok {
 		if ed, ok := res.AsProto().(*descriptorpb.EnumValueDescriptorProto); ok {
 			return ed
 		}
 	}
+
 	return protodesc.ToEnumValueDescriptorProto(d)
 }
 
@@ -234,11 +248,13 @@ func ProtoFromServiceDescriptor(d protoreflect.ServiceDescriptor) *descriptorpb.
 	if res, ok := d.(canProto); ok {
 		return res.ServiceDescriptorProto()
 	}
+
 	if res, ok := d.(DescriptorProtoWrapper); ok {
 		if sd, ok := res.AsProto().(*descriptorpb.ServiceDescriptorProto); ok {
 			return sd
 		}
 	}
+
 	return protodesc.ToServiceDescriptorProto(d)
 }
 
@@ -253,10 +269,12 @@ func ProtoFromMethodDescriptor(d protoreflect.MethodDescriptor) *descriptorpb.Me
 	if res, ok := d.(canProto); ok {
 		return res.MethodDescriptorProto()
 	}
+
 	if res, ok := d.(DescriptorProtoWrapper); ok {
 		if md, ok := res.AsProto().(*descriptorpb.MethodDescriptorProto); ok {
 			return md
 		}
 	}
+
 	return protodesc.ToMethodDescriptorProto(d)
 }

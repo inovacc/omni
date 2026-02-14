@@ -212,13 +212,15 @@ func resolveBuiltins(file *File) {
 	file.dpBuiltins = new(builtins)
 	v := reflect.ValueOf(file.dpBuiltins).Elem()
 	ids := reflect.ValueOf(file.session.builtins)
+
 	for i := range v.NumField() {
 		field := v.Field(i)
 		tyField := v.Type().Field(i)
-		id := ids.FieldByName(tyField.Name).Interface().(intern.ID) //nolint:errcheck
+		id := ids.FieldByName(tyField.Name).Interface().(intern.ID)
 		kind := kinds[field.Type()]
 
 		var optional bool
+
 		for option := range strings.SplitSeq(tyField.Tag.Get("builtin"), ",") {
 			if option == "optional" {
 				optional = true
@@ -226,6 +228,7 @@ func resolveBuiltins(file *File) {
 		}
 
 		ref := file.exported.lookup(file, id)
+
 		sym := GetRef(file, ref)
 		if sym.IsZero() && optional {
 			continue
@@ -237,6 +240,7 @@ func resolveBuiltins(file *File) {
 				kind.kind.noun(), file.session.intern.Value(id), sym.Kind(),
 			))
 		}
+
 		kind.wrap(sym.Raw().data, field)
 	}
 }

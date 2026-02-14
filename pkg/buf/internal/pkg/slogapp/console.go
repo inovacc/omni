@@ -102,10 +102,12 @@ func newConsoleHandler(out io.Writer, logLevel slog.Level, options ...consoleHan
 		lock   sync.Mutex
 		buffer bytes.Buffer
 	)
+
 	delegateHandler := slog.NewJSONHandler(&buffer, &slog.HandlerOptions{
 		Level:       logLevel,
 		ReplaceAttr: consoleReplaceAttr,
 	})
+
 	return &consoleHandler{
 		enableColor: enableColor,
 		out:         out,
@@ -124,12 +126,15 @@ func (c *consoleHandler) Enabled(ctx context.Context, level slog.Level) bool {
 func (c *consoleHandler) Handle(ctx context.Context, r slog.Record) error {
 	c.lock.Lock()
 	defer c.lock.Unlock()
+
 	c.buffer.Reset()
+
 	if c.enableColor {
 		c.buffer.WriteString(colorize(r.Level.String(), getColor(r.Level)))
 	} else {
 		c.buffer.WriteString(r.Level.String())
 	}
+
 	c.buffer.WriteString(consoleSeparator)
 	c.buffer.WriteString(r.Message)
 	bufN := c.buffer.Len()
@@ -138,12 +143,15 @@ func (c *consoleHandler) Handle(ctx context.Context, r slog.Record) error {
 	if err := c.delegate.Handle(ctx, r); err != nil {
 		return err
 	}
+
 	if c.buffer.Len() == bufN+len(consoleSeparator+"{}\n") {
 		// No attributes to write, trim the buffer to remove the empty JSON object.
 		c.buffer.Truncate(bufN)
 		c.buffer.WriteByte('\n')
 	}
+
 	_, err := c.buffer.WriteTo(c.out)
+
 	return err
 }
 
@@ -189,6 +197,7 @@ func colorize(s string, color color) string {
 	if color == 0 {
 		return s
 	}
+
 	return fmt.Sprintf("\x1b[%dm%s\x1b[0m", color, s)
 }
 

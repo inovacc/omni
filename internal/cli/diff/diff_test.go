@@ -328,6 +328,7 @@ func TestRunDiff(t *testing.T) {
 		_ = os.WriteFile(file2, []byte("beta"), 0644)
 
 		var buf bytes.Buffer
+
 		_ = RunDiff(&buf, []string{file1, file2}, DiffOptions{Brief: true})
 
 		output := buf.String()
@@ -344,6 +345,7 @@ func TestRunDiff(t *testing.T) {
 		_ = os.WriteFile(file2, []byte("same"), 0644)
 
 		var buf bytes.Buffer
+
 		_ = RunDiff(&buf, []string{file1, file2}, DiffOptions{Brief: true})
 
 		output := buf.String()
@@ -360,6 +362,7 @@ func TestRunDiff(t *testing.T) {
 		_ = os.WriteFile(file2, []byte("line1\nchanged\nline3"), 0644)
 
 		var buf bytes.Buffer
+
 		_ = RunDiff(&buf, []string{file1, file2}, DiffOptions{Side: true, Width: 80})
 
 		output := buf.String()
@@ -380,6 +383,7 @@ func TestRunDiff(t *testing.T) {
 		_ = os.WriteFile(file2, []byte("same1\nsame2\nchanged\nsame3"), 0644)
 
 		var buf bytes.Buffer
+
 		_ = RunDiff(&buf, []string{file1, file2}, DiffOptions{Side: true, SuppressCommon: true})
 
 		output := buf.String()
@@ -396,8 +400,8 @@ func TestRunDiff(t *testing.T) {
 		_ = os.WriteFile(file2, []byte("hello\nworld"), 0644)
 
 		var buf bytes.Buffer
-		err := RunDiff(&buf, []string{file1, file2}, DiffOptions{IgnoreCase: true})
 
+		err := RunDiff(&buf, []string{file1, file2}, DiffOptions{IgnoreCase: true})
 		if err != nil {
 			t.Fatalf("RunDiff() with IgnoreCase error = %v", err)
 		}
@@ -416,8 +420,8 @@ func TestRunDiff(t *testing.T) {
 		_ = os.WriteFile(file2, []byte("hello world"), 0644)
 
 		var buf bytes.Buffer
-		err := RunDiff(&buf, []string{file1, file2}, DiffOptions{IgnoreSpace: true})
 
+		err := RunDiff(&buf, []string{file1, file2}, DiffOptions{IgnoreSpace: true})
 		if err != nil {
 			t.Fatalf("RunDiff() with IgnoreSpace error = %v", err)
 		}
@@ -431,8 +435,8 @@ func TestRunDiff(t *testing.T) {
 		_ = os.WriteFile(file2, []byte("line1\nline2"), 0644)
 
 		var buf bytes.Buffer
-		err := RunDiff(&buf, []string{file1, file2}, DiffOptions{IgnoreBlank: true})
 
+		err := RunDiff(&buf, []string{file1, file2}, DiffOptions{IgnoreBlank: true})
 		if err != nil {
 			t.Fatalf("RunDiff() with IgnoreBlank error = %v", err)
 		}
@@ -446,6 +450,7 @@ func TestRunDiff(t *testing.T) {
 		_ = os.WriteFile(file2, []byte("new"), 0644)
 
 		var buf bytes.Buffer
+
 		_ = RunDiff(&buf, []string{file1, file2}, DiffOptions{Color: true})
 
 		output := buf.String()
@@ -462,11 +467,12 @@ func TestRunDiff(t *testing.T) {
 		_ = os.WriteFile(file2, []byte(`{"a":1,"b":2}`), 0644)
 
 		var buf bytes.Buffer
-		err := RunDiff(&buf, []string{file1, file2}, DiffOptions{JSON: true})
 
+		err := RunDiff(&buf, []string{file1, file2}, DiffOptions{JSON: true})
 		if err != nil {
 			t.Fatalf("RunDiff() JSON compare error = %v", err)
 		}
+
 		if buf.Len() > 0 {
 			t.Error("identical JSON should produce no output")
 		}
@@ -480,12 +486,14 @@ func TestRunDiff(t *testing.T) {
 		_ = os.WriteFile(file2, []byte(`{"a":1,"b":3,"c":4}`), 0644)
 
 		var buf bytes.Buffer
+
 		_ = RunDiff(&buf, []string{file1, file2}, DiffOptions{JSON: true})
 
 		output := buf.String()
 		if !strings.Contains(output, "b") {
 			t.Error("expected JSON diff to mention changed key 'b'")
 		}
+
 		if !strings.Contains(output, "c") {
 			t.Error("expected JSON diff to mention added key 'c'")
 		}
@@ -499,8 +507,8 @@ func TestRunDiff(t *testing.T) {
 		_ = os.WriteFile(file2, []byte(`{"a":1}`), 0644)
 
 		var buf bytes.Buffer
-		err := RunDiff(&buf, []string{file1, file2}, DiffOptions{JSON: true})
 
+		err := RunDiff(&buf, []string{file1, file2}, DiffOptions{JSON: true})
 		if err == nil {
 			t.Error("expected error for invalid JSON")
 		}
@@ -518,15 +526,17 @@ func TestRunDiff(t *testing.T) {
 		_ = os.WriteFile(filepath.Join(dir2, "only_in_2.txt"), []byte("y"), 0644)
 
 		var buf bytes.Buffer
-		err := RunDiff(&buf, []string{dir1, dir2}, DiffOptions{Recursive: true})
 
+		err := RunDiff(&buf, []string{dir1, dir2}, DiffOptions{Recursive: true})
 		if err != nil {
 			t.Fatalf("recursive diff error = %v", err)
 		}
+
 		output := buf.String()
 		if !strings.Contains(output, "only_in_1") {
 			t.Error("expected 'Only in' message for only_in_1.txt")
 		}
+
 		if !strings.Contains(output, "only_in_2") {
 			t.Error("expected 'Only in' message for only_in_2.txt")
 		}
@@ -539,6 +549,7 @@ func TestRunDiff(t *testing.T) {
 		_ = os.MkdirAll(dir2, 0755)
 
 		var buf bytes.Buffer
+
 		err := RunDiff(&buf, []string{dir1, dir2}, DiffOptions{})
 		if err == nil {
 			t.Error("expected error when comparing directories without recursive flag")

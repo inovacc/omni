@@ -181,6 +181,7 @@ func TestHover(t *testing.T) {
 			clientJSONConn, testURI := setupLSPServer(t, protoPath)
 
 			var hover *protocol.Hover
+
 			_, hoverErr := clientJSONConn.Call(ctx, protocol.MethodTextDocumentHover, protocol.HoverParams{
 				TextDocumentPositionParams: protocol.TextDocumentPositionParams{
 					TextDocument: protocol.TextDocumentIdentifier{
@@ -202,6 +203,7 @@ func TestHover(t *testing.T) {
 					assert.Equal(t, protocol.Markdown, hover.Contents.Kind)
 					assert.Contains(t, hover.Contents.Value, tt.expectedContains)
 				}
+
 				if tt.expectedNotContains != "" {
 					require.NotNil(t, hover, "expected hover to be non-nil")
 					assert.Equal(t, protocol.Markdown, hover.Contents.Kind)

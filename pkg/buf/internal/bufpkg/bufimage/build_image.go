@@ -51,17 +51,21 @@ func buildImage(
 	if !moduleReadBucket.ShouldBeSelfContained() {
 		return nil, syserror.New("passed a ModuleReadBucket to BuildImage that was not expected to be self-contained")
 	}
+
 	moduleReadBucket = bufmodule2.ModuleReadBucketWithOnlyProtoFiles(moduleReadBucket)
 	parserAccessorHandler := newParserAccessorHandler(ctx, moduleReadBucket)
+
 	targetFileInfos, err := bufmodule2.GetTargetFileInfos(ctx, moduleReadBucket)
 	if err != nil {
 		return nil, err
 	}
+
 	if len(targetFileInfos) == 0 {
-		// If we had no no target files within the module after path filtering, this is an error.
+		// If we had no target files within the module after path filtering, this is an error.
 		// We could have a better user error than this. This gets back to the lack of allowNotExist.
 		return nil, bufmodule2.ErrNoTargetProtoFiles
 	}
+
 	paths := bufmodule2.FileInfoPaths(targetFileInfos)
 
 	buildResult := getBuildResult(
@@ -74,10 +78,12 @@ func buildImage(
 	if buildResult.Err != nil {
 		return nil, buildResult.Err
 	}
+
 	sortedFiles, err := checkAndSortFiles(buildResult.Files, paths)
 	if err != nil {
 		return nil, err
 	}
+
 	image, err := getImage(
 		ctx,
 		excludeSourceCodeInfo,
@@ -90,6 +96,7 @@ func buildImage(
 	if err != nil {
 		return nil, err
 	}
+
 	return image, nil
 }
 
@@ -100,8 +107,10 @@ func getBuildResult(
 	excludeSourceCodeInfo bool,
 	noParallelism bool,
 ) *buildResult {
-	var errorsWithPos []reporter.ErrorWithPos
-	var warningErrorsWithPos []reporter.ErrorWithPos
+	var (
+		errorsWithPos        []reporter.ErrorWithPos
+		warningErrorsWithPos []reporter.ErrorWithPos
+	)
 	// With "extra option locations", buf can include more comments
 	// for an option value than protoc can. In particular, this allows
 	// it to preserve comments inside of message literals.
@@ -109,10 +118,12 @@ func getBuildResult(
 	if excludeSourceCodeInfo {
 		sourceInfoMode = protocompile.SourceInfoNone
 	}
+
 	parallelism := thread.Parallelism()
 	if noParallelism {
 		parallelism = 1
 	}
+
 	symbols := &linker.Symbols{}
 	compiler := protocompile.Compiler{
 		MaxParallelism: parallelism,
@@ -138,6 +149,7 @@ func getBuildResult(
 					errors.New("got invalid source error from parse but no errors reported"),
 				)
 			}
+
 			fileAnnotationSet, err := bufprotocompile.FileAnnotationSetForErrorsWithPos(
 				errorsWithPos,
 				bufprotocompile.WithExternalPathResolver(parserAccessorHandler.ExternalPath),
@@ -145,8 +157,10 @@ func getBuildResult(
 			if err != nil {
 				return newFailedBuildResult(err)
 			}
+
 			return newFailedBuildResult(fileAnnotationSet)
 		}
+
 		if errorWithPos, ok := err.(reporter.ErrorWithPos); ok {
 			fileAnnotation, err := bufprotocompile.FileAnnotationForErrorWithPos(
 				errorWithPos,
@@ -155,8 +169,10 @@ func getBuildResult(
 			if err != nil {
 				return newFailedBuildResult(err)
 			}
+
 			return newFailedBuildResult(bufanalysis.NewFileAnnotationSet(fileAnnotation))
 		}
+
 		return newFailedBuildResult(err)
 	} else if len(errorsWithPos) > 0 {
 		// https://github.com/jhump/protoreflect/pull/331
@@ -164,11 +180,13 @@ func getBuildResult(
 			errors.New("got no error from parse but errors reported"),
 		)
 	}
+
 	if len(compiledFiles) != len(paths) {
 		return newFailedBuildResult(
 			fmt.Errorf("expected FileDescriptors to be of length %d but was %d", len(paths), len(compiledFiles)),
 		)
 	}
+
 	for i, fileDescriptor := range compiledFiles {
 		path := paths[i]
 		filename := fileDescriptor.Path()
@@ -180,12 +198,15 @@ func getBuildResult(
 			)
 		}
 	}
+
 	syntaxUnspecifiedFilenames := make(map[string]struct{})
 	filenameToUnusedDependencyFilenames := make(map[string]map[string]struct{})
+
 	for _, warningErrorWithPos := range warningErrorsWithPos {
 		maybeAddSyntaxUnspecified(syntaxUnspecifiedFilenames, warningErrorWithPos)
 		maybeAddUnusedImport(filenameToUnusedDependencyFilenames, warningErrorWithPos)
 	}
+
 	return newBuildResult(
 		compiledFiles,
 		symbols,
@@ -204,28 +225,34 @@ func checkAndSortFiles(
 	if len(fileDescriptors) != len(rootRelFilePaths) {
 		return nil, fmt.Errorf("rootRelFilePath length was %d but FileDescriptor length was %d", len(rootRelFilePaths), len(fileDescriptors))
 	}
+
 	nameToFileDescriptor := make(map[string]linker.File, len(fileDescriptors))
 	for _, fileDescriptor := range fileDescriptors {
 		name := fileDescriptor.Path()
 		if name == "" {
 			return nil, errors.New("no name on FileDescriptor")
 		}
+
 		if _, ok := nameToFileDescriptor[name]; ok {
 			return nil, fmt.Errorf("duplicate FileDescriptor: %s", name)
 		}
+
 		nameToFileDescriptor[name] = fileDescriptor
 	}
 	// We now know that all FileDescriptors had unique names and the number of FileDescriptors
 	// is equal to the number of rootRelFilePaths. We also verified earlier that rootRelFilePaths
 	// has only unique values. Now we can put them in order.
 	sortedFileDescriptors := make(linker.Files, 0, len(fileDescriptors))
+
 	for _, rootRelFilePath := range rootRelFilePaths {
 		fileDescriptor, ok := nameToFileDescriptor[rootRelFilePath]
 		if !ok {
 			return nil, fmt.Errorf("no FileDescriptor for rootRelFilePath: %q", rootRelFilePath)
 		}
+
 		sortedFileDescriptors = append(sortedFileDescriptors, fileDescriptor)
 	}
+
 	return sortedFileDescriptors, nil
 }
 
@@ -255,8 +282,11 @@ func getImage(
 		nonImportFilenames[fileDescriptor.Path()] = struct{}{}
 	}
 
-	var imageFiles []ImageFile
-	var err error
+	var (
+		imageFiles []ImageFile
+		err        error
+	)
+
 	alreadySeen := map[string]struct{}{}
 	for _, fileDescriptor := range sortedFiles {
 		imageFiles, err = getImageFilesRec(
@@ -274,6 +304,7 @@ func getImage(
 			return nil, err
 		}
 	}
+
 	return newImage(imageFiles, false, newResolverForFiles(sortedFiles, symbols))
 }
 
@@ -291,18 +322,23 @@ func getImageFilesRec(
 	if fileDescriptor == nil {
 		return nil, errors.New("nil FileDescriptor")
 	}
+
 	path := fileDescriptor.Path()
 	if _, ok := alreadySeen[path]; ok {
 		return imageFiles, nil
 	}
+
 	alreadySeen[path] = struct{}{}
 
 	unusedDependencyFilenames, ok := filenameToUnusedDependencyFilenames[path]
+
 	var unusedDependencyIndexes []int32
 	if ok {
 		unusedDependencyIndexes = make([]int32, 0, len(unusedDependencyFilenames))
 	}
+
 	var err error
+
 	for i := range fileDescriptor.Imports().Len() {
 		dependency := fileDescriptor.Imports().Get(i).FileDescriptor
 		if unusedDependencyFilenames != nil {
@@ -312,12 +348,14 @@ func getImageFilesRec(
 				if i > math.MaxInt32 || i < math.MinInt32 {
 					return nil, fmt.Errorf("unused dependency index out-of-bounds for int32 conversion: %v", i)
 				}
+
 				unusedDependencyIndexes = append(
 					unusedDependencyIndexes,
 					int32(i),
 				)
 			}
 		}
+
 		imageFiles, err = getImageFilesRec(
 			ctx,
 			excludeSourceCodeInfo,
@@ -338,12 +376,15 @@ func getImageFilesRec(
 	if fileDescriptorProto == nil {
 		return nil, errors.New("nil FileDescriptorProto")
 	}
+
 	if excludeSourceCodeInfo {
 		// need to do this anyways as Parser does not respect this for FileDescriptorProtos
 		fileDescriptorProto.SourceCodeInfo = nil
 	}
+
 	_, isNotImport := nonImportFilenames[path]
 	_, syntaxUnspecified := syntaxUnspecifiedFilenames[path]
+
 	imageFile, err := NewImageFile(
 		fileDescriptorProto,
 		parserAccessorHandler.FullName(path),
@@ -358,6 +399,7 @@ func getImageFilesRec(
 	if err != nil {
 		return nil, err
 	}
+
 	return append(imageFiles, imageFile), nil
 }
 
@@ -368,6 +410,7 @@ func maybeAddSyntaxUnspecified(
 	if errorWithPos.Unwrap() != parser.ErrNoSyntax {
 		return
 	}
+
 	syntaxUnspecifiedFilenames[errorWithPos.GetPosition().Filename] = struct{}{}
 }
 
@@ -379,12 +422,15 @@ func maybeAddUnusedImport(
 	if !ok {
 		return
 	}
+
 	pos := errorWithPos.GetPosition()
+
 	unusedImportFilenames, ok := filenameToUnusedImportFilenames[pos.Filename]
 	if !ok {
 		unusedImportFilenames = make(map[string]struct{})
 		filenameToUnusedImportFilenames[pos.Filename] = unusedImportFilenames
 	}
+
 	unusedImportFilenames[errorUnusedImport.UnusedImport()] = struct{}{}
 }
 
@@ -438,6 +484,7 @@ func newResolverForFiles(files linker.Files, symbols *linker.Symbols) protoencod
 	for _, file := range files {
 		addFileToMapRec(pathToFile, file)
 	}
+
 	return &resolverForFiles{pathToFile: pathToFile, symbols: symbols}
 }
 
@@ -446,6 +493,7 @@ func (r *resolverForFiles) FindFileByPath(path string) (protoreflect.FileDescrip
 	if !ok {
 		return nil, protoregistry.NotFound
 	}
+
 	return fileDescriptor, nil
 }
 
@@ -454,10 +502,12 @@ func (r *resolverForFiles) FindDescriptorByName(name protoreflect.FullName) (pro
 	if span == nil {
 		return nil, protoregistry.NotFound
 	}
+
 	descriptor := r.pathToFile[span.Start().Filename].FindDescriptorByName(name)
 	if descriptor == nil {
 		return nil, protoregistry.NotFound
 	}
+
 	return descriptor, nil
 }
 
@@ -466,13 +516,16 @@ func (r *resolverForFiles) FindExtensionByName(field protoreflect.FullName) (pro
 	if err != nil {
 		return nil, err
 	}
+
 	extensionDescriptor, ok := descriptor.(protoreflect.ExtensionDescriptor)
 	if !ok {
 		return nil, fmt.Errorf("%s is a %T, not a protoreflect.ExtensionDescriptor", field, descriptor)
 	}
+
 	if extensionTypeDescriptor, ok := extensionDescriptor.(protoreflect.ExtensionTypeDescriptor); ok {
 		return extensionTypeDescriptor.Type(), nil
 	}
+
 	return dynamicpb.NewExtensionType(extensionDescriptor), nil
 }
 
@@ -481,13 +534,16 @@ func (r *resolverForFiles) FindExtensionByNumber(message protoreflect.FullName, 
 	if span == nil {
 		return nil, protoregistry.NotFound
 	}
+
 	extensionDescriptor := findExtension(r.pathToFile[span.Start().Filename], message, field)
 	if extensionDescriptor == nil {
 		return nil, protoregistry.NotFound
 	}
+
 	if extensionTypeDescriptor, ok := extensionDescriptor.(protoreflect.ExtensionTypeDescriptor); ok {
 		return extensionTypeDescriptor.Type(), nil
 	}
+
 	return dynamicpb.NewExtensionType(extensionDescriptor), nil
 }
 
@@ -496,10 +552,12 @@ func (r *resolverForFiles) FindMessageByName(message protoreflect.FullName) (pro
 	if err != nil {
 		return nil, err
 	}
+
 	messageDescriptor, ok := descriptor.(protoreflect.MessageDescriptor)
 	if !ok {
 		return nil, fmt.Errorf("%s is a %T, not a protoreflect.MessageDescriptor", message, descriptor)
 	}
+
 	return dynamicpb.NewMessageType(messageDescriptor), nil
 }
 
@@ -513,10 +571,12 @@ func (r *resolverForFiles) FindEnumByName(enum protoreflect.FullName) (protorefl
 	if err != nil {
 		return nil, err
 	}
+
 	enumDescriptor, ok := descriptor.(protoreflect.EnumDescriptor)
 	if !ok {
 		return nil, fmt.Errorf("%s is a %T, not a protoreflect.EnumDescriptor", enum, descriptor)
 	}
+
 	return dynamicpb.NewEnumType(enumDescriptor), nil
 }
 
@@ -533,11 +593,13 @@ func findExtension(d container, message protoreflect.FullName, field protoreflec
 			return extension
 		}
 	}
+
 	for i := range d.Messages().Len() {
 		if ext := findExtension(d.Messages().Get(i), message, field); ext != nil {
 			return ext
 		}
 	}
+
 	return nil // could not be found
 }
 
@@ -545,7 +607,9 @@ func addFileToMapRec(pathToFile map[string]linker.File, file linker.File) {
 	if _, alreadyAdded := pathToFile[file.Path()]; alreadyAdded {
 		return
 	}
+
 	pathToFile[file.Path()] = file
+
 	imports := file.Imports()
 	for i, length := 0, imports.Len(); i < length; i++ {
 		importedFile := file.FindImportByPath(imports.Get(i).Path())

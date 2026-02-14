@@ -44,9 +44,11 @@ func (f *fileWalker) Walk(ctx context.Context, fu func(io.Reader) error) error {
 			if err != nil {
 				return err
 			}
+
 			defer func() {
 				retErr = errors.Join(retErr, readObjectCloser.Close())
 			}()
+
 			return fu(readObjectCloser)
 		},
 	)

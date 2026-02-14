@@ -31,6 +31,7 @@ var _ FileDeclNode = (*NoSourceNode)(nil)
 // protobuf source file.
 type FileNode struct {
 	compositeNode
+
 	fileInfo *FileInfo
 
 	// A file has either a Syntax or Edition node, never both.
@@ -63,6 +64,7 @@ func NewFileNodeWithEdition(info *FileInfo, edition *EditionNode, decls []FileEl
 	if edition == nil {
 		panic("edition is nil")
 	}
+
 	return newFileNode(info, nil, edition, decls, eof)
 }
 
@@ -71,12 +73,14 @@ func newFileNode(info *FileInfo, syntax *SyntaxNode, edition *EditionNode, decls
 	if syntax != nil || edition != nil {
 		numChildren++
 	}
+
 	children := make([]Node, 0, numChildren)
 	if syntax != nil {
 		children = append(children, syntax)
 	} else if edition != nil {
 		children = append(children, edition)
 	}
+
 	for _, decl := range decls {
 		switch decl := decl.(type) {
 		case *PackageNode, *ImportNode, *OptionNode, *MessageNode,
@@ -84,6 +88,7 @@ func newFileNode(info *FileInfo, syntax *SyntaxNode, edition *EditionNode, decls
 		default:
 			panic(fmt.Sprintf("invalid FileElement type: %T", decl))
 		}
+
 		children = append(children, decl)
 	}
 
@@ -170,6 +175,7 @@ var _ FileElement = (*EmptyDeclNode)(nil)
 // Files that don't have a syntax node are assumed to use proto2 syntax.
 type SyntaxNode struct {
 	compositeNode
+
 	Keyword   *KeywordNode
 	Equals    *RuneNode
 	Syntax    StringValueNode
@@ -185,18 +191,22 @@ func NewSyntaxNode(keyword *KeywordNode, equals *RuneNode, syntax StringValueNod
 	if keyword == nil {
 		panic("keyword is nil")
 	}
+
 	if equals == nil {
 		panic("equals is nil")
 	}
+
 	if syntax == nil {
 		panic("syntax is nil")
 	}
+
 	var children []Node
 	if semicolon == nil {
 		children = []Node{keyword, equals, syntax}
 	} else {
 		children = []Node{keyword, equals, syntax, semicolon}
 	}
+
 	return &SyntaxNode{
 		compositeNode: compositeNode{
 			children: children,
@@ -217,6 +227,7 @@ func NewSyntaxNode(keyword *KeywordNode, equals *RuneNode, syntax StringValueNod
 // If neither are present, the file is assumed to use proto2 syntax.
 type EditionNode struct {
 	compositeNode
+
 	Keyword   *KeywordNode
 	Equals    *RuneNode
 	Edition   StringValueNode
@@ -232,16 +243,21 @@ func NewEditionNode(keyword *KeywordNode, equals *RuneNode, edition StringValueN
 	if keyword == nil {
 		panic("keyword is nil")
 	}
+
 	if equals == nil {
 		panic("equals is nil")
 	}
+
 	if edition == nil {
 		panic("edition is nil")
 	}
+
 	if semicolon == nil {
 		panic("semicolon is nil")
 	}
+
 	children := []Node{keyword, equals, edition, semicolon}
+
 	return &EditionNode{
 		compositeNode: compositeNode{
 			children: children,
@@ -258,6 +274,7 @@ func NewEditionNode(keyword *KeywordNode, equals *RuneNode, edition StringValueN
 //	import "google/protobuf/empty.proto";
 type ImportNode struct {
 	compositeNode
+
 	Keyword *KeywordNode
 	// Optional; if present indicates this is a public import
 	// Deprecated: Use Modifier field instead.
@@ -286,12 +303,14 @@ type ImportNode struct {
 //   - semicolon: The token corresponding to the ";" rune that ends the declaration.
 func NewImportNode(keyword *KeywordNode, public *KeywordNode, weak *KeywordNode, name StringValueNode, semicolon *RuneNode) *ImportNode {
 	var modifier *KeywordNode
+
 	switch {
 	case public != nil:
 		modifier = public
 	case weak != nil:
 		modifier = weak
 	}
+
 	return NewImportNodeWithModifier(keyword, modifier, name, semicolon)
 }
 
@@ -306,27 +325,34 @@ func NewImportNodeWithModifier(keyword *KeywordNode, modifier *KeywordNode, name
 	if keyword == nil {
 		panic("keyword is nil")
 	}
+
 	if name == nil {
 		panic("name is nil")
 	}
+
 	numChildren := 2 // keyword + name
 	if semicolon != nil {
 		numChildren++
 	}
+
 	if modifier != nil {
 		numChildren++
 	}
+
 	children := make([]Node, 0, numChildren)
+
 	children = append(children, keyword)
 	if modifier != nil {
 		children = append(children, modifier)
 	}
+
 	children = append(children, name)
 	if semicolon != nil {
 		children = append(children, semicolon)
 	}
 	// For backwards compatibility, populate the appropriate legacy field.
 	var public, weak *KeywordNode
+
 	if modifier != nil {
 		switch modifier.Val {
 		case "public":
@@ -335,6 +361,7 @@ func NewImportNodeWithModifier(keyword *KeywordNode, modifier *KeywordNode, name
 			weak = modifier
 		}
 	}
+
 	return &ImportNode{
 		compositeNode: compositeNode{
 			children: children,
@@ -355,6 +382,7 @@ func (*ImportNode) fileElement() {}
 //	package foobar.com;
 type PackageNode struct {
 	compositeNode
+
 	Keyword   *KeywordNode
 	Name      IdentValueNode
 	Semicolon *RuneNode
@@ -370,15 +398,18 @@ func NewPackageNode(keyword *KeywordNode, name IdentValueNode, semicolon *RuneNo
 	if keyword == nil {
 		panic("keyword is nil")
 	}
+
 	if name == nil {
 		panic("name is nil")
 	}
+
 	var children []Node
 	if semicolon == nil {
 		children = []Node{keyword, name}
 	} else {
 		children = []Node{keyword, name, semicolon}
 	}
+
 	return &PackageNode{
 		compositeNode: compositeNode{
 			children: children,

@@ -41,24 +41,28 @@ func (s *markSweeper) Mark(imageFile bufimage.ImageFile, path []int32) {
 		paths = make(map[string]struct{})
 		s.sourceCodeInfoPaths[imageFile.Path()] = paths
 	}
+
 	paths[getPathKey(path)] = struct{}{}
 }
 
 func (s *markSweeper) Sweep() error {
 	for _, imageFile := range s.image.Files() {
 		descriptor := imageFile.FileDescriptorProto()
-		if descriptor.SourceCodeInfo == nil {
+		if descriptor.GetSourceCodeInfo() == nil {
 			continue
 		}
+
 		paths, ok := s.sourceCodeInfoPaths[imageFile.Path()]
 		if !ok {
 			continue
 		}
-		err := removeLocationsFromSourceCodeInfo(descriptor.SourceCodeInfo, paths)
+
+		err := removeLocationsFromSourceCodeInfo(descriptor.GetSourceCodeInfo(), paths)
 		if err != nil {
 			return err
 		}
 	}
+
 	return nil
 }
 
@@ -80,32 +84,40 @@ func removeLocationsFromSourceCodeInfo(
 	indices := make(map[int]struct{}, len(pathsToRemove)*2)
 	// each path in this trie is for a FieldOptions message (not for a singular option)
 	var fieldOptionsPaths fieldOptionsTrie
-	for i, location := range sourceCodeInfo.Location {
-		path := location.Path
+
+	for i, location := range sourceCodeInfo.GetLocation() {
+		path := location.GetPath()
+
 		pathType := getPathType(path)
 		if pathType == pathTypeFieldOptionsRoot {
 			fieldOptionsPaths.insert(path, i)
 		}
+
 		if _, ok := pathsToRemove[getPathKey(path)]; !ok {
 			if pathType == pathTypeFieldOption {
 				// This field option path will not be removed, register it to its
 				// parent FieldOptions.
 				fieldOptionsPaths.registerDescendant(path)
 			}
+
 			continue
 		}
+
 		if i == 0 {
-			return fmt.Errorf("path %v must have a preceding parent path", location.Path)
+			return fmt.Errorf("path %v must have a preceding parent path", location.GetPath())
 		}
-		if isPathForFileOption(location.Path) {
-			if !slices.Equal(sourceCodeInfo.Location[i-1].Path, fileOptionPath) {
-				return fmt.Errorf("file option path %v must have a preceding parent path equal to %v", location.Path, fileOptionPath)
+
+		if isPathForFileOption(location.GetPath()) {
+			if !slices.Equal(sourceCodeInfo.GetLocation()[i-1].GetPath(), fileOptionPath) {
+				return fmt.Errorf("file option path %v must have a preceding parent path equal to %v", location.GetPath(), fileOptionPath)
 			}
 			// Add the target path and its parent.
 			indices[i-1] = struct{}{}
 			indices[i] = struct{}{}
+
 			continue
 		}
+
 		if pathType == pathTypeFieldOption {
 			// Note that there is a difference between the generated file option paths and field options paths.
 			// For example, for:
@@ -133,8 +145,10 @@ func removeLocationsFromSourceCodeInfo(
 			indices[i] = struct{}{}
 			continue
 		}
-		return fmt.Errorf("path %v is neither a file option path nor a field option path", location.Path)
+
+		return fmt.Errorf("path %v is neither a file option path nor a field option path", location.GetPath())
 	}
+
 	for _, emptyFieldOptions := range fieldOptionsPaths.indicesWithoutDescendant() {
 		indices[emptyFieldOptions] = struct{}{}
 	}
@@ -143,15 +157,18 @@ func removeLocationsFromSourceCodeInfo(
 	locations := make(
 		[]*descriptorpb.SourceCodeInfo_Location,
 		0,
-		len(sourceCodeInfo.Location)-len(indices),
+		len(sourceCodeInfo.GetLocation())-len(indices),
 	)
-	for i, location := range sourceCodeInfo.Location {
+	for i, location := range sourceCodeInfo.GetLocation() {
 		if _, ok := indices[i]; ok {
 			continue
 		}
+
 		locations = append(locations, location)
 	}
+
 	sourceCodeInfo.Location = locations
+
 	return nil
 }
 
@@ -164,6 +181,7 @@ func isPathForFileOption(path []int32) bool {
 // getPathKey returns a unique key for the given path.
 func getPathKey(path []int32) string {
 	key := make([]byte, len(path)*4)
+
 	j := 0
 	for _, elem := range path {
 		key[j] = byte(elem)
@@ -172,5 +190,6 @@ func getPathKey(path []int32) string {
 		key[j+3] = byte(elem >> 24)
 		j += 4
 	}
+
 	return string(key)
 }

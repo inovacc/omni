@@ -21,6 +21,7 @@ func RunBanner(w io.Writer, r io.Reader, args []string, opts Options) error {
 		for _, name := range figlet.ListFonts() {
 			_, _ = fmt.Fprintln(w, name)
 		}
+
 		return nil
 	}
 
@@ -32,6 +33,7 @@ func RunBanner(w io.Writer, r io.Reader, args []string, opts Options) error {
 		if err != nil {
 			return fmt.Errorf("banner: read stdin: %w", err)
 		}
+
 		text = strings.TrimRight(string(data), "\n\r")
 	}
 
@@ -45,6 +47,7 @@ func RunBanner(w io.Writer, r io.Reader, args []string, opts Options) error {
 	}
 
 	var renderOpts []figlet.Option
+
 	renderOpts = append(renderOpts, figlet.WithFont(fontName))
 	if opts.Width > 0 {
 		renderOpts = append(renderOpts, figlet.WithWidth(opts.Width))
@@ -56,5 +59,6 @@ func RunBanner(w io.Writer, r io.Reader, args []string, opts Options) error {
 	}
 
 	_, _ = fmt.Fprintln(w, result)
+
 	return nil
 }

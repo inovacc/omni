@@ -154,6 +154,7 @@ func BindVisibility(flagSet *pflag.FlagSet, addr *string, flagName string, empty
 	if emptyDefault {
 		defaultVisibility = ""
 	}
+
 	flagSet.StringVar(
 		addr,
 		flagName,
@@ -213,6 +214,7 @@ func (b *stringPointerValue) String() string {
 	if *b.valuePointer == nil {
 		return ""
 	}
+
 	return **b.valuePointer
 }
 
@@ -270,6 +272,7 @@ func GetInputValue(
 	defaultValue string,
 ) (string, error) {
 	var arg string
+
 	switch numArgs := container.NumArgs(); numArgs {
 	case 0:
 		if inputHashtag != "" {
@@ -287,9 +290,11 @@ func GetInputValue(
 	default:
 		return "", fmt.Errorf("only 1 argument allowed but %d arguments specified", numArgs)
 	}
+
 	if arg != "" {
 		return arg, nil
 	}
+
 	return defaultValue, nil
 }
 
@@ -386,6 +391,7 @@ func ValidateRequiredFlag[T comparable](flagName string, value T) error {
 	if value == zero {
 		return appcmd.NewInvalidArgumentErrorf("--%s is required", flagName)
 	}
+
 	return nil
 }
 
@@ -398,5 +404,6 @@ func validateErrorFormatFlag(validFormatStrings []string, errorFormatString stri
 	if slices.Contains(validFormatStrings, errorFormatString) {
 		return nil
 	}
+
 	return appcmd.NewInvalidArgumentErrorf("--%s: invalid format: %q", errorFormatFlagName, errorFormatString)
 }

@@ -43,8 +43,10 @@ func NewReadBucket(pathToData map[string][]byte) (storage2.ReadBucket, error) {
 		if _, ok := pathToImmutableObject[path]; ok {
 			return nil, errDuplicatePath
 		}
+
 		pathToImmutableObject[path] = internal.NewImmutableObject(path, "", "", data)
 	}
+
 	return newBucket(pathToImmutableObject), nil
 }
 
@@ -54,9 +56,11 @@ func CopyReadBucket(ctx context.Context, inputBucket storage2.ReadBucket) (stora
 	if _, ok := inputBucket.(*bucket); ok {
 		return inputBucket, nil
 	}
+
 	inMemoryBucket := newBucket(nil)
 	if _, err := storage2.Copy(ctx, inputBucket, inMemoryBucket, storage2.CopyWithExternalAndLocalPaths()); err != nil {
 		return nil, err
 	}
+
 	return inMemoryBucket, nil
 }

@@ -30,12 +30,14 @@ func newJSONUnmarshaler(resolver Resolver, options ...JSONUnmarshalerOption) Unm
 	if resolver == nil {
 		resolver = EmptyResolver
 	}
+
 	jsonUnmarshaler := &jsonUnmarshaler{
 		resolver: resolver,
 	}
 	for _, option := range options {
 		option(jsonUnmarshaler)
 	}
+
 	return jsonUnmarshaler
 }
 
@@ -47,5 +49,6 @@ func (m *jsonUnmarshaler) Unmarshal(data []byte, message proto.Message) error {
 	if err := options.Unmarshal(data, message); err != nil {
 		return fmt.Errorf("json unmarshal: %w", err)
 	}
+
 	return nil
 }

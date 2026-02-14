@@ -206,19 +206,24 @@ func runCloudProfileAdd(cmd *cobra.Command, args []string) error {
 	if region, _ := cmd.Flags().GetString("region"); region != "" {
 		p.Region = region
 	}
+
 	if accountID, _ := cmd.Flags().GetString("account-id"); accountID != "" {
 		p.AccountID = accountID
 	}
+
 	if roleArn, _ := cmd.Flags().GetString("role-arn"); roleArn != "" {
 		p.RoleArn = roleArn
 	}
+
 	if isDefault, _ := cmd.Flags().GetBool("default"); isDefault {
 		p.Default = true
 	}
 
 	// Get credentials based on provider
-	var creds profile.Credentials
-	var err error
+	var (
+		creds profile.Credentials
+		err   error
+	)
 
 	switch provider {
 	case profile.ProviderAWS:
@@ -262,6 +267,7 @@ func getAWSCredentials(cmd *cobra.Command) (*profile.AWSCredentials, error) {
 	// Prompt for missing values
 	if accessKeyID == "" {
 		var err error
+
 		accessKeyID, err = promptInput("AWS Access Key ID: ")
 		if err != nil {
 			return nil, err
@@ -270,6 +276,7 @@ func getAWSCredentials(cmd *cobra.Command) (*profile.AWSCredentials, error) {
 
 	if secretAccessKey == "" {
 		var err error
+
 		secretAccessKey, err = promptSecret("AWS Secret Access Key: ")
 		if err != nil {
 			return nil, err
@@ -296,6 +303,7 @@ func getAzureCredentials(cmd *cobra.Command) (*profile.AzureCredentials, error) 
 	// Prompt for missing values
 	if tenantID == "" {
 		var err error
+
 		tenantID, err = promptInput("Azure Tenant ID: ")
 		if err != nil {
 			return nil, err
@@ -304,6 +312,7 @@ func getAzureCredentials(cmd *cobra.Command) (*profile.AzureCredentials, error) 
 
 	if clientID == "" {
 		var err error
+
 		clientID, err = promptInput("Azure Client ID: ")
 		if err != nil {
 			return nil, err
@@ -312,6 +321,7 @@ func getAzureCredentials(cmd *cobra.Command) (*profile.AzureCredentials, error) 
 
 	if clientSecret == "" {
 		var err error
+
 		clientSecret, err = promptSecret("Azure Client Secret: ")
 		if err != nil {
 			return nil, err
@@ -320,6 +330,7 @@ func getAzureCredentials(cmd *cobra.Command) (*profile.AzureCredentials, error) 
 
 	if subscriptionID == "" {
 		var err error
+
 		subscriptionID, err = promptInput("Azure Subscription ID: ")
 		if err != nil {
 			return nil, err
@@ -343,6 +354,7 @@ func getGCPCredentials(cmd *cobra.Command) (*profile.GCPCredentials, error) {
 
 	if keyFile == "" {
 		var err error
+
 		keyFile, err = promptInput("Path to service account JSON file: ")
 		if err != nil {
 			return nil, err
@@ -387,12 +399,14 @@ func runCloudProfileList(cmd *cobra.Command, args []string) error {
 		}
 
 		provider := profile.Provider(providerStr)
+
 		profiles, err := svc.ListProfiles(provider)
 		if err != nil {
 			return err
 		}
 
 		printProfileTable(out, provider, profiles)
+
 		return nil
 	}
 
@@ -433,10 +447,12 @@ func printProfileTable(out io.Writer, provider profile.Provider, profiles []*pro
 		if p.Default {
 			defaultMark = "*"
 		}
+
 		region := p.Region
 		if region == "" {
 			region = "-"
 		}
+
 		_, _ = fmt.Fprintf(out, "  %-20s %-12s %-8s\n", p.Name, region, defaultMark)
 	}
 }
@@ -473,6 +489,7 @@ func runCloudProfileShow(cmd *cobra.Command, args []string) error {
 	_, _ = fmt.Fprintf(out, "Role ARN:      %s\n", valueOrDash(p.RoleArn))
 	_, _ = fmt.Fprintf(out, "Default:       %v\n", p.Default)
 	_, _ = fmt.Fprintf(out, "Token Storage: %s\n", p.TokenStorage)
+
 	_, _ = fmt.Fprintf(out, "Created:       %s\n", p.CreatedAt.Format("2006-01-02 15:04:05"))
 	if !p.LastUsedAt.IsZero() {
 		_, _ = fmt.Fprintf(out, "Last Used:     %s\n", p.LastUsedAt.Format("2006-01-02 15:04:05"))
@@ -505,6 +522,7 @@ func runCloudProfileUse(cmd *cobra.Command, args []string) error {
 	}
 
 	_, _ = fmt.Fprintf(cmd.OutOrStdout(), "Profile '%s' is now the default for %s.\n", name, provider)
+
 	return nil
 }
 
@@ -524,6 +542,7 @@ func runCloudProfileDelete(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
+
 		if strings.ToLower(strings.TrimSpace(confirm)) != "yes" {
 			_, _ = fmt.Fprintln(cmd.OutOrStdout(), "Cancelled.")
 			return nil
@@ -540,16 +559,19 @@ func runCloudProfileDelete(cmd *cobra.Command, args []string) error {
 	}
 
 	_, _ = fmt.Fprintf(cmd.OutOrStdout(), "Profile '%s' deleted.\n", name)
+
 	return nil
 }
 
 func promptInput(prompt string) (string, error) {
 	_, _ = fmt.Fprint(os.Stderr, prompt)
 	reader := bufio.NewReader(os.Stdin)
+
 	input, err := reader.ReadString('\n')
 	if err != nil {
 		return "", err
 	}
+
 	return strings.TrimSpace(input), nil
 }
 
@@ -561,9 +583,11 @@ func promptSecret(prompt string) (string, error) {
 	if term.IsTerminal(fd) {
 		password, err := term.ReadPassword(fd)
 		_, _ = fmt.Fprintln(os.Stderr) // New line after password
+
 		if err != nil {
 			return "", err
 		}
+
 		return string(password), nil
 	}
 
@@ -575,6 +599,7 @@ func valueOrDash(s string) string {
 	if s == "" {
 		return "-"
 	}
+
 	return s
 }
 
@@ -625,6 +650,7 @@ func importAWSProfile(out io.Writer, source, targetName string, listOnly, setDef
 		for _, p := range profiles {
 			_, _ = fmt.Fprintf(out, "  %s\n", p)
 		}
+
 		return nil
 	}
 
@@ -658,6 +684,7 @@ func importAWSProfile(out io.Writer, source, targetName string, listOnly, setDef
 	if p.Region != "" {
 		_, _ = fmt.Fprintf(out, "  Region: %s\n", p.Region)
 	}
+
 	if p.Default {
 		_, _ = fmt.Fprintf(out, "  Set as default for aws\n")
 	}
@@ -680,20 +707,25 @@ func importAzureProfile(out io.Writer, source, targetName string, listOnly, setD
 		_, _ = fmt.Fprintln(out, "Available Azure subscriptions:")
 		_, _ = fmt.Fprintf(out, "  %-36s  %-30s  %s\n", "SUBSCRIPTION ID", "NAME", "DEFAULT")
 		_, _ = fmt.Fprintf(out, "  %-36s  %-30s  %s\n", "---------------", "----", "-------")
+
 		for _, s := range subs {
 			def := ""
 			if s.IsDefault {
 				def = "*"
 			}
+
 			name := s.Name
 			if len(name) > 30 {
 				name = name[:27] + "..."
 			}
+
 			_, _ = fmt.Fprintf(out, "  %-36s  %-30s  %s\n", s.ID, name, def)
 		}
+
 		_, _ = fmt.Fprintln(out, "\nNote: To import, create a service principal:")
 		_, _ = fmt.Fprintln(out, "  az ad sp create-for-rbac --name omni-sp --sdk-auth > ~/.azure/sp.json")
 		_, _ = fmt.Fprintln(out, "  omni cloud profile import --provider azure --source ~/.azure/sp.json")
+
 		return nil
 	}
 
@@ -719,6 +751,7 @@ func importAzureProfile(out io.Writer, source, targetName string, listOnly, setD
 
 	_, _ = fmt.Fprintf(out, "Imported Azure profile '%s'\n", p.Name)
 	_, _ = fmt.Fprintf(out, "  Subscription: %s\n", creds.SubscriptionID)
+
 	_, _ = fmt.Fprintf(out, "  Tenant: %s\n", creds.TenantID)
 	if p.Default {
 		_, _ = fmt.Fprintf(out, "  Set as default for azure\n")
@@ -739,6 +772,7 @@ func importGCPProfile(out io.Writer, source, targetName string, listOnly, setDef
 			_, _ = fmt.Fprintln(out, "No GCP credentials found.")
 			_, _ = fmt.Fprintln(out, "\nTo import, specify a service account key file:")
 			_, _ = fmt.Fprintln(out, "  omni cloud profile import --provider gcp --source /path/to/sa.json")
+
 			return nil
 		}
 
@@ -746,6 +780,7 @@ func importGCPProfile(out io.Writer, source, targetName string, listOnly, setDef
 		for _, s := range sources {
 			_, _ = fmt.Fprintf(out, "  %s\n", s)
 		}
+
 		return nil
 	}
 
@@ -771,6 +806,7 @@ func importGCPProfile(out io.Writer, source, targetName string, listOnly, setDef
 
 	_, _ = fmt.Fprintf(out, "Imported GCP profile '%s'\n", p.Name)
 	_, _ = fmt.Fprintf(out, "  Project: %s\n", creds.ProjectID)
+
 	_, _ = fmt.Fprintf(out, "  Service Account: %s\n", creds.ClientEmail)
 	if p.Default {
 		_, _ = fmt.Fprintf(out, "  Set as default for gcp\n")

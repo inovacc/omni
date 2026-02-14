@@ -67,6 +67,7 @@ func (e Op) AsAny() Expr {
 	if e.IsZero() {
 		return Expr{}
 	}
+
 	return id.WrapDyn(e.Context(), id.NewDyn(KindOp, id.ID[Expr](e.ID())))
 }
 
@@ -76,6 +77,7 @@ func (e Op) Left() Expr {
 	if e.IsZero() {
 		return Expr{}
 	}
+
 	return id.WrapDyn(e.Context(), e.Raw().left)
 }
 
@@ -84,6 +86,7 @@ func (e Op) Right() Expr {
 	if e.IsZero() {
 		return Expr{}
 	}
+
 	return id.WrapDyn(e.Context(), e.Raw().right)
 }
 
@@ -102,6 +105,7 @@ func (e Op) OperatorToken() token.Token {
 	if e.IsZero() {
 		return token.Zero
 	}
+
 	return id.Wrap(e.Context().Stream(), e.Raw().op)
 }
 

@@ -59,6 +59,7 @@ func ParseFullName(fullNameString string) (FullName, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	if err := validateFullNameParameters(registry, owner, name); err != nil {
 		return nil, NewParseError(
 			"full name",
@@ -75,9 +76,11 @@ func FullNameEqual(one FullName, two FullName) bool {
 	if (one == nil) != (two == nil) {
 		return false
 	}
+
 	if one == nil {
 		return true
 	}
+
 	return one.String() == two.String()
 }
 
@@ -104,6 +107,7 @@ func FullNameStringToUniqueValue[T HasFullName, S ~[]T](values S) (map[string]T,
 		if fullName == nil {
 			continue
 		}
+
 		existingValue, ok := m[fullName.String()]
 		if ok {
 			return nil, fmt.Errorf(
@@ -112,8 +116,10 @@ func FullNameStringToUniqueValue[T HasFullName, S ~[]T](values S) (map[string]T,
 				fullName.String(),
 			)
 		}
+
 		m[fullName.String()] = value
 	}
+
 	return m, nil
 }
 
@@ -133,6 +139,7 @@ func newFullName(
 	if err := validateFullNameParameters(registry, owner, name); err != nil {
 		return nil, err
 	}
+
 	return &fullName{
 		registry: registry,
 		owner:    owner,
@@ -166,20 +173,26 @@ func validateFullNameParameters(
 	if registry == "" {
 		return errors.New("registry is empty")
 	}
+
 	if _, err := netext.ValidateHostname(registry); err != nil {
 		return fmt.Errorf("registry %q is not a valid hostname: %w", registry, err)
 	}
+
 	if owner == "" {
 		return errors.New("owner is empty")
 	}
+
 	if strings.Contains(owner, "/") {
 		return fmt.Errorf("owner %q cannot contain slashes", owner)
 	}
+
 	if name == "" {
 		return errors.New("name is empty")
 	}
+
 	if strings.Contains(name, "/") {
 		return fmt.Errorf("name %q cannot contain slashes", name)
 	}
+
 	return nil
 }

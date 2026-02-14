@@ -137,6 +137,7 @@ func ModuleReadBucketWithOnlyProtoFiles(moduleReadBucket ModuleReadBucket) Modul
 // Sorted by path.
 func GetFileInfos(ctx context.Context, moduleReadBucket ModuleReadBucket) ([]FileInfo, error) {
 	var fileInfos []FileInfo
+
 	if err := moduleReadBucket.WalkFileInfos(
 		ctx,
 		func(fileInfo FileInfo) error {
@@ -146,12 +147,14 @@ func GetFileInfos(ctx context.Context, moduleReadBucket ModuleReadBucket) ([]Fil
 	); err != nil {
 		return nil, err
 	}
+
 	sort.Slice(
 		fileInfos,
 		func(i int, j int) bool {
 			return fileInfos[i].Path() < fileInfos[j].Path()
 		},
 	)
+
 	return fileInfos, nil
 }
 
@@ -161,6 +164,7 @@ func GetFileInfos(ctx context.Context, moduleReadBucket ModuleReadBucket) ([]Fil
 // Sorted by path.
 func GetTargetFileInfos(ctx context.Context, moduleReadBucket ModuleReadBucket) ([]FileInfo, error) {
 	var fileInfos []FileInfo
+
 	if err := moduleReadBucket.WalkFileInfos(
 		ctx,
 		func(fileInfo FileInfo) error {
@@ -171,12 +175,14 @@ func GetTargetFileInfos(ctx context.Context, moduleReadBucket ModuleReadBucket) 
 	); err != nil {
 		return nil, err
 	}
+
 	sort.Slice(
 		fileInfos,
 		func(i int, j int) bool {
 			return fileInfos[i].Path() < fileInfos[j].Path()
 		},
 	)
+
 	return fileInfos, nil
 }
 
@@ -189,6 +195,7 @@ func GetFilePaths(ctx context.Context, moduleReadBucket ModuleReadBucket) ([]str
 	if err != nil {
 		return nil, err
 	}
+
 	return xslices.Map(fileInfos, func(fileInfo FileInfo) string { return fileInfo.Path() }), nil
 }
 
@@ -201,6 +208,7 @@ func GetTargetFilePaths(ctx context.Context, moduleReadBucket ModuleReadBucket) 
 	if err != nil {
 		return nil, err
 	}
+
 	return xslices.Map(fileInfos, func(fileInfo FileInfo) string { return fileInfo.Path() }), nil
 }
 
@@ -215,6 +223,7 @@ func GetDocFile(ctx context.Context, moduleReadBucket ModuleReadBucket) (File, e
 	if docFilePath := getDocFilePathForModuleReadBucket(ctx, moduleReadBucket); docFilePath != "" {
 		return moduleReadBucket.GetFile(ctx, docFilePath)
 	}
+
 	return nil, fs.ErrNotExist
 }
 
@@ -234,10 +243,12 @@ func GetDocStorageReadBucket(ctx context.Context, bucket storage2.ReadBucket) (s
 	if docFilePath == "" {
 		return storage2.MultiReadBucket(), nil // nop bucket
 	}
+
 	content, err := storage2.ReadPath(ctx, bucket, docFilePath)
 	if err != nil {
 		return nil, err
 	}
+
 	return storagemem.NewReadBucket(
 		map[string][]byte{
 			docFilePath: content,
@@ -255,8 +266,10 @@ func GetLicenseStorageReadBucket(ctx context.Context, bucket storage2.ReadBucket
 		if errors.Is(err, fs.ErrNotExist) {
 			return storage2.MultiReadBucket(), nil // nop bucket
 		}
+
 		return nil, err
 	}
+
 	return storagemem.NewReadBucket(
 		map[string][]byte{
 			licenseFilePath: content,
@@ -300,9 +313,11 @@ func newModuleReadBucketForModule(
 	if protoFileTargetPath != "" && (len(targetPaths) > 0 || len(targetExcludePaths) > 0) {
 		return nil, syserror.Newf("cannot set both protoFileTargetPath %q and either targetPaths %v or targetExcludePaths %v", protoFileTargetPath, targetPaths, targetExcludePaths)
 	}
+
 	if protoFileTargetPath != "" && normalpath2.Ext(protoFileTargetPath) != ".proto" {
 		return nil, syserror.Newf("protoFileTargetPath %q is not a .proto file", protoFileTargetPath)
 	}
+
 	return &moduleReadBucket{
 		getBucket:            syncOnceValuesGetBucketWithStorageMatcherApplied,
 		module:               module,
@@ -319,14 +334,17 @@ func (b *moduleReadBucket) GetFile(ctx context.Context, path string) (File, erro
 	if err != nil {
 		return nil, err
 	}
+
 	bucket, err := b.getBucket()
 	if err != nil {
 		return nil, err
 	}
+
 	readObjectCloser, err := bucket.Get(ctx, path)
 	if err != nil {
 		return nil, err
 	}
+
 	return newFile(fileInfo, readObjectCloser), nil
 }
 
@@ -335,10 +353,12 @@ func (b *moduleReadBucket) StatFileInfo(ctx context.Context, path string) (FileI
 	if err != nil {
 		return nil, err
 	}
+
 	objectInfo, err := bucket.Stat(ctx, path)
 	if err != nil {
 		return nil, err
 	}
+
 	return b.getFileInfo(ctx, objectInfo)
 }
 
@@ -355,6 +375,7 @@ func (b *moduleReadBucket) WalkFileInfos(
 	for _, option := range options {
 		option(walkFileInfosOptions)
 	}
+
 	bucket, err := b.getBucket()
 	if err != nil {
 		return err
@@ -365,6 +386,7 @@ func (b *moduleReadBucket) WalkFileInfos(
 		// the target files. By not calling trackModule outside of this if statement,
 		// we will not produce NoProtoFilesErrors, per the documentation on trackModule.
 		protoFileTracker.trackModule(b.module)
+
 		if err := bucket.Walk(
 			ctx,
 			"",
@@ -379,6 +401,7 @@ func (b *moduleReadBucket) WalkFileInfos(
 		); err != nil {
 			return err
 		}
+
 		return protoFileTracker.validate()
 	}
 
@@ -392,10 +415,13 @@ func (b *moduleReadBucket) WalkFileInfos(
 		if err != nil {
 			return err
 		}
+
 		protoFileTracker.trackFileInfo(fileInfo)
+
 		if !fileInfo.IsTargetFile() {
 			return nil
 		}
+
 		return fn(fileInfo)
 	}
 
@@ -412,12 +438,15 @@ func (b *moduleReadBucket) WalkFileInfos(
 		// you get the union of the files. We need to make sure that we only walk a given
 		// file path once.
 		seenPaths := make(map[string]struct{})
+
 		multiTargetFileWalkFunc := func(objectInfo storage2.ObjectInfo) error {
 			path := objectInfo.Path()
 			if _, ok := seenPaths[path]; ok {
 				return nil
 			}
+
 			seenPaths[path] = struct{}{}
+
 			return targetFileWalkFunc(objectInfo)
 		}
 		for _, targetPath := range b.targetPaths {
@@ -430,9 +459,11 @@ func (b *moduleReadBucket) WalkFileInfos(
 		// the target paths. We don't return any value from protoFileTracker.validate().
 		return nil
 	}
+
 	if err := bucket.Walk(ctx, "", targetFileWalkFunc); err != nil {
 		return err
 	}
+
 	return protoFileTracker.validate()
 }
 
@@ -478,10 +509,12 @@ func (b *moduleReadBucket) getFileInfoUncached(ctx context.Context, objectInfo s
 		// A lack of classification is a system error.
 		return nil, syserror.Wrap(err)
 	}
+
 	isTargetFile, err := b.getIsTargetFileForPathUncached(ctx, objectInfo.Path())
 	if err != nil {
 		return nil, err
 	}
+
 	return newFileInfo(
 		objectInfo,
 		b.module,
@@ -491,6 +524,7 @@ func (b *moduleReadBucket) getFileInfoUncached(ctx context.Context, objectInfo s
 			if fileType != FileTypeProto {
 				return nil, nil
 			}
+
 			fastscanResult, err := b.getFastscanResultForPath(ctx, objectInfo.Path())
 			if err != nil {
 				return nil, err
@@ -502,10 +536,12 @@ func (b *moduleReadBucket) getFileInfoUncached(ctx context.Context, objectInfo s
 			if fileType != FileTypeProto {
 				return "", nil
 			}
+
 			fastscanResult, err := b.getFastscanResultForPath(ctx, objectInfo.Path())
 			if err != nil {
 				return "", err
 			}
+
 			return fastscanResult.PackageName, nil
 		},
 	), nil
@@ -525,16 +561,19 @@ func (b *moduleReadBucket) getIsTargetFileForPathUncached(ctx context.Context, p
 		if err != nil {
 			return false, err
 		}
+
 		if fileType != FileTypeProto {
 			// We are targeting a .proto file and this file is not a .proto file, therefore
 			// this file is not targeted.
 			return false, nil
 		}
+
 		isProtoFileTargetPath := path == b.protoFileTargetPath
 		if isProtoFileTargetPath {
 			// Regardless of includePackageFiles, we always return true.
 			return true, nil
 		}
+
 		if !b.includePackageFiles {
 			// If we don't include package files, then we don't have a match, return false.
 			return false, nil
@@ -550,12 +589,15 @@ func (b *moduleReadBucket) getIsTargetFileForPathUncached(ctx context.Context, p
 			if errors.Is(err, fs.ErrNotExist) {
 				return false, nil
 			}
+
 			return false, err
 		}
+
 		if protoFileTargetFastscanResult.PackageName == "" {
 			// Don't do anything if the target file does not have a package.
 			return false, nil
 		}
+
 		fastscanResult, err := b.getFastscanResultForPath(ctx, path)
 		if err != nil {
 			return false, err
@@ -563,6 +605,7 @@ func (b *moduleReadBucket) getIsTargetFileForPathUncached(ctx context.Context, p
 		// If the package is the same, this is a target.
 		return protoFileTargetFastscanResult.PackageName == fastscanResult.PackageName, nil
 	}
+
 	switch {
 	case len(b.targetPathMap) == 0 && len(b.targetExcludePathMap) == 0:
 		// If we did not target specific Files, all Files in a targeted Module are targeted.
@@ -598,6 +641,7 @@ func (b *moduleReadBucket) getFastscanResultForPathUncached(
 	if err != nil {
 		return fastscan.Result{}, err
 	}
+
 	if fileType != FileTypeProto {
 		// We should have validated this WAY before.
 		return fastscan.Result{}, syserror.Newf("cannot get fastscan.Result for non-proto file %q", path)
@@ -608,13 +652,16 @@ func (b *moduleReadBucket) getFastscanResultForPathUncached(
 	if err != nil {
 		return fastscan.Result{}, err
 	}
+
 	readObjectCloser, err := bucket.Get(ctx, path)
 	if err != nil {
 		return fastscan.Result{}, err
 	}
+
 	defer func() {
 		retErr = errors.Join(retErr, readObjectCloser.Close())
 	}()
+
 	fastscanResult, err = fastscan.Scan(path, readObjectCloser)
 	if err != nil {
 		var syntaxError fastscan.SyntaxError
@@ -627,6 +674,7 @@ func (b *moduleReadBucket) getFastscanResultForPathUncached(
 						if err != nil {
 							return path
 						}
+
 						return fileInfo.ExternalPath()
 					},
 				),
@@ -634,10 +682,13 @@ func (b *moduleReadBucket) getFastscanResultForPathUncached(
 			if err != nil {
 				return fastscan.Result{}, err
 			}
+
 			return fastscan.Result{}, fileAnnotationSet
 		}
+
 		return fastscan.Result{}, err
 	}
+
 	return fastscanResult, nil
 }
 
@@ -658,6 +709,7 @@ func (t *targetedModuleReadBucket) GetFile(ctx context.Context, path string) (Fi
 	if _, err := t.StatFileInfo(ctx, path); err != nil {
 		return nil, err
 	}
+
 	return t.delegate.GetFile(ctx, path)
 }
 
@@ -666,9 +718,11 @@ func (t *targetedModuleReadBucket) StatFileInfo(ctx context.Context, path string
 	if err != nil {
 		return nil, err
 	}
+
 	if !fileInfo.IsTargetFile() {
 		return nil, &fs.PathError{Op: "stat", Path: path, Err: fs.ErrNotExist}
 	}
+
 	return fileInfo, nil
 }
 
@@ -698,6 +752,7 @@ func (t *targetedModuleReadBucket) getFastscanResultForPath(ctx context.Context,
 	if _, err := t.StatFileInfo(ctx, path); err != nil {
 		return fastscan.Result{}, err
 	}
+
 	return t.delegate.getFastscanResultForPath(ctx, path)
 }
 
@@ -717,6 +772,7 @@ func newFilteredModuleReadBucket(
 ) *filteredModuleReadBucket {
 	fileTypeMap := xslices.ToStructMap(fileTypes)
 	_, containsFileTypeProto := fileTypeMap[FileTypeProto]
+
 	return &filteredModuleReadBucket{
 		delegate:              delegate,
 		fileTypeMap:           fileTypeMap,
@@ -729,6 +785,7 @@ func (f *filteredModuleReadBucket) GetFile(ctx context.Context, path string) (Fi
 	if _, err := f.StatFileInfo(ctx, path); err != nil {
 		return nil, err
 	}
+
 	return f.delegate.GetFile(ctx, path)
 }
 
@@ -737,9 +794,11 @@ func (f *filteredModuleReadBucket) StatFileInfo(ctx context.Context, path string
 	if err != nil {
 		return nil, err
 	}
+
 	if _, ok := f.fileTypeMap[fileInfo.FileType()]; !ok {
 		return nil, &fs.PathError{Op: "stat", Path: path, Err: fs.ErrNotExist}
 	}
+
 	return fileInfo, nil
 }
 
@@ -754,6 +813,7 @@ func (f *filteredModuleReadBucket) WalkFileInfos(
 			if _, ok := f.fileTypeMap[fileInfo.FileType()]; !ok {
 				return nil
 			}
+
 			return fn(fileInfo)
 		},
 		options...,
@@ -768,6 +828,7 @@ func (f *filteredModuleReadBucket) getFastscanResultForPath(ctx context.Context,
 	if _, err := f.StatFileInfo(ctx, path); err != nil {
 		return fastscan.Result{}, err
 	}
+
 	return f.delegate.getFastscanResultForPath(ctx, path)
 }
 
@@ -795,6 +856,7 @@ func (m *multiProtoFileModuleReadBucket[T, S]) GetFile(ctx context.Context, path
 	if err != nil {
 		return nil, err
 	}
+
 	return m.delegates[delegateIndex].GetFile(ctx, path)
 }
 
@@ -810,6 +872,7 @@ func (m *multiProtoFileModuleReadBucket[T, S]) WalkFileInfos(
 ) error {
 	seenPathToFileInfo := make(map[string]FileInfo)
 	protoFileTracker := newProtoFileTracker()
+
 	for _, delegate := range m.delegates {
 		if err := delegate.WalkFileInfos(
 			ctx,
@@ -841,6 +904,7 @@ func (m *multiProtoFileModuleReadBucket[T, S]) WalkFileInfos(
 			return err
 		}
 	}
+
 	return nil
 }
 
@@ -853,6 +917,7 @@ func (m *multiProtoFileModuleReadBucket[T, S]) getFastscanResultForPath(ctx cont
 	if err != nil {
 		return fastscan.Result{}, err
 	}
+
 	return m.delegates[delegateIndex].getFastscanResultForPath(ctx, path)
 }
 
@@ -861,20 +926,27 @@ func (m *multiProtoFileModuleReadBucket[T, S]) getFileInfoAndDelegateIndex(
 	op string,
 	path string,
 ) (FileInfo, int, error) {
-	var fileInfos []FileInfo
-	var delegateIndexes []int
+	var (
+		fileInfos       []FileInfo
+		delegateIndexes []int
+	)
+
 	protoFileTracker := newProtoFileTracker()
+
 	for i, delegate := range m.delegates {
 		fileInfo, err := delegate.StatFileInfo(ctx, path)
 		if err != nil {
 			if errors.Is(err, fs.ErrNotExist) {
 				continue
 			}
+
 			return nil, 0, err
 		}
+
 		if fileInfo.FileType() != FileTypeProto {
 			continue
 		}
+
 		protoFileTracker.trackFileInfo(fileInfo)
 		fileInfos = append(fileInfos, fileInfo)
 		delegateIndexes = append(delegateIndexes, i)
@@ -883,6 +955,7 @@ func (m *multiProtoFileModuleReadBucket[T, S]) getFileInfoAndDelegateIndex(
 	if err := protoFileTracker.validate(); err != nil {
 		return nil, 0, err
 	}
+
 	switch len(fileInfos) {
 	case 0:
 		return nil, 0, &fs.PathError{Op: op, Path: path, Err: fs.ErrNotExist}
@@ -923,12 +996,14 @@ func (s *storageReadBucket) Walk(ctx context.Context, prefix string, f func(stor
 	if err != nil {
 		return err
 	}
+
 	return s.delegate.WalkFileInfos(
 		ctx,
 		func(fileInfo FileInfo) error {
 			if !normalpath2.EqualsOrContainsPath(prefix, fileInfo.Path(), normalpath2.Relative) {
 				return nil
 			}
+
 			return f(fileInfo)
 		},
 	)

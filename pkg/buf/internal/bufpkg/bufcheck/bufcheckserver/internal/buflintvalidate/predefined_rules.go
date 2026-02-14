@@ -17,10 +17,10 @@ package buflintvalidate
 import (
 	"strings"
 
+	"buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go/buf/validate"
 	celpv "buf.build/go/protovalidate/cel"
 	"github.com/google/cel-go/cel"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufprotosource"
-	"buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go/buf/validate"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/protoencoding"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/syserror"
 )
@@ -42,23 +42,27 @@ func checkPredefinedRuleExtension(
 	if !extensionDescriptor.IsExtension() {
 		return nil
 	}
+
 	extendedStandardRuleDescriptor := extensionDescriptor.ContainingMessage()
 	extendedRuleFullName := extendedStandardRuleDescriptor.FullName()
 	// This function only lints extensions extending buf.validate.*Rules, e.g. buf.validate.StringRules.
-	if !(strings.HasPrefix(string(extendedRuleFullName), "buf.validate.") && strings.HasSuffix(string(extendedRuleFullName), "Rules")) {
+	if !strings.HasPrefix(string(extendedRuleFullName), "buf.validate.") || !strings.HasSuffix(string(extendedRuleFullName), "Rules") {
 		return nil
 	}
 	// Just to be extra sure.
 	if validate.File_buf_validate_validate_proto.Messages().ByName(extendedRuleFullName.Name()) == nil {
 		return nil
 	}
+
 	predefinedRules, err := resolveExtension[*validate.PredefinedRules](extensionDescriptor.Options(), validate.E_Predefined, extensionResolver)
 	if err != nil {
 		return err
 	}
+
 	if predefinedRules == nil {
 		return nil
 	}
+
 	celEnv, err := cel.NewEnv(
 		cel.Lib(celpv.NewLibrary()),
 	)
@@ -88,6 +92,7 @@ func checkPredefinedRuleExtension(
 	if thisType == nil {
 		return syserror.Newf("extension for unexpected rule type %q found", extendedStandardRuleDescriptor.FullName())
 	}
+
 	celEnv, err = celEnv.Extend(
 		append(
 			celpv.RequiredEnvOptions(extensionDescriptor),
@@ -99,6 +104,7 @@ func checkPredefinedRuleExtension(
 	if err != nil {
 		return err
 	}
+
 	checkCEL(
 		celEnv,
 		predefinedRules.GetCel(),
@@ -116,5 +122,6 @@ func checkPredefinedRuleExtension(
 		},
 		false,
 	)
+
 	return nil
 }

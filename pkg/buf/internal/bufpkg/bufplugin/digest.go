@@ -64,6 +64,7 @@ func ParseDigestType(s string) (DigestType, error) {
 			fmt.Errorf("unknown type: %q", s),
 		)
 	}
+
 	return d, nil
 }
 
@@ -73,6 +74,7 @@ func (d DigestType) String() string {
 	if !ok {
 		return strconv.Itoa(int(d))
 	}
+
 	return s
 }
 
@@ -106,6 +108,7 @@ func NewDigest(digestType DigestType, bufcasDigest bufcas.Digest) (Digest, error
 				bufcasDigest.Type(),
 			)
 		}
+
 		return newDigest(digestType, bufcasDigest), nil
 	default:
 		// This is a system error.
@@ -126,6 +129,7 @@ func ParseDigest(s string) (Digest, error) {
 		// This should be considered a system error.
 		return nil, errors.New("empty string passed to ParseDigest")
 	}
+
 	digestTypeString, hexValue, ok := strings.Cut(s, ":")
 	if !ok {
 		return nil, bufparse.NewParseError(
@@ -134,6 +138,7 @@ func ParseDigest(s string) (Digest, error) {
 			errors.New(`must be in the form "digest_type:digest_hex_value"`),
 		)
 	}
+
 	digestType, err := ParseDigestType(digestTypeString)
 	if err != nil {
 		return nil, bufparse.NewParseError(
@@ -142,6 +147,7 @@ func ParseDigest(s string) (Digest, error) {
 			err,
 		)
 	}
+
 	value, err := hex.DecodeString(hexValue)
 	if err != nil {
 		return nil, bufparse.NewParseError(
@@ -150,12 +156,14 @@ func ParseDigest(s string) (Digest, error) {
 			errors.New(`could not parse hex: must in the form "digest_type:digest_hex_value"`),
 		)
 	}
+
 	switch digestType {
 	case DigestTypeP1:
 		bufcasDigest, err := bufcas.NewDigest(value)
 		if err != nil {
 			return nil, err
 		}
+
 		return NewDigest(digestType, bufcasDigest)
 	default:
 		return nil, syserror.Newf("unknown DigestType: %v", digestType)
@@ -171,12 +179,15 @@ func DigestEqual(a Digest, b Digest) bool {
 	if (a == nil) != (b == nil) {
 		return false
 	}
+
 	if a == nil {
 		return true
 	}
+
 	if a.Type() != b.Type() {
 		return false
 	}
+
 	return bytes.Equal(a.Value(), b.Value())
 }
 

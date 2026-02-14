@@ -49,6 +49,7 @@ func newImageFile(
 	if err := protodescriptor.ValidateFileDescriptor(fileDescriptor); err != nil {
 		return nil, err
 	}
+
 	return newImageFileNoValidate(
 		fileDescriptor,
 		moduleFullName,
@@ -75,6 +76,7 @@ func newImageFileNoValidate(
 	if len(unusedDependencyIndexes) == 0 {
 		unusedDependencyIndexes = nil
 	}
+
 	return &imageFile{
 		// protodescriptor.FileDescriptorProtoForFileDescriptor is a no-op if fileDescriptor
 		// is already a *descriptorpb.FileDescriptorProto
@@ -97,6 +99,7 @@ func (f *imageFile) ExternalPath() string {
 	if f.externalPath == "" {
 		return f.Path()
 	}
+
 	return f.externalPath
 }
 

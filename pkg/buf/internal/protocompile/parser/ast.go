@@ -30,6 +30,7 @@ func toStringValueNode(strs []*ast.StringLiteralNode) ast.StringValueNode {
 	if len(strs) == 1 {
 		return strs[0]
 	}
+
 	return ast.NewCompoundLiteralStringNode(strs...)
 }
 
@@ -75,6 +76,7 @@ func (s *identSlices) toIdentValueNode(leadingDot *ast.RuneNode) ast.IdentValueN
 		// single simple name
 		return s.idents[0]
 	}
+
 	return ast.NewCompoundIdentNode(leadingDot, s.idents, s.dots)
 }
 
@@ -88,18 +90,22 @@ func (list *messageFieldList) toNodes() ([]*ast.MessageFieldNode, []*ast.RuneNod
 	if list == nil {
 		return nil, nil
 	}
+
 	l := 0
 	for cur := list; cur != nil; cur = cur.next {
 		l++
 	}
+
 	fields := make([]*ast.MessageFieldNode, l)
 	delimiters := make([]*ast.RuneNode, l)
+
 	for cur, i := list, 0; cur != nil; cur, i = cur.next, i+1 {
 		fields[i] = cur.field
 		if cur.delimiter != nil {
 			delimiters[i] = cur.delimiter
 		}
 	}
+
 	return fields, delimiters
 }
 
@@ -108,7 +114,9 @@ func prependRunes[T ast.Node](convert func(*ast.RuneNode) T, runes []*ast.RuneNo
 	for _, rune := range runes {
 		elems = append(elems, convert(rune))
 	}
+
 	elems = append(elems, elements...)
+
 	return elems
 }
 
@@ -146,9 +154,11 @@ func newNodeWithRunes[T ast.Node](node T, trailingRunes ...*ast.RuneNode) nodeWi
 
 func toElements[T ast.Node](convert func(*ast.RuneNode) T, node T, runes []*ast.RuneNode) []T {
 	elements := make([]T, 1+len(runes))
+
 	elements[0] = node
 	for i, rune := range runes {
 		elements[i+1] = convert(rune)
 	}
+
 	return elements
 }

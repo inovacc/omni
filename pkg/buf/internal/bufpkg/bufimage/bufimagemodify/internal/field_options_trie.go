@@ -38,9 +38,11 @@ type fieldOptionsTrieNode struct {
 // ensure that the path is for a FieldOptions.
 func (p *fieldOptionsTrie) insert(path []int32, locationIndex int) {
 	trie := p
+
 	for index, element := range path {
 		isLastElement := index == len(path)-1
 		nodes := *trie
+
 		pos, found := sort.Find(len(nodes), func(i int) int {
 			return int(element - nodes[i].value)
 		})
@@ -48,11 +50,15 @@ func (p *fieldOptionsTrie) insert(path []int32, locationIndex int) {
 			if isLastElement {
 				nodes[pos].isPathEnd = true
 				nodes[pos].locationIndex = locationIndex
+
 				return
 			}
+
 			trie = &nodes[pos].children
+
 			continue
 		}
+
 		newNode := &fieldOptionsTrieNode{
 			value:    element,
 			children: fieldOptionsTrie{},
@@ -61,6 +67,7 @@ func (p *fieldOptionsTrie) insert(path []int32, locationIndex int) {
 			newNode.isPathEnd = true
 			newNode.locationIndex = locationIndex
 		}
+
 		nodes = slices.Insert(nodes, pos, newNode)
 		*trie = nodes
 		trie = &nodes[pos].children
@@ -73,18 +80,22 @@ func (p *fieldOptionsTrie) registerDescendant(descendant []int32) {
 	trie := p
 	for i, element := range descendant {
 		nodes := *trie
+
 		pos, found := sort.Find(len(nodes), func(i int) int {
 			return int(element - nodes[i].value)
 		})
 		if !found {
 			return
 		}
+
 		ancestor := nodes[pos]
+
 		descendantContinues := i != len(descendant)-1
 		if ancestor.isPathEnd && descendantContinues {
 			ancestor.registeredDescendantCount += 1
 			return
 		}
+
 		trie = &ancestor.children
 	}
 }
@@ -92,11 +103,13 @@ func (p *fieldOptionsTrie) registerDescendant(descendant []int32) {
 // indicesWithoutDescendant returns the location indices of
 func (p *fieldOptionsTrie) indicesWithoutDescendant() []int {
 	locationIndices := []int{}
+
 	walkTrie(*p, func(node *fieldOptionsTrieNode) {
 		if node.isPathEnd && node.registeredDescendantCount == 0 {
 			locationIndices = append(locationIndices, node.locationIndex)
 		}
 	})
+
 	return locationIndices
 }
 

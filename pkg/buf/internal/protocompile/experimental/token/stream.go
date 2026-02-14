@@ -92,6 +92,7 @@ func (s *Stream) All() iter.Seq[Token] {
 				return
 			}
 		}
+
 		for i := range s.synths {
 			if !yield(id.Wrap(s, ID(^i))) {
 				return
@@ -112,7 +113,8 @@ func (s *Stream) Around(offset int) (Token, Token) {
 	if offset == 0 {
 		return Zero, id.Wrap(s, ID(1))
 	}
-	if offset == len(s.File.Text()) {
+
+	if offset == len(s.Text()) {
 		return id.Wrap(s, ID(len(s.nats))), Zero
 	}
 
@@ -223,21 +225,25 @@ func (s *Stream) NewFused(openTok, closeTok Token, children ...Token) {
 	if !openTok.IsSynthetic() || !closeTok.IsSynthetic() {
 		panic("protocompile/token: called NewOpenClose() with natural delimiters")
 	}
+
 	if !openTok.IsLeaf() || !closeTok.IsLeaf() {
 		panic("protocompile/token: called PushCloseToken() with non-leaf as a delimiter token")
 	}
 
 	synth := openTok.synth()
 	synth.otherEnd = closeTok.ID()
+
 	synth.children = make([]ID, len(children))
 	for i, t := range children {
 		synth.children[i] = t.ID()
 	}
+
 	closeTok.synth().otherEnd = openTok.ID()
 }
 
 func (s *Stream) newSynth(tok synth) Token {
 	raw := ID(^len(s.synths))
 	s.synths = append(s.synths, tok)
+
 	return id.Wrap(s, raw)
 }

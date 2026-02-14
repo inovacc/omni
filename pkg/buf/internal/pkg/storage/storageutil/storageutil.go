@@ -67,9 +67,11 @@ func ValidatePath(path string) (string, error) {
 	if err != nil {
 		return "", err
 	}
+
 	if path == "." {
 		return "", errors.New("cannot use root")
 	}
+
 	return path, nil
 }
 
@@ -94,12 +96,14 @@ type walkChecker struct {
 
 func (w *walkChecker) Check(ctx context.Context) error {
 	w.count++
+
 	select {
 	case <-ctx.Done():
 		err := ctx.Err()
 		if err == context.DeadlineExceeded {
 			return fmt.Errorf("timed out after %d files: %v", w.count, err)
 		}
+
 		return err
 	default:
 		return nil

@@ -35,6 +35,10 @@ func RunChannel(w io.Writer, args []string, opts Options) error {
 		clientOpts = append(clientOpts, video.WithVerbose())
 	}
 
+	if opts.CookiesFromBrowser {
+		clientOpts = append(clientOpts, video.WithCookiesFromBrowser())
+	}
+
 	extractClient, err := video.New(clientOpts...)
 	if err != nil {
 		return fmt.Errorf("video channel: %w", err)
@@ -175,6 +179,10 @@ func RunChannel(w io.Writer, args []string, opts Options) error {
 
 		if opts.Verbose {
 			dlOpts = append(dlOpts, video.WithVerbose())
+		}
+
+		if opts.CookiesFromBrowser {
+			dlOpts = append(dlOpts, video.WithCookiesFromBrowser())
 		}
 
 		progressFn := MakeProgressFunc(w, opts.Quiet || opts.NoProgress)

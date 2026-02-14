@@ -31,6 +31,7 @@ var AllRuleFormatStrings = []string{
 // PrintRules prints the Rules to the writer given the --format and --include-deprecated flag values.
 func PrintRules(writer io.Writer, rules []bufcheck.Rule, format string, includeDeprecated bool) error {
 	var printRulesOptions []bufcheck.PrintRulesOption
+
 	switch s := strings.ToLower(strings.TrimSpace(format)); s {
 	case "", "text":
 	case "json":
@@ -38,8 +39,10 @@ func PrintRules(writer io.Writer, rules []bufcheck.Rule, format string, includeD
 	default:
 		return fmt.Errorf("unknown format: %q", s)
 	}
+
 	if includeDeprecated {
 		printRulesOptions = append(printRulesOptions, bufcheck.PrintRulesWithDeprecated())
 	}
+
 	return bufcheck.PrintRules(writer, rules, printRulesOptions...)
 }

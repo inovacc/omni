@@ -3,17 +3,18 @@ package hexenc
 import (
 	"bufio"
 	"encoding/hex"
-	"encoding/json"
 	"fmt"
 	"io"
 	"os"
 	"strings"
+
+	clioutput "github.com/inovacc/omni/internal/cli/output"
 )
 
 // Options configures the hex encode/decode command behavior
 type Options struct {
-	JSON      bool // --json: output as JSON
-	Uppercase bool // --upper: use uppercase hex
+	OutputFormat clioutput.Format // output format (text, json, table)
+	Uppercase    bool          // --upper: use uppercase hex
 }
 
 // Result represents the output for JSON mode
@@ -35,17 +36,14 @@ func RunEncode(w io.Writer, args []string, opts Options) error {
 		output = strings.ToUpper(output)
 	}
 
-	if opts.JSON {
-		result := Result{
+	f := clioutput.New(w, opts.OutputFormat)
+
+	if f.IsJSON() {
+		return f.Print(Result{
 			Input:  input,
 			Output: output,
 			Mode:   "encode",
-		}
-
-		enc := json.NewEncoder(w)
-		enc.SetIndent("", "  ")
-
-		return enc.Encode(result)
+		})
 	}
 
 	_, _ = fmt.Fprintln(w, output)
@@ -76,17 +74,14 @@ func RunDecode(w io.Writer, args []string, opts Options) error {
 
 	output := string(decoded)
 
-	if opts.JSON {
-		result := Result{
+	f := clioutput.New(w, opts.OutputFormat)
+
+	if f.IsJSON() {
+		return f.Print(Result{
 			Input:  input,
 			Output: output,
 			Mode:   "decode",
-		}
-
-		enc := json.NewEncoder(w)
-		enc.SetIndent("", "  ")
-
-		return enc.Encode(result)
+		})
 	}
 
 	_, _ = fmt.Fprintln(w, output)

@@ -124,6 +124,7 @@ func newModuleDataStore(
 	for _, option := range options {
 		option(moduleDataStore)
 	}
+
 	return moduleDataStore
 }
 
@@ -131,8 +132,11 @@ func (p *moduleDataStore) GetModuleDatasForModuleKeys(
 	ctx context.Context,
 	moduleKeys []bufmodule2.ModuleKey,
 ) ([]bufmodule2.ModuleData, []bufmodule2.ModuleKey, error) {
-	var foundModuleDatas []bufmodule2.ModuleData
-	var notFoundModuleKeys []bufmodule2.ModuleKey
+	var (
+		foundModuleDatas   []bufmodule2.ModuleData
+		notFoundModuleKeys []bufmodule2.ModuleKey
+	)
+
 	for _, moduleKey := range moduleKeys {
 		moduleData, err := p.getModuleDataForModuleKey(ctx, moduleKey)
 		if err != nil {
@@ -144,6 +148,7 @@ func (p *moduleDataStore) GetModuleDatasForModuleKeys(
 			foundModuleDatas = append(foundModuleDatas, moduleData)
 		}
 	}
+
 	return foundModuleDatas, notFoundModuleKeys, nil
 }
 
@@ -156,6 +161,7 @@ func (p *moduleDataStore) PutModuleDatas(
 			return err
 		}
 	}
+
 	return nil
 }
 
@@ -188,8 +194,11 @@ func (p *moduleDataStore) getModuleDataForModuleKey(
 	ctx context.Context,
 	moduleKey bufmodule2.ModuleKey,
 ) (retValue bufmodule2.ModuleData, retErr error) {
-	var moduleCacheBucket storage2.ReadBucket
-	var err error
+	var (
+		moduleCacheBucket storage2.ReadBucket
+		err               error
+	)
+
 	if p.tar {
 		moduleCacheBucket, err = p.getReadBucketForTar(ctx, moduleKey)
 		if err != nil {
@@ -200,12 +209,14 @@ func (p *moduleDataStore) getModuleDataForModuleKey(
 				if err != nil {
 					return nil, err
 				}
+
 				if err := p.bucket.Delete(ctx, tarPath); err != nil {
 					return nil, err
 				}
 				// Return a path error indicating the module data was not found
 				return nil, &fs.PathError{Op: "read", Path: tarPath, Err: fs.ErrNotExist}
 			}
+
 			return nil, err
 		}
 	} else {
@@ -213,6 +224,7 @@ func (p *moduleDataStore) getModuleDataForModuleKey(
 		if err != nil {
 			return nil, err
 		}
+
 		p.logDebugModuleKey(
 			ctx,
 			moduleKey,
@@ -220,6 +232,7 @@ func (p *moduleDataStore) getModuleDataForModuleKey(
 			slog.String("dirPath", dirPath),
 		)
 		moduleCacheBucket = storage2.MapReadWriteBucket(p.bucket, storage2.MapOnPrefix(dirPath))
+
 		moduleDataStoreDirLockPath, err := getModuleDataStoreDirLockPath(moduleKey)
 		if err != nil {
 			return nil, err
@@ -229,6 +242,7 @@ func (p *moduleDataStore) getModuleDataForModuleKey(
 		if err != nil {
 			return nil, err
 		}
+
 		defer func() {
 			// Release lock on the module data lock file.
 			if err := unlocker.Unlock(); err != nil {
@@ -238,7 +252,7 @@ func (p *moduleDataStore) getModuleDataForModuleKey(
 	}
 	// Attempt to read module.yaml from cache. The module.yaml file is always written last,
 	// so if a valid module.yaml file is present, then we proceed to read the rest of the
-	// the module data.
+	// module data.
 	data, err := storage2.ReadPath(ctx, moduleCacheBucket, externalModuleDataFileName)
 	p.logDebugModuleKey(
 		ctx,
@@ -247,13 +261,16 @@ func (p *moduleDataStore) getModuleDataForModuleKey(
 		slog.Bool("found", err == nil),
 		xslog.ErrorAttr(err),
 	)
+
 	if err != nil {
 		return nil, err
 	}
+
 	var externalModuleData externalModuleData
 	if err := encoding.UnmarshalYAMLNonStrict(data, &externalModuleData); err != nil {
 		return nil, err
 	}
+
 	if !externalModuleData.isValid() {
 		return nil, fmt.Errorf("invalid %s from cache for %s: %+v", externalModuleDataFileName, moduleKey.String(), externalModuleData)
 	}
@@ -269,7 +286,9 @@ func (p *moduleDataStore) getModuleDataForModuleKey(
 	if err != nil {
 		return nil, err
 	}
+
 	var v1BufYAMLObjectData bufmodule2.ObjectData
+
 	if externalModuleData.V1BufYAMLFile != "" {
 		// We do not want to use bufconfig.GetBufYAMLFileForPrefix as this validates the
 		// buf.yaml, and potentially calls out to i.e. resolve digests. We just want to raw data.
@@ -277,6 +296,7 @@ func (p *moduleDataStore) getModuleDataForModuleKey(
 		if err != nil {
 			return nil, err
 		}
+
 		v1BufYAMLObjectData, err = bufmodule2.NewObjectData(
 			normalpath.Base(externalModuleData.V1BufYAMLFile),
 			v1BufYAMLFileData,
@@ -285,7 +305,9 @@ func (p *moduleDataStore) getModuleDataForModuleKey(
 			return nil, err
 		}
 	}
+
 	var v1BufLockObjectData bufmodule2.ObjectData
+
 	if externalModuleData.V1BufLockFile != "" {
 		// We do not want to use bufconfig.GetBufLockFileForPrefix as this validates the
 		// buf.lock, and potentially calls out to i.e. resolve digests. We just want to raw data.
@@ -293,6 +315,7 @@ func (p *moduleDataStore) getModuleDataForModuleKey(
 		if err != nil {
 			return nil, err
 		}
+
 		v1BufLockObjectData, err = bufmodule2.NewObjectData(
 			normalpath.Base(externalModuleData.V1BufLockFile),
 			v1BufLockFileData,
@@ -352,11 +375,17 @@ func (p *moduleDataStore) putModuleData(
 	moduleData bufmodule2.ModuleData,
 ) (retErr error) {
 	moduleKey := moduleData.ModuleKey()
-	var moduleCacheBucket storage2.ReadWriteBucket
-	var err error
+
+	var (
+		moduleCacheBucket storage2.ReadWriteBucket
+		err               error
+	)
+
 	if p.tar {
 		var callback func(ctx context.Context) error
+
 		moduleCacheBucket, callback = p.getWriteBucketAndCallbackForTar(moduleKey)
+
 		defer func() {
 			if retErr == nil {
 				// Only call the callback if we have had no error.
@@ -368,6 +397,7 @@ func (p *moduleDataStore) putModuleData(
 		if err != nil {
 			return err
 		}
+
 		p.logDebugModuleKey(
 			ctx,
 			moduleKey,
@@ -375,6 +405,7 @@ func (p *moduleDataStore) putModuleData(
 			slog.String("dirPath", dirPath),
 		)
 		moduleCacheBucket = storage2.MapReadWriteBucket(p.bucket, storage2.MapOnPrefix(dirPath))
+
 		moduleDataStoreDirLockPath, err := getModuleDataStoreDirLockPath(moduleKey)
 		if err != nil {
 			return err
@@ -384,6 +415,7 @@ func (p *moduleDataStore) putModuleData(
 		if err != nil {
 			return err
 		}
+
 		defer func() {
 			if readUnlocker != nil {
 				if err := readUnlocker.Unlock(); err != nil {
@@ -391,6 +423,7 @@ func (p *moduleDataStore) putModuleData(
 				}
 			}
 		}()
+
 		data, err := storage2.ReadPath(ctx, moduleCacheBucket, externalModuleDataFileName)
 		p.logDebugModuleKey(
 			ctx,
@@ -399,9 +432,11 @@ func (p *moduleDataStore) putModuleData(
 			slog.Bool("found", err == nil),
 			xslog.ErrorAttr(err),
 		)
+
 		if err != nil && !errors.Is(err, fs.ErrNotExist) {
 			return err
 		}
+
 		if err == nil {
 			var externalModuleData externalModuleData
 			if err := encoding.UnmarshalYAMLNonStrict(data, &externalModuleData); err != nil {
@@ -420,6 +455,7 @@ func (p *moduleDataStore) putModuleData(
 		if readUnlocker != nil {
 			err := readUnlocker.Unlock()
 			readUnlocker = nil // unset the readUnlocker since we are upgrading the lock
+
 			if err != nil {
 				return err
 			}
@@ -429,6 +465,7 @@ func (p *moduleDataStore) putModuleData(
 		if err != nil {
 			return err
 		}
+
 		defer func() {
 			if err := unlocker.Unlock(); err != nil {
 				retErr = errors.Join(retErr, err)
@@ -446,9 +483,11 @@ func (p *moduleDataStore) putModuleData(
 			slog.Bool("found", err == nil),
 			xslog.ErrorAttr(err),
 		)
+
 		if err != nil && !errors.Is(err, fs.ErrNotExist) {
 			return err
 		}
+
 		if err == nil {
 			var externalModuleData externalModuleData
 			if err := encoding.UnmarshalYAMLNonStrict(data, &externalModuleData); err != nil {
@@ -465,6 +504,7 @@ func (p *moduleDataStore) putModuleData(
 	if err != nil {
 		return err
 	}
+
 	externalModuleData := externalModuleData{
 		Version: externalModuleDataVersion,
 		Deps:    make([]externalModuleDataDep, len(depModuleKeys)),
@@ -475,6 +515,7 @@ func (p *moduleDataStore) putModuleData(
 		if err != nil {
 			return err
 		}
+
 		externalModuleData.Deps[i] = externalModuleDataDep{
 			Name:   depModuleKey.FullName().String(),
 			Commit: uuidutil.ToDashless(depModuleKey.CommitID()),
@@ -486,6 +527,7 @@ func (p *moduleDataStore) putModuleData(
 	if err != nil {
 		return err
 	}
+
 	if _, err := storage2.Copy(
 		ctx,
 		filesBucket,
@@ -493,17 +535,20 @@ func (p *moduleDataStore) putModuleData(
 	); err != nil {
 		return err
 	}
+
 	externalModuleData.FilesDir = externalModuleDataFilesDir
 
 	v1BufYAMLObjectData, err := moduleData.V1Beta1OrV1BufYAMLObjectData()
 	if err != nil {
 		return err
 	}
+
 	if v1BufYAMLObjectData != nil {
 		v1BufYAMLFilePath := normalpath.Join(externalModuleDataV1BufYAMLDir, v1BufYAMLObjectData.Name())
 		if err := storage2.PutPath(ctx, moduleCacheBucket, v1BufYAMLFilePath, v1BufYAMLObjectData.Data()); err != nil {
 			return err
 		}
+
 		externalModuleData.V1BufYAMLFile = v1BufYAMLFilePath
 	}
 
@@ -511,11 +556,13 @@ func (p *moduleDataStore) putModuleData(
 	if err != nil {
 		return err
 	}
+
 	if v1BufLockObjectData != nil {
 		v1BufLockFilePath := normalpath.Join(externalModuleDataV1BufLockDir, v1BufLockObjectData.Name())
 		if err := storage2.PutPath(ctx, moduleCacheBucket, v1BufLockFilePath, v1BufLockObjectData.Data()); err != nil {
 			return err
 		}
+
 		externalModuleData.V1BufLockFile = v1BufLockFilePath
 	}
 
@@ -544,6 +591,7 @@ func (p *moduleDataStore) getReadBucketForTar(
 	if err != nil {
 		return nil, err
 	}
+
 	defer func() {
 		p.logDebugModuleKey(
 			ctx,
@@ -554,13 +602,16 @@ func (p *moduleDataStore) getReadBucketForTar(
 			slog.Any("error", retErr),
 		)
 	}()
+
 	readObjectCloser, err := p.bucket.Get(ctx, tarPath)
 	if err != nil {
 		return nil, err
 	}
+
 	defer func() {
 		retErr = errors.Join(retErr, readObjectCloser.Close())
 	}()
+
 	readWriteBucket := storagemem.NewReadWriteBucket()
 	if err := storagearchive.Untar(
 		ctx,
@@ -569,6 +620,7 @@ func (p *moduleDataStore) getReadBucketForTar(
 	); err != nil {
 		return nil, err
 	}
+
 	return readWriteBucket, nil
 }
 
@@ -576,11 +628,13 @@ func (p *moduleDataStore) getWriteBucketAndCallbackForTar(
 	moduleKey bufmodule2.ModuleKey,
 ) (storage2.ReadWriteBucket, func(context.Context) error) {
 	readWriteBucket := storagemem.NewReadWriteBucket()
+
 	return readWriteBucket, func(ctx context.Context) (retErr error) {
 		tarPath, err := getModuleDataStoreTarPath(moduleKey)
 		if err != nil {
 			return err
 		}
+
 		defer func() {
 			p.logDebugModuleKey(
 				ctx,
@@ -591,6 +645,7 @@ func (p *moduleDataStore) getWriteBucketAndCallbackForTar(
 				slog.Any("error", retErr),
 			)
 		}()
+
 		writeObjectCloser, err := p.bucket.Put(
 			ctx,
 			tarPath,
@@ -600,9 +655,11 @@ func (p *moduleDataStore) getWriteBucketAndCallbackForTar(
 		if err != nil {
 			return err
 		}
+
 		defer func() {
 			retErr = errors.Join(retErr, writeObjectCloser.Close())
 		}()
+
 		return storagearchive.Tar(
 			ctx,
 			readWriteBucket,
@@ -625,6 +682,7 @@ func getModuleDataStoreDirPath(moduleKey bufmodule2.ModuleKey) (string, error) {
 	if err != nil {
 		return "", err
 	}
+
 	return normalpath.Join(
 		digest.Type().String(),
 		moduleKey.FullName().Registry(),
@@ -644,6 +702,7 @@ func getModuleDataStoreTarPath(moduleKey bufmodule2.ModuleKey) (string, error) {
 	if err != nil {
 		return "", err
 	}
+
 	return normalpath.Join(
 		digest.Type().String(),
 		moduleKey.FullName().Registry(),
@@ -657,24 +716,30 @@ func getDepModuleKeyForExternalModuleDataDep(dep externalModuleDataDep) (bufmodu
 	if dep.Name == "" {
 		return nil, errors.New("no module name specified")
 	}
+
 	moduleFullName, err := bufparse.ParseFullName(dep.Name)
 	if err != nil {
 		return nil, fmt.Errorf("invalid module name: %w", err)
 	}
+
 	if dep.Commit == "" {
 		return nil, fmt.Errorf("no commit specified for module %s", moduleFullName.String())
 	}
+
 	if dep.Digest == "" {
 		return nil, fmt.Errorf("no digest specified for module %s", moduleFullName.String())
 	}
+
 	digest, err := bufmodule2.ParseDigest(dep.Digest)
 	if err != nil {
 		return nil, err
 	}
+
 	commitID, err := uuidutil.FromDashless(dep.Commit)
 	if err != nil {
 		return nil, err
 	}
+
 	return bufmodule2.NewModuleKey(
 		moduleFullName,
 		commitID,
@@ -689,6 +754,7 @@ func getModuleDataStoreDirLockPath(moduleKey bufmodule2.ModuleKey) (string, erro
 	if err != nil {
 		return "", err
 	}
+
 	return moduleDataStoreDirPath + externalModuleDataLockFileExt, nil
 }
 
@@ -718,6 +784,7 @@ func (e externalModuleData) isValid() bool {
 			return false
 		}
 	}
+
 	return e.Version == externalModuleDataVersion &&
 		len(e.FilesDir) > 0
 }

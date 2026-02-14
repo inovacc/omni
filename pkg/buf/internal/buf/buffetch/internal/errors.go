@@ -83,6 +83,7 @@ func NewOptionsInvalidKeysError(keys ...string) error {
 	if len(keys) == 1 {
 		return fmt.Errorf("invalid key: %q", keys[0])
 	}
+
 	return fmt.Errorf("invalid keys: \"%v\"", strings.Join(keys, ", "))
 }
 
@@ -116,6 +117,7 @@ func NewInvalidPathError(format string, path string) error {
 	if format != "" {
 		format = format + " "
 	}
+
 	return fmt.Errorf("invalid %spath: %q", format, path)
 }
 
@@ -124,6 +126,7 @@ func NewProtoFileCannotBeDevPathError(format string, path string) error {
 	if format != "" {
 		format = format + " "
 	}
+
 	return fmt.Errorf("invalid %spath: %q (protofiles cannot be read or written to or from stdio)", format, path)
 }
 

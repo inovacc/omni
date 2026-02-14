@@ -41,10 +41,12 @@ func ResolveMethodDescriptor(res protoencoding.Resolver, service, method string)
 	if err != nil {
 		return nil, err
 	}
+
 	methodDescriptor := serviceDescriptor.Methods().ByName(protoreflect.Name(method))
 	if methodDescriptor == nil {
 		return nil, fmt.Errorf("URL indicates method name %q, but service %q contains no such method", method, service)
 	}
+
 	return methodDescriptor, nil
 }
 
@@ -57,9 +59,11 @@ func ResolveServiceDescriptor(res protoencoding.Resolver, service string) (proto
 	} else if err != nil {
 		return nil, err
 	}
+
 	serviceDescriptor, ok := descriptor.(protoreflect.ServiceDescriptor)
 	if !ok {
 		return nil, fmt.Errorf("URL indicates service name %q, but that name is a %s", service, descriptorKind(descriptor))
 	}
+
 	return serviceDescriptor, nil
 }

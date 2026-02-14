@@ -146,6 +146,7 @@ func (f *field) Oneof() Oneof {
 	if f.oneof == nil {
 		return nil
 	}
+
 	return f.oneof
 }
 
@@ -198,6 +199,7 @@ func (f *field) TypeLocation() Location {
 	if loc == nil {
 		return f.maybeMapEntryLocation()
 	}
+
 	return loc
 }
 
@@ -206,6 +208,7 @@ func (f *field) TypeNameLocation() Location {
 	if loc == nil {
 		return f.maybeMapEntryLocation()
 	}
+
 	return loc
 }
 
@@ -242,6 +245,7 @@ func (f *field) Location() Location {
 	if loc == nil {
 		return f.maybeMapEntryLocation()
 	}
+
 	return loc
 }
 
@@ -250,6 +254,7 @@ func (f *field) NameLocation() Location {
 	if loc == nil {
 		return f.maybeMapEntryLocation()
 	}
+
 	return loc
 }
 
@@ -257,5 +262,6 @@ func (f *field) maybeMapEntryLocation() Location {
 	if message, _ := f.parentMessage.(*message); message != nil {
 		return message.maybeMapEntryLocation()
 	}
+
 	return nil
 }

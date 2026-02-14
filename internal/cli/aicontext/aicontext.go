@@ -13,8 +13,8 @@ import (
 
 // Options configures the aicontext command behavior
 type Options struct {
-	JSON       bool
-	Category   string
+	JSON        bool
+	Category    string
 	NoStructure bool
 }
 
@@ -111,8 +111,10 @@ func RunAIContext(w io.Writer, root *cobra.Command, opts Options) error {
 	if opts.JSON {
 		enc := json.NewEncoder(w)
 		enc.SetIndent("", "  ")
+
 		return enc.Encode(ctx)
 	}
+
 	return writeMarkdown(w, ctx)
 }
 
@@ -143,10 +145,12 @@ func buildContext(root *cobra.Command, opts Options) AIContext {
 			if f.Name == "help" {
 				return
 			}
+
 			flag := "--" + f.Name
 			if f.Shorthand != "" {
 				flag = "-" + f.Shorthand + "/" + flag
 			}
+
 			cmd.Flags = append(cmd.Flags, flag)
 		})
 
@@ -195,14 +199,17 @@ func writeMarkdown(w io.Writer, ctx AIContext) error {
 	for cat := range ctx.Categories {
 		cats = append(cats, cat)
 	}
+
 	sort.Strings(cats)
 
 	for _, cat := range cats {
 		cmds := ctx.Categories[cat]
+
 		name := categoryNames[cat]
 		if name == "" {
 			name = cat
 		}
+
 		sb.WriteString(fmt.Sprintf("## %s\n\n", name))
 
 		for _, cmd := range cmds {
@@ -222,16 +229,20 @@ func writeMarkdown(w io.Writer, ctx AIContext) error {
 
 	if len(ctx.Structure) > 0 {
 		sb.WriteString("## Structure\n\n")
+
 		keys := make([]string, 0, len(ctx.Structure))
 		for k := range ctx.Structure {
 			keys = append(keys, k)
 		}
+
 		sort.Strings(keys)
+
 		for _, k := range keys {
 			sb.WriteString(fmt.Sprintf("- `%s` %s\n", k, ctx.Structure[k]))
 		}
 	}
 
 	_, err := io.WriteString(w, sb.String())
+
 	return err
 }

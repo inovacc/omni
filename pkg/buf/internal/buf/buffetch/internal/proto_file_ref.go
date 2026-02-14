@@ -31,6 +31,7 @@ func newProtoFileRef(format string, path string, includePackageFiles bool) (*pro
 	if app.IsDevStderr(path) {
 		return nil, NewInvalidPathError(format, path)
 	}
+
 	if path == "-" {
 		return newDirectProtoFileRef(
 			format,
@@ -39,6 +40,7 @@ func newProtoFileRef(format string, path string, includePackageFiles bool) (*pro
 			includePackageFiles,
 		), nil
 	}
+
 	if app.IsDevStdin(path) {
 		return newDirectProtoFileRef(
 			format,
@@ -47,6 +49,7 @@ func newProtoFileRef(format string, path string, includePackageFiles bool) (*pro
 			includePackageFiles,
 		), nil
 	}
+
 	if app.IsDevStdout(path) {
 		return newDirectProtoFileRef(
 			format,
@@ -55,6 +58,7 @@ func newProtoFileRef(format string, path string, includePackageFiles bool) (*pro
 			includePackageFiles,
 		), nil
 	}
+
 	if app.IsDevNull(path) {
 		return newDirectProtoFileRef(
 			format,
@@ -63,6 +67,7 @@ func newProtoFileRef(format string, path string, includePackageFiles bool) (*pro
 			includePackageFiles,
 		), nil
 	}
+
 	return &protoFileRef{
 		format:              format,
 		path:                path,

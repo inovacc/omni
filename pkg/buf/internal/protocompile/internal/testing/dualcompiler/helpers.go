@@ -106,9 +106,11 @@ func RunWithBothCompilersIf(
 		t.Run("new_compiler", func(t *testing.T) {
 			t.Helper()
 			t.Parallel()
+
 			if skip.SkipReason != "" {
 				t.Skip(skip.SkipReason)
 			}
+
 			compiler := SetupNewCompilerWithOptions(t, opts)
 			testFunc(t, compiler)
 		})
@@ -121,9 +123,11 @@ func RunWithBothCompilersIf(
 //   - Include standard imports (WKTs).
 func SetupOldCompiler(t *testing.T) CompilerInterface {
 	t.Helper()
+
 	resolver := protocompile.WithStandardImports(&protocompile.SourceResolver{
 		ImportPaths: []string{defaultTestdataPath},
 	})
+
 	return NewOldCompiler(WithResolver(resolver))
 }
 
@@ -131,6 +135,7 @@ func SetupOldCompiler(t *testing.T) CompilerInterface {
 // If no resolver is specified in opts, a default resolver with standard imports will be used.
 func SetupOldCompilerWithOptions(t *testing.T, opts []CompilerOption) CompilerInterface {
 	t.Helper()
+
 	config := &compilerConfig{}
 	for _, opt := range opts {
 		opt(config)
@@ -142,6 +147,7 @@ func SetupOldCompilerWithOptions(t *testing.T, opts []CompilerOption) CompilerIn
 		})
 		opts = append([]CompilerOption{WithResolver(resolver)}, opts...)
 	}
+
 	return NewOldCompiler(opts...)
 }
 
@@ -151,9 +157,11 @@ func SetupOldCompilerWithOptions(t *testing.T, opts []CompilerOption) CompilerIn
 //   - Include WKTs via source.WKTs().
 func SetupNewCompiler(t *testing.T) CompilerInterface {
 	t.Helper()
+
 	resolver := &protocompile.SourceResolver{
 		ImportPaths: []string{defaultTestdataPath},
 	}
+
 	return NewNewCompiler(WithResolver(resolver))
 }
 
@@ -161,6 +169,7 @@ func SetupNewCompiler(t *testing.T) CompilerInterface {
 // If no resolver is specified in opts, a default resolver will be used.
 func SetupNewCompilerWithOptions(t *testing.T, opts []CompilerOption) CompilerInterface {
 	t.Helper()
+
 	config := &compilerConfig{}
 	for _, opt := range opts {
 		opt(config)
@@ -172,6 +181,7 @@ func SetupNewCompilerWithOptions(t *testing.T, opts []CompilerOption) CompilerIn
 		}
 		opts = append([]CompilerOption{WithResolver(resolver)}, opts...)
 	}
+
 	return NewNewCompiler(opts...)
 }
 
@@ -264,5 +274,6 @@ func compareCompilationResults(t *testing.T, result1, result2 CompilationResult,
 func stripSourceCodeInfo(fdp *descriptorpb.FileDescriptorProto) *descriptorpb.FileDescriptorProto {
 	clone := proto.CloneOf(fdp)
 	clone.SourceCodeInfo = nil
+
 	return clone
 }

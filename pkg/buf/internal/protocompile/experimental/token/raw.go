@@ -39,6 +39,7 @@ func naturalIndex(t ID) int {
 	if t.IsZero() {
 		panic("protocompile/token: called naturalIndex on zero token")
 	}
+
 	if t < 0 {
 		panic("protocompile/token: called naturalIndex on synthetic token")
 	}
@@ -52,6 +53,7 @@ func syntheticIndex(t ID) int {
 	if t.IsZero() {
 		panic("protocompile/token: called syntheticIndex on zero token")
 	}
+
 	if t > 0 {
 		panic("protocompile/token: called syntheticIndex on natural token")
 	}
@@ -105,6 +107,7 @@ func (t nat) Kind() Kind {
 func (t nat) WithKind(k Kind) nat {
 	t.metadata &^= kindMask
 	t.metadata |= int32(k)
+
 	return t
 }
 
@@ -116,6 +119,7 @@ func (t nat) WithKeyword(kw keyword.Keyword) nat {
 
 	t.metadata &^= 0xff << keywordShift
 	t.metadata |= int32(kw) << keywordShift
+
 	return t
 }
 
@@ -124,6 +128,7 @@ func (t nat) Offset() int {
 	if t.metadata&isTreeMask == 0 {
 		return 0
 	}
+
 	return int(t.metadata >> offsetShift)
 }
 
@@ -136,9 +141,11 @@ func (t nat) Keyword() keyword.Keyword {
 	if t.IsLeaf() {
 		return keyword.Keyword(t.metadata >> keywordShift)
 	}
+
 	if t.Kind() != Keyword {
 		return keyword.Unknown
 	}
+
 	return keyword.Parens + keyword.Keyword((t.metadata&treeKwMask)>>keywordShift)
 }
 
@@ -216,6 +223,7 @@ func (t synth) Keyword() keyword.Keyword {
 	if !t.IsLeaf() {
 		_, _, kw = kw.Brackets()
 	}
+
 	return kw
 }
 

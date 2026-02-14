@@ -29,6 +29,7 @@ import (
 
 type defParser struct {
 	*parser
+
 	c *token.Cursor
 
 	kw token.Token
@@ -66,19 +67,25 @@ func (p *defParser) parse() ast.DeclDef {
 	// Try to parse the various "followers". We try to parse as many as
 	// possible: if we have `foo = 5 = 6`, we want to parse the second = 6,
 	// diagnose it, and throw it away.
-	var mark token.CursorMark
-	var skipSemi bool
+	var (
+		mark     token.CursorMark
+		skipSemi bool
+	)
+
 	lastFollower := -1
+
 	for !p.c.Done() {
 		ensureProgress(p.c, &mark)
 
 		idx := -1
+
 		for i := range defFollowers {
 			if defFollowers[i].canStart(p) {
 				idx = i
 				break
 			}
 		}
+
 		if idx < 0 {
 			break
 		}
@@ -93,7 +100,6 @@ func (p *defParser) parse() ast.DeclDef {
 			// TODO: if we have already seen a follower at idx, we should
 			// suggest removing this follower. Otherwise, we should suggest
 			// moving this follower before the previous one.
-
 			f := defFollowers[lastFollower]
 			p.Error(errtoken.Unexpected{
 				What:  next,
@@ -122,6 +128,7 @@ func (p *defParser) parse() ast.DeclDef {
 	// If we didn't see any braces, this def needs to be ended by a semicolon.
 	if !skipSemi {
 		semi, err := parseSemi(p.parser, p.c, taxa.Def)
+
 		p.args.Semicolon = semi
 		if err != nil {
 			p.Error(err)
@@ -147,6 +154,7 @@ func (p *defParser) parse() ast.DeclDef {
 	if !p.inputs.IsZero() {
 		parseTypeList(p.parser, p.inputs, def.WithSignature().Inputs(), taxa.MethodIns)
 	}
+
 	if !p.outputs.IsZero() {
 		parseTypeList(p.parser, p.outputs, def.WithSignature().Outputs(), taxa.MethodOuts)
 	} else if !p.outputTy.IsZero() {
@@ -165,6 +173,7 @@ func (p *defParser) parse() ast.DeclDef {
 
 	if !p.braces.IsZero() {
 		var in taxa.Noun
+
 		switch p.kw.Text() {
 		case "message":
 			in = taxa.Message
@@ -204,6 +213,7 @@ func (defInputs) parse(p *defParser) source.Span {
 	if p.inputs.IsZero() {
 		p.inputs = next
 	}
+
 	return next.Span()
 }
 
@@ -223,6 +233,7 @@ func (defOutputs) parse(p *defParser) source.Span {
 	}
 
 	var ty ast.TypeAny
+
 	list, err := punctParser{
 		parser: p.parser, c: p.c,
 		want:  keyword.Parens,
@@ -249,6 +260,7 @@ func (defOutputs) parse(p *defParser) source.Span {
 	if !list.IsZero() {
 		return source.Join(returns, list)
 	}
+
 	return source.Join(returns, ty)
 }
 
@@ -256,6 +268,7 @@ func (defOutputs) prev(p *defParser) source.Span {
 	if !p.outputTy.IsZero() {
 		return source.Join(p.args.Returns, p.outputTy)
 	}
+
 	return source.Join(p.args.Returns, p.outputs)
 }
 
@@ -321,6 +334,7 @@ func (defValue) parse(p *defParser) source.Span {
 		p.args.Equals = eq
 		p.args.Value = expr
 	}
+
 	return source.Join(eq, expr)
 }
 
@@ -328,6 +342,7 @@ func (defValue) prev(p *defParser) source.Span {
 	if p.args.Value.IsZero() {
 		return source.Span{}
 	}
+
 	return source.Join(p.args.Equals, p.args.Value)
 }
 
@@ -345,6 +360,7 @@ func (defOptions) parse(p *defParser) source.Span {
 	if p.args.Options.IsZero() {
 		p.args.Options = parseOptions(p.parser, next, taxa.Def)
 	}
+
 	return next.Span()
 }
 
@@ -364,6 +380,7 @@ func (defBody) parse(p *defParser) source.Span {
 	if p.braces.IsZero() {
 		p.braces = next
 	}
+
 	return next.Span()
 }
 

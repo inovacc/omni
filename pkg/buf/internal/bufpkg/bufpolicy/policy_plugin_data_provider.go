@@ -80,6 +80,7 @@ func (s staticPolicyPluginDataProvider) GetPluginDataProviderForPolicy(policyNam
 			return pluginDataProvider
 		}
 	}
+
 	return newNopPluginDataProviderForPolicy(policyName)
 }
 

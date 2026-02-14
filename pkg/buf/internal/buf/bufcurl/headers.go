@@ -49,10 +49,11 @@ var headerBlockList = map[string]struct{}{
 // such header, the authority is the host portion of the URL (both the domain
 // name/IP address and port).
 func GetAuthority(urlHost string, headers http.Header) string {
-	header := headers.Get("host")
+	header := headers.Get("Host")
 	if header != "" {
 		return header
 	}
+
 	return urlHost
 }
 
@@ -73,7 +74,9 @@ func GetAuthority(urlHost string, headers http.Header) string {
 // the request body can be read from it.
 func LoadHeaders(headerFlags []string, dataFile string, others http.Header) (http.Header, io.ReadCloser, error) {
 	var dataReader io.ReadCloser
+
 	headers := http.Header{}
+
 	for _, headerFlag := range headerFlags {
 		switch {
 		case strings.HasPrefix(headerFlag, "@"):
@@ -83,11 +86,14 @@ func LoadHeaders(headerFlags []string, dataFile string, others http.Header) (htt
 					headerFile = absFile
 				}
 			}
+
 			isAlsoDataFile := headerFile == dataFile
+
 			reader, err := readHeadersFile(headerFile, isAlsoDataFile, headers)
 			if err != nil {
 				return nil, nil, err
 			}
+
 			if isAlsoDataFile {
 				dataReader = reader
 			}
@@ -106,6 +112,7 @@ func LoadHeaders(headerFlags []string, dataFile string, others http.Header) (htt
 			return nil, nil, fmt.Errorf("invalid header: %q is reserved and may not be used", key)
 		}
 	}
+
 	return headers, dataReader, nil
 }
 
@@ -119,6 +126,7 @@ func readHeadersFile(headerFile string, stopAtBlankLine bool, headers http.Heade
 			return nil, ErrorHasFilename(err, headerFile)
 		}
 	}
+
 	defer func() {
 		if f != nil {
 			closeErr := f.Close()
@@ -127,8 +135,11 @@ func readHeadersFile(headerFile string, stopAtBlankLine bool, headers http.Heade
 			}
 		}
 	}()
+
 	in := &lineReader{r: bufio.NewReader(f)}
+
 	var lineNo int
+
 	for {
 		line, err := in.ReadLine()
 		if err == io.EOF {
@@ -136,24 +147,30 @@ func readHeadersFile(headerFile string, stopAtBlankLine bool, headers http.Heade
 				// never hit a blank line
 				return nil, ErrorHasFilename(io.ErrUnexpectedEOF, headerFile)
 			}
+
 			return nil, nil
 		} else if err != nil {
 			return nil, ErrorHasFilename(err, headerFile)
 		}
+
 		if line == "" && stopAtBlankLine {
 			closer := f
 			// we don't want close f on return in above defer function, so we clear it
 			f = nil
+
 			return &readerWithClose{Reader: in, Closer: closer}, nil
 		}
+
 		line = strings.TrimSpace(line)
 		if strings.TrimSpace(line) == "" || strings.HasPrefix(line, "#") {
 			// ignore blank lines and shell-style comments
 			continue
 		}
+
 		if !addHeader(line, headers) {
 			return nil, fmt.Errorf("%s:%d: malformed header: %q", headerFile, lineNo, line)
 		}
+
 		lineNo++
 	}
 }
@@ -162,10 +179,13 @@ func addHeader(header string, dest http.Header) bool {
 	parts := strings.SplitN(header, ":", 2)
 	headerName := parts[0]
 	hasValue := len(parts) > 1
+
 	var headerVal string
 	if hasValue {
 		headerVal = parts[1]
 	}
+
 	dest.Add(strings.TrimSpace(headerName), strings.TrimSpace(headerVal))
+
 	return hasValue
 }

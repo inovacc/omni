@@ -35,6 +35,7 @@ func GetBufYAMLFileForDirPathOrOverride(
 	if err != nil {
 		return nil, err
 	}
+
 	return bufconfig.GetBufYAMLFileForPrefixOrOverride(ctx, bucket, ".", override)
 }
 
@@ -47,6 +48,7 @@ func GetBufYAMLFileForDirPath(
 	if err != nil {
 		return nil, err
 	}
+
 	return bufconfig.GetBufYAMLFileForPrefix(ctx, bucket, ".")
 }
 
@@ -60,6 +62,7 @@ func PutBufYAMLFileForDirPath(
 	if err != nil {
 		return err
 	}
+
 	return bufconfig.PutBufYAMLFileForPrefix(ctx, bucket, ".", bufYAMLFile)
 }
 
@@ -72,12 +75,15 @@ func BufYAMLFileExistsForDirPath(
 	if err != nil {
 		return false, err
 	}
+
 	if _, err := bufconfig.GetBufYAMLFileVersionForPrefix(ctx, bucket, "."); err != nil {
 		if errors.Is(err, fs.ErrNotExist) {
 			return false, nil
 		}
+
 		return false, err
 	}
+
 	return true, nil
 }
 

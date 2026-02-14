@@ -50,6 +50,7 @@ func NewNewCompiler(opts ...CompilerOption) CompilerInterface {
 	// Create an opener that combines the resolver with WKTs.
 	// WKTs are checked first so they're returned as source files, not descriptors.
 	var opener source.Opener
+
 	if config.resolver != nil {
 		resolverOpener := ResolverToOpener(config.resolver)
 		wkts := source.WKTs()
@@ -94,6 +95,7 @@ func (a *newCompilerAdapter) Compile(ctx context.Context, files ...string) (Comp
 		if result.Fatal != nil {
 			return nil, fmt.Errorf("compilation failed for %s: %w", files[i], result.Fatal)
 		}
+
 		irFiles = append(irFiles, result.Value)
 	}
 
@@ -122,6 +124,7 @@ func (r *newCompilationResult) Files() []CompiledFile {
 			file: file,
 		}
 	}
+
 	return result
 }
 

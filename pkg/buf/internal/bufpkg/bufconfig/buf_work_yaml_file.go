@@ -140,10 +140,12 @@ func newBufWorkYAMLFile(fileVersion FileVersion, objectData ObjectData, dirPaths
 	if fileVersion != FileVersionV1 {
 		return nil, newUnsupportedFileVersionError("", fileVersion)
 	}
+
 	sortedNormalizedDirPaths, err := validateBufWorkYAMLDirPaths(dirPaths)
 	if err != nil {
 		return nil, err
 	}
+
 	return &bufWorkYAMLFile{
 		fileVersion: fileVersion,
 		objectData:  objectData,
@@ -181,13 +183,16 @@ func readBufWorkYAMLFile(
 	if err != nil {
 		return nil, err
 	}
+
 	if fileVersion != FileVersionV1 {
 		return nil, newUnsupportedFileVersionError(objectData.Name(), fileVersion)
 	}
+
 	var externalBufWorkYAMLFile externalBufWorkYAMLFileV1
 	if err := getUnmarshalStrict(allowJSON)(data, &externalBufWorkYAMLFile); err != nil {
 		return nil, err
 	}
+
 	return newBufWorkYAMLFile(fileVersion, objectData, externalBufWorkYAMLFile.Directories)
 }
 
@@ -197,16 +202,20 @@ func writeBufWorkYAMLFile(writer io.Writer, bufWorkYAMLFile BufWorkYAMLFile) err
 		// This is effectively a system error.
 		return syserror.Wrap(newUnsupportedFileVersionError("", fileVersion))
 	}
+
 	externalBufWorkYAMLFile := externalBufWorkYAMLFileV1{
 		Version: fileVersion.String(),
 		// No need to sort - DirPaths() is already sorted per the documentation on BufWorkYAMLFile
 		Directories: bufWorkYAMLFile.DirPaths(),
 	}
+
 	data, err := encoding.MarshalYAML(&externalBufWorkYAMLFile)
 	if err != nil {
 		return err
 	}
+
 	_, err = writer.Write(data)
+
 	return err
 }
 
@@ -216,18 +225,22 @@ func validateBufWorkYAMLDirPaths(dirPaths []string) ([]string, error) {
 	if len(dirPaths) == 0 {
 		return nil, fmt.Errorf(`directories is empty`)
 	}
+
 	normalizedDirPathToDirPath := make(map[string]string, len(dirPaths))
 	for _, dirPath := range dirPaths {
 		normalizedDirPath, err := normalpath2.NormalizeAndValidate(dirPath)
 		if err != nil {
 			return nil, fmt.Errorf(`directory %q is invalid: %w`, dirPath, err)
 		}
+
 		if _, ok := normalizedDirPathToDirPath[normalizedDirPath]; ok {
 			return nil, fmt.Errorf(`directory %q is listed more than once`, dirPath)
 		}
+
 		if normalizedDirPath == "." {
 			return nil, fmt.Errorf(`directory "." is listed, it is not valid to have "." as a workspace directory, as this is no different than not having a workspace at all, see https://buf.build/docs/reference/workspaces/#directories for more details`)
 		}
+
 		normalizedDirPathToDirPath[normalizedDirPath] = dirPath
 	}
 	// We already know the paths are unique due to above validation.
@@ -236,6 +249,7 @@ func validateBufWorkYAMLDirPaths(dirPaths []string) ([]string, error) {
 	for i := range sortedNormalizedDirPaths {
 		for j := i + 1; j < len(sortedNormalizedDirPaths); j++ {
 			left := sortedNormalizedDirPaths[i]
+
 			right := sortedNormalizedDirPaths[j]
 			if normalpath2.ContainsPath(left, right, normalpath2.Relative) {
 				return nil, fmt.Errorf(
@@ -244,6 +258,7 @@ func validateBufWorkYAMLDirPaths(dirPaths []string) ([]string, error) {
 					normalizedDirPathToDirPath[right],
 				)
 			}
+
 			if normalpath2.ContainsPath(right, left, normalpath2.Relative) {
 				return nil, fmt.Errorf(
 					`directory %q contains directory %q`,
@@ -253,6 +268,7 @@ func validateBufWorkYAMLDirPaths(dirPaths []string) ([]string, error) {
 			}
 		}
 	}
+
 	return sortedNormalizedDirPaths, nil
 }
 

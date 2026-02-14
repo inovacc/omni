@@ -101,6 +101,7 @@ func (f LicenseType) String() string {
 	if !ok {
 		return strconv.Itoa(int(f))
 	}
+
 	return s
 }
 
@@ -110,6 +111,7 @@ func ParseLicenseType(s string) (LicenseType, error) {
 	if ok {
 		return f, nil
 	}
+
 	return 0, fmt.Errorf("unknown LicenseType: %q", s)
 }
 
@@ -132,17 +134,22 @@ func Modify(
 		// so we just return the unmodified data
 		return data, nil
 	}
+
 	remainder := getRemainder(string(data), prefix)
+
 	licenseHeader, err := getLicenseHeader(licenseType, copyrightHolder, yearRange, prefix)
 	if err != nil {
 		return nil, err
 	}
+
 	if licenseHeader == "" {
 		return []byte(remainder), nil
 	}
+
 	if len(remainder) == 0 {
 		return []byte(licenseHeader + "\n"), nil
 	}
+
 	return []byte(licenseHeader + "\n\n" + remainder), nil
 }
 
@@ -157,14 +164,20 @@ func getRemainder(data string, prefix string) string {
 	if len(data) == 0 {
 		return ""
 	}
+
 	lines := strings.Split(data, "\n")
-	var headerLines []string
-	var lastCommentLine int
+
+	var (
+		headerLines     []string
+		lastCommentLine int
+	)
+
 	for i, line := range lines {
 		if !strings.HasPrefix(line, prefix) {
 			lastCommentLine = i
 			break
 		}
+
 		headerLines = append(headerLines, line)
 	}
 	// we have reached the first non-comment, check if the header lines represent a license or not
@@ -185,20 +198,25 @@ func getLicenseHeader(
 	if licenseType == LicenseTypeNone {
 		return "", nil
 	}
+
 	if copyrightHolder == "" {
 		return "", errors.New("copyrightHolder required if not using LicenseTypeNone")
 	}
+
 	if yearRange == "" {
 		return "", errors.New("yearRange required if not using LicenseTypeNone")
 	}
+
 	templateData, ok := licenseTypeToTemplateData[licenseType]
 	if !ok {
 		return "", fmt.Errorf("unrecognized license type: %q", licenseType)
 	}
+
 	tmpl, err := template.New("tmpl").Parse(templateData)
 	if err != nil {
 		return "", err
 	}
+
 	buffer := bytes.NewBuffer(nil)
 	if err := tmpl.Execute(
 		buffer,
@@ -209,6 +227,7 @@ func getLicenseHeader(
 	); err != nil {
 		return "", err
 	}
+
 	lines := strings.Split(buffer.String(), "\n")
 	for i, line := range lines {
 		if line == "" {
@@ -217,6 +236,7 @@ func getLicenseHeader(
 			lines[i] = prefix + " " + line
 		}
 	}
+
 	return strings.Join(lines, "\n"), nil
 }
 
@@ -228,6 +248,7 @@ func doLinesContainALicense(lines []string) bool {
 			}
 		}
 	}
+
 	return false
 }
 

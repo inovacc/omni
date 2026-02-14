@@ -32,16 +32,20 @@ func (a *netrcAuthenticator) SetAuth(envContainer app.EnvContainer, request *htt
 	if request.URL == nil {
 		return false, errors.New("malformed request: no url")
 	}
+
 	if request.URL.Host == "" {
 		return false, errors.New("malformed request: no url host")
 	}
+
 	machine, err := netrc.GetMachineForName(envContainer, request.URL.Host)
 	if err != nil {
 		return false, err
 	}
+
 	if machine == nil {
 		return false, nil
 	}
+
 	return setBasicAuth(
 		request,
 		machine.Login(),

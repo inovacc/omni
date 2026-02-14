@@ -127,10 +127,12 @@ func (v Value) OptionSpan() source.Spanner {
 	}
 
 	c := v.Context().AST()
+
 	expr := id.WrapDyn(c, v.Raw().exprs[0])
 	if field := expr.AsField(); !field.IsZero() {
 		return field
 	}
+
 	return source.Join(ast.ExprPath{Path: v.Raw().optionPaths[0].In(c)}, expr)
 }
 
@@ -145,10 +147,12 @@ func (v Value) OptionSpans() seq.Indexer[source.Spanner] {
 
 	return seq.NewFixedSlice(slice, func(_ int, p id.Dyn[ast.ExprAny, ast.ExprKind]) source.Spanner {
 		c := v.Context().AST()
+
 		expr := id.WrapDyn(c, p)
 		if field := expr.AsField(); !field.IsZero() {
 			return field
 		}
+
 		return source.Join(ast.ExprPath{Path: v.Raw().optionPaths[0].In(c)}, expr)
 	})
 }
@@ -163,6 +167,7 @@ func (v Value) ValueAST() ast.ExprAny {
 	}
 
 	c := v.Context().AST()
+
 	expr := id.WrapDyn(c, v.Raw().exprs[0])
 	if field := expr.AsField(); !field.IsZero() {
 		return field.Value()
@@ -183,10 +188,12 @@ func (v Value) ValueASTs() seq.Indexer[ast.ExprAny] {
 
 	return seq.NewFixedSlice(slice, func(_ int, p id.Dyn[ast.ExprAny, ast.ExprKind]) ast.ExprAny {
 		c := v.Context().AST()
+
 		expr := id.WrapDyn(c, p)
 		if field := expr.AsField(); !field.IsZero() {
 			return field.Value()
 		}
+
 		return expr
 	})
 }
@@ -199,10 +206,12 @@ func (v Value) KeyAST() ast.ExprAny {
 	}
 
 	c := v.Context().AST()
+
 	expr := id.WrapDyn(c, v.Raw().exprs[0])
 	if field := expr.AsField(); !field.IsZero() {
 		return field.Key()
 	}
+
 	return ast.ExprPath{Path: v.Raw().optionPaths[0].In(c)}.AsAny()
 }
 
@@ -220,10 +229,12 @@ func (v Value) KeyASTs() seq.Indexer[ast.ExprAny] {
 
 	return seq.NewFixedSlice(slice, func(n int, p id.Dyn[ast.ExprAny, ast.ExprKind]) ast.ExprAny {
 		c := v.Context().AST()
+
 		expr := id.WrapDyn(c, p)
 		if field := expr.AsField(); !field.IsZero() {
 			return field.Key()
 		}
+
 		return ast.ExprPath{Path: v.Raw().optionPaths[n].In(c)}.AsAny()
 	})
 }
@@ -258,6 +269,7 @@ func (v Value) Field() Member {
 	if int32(field.id) < 0 {
 		field.id ^= -1
 	}
+
 	return GetRef(v.Context(), field)
 }
 
@@ -271,6 +283,7 @@ func (v Value) Container() MessageValue {
 	if v.IsZero() {
 		return MessageValue{}
 	}
+
 	return id.Wrap(v.Context(), v.Raw().container)
 }
 
@@ -295,6 +308,7 @@ func (v Value) Elements() seq.Indexer[Element] {
 // Outlined to promote inlining of Elements().
 func (v Value) getElements() []rawValueBits {
 	var slice []rawValueBits
+
 	switch {
 	case v.IsZero():
 		break
@@ -303,6 +317,7 @@ func (v Value) getElements() []rawValueBits {
 	default:
 		slice = slicesx.One(&v.Raw().bits)
 	}
+
 	return slice
 }
 
@@ -311,6 +326,7 @@ func (v Value) IsZeroValue() bool {
 	if v.IsZero() {
 		return false
 	}
+
 	return v.Elements().At(0).IsZeroValue()
 }
 
@@ -319,6 +335,7 @@ func (v Value) AsBool() (value, ok bool) {
 	if v.IsZero() || v.Field().IsRepeated() {
 		return false, false
 	}
+
 	return v.Elements().At(0).AsBool()
 }
 
@@ -327,6 +344,7 @@ func (v Value) AsUInt() (uint64, bool) {
 	if v.IsZero() || v.Field().IsRepeated() {
 		return 0, false
 	}
+
 	return v.Elements().At(0).AsUInt()
 }
 
@@ -335,6 +353,7 @@ func (v Value) AsInt() (int64, bool) {
 	if v.IsZero() || v.Field().IsRepeated() {
 		return 0, false
 	}
+
 	return v.Elements().At(0).AsInt()
 }
 
@@ -343,6 +362,7 @@ func (v Value) AsEnum() Member {
 	if v.IsZero() || v.Field().IsRepeated() {
 		return Member{}
 	}
+
 	return v.Elements().At(0).AsEnum()
 }
 
@@ -351,6 +371,7 @@ func (v Value) AsFloat() (float64, bool) {
 	if v.IsZero() || v.Field().IsRepeated() {
 		return 0, false
 	}
+
 	return v.Elements().At(0).AsFloat()
 }
 
@@ -359,6 +380,7 @@ func (v Value) AsString() (string, bool) {
 	if v.IsZero() || v.Field().IsRepeated() {
 		return "", false
 	}
+
 	return v.Elements().At(0).AsString()
 }
 
@@ -381,6 +403,7 @@ func (v Value) AsMessage() MessageValue {
 	if v.Field().IsRepeated() {
 		return MessageValue{}
 	}
+
 	return m
 }
 
@@ -395,6 +418,7 @@ func (v Value) slice() *[]rawValueBits {
 	slice := v.Context().arenas.arrays.New([]rawValueBits{v.Raw().bits})
 	v.Raw().bits = rawValueBits(v.Context().arenas.arrays.Compress(slice))
 	v.Raw().field.id ^= -1
+
 	return slice
 }
 
@@ -404,7 +428,9 @@ func (v Value) slice() *[]rawValueBits {
 // marshal operation.
 func (v Value) Marshal(buf []byte, r *report.Report) []byte {
 	var ranges [][2]int
+
 	buf, _ = v.marshal(buf, r, &ranges)
+
 	return deleteRanges(buf, ranges)
 }
 
@@ -422,23 +448,28 @@ func (v Value) marshal(buf []byte, r *report.Report, ranges *[][2]int) ([]byte, 
 		switch {
 		case scalar.IsVarint(), v.Field().Element().IsEnum():
 			var bytes int
+
 			for v := range seq.Values(v.Elements()) {
 				bits := uint64(v.bits)
 				if scalar.IsZigZag() {
 					bits = protowire.EncodeZigZag(int64(bits))
 				}
+
 				bytes += protowire.SizeVarint(bits)
 			}
 
 			buf = protowire.AppendTag(buf, protowire.Number(v.Field().Number()), protowire.BytesType)
 			buf = protowire.AppendVarint(buf, uint64(bytes))
+
 			for v := range seq.Values(v.Elements()) {
 				bits := uint64(v.bits)
 				if scalar.IsZigZag() {
 					bits = protowire.EncodeZigZag(int64(bits))
 				}
+
 				buf = protowire.AppendVarint(buf, bits)
 			}
+
 			return buf, 0
 
 		case scalar.IsFixed():
@@ -447,6 +478,7 @@ func (v Value) marshal(buf []byte, r *report.Report, ranges *[][2]int) ([]byte, 
 
 			for v := range seq.Values(v.Elements()) {
 				bits := uint64(v.bits)
+
 				switch {
 				case scalar == predeclared.Float32:
 					f64, _ := v.AsFloat()
@@ -458,19 +490,23 @@ func (v Value) marshal(buf []byte, r *report.Report, ranges *[][2]int) ([]byte, 
 					buf = protowire.AppendFixed64(buf, bits)
 				}
 			}
+
 			return buf, 0
 		}
 	}
 
 	var n int
+
 	for v := range seq.Values(v.Elements()) {
 		switch {
 		case scalar.IsVarint(), v.Field().Element().IsEnum():
 			buf = protowire.AppendTag(buf, protowire.Number(v.Field().Number()), protowire.VarintType)
+
 			bits := uint64(v.bits)
 			if scalar.IsZigZag() {
 				bits = protowire.EncodeZigZag(int64(bits))
 			}
+
 			buf = protowire.AppendVarint(buf, bits)
 		case scalar == predeclared.Float32:
 			buf = protowire.AppendTag(buf, protowire.Number(v.Field().Number()), protowire.Fixed32Type)
@@ -494,6 +530,7 @@ func (v Value) marshal(buf []byte, r *report.Report, ranges *[][2]int) ([]byte, 
 			m := v.AsMessage()
 
 			var k int
+
 			var group bool // TODO: v.Field().IsGroup()
 			if group {
 				buf = protowire.AppendTag(buf, protowire.Number(v.Field().Number()), protowire.StartGroupType)
@@ -505,6 +542,7 @@ func (v Value) marshal(buf []byte, r *report.Report, ranges *[][2]int) ([]byte, 
 					return m.marshal(buf, r, ranges)
 				})
 			}
+
 			n += k
 		}
 	}
@@ -538,6 +576,7 @@ func (v Value) suggestEdit(path, expr string, format string, args ...any) report
 // type provides uniform access to such elements. See [Value.Elements].
 type Element struct {
 	withContext
+
 	index int
 	value Value
 	bits  rawValueBits
@@ -551,6 +590,7 @@ func (e Element) AST() ast.ExprAny {
 
 	idx := e.ValueNodeIndex()
 	c := e.Context().AST()
+
 	expr := id.WrapDyn(c, e.value.Raw().exprs[idx])
 	if field := expr.AsField(); !field.IsZero() {
 		expr = field.Value()
@@ -563,6 +603,7 @@ func (e Element) AST() ast.ExprAny {
 		n := int(e.value.Raw().elemIndices[idx]) - e.index - 1
 		expr = array.Elements().At(n)
 	}
+
 	return expr
 }
 
@@ -595,6 +636,7 @@ func (e Element) ValueNodeIndex() int {
 		// 3 -> 1, false
 		// 4 -> 1, false
 		var exact bool
+
 		idx, exact = slices.BinarySearch(e.value.Raw().elemIndices, uint32(e.index))
 		if exact {
 			idx++
@@ -649,6 +691,7 @@ func (e Element) AsBool() (value, ok bool) {
 	if e.Type().Predeclared() != predeclared.Bool {
 		return false, false
 	}
+
 	return e.bits != 0, true
 }
 
@@ -659,6 +702,7 @@ func (e Element) AsUInt() (uint64, bool) {
 	if !e.Type().Predeclared().IsUnsigned() {
 		return 0, false
 	}
+
 	return uint64(e.bits), true
 }
 
@@ -670,6 +714,7 @@ func (e Element) AsInt() (int64, bool) {
 	if !e.Type().Predeclared().IsSigned() && !e.Type().IsEnum() {
 		return 0, false
 	}
+
 	return int64(e.bits), true
 }
 
@@ -681,6 +726,7 @@ func (e Element) AsEnum() Member {
 	if !ty.IsEnum() {
 		return Member{}
 	}
+
 	return ty.MemberByNumber(int32(e.bits))
 }
 
@@ -691,6 +737,7 @@ func (e Element) AsFloat() (float64, bool) {
 	if !e.Type().Predeclared().IsFloat() {
 		return 0, false
 	}
+
 	return math.Float64frombits(uint64(e.bits)), true
 }
 
@@ -701,6 +748,7 @@ func (e Element) AsString() (string, bool) {
 	if !e.Type().Predeclared().IsString() {
 		return "", false
 	}
+
 	return e.Context().session.intern.Value(intern.ID(e.bits)), true
 }
 
@@ -749,6 +797,7 @@ func (v MessageValue) AsValue() Value {
 	if v.IsZero() {
 		return Value{}
 	}
+
 	return id.Wrap(v.Context(), v.Raw().self)
 }
 
@@ -761,6 +810,7 @@ func (v MessageValue) Type() Type {
 	if v.IsZero() {
 		return Type{}
 	}
+
 	return GetRef(v.Context(), v.Raw().ty)
 }
 
@@ -770,6 +820,7 @@ func (v MessageValue) TypeURL() string {
 	if v.IsZero() {
 		return ""
 	}
+
 	return v.Context().session.intern.Value(v.Raw().url)
 }
 
@@ -842,7 +893,9 @@ func (v MessageValue) pseudoFields() PseudoFields {
 // marshal operation.
 func (v MessageValue) Marshal(buf []byte, r *report.Report) []byte {
 	var ranges [][2]int
+
 	buf, _ = v.marshal(buf, r, &ranges)
+
 	return deleteRanges(buf, ranges)
 }
 
@@ -861,17 +914,21 @@ func (v MessageValue) marshal(buf []byte, r *report.Report, ranges *[][2]int) ([
 		buf = append(buf, url...)
 
 		buf = protowire.AppendTag(buf, 2, protowire.BytesType)
+
 		return marshalFramed(buf, r, ranges, func(buf []byte) ([]byte, int) {
 			return m.marshal(buf, r, ranges)
 		})
 	}
 
 	var n int
+
 	for v := range v.Fields() {
 		var k int
+
 		buf, k = v.marshal(buf, r, ranges)
 		n += k
 	}
+
 	return buf, n
 }
 
@@ -887,8 +944,11 @@ func marshalFramed(buf []byte, _ *report.Report, ranges *[][2]int, body func([]b
 	// length with five bytes.
 	mark := len(buf)
 	buf = append(buf, make([]byte, 5)...)
+
 	var n int
+
 	buf, n = body(buf)
+
 	bytes := uint64(len(buf) - (mark + 5) - n)
 	if bytes > math.MaxUint32 {
 		// This is not reachable today, because input files may be
@@ -904,6 +964,7 @@ func marshalFramed(buf []byte, _ *report.Report, ranges *[][2]int, body func([]b
 	if k := len(varint); k < 5 {
 		*ranges = append(*ranges, [2]int{mark + k, mark + 5})
 	}
+
 	return buf, n + 5 - len(varint)
 }
 
@@ -918,6 +979,7 @@ func deleteRanges(buf []byte, ranges [][2]int) []byte {
 	})
 
 	offset := 0
+
 	for i, r1 := range ranges[:len(ranges)-1] {
 		r2 := ranges[i+1]
 		// Need to delete the interval between r1[0] and r1[1]. We do this
@@ -953,6 +1015,7 @@ func (s slot) Insert(v Value) {
 	if !v.Container().IsZero() {
 		panic("protocompile/ir: slot.Insert with non-top-level value")
 	}
+
 	v.Raw().container = s.msg.ID()
 	*s.slot = v.ID()
 }
@@ -980,6 +1043,7 @@ func (v MessageValue) slot(field Member) slot {
 	}
 
 	v.Raw().entries = append(v.Raw().entries, 0)
+
 	return slot{v, slicesx.LastPointer(v.Raw().entries)}
 }
 
@@ -1049,6 +1113,7 @@ func newConcrete(m MessageValue, ty Type, url string) MessageValue {
 	if !m.Raw().concrete.IsZero() {
 		panic("protocompile/ir: set a concrete type more than once")
 	}
+
 	if !m.Type().IsAny() {
 		panic("protocompile/ir: set concrete type on non-Any")
 	}
@@ -1062,6 +1127,7 @@ func newConcrete(m MessageValue, ty Type, url string) MessageValue {
 	msg.Raw().ty = ty.toRef(m.Context())
 	msg.Raw().url = m.Context().session.intern.Intern(url)
 	m.Raw().concrete = msg.ID()
+
 	return msg
 }
 
@@ -1072,6 +1138,7 @@ func newScalarBits[T scalar](file *File, v T) rawValueBits {
 		if v {
 			return 1
 		}
+
 		return 0
 
 	case int32:

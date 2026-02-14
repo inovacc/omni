@@ -36,6 +36,7 @@ func newReadBucketCloser(
 	bucketTargeting buftarget.BucketTargeting,
 ) *readBucketCloser {
 	normalizedSubDirPath := normalpath.Normalize(bucketTargeting.SubDirPath())
+
 	return &readBucketCloser{
 		ReadBucketCloser: storageReadBucketCloser,
 		subDirPath:       normalizedSubDirPath,
@@ -60,10 +61,11 @@ func (r *readBucketCloser) copyToInMemory(ctx context.Context) (*readBucketClose
 	if err != nil {
 		return nil, err
 	}
+
 	return &readBucketCloser{
 		ReadBucketCloser: compositeStorageReadBucketCloser{
 			ReadBucket: storageReadBucket,
-			closeFunc:  r.ReadBucketCloser.Close,
+			closeFunc:  r.Close,
 		},
 		subDirPath: r.subDirPath,
 	}, nil
@@ -71,6 +73,7 @@ func (r *readBucketCloser) copyToInMemory(ctx context.Context) (*readBucketClose
 
 type compositeStorageReadBucketCloser struct {
 	storage.ReadBucket
+
 	closeFunc func() error
 }
 
@@ -78,5 +81,6 @@ func (c compositeStorageReadBucketCloser) Close() error {
 	if c.closeFunc != nil {
 		return c.closeFunc()
 	}
+
 	return nil
 }

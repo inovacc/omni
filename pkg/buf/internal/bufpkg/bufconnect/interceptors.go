@@ -23,8 +23,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/inovacc/omni/pkg/buf/internal/app/appext"
 	"connectrpc.com/connect"
+	"github.com/inovacc/omni/pkg/buf/internal/app/appext"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -49,9 +49,11 @@ func NewAugmentedConnectErrorInterceptor() connect.UnaryInterceptorFunc {
 					}
 				}
 			}
+
 			return resp, err
 		}
 	}
+
 	return interceptor
 }
 
@@ -63,6 +65,7 @@ func NewSetCLIVersionInterceptor(version string) connect.UnaryInterceptorFunc {
 			return next(ctx, req)
 		}
 	}
+
 	return interceptor
 }
 
@@ -78,9 +81,11 @@ func NewCLIWarningInterceptor(container appext.LoggerContainer) connect.UnaryInt
 					logWarningFromHeader(container, connectErr.Meta())
 				}
 			}
+
 			return resp, err
 		}
 	}
+
 	return interceptor
 }
 
@@ -92,6 +97,7 @@ func logWarningFromHeader(container appext.LoggerContainer, header http.Header) 
 			container.Logger().Debug(fmt.Errorf("failed to decode warning header: %w", err).Error())
 			return
 		}
+
 		if len(warning) > 0 {
 			container.Logger().Warn(string(warning))
 		}
@@ -117,20 +123,25 @@ func NewAuthorizationInterceptorProvider(tokenProviders ...TokenProvider) func(s
 			return connect.UnaryFunc(func(ctx context.Context, req connect.AnyRequest) (connect.AnyResponse, error) {
 				usingTokenEnvKey := false
 				hasToken := false
+
 				for _, tf := range tokenProviders {
 					if token := tf.RemoteToken(address); token != "" {
 						req.Header().Set(AuthenticationHeader, AuthenticationTokenPrefix+token)
+
 						usingTokenEnvKey = tf.IsFromEnvVar()
 						hasToken = true
+
 						break
 					}
 				}
+
 				response, err := next(ctx, req)
 				if err != nil {
 					var envKey string
 					if usingTokenEnvKey {
 						envKey = TokenEnvKey
 					}
+
 					err = &AuthError{
 						cause:       err,
 						remote:      address,
@@ -138,9 +149,11 @@ func NewAuthorizationInterceptorProvider(tokenProviders ...TokenProvider) func(s
 						tokenEnvKey: envKey,
 					}
 				}
+
 				return response, err
 			})
 		}
+
 		return interceptor
 	}
 }
@@ -154,26 +167,32 @@ func NewDebugLoggingInterceptor(container appext.LoggerContainer) connect.UnaryI
 	interceptor := func(next connect.UnaryFunc) connect.UnaryFunc {
 		return func(ctx context.Context, req connect.AnyRequest) (connect.AnyResponse, error) {
 			var requestSize int
+
 			if req.Any() != nil {
 				msg, ok := req.Any().(proto.Message)
 				if ok {
 					requestSize = proto.Size(msg)
 				}
 			}
+
 			startTime := time.Now()
 			resp, err := next(ctx, req)
 			duration := time.Since(startTime)
+
 			var status connect.Code
 			if err != nil {
 				status = connect.CodeOf(err)
 			}
+
 			var responseSize int
+
 			if resp != nil && resp.Any() != nil {
 				msg, ok := resp.Any().(proto.Message)
 				if ok {
 					responseSize = proto.Size(msg)
 				}
 			}
+
 			attrs := []slog.Attr{
 				slog.Duration("duration", duration),
 				slog.String("status", status.String()),
@@ -189,8 +208,10 @@ func NewDebugLoggingInterceptor(container appext.LoggerContainer) connect.UnaryI
 				strings.TrimPrefix(req.Spec().Procedure, "/"),
 				attrs...,
 			)
+
 			return resp, err
 		}
 	}
+
 	return interceptor
 }

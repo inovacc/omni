@@ -35,6 +35,7 @@ func TestPanic(t *testing.T) {
 	require.NoError(t, err)
 
 	_, _, err = incremental.Run(ctx, exec, Panic(true), Panic(false))
+
 	var panicked *incremental.ErrPanic
 	require.ErrorAs(t, err, &panicked)
 	assert.Equal(t, panicked.Query.Underlying(), Panic(true))
@@ -77,6 +78,7 @@ func (p Panic) Execute(_ *incremental.Task) (bool, error) {
 	if p {
 		panic("aaa!")
 	}
+
 	return bool(p), nil
 }
 
@@ -92,6 +94,7 @@ func (a Abort) Execute(t *incremental.Task) (bool, error) {
 	if a {
 		t.Abort(a)
 	}
+
 	return bool(a), nil
 }
 

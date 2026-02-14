@@ -33,19 +33,24 @@ func normalizeAndCheckPaths(paths []string, name string) ([]string, error) {
 	if len(paths) == 0 {
 		return paths, nil
 	}
+
 	outputs := make([]string, len(paths))
 	for i, path := range paths {
 		if path == "" {
 			return nil, fmt.Errorf("%s contained an empty path", name)
 		}
+
 		output, err := normalpath2.NormalizeAndValidate(path)
 		if err != nil {
 			// user error
 			return nil, err
 		}
+
 		outputs[i] = output
 	}
+
 	sort.Strings(outputs)
+
 	for i := range outputs {
 		for j := i + 1; j < len(outputs); j++ {
 			output1 := outputs[i]
@@ -54,13 +59,16 @@ func normalizeAndCheckPaths(paths []string, name string) ([]string, error) {
 			if output1 == output2 {
 				return nil, fmt.Errorf("duplicate %s %q", name, output1)
 			}
+
 			if normalpath2.EqualsOrContainsPath(output2, output1, normalpath2.Relative) {
 				return nil, fmt.Errorf("%s %q is within %s %q which is not allowed", name, output1, name, output2)
 			}
+
 			if normalpath2.EqualsOrContainsPath(output1, output2, normalpath2.Relative) {
 				return nil, fmt.Errorf("%s %q is within %s %q which is not allowed", name, output2, name, output1)
 			}
 		}
 	}
+
 	return outputs, nil
 }

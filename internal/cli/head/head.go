@@ -2,11 +2,11 @@ package head
 
 import (
 	"bufio"
-	"encoding/json"
 	"fmt"
 	"io"
 
 	"github.com/inovacc/omni/internal/cli/input"
+	"github.com/inovacc/omni/internal/cli/output"
 )
 
 // HeadOptions configures the head command behavior
@@ -15,7 +15,7 @@ type HeadOptions struct {
 	Bytes   int  // -c: number of bytes to print
 	Quiet   bool // -q: never print headers
 	Verbose bool // -v: always print headers
-	JSON    bool // --json: output as JSON
+	OutputFormat output.Format // output format (text/json/table)
 }
 
 // HeadResult represents head output for JSON
@@ -45,10 +45,13 @@ func RunHead(w io.Writer, r io.Reader, args []string, opts HeadOptions) error {
 		showHeaders = false
 	}
 
+	f := output.New(w, opts.OutputFormat)
+	jsonMode := f.IsJSON()
+
 	var results []HeadResult
 
 	for i, src := range sources {
-		if opts.JSON {
+		if jsonMode {
 			lines, err := headLinesJSON(src.Reader, opts.Lines)
 			if err != nil {
 				return err
@@ -78,8 +81,8 @@ func RunHead(w io.Writer, r io.Reader, args []string, opts HeadOptions) error {
 		}
 	}
 
-	if opts.JSON {
-		return json.NewEncoder(w).Encode(results)
+	if jsonMode {
+		return f.Print(results)
 	}
 
 	return nil

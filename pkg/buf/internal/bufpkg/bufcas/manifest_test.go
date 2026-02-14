@@ -28,16 +28,23 @@ import (
 
 func TestManifest(t *testing.T) {
 	t.Parallel()
-	var digests []Digest
-	var fileNodes []FileNode
+
+	var (
+		digests   []Digest
+		fileNodes []FileNode
+	)
+
 	for i := range 10 {
 		digest, err := NewDigestForContent(strings.NewReader(fmt.Sprintf("content%d", i)))
 		require.NoError(t, err)
+
 		digests = append(digests, digest)
 		fileNode, err := NewFileNode(fmt.Sprintf("%d", i), digest)
 		require.NoError(t, err)
+
 		fileNodes = append(fileNodes, fileNode)
 	}
+
 	manifest, err := NewManifest(fileNodes)
 	require.NoError(t, err)
 
@@ -47,6 +54,7 @@ func TestManifest(t *testing.T) {
 			return fileNodes[i].Path() < fileNodes[j].Path()
 		},
 	)
+
 	manifestFileNodes := manifest.FileNodes()
 	for i := range 10 {
 		digest := manifest.GetDigest(fmt.Sprintf("%d", i))
@@ -65,6 +73,7 @@ func TestManifest(t *testing.T) {
 
 func TestEmptyManifest(t *testing.T) {
 	t.Parallel()
+
 	manifest, err := NewManifest(nil)
 	require.NoError(t, err)
 
@@ -90,6 +99,7 @@ func TestParseManifestError(t *testing.T) {
 func testParseManifestError(t *testing.T, manifestString string) {
 	_, err := ParseManifest(manifestString)
 	assert.Error(t, err)
+
 	parseError := &bufparse.ParseError{}
 	isParseError := errors.As(err, &parseError)
 	assert.True(t, isParseError)

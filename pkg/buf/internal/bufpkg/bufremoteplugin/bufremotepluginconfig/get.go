@@ -36,10 +36,12 @@ func getConfigForBucket(ctx context.Context, readBucket storage2.ReadBucket, opt
 		if err != nil {
 			return nil, err
 		}
+
 		if exists {
 			foundConfigFilePaths = append(foundConfigFilePaths, configFilePath)
 		}
 	}
+
 	switch len(foundConfigFilePaths) {
 	case 0:
 		// Did not find anything, return the default.
@@ -49,13 +51,16 @@ func getConfigForBucket(ctx context.Context, readBucket storage2.ReadBucket, opt
 		if err != nil {
 			return nil, err
 		}
+
 		defer func() {
 			retErr = errors.Join(retErr, readObjectCloser.Close())
 		}()
+
 		data, err := io.ReadAll(readObjectCloser)
 		if err != nil {
 			return nil, err
 		}
+
 		return getConfigForDataInternal(
 			ctx,
 			encoding.UnmarshalYAMLNonStrict,
@@ -92,13 +97,16 @@ func getConfigForDataInternal(
 	if err := unmarshalNonStrict(data, &externalConfigVersion); err != nil {
 		return nil, err
 	}
+
 	if err := validateExternalConfigVersion(externalConfigVersion, id); err != nil {
 		return nil, err
 	}
+
 	var externalConfig ExternalConfig
 	if err := unmarshalStrict(data, &externalConfig); err != nil {
 		return nil, err
 	}
+
 	return newConfig(externalConfig, options)
 }
 

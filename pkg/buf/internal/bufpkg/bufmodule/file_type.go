@@ -53,6 +53,7 @@ func (c FileType) String() string {
 	if !ok {
 		return strconv.Itoa(int(c))
 	}
+
 	return s
 }
 
@@ -70,6 +71,7 @@ func ParseFileType(s string) (FileType, error) {
 			fmt.Errorf("unknown type: %q", s),
 		)
 	}
+
 	return c, nil
 }
 
@@ -84,12 +86,15 @@ func FileTypeForPath(path string) (FileType, error) {
 	if normalpath.Ext(path) == ".proto" {
 		return FileTypeProto, nil
 	}
+
 	if path == licenseFilePath {
 		return FileTypeLicense, nil
 	}
+
 	if _, ok := docFilePathMap[path]; ok {
 		return FileTypeDoc, nil
 	}
+
 	return 0, fmt.Errorf("could not classify FileType for path %q", path)
 }
 

@@ -2,13 +2,13 @@ package tail
 
 import (
 	"bufio"
-	"encoding/json"
 	"fmt"
 	"io"
 	"os"
 	"time"
 
 	"github.com/inovacc/omni/internal/cli/input"
+	"github.com/inovacc/omni/internal/cli/output"
 )
 
 // TailOptions configures the tail command behavior
@@ -19,7 +19,7 @@ type TailOptions struct {
 	Quiet   bool          // -q: never print headers
 	Verbose bool          // -v: always print headers
 	Sleep   time.Duration // --sleep-interval: sleep interval for -f
-	JSON    bool          // --json: output as JSON
+	OutputFormat output.Format // output format (text/json/table)
 }
 
 // TailResult represents tail output for JSON
@@ -53,6 +53,9 @@ func RunTail(w io.Writer, r io.Reader, args []string, opts TailOptions) error {
 		showHeaders = false
 	}
 
+	f := output.New(w, opts.OutputFormat)
+	jsonMode := f.IsJSON()
+
 	var results []TailResult
 
 	for i, src := range sources {
@@ -64,7 +67,7 @@ func RunTail(w io.Writer, r io.Reader, args []string, opts TailOptions) error {
 			_, _ = fmt.Fprintf(w, "==> %s <==\n", src.Name)
 		}
 
-		if opts.JSON {
+		if jsonMode {
 			lines, err := tailLinesJSON(src.Reader, opts.Lines)
 			if err != nil {
 				return err
@@ -95,8 +98,8 @@ func RunTail(w io.Writer, r io.Reader, args []string, opts TailOptions) error {
 		}
 	}
 
-	if opts.JSON {
-		return json.NewEncoder(w).Encode(results)
+	if jsonMode {
+		return f.Print(results)
 	}
 
 	return nil

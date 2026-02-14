@@ -36,18 +36,24 @@ func (m *DigestMismatchError) Error() string {
 	if m == nil {
 		return ""
 	}
+
 	var builder strings.Builder
+
 	_, _ = builder.WriteString(`*** Digest verification failed`)
 	if m.FullName != nil {
 		_, _ = builder.WriteString(` for "`)
+
 		_, _ = builder.WriteString(m.FullName.String())
 		if m.CommitID != uuid.Nil {
 			_, _ = builder.WriteString(`:`)
 			_, _ = builder.WriteString(uuidutil.ToDashless(m.CommitID))
 		}
+
 		_, _ = builder.WriteString(`"`)
 	}
+
 	_, _ = builder.WriteString(` ***`)
+
 	_, _ = builder.WriteString("\n")
 	if m.ExpectedDigest != nil && m.ActualDigest != nil {
 		_, _ = builder.WriteString("\t")
@@ -61,10 +67,12 @@ func (m *DigestMismatchError) Error() string {
 		_, _ = builder.WriteString(`"`)
 		_, _ = builder.WriteString("\n")
 	}
+
 	_, _ = builder.WriteString("\t")
 	_, _ = builder.WriteString(`This may be the result of a hand-edited or corrupted buf.lock file, a corrupted local cache, and/or an attack.`)
 	_, _ = builder.WriteString("\n")
 	_, _ = builder.WriteString("\t")
 	_, _ = builder.WriteString(`To clear your local cache, run "buf registry cc".`)
+
 	return builder.String()
 }

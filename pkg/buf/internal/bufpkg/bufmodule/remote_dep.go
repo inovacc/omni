@@ -60,27 +60,34 @@ func RemoteDepsForModuleSet(moduleSet ModuleSet) ([]RemoteDep, error) {
 func RemoteDepsForModules(modules []Module) ([]RemoteDep, error) {
 	visitedOpaqueIDs := make(map[string]struct{})
 	remoteDepFullNameStringsThatAreDirectDepsOfLocal := make(map[string]struct{})
+
 	var remoteDepModules []Module
+
 	for _, module := range modules {
 		if !module.IsLocal() {
 			continue
 		}
+
 		moduleDeps, err := module.ModuleDeps()
 		if err != nil {
 			return nil, err
 		}
+
 		for _, moduleDep := range moduleDeps {
 			if moduleDep.IsLocal() {
 				continue
 			}
+
 			moduleDepFullName := moduleDep.FullName()
 			if moduleDepFullName == nil {
 				// Just a sanity check.
 				return nil, syserror.New("remote module did not have a FullName")
 			}
+
 			if moduleDep.IsDirect() {
 				remoteDepFullNameStringsThatAreDirectDepsOfLocal[moduleDepFullName.String()] = struct{}{}
 			}
+
 			iRemoteDepModules, err := remoteDepsForModuleSetRec(
 				moduleDep,
 				visitedOpaqueIDs,
@@ -88,9 +95,11 @@ func RemoteDepsForModules(modules []Module) ([]RemoteDep, error) {
 			if err != nil {
 				return nil, err
 			}
+
 			remoteDepModules = append(remoteDepModules, iRemoteDepModules...)
 		}
 	}
+
 	remoteDeps := make([]RemoteDep, len(remoteDepModules))
 	for i, remoteDepModule := range remoteDepModules {
 		moduleFullName := remoteDepModule.FullName()
@@ -98,15 +107,18 @@ func RemoteDepsForModules(modules []Module) ([]RemoteDep, error) {
 			// Just a sanity check.
 			return nil, syserror.New("remote module did not have a FullName")
 		}
+
 		_, isDirect := remoteDepFullNameStringsThatAreDirectDepsOfLocal[moduleFullName.String()]
 		remoteDeps[i] = newRemoteDep(remoteDepModule, isDirect)
 	}
+
 	sort.Slice(
 		remoteDeps,
 		func(i int, j int) bool {
 			return remoteDeps[i].OpaqueID() < remoteDeps[j].OpaqueID()
 		},
 	)
+
 	return remoteDeps, nil
 }
 
@@ -138,21 +150,27 @@ func remoteDepsForModuleSetRec(
 	if remoteModule.IsLocal() {
 		return nil, syserror.New("only pass remote modules to remoteDepsForModuleSetRec")
 	}
+
 	if remoteModule.FullName() == nil {
 		// Just a sanity check.
 		return nil, syserror.New("FullName is nil for a remote Module")
 	}
+
 	opaqueID := remoteModule.OpaqueID()
 	if _, ok := visitedOpaqueIDs[opaqueID]; ok {
 		return nil, nil
 	}
+
 	visitedOpaqueIDs[opaqueID] = struct{}{}
+
 	recModuleDeps, err := remoteModule.ModuleDeps()
 	if err != nil {
 		return nil, err
 	}
+
 	recDeps := make([]Module, 0, len(recModuleDeps)+1)
 	recDeps = append(recDeps, remoteModule)
+
 	for _, recModuleDep := range recModuleDeps {
 		if recModuleDep.IsLocal() {
 			continue
@@ -165,7 +183,9 @@ func remoteDepsForModuleSetRec(
 		if err != nil {
 			return nil, err
 		}
+
 		recDeps = append(recDeps, iRecDeps...)
 	}
+
 	return recDeps, nil
 }

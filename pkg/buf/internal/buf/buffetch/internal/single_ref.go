@@ -48,9 +48,11 @@ func newSingleRef(
 	if path == "" {
 		return nil, NewNoPathError()
 	}
+
 	if app.IsDevStderr(path) {
 		return nil, NewInvalidPathError(format, path)
 	}
+
 	if path == "-" {
 		return newDirectSingleRef(
 			format,
@@ -60,6 +62,7 @@ func newSingleRef(
 			customOptions,
 		), nil
 	}
+
 	if app.IsDevStdin(path) {
 		return newDirectSingleRef(
 			format,
@@ -69,6 +72,7 @@ func newSingleRef(
 			customOptions,
 		), nil
 	}
+
 	if app.IsDevStdout(path) {
 		return newDirectSingleRef(
 			format,
@@ -78,6 +82,7 @@ func newSingleRef(
 			customOptions,
 		), nil
 	}
+
 	if app.IsDevNull(path) {
 		return newDirectSingleRef(
 			format,
@@ -87,15 +92,18 @@ func newSingleRef(
 			customOptions,
 		), nil
 	}
+
 	for prefix, fileScheme := range fileSchemePrefixToFileScheme {
-		if strings.HasPrefix(path, prefix) {
-			path = strings.TrimPrefix(path, prefix)
+		if after, ok := strings.CutPrefix(path, prefix); ok {
+			path = after
 			if fileScheme == FileSchemeLocal {
 				path = normalpath.Normalize(path)
 			}
+
 			if path == "" {
 				return nil, NewNoPathError()
 			}
+
 			return newDirectSingleRef(
 				format,
 				path,
@@ -105,9 +113,11 @@ func newSingleRef(
 			), nil
 		}
 	}
+
 	if strings.Contains(path, "://") {
 		return nil, NewInvalidPathError(format, path)
 	}
+
 	return newDirectSingleRef(
 		format,
 		normalpath.Normalize(path),
@@ -127,6 +137,7 @@ func newDirectSingleRef(
 	if customOptions == nil {
 		customOptions = make(map[string]string)
 	}
+
 	return &singleRef{
 		format:          format,
 		path:            path,

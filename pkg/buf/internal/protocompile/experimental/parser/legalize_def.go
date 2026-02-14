@@ -105,6 +105,7 @@ func legalizeTypeDefLike(p *parser, what taxa.Noun, def ast.DeclDef) {
 
 				RepeatUnexpected: true,
 			}
+
 			return false
 		})
 
@@ -128,6 +129,7 @@ func legalizeTypeDefLike(p *parser, what taxa.Noun, def ast.DeclDef) {
 					Where:   mod.PrefixToken(),
 				})
 			}
+
 			continue
 		}
 
@@ -189,10 +191,12 @@ func legalizeFieldLike(p *parser, what taxa.Noun, def ast.DeclDef, parent classi
 			Want:  taxa.Ident.AsSet(),
 		})
 	}
+
 	tag := taxa.FieldTag
 	if def.Classify() == ast.DefKindEnumValue {
 		tag = taxa.EnumValue
 	}
+
 	if def.Value().IsZero() {
 		p.Errorf("missing %v in declaration", tag).Apply(
 			report.Snippet(def),
@@ -221,11 +225,13 @@ func legalizeFieldLike(p *parser, what taxa.Noun, def ast.DeclDef, parent classi
 		}
 
 		name := def.Name().AsIdent().Text()
+
 		var capitalized bool
 		for _, r := range name {
 			capitalized = unicode.IsUpper(r)
 			break
 		}
+
 		if !capitalized {
 			p.Errorf("group names must start with an uppercase letter").Apply(
 				report.Snippet(def.Name()),
@@ -262,6 +268,7 @@ func legalizeFieldLike(p *parser, what taxa.Noun, def ast.DeclDef, parent classi
 		if parent.what == taxa.Oneof {
 			oneof, _ = parent.Spanner.(ast.DeclDef)
 		}
+
 		legalizeFieldType(p, what, def.Type(), true, ast.TypePrefixed{}, oneof)
 	}
 }
@@ -332,8 +339,12 @@ func legalizeMethod(p *parser, def ast.DeclDef) {
 
 		if sig.Outputs().Span().IsZero() {
 			def.MarkCorrupt()
-			var after source.Spanner
-			var expected taxa.Noun
+
+			var (
+				after    source.Spanner
+				expected taxa.Noun
+			)
+
 			switch {
 			case !sig.Returns().IsZero():
 				after = sig.Returns()

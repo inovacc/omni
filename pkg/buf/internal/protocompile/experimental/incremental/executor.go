@@ -97,16 +97,20 @@ func WithDebugEvict(wait time.Duration) ExecutorOption {
 // The returned slice is sorted.
 func (e *Executor) Keys() (keys []string) {
 	e.tasks.Range(func(k, t any) bool {
-		task := t.(*task) //nolint:errcheck // All values in this map are tasks.
+		task := t.(*task)
+
 		result := task.result.Load()
 		if result == nil || !closed(result.done) {
 			return true
 		}
+
 		keys = append(keys, fmt.Sprintf("%#v", k))
+
 		return true
 	})
 
 	slices.Sort(keys)
+
 	return
 }
 
@@ -136,10 +140,12 @@ func Run[T any](ctx context.Context, e *Executor, queries ...Query[T]) ([]Result
 		if slices.Contains(*callers, e) {
 			panic("protocompile/incremental: reentrant call to Run")
 		}
+
 		*callers = append(*callers, e)
 	} else {
 		ctx = context.WithValue(ctx, &runExecutorKey, &[]*Executor{e})
 	}
+
 	ctx, cancel := context.WithCancelCause(ctx)
 	defer cancel(nil)
 
@@ -165,34 +171,42 @@ func Run[T any](ctx context.Context, e *Executor, queries ...Query[T]) ([]Result
 		if _, aborted := expired.(*errAbort); aborted {
 			panic(expired)
 		}
+
 		return nil, nil, expired
 	}
 
 	// Record all diagnostics generates by the queries.
 	report := &report.Report{Options: e.reportOptions}
 	dedup := make(map[*task]struct{})
+
 	tasks := make([]*task, 0, len(queries))
 	for _, query := range queries {
 		task, ok := e.getTask(query.Key())
 		if !ok {
 			continue // Uncompleted query, can happen due to an abort.
 		}
+
 		tasks = append(tasks, task)
 	}
+
 	for n := len(tasks); n > 0; n = len(tasks) {
 		node := tasks[n-1]
 		tasks = tasks[:n-1]
+
 		if _, ok := dedup[node]; ok {
 			continue
 		}
+
 		node.deps.Range(func(depAny any, _ any) bool {
-			dep := depAny.(*task) //nolint:errcheck
+			dep := depAny.(*task)
 			tasks = append(tasks, dep)
+
 			return true
 		})
 		dedup[node] = struct{}{}
 		report.Diagnostics = append(report.Diagnostics, node.report.Diagnostics...)
 	}
+
 	report.Canonicalize()
 
 	return results, report, nil
@@ -215,11 +229,13 @@ func (e *Executor) Evict(keys ...any) {
 // to [Run] seeing inconsistent or stale state across multiple queries.
 func (e *Executor) EvictWithCleanup(keys []any, cleanup func()) {
 	var tasks []*task
+
 	for _, key := range keys {
 		if t, ok := e.getTask(key); ok {
 			tasks = append(tasks, t)
 		}
 	}
+
 	if len(tasks) == 0 && cleanup == nil {
 		return
 	}
@@ -228,24 +244,26 @@ func (e *Executor) EvictWithCleanup(keys []any, cleanup func()) {
 	defer e.dirty.Unlock()
 
 	var evicted []weak.Pointer[task]
+
 	logEvictionDebug := internal.Debug && e.evictGCDeadline > 0
+
 	for n := len(tasks); n > 0; n = len(tasks) {
 		next := tasks[n-1]
 		tasks = tasks[:n-1]
 
 		for k := range next.callers.Range {
-			tasks = append(tasks, k.(*task)) //nolint:errcheck
+			tasks = append(tasks, k.(*task))
 		}
 
 		// Remove the task from the map. Syncronized by the dirty lock.
 		t, _ := e.tasks.LoadAndDelete(next.query.Key())
 		if logEvictionDebug {
-			evicted = append(evicted, weak.Make(t.(*task))) //nolint:errcheck
+			evicted = append(evicted, weak.Make(t.(*task)))
 		}
 
 		// Remove the task from the callers of its deps.
 		for k := range next.deps.Range {
-			k.(*task).callers.Delete(next) //nolint:errcheck
+			k.(*task).callers.Delete(next)
 		}
 	}
 
@@ -253,6 +271,7 @@ func (e *Executor) EvictWithCleanup(keys []any, cleanup func()) {
 		go func() {
 			time.Sleep(e.evictGCDeadline)
 			runtime.GC()
+
 			evicted = slices.DeleteFunc(evicted, func(e weak.Pointer[task]) bool {
 				return e.Value() == nil
 			})
@@ -277,8 +296,9 @@ func (e *Executor) EvictWithCleanup(keys []any, cleanup func()) {
 // The returned task is nil if found is false.
 func (e *Executor) getTask(key any) (_ *task, found bool) {
 	if t, ok := e.tasks.Load(key); ok {
-		return t.(*task), true //nolint:errcheck
+		return t.(*task), true
 	}
+
 	return nil, false
 }
 
@@ -288,11 +308,13 @@ func (e *Executor) getOrCreateTask(query *AnyQuery) *task {
 	// Avoid allocating a new task object in the common case.
 	key := query.Key()
 	if t, ok := e.tasks.Load(key); ok {
-		return t.(*task) //nolint:errcheck
+		return t.(*task)
 	}
+
 	t, _ := e.tasks.LoadOrStore(key, &task{
 		query:  query,
 		report: report.Report{Options: e.reportOptions},
 	})
-	return t.(*task) //nolint:errcheck
+
+	return t.(*task)
 }

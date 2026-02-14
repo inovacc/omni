@@ -149,6 +149,7 @@ func NewModuleSetForBucket(
 
 type omniProvider struct {
 	bufmodule2.ModuleSet
+
 	commitIDToCreateTime map[uuid.UUID]time.Time
 }
 
@@ -156,10 +157,12 @@ func newOmniProvider(
 	moduleDatas []ModuleData,
 ) (*omniProvider, error) {
 	commitIDToCreateTime := make(map[uuid.UUID]time.Time)
+
 	moduleSet, err := newModuleSet(moduleDatas, true, commitIDToCreateTime)
 	if err != nil {
 		return nil, err
 	}
+
 	return &omniProvider{
 		ModuleSet:            moduleSet,
 		commitIDToCreateTime: commitIDToCreateTime,
@@ -177,12 +180,15 @@ func (o *omniProvider) GetModuleKeysForModuleRefs(
 		if module == nil {
 			return nil, &fs.PathError{Op: "read", Path: moduleRef.String(), Err: fs.ErrNotExist}
 		}
+
 		moduleKey, err := bufmodule2.ModuleToModuleKey(module, digestType)
 		if err != nil {
 			return nil, err
 		}
+
 		moduleKeys[i] = moduleKey
 	}
+
 	return moduleKeys, nil
 }
 
@@ -193,12 +199,15 @@ func (o *omniProvider) GetModuleDatasForModuleKeys(
 	if len(moduleKeys) == 0 {
 		return nil, nil
 	}
+
 	if _, err := bufmodule2.UniqueDigestTypeForModuleKeys(moduleKeys); err != nil {
 		return nil, err
 	}
+
 	if _, err := bufparse2.FullNameStringToUniqueValue(moduleKeys); err != nil {
 		return nil, err
 	}
+
 	return xslices.MapError(
 		moduleKeys,
 		func(moduleKey bufmodule2.ModuleKey) (bufmodule2.ModuleData, error) {
@@ -214,15 +223,18 @@ func (o *omniProvider) GetCommitsForModuleKeys(
 	if len(moduleKeys) == 0 {
 		return nil, nil
 	}
+
 	if _, err := bufmodule2.UniqueDigestTypeForModuleKeys(moduleKeys); err != nil {
 		return nil, err
 	}
+
 	commits := make([]bufmodule2.Commit, len(moduleKeys))
 	for i, moduleKey := range moduleKeys {
 		createTime, ok := o.commitIDToCreateTime[moduleKey.CommitID()]
 		if !ok {
 			return nil, &fs.PathError{Op: "read", Path: moduleKey.String(), Err: fs.ErrNotExist}
 		}
+
 		commits[i] = bufmodule2.NewCommit(
 			moduleKey,
 			func() (time.Time, error) {
@@ -230,6 +242,7 @@ func (o *omniProvider) GetCommitsForModuleKeys(
 			},
 		)
 	}
+
 	return commits, nil
 }
 
@@ -240,23 +253,28 @@ func (o *omniProvider) GetCommitsForCommitKeys(
 	if len(commitKeys) == 0 {
 		return nil, nil
 	}
+
 	if _, err := bufmodule2.UniqueDigestTypeForCommitKeys(commitKeys); err != nil {
 		return nil, err
 	}
+
 	commits := make([]bufmodule2.Commit, len(commitKeys))
 	for i, commitKey := range commitKeys {
 		module := o.GetModuleForCommitID(commitKey.CommitID())
 		if module == nil {
 			return nil, &fs.PathError{Op: "read", Path: uuidutil.ToDashless(commitKey.CommitID()), Err: fs.ErrNotExist}
 		}
+
 		createTime, ok := o.commitIDToCreateTime[commitKey.CommitID()]
 		if !ok {
 			return nil, &fs.PathError{Op: "read", Path: uuidutil.ToDashless(commitKey.CommitID()), Err: fs.ErrNotExist}
 		}
+
 		moduleKey, err := bufmodule2.ModuleToModuleKey(module, commitKey.DigestType())
 		if err != nil {
 			return nil, err
 		}
+
 		commits[i] = bufmodule2.NewCommit(
 			moduleKey,
 			func() (time.Time, error) {
@@ -264,6 +282,7 @@ func (o *omniProvider) GetCommitsForCommitKeys(
 			},
 		)
 	}
+
 	return commits, nil
 }
 
@@ -275,23 +294,28 @@ func (o *omniProvider) GetGraphForModuleKeys(
 	if len(moduleKeys) == 0 {
 		return graph, nil
 	}
+
 	digestType, err := bufmodule2.UniqueDigestTypeForModuleKeys(moduleKeys)
 	if err != nil {
 		return nil, err
 	}
+
 	modules := make([]bufmodule2.Module, len(moduleKeys))
 	for i, moduleKey := range moduleKeys {
 		module := o.GetModuleForFullName(moduleKey.FullName())
 		if module == nil {
 			return nil, &fs.PathError{Op: "read", Path: moduleKey.String(), Err: fs.ErrNotExist}
 		}
+
 		modules[i] = module
 	}
+
 	for _, module := range modules {
 		if err := addModuleToGraphRec(module, graph, digestType); err != nil {
 			return nil, err
 		}
 	}
+
 	return graph, nil
 }
 
@@ -303,14 +327,17 @@ func (o *omniProvider) getModuleDataForModuleKey(
 	if module == nil {
 		return nil, &fs.PathError{Op: "read", Path: moduleKey.String(), Err: fs.ErrNotExist}
 	}
+
 	moduleDeps, err := module.ModuleDeps()
 	if err != nil {
 		return nil, err
 	}
+
 	digest, err := moduleKey.Digest()
 	if err != nil {
 		return nil, err
 	}
+
 	depModuleKeys, err := xslices.MapError(
 		moduleDeps,
 		func(moduleDep bufmodule2.ModuleDep) (bufmodule2.ModuleKey, error) {
@@ -320,6 +347,7 @@ func (o *omniProvider) getModuleDataForModuleKey(
 	if err != nil {
 		return nil, err
 	}
+
 	return bufmodule2.NewModuleData(
 		ctx,
 		moduleKey,
@@ -356,6 +384,7 @@ func newModuleSet(
 			return nil, err
 		}
 	}
+
 	return moduleSetBuilder.Build()
 }
 
@@ -374,6 +403,7 @@ func addModuleDataToModuleSetBuilder(
 	) != 1 {
 		return errors.New("exactly one of Bucket, PathToData, DirPath must be set on ModuleData")
 	}
+
 	if boolCount(
 		moduleData.ReadObjectDataFromBucket,
 		moduleData.BufYAMLObjectData != nil,
@@ -384,12 +414,16 @@ func addModuleDataToModuleSetBuilder(
 		return errors.New("cannot set ReadObjectDataFromBucket alongside BufYAMLObjectData or BufLockObjectData")
 	}
 
-	var bucket storage.ReadBucket
-	var bucketID string
-	var err error
+	var (
+		bucket   storage.ReadBucket
+		bucketID string
+		err      error
+	)
+
 	switch {
 	case moduleData.DirPath != "":
 		storageosProvider := storageos.NewProvider(storageos.ProviderWithSymlinks())
+
 		bucket, err = storageosProvider.NewReadWriteBucket(
 			moduleData.DirPath,
 			storageos.ReadWriteBucketWithSymlinksIfSupported(),
@@ -406,6 +440,7 @@ func addModuleDataToModuleSetBuilder(
 		if err != nil {
 			return err
 		}
+
 		bucketID = fmt.Sprintf("omniProviderBucket-%d", index)
 	case moduleData.Bucket != nil:
 		bucket = moduleData.Bucket
@@ -414,12 +449,15 @@ func addModuleDataToModuleSetBuilder(
 		// Should never get here.
 		return errors.New("boolCount returned 1 but all ModuleData fields were nil")
 	}
+
 	var localModuleOptions []bufmodule2.LocalModuleOption
+
 	if moduleData.Name != "" {
 		moduleFullName, err := bufparse2.ParseFullName(moduleData.Name)
 		if err != nil {
 			return err
 		}
+
 		commitID := moduleData.CommitID
 		if commitID == uuid.Nil {
 			commitID, err = uuidutil.New()
@@ -427,33 +465,40 @@ func addModuleDataToModuleSetBuilder(
 				return err
 			}
 		}
+
 		if commitIDToCreateTime != nil {
 			createTime := moduleData.CreateTime
 			if createTime.IsZero() {
 				createTime = mockTime
 			}
+
 			commitIDToCreateTime[commitID] = createTime
 		}
+
 		localModuleOptions = []bufmodule2.LocalModuleOption{
 			bufmodule2.LocalModuleWithFullNameAndCommitID(moduleFullName, commitID),
 		}
 	} else if requireName {
 		return errors.New("ModuleData.Name was required in this context")
 	}
+
 	if moduleData.ReadObjectDataFromBucket {
 		ctx := context.Background()
+
 		bufYAMLObjectData, err := bufconfig.GetBufYAMLV1Beta1OrV1ObjectDataForPrefix(ctx, bucket, ".")
 		if err != nil {
 			if !errors.Is(err, fs.ErrNotExist) {
 				return err
 			}
 		}
+
 		bufLockObjectData, err := bufconfig.GetBufLockV1Beta1OrV1ObjectDataForPrefix(ctx, bucket, ".")
 		if err != nil {
 			if !errors.Is(err, fs.ErrNotExist) {
 				return err
 			}
 		}
+
 		localModuleOptions = append(
 			localModuleOptions,
 			bufmodule2.LocalModuleWithV1Beta1OrV1BufYAMLObjectData(bufYAMLObjectData),
@@ -466,6 +511,7 @@ func addModuleDataToModuleSetBuilder(
 				bufmodule2.LocalModuleWithV1Beta1OrV1BufYAMLObjectData(moduleData.BufYAMLObjectData),
 			)
 		}
+
 		if moduleData.BufLockObjectData != nil {
 			localModuleOptions = append(
 				localModuleOptions,
@@ -473,12 +519,14 @@ func addModuleDataToModuleSetBuilder(
 			)
 		}
 	}
+
 	moduleSetBuilder.AddLocalModule(
 		bucket,
 		bucketID,
 		!moduleData.NotTargeted,
 		localModuleOptions...,
 	)
+
 	return nil
 }
 
@@ -491,21 +539,27 @@ func addModuleToGraphRec(
 	if err != nil {
 		return err
 	}
+
 	graph.AddNode(moduleKey)
+
 	directModuleDeps, err := bufmodule2.ModuleDirectModuleDeps(module)
 	if err != nil {
 		return err
 	}
+
 	for _, directModuleDep := range directModuleDeps {
 		directDepModuleKey, err := bufmodule2.ModuleToModuleKey(module, digestType)
 		if err != nil {
 			return err
 		}
+
 		graph.AddEdge(moduleKey, directDepModuleKey)
+
 		if err := addModuleToGraphRec(directModuleDep, graph, digestType); err != nil {
 			return err
 		}
 	}
+
 	return nil
 }
 

@@ -33,12 +33,14 @@ func newJSONMarshaler(resolver Resolver, options ...JSONMarshalerOption) Marshal
 	if resolver == nil {
 		resolver = EmptyResolver
 	}
+
 	jsonMarshaler := &jsonMarshaler{
 		resolver: resolver,
 	}
 	for _, option := range options {
 		option(jsonMarshaler)
 	}
+
 	return jsonMarshaler
 }
 
@@ -46,6 +48,7 @@ func (m *jsonMarshaler) Marshal(message proto.Message) ([]byte, error) {
 	if err := ReparseExtensions(m.resolver, message.ProtoReflect()); err != nil {
 		return nil, err
 	}
+
 	options := protojson.MarshalOptions{
 		Resolver:        m.resolver,
 		UseProtoNames:   m.useProtoNames,
@@ -53,9 +56,11 @@ func (m *jsonMarshaler) Marshal(message proto.Message) ([]byte, error) {
 		EmitUnpopulated: m.emitUnpopulated,
 		Indent:          m.indent,
 	}
+
 	data, err := options.Marshal(message)
 	if err != nil {
 		return nil, fmt.Errorf("json marshal: %w", err)
 	}
+
 	return data, err
 }

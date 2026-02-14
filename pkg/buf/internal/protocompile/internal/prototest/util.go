@@ -32,11 +32,15 @@ import (
 
 func LoadDescriptorSet(t *testing.T, path string, res linker.Resolver) *descriptorpb.FileDescriptorSet {
 	t.Helper()
+
 	data, err := os.ReadFile(path)
 	require.NoError(t, err)
+
 	var fdset descriptorpb.FileDescriptorSet
+
 	err = proto.UnmarshalOptions{Resolver: res}.Unmarshal(data, &fdset)
 	require.NoError(t, err)
+
 	return &fdset
 }
 
@@ -50,6 +54,7 @@ func checkFiles(t *testing.T, act protoreflect.FileDescriptor, expSet *descripto
 		// already checked
 		return true
 	}
+
 	checked[act.Path()] = struct{}{}
 
 	expProto := findFileInSet(expSet, act.Path())
@@ -68,20 +73,23 @@ func checkFiles(t *testing.T, act protoreflect.FileDescriptor, expSet *descripto
 }
 
 func findFileInSet(fps *descriptorpb.FileDescriptorSet, name string) *descriptorpb.FileDescriptorProto {
-	files := fps.File
+	files := fps.GetFile()
 	for _, fd := range files {
 		if fd.GetName() == name {
 			return fd
 		}
 	}
+
 	return nil
 }
 
 func AssertMessagesEqual(t *testing.T, exp, act proto.Message, description string) bool {
 	t.Helper()
+
 	if diff := cmp.Diff(exp, act, protocmp.Transform(), cmpopts.EquateNaNs()); diff != "" {
 		t.Errorf("%s: message mismatch (-want, +got):\n%s", description, diff)
 		return false
 	}
+
 	return true
 }

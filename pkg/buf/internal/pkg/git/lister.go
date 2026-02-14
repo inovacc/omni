@@ -50,6 +50,7 @@ func (l *lister) ListFilesAndUnstagedFiles(
 	if err != nil {
 		return nil, err
 	}
+
 	deletedFilesOutput, err := runStdout(
 		ctx,
 		container,
@@ -60,6 +61,7 @@ func (l *lister) ListFilesAndUnstagedFiles(
 	if err != nil {
 		return nil, err
 	}
+
 	return xslices.ToUniqueSorted(
 		filterNonRegularFiles(
 			stringSliceExceptMatches(
@@ -78,12 +80,14 @@ func (l *lister) ListFilesAndUnstagedFiles(
 // stringSliceExcept returns all elements in source that are not in except.
 func stringSliceExcept(source []string, except []string) []string {
 	exceptMap := xslices.ToStructMap(except)
+
 	result := make([]string, 0, len(source))
 	for _, s := range source {
 		if _, ok := exceptMap[s]; !ok {
 			result = append(result, s)
 		}
 	}
+
 	return result
 }
 
@@ -93,12 +97,14 @@ func stringSliceExceptMatches(source []string, regexps []*regexp.Regexp) []strin
 	if len(regexps) == 0 {
 		return source
 	}
+
 	result := make([]string, 0, len(source))
 	for _, s := range source {
 		if !matchesAny(s, regexps) {
 			result = append(result, s)
 		}
 	}
+
 	return result
 }
 
@@ -109,6 +115,7 @@ func matchesAny(s string, regexps []*regexp.Regexp) bool {
 			return true
 		}
 	}
+
 	return false
 }
 
@@ -123,6 +130,7 @@ func filterNonRegularFiles(files []string) []string {
 			filteredFiles = append(filteredFiles, file)
 		}
 	}
+
 	return filteredFiles
 }
 
@@ -139,5 +147,6 @@ func runStdout(ctx context.Context, container app.EnvStdioContainer, name string
 	); err != nil {
 		return nil, err
 	}
+
 	return buffer.Bytes(), nil
 }

@@ -66,6 +66,7 @@ func (c *commit) CreateTime() (time.Time, error) {
 	if _, err := c.policyKey.Digest(); err != nil {
 		return time.Time{}, err
 	}
+
 	return c.getCreateTime()
 }
 

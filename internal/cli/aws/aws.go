@@ -56,8 +56,8 @@ func LoadConfig(ctx context.Context, opts Options) (aws.Config, error) {
 	}
 
 	// 2. Check --profile with "omni:" prefix
-	if strings.HasPrefix(opts.Profile, "omni:") {
-		name := strings.TrimPrefix(opts.Profile, "omni:")
+	if after, ok := strings.CutPrefix(opts.Profile, "omni:"); ok {
+		name := after
 		return loadWithOmniProfile(ctx, name, opts)
 	}
 
@@ -114,6 +114,7 @@ func loadWithOmniProfile(ctx context.Context, name string, opts Options) (aws.Co
 	if region == "" && p.Region != "" {
 		region = p.Region
 	}
+
 	if region == "" {
 		region = GetRegion(opts)
 	}

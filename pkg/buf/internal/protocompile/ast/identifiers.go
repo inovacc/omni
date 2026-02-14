@@ -39,6 +39,7 @@ var _ IdentValueNode = (*CompoundIdentNode)(nil)
 //	foobar
 type IdentNode struct {
 	terminalNode
+
 	Val string
 }
 
@@ -73,6 +74,7 @@ func (n *IdentNode) ToKeyword() *KeywordNode {
 //	.com.foobar.Baz
 type CompoundIdentNode struct {
 	compositeNode
+
 	// Optional leading dot, indicating that the identifier is fully qualified.
 	LeadingDot *RuneNode
 	Components []*IdentNode
@@ -91,33 +93,42 @@ func NewCompoundIdentNode(leadingDot *RuneNode, components []*IdentNode, dots []
 	if len(components) == 0 {
 		panic("must have at least one component")
 	}
+
 	if len(dots) != len(components)-1 && len(dots) != len(components) {
 		panic(fmt.Sprintf("%d components requires %d dots, not %d", len(components), len(components)-1, len(dots)))
 	}
+
 	numChildren := len(components) + len(dots)
 	if leadingDot != nil {
 		numChildren++
 	}
+
 	children := make([]Node, 0, numChildren)
+
 	var b strings.Builder
+
 	if leadingDot != nil {
 		children = append(children, leadingDot)
 		b.WriteRune(leadingDot.Rune)
 	}
+
 	for i, comp := range components {
 		if i > 0 {
 			dot := dots[i-1]
 			children = append(children, dot)
 			b.WriteRune(dot.Rune)
 		}
+
 		children = append(children, comp)
 		b.WriteString(comp.Val)
 	}
+
 	if len(dots) == len(components) {
 		dot := dots[len(dots)-1]
 		children = append(children, dot)
 		b.WriteRune(dot.Rune)
 	}
+
 	return &CompoundIdentNode{
 		compositeNode: compositeNode{
 			children: children,

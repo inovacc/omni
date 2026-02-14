@@ -18,10 +18,10 @@ import (
 	"context"
 	"log/slog"
 
+	"connectrpc.com/connect"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufparse"
 	bufpolicy2 "github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufpolicy"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufregistryapi/bufregistryapipolicy"
-	"connectrpc.com/connect"
 	policyv1beta1 "github.com/inovacc/omni/pkg/buf/internal/gen/bufbuild/registry/protocolbuffers/go/buf/registry/policy/v1beta1"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/syserror"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/uuidutil"
@@ -79,6 +79,7 @@ func (p *policyKeyProvider) GetPolicyKeysForPolicyRefs(
 	); err != nil {
 		return nil, err
 	}
+
 	registryToIndexedPolicyRefs := xslices.ToIndexedValuesMap(
 		policyRefs,
 		func(policyRef bufparse.Ref) string {
@@ -86,6 +87,7 @@ func (p *policyKeyProvider) GetPolicyKeysForPolicyRefs(
 		},
 	)
 	indexedPolicyKeys := make([]xslices.Indexed[bufpolicy2.PolicyKey], 0, len(policyRefs))
+
 	for registry, indexedPolicyRefs := range registryToIndexedPolicyRefs {
 		indexedRegistryPolicyKeys, err := p.getIndexedPolicyKeysForRegistryAndIndexedPolicyRefs(
 			ctx,
@@ -96,8 +98,10 @@ func (p *policyKeyProvider) GetPolicyKeysForPolicyRefs(
 		if err != nil {
 			return nil, err
 		}
+
 		indexedPolicyKeys = append(indexedPolicyKeys, indexedRegistryPolicyKeys...)
 	}
+
 	return xslices.IndexedToSortedValues(indexedPolicyKeys), nil
 }
 
@@ -117,12 +121,14 @@ func (p *policyKeyProvider) getIndexedPolicyKeysForRegistryAndIndexedPolicyRefs(
 				Ref: ref,
 			}
 		}
+
 		return &policyv1beta1.ResourceRef{
 			Value: &policyv1beta1.ResourceRef_Name_{
 				Name: resourceRefName,
 			},
 		}
 	})
+
 	policyResponse, err := p.clientProvider.V1Beta1CommitServiceClient(registry).GetCommits(
 		ctx,
 		connect.NewRequest(&policyv1beta1.GetCommitsRequest{
@@ -132,21 +138,24 @@ func (p *policyKeyProvider) getIndexedPolicyKeysForRegistryAndIndexedPolicyRefs(
 	if err != nil {
 		return nil, err
 	}
-	commits := policyResponse.Msg.Commits
+
+	commits := policyResponse.Msg.GetCommits()
 	if len(commits) != len(indexedPolicyRefs) {
 		return nil, syserror.New("did not get the expected number of policy datas")
 	}
 
 	indexedPolicyKeys := make([]xslices.Indexed[bufpolicy2.PolicyKey], len(commits))
 	for i, commit := range commits {
-		commitID, err := uuidutil.FromDashless(commit.Id)
+		commitID, err := uuidutil.FromDashless(commit.GetId())
 		if err != nil {
 			return nil, err
 		}
-		digest, err := V1Beta1ProtoToDigest(commit.Digest)
+
+		digest, err := V1Beta1ProtoToDigest(commit.GetDigest())
 		if err != nil {
 			return nil, err
 		}
+
 		policyKey, err := bufpolicy2.NewPolicyKey(
 			// Note we don't have to resolve owner_name and policy_name since we already have them.
 			indexedPolicyRefs[i].Value.FullName(),
@@ -158,10 +167,12 @@ func (p *policyKeyProvider) getIndexedPolicyKeysForRegistryAndIndexedPolicyRefs(
 		if err != nil {
 			return nil, err
 		}
+
 		indexedPolicyKeys[i] = xslices.Indexed[bufpolicy2.PolicyKey]{
 			Value: policyKey,
 			Index: indexedPolicyRefs[i].Index,
 		}
 	}
+
 	return indexedPolicyKeys, nil
 }

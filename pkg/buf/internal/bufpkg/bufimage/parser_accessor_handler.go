@@ -63,27 +63,34 @@ func (p *parserAccessorHandler) Open(path string) (_ io.ReadCloser, retErr error
 		if !errors.Is(moduleErr, fs.ErrNotExist) {
 			return nil, moduleErr
 		}
+
 		if wktModuleFile, wktErr := datawkt.ReadBucket.Get(p.ctx, path); wktErr == nil {
 			if wktModuleFile.Path() != path {
 				// this should never happen, but just in case
 				return nil, fmt.Errorf("parser accessor requested path %q but got %q", path, wktModuleFile.Path())
 			}
+
 			if err := p.addPath(path, path, "", nil, uuid.Nil); err != nil {
 				return nil, err
 			}
+
 			return wktModuleFile, nil
 		}
+
 		return nil, moduleErr
 	}
+
 	defer func() {
 		if retErr != nil {
 			retErr = errors.Join(retErr, moduleFile.Close())
 		}
 	}()
+
 	if moduleFile.Path() != path {
 		// this should never happen, but just in case
 		return nil, fmt.Errorf("parser accessor requested path %q but got %q", path, moduleFile.Path())
 	}
+
 	if err := p.addPath(
 		path,
 		moduleFile.ExternalPath(),
@@ -93,6 +100,7 @@ func (p *parserAccessorHandler) Open(path string) (_ io.ReadCloser, retErr error
 	); err != nil {
 		return nil, err
 	}
+
 	return moduleFile, nil
 }
 
@@ -102,9 +110,11 @@ func (p *parserAccessorHandler) Open(path string) (_ io.ReadCloser, retErr error
 func (p *parserAccessorHandler) ExternalPath(path string) string {
 	p.lock.RLock()
 	defer p.lock.RUnlock()
+
 	if externalPath := p.pathToExternalPath[path]; externalPath != "" {
 		return externalPath
 	}
+
 	return path
 }
 
@@ -112,6 +122,7 @@ func (p *parserAccessorHandler) ExternalPath(path string) string {
 func (p *parserAccessorHandler) LocalPath(path string) string {
 	p.lock.RLock()
 	defer p.lock.RUnlock()
+
 	return p.pathToLocalPath[path]
 }
 
@@ -119,6 +130,7 @@ func (p *parserAccessorHandler) LocalPath(path string) string {
 func (p *parserAccessorHandler) FullName(path string) bufparse.FullName {
 	p.lock.RLock()
 	defer p.lock.RUnlock()
+
 	return p.pathToFullName[path] // nil is a valid value.
 }
 
@@ -126,6 +138,7 @@ func (p *parserAccessorHandler) FullName(path string) bufparse.FullName {
 func (p *parserAccessorHandler) CommitID(path string) uuid.UUID {
 	p.lock.RLock()
 	defer p.lock.RUnlock()
+
 	return p.pathToCommitID[path] // empty is a valid value.
 }
 
@@ -138,6 +151,7 @@ func (p *parserAccessorHandler) addPath(
 ) error {
 	p.lock.Lock()
 	defer p.lock.Unlock()
+
 	existingExternalPath, ok := p.pathToExternalPath[path]
 	if ok {
 		if existingExternalPath != externalPath {
@@ -146,6 +160,7 @@ func (p *parserAccessorHandler) addPath(
 	} else {
 		p.pathToExternalPath[path] = externalPath
 	}
+
 	if localPath != "" {
 		existingLocalPath, ok := p.pathToLocalPath[path]
 		if ok {
@@ -156,11 +171,14 @@ func (p *parserAccessorHandler) addPath(
 			p.pathToLocalPath[path] = localPath
 		}
 	}
+
 	if moduleFullName != nil {
 		p.pathToFullName[path] = moduleFullName
 	}
+
 	if commitID != uuid.Nil {
 		p.pathToCommitID[path] = commitID
 	}
+
 	return nil
 }

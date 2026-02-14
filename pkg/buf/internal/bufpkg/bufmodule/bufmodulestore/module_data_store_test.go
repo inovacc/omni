@@ -49,10 +49,12 @@ func TestModuleDataStoreOS(t *testing.T) {
 func testModuleDataStoreBasic(t *testing.T, tar bool) {
 	bucket := storagemem.NewReadWriteBucket()
 	filelocker := filelock.NewNopLocker()
+
 	var moduleDataStoreOptions []ModuleDataStoreOption
 	if tar {
 		moduleDataStoreOptions = append(moduleDataStoreOptions, ModuleDataStoreWithTar())
 	}
+
 	testModuleDataStore(t, bucket, filelocker, moduleDataStoreOptions, tar)
 }
 
@@ -132,6 +134,7 @@ func testModuleDataStore(
 			),
 		)
 	}
+
 	foundModuleDatas, notFoundModuleKeys, err = moduleDataStore.GetModuleDatasForModuleKeys(
 		ctx,
 		moduleKeys,
@@ -222,6 +225,7 @@ func testGetModuleKeysAndModuleDatas(t *testing.T, ctx context.Context) ([]bufmo
 		},
 		moduleDatas,
 	)
+
 	return moduleKeys, moduleDatas
 }
 

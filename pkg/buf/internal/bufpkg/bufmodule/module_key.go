@@ -81,10 +81,12 @@ func UniqueDigestTypeForModuleKeys(moduleKeys []ModuleKey) (DigestType, error) {
 	if len(moduleKeys) == 0 {
 		return 0, syserror.New("empty moduleKeys passed to UniqueDigestTypeForModuleKeys")
 	}
+
 	digests, err := xslices.MapError(moduleKeys, ModuleKey.Digest)
 	if err != nil {
 		return 0, err
 	}
+
 	digestType := digests[0].Type()
 	for _, digest := range digests[1:] {
 		if digestType != digest.Type() {
@@ -96,6 +98,7 @@ func UniqueDigestTypeForModuleKeys(moduleKeys []ModuleKey) (DigestType, error) {
 			)
 		}
 	}
+
 	return digestType, nil
 }
 
@@ -108,6 +111,7 @@ func ModuleKeyToCommitKey(moduleKey ModuleKey) (CommitKey, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return newCommitKey(moduleKey.FullName().Registry(), moduleKey.CommitID(), digest.Type())
 }
 
@@ -128,9 +132,11 @@ func newModuleKey(
 	if moduleFullName == nil {
 		return nil, errors.New("nil FullName when constructing ModuleKey")
 	}
+
 	if commitID == uuid.Nil {
 		return nil, errors.New("empty commitID when constructing ModuleKey")
 	}
+
 	return newModuleKeyNoValidate(moduleFullName, commitID, getDigest), nil
 }
 

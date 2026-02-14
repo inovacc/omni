@@ -31,8 +31,12 @@ func TestDiff(t *testing.T) {
 	t.Parallel()
 	t.Run("delete-and-insert", func(t *testing.T) {
 		t.Parallel()
-		const from = "Hello, world!\n"
-		const to = "Goodbye, world!\n"
+
+		const (
+			from = "Hello, world!\n"
+			to   = "Goodbye, world!\n"
+		)
+
 		edits := diffmyers.Diff(
 			splitLines(from),
 			splitLines(to),
@@ -50,8 +54,12 @@ func TestDiff(t *testing.T) {
 	})
 	t.Run("insert-one", func(t *testing.T) {
 		t.Parallel()
-		const from = "Hello, world!\n"
-		const to = "Hello, world!\nGoodbye, world!\n"
+
+		const (
+			from = "Hello, world!\n"
+			to   = "Hello, world!\nGoodbye, world!\n"
+		)
+
 		edits := diffmyers.Diff(
 			splitLines(from),
 			splitLines(to),
@@ -67,8 +75,12 @@ func TestDiff(t *testing.T) {
 	})
 	t.Run("delete-one", func(t *testing.T) {
 		t.Parallel()
-		const from = "Hello, world!\nGoodbye, world!\n"
-		const to = "Hello, world!\n"
+
+		const (
+			from = "Hello, world!\nGoodbye, world!\n"
+			to   = "Hello, world!\n"
+		)
+
 		edits := diffmyers.Diff(
 			splitLines(from),
 			splitLines(to),
@@ -83,8 +95,12 @@ func TestDiff(t *testing.T) {
 	})
 	t.Run("create-file", func(t *testing.T) {
 		t.Parallel()
-		const from = ""
-		const to = "Hello, world!\n"
+
+		const (
+			from = ""
+			to   = "Hello, world!\n"
+		)
+
 		edits := diffmyers.Diff(
 			splitLines(from),
 			splitLines(to),
@@ -100,8 +116,12 @@ func TestDiff(t *testing.T) {
 	})
 	t.Run("remove", func(t *testing.T) {
 		t.Parallel()
-		const from = "Hello, world!\n"
-		const to = ""
+
+		const (
+			from = "Hello, world!\n"
+			to   = ""
+		)
+
 		edits := diffmyers.Diff(
 			splitLines(from),
 			splitLines(to),
@@ -116,8 +136,12 @@ func TestDiff(t *testing.T) {
 	})
 	t.Run("equal", func(t *testing.T) {
 		t.Parallel()
-		const from = "Hello, world!\n"
-		const to = "Hello, world!\n"
+
+		const (
+			from = "Hello, world!\n"
+			to   = "Hello, world!\n"
+		)
+
 		edits := diffmyers.Diff(
 			splitLines(from),
 			splitLines(to),
@@ -128,7 +152,9 @@ func TestDiff(t *testing.T) {
 	// The example from https://www.gnu.org/software/diffutils/manual/html_node/Sample-diff-Input.html
 	t.Run("lao-tzu", func(t *testing.T) {
 		t.Parallel()
-		const lao = `The Way that can be told of is not the eternal Way;
+
+		const (
+			lao = `The Way that can be told of is not the eternal Way;
 The name that can be named is not the eternal name.
 The Nameless is the origin of Heaven and Earth;
 The Named is the mother of all things.
@@ -140,7 +166,7 @@ The two are the same,
 But after they are produced,
   they have different names.
 `
-		const tzu = `The Nameless is the origin of Heaven and Earth;
+			tzu = `The Nameless is the origin of Heaven and Earth;
 The named is the mother of all things.
 
 Therefore let there always be non-being,
@@ -154,6 +180,8 @@ They both may be called deep and profound.
 Deeper and more profound,
 The door of all subtleties!
 `
+		)
+
 		edits := diffmyers.Diff(
 			splitLines(lao),
 			splitLines(tzu),
@@ -204,6 +232,7 @@ The door of all subtleties!
 
 	t.Run("first-line-prefix", func(t *testing.T) {
 		t.Parallel()
+
 		from := "syntax = \"proto3\";\n\npackage test;\n\nmessage Foo {\n  string field1 = 1;\n  string field2 = 2;\n  string field3 = 3;\n  string field4 = 4;\n  string field5 = 5;\n}\n"
 		to := "syntax = \"proto3\";\n\npackage test;\n\nmessage Foo {\n  string field1 = 1;\n  string field2 = 2;\n  string field3 = 3;\n  string field4 = 4;\n  int32 field5 = 5;\n}\n"
 		expectedFirstLineOfOutput := " syntax = \"proto3\";"
@@ -219,9 +248,10 @@ The door of all subtleties!
 			edits,
 		)
 		require.NoError(t, err)
-		firstLineEnd := bytes.Index(diff, []byte("\n"))
 
-		firstLine := diff[:firstLineEnd]
+		before, _, _ := bytes.Cut(diff, []byte("\n"))
+
+		firstLine := before
 		actualFirstLine := string(firstLine)
 		require.Equal(t, expectedFirstLineOfOutput, actualFirstLine,
 			"First line of diff output should match expected format (single space prefix, no double space)")
@@ -237,10 +267,12 @@ func testPrint(t *testing.T, from, to string, edits []diffmyers.Edit, golden str
 			edits,
 		)
 		require.NoError(t, err)
+
 		goldenFilePath := filepath.Join("testdata", golden)
 		if writeGoldenFiles {
 			require.NoError(t, os.WriteFile(goldenFilePath, diff, 0600))
 		}
+
 		diffGolden, err := os.ReadFile(goldenFilePath)
 		require.NoError(t, err)
 		assert.Equal(t, string(diff), string(diffGolden))
@@ -252,5 +284,6 @@ func splitLines(s string) [][]byte {
 	if len(lines[len(lines)-1]) == 0 {
 		lines = lines[:len(lines)-1]
 	}
+
 	return lines
 }

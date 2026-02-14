@@ -115,9 +115,11 @@ func newPolicy(
 	if name == "" {
 		return nil, syserror.New("name not present when constructing a Policy")
 	}
+
 	if fullName == nil && commitID != uuid.Nil {
 		return nil, syserror.New("commitID present when constructing a local Policy")
 	}
+
 	policy := &policy{
 		description: description,
 		fullName:    fullName,
@@ -126,6 +128,7 @@ func newPolicy(
 		getConfig:   sync.OnceValues(getConfig),
 	}
 	policy.digestTypeToGetDigest = newSyncOnceValueDigestTypeToGetDigestFuncForPolicy(policy)
+
 	return policy, nil
 }
 
@@ -149,6 +152,7 @@ func (p *policy) Description() string {
 	if p.description != "" {
 		return p.description
 	}
+
 	return p.OpaqueID()
 }
 
@@ -161,6 +165,7 @@ func (p *policy) Digest(digestType DigestType) (Digest, error) {
 	if !ok {
 		return nil, syserror.Newf("DigestType %v was not in policy.digestTypeToGetDigest", digestType)
 	}
+
 	return getDigest()
 }
 
@@ -175,6 +180,7 @@ func newSyncOnceValueDigestTypeToGetDigestFuncForPolicy(policy *policy) map[Dige
 	for digestType := range digestTypeToString {
 		m[digestType] = sync.OnceValues(newGetDigestFuncForPolicyAndDigestType(policy, digestType))
 	}
+
 	return m
 }
 
@@ -186,6 +192,7 @@ func newGetDigestFuncForPolicyAndDigestType(policy *policy, digestType DigestTyp
 			if err != nil {
 				return nil, err
 			}
+
 			return getO1Digest(policyConfig)
 		default:
 			return nil, syserror.Newf("unknown DigestType: %v", digestType)

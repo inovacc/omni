@@ -39,6 +39,7 @@ func lexString(l *lexer, sigil string) {
 	if len(l.rest()) >= 3 && l.rest()[1:2] == quote && l.rest()[2:3] == quote {
 		quote = l.rest()[:3]
 	}
+
 	l.cursor += len(quote)
 
 	var (
@@ -46,14 +47,17 @@ func lexString(l *lexer, sigil string) {
 		terminated bool
 		escapes    []tokenmeta.Escape
 	)
+
 	for !l.done() {
 		if strings.HasPrefix(l.rest(), quote) {
 			l.cursor += len(quote)
 			terminated = true
+
 			break
 		}
 
 		cursor := l.cursor
+
 		sc := lexStringContent(l)
 		if !sc.escape.IsZero() || escapes != nil {
 			if escapes == nil {
@@ -73,6 +77,7 @@ func lexString(l *lexer, sigil string) {
 				escape.Rune = sc.rune
 				buf.WriteRune(sc.rune)
 			}
+
 			escapes = append(escapes, escape)
 		}
 	}
@@ -157,6 +162,7 @@ func lexStringContent(l *lexer) (sc stringContent) {
 		// Warn if the user has a non-printable character in their string that isn't
 		// ASCII whitespace.
 		var escape string
+
 		switch {
 		case r < 0x80:
 			escape = fmt.Sprintf(`\x%02x`, r)
@@ -187,61 +193,76 @@ func lexStringContent(l *lexer) (sc stringContent) {
 	}
 
 	r = l.pop()
+
 escSwitch:
 	switch r {
 	// These are all the simple escapes.
 	case 'n':
 		sc.rune = '\n'
 		sc.escape = l.spanFrom(start)
+
 		return sc
 	case 'r':
 		sc.rune = '\r'
 		sc.escape = l.spanFrom(start)
+
 		return sc
 	case 't':
 		sc.rune = '\t'
 		sc.escape = l.spanFrom(start)
+
 		return sc
 	case '\\', '\'', '"':
 		sc.escape = l.spanFrom(start)
 		sc.rune = r
+
 		return sc
 
 	case 'a':
 		if !l.EscapeExtended {
 			break
 		}
+
 		sc.rune = '\a' // U+0007
 		sc.escape = l.spanFrom(start)
+
 		return sc
 	case 'b':
 		if !l.EscapeExtended {
 			break
 		}
+
 		sc.rune = '\b' // U+0008
 		sc.escape = l.spanFrom(start)
+
 		return sc
 	case 'f':
 		if !l.EscapeExtended {
 			break
 		}
+
 		sc.rune = '\f' // U+000C
 		sc.escape = l.spanFrom(start)
+
 		return sc
 	case 'v':
 		if !l.EscapeExtended {
 			break
 		}
+
 		sc.rune = '\v' // U+000B
 		sc.escape = l.spanFrom(start)
+
 		return sc
 
 	case '?':
 		if !l.EscapeAsk {
 			break
 		}
+
 		sc.rune = '?'
 		sc.escape = l.spanFrom(start)
+
 		return sc
 
 	// Octal escape. Need to eat the next two runes if they're octal.
@@ -250,6 +271,7 @@ escSwitch:
 			if r == '0' {
 				sc.rune = 0
 				sc.escape = l.spanFrom(start)
+
 				return sc
 			}
 
@@ -257,6 +279,7 @@ escSwitch:
 		}
 
 		sc.isRawByte = true
+
 		sc.rune = r - '0'
 		for i := 0; i < 2 && !l.done(); i++ {
 			// Check before consuming the rune. If we see e.g.
@@ -265,12 +288,15 @@ escSwitch:
 			if r < '0' || r > '7' {
 				break
 			}
+
 			_ = l.pop()
 
 			sc.rune *= 8
 			sc.rune += r - '0'
 		}
+
 		sc.escape = l.spanFrom(start)
+
 		return sc
 
 	// Hex escapes. And yes, the 'X' is no mistake: Protobuf is one of the
@@ -278,11 +304,13 @@ escSwitch:
 	// even C offers! https://en.cppreference.com/w/c/language/escape
 	case 'x', 'X', 'u', 'U':
 		var digits, consumed int
+
 		switch r {
 		case 'X':
 			if !l.EscapeUppercaseX {
 				break escSwitch
 			}
+
 			fallthrough
 		case 'x':
 			digits = 2
@@ -292,11 +320,13 @@ escSwitch:
 			if !l.EscapeOldStyleUnicode {
 				break escSwitch
 			}
+
 			digits = 4
 		case 'U':
 			if !l.EscapeOldStyleUnicode {
 				break escSwitch
 			}
+
 			digits = 8
 		}
 
@@ -310,6 +340,7 @@ escSwitch:
 			sc.rune += rune(digit)
 
 			l.pop()
+
 			consumed++
 		}
 
@@ -322,10 +353,12 @@ escSwitch:
 				l.Error(errtoken.InvalidEscape{Span: sc.escape})
 			}
 		}
+
 		return sc
 	}
 
 	sc.escape = l.spanFrom(start)
 	l.Error(errtoken.InvalidEscape{Span: sc.escape})
+
 	return sc
 }

@@ -43,10 +43,12 @@ func FormatModuleSet(ctx context.Context, moduleSet bufmodule2.ModuleSet) (_ sto
 // FormatBucket formats the .proto files in the bucket and returns a new bucket with the formatted files.
 func FormatBucket(ctx context.Context, bucket storage2.ReadBucket) (_ storage2.ReadBucket, retErr error) {
 	readWriteBucket := storagemem.NewReadWriteBucket()
+
 	paths, err := storage2.AllPaths(ctx, storage2.FilterReadBucket(bucket, storage2.MatchPathExt(".proto")), "")
 	if err != nil {
 		return nil, err
 	}
+
 	jobs := make([]func(context.Context) error, len(paths))
 	for i, path := range paths {
 		jobs[i] = func(ctx context.Context) (retErr error) {
@@ -54,29 +56,37 @@ func FormatBucket(ctx context.Context, bucket storage2.ReadBucket) (_ storage2.R
 			if err != nil {
 				return err
 			}
+
 			defer func() {
 				retErr = errors.Join(retErr, readObjectCloser.Close())
 			}()
+
 			fileNode, err := parser.Parse(readObjectCloser.ExternalPath(), readObjectCloser, reporter.NewHandler(nil))
 			if err != nil {
 				return err
 			}
+
 			writeObjectCloser, err := readWriteBucket.Put(ctx, path)
 			if err != nil {
 				return err
 			}
+
 			defer func() {
 				retErr = errors.Join(retErr, writeObjectCloser.Close())
 			}()
+
 			if err := FormatFileNode(writeObjectCloser, fileNode); err != nil {
 				return err
 			}
+
 			return writeObjectCloser.SetExternalPath(readObjectCloser.ExternalPath())
 		}
 	}
+
 	if err := thread.Parallelize(ctx, jobs); err != nil {
 		return nil, err
 	}
+
 	return readWriteBucket, nil
 }
 
@@ -88,6 +98,8 @@ func FormatFileNode(dest io.Writer, fileNode *ast.FileNode) error {
 	if _, err := parser.ResultFromAST(fileNode, true, reporter.NewHandler(nil)); err != nil {
 		return err
 	}
+
 	formatter := newFormatter(dest, fileNode)
+
 	return formatter.Run()
 }

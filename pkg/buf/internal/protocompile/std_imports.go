@@ -56,11 +56,13 @@ func init() {
 	}
 
 	standardImports = map[string]protoreflect.FileDescriptor{}
+
 	for _, fn := range standardFilenames {
 		fd, err := protoregistry.GlobalFiles.FindFileByPath(fn)
 		if err != nil {
 			panic(err.Error())
 		}
+
 		standardImports[fn] = fd
 	}
 
@@ -85,12 +87,14 @@ func init() {
 			standardImports[feature.Name] = fd
 			continue
 		}
+
 		fd, err = feature.GetDescriptor()
 		if err != nil {
 			// For these extensions to FeatureSet, we are lenient. If
 			// we can't load them, just ignore them.
 			continue
 		}
+
 		standardImports[feature.Name] = fd
 	}
 }

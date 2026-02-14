@@ -38,10 +38,12 @@ func (n NumberToken) Base() byte {
 	if n.Raw() == nil {
 		return 10
 	}
+
 	base := n.Raw().Base
 	if base == 0 {
 		return 10
 	}
+
 	return base
 }
 
@@ -53,6 +55,7 @@ func (n NumberToken) IsLegacyOctal() bool {
 	}
 
 	text := n.Token().Text()
+
 	return !strings.HasPrefix(text, "0o") && !strings.HasPrefix(text, "0O")
 }
 
@@ -62,6 +65,7 @@ func (n NumberToken) ExpBase() int {
 	if n.Raw() == nil {
 		return 1
 	}
+
 	return max(1, int(n.Raw().ExpBase))
 }
 
@@ -73,6 +77,7 @@ func (n NumberToken) Prefix() source.Span {
 
 	span := n.Token().Span()
 	span.End = span.Start + int(n.Raw().Prefix)
+
 	return span
 }
 
@@ -85,6 +90,7 @@ func (n NumberToken) Suffix() source.Span {
 
 	span := n.Token().Span()
 	span.Start = span.End - int(n.Raw().Suffix)
+
 	return span
 }
 
@@ -100,6 +106,7 @@ func (n NumberToken) Mantissa() source.Span {
 
 	start := int(n.Raw().Prefix)
 	end := span.Len() - int(n.Raw().Suffix) - int(n.Raw().Exp)
+
 	return span.Range(start, end)
 }
 
@@ -153,6 +160,7 @@ func (n NumberToken) Int() (v uint64, exact bool) {
 	case n.Raw().IsFloat:
 		f := math.Float64frombits(n.Raw().Word)
 		n := uint64(f)
+
 		return n, f == float64(n)
 	default:
 		return n.Raw().Word, true

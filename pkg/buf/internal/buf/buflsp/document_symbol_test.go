@@ -40,6 +40,7 @@ func TestDocumentSymbol(t *testing.T) {
 		line       uint32
 		deprecated bool
 	}
+
 	tests := []struct {
 		name            string
 		expectedSymbols []symbolInfo
@@ -81,6 +82,7 @@ func TestDocumentSymbol(t *testing.T) {
 			t.Parallel()
 
 			var symbols []protocol.SymbolInformation
+
 			_, symErr := clientJSONConn.Call(ctx, protocol.MethodTextDocumentDocumentSymbol, protocol.DocumentSymbolParams{
 				TextDocument: protocol.TextDocumentIdentifier{
 					URI: testURI,

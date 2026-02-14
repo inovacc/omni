@@ -22,8 +22,10 @@ Subcommands:
   search        Search YouTube
   interactive   Interactive menu (download/info/formats/nerd stats)
   extractors    List supported sites
+  auth          Extract YouTube cookies from Chrome for authenticated downloads
 
 Examples:
+  omni video auth
   omni video download "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
   omni video channel "https://www.youtube.com/@GithubAwesome" --limit 5
   omni video info "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
@@ -112,6 +114,7 @@ Examples:
 		opts.PlaylistEnd, _ = cmd.Flags().GetInt("playlist-end")
 		opts.Verbose, _ = cmd.Flags().GetBool("verbose")
 		opts.Complete, _ = cmd.Flags().GetBool("complete")
+		opts.CookiesFromBrowser, _ = cmd.Flags().GetBool("cookies-from-browser")
 		return video.RunDownload(cmd.OutOrStdout(), args, opts)
 	},
 }
@@ -130,6 +133,7 @@ Examples:
 		opts.CookieFile, _ = cmd.Flags().GetString("cookies")
 		opts.Proxy, _ = cmd.Flags().GetString("proxy")
 		opts.Verbose, _ = cmd.Flags().GetBool("verbose")
+		opts.CookiesFromBrowser, _ = cmd.Flags().GetBool("cookies-from-browser")
 		return video.RunInfo(cmd.OutOrStdout(), args, opts)
 	},
 }
@@ -149,6 +153,7 @@ Examples:
 		opts.CookieFile, _ = cmd.Flags().GetString("cookies")
 		opts.Proxy, _ = cmd.Flags().GetString("proxy")
 		opts.JSON, _ = cmd.Flags().GetBool("json")
+		opts.CookiesFromBrowser, _ = cmd.Flags().GetBool("cookies-from-browser")
 		return video.RunListFormats(cmd.OutOrStdout(), args, opts)
 	},
 }
@@ -167,6 +172,24 @@ Examples:
 		opts := video.Options{}
 		opts.Verbose, _ = cmd.Flags().GetBool("verbose")
 		return video.RunInfo(cmd.OutOrStdout(), []string{"ytsearch:" + query}, opts)
+	},
+}
+
+var videoAuthCmd = &cobra.Command{
+	Use:   "auth",
+	Short: "Extract YouTube cookies from Chrome browser profile",
+	Long: `Launch Chrome with your existing profile to extract YouTube cookies.
+
+Cookies are saved to a well-known cache location and will be
+auto-loaded for all subsequent video commands. This enables
+authenticated downloads (age-restricted, members-only, etc.).
+
+Requires Google Chrome with an active YouTube login.
+
+Examples:
+  omni video auth`,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return video.RunAuth(cmd.OutOrStdout(), args, video.Options{})
 	},
 }
 
@@ -222,6 +245,7 @@ Examples:
 		opts.Retries, _ = cmd.Flags().GetInt("retries")
 		opts.RateLimit, _ = cmd.Flags().GetString("rate-limit")
 		opts.Verbose, _ = cmd.Flags().GetBool("verbose")
+		opts.CookiesFromBrowser, _ = cmd.Flags().GetBool("cookies-from-browser")
 		return video.RunChannel(cmd.OutOrStdout(), args, opts)
 	},
 }
@@ -258,6 +282,7 @@ func init() {
 	videoCmd.AddCommand(videoSearchCmd)
 	videoCmd.AddCommand(videoInteractiveCmd)
 	videoCmd.AddCommand(videoExtractorsCmd)
+	videoCmd.AddCommand(videoAuthCmd)
 
 	videoCmd.Flags().Bool("interactive", false, "start interactive mode (same as 'video interactive')")
 	videoCmd.Flags().String("cookies", "", "Netscape cookie file path for interactive mode")
@@ -282,6 +307,7 @@ func init() {
 	videoDownloadCmd.Flags().Int("playlist-end", 0, "playlist end index")
 	videoDownloadCmd.Flags().BoolP("verbose", "v", false, "verbose output")
 	videoDownloadCmd.Flags().Bool("complete", false, "download best quality and write .md file with description and link")
+	videoDownloadCmd.Flags().Bool("cookies-from-browser", false, "auto-load cookies extracted by 'video auth'")
 
 	// channel flags
 	videoChannelCmd.Flags().Int("limit", -1, "max videos to download (-1 = all)")
@@ -292,16 +318,19 @@ func init() {
 	videoChannelCmd.Flags().IntP("retries", "R", 3, "number of retries")
 	videoChannelCmd.Flags().String("rate-limit", "", "rate limit (e.g., 1M, 500K)")
 	videoChannelCmd.Flags().BoolP("verbose", "v", false, "verbose output")
+	videoChannelCmd.Flags().Bool("cookies-from-browser", false, "auto-load cookies extracted by 'video auth'")
 
 	// info flags
 	videoInfoCmd.Flags().String("cookies", "", "Netscape cookie file path")
 	videoInfoCmd.Flags().String("proxy", "", "HTTP/SOCKS proxy URL")
 	videoInfoCmd.Flags().BoolP("verbose", "v", false, "verbose output")
+	videoInfoCmd.Flags().Bool("cookies-from-browser", false, "auto-load cookies extracted by 'video auth'")
 
 	// list-formats flags
 	videoListFormatsCmd.Flags().String("cookies", "", "Netscape cookie file path")
 	videoListFormatsCmd.Flags().String("proxy", "", "HTTP/SOCKS proxy URL")
 	videoListFormatsCmd.Flags().Bool("json", false, "output as JSON")
+	videoListFormatsCmd.Flags().Bool("cookies-from-browser", false, "auto-load cookies extracted by 'video auth'")
 
 	// search flags
 	videoSearchCmd.Flags().BoolP("verbose", "v", false, "verbose output")
@@ -324,6 +353,7 @@ func init() {
 	videoInteractiveCmd.Flags().Int("playlist-end", 0, "playlist end index")
 	videoInteractiveCmd.Flags().BoolP("verbose", "v", false, "verbose output")
 	videoInteractiveCmd.Flags().Bool("complete", false, "download best quality and write .md file with description and link")
+	videoInteractiveCmd.Flags().Bool("cookies-from-browser", false, "auto-load cookies extracted by 'video auth'")
 }
 
 func runVideoInteractive(cmd *cobra.Command, args []string) error {
@@ -345,6 +375,7 @@ func runVideoInteractive(cmd *cobra.Command, args []string) error {
 	opts.PlaylistEnd = videoIntFlag(cmd, "playlist-end")
 	opts.Verbose = videoBoolFlag(cmd, "verbose")
 	opts.Complete = videoBoolFlag(cmd, "complete")
+	opts.CookiesFromBrowser = videoBoolFlag(cmd, "cookies-from-browser")
 
 	return video.RunInteractive(cmd.OutOrStdout(), cmd.ErrOrStderr(), cmd.InOrStdin(), args, opts)
 }

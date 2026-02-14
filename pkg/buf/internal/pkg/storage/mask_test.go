@@ -45,6 +45,7 @@ func TestMaskReadBucket(t *testing.T) {
 		"api/v2/service.proto":     "syntax = \"proto3\";",
 	}
 	delegate := storagemem.NewReadWriteBucket()
+
 	ctx := t.Context()
 	for path, content := range testFiles {
 		writeObjectCloser, err := delegate.Put(ctx, path)
@@ -150,6 +151,7 @@ func TestMaskReadBucket(t *testing.T) {
 
 func TestMaskReadBucket_InvalidPrefixes(t *testing.T) {
 	t.Parallel()
+
 	readWriteBucket := storagemem.NewReadWriteBucket()
 	_, err := storage2.MaskReadBucket(readWriteBucket, []string{"../invalid"}, []string{})
 	assert.Error(t, err, "Should error on invalid include prefix")
@@ -190,6 +192,7 @@ func TestMaskReadBucket_PrefixCompaction(t *testing.T) {
 
 	// Walk should return all files under "foo" (since "foo/v1" and "foo/v1/v2" are redundant)
 	var actualFiles []string
+
 	err = filteredBucket.Walk(ctx, "", func(objectInfo storage2.ObjectInfo) error {
 		actualFiles = append(actualFiles, objectInfo.Path())
 		return nil
@@ -197,6 +200,7 @@ func TestMaskReadBucket_PrefixCompaction(t *testing.T) {
 	require.NoError(t, err)
 
 	sort.Strings(actualFiles)
+
 	expectedFiles := []string{"foo/file1.txt", "foo/v1/file2.txt", "foo/v1/v2/file3.txt"}
 	sort.Strings(expectedFiles)
 	assert.Equal(t, expectedFiles, actualFiles, "Should include all files under foo prefix")
@@ -210,6 +214,7 @@ func TestMaskReadBucket_PrefixCompaction(t *testing.T) {
 	require.NoError(t, err)
 
 	var actualFiles2 []string
+
 	err = filteredBucket2.Walk(ctx, "", func(objectInfo storage2.ObjectInfo) error {
 		actualFiles2 = append(actualFiles2, objectInfo.Path())
 		return nil
@@ -217,6 +222,7 @@ func TestMaskReadBucket_PrefixCompaction(t *testing.T) {
 	require.NoError(t, err)
 
 	sort.Strings(actualFiles2)
+
 	expectedFiles2 := []string{"bar/file4.txt", "foo/file1.txt", "foo/v1/file2.txt", "foo/v1/v2/file3.txt"}
 	sort.Strings(expectedFiles2)
 	assert.Equal(t, expectedFiles2, actualFiles2, "Should include all files under foo and bar prefixes")
@@ -233,6 +239,7 @@ func TestMaskReadBucket_WalkOptimization(t *testing.T) {
 		"docs/README.md":      "content",
 		"src/main.go":         "content",
 	}
+
 	delegate := storagemem.NewReadWriteBucket()
 	for path, content := range testFiles {
 		writeObjectCloser, err := delegate.Put(ctx, path)
@@ -292,6 +299,7 @@ func testMaskReadBucket(
 
 	// Test Walk operation
 	var actualFiles []string
+
 	err = filteredBucket.Walk(ctx, walkPrefix, func(objectInfo storage2.ObjectInfo) error {
 		actualFiles = append(actualFiles, objectInfo.Path())
 		return nil
@@ -304,6 +312,7 @@ func testMaskReadBucket(
 	// Test Get/Stat operations based on include/exclude filters (not walk prefix)
 	// Calculate which files should be accessible based on the include/exclude filters
 	accessibleFiles := make(map[string]bool)
+
 	for file := range testFiles {
 		shouldInclude := len(includePrefixes) == 0 // if no includes, include all by default
 		if !shouldInclude {
@@ -315,15 +324,18 @@ func testMaskReadBucket(
 				}
 			}
 		}
+
 		if shouldInclude {
 			// Check excludes
 			shouldExclude := false
+
 			for _, excludePrefix := range excludePrefixes {
 				if file == excludePrefix || len(file) > len(excludePrefix) && strings.HasPrefix(file, excludePrefix) && file[len(excludePrefix)] == '/' {
 					shouldExclude = true
 					break
 				}
 			}
+
 			if !shouldExclude {
 				accessibleFiles[file] = true
 			}
@@ -333,6 +345,7 @@ func testMaskReadBucket(
 	for file := range accessibleFiles {
 		readObjectCloser, err := filteredBucket.Get(ctx, file)
 		assert.NoError(t, err, "Should be able to get accessible file: %s", file)
+
 		if err == nil {
 			require.NoError(t, readObjectCloser.Close())
 		}

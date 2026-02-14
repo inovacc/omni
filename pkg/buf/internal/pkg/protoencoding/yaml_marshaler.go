@@ -33,12 +33,14 @@ func newYAMLMarshaler(resolver Resolver, options ...YAMLMarshalerOption) Marshal
 	if resolver == nil {
 		resolver = EmptyResolver
 	}
+
 	yamlMarshaler := &yamlMarshaler{
 		resolver: resolver,
 	}
 	for _, option := range options {
 		option(yamlMarshaler)
 	}
+
 	return yamlMarshaler
 }
 
@@ -46,6 +48,7 @@ func (m *yamlMarshaler) Marshal(message proto.Message) ([]byte, error) {
 	if err := ReparseExtensions(m.resolver, message.ProtoReflect()); err != nil {
 		return nil, err
 	}
+
 	options := protoyaml.MarshalOptions{
 		Indent:          m.indent,
 		Resolver:        m.resolver,
@@ -53,9 +56,11 @@ func (m *yamlMarshaler) Marshal(message proto.Message) ([]byte, error) {
 		UseEnumNumbers:  m.useEnumNumbers,
 		EmitUnpopulated: m.emitUnpopulated,
 	}
+
 	data, err := options.Marshal(message)
 	if err != nil {
 		return nil, fmt.Errorf("yaml marshal: %w", err)
 	}
+
 	return data, err
 }

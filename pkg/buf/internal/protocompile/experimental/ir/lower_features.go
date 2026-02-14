@@ -52,6 +52,7 @@ func buildFeatureInfo(field Member, r *report.Report) {
 	mistake := report.Notef("this is likely a mistake, but it is not rejected by protoc")
 
 	info := new(rawFeatureInfo)
+
 	if defaults.IsZero() {
 		r.Warnf("expected feature field to set `%s`", builtins.EditionDefaults.Name()).Apply(
 			report.Snippet(field.AST().Options()), mistake,
@@ -89,6 +90,7 @@ func buildFeatureInfo(field Member, r *report.Report) {
 			// We can't use eval() here because we would need to run the whole
 			// parser on the contents of the quoted string.
 			var bits rawValueBits
+
 			if value.IsZero() {
 				r.Warnf("missing value for `%s.%s`",
 					builtins.EditionDefaultsKey.Container().Name(),
@@ -98,6 +100,7 @@ func buildFeatureInfo(field Member, r *report.Report) {
 				)
 			} else {
 				text, _ := value.AsString()
+
 				switch {
 				case field.Element().IsEnum():
 					ev := field.Element().MemberByName(text)
@@ -112,6 +115,7 @@ func buildFeatureInfo(field Member, r *report.Report) {
 							mistake,
 						)
 					}
+
 					bits = rawValueBits(ev.Number())
 				case field.Element().Predeclared() == predeclared.Bool:
 					switch text {
@@ -140,6 +144,7 @@ func buildFeatureInfo(field Member, r *report.Report) {
 						report.Helpf("features should have `bool` or enum type"),
 						mistake,
 					)
+
 					continue
 				}
 			}
@@ -149,6 +154,7 @@ func buildFeatureInfo(field Member, r *report.Report) {
 			if !value.IsZero() {
 				copied = *value.Raw()
 			}
+
 			copied.field = field.toRef(field.Context())
 			copied.bits = bits
 			raw := field.Context().arenas.values.NewCompressed(copied)
@@ -194,6 +200,7 @@ func buildFeatureInfo(field Member, r *report.Report) {
 	} else {
 		value := support.Field(builtins.EditionSupportIntroduced)
 		n, _ := value.AsInt()
+
 		info.introduced = syntax.Syntax(n)
 		if value.IsZero() {
 			r.Warnf("expected `%s.%s` to be set",
@@ -215,6 +222,7 @@ func buildFeatureInfo(field Member, r *report.Report) {
 
 		value = support.Field(builtins.EditionSupportDeprecated)
 		n, _ = value.AsInt()
+
 		info.deprecated = syntax.Syntax(n)
 		if !value.IsZero() && info.deprecated == syntax.Unknown {
 			r.Warnf("unexpected `%s` in `%s`",
@@ -228,6 +236,7 @@ func buildFeatureInfo(field Member, r *report.Report) {
 
 		value = support.Field(builtins.EditionSupportRemoved)
 		n, _ = value.AsInt()
+
 		info.removed = syntax.Syntax(n)
 		if !value.IsZero() && info.removed == syntax.Unknown {
 			r.Warnf("unexpected `%s` in `%s`",
@@ -291,6 +300,7 @@ func validateAllFeatures(file *File, r *report.Report) {
 				parent:  ty.Raw().features,
 			}))
 		}
+
 		for oneof := range seq.Values(ty.Oneofs()) {
 			features := oneof.Options().Field(builtins.OneofFeatures)
 			validateFeatures(features.AsMessage(), r)
@@ -299,6 +309,7 @@ func validateAllFeatures(file *File, r *report.Report) {
 				parent:  ty.Raw().features,
 			}))
 		}
+
 		for extns := range seq.Values(ty.ExtensionRanges()) {
 			features := extns.Options().Field(builtins.RangeFeatures)
 			validateFeatures(features.AsMessage(), r)
@@ -308,6 +319,7 @@ func validateAllFeatures(file *File, r *report.Report) {
 			}))
 		}
 	}
+
 	for field := range seq.Values(file.AllExtensions()) {
 		parent := file.features
 		if !field.Parent().IsZero() {
@@ -321,6 +333,7 @@ func validateAllFeatures(file *File, r *report.Report) {
 			parent:  parent,
 		}))
 	}
+
 	for service := range seq.Values(file.Services()) {
 		features := service.Options().Field(builtins.ServiceFeatures)
 		validateFeatures(features.AsMessage(), r)
@@ -353,6 +366,7 @@ func validateFeatures(features MessageValue, r *report.Report) {
 	))
 
 	builtins := features.Context().builtins()
+
 	edition := features.Context().Syntax()
 	for feature := range features.Fields() {
 		if msg := feature.AsMessage(); !msg.IsZero() {
@@ -369,6 +383,7 @@ func validateFeatures(features MessageValue, r *report.Report) {
 					builtins.EditionSupport.Name(),
 				),
 			)
+
 			continue
 		}
 

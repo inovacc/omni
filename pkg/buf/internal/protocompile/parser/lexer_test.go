@@ -30,6 +30,7 @@ import (
 
 func TestLexer(t *testing.T) {
 	t.Parallel()
+
 	handler := reporter.NewHandler(nil)
 	l := newTestLexer(t, strings.NewReader(`
 	// comment
@@ -103,8 +104,11 @@ foo
 	
 	`), handler)
 
-	var prev ast.Node
-	var sym protoSymType
+	var (
+		prev ast.Node
+		sym  protoSymType
+	)
+
 	expected := []struct {
 		t          int
 		line, col  int
@@ -193,8 +197,12 @@ foo
 		if tok == 0 {
 			t.Fatalf("lexer reported EOF but should have returned %v", exp)
 		}
-		var n ast.Node
-		var val any
+
+		var (
+			n   ast.Node
+			val any
+		)
+
 		switch tok {
 		case _SYNTAX, _OPTION, _INT32, _SERVICE, _RPC, _MESSAGE, _NAME:
 			n = sym.id
@@ -214,29 +222,38 @@ foo
 			n = sym.b
 			val = nil
 		}
+
 		if !assert.Equal(t, exp.t, tok, "case %d: wrong token type (expecting %+v, got %+v)", i, exp.v, val) {
 			break
 		}
+
 		if !assert.Equal(t, exp.v, val, "case %d: wrong token value", i) {
 			break
 		}
+
 		nodeInfo := l.info.NodeInfo(n)
+
 		var prevNodeInfo ast.NodeInfo
 		if prev != nil {
 			prevNodeInfo = l.info.NodeInfo(prev)
 		}
+
 		assert.Equal(t, exp.line, nodeInfo.Start().Line, "case %d: wrong line number", i)
 		assert.Equal(t, exp.col, nodeInfo.Start().Col, "case %d: wrong column number (on line %d)", i, exp.line)
 		assert.Equal(t, exp.line, nodeInfo.End().Line, "case %d: wrong end line number", i)
 		assert.Equal(t, exp.col+exp.span, nodeInfo.End().Col, "case %d: wrong end column number", i)
+
 		actualTrailCount := 0
 		if prev != nil {
 			actualTrailCount = prevNodeInfo.TrailingComments().Len()
 		}
+
 		assert.Equal(t, exp.trailCount, actualTrailCount, "case %d: wrong number of trailing comments", i)
 		assert.Equal(t, len(exp.comments)-exp.trailCount, nodeInfo.LeadingComments().Len(), "case %d: wrong number of comments", i)
+
 		for ci := range exp.comments {
 			var c ast.Comment
+
 			if ci < exp.trailCount {
 				if assert.Less(t, ci, prevNodeInfo.TrailingComments().Len(), "missing comment") {
 					c = prevNodeInfo.TrailingComments().Index(ci)
@@ -250,29 +267,37 @@ foo
 					continue
 				}
 			}
+
 			assert.Equal(t, exp.comments[ci], c.RawText(), "case %d, comment #%d: unexpected text", i, ci+1)
 		}
+
 		prev = n
 	}
+
 	if tok := l.Lex(&sym); tok != 0 {
 		t.Fatalf("lexer reported symbol after what should have been EOF: %d", tok)
 	}
+
 	require.NoError(t, handler.Error())
 	// Now we check final state of lexer for unattached comments and final whitespace
 	// One of the final comments get associated as trailing comment for final token
 	prevNodeInfo := l.info.NodeInfo(prev)
 	assert.Equal(t, 1, prevNodeInfo.TrailingComments().Len(), "last token: wrong number of trailing comments")
+
 	eofNodeInfo := l.info.TokenInfo(l.eof)
+
 	finalComments := eofNodeInfo.LeadingComments()
 	if assert.Equal(t, 2, finalComments.Len(), "wrong number of final remaining comments") {
 		assert.Equal(t, "// comment attached to no tokens (upcoming token is EOF!)", finalComments.Index(0).RawText(), "incorrect final comment text")
 		assert.Equal(t, "/* another comment followed by some final whitespace*/", finalComments.Index(1).RawText(), "incorrect final comment text")
 	}
+
 	assert.Equal(t, "\n\n\t\n\t", eofNodeInfo.LeadingWhitespace(), "incorrect final whitespace")
 }
 
 func TestLexerErrors(t *testing.T) {
 	t.Parallel()
+
 	testCases := map[string]struct {
 		input       string
 		expectedErr string
@@ -425,9 +450,12 @@ func TestLexerErrors(t *testing.T) {
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
+
 			handler := reporter.NewHandler(nil)
 			l := newTestLexer(t, strings.NewReader(tc.input), handler)
+
 			var sym protoSymType
+
 			tok := l.Lex(&sym)
 			if assert.Equal(t, _ERROR, tok) {
 				require.ErrorContains(t, sym.err, tc.expectedErr, "expected message to contain %q but does not: %q", tc.expectedErr, sym.err.Error())
@@ -438,6 +466,7 @@ func TestLexerErrors(t *testing.T) {
 
 func TestStringLiteralMultipleErrors(t *testing.T) {
 	t.Parallel()
+
 	testCases := map[string]struct {
 		input        string
 		expectedErrs []string
@@ -476,7 +505,9 @@ func TestStringLiteralMultipleErrors(t *testing.T) {
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
+
 			var errors []reporter.ErrorWithPos
+
 			handler := reporter.NewHandler(reporter.NewReporter(
 				func(err reporter.ErrorWithPos) error {
 					errors = append(errors, err)
@@ -486,11 +517,14 @@ func TestStringLiteralMultipleErrors(t *testing.T) {
 			))
 			// add an extra integer literal *after* the bad string literal, to make sure we can tokenize it
 			l := newTestLexer(t, strings.NewReader(tc.input+" 0"), handler)
+
 			var sym protoSymType
+
 			tok := l.Lex(&sym)
 			require.Equal(t, _ERROR, tok)
 			require.Equal(t, len(tc.expectedErrs), len(errors))
 			require.Equal(t, errors[len(errors)-1], sym.err) // returned err in symbol should be last error
+
 			for i := range tc.expectedErrs {
 				assert.Equal(t, tc.expectedErrs[i], errors[i].Error(), "error#%d", i+1)
 			}
@@ -505,6 +539,7 @@ func TestStringLiteralMultipleErrors(t *testing.T) {
 func newTestLexer(t *testing.T, in io.Reader, h *reporter.Handler) *protoLex {
 	lexer, err := newLexer(in, "test.proto", h)
 	require.NoError(t, err)
+
 	return lexer
 }
 
@@ -530,7 +565,9 @@ func TestUTF8(t *testing.T) {
 	for _, tc := range testCases {
 		handler := reporter.NewHandler(nil)
 		l := newTestLexer(t, strings.NewReader(tc.data), handler)
+
 		var sym protoSymType
+
 		tok := l.Lex(&sym)
 		if !tc.succeeds {
 			assert.Equal(t, _ERROR, tok, "lexer should return error for %v", tc.data)
@@ -542,6 +579,7 @@ func TestUTF8(t *testing.T) {
 
 func TestCompactOptionsLeadingComments(t *testing.T) {
 	t.Parallel()
+
 	contents := `
 syntax = "proto2";
 
@@ -586,6 +624,7 @@ message Foo {
 						// The leading comments will be attached to the '(', if one exists.
 						info = fileNode.NodeInfo(fieldReferenceNode.Open)
 					}
+
 					name := stringForFieldReference(fieldReferenceNode)
 					if assert.Equal(t, 1, info.LeadingComments().Len(), "%s should have a leading comment", name) {
 						assert.Equal(
@@ -594,12 +633,14 @@ message Foo {
 							info.LeadingComments().Index(0).RawText(),
 						)
 					}
+
 					return nil
 				},
 				DoVisitFieldNode: func(fieldNode *ast.FieldNode) error {
 					// The fields in these tests always define a label,
 					// so we can confidently use it to retrieve the comments.
 					info := fileNode.NodeInfo(fieldNode.Label)
+
 					name := fieldNode.Name.Val
 					if assert.Equal(t, 1, info.LeadingComments().Len(), "%s should have a leading comment", name) {
 						assert.Equal(
@@ -608,6 +649,7 @@ message Foo {
 							info.LeadingComments().Index(0).RawText(),
 						)
 					}
+
 					return nil
 				},
 			},
@@ -622,9 +664,11 @@ func stringForFieldReference(fieldReference *ast.FieldReferenceNode) string {
 	if fieldReference.Open != nil {
 		result += "("
 	}
+
 	result += string(fieldReference.Name.AsIdentifier())
 	if fieldReference.Close != nil {
 		result += ")"
 	}
+
 	return result
 }

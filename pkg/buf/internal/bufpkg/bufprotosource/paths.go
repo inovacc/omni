@@ -45,6 +45,7 @@ func getMessagePath(topLevelMessageIndex int, nestedMessageIndexes ...int) []int
 	for _, nestedMessageIndex := range nestedMessageIndexes {
 		path = append(path, 3, int32(nestedMessageIndex))
 	}
+
 	return path
 }
 
@@ -192,10 +193,12 @@ func getEnumPath(enumIndex int, nestedMessageIndexes ...int) []int32 {
 	if len(nestedMessageIndexes) == 0 {
 		return []int32{5, int32(enumIndex)}
 	}
+
 	path := []int32{4, int32(nestedMessageIndexes[0])}
 	for _, nestedMessageIndex := range nestedMessageIndexes[1:] {
 		path = append(path, 3, int32(nestedMessageIndex))
 	}
+
 	return append(path, 4, int32(enumIndex))
 }
 

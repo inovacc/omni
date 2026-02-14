@@ -30,6 +30,10 @@ func RunInfo(w io.Writer, args []string, opts Options) error {
 		clientOpts = append(clientOpts, video.WithVerbose())
 	}
 
+	if opts.CookiesFromBrowser {
+		clientOpts = append(clientOpts, video.WithCookiesFromBrowser())
+	}
+
 	client, err := video.New(clientOpts...)
 	if err != nil {
 		return fmt.Errorf("video info: %w", err)

@@ -46,6 +46,7 @@ func (w *writeObjectCloser) Write(p []byte) (int, error) {
 	if w.closed {
 		return 0, storage.ErrClosed
 	}
+
 	return w.buffer.Write(p)
 }
 
@@ -53,7 +54,9 @@ func (w *writeObjectCloser) SetExternalPath(externalPath string) error {
 	if w.externalPath != "" {
 		return fmt.Errorf("external path already set: %q", w.externalPath)
 	}
+
 	w.externalPath = externalPath
+
 	return nil
 }
 
@@ -61,7 +64,9 @@ func (w *writeObjectCloser) SetLocalPath(localPath string) error {
 	if w.localPath != "" {
 		return fmt.Errorf("local path already set: %q", w.localPath)
 	}
+
 	w.localPath = localPath
+
 	return nil
 }
 
@@ -69,6 +74,7 @@ func (w *writeObjectCloser) Close() error {
 	if w.closed {
 		return storage.ErrClosed
 	}
+
 	w.closed = true
 	// overwrites anything existing
 	// this is the same behavior as storageos
@@ -83,5 +89,6 @@ func (w *writeObjectCloser) Close() error {
 		w.localPath,
 		w.buffer.Bytes(),
 	)
+
 	return nil
 }

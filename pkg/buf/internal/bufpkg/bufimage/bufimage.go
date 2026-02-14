@@ -96,6 +96,7 @@ func AppendWellKnownTypeImageFileInfos(
 	if err != nil {
 		return nil, err
 	}
+
 	return appendWellKnownTypeImageFileInfos(ctx, wktBucket, imageFileInfos, pathToImageFileInfo)
 }
 
@@ -125,33 +126,40 @@ func ImageFileInfosWithOnlyTargetsAndTargetImports(
 	if err != nil {
 		return nil, err
 	}
+
 	imageFileInfos, err = appendWellKnownTypeImageFileInfos(ctx, wktBucket, imageFileInfos, pathToImageFileInfo)
 	if err != nil {
 		return nil, err
 	}
+
 	resultPaths := make(map[string]struct{}, len(imageFileInfos))
 	for _, imageFileInfo := range imageFileInfos {
 		if imageFileInfo.IsImport() {
 			continue
 		}
+
 		if err := imageFileInfosWithOnlyTargetsAndTargetImportsRec(imageFileInfo, pathToImageFileInfo, resultPaths); err != nil {
 			return nil, err
 		}
 	}
+
 	resultImageFileInfos := make([]ImageFileInfo, 0, len(resultPaths))
 	for resultPath := range resultPaths {
 		imageFileInfo, ok := pathToImageFileInfo[resultPath]
 		if !ok {
 			return nil, fmt.Errorf("no ImageFileInfo for path %q", resultPath)
 		}
+
 		resultImageFileInfos = append(resultImageFileInfos, imageFileInfo)
 	}
+
 	sort.Slice(
 		resultImageFileInfos,
 		func(i int, j int) bool {
 			return resultImageFileInfos[i].Path() < resultImageFileInfos[j].Path()
 		},
 	)
+
 	return resultImageFileInfos, nil
 }
 
@@ -279,6 +287,7 @@ func BuildImage(
 	for _, option := range options {
 		option(buildImageOptions)
 	}
+
 	return buildImage(
 		ctx,
 		logger,
@@ -312,14 +321,17 @@ func WithNoParallelism() BuildImageOption {
 // CloneImage returns a deep copy of the given image.
 func CloneImage(image Image) (Image, error) {
 	originalFiles := image.Files()
+
 	imageFiles := make([]ImageFile, len(originalFiles))
 	for i, originalFile := range originalFiles {
 		clonedFile, err := CloneImageFile(originalFile)
 		if err != nil {
 			return nil, err
 		}
+
 		imageFiles[i] = clonedFile
 	}
+
 	return NewImage(imageFiles)
 }
 
@@ -353,6 +365,7 @@ func NewImageForProto(protoImage *imagev1.Image, options ...NewImageForProtoOpti
 	for _, option := range options {
 		option(&newImageOptions)
 	}
+
 	if newImageOptions.noReparse && newImageOptions.computeUnusedImports {
 		return nil, fmt.Errorf("cannot use both WithNoReparse and WithComputeUnusedImports options; they are mutually exclusive")
 	}
@@ -364,20 +377,26 @@ func NewImageForProto(protoImage *imagev1.Image, options ...NewImageForProtoOpti
 			return nil, err
 		}
 	}
+
 	if err := validateProtoImage(protoImage); err != nil {
 		return nil, err
 	}
+
 	imageFiles := make([]ImageFile, len(protoImage.GetFile()))
 	for i, protoImageFile := range protoImage.GetFile() {
-		var isImport bool
-		var isSyntaxUnspecified bool
-		var unusedDependencyIndexes []int32
-		var moduleFullName bufparse.FullName
-		var commitID uuid.UUID
-		var err error
+		var (
+			isImport                bool
+			isSyntaxUnspecified     bool
+			unusedDependencyIndexes []int32
+			moduleFullName          bufparse.FullName
+			commitID                uuid.UUID
+			err                     error
+		)
+
 		if protoImageFileExtension := protoImageFile.GetBufExtension(); protoImageFileExtension != nil {
 			isImport = protoImageFileExtension.GetIsImport()
 			isSyntaxUnspecified = protoImageFileExtension.GetIsSyntaxUnspecified()
+
 			unusedDependencyIndexes = protoImageFileExtension.GetUnusedDependency()
 			if protoModuleInfo := protoImageFileExtension.GetModuleInfo(); protoModuleInfo != nil {
 				if protoModuleName := protoModuleInfo.GetName(); protoModuleName != nil {
@@ -399,6 +418,7 @@ func NewImageForProto(protoImage *imagev1.Image, options ...NewImageForProtoOpti
 				}
 			}
 		}
+
 		imageFile, err := NewImageFile(
 			protoImageFile,
 			moduleFullName,
@@ -412,8 +432,10 @@ func NewImageForProto(protoImage *imagev1.Image, options ...NewImageForProtoOpti
 		if err != nil {
 			return nil, err
 		}
+
 		imageFiles[i] = imageFile
 	}
+
 	return newImage(imageFiles, false, resolver)
 }
 
@@ -428,6 +450,7 @@ func NewImageForCodeGeneratorRequest(request *pluginpb.CodeGeneratorRequest, opt
 		// we cannot determine if the syntax was unset
 		protoImageFiles[i] = fileDescriptorProtoToProtoImageFile(fileDescriptorProto, false, false, nil, nil, "")
 	}
+
 	image, err := NewImageForProto(
 		imagev1.Image_builder{
 			File: protoImageFiles,
@@ -437,6 +460,7 @@ func NewImageForCodeGeneratorRequest(request *pluginpb.CodeGeneratorRequest, opt
 	if err != nil {
 		return nil, err
 	}
+
 	return ImageWithOnlyPaths(
 		image,
 		request.GetFileToGenerate(),
@@ -474,12 +498,14 @@ func WithUnusedImportsComputation() NewImageForProtoOption {
 // The backing Files are not copied.
 func ImageWithoutImports(image Image) Image {
 	imageFiles := image.Files()
+
 	newImageFiles := make([]ImageFile, 0, len(imageFiles))
 	for _, imageFile := range imageFiles {
 		if !imageFile.IsImport() {
 			newImageFiles = append(newImageFiles, imageFile)
 		}
 	}
+
 	return newImageNoValidate(newImageFiles, image.Resolver())
 }
 
@@ -521,19 +547,23 @@ func ImageWithOnlyPathsAllowNotExist(
 // files in that directory.
 func ImageByDir(image Image) ([]Image, error) {
 	imageFiles := image.Files()
+
 	paths := make([]string, 0, len(imageFiles))
 	for _, imageFile := range imageFiles {
 		if !imageFile.IsImport() {
 			paths = append(paths, imageFile.Path())
 		}
 	}
+
 	dirToPaths := normalpath.ByDir(paths...)
 	// we need this to produce a deterministic order of the returned Images
 	dirs := make([]string, 0, len(dirToPaths))
 	for dir := range dirToPaths {
 		dirs = append(dirs, dir)
 	}
+
 	sort.Strings(dirs)
+
 	newImages := make([]Image, 0, len(dirToPaths))
 	for _, dir := range dirs {
 		paths, ok := dirToPaths[dir]
@@ -541,18 +571,22 @@ func ImageByDir(image Image) ([]Image, error) {
 			// this should never happen
 			return nil, fmt.Errorf("no dir for %q in dirToPaths", dir)
 		}
+
 		newImage, err := ImageWithOnlyPaths(image, paths, nil)
 		if err != nil {
 			return nil, err
 		}
+
 		newImages = append(newImages, newImage)
 	}
+
 	return newImages, nil
 }
 
 // ImageToProtoImage returns a new ProtoImage for the Image.
 func ImageToProtoImage(image Image) (*imagev1.Image, error) {
 	imageFiles := image.Files()
+
 	protoImage := imagev1.Image_builder{
 		File: make([]*imagev1.ImageFile, len(imageFiles)),
 	}.Build()
@@ -561,8 +595,10 @@ func ImageToProtoImage(image Image) (*imagev1.Image, error) {
 		if err != nil {
 			return nil, err
 		}
+
 		protoImage.GetFile()[i] = protoImageFile
 	}
+
 	return protoImage, nil
 }
 
@@ -629,6 +665,7 @@ func ImagesToCodeGeneratorRequests(
 	// a CodeGeneratorRequest via Image A, so do not add the duplicate to any other
 	// CodeGeneratorRequest.
 	var nonImportPaths map[string]struct{}
+
 	if includeImports {
 		// We don't need to track these if includeImports is false, so we only populate
 		// the maps if includeImports is true. If includeImports is false, only non-imports
@@ -638,6 +675,7 @@ func ImagesToCodeGeneratorRequests(
 		// imageToCodeGeneratorRequest checks if these maps are nil before every access.
 		alreadyUsedPaths = make(map[string]struct{})
 		nonImportPaths = make(map[string]struct{})
+
 		for _, image := range images {
 			for _, imageFile := range image.Files() {
 				if !imageFile.IsImport() {
@@ -646,8 +684,10 @@ func ImagesToCodeGeneratorRequests(
 			}
 		}
 	}
+
 	for i, image := range images {
 		var err error
+
 		requests[i], err = imageToCodeGeneratorRequest(
 			image,
 			parameter,
@@ -661,6 +701,7 @@ func ImagesToCodeGeneratorRequests(
 			return nil, err
 		}
 	}
+
 	return requests, nil
 }
 
@@ -673,6 +714,7 @@ func reparseImageProto(protoImage *imagev1.Image, resolver protoencoding2.Resolv
 	if err := protoencoding2.ReparseExtensions(resolver, protoImage.ProtoReflect()); err != nil {
 		return fmt.Errorf("could not reparse image: %v", err)
 	}
+
 	if computeUnusedImports {
 		tracker := &importTracker{
 			resolver: resolver,
@@ -686,30 +728,36 @@ func reparseImageProto(protoImage *imagev1.Image, resolver protoencoding2.Resolv
 				bufExt = &imagev1.ImageFileExtension{}
 				file.SetBufExtension(bufExt)
 			}
+
 			bufExt.SetUnusedDependency(nil) // reset
+
 			usedImports := tracker.used[file.GetName()]
 			for i, dep := range file.GetDependency() {
 				if _, ok := usedImports[dep]; !ok {
 					// it's fine if it's public
 					isPublic := false
+
 					for _, publicDepIndex := range file.GetPublicDependency() {
 						if i == int(publicDepIndex) {
 							isPublic = true
 							break
 						}
 					}
+
 					if !isPublic {
 						// This should never happen, however we do a bounds check to ensure that we are
 						// doing a safe conversion for the index.
 						if i > math.MaxInt32 || i < math.MinInt32 {
 							return fmt.Errorf("unused dependency index out-of-bounds for int32 conversion: %v", i)
 						}
+
 						bufExt.SetUnusedDependency(append(bufExt.GetUnusedDependency(), int32(i)))
 					}
 				}
 			}
 		}
 	}
+
 	return nil
 }
 
@@ -728,22 +776,27 @@ func appendWellKnownTypeImageFileInfos(
 	if err != nil {
 		return nil, err
 	}
+
 	wktPaths := xslices.Map(wktObjectInfos, storage2.ObjectInfo.Path)
 	if !slices.Equal(datawkt.AllFilePaths, wktPaths) {
 		return nil, syserror.Newf("wktBucket paths %s are not equal to datawkt.AllFilePaths %s", strings.Join(wktPaths, ","), strings.Join(datawkt.AllFilePaths, ","))
 	}
+
 	resultImageFileInfos := slices.Clone(imageFileInfos)
+
 	for _, wktObjectInfo := range wktObjectInfos {
 		if _, ok := pathToImageFileInfo[wktObjectInfo.Path()]; !ok {
 			fileImports, ok := datawkt.FileImports(wktObjectInfo.Path())
 			if !ok {
 				return nil, syserror.Newf("datawkt.FileImports returned false for wkt %s", wktObjectInfo.Path())
 			}
+
 			imageFileInfo := newWellKnownTypeImageFileInfo(wktObjectInfo, fileImports, true)
 			resultImageFileInfos = append(resultImageFileInfos, imageFileInfo)
 			pathToImageFileInfo[wktObjectInfo.Path()] = imageFileInfo
 		}
 	}
+
 	return resultImageFileInfos, nil
 }
 
@@ -756,19 +809,24 @@ func imageFileInfosWithOnlyTargetsAndTargetImportsRec(
 	if _, ok := resultPaths[path]; ok {
 		return nil
 	}
+
 	resultPaths[path] = struct{}{}
+
 	imports, err := imageFileInfo.Imports()
 	if err != nil {
 		return err
 	}
+
 	for _, imp := range imports {
 		importImageFileInfo, ok := pathToImageFileInfo[imp]
 		if !ok {
 			return fmt.Errorf("%s: import %q: %w", imageFileInfo.ExternalPath(), imp, fs.ErrNotExist)
 		}
+
 		if err := imageFileInfosWithOnlyTargetsAndTargetImportsRec(importImageFileInfo, pathToImageFileInfo, resultPaths); err != nil {
 			return err
 		}
 	}
+
 	return nil
 }

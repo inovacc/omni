@@ -86,6 +86,7 @@ func newImageIndexForImage(image bufimage.Image, options *imageFilterOptions) (*
 	if options.includeCustomOptions {
 		index.NameToOptions = make(map[protoreflect.FullName]map[int32]*descriptorpb.FieldDescriptorProto)
 	}
+
 	if options.includeKnownExtensions {
 		index.NameToExtensions = make(map[protoreflect.FullName][]*descriptorpb.FieldDescriptorProto)
 	}
@@ -101,14 +102,17 @@ func newImageIndexForImage(image bufimage.Image, options *imageFilterOptions) (*
 			element:  fileDescriptorProto,
 			parent:   nil,
 		}
+
 		err := walk.DescriptorProtos(fileDescriptorProto, func(name protoreflect.FullName, msg proto.Message) error {
 			if _, existing := index.ByName[name]; existing {
 				return fmt.Errorf("duplicate for %q", name)
 			}
+
 			descriptor, ok := msg.(namedDescriptor)
 			if !ok {
 				return fmt.Errorf("unexpected descriptor type %T", msg)
 			}
+
 			var parent namedDescriptor = fileDescriptorProto
 			if pos := strings.LastIndexByte(string(name), '.'); pos != -1 {
 				parent = index.ByName[name[:pos]].element
@@ -129,13 +133,16 @@ func newImageIndexForImage(image bufimage.Image, options *imageFilterOptions) (*
 				if d.Extendee == nil {
 					return nil
 				}
+
 				extendeeName := protoreflect.FullName(strings.TrimPrefix(d.GetExtendee(), "."))
 				if options.includeCustomOptions && isOptionsTypeName(extendeeName) {
 					if _, ok := index.NameToOptions[extendeeName]; !ok {
 						index.NameToOptions[extendeeName] = make(map[int32]*descriptorpb.FieldDescriptorProto)
 					}
+
 					index.NameToOptions[extendeeName][d.GetNumber()] = d
 				}
+
 				if options.includeKnownExtensions {
 					index.NameToExtensions[extendeeName] = append(index.NameToExtensions[extendeeName], d)
 				}
@@ -157,6 +164,7 @@ func newImageIndexForImage(image bufimage.Image, options *imageFilterOptions) (*
 			return nil, err
 		}
 	}
+
 	return index, nil
 }
 
@@ -165,19 +173,24 @@ func addPackageToIndex(pkgName string, index *imageIndex) *packageInfo {
 	if pkg != nil {
 		return pkg
 	}
+
 	pkg = &packageInfo{
 		fullName: protoreflect.FullName(pkgName),
 	}
+
 	index.Packages[pkgName] = pkg
 	if pkgName == "" {
 		return pkg
 	}
+
 	var parentPkgName string
 	if pos := strings.LastIndexByte(pkgName, '.'); pos != -1 {
 		parentPkgName = pkgName[:pos]
 	}
+
 	parentPkg := addPackageToIndex(parentPkgName, index)
 	parentPkg.subPackages = append(parentPkg.subPackages, pkg)
+
 	return pkg
 }
 

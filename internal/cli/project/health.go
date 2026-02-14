@@ -63,10 +63,7 @@ func computeHealth(dir string, report *ProjectReport) *HealthReport {
 	health.addCheck(".editorconfig", 5, docs.HasEditorconfig, "")
 
 	// 12. Build automation (5 points)
-	hasBuild := false
-	if len(report.BuildTools) > 0 {
-		hasBuild = true
-	}
+	hasBuild := len(report.BuildTools) > 0
 
 	health.addCheck("Build automation", 5, hasBuild, "")
 

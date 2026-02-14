@@ -37,6 +37,7 @@ import (
 
 func TestModifyImage(t *testing.T) {
 	t.Parallel()
+
 	testcases := []struct {
 		description               string
 		dirPathToFullName         map[string]string
@@ -159,6 +160,7 @@ func TestModifyImage(t *testing.T) {
 					testcase.config,
 				)
 				require.NoError(t, err)
+
 				for filePath, expectedOptions := range testcase.filePathToExpectedOptions {
 					imageFile := image.GetFile(filePath)
 					require.NotNil(t, imageFile)
@@ -177,6 +179,7 @@ func TestModifyImageFile(
 	t *testing.T,
 ) {
 	t.Parallel()
+
 	testcases := []struct {
 		description                           string
 		dirPathToFullName                     map[string]string
@@ -641,6 +644,7 @@ func TestModifyImageFile(
 // TODO FUTURE: add default values
 func TestGetStringOverrideFromConfig(t *testing.T) {
 	t.Parallel()
+
 	testcases := []struct {
 		description            string
 		config                 bufconfig2.GenerateManagedConfig
@@ -801,6 +805,7 @@ func TestGetStringOverrideFromConfig(t *testing.T) {
 	for _, testcase := range testcases {
 		t.Run(testcase.description, func(t *testing.T) {
 			t.Parallel()
+
 			override, err := stringOverrideFromConfig(
 				testcase.imageFile,
 				testcase.config,
@@ -816,7 +821,7 @@ func TestGetStringOverrideFromConfig(t *testing.T) {
 }
 
 // TODO FUTURE in v2
-//func TestModifyFieldOption(t *testing.T) {
+// func TestModifyFieldOption(t *testing.T) {
 //t.Parallel()
 //}
 
@@ -827,6 +832,7 @@ func testGetImageFile(
 ) bufimage.ImageFile {
 	parsedFullName, err := bufparse.ParseFullName(moduleFullName)
 	require.NoError(t, err)
+
 	return bufimagetesting.NewImageFile(
 		t,
 		&descriptorpb.FileDescriptorProto{
@@ -858,12 +864,15 @@ func testGetImageFromDirs(
 			},
 		)
 	}
+
 	moduleSet, err := bufmoduletesting.NewModuleSet(moduleDatas...)
 	require.NoError(t, err)
+
 	var options []bufimage.BuildImageOption
 	if !includeSourceInfo {
 		options = []bufimage.BuildImageOption{bufimage.WithExcludeSourceCodeInfo()}
 	}
+
 	image, err := bufimage.BuildImage(
 		context.Background(),
 		slogtestext.NewLogger(t),
@@ -871,6 +880,7 @@ func testGetImageFromDirs(
 		options...,
 	)
 	require.NoError(t, err)
+
 	return image
 }
 
@@ -890,6 +900,7 @@ func newTestManagedDisableRule(
 		fieldOption,
 	)
 	require.NoError(t, err)
+
 	return disable
 }
 
@@ -907,5 +918,6 @@ func newTestFileOptionOverrideRule(
 		value,
 	)
 	require.NoError(t, err)
+
 	return fileOptionOverride
 }

@@ -35,10 +35,12 @@ func newMessageRef(
 	if err != nil {
 		return nil, err
 	}
+
 	useEnumNumbers, err := getTrueOrFalseForSingleRef(singleRef, useEnumNumbersKey)
 	if err != nil {
 		return nil, err
 	}
+
 	return &messageRef{
 		singleRef:       singleRef,
 		useProtoNames:   useProtoNames,
@@ -80,6 +82,7 @@ func getTrueOrFalseForSingleRef(singleRef internal2.SingleRef, key string) (bool
 	if !ok {
 		return false, nil
 	}
+
 	switch value {
 	case "true":
 		return true, nil

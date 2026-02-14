@@ -26,6 +26,7 @@ func newStderrContainer(writer io.Writer) *stderrContainer {
 	if writer == nil {
 		writer = io.Discard
 	}
+
 	return &stderrContainer{
 		writer: newLockedWriter(writer),
 	}

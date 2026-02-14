@@ -108,10 +108,12 @@ func (b *optionsConfigSpec) newOptionsConfig(ruleType check.RuleType) (*optionsC
 	if b.CommentIgnorePrefix != "" {
 		optionsSpec.CommentExcludes = []string{b.CommentIgnorePrefix}
 	}
+
 	options, err := optionsSpec.ToOptions()
 	if err != nil {
 		return nil, err
 	}
+
 	return &optionsConfig{
 		DefaultOptions:         options,
 		AllowCommentIgnores:    b.AllowCommentIgnores,

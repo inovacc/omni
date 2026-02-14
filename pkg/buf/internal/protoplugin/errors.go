@@ -35,6 +35,7 @@ func (a *unknownArgumentsError) Error() string {
 	if len(a.args) == 1 {
 		return "unknown argument: " + a.args[0]
 	}
+
 	return "unknown arguments: " + strings.Join(a.args, " ")
 }
 
@@ -65,6 +66,7 @@ func (u *unnormalizedCodeGeneratorResponseFileNameError) Error() string {
 	if u.isWarning {
 		warningMessage = ` Generation will continue without error here, but please raise an issue with the maintainer of the plugin and reference https://github.com/protocolbuffers/protobuf/blob/95e6c5b4746dd7474d540ce4fb375e3f79a086f8/src/google/protobuf/compiler/plugin.proto#L122`
 	}
+
 	return fmt.Sprintf(
 		`path %q is not equal to %q, and therefore does not conform to the Protobuf generation specification. The path must be non-empty, relative, use "/" instead of "\" as the path separator, and not use "." or ".." as part of the path.%s`,
 		u.name,
@@ -97,5 +99,6 @@ func (d *duplicateCodeGeneratorResponseFileNameError) Error() string {
 	if d.isWarning {
 		warningMessage = ` Generation will continue without error here and drop the second occurrence of this file, but please raise an issue with the maintainer of the plugin.`
 	}
+
 	return fmt.Sprintf("duplicate generated file name %q.%s", d.name, warningMessage)
 }

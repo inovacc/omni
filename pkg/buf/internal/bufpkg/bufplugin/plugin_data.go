@@ -80,20 +80,24 @@ func newPluginData(
 		if err != nil {
 			return err
 		}
+
 		bufcasDigest, err := bufcas.NewDigestForContent(
 			bytes.NewReader(pluginData),
 		)
 		if err != nil {
 			return err
 		}
+
 		actualDigest, err := NewDigest(DigestTypeP1, bufcasDigest)
 		if err != nil {
 			return err
 		}
+
 		expectedDigest, err := pluginKey.Digest()
 		if err != nil {
 			return err
 		}
+
 		if !DigestEqual(actualDigest, expectedDigest) {
 			return &DigestMismatchError{
 				FullName:       pluginKey.FullName(),
@@ -102,8 +106,10 @@ func newPluginData(
 				ActualDigest:   actualDigest,
 			}
 		}
+
 		return nil
 	})
+
 	return pluginData, nil
 }
 
@@ -115,6 +121,7 @@ func (p *pluginData) Data() ([]byte, error) {
 	if err := p.checkDigest(); err != nil {
 		return nil, err
 	}
+
 	return p.getData()
 }
 

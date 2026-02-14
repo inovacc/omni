@@ -82,10 +82,12 @@ func UniqueDigestTypeForPluginKeys(pluginKeys []PluginKey) (DigestType, error) {
 	if len(pluginKeys) == 0 {
 		return 0, syserror.New("empty pluginKeys passed to UniqueDigestTypeForPluginKeys")
 	}
+
 	digests, err := xslices.MapError(pluginKeys, PluginKey.Digest)
 	if err != nil {
 		return 0, err
 	}
+
 	digestType := digests[0].Type()
 	for _, digest := range digests[1:] {
 		if digestType != digest.Type() {
@@ -97,6 +99,7 @@ func UniqueDigestTypeForPluginKeys(pluginKeys []PluginKey) (DigestType, error) {
 			)
 		}
 	}
+
 	return digestType, nil
 }
 
@@ -117,9 +120,11 @@ func newPluginKey(
 	if pluginFullName == nil {
 		return nil, errors.New("nil FullName when constructing PluginKey")
 	}
+
 	if commitID == uuid.Nil {
 		return nil, errors.New("empty commitID when constructing PluginKey")
 	}
+
 	return &pluginKey{
 		pluginFullName: pluginFullName,
 		commitID:       commitID,

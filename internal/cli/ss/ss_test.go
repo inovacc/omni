@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"strings"
 	"testing"
+
+	"github.com/inovacc/omni/internal/cli/output"
 )
 
 func TestResolvePort(t *testing.T) {
@@ -131,18 +133,23 @@ func TestPrintSockets(t *testing.T) {
 
 	t.Run("with_headers", func(t *testing.T) {
 		var buf bytes.Buffer
+
 		opts := Options{Numeric: true}
+
 		err := printSockets(&buf, sockets, opts)
 		if err != nil {
 			t.Fatal(err)
 		}
+
 		output := buf.String()
 		if !strings.Contains(output, "Proto") {
 			t.Error("expected header with Proto")
 		}
+
 		if !strings.Contains(output, "LISTEN") {
 			t.Error("expected LISTEN state")
 		}
+
 		if !strings.Contains(output, "ESTABLISHED") {
 			t.Error("expected ESTABLISHED state")
 		}
@@ -150,11 +157,14 @@ func TestPrintSockets(t *testing.T) {
 
 	t.Run("no_headers", func(t *testing.T) {
 		var buf bytes.Buffer
+
 		opts := Options{NoHeaders: true, Numeric: true}
+
 		err := printSockets(&buf, sockets, opts)
 		if err != nil {
 			t.Fatal(err)
 		}
+
 		output := buf.String()
 		if strings.Contains(output, "Proto") {
 			t.Error("expected no header")
@@ -163,11 +173,14 @@ func TestPrintSockets(t *testing.T) {
 
 	t.Run("extended", func(t *testing.T) {
 		var buf bytes.Buffer
+
 		opts := Options{Extended: true, Numeric: true}
+
 		err := printSockets(&buf, sockets, opts)
 		if err != nil {
 			t.Fatal(err)
 		}
+
 		output := buf.String()
 		if !strings.Contains(output, "Recv-Q") {
 			t.Error("expected extended headers with Recv-Q")
@@ -179,12 +192,16 @@ func TestPrintSockets(t *testing.T) {
 			{Protocol: "TCP", State: "LISTEN", LocalAddr: "0.0.0.0", LocalPort: 80,
 				PID: 1234, ProcessName: "nginx"},
 		}
+
 		var buf bytes.Buffer
+
 		opts := Options{Processes: true, Numeric: true}
+
 		err := printSockets(&buf, procSockets, opts)
 		if err != nil {
 			t.Fatal(err)
 		}
+
 		output := buf.String()
 		if !strings.Contains(output, "nginx(1234)") {
 			t.Error("expected process info nginx(1234)")
@@ -194,6 +211,7 @@ func TestPrintSockets(t *testing.T) {
 
 func TestRun_Default(t *testing.T) {
 	var buf bytes.Buffer
+
 	err := Run(&buf, Options{All: true, Numeric: true})
 	if err != nil {
 		t.Fatal(err)
@@ -207,7 +225,8 @@ func TestRun_Default(t *testing.T) {
 
 func TestRun_JSON(t *testing.T) {
 	var buf bytes.Buffer
-	err := Run(&buf, Options{All: true, JSON: true})
+
+	err := Run(&buf, Options{All: true, OutputFormat: output.FormatJSON})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -220,10 +239,12 @@ func TestRun_JSON(t *testing.T) {
 
 func TestRun_Summary(t *testing.T) {
 	var buf bytes.Buffer
+
 	err := Run(&buf, Options{Summary: true})
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	output := buf.String()
 	if !strings.Contains(output, "Total:") {
 		t.Error("expected Total: in summary output")
@@ -232,10 +253,12 @@ func TestRun_Summary(t *testing.T) {
 
 func TestRun_SummaryJSON(t *testing.T) {
 	var buf bytes.Buffer
-	err := Run(&buf, Options{Summary: true, JSON: true})
+
+	err := Run(&buf, Options{Summary: true, OutputFormat: output.FormatJSON})
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	var summary Summary
 	if err := json.Unmarshal(buf.Bytes(), &summary); err != nil {
 		t.Errorf("expected valid JSON summary, got error: %v", err)
@@ -244,10 +267,12 @@ func TestRun_SummaryJSON(t *testing.T) {
 
 func TestRun_TCPOnly(t *testing.T) {
 	var buf bytes.Buffer
+
 	err := Run(&buf, Options{TCP: true, All: true, Numeric: true})
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	output := buf.String()
 	lines := strings.Split(strings.TrimSpace(output), "\n")
 	// Check only TCP entries (skip header)
@@ -260,16 +285,20 @@ func TestRun_TCPOnly(t *testing.T) {
 
 func TestRun_UDPOnly(t *testing.T) {
 	var buf bytes.Buffer
+
 	err := Run(&buf, Options{UDP: true, All: true, Numeric: true})
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	output := buf.String()
+
 	lines := strings.Split(strings.TrimSpace(output), "\n")
 	for _, line := range lines[1:] {
 		if line == "" {
 			continue
 		}
+
 		if !strings.HasPrefix(strings.TrimSpace(line), "UDP") {
 			t.Errorf("expected UDP protocol, got line: %s", line)
 		}
@@ -278,16 +307,20 @@ func TestRun_UDPOnly(t *testing.T) {
 
 func TestRun_Listening(t *testing.T) {
 	var buf bytes.Buffer
+
 	err := Run(&buf, Options{Listening: true, Numeric: true})
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	output := buf.String()
+
 	lines := strings.Split(strings.TrimSpace(output), "\n")
 	for _, line := range lines[1:] {
 		if line == "" {
 			continue
 		}
+
 		if !strings.Contains(line, "LISTEN") {
 			t.Errorf("expected only LISTEN state, got line: %s", line)
 		}
@@ -296,16 +329,20 @@ func TestRun_Listening(t *testing.T) {
 
 func TestRun_StateFilter(t *testing.T) {
 	var buf bytes.Buffer
+
 	err := Run(&buf, Options{All: true, State: "ESTABLISHED", Numeric: true})
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	output := buf.String()
+
 	lines := strings.Split(strings.TrimSpace(output), "\n")
 	for _, line := range lines[1:] {
 		if line == "" {
 			continue
 		}
+
 		if !strings.Contains(line, "ESTABLISHED") {
 			t.Errorf("expected only ESTABLISHED state, got line: %s", line)
 		}

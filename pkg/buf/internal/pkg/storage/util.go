@@ -34,9 +34,11 @@ func ReadPath(ctx context.Context, readBucket ReadBucket, path string) (_ []byte
 	if err != nil {
 		return nil, err
 	}
+
 	defer func() {
 		retErr = errors.Join(retErr, readObject.Close())
 	}()
+
 	return io.ReadAll(readObject)
 }
 
@@ -46,10 +48,13 @@ func PutPath(ctx context.Context, writeBucket WriteBucket, path string, data []b
 	if err != nil {
 		return err
 	}
+
 	defer func() {
 		retErr = errors.Join(retErr, writeObjectCloser.Close())
 	}()
+
 	_, err = writeObjectCloser.Write(data)
+
 	return err
 }
 
@@ -59,9 +64,11 @@ func ForReadObject(ctx context.Context, readBucket ReadBucket, path string, f fu
 	if err != nil {
 		return err
 	}
+
 	defer func() {
 		retErr = errors.Join(retErr, readObjectCloser.Close())
 	}()
+
 	return f(readObjectCloser)
 }
 
@@ -71,9 +78,11 @@ func ForWriteObject(ctx context.Context, writeBucket WriteBucket, path string, f
 	if err != nil {
 		return err
 	}
+
 	defer func() {
 		retErr = errors.Join(retErr, writeObjectCloser.Close())
 	}()
+
 	return f(writeObjectCloser)
 }
 
@@ -93,6 +102,7 @@ func WalkReadObjects(
 			if err != nil {
 				return err
 			}
+
 			return errors.Join(f(readObjectCloser), readObjectCloser.Close())
 		},
 	)
@@ -103,6 +113,7 @@ func WalkReadObjects(
 // The returned paths are sorted.
 func AllPaths(ctx context.Context, readBucket ReadBucket, prefix string) ([]string, error) {
 	var allPaths []string
+
 	if err := readBucket.Walk(
 		ctx,
 		prefix,
@@ -113,7 +124,9 @@ func AllPaths(ctx context.Context, readBucket ReadBucket, prefix string) ([]stri
 	); err != nil {
 		return nil, err
 	}
+
 	sort.Strings(allPaths)
+
 	return allPaths, nil
 }
 
@@ -122,6 +135,7 @@ func AllPaths(ctx context.Context, readBucket ReadBucket, prefix string) ([]stri
 // The returned ObjectInfos are sorted by path.
 func AllObjectInfos(ctx context.Context, readBucket ReadBucket, prefix string) ([]ObjectInfo, error) {
 	var allObjectInfos []ObjectInfo
+
 	if err := readBucket.Walk(
 		ctx,
 		prefix,
@@ -132,12 +146,14 @@ func AllObjectInfos(ctx context.Context, readBucket ReadBucket, prefix string) (
 	); err != nil {
 		return nil, err
 	}
+
 	sort.Slice(
 		allObjectInfos,
 		func(i int, j int) bool {
 			return allObjectInfos[i].Path() < allObjectInfos[j].Path()
 		},
 	)
+
 	return allObjectInfos, nil
 }
 
@@ -148,8 +164,10 @@ func Exists(ctx context.Context, readBucket ReadBucket, path string) (bool, erro
 		if IsNotExist(err) {
 			return false, nil
 		}
+
 		return false, err
 	}
+
 	return true, nil
 }
 
@@ -167,14 +185,17 @@ func IsEmpty(ctx context.Context, readBucket ReadBucket, prefix string) (bool, e
 		if errors.Is(err, errIsNotEmpty) {
 			return false, nil
 		}
+
 		return false, err
 	}
+
 	return true, nil
 }
 
 // allObjectInfos walks the bucket and gets all the ObjectInfos.
 func allObjectInfos(ctx context.Context, readBucket ReadBucket, prefix string) ([]ObjectInfo, error) {
 	var allObjectInfos []ObjectInfo
+
 	if err := readBucket.Walk(
 		ctx,
 		prefix,
@@ -185,6 +206,7 @@ func allObjectInfos(ctx context.Context, readBucket ReadBucket, prefix string) (
 	); err != nil {
 		return nil, err
 	}
+
 	return allObjectInfos, nil
 }
 
@@ -193,6 +215,7 @@ func pathToObjectInfo(objectInfos []ObjectInfo) map[string]ObjectInfo {
 	for _, objectInfo := range objectInfos {
 		m[objectInfo.Path()] = objectInfo
 	}
+
 	return m
 }
 
@@ -213,6 +236,7 @@ type compositeReadObjectCloser struct {
 type compositeReadWriteBucketCloser struct {
 	ReadBucket
 	WriteBucket
+
 	closeFunc func() error
 }
 
@@ -220,5 +244,6 @@ func (c compositeReadWriteBucketCloser) Close() error {
 	if c.closeFunc != nil {
 		return c.closeFunc()
 	}
+
 	return nil
 }

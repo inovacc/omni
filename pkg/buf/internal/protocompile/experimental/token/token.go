@@ -71,6 +71,7 @@ func (t Token) IsLeaf() bool {
 	if impl := t.nat(); impl != nil {
 		return impl.IsLeaf()
 	}
+
 	return t.synth().IsLeaf()
 }
 
@@ -91,6 +92,7 @@ func (t Token) Kind() Kind {
 	if impl := t.nat(); impl != nil {
 		return impl.Kind()
 	}
+
 	return t.synth().kind
 }
 
@@ -130,9 +132,9 @@ func (t Token) Text() string {
 		if synth.kind == String {
 			// If this is a string, we need to add quotes and escape it.
 			// This can be done on-demand.
-
 			var escaped strings.Builder
 			escaped.WriteRune('"')
+
 			for _, r := range synth.text {
 				switch {
 				case r == '\n':
@@ -165,7 +167,9 @@ func (t Token) Text() string {
 					fmt.Fprintf(&escaped, "\\U%08x", r)
 				}
 			}
+
 			escaped.WriteRune('"')
+
 			return escaped.String()
 		}
 
@@ -173,6 +177,7 @@ func (t Token) Text() string {
 	}
 
 	start, end := t.offsets()
+
 	return t.Context().Text()[start:end]
 }
 
@@ -198,6 +203,7 @@ func (t Token) Span() source.Span {
 	}
 
 	var a, b int
+
 	if !t.IsLeaf() {
 		start, end := t.StartEnd()
 		a, _ = start.offsets()
@@ -260,6 +266,7 @@ func (t Token) StartEnd() (start, end Token) {
 func (t Token) Next() Token {
 	c := NewCursorAt(t)
 	_ = c.Next()
+
 	return c.Next()
 }
 
@@ -279,6 +286,7 @@ func Fuse(open, close Token) { //nolint:predeclared,revive // For close.
 	if open.Context() != close.Context() {
 		panic("protocompile/token: attempted to fuse tokens from different streams")
 	}
+
 	if open.Context().frozen {
 		panic("protocompile/token: attempted to mutate frozen stream")
 	}
@@ -287,6 +295,7 @@ func Fuse(open, close Token) { //nolint:predeclared,revive // For close.
 	if impl1 == nil {
 		panic("protocompile/token: called FuseTokens() with a synthetic open token")
 	}
+
 	if !impl1.IsLeaf() {
 		panic("protocompile/token: called FuseTokens() with non-leaf as the open token")
 	}
@@ -295,6 +304,7 @@ func Fuse(open, close Token) { //nolint:predeclared,revive // For close.
 	if impl2 == nil {
 		panic("protocompile/token: called FuseTokens() with a synthetic close token")
 	}
+
 	if !impl2.IsLeaf() {
 		panic("protocompile/token: called FuseTokens() with non-leaf as the close token")
 	}
@@ -312,6 +322,7 @@ func (t Token) Children() *Cursor {
 
 	if impl := t.nat(); impl != nil {
 		start, _ := t.StartEnd()
+
 		return &Cursor{
 			context: t.Context(),
 			idx:     naturalIndex(start.ID()) + 1, // Skip the start!
@@ -322,6 +333,7 @@ func (t Token) Children() *Cursor {
 	if synth.IsClose() {
 		return id.Wrap(t.Context(), synth.otherEnd).Children()
 	}
+
 	return NewSliceCursor(t.Context(), synth.children)
 }
 
@@ -334,9 +346,11 @@ func (t Token) SyntheticChildren(i, j int) *Cursor {
 	if synth == nil {
 		panic("protocompile/token: called SyntheticChildren() on non-synthetic token")
 	}
+
 	if synth.IsClose() {
 		return id.Wrap(t.Context(), synth.otherEnd).SyntheticChildren(i, j)
 	}
+
 	return NewSliceCursor(t.Context(), synth.children[i:j])
 }
 
@@ -351,6 +365,7 @@ func (t Token) Name() string {
 	if t.Kind() != Ident {
 		return ""
 	}
+
 	return t.Text()
 }
 
@@ -359,6 +374,7 @@ func (t Token) AsNumber() NumberToken {
 	if t.Kind() != Number {
 		return NumberToken{}
 	}
+
 	return id.Wrap(t.Context(), id.ID[NumberToken](t.ID()))
 }
 
@@ -367,6 +383,7 @@ func (t Token) AsString() StringToken {
 	if t.Kind() != String {
 		return StringToken{}
 	}
+
 	return id.Wrap(t.Context(), id.ID[StringToken](t.ID()))
 }
 
@@ -376,6 +393,7 @@ func (t Token) String() string {
 		if t.IsSynthetic() {
 			return fmt.Sprintf("{%v %#v}", t.ID(), t.synth())
 		}
+
 		return fmt.Sprintf("{%v %#v}", t.ID(), t.nat())
 	}
 
@@ -399,6 +417,7 @@ func (t Token) offsets() (start, end int) {
 	}
 
 	prev := id.Wrap(t.Context(), t.ID()-1)
+
 	return int(prev.nat().end), end
 }
 
@@ -406,6 +425,7 @@ func (t Token) nat() *nat {
 	if t.IsSynthetic() {
 		return nil
 	}
+
 	return &t.Context().nats[naturalIndex(t.ID())]
 }
 
@@ -413,5 +433,6 @@ func (t Token) synth() *synth {
 	if !t.IsSynthetic() {
 		return nil
 	}
+
 	return &t.Context().synths[syntheticIndex(t.ID())]
 }

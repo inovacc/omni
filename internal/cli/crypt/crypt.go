@@ -45,6 +45,7 @@ func RunEncrypt(w io.Writer, args []string, opts CryptOptions) error {
 	if opts.Iterations > 0 {
 		cryptOpts = append(cryptOpts, cryptutil.WithIterations(opts.Iterations))
 	}
+
 	if opts.Base64 || opts.Armor {
 		cryptOpts = append(cryptOpts, cryptutil.WithBase64())
 	}
@@ -104,6 +105,7 @@ func RunDecrypt(w io.Writer, args []string, opts CryptOptions) error {
 	if opts.Iterations > 0 {
 		cryptOpts = append(cryptOpts, cryptutil.WithIterations(opts.Iterations))
 	}
+
 	if opts.Base64 || opts.Armor {
 		cryptOpts = append(cryptOpts, cryptutil.WithBase64())
 	}

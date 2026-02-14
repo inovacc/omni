@@ -13,10 +13,12 @@ import (
 func createBenchJSONFile(b *testing.B, content string) string {
 	b.Helper()
 	dir := b.TempDir()
+
 	path := filepath.Join(dir, "bench.json")
 	if err := os.WriteFile(path, []byte(content), 0644); err != nil {
 		b.Fatal(err)
 	}
+
 	return path
 }
 
@@ -26,7 +28,8 @@ func generateSmallJSONObj() string {
 
 func generateLargeJSONObj() string {
 	obj := make(map[string]any)
-	for i := 0; i < 500; i++ {
+
+	for i := range 500 {
 		key := fmt.Sprintf("field_%d", i)
 		obj[key] = map[string]any{
 			"id":      i,
@@ -37,29 +40,35 @@ func generateLargeJSONObj() string {
 			"enabled": i%2 == 0,
 		}
 	}
+
 	data, _ := json.Marshal(obj)
+
 	return string(data)
 }
 
 func generateDeepJSON(depth int) string {
 	var sb strings.Builder
-	for i := 0; i < depth; i++ {
+	for i := range depth {
 		_, _ = fmt.Fprintf(&sb, `{"level_%d":`, i)
 	}
+
 	sb.WriteString(`"leaf"`)
-	for i := 0; i < depth; i++ {
+
+	for range depth {
 		sb.WriteString("}")
 	}
+
 	return sb.String()
 }
 
 func BenchmarkBeautify_Small(b *testing.B) {
 	path := createBenchJSONFile(b, generateSmallJSONObj())
+
 	var buf bytes.Buffer
+
 	opts := Options{}
 
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		buf.Reset()
 		_ = RunJSONFmt(&buf, []string{path}, opts)
 	}
@@ -67,11 +76,12 @@ func BenchmarkBeautify_Small(b *testing.B) {
 
 func BenchmarkBeautify_Large(b *testing.B) {
 	path := createBenchJSONFile(b, generateLargeJSONObj())
+
 	var buf bytes.Buffer
+
 	opts := Options{}
 
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		buf.Reset()
 		_ = RunJSONFmt(&buf, []string{path}, opts)
 	}
@@ -81,11 +91,12 @@ func BenchmarkMinify_Small(b *testing.B) {
 	// Pre-beautify the JSON so minify has work to do
 	pretty, _ := json.MarshalIndent(json.RawMessage(generateSmallJSONObj()), "", "  ")
 	path := createBenchJSONFile(b, string(pretty))
+
 	var buf bytes.Buffer
+
 	opts := Options{Minify: true}
 
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		buf.Reset()
 		_ = RunJSONFmt(&buf, []string{path}, opts)
 	}
@@ -94,11 +105,12 @@ func BenchmarkMinify_Small(b *testing.B) {
 func BenchmarkMinify_Large(b *testing.B) {
 	pretty, _ := json.MarshalIndent(json.RawMessage(generateLargeJSONObj()), "", "  ")
 	path := createBenchJSONFile(b, string(pretty))
+
 	var buf bytes.Buffer
+
 	opts := Options{Minify: true}
 
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		buf.Reset()
 		_ = RunJSONFmt(&buf, []string{path}, opts)
 	}
@@ -106,11 +118,12 @@ func BenchmarkMinify_Large(b *testing.B) {
 
 func BenchmarkSortKeys_Large(b *testing.B) {
 	path := createBenchJSONFile(b, generateLargeJSONObj())
+
 	var buf bytes.Buffer
+
 	opts := Options{SortKeys: true}
 
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		buf.Reset()
 		_ = RunJSONFmt(&buf, []string{path}, opts)
 	}
@@ -118,11 +131,12 @@ func BenchmarkSortKeys_Large(b *testing.B) {
 
 func BenchmarkValidate_Small(b *testing.B) {
 	path := createBenchJSONFile(b, generateSmallJSONObj())
+
 	var buf bytes.Buffer
+
 	opts := Options{Validate: true}
 
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		buf.Reset()
 		_ = RunJSONFmt(&buf, []string{path}, opts)
 	}
@@ -130,11 +144,12 @@ func BenchmarkValidate_Small(b *testing.B) {
 
 func BenchmarkValidate_Large(b *testing.B) {
 	path := createBenchJSONFile(b, generateLargeJSONObj())
+
 	var buf bytes.Buffer
+
 	opts := Options{Validate: true}
 
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		buf.Reset()
 		_ = RunJSONFmt(&buf, []string{path}, opts)
 	}
@@ -142,11 +157,12 @@ func BenchmarkValidate_Large(b *testing.B) {
 
 func BenchmarkDeepNesting(b *testing.B) {
 	path := createBenchJSONFile(b, generateDeepJSON(50))
+
 	var buf bytes.Buffer
+
 	opts := Options{}
 
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		buf.Reset()
 		_ = RunJSONFmt(&buf, []string{path}, opts)
 	}

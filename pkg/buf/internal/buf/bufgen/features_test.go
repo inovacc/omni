@@ -171,6 +171,7 @@ func testCheckRequiredFeatures(
 	expectedErr string,
 ) {
 	t.Helper()
+
 	required := computeRequiredFeatures(image)
 	buffer := bytes.NewBuffer(nil)
 	logger := slog.New(slog.NewTextHandler(buffer, &slog.HandlerOptions{}))
@@ -191,11 +192,13 @@ func testCheckRequiredFeatures(
 			newMockPluginConfig("never_fails"),
 		},
 	)
+
 	if expectedStdErr != "" {
 		require.NotEmpty(t, buffer.String())
 	} else {
 		require.Empty(t, buffer.String())
 	}
+
 	if expectedErr != "" {
 		require.ErrorContains(t, err, expectedErr)
 	} else {
@@ -205,6 +208,7 @@ func testCheckRequiredFeatures(
 
 func makeImageNoRequiredFeatures(t *testing.T) bufimage.Image {
 	t.Helper()
+
 	testFile, err := bufimage.NewImageFile(
 		&descriptorpb.FileDescriptorProto{
 			Name:   proto.String("test.proto"),
@@ -228,6 +232,7 @@ func makeImageNoRequiredFeatures(t *testing.T) bufimage.Image {
 	importedFileProto3Optional := makeImageFileRequiresProto3Optional(t, "imported_proto3_optional.proto", true)
 	image, err := bufimage.NewImage([]bufimage.ImageFile{importedFileEditions, importedFileProto3Optional, testFile})
 	require.NoError(t, err)
+
 	return image
 }
 
@@ -236,6 +241,7 @@ func makeImageRequiresProto3Optional(t *testing.T) bufimage.Image {
 	proto3OptionalFile := makeImageFileRequiresProto3Optional(t, "proto3_optional.proto", false)
 	image, err := bufimage.NewImage([]bufimage.ImageFile{proto3OptionalFile})
 	require.NoError(t, err)
+
 	return image
 }
 
@@ -244,6 +250,7 @@ func makeImageRequiresEditions(t *testing.T) bufimage.Image {
 	editionsFile := makeImageFileRequiresEditions(t, "editions.proto", false)
 	image, err := bufimage.NewImage([]bufimage.ImageFile{editionsFile})
 	require.NoError(t, err)
+
 	return image
 }
 
@@ -253,11 +260,13 @@ func makeImageRequiresBoth(t *testing.T) bufimage.Image {
 	proto3OptionalFile := makeImageFileRequiresProto3Optional(t, "proto3_optional.proto", false)
 	image, err := bufimage.NewImage([]bufimage.ImageFile{editionsFile, proto3OptionalFile})
 	require.NoError(t, err)
+
 	return image
 }
 
 func makeImageFileRequiresProto3Optional(t *testing.T, name string, isImport bool) bufimage.ImageFile {
 	t.Helper()
+
 	imageFile, err := bufimage.NewImageFile(
 		&descriptorpb.FileDescriptorProto{
 			Syntax: proto.String("proto3"),
@@ -292,11 +301,13 @@ func makeImageFileRequiresProto3Optional(t *testing.T, name string, isImport boo
 		nil,
 	)
 	require.NoError(t, err)
+
 	return imageFile
 }
 
 func makeImageFileRequiresEditions(t *testing.T, name string, isImport bool) bufimage.ImageFile {
 	t.Helper()
+
 	imageFile, err := bufimage.NewImageFile(
 		&descriptorpb.FileDescriptorProto{
 			Syntax:  proto.String("editions"),
@@ -325,6 +336,7 @@ func makeImageFileRequiresEditions(t *testing.T, name string, isImport bool) buf
 		nil,
 	)
 	require.NoError(t, err)
+
 	return imageFile
 }
 

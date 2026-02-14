@@ -79,6 +79,7 @@ func newResponseWriter(
 	for _, option := range options {
 		option(responseWriterOptions)
 	}
+
 	return &responseWriter{
 		logger:                  logger,
 		storageosProvider:       storageosProvider,
@@ -106,8 +107,10 @@ func (w *responseWriter) AddResponse(
 	if err != nil {
 		return err
 	}
+
 	w.lock.Lock()
 	defer w.lock.Unlock()
+
 	return w.addResponse(
 		ctx,
 		response,
@@ -119,6 +122,7 @@ func (w *responseWriter) AddResponse(
 func (w *responseWriter) Close() error {
 	w.lock.Lock()
 	defer w.lock.Unlock()
+
 	for _, closeFunc := range w.closers {
 		if err := closeFunc(); err != nil {
 			// Although unlikely, if an error happens here,
@@ -133,6 +137,7 @@ func (w *responseWriter) Close() error {
 	// Re-initialize the cached values to be safe.
 	w.readWriteBuckets = make(map[string]storage2.ReadWriteBucket)
 	w.closers = nil
+
 	return nil
 }
 
@@ -188,6 +193,7 @@ func (w *responseWriter) writeZip(
 		); err != nil {
 			return err
 		}
+
 		return nil
 	}
 	// OK to use os.Stat instead of os.Lstat here.
@@ -202,16 +208,19 @@ func (w *responseWriter) writeZip(
 				return err
 			}
 		}
+
 		return err
 	} else if !fileInfo.IsDir() {
 		return fmt.Errorf("not a directory: %s", outDirPath)
 	}
+
 	readWriteBucket := storagemem.NewReadWriteBucket()
 	if includeManifest {
 		if err := storage2.PutPath(ctx, readWriteBucket, manifestPath, manifestContent); err != nil {
 			return err
 		}
 	}
+
 	if err := w.responseWriter.WriteResponse(
 		ctx,
 		readWriteBucket,
@@ -230,12 +239,14 @@ func (w *responseWriter) writeZip(
 		if err != nil {
 			return err
 		}
+
 		defer func() {
 			retErr = errors.Join(retErr, file.Close())
 		}()
 		// protoc does not compress.
 		return storagearchive.Zip(ctx, readWriteBucket, file, false)
 	})
+
 	return nil
 }
 
@@ -256,8 +267,10 @@ func (w *responseWriter) writeDirectory(
 		); err != nil {
 			return err
 		}
+
 		return nil
 	}
+
 	readWriteBucket := storagemem.NewReadWriteBucket()
 	if err := w.responseWriter.WriteResponse(
 		ctx,
@@ -284,11 +297,14 @@ func (w *responseWriter) writeDirectory(
 		if err != nil {
 			return err
 		}
+
 		if _, err := storage2.Copy(ctx, readWriteBucket, osReadWriteBucket); err != nil {
 			return err
 		}
+
 		return nil
 	})
+
 	return nil
 }
 

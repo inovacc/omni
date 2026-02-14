@@ -165,19 +165,24 @@ func newEnabledCheckConfig(
 	use = xslices.ToUniqueSorted(use)
 	except = xslices.ToUniqueSorted(except)
 	ignore = xslices.ToUniqueSorted(ignore)
+
 	ignore, err := normalizeAndCheckPaths(ignore, "ignore")
 	if err != nil {
 		return nil, err
 	}
+
 	newIgnoreOnly := make(map[string][]string, len(ignoreOnly))
 	for k, v := range ignoreOnly {
 		v = xslices.ToUniqueSorted(v)
+
 		v, err := normalizeAndCheckPaths(v, "ignore_only path")
 		if err != nil {
 			return nil, err
 		}
+
 		newIgnoreOnly[k] = v
 	}
+
 	ignoreOnly = newIgnoreOnly
 
 	return newEnabledCheckConfigNoValidate(fileVersion, use, except, ignore, ignoreOnly, disableBuiltin), nil

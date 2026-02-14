@@ -54,6 +54,7 @@ func (w *protoFileWriter) PutProtoFile(
 		if filePath == "" {
 			return nil, fmt.Errorf("empty path for ProtoFileRef: %v", protoFileRef)
 		}
+
 		if dirPath := normalpath.Dir(filePath); dirPath != "." {
 			if err := createDirIfNotExists(normalpath.Unnormalize(dirPath)); err != nil {
 				return nil, err
@@ -85,5 +86,6 @@ func createDirIfNotExists(dirPath string) error {
 			// not going to, just to be safe.
 		}
 	}
+
 	return nil
 }

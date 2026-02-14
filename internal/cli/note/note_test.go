@@ -67,6 +67,7 @@ func TestRunRemoveByIndex(t *testing.T) {
 	if err := RunNote(&bytes.Buffer{}, []string{"alpha"}, Options{File: file}); err != nil {
 		t.Fatalf("RunNote(add alpha) error = %v", err)
 	}
+
 	if err := RunNote(&bytes.Buffer{}, []string{"beta"}, Options{File: file}); err != nil {
 		t.Fatalf("RunNote(add beta) error = %v", err)
 	}
@@ -88,6 +89,7 @@ func TestRunRemoveByIndex(t *testing.T) {
 	if strings.Contains(listOut.String(), "alpha") {
 		t.Fatalf("expected alpha to be removed, got %q", listOut.String())
 	}
+
 	if !strings.Contains(listOut.String(), "beta") {
 		t.Fatalf("expected beta to remain, got %q", listOut.String())
 	}
@@ -99,6 +101,7 @@ func TestRunRemoveByID(t *testing.T) {
 	if err := RunNote(&bytes.Buffer{}, []string{"alpha"}, Options{File: file}); err != nil {
 		t.Fatalf("RunNote(add alpha) error = %v", err)
 	}
+
 	if err := RunNote(&bytes.Buffer{}, []string{"beta"}, Options{File: file}); err != nil {
 		t.Fatalf("RunNote(add beta) error = %v", err)
 	}
@@ -156,6 +159,7 @@ func TestResolveNotesPathDefault(t *testing.T) {
 	oldProfile, hadProfile := os.LookupEnv("USERPROFILE")
 	_ = os.Setenv("HOME", home)
 	_ = os.Setenv("USERPROFILE", home)
+
 	t.Cleanup(func() {
 		if hadHome {
 			_ = os.Setenv("HOME", oldHome)

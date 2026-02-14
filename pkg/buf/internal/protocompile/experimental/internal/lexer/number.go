@@ -54,6 +54,7 @@ func lexNumber(l *lexer) token.Token {
 	if len(digits) >= 2 {
 		prefix = digits[:2]
 	}
+
 	switch prefix {
 	case "0b", "0B":
 		digits = digits[2:]
@@ -71,6 +72,7 @@ func lexNumber(l *lexer) token.Token {
 			prefix = digits[:1]
 			base = 8
 			legacyOctal = true
+
 			break
 		}
 
@@ -84,6 +86,7 @@ func lexNumber(l *lexer) token.Token {
 
 	isFloat := taxa.IsFloatText(digits)
 	expBase := 1
+
 	expIdx := -1
 	if isFloat {
 		if expIdx = strings.IndexAny(digits, "pP"); expIdx != -1 {
@@ -92,6 +95,7 @@ func lexNumber(l *lexer) token.Token {
 			expBase = 10
 		}
 	}
+
 	if expBase != 1 {
 		token.MutateMeta[tokenmeta.Number](tok).ExpBase = byte(expBase)
 	}
@@ -99,6 +103,7 @@ func lexNumber(l *lexer) token.Token {
 	// Peel a suffix off of digits consisting of characters not in the
 	// desired base.
 	haystack := digits
+
 	suffixBase := base
 	if expIdx != -1 {
 		suffixBase = 10
@@ -109,7 +114,9 @@ func lexNumber(l *lexer) token.Token {
 		if strings.ContainsRune("_.+-", r) {
 			return false
 		}
+
 		_, ok := unicodex.Digit(r, suffixBase)
+
 		return !ok
 	})
 
@@ -128,9 +135,11 @@ func lexNumber(l *lexer) token.Token {
 	if prefix != "" {
 		token.MutateMeta[tokenmeta.Number](tok).Prefix = uint32(len(prefix))
 	}
+
 	if suffix != "" {
 		token.MutateMeta[tokenmeta.Number](tok).Suffix = uint32(len(suffix))
 	}
+
 	if expIdx != -1 {
 		// Example: 123e456suffix, want len("e456").
 		//   len(digits) = 13
@@ -159,6 +168,7 @@ func lexNumber(l *lexer) token.Token {
 			meta.Base = 10
 			meta.Prefix = 0
 		}
+
 		meta.IsFloat = strings.ContainsAny(digits, ".-") // Positive exponents are not necessarily floats.
 		meta.ThousandsSep = strings.Contains(digits, "_")
 
@@ -189,10 +199,12 @@ func lexNumber(l *lexer) token.Token {
 
 			v.SetPrec(uint(math.Ceil(prec)))
 			_, _, err := v.Parse(digits, 0)
+
 			return v, err
 		}
 
 		var err error
+
 		switch base {
 		case 10:
 			match := decFloat.FindStringSubmatch(digits)
@@ -206,10 +218,12 @@ func lexNumber(l *lexer) token.Token {
 			}
 
 			v, err = parse(v, match[1])
+
 			exp, err := strconv.ParseInt(match[3], 10, 64)
 			if err != nil {
 				exp = math.MaxInt
 			}
+
 			exp += int64(v.MantExp(nil))
 			v.SetMantExp(v, int(exp))
 
@@ -247,6 +261,7 @@ func lexNumber(l *lexer) token.Token {
 				l.scratchFloat = nil
 			} else {
 				meta.Word = math.Float64bits(f64)
+
 				l.scratchFloat.SetUint64(0)
 			}
 		} else {
@@ -256,9 +271,11 @@ func lexNumber(l *lexer) token.Token {
 				l.scratchFloat = nil
 			} else {
 				meta.Word = u64
+
 				l.scratchFloat.SetUint64(0)
 			}
 		}
+
 		return tok
 
 	case result.big != nil:
@@ -281,7 +298,9 @@ func lexNumber(l *lexer) token.Token {
 
 fail:
 	l.Error(errtoken.InvalidNumber{Token: tok})
+
 	token.MutateMeta[tokenmeta.Number](tok).SyntaxError = true
+
 	return tok
 }
 
@@ -292,10 +311,11 @@ func lexRawNumber(l *lexer) token.Token {
 
 	for !l.done() {
 		r := l.peek()
-		//nolint:gocritic // This trips a noisy "use a switch" lint that makes
+
 		// this code less readable.
 		if r == 'e' || r == 'E' {
 			l.pop()
+
 			r = l.peek()
 			if r == '+' || r == '-' {
 				l.pop()
@@ -313,6 +333,7 @@ func lexRawNumber(l *lexer) token.Token {
 	// Create the token, even if this is an invalid number. This will help
 	// the parser pick up bad numbers into number literals.
 	digits := l.Text()[start:l.cursor]
+
 	return l.push(len(digits), token.Number)
 }
 

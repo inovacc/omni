@@ -27,6 +27,10 @@ func RunListFormats(w io.Writer, args []string, opts Options) error {
 		clientOpts = append(clientOpts, video.WithProxy(opts.Proxy))
 	}
 
+	if opts.CookiesFromBrowser {
+		clientOpts = append(clientOpts, video.WithCookiesFromBrowser())
+	}
+
 	client, err := video.New(clientOpts...)
 	if err != nil {
 		return fmt.Errorf("video list-formats: %w", err)

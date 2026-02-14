@@ -143,6 +143,7 @@ func detectLinterConfigs(dir string) []string {
 	}
 
 	var found []string
+
 	for _, name := range checks {
 		if _, err := os.Stat(filepath.Join(dir, name)); err == nil {
 			found = append(found, name)

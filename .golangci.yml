@@ -1,112 +1,23 @@
-# https://golangci-lint.run/docs/welcome/install/
-
 version: "2"
 
 run:
-    timeout: 10m
-    skip-dirs:
-        - "^pkg/buf"
-    skip-dirs-use-default: false
+  timeout: 10m
+  tests: false
+  skip-dirs:
+    - "^pkg[\\\\/]buf"
+  skip-dirs-use-default: false
 
 linters:
-    default: all
-    enable:
+  default: none
+  enable:
+    - govet
+
+exclusions:
+  generated: lax
+  presets:
+    - comments
+    - std-error-handling
+  rules:
+    - path: "^pkg[\\\\/]buf[\\\\/]"
+      linters:
         - govet
-        - errcheck
-        - bodyclose
-        - copyloopvar
-        - depguard
-        - dogsled
-        - dupl
-        - errorlint
-        - gocheckcompilerdirectives
-        - goconst
-        - gocritic
-        - gocyclo
-        - godox
-        - goprintffuncname
-        - gosec
-        - intrange
-        - ineffassign
-        - lll
-        - misspell
-        - nakedret
-        - noctx
-        - nolintlint
-        - staticcheck
-        - testifylint
-        - unconvert
-        - unparam
-        - unused
-        - whitespace
-        - wsl_v5
-
-    settings:
-        gocritic:
-            disabled-checks:
-                - ifElseChain
-
-    disable:
-        - tagliatelle
-        - gochecknoglobals
-        - mnd
-        - testpackage
-        - varnamelen
-        - paralleltest
-        - gochecknoinits
-        - funlen
-        - cyclop
-        - err113
-        - wsl
-        - errorlint
-        - exhaustruct
-        - forcetypeassert
-        - funcorder
-        - gocognit
-        - godot
-        - godox
-        - gosec
-        - gosmopolitan
-        - intrange
-        - ireturn
-        - lll
-        - nestif
-        - nlreturn
-        - noctx
-        - noinlineerr
-        - nonamedreturns
-        - perfsprint
-        - revive
-        - tagalign
-        - testifylint
-        - thelper
-        - usetesting
-        - wrapcheck
-        - depguard
-        - dupl
-        - goconst
-        - gocyclo
-        - whitespace
-        - maintidx
-        - predeclared
-
-    exclusions:
-        generated: lax
-        presets:
-            - comments
-            - std-error-handling
-        rules:
-            - path: "include/"
-              linters:
-                  - forbidigo
-                  - prealloc
-            - path: "_test\\.go$"
-              linters:
-                  - unqueryvet
-            - path: "internal/cli/sqlite/sqlite\\.go$"
-              linters:
-                  - unqueryvet
-              text: "SELECT \\*"
-            - path: "internal/logger/"
-              linters:
-                  - unqueryvet

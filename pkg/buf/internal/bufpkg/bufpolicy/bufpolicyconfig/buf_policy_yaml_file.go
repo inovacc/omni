@@ -122,12 +122,14 @@ func newBufPolicyYAMLFile(
 			return nil, fmt.Errorf("failed to get default lint config: %w", err)
 		}
 	}
+
 	if breakingConfig == nil {
 		breakingConfig, err = getDefaultBreakingConfigV2()
 		if err != nil {
 			return nil, fmt.Errorf("failed to get default breaking config: %w", err)
 		}
 	}
+
 	return &bufPolicyYAMLFile{
 		fileVersion:    bufconfig2.FileVersionV2,
 		objectData:     objectData,
@@ -191,15 +193,18 @@ func readBufPolicyYAMLFile(
 	if err != nil {
 		return nil, err
 	}
+
 	if objectData != nil {
 		if err := validateSupportedFileVersion(objectData.Name(), fileVersion); err != nil {
 			return nil, err
 		}
 	}
+
 	var externalBufPolicyYAMLFile externalBufPolicyYAMLFileV2
 	if err := getUnmarshalStrict(allowJSON)(data, &externalBufPolicyYAMLFile); err != nil {
 		return nil, err
 	}
+
 	var lintConfig bufpolicy.LintConfig
 	if !externalBufPolicyYAMLFile.Lint.isEmpty() {
 		lintConfig, err = getLintConfigForExternalLintV2(
@@ -209,6 +214,7 @@ func readBufPolicyYAMLFile(
 			return nil, err
 		}
 	}
+
 	var breakingConfig bufpolicy.BreakingConfig
 	if !externalBufPolicyYAMLFile.Breaking.isEmpty() {
 		breakingConfig, err = getBreakingConfigForExternalBreaking(
@@ -218,14 +224,18 @@ func readBufPolicyYAMLFile(
 			return nil, err
 		}
 	}
+
 	var pluginConfigs []bufpolicy.PluginConfig
+
 	for _, externalPluginConfig := range externalBufPolicyYAMLFile.Plugins {
 		pluginConfig, err := newPluginConfigForExternalPluginV2(externalPluginConfig)
 		if err != nil {
 			return nil, err
 		}
+
 		pluginConfigs = append(pluginConfigs, pluginConfig)
 	}
+
 	return newBufPolicyYAMLFile(
 		objectData,
 		externalBufPolicyYAMLFile.Name,
@@ -241,22 +251,28 @@ func writeBufPolicyYAMLFile(writer io.Writer, bufPolicyYAMLFile BufPolicyYAMLFil
 		// This is effectively a system error.
 		return syserror.Wrap(newUnsupportedFileVersionError("", fileVersion))
 	}
+
 	var externalLint externalBufPolicyYAMLFileLintV2
 	if lintConfig := bufPolicyYAMLFile.LintConfig(); lintConfig != nil {
 		externalLint = getExternalLintForLintConfig(lintConfig)
 	}
+
 	var externalBreaking externalBufPolicyYAMLFileBreakingV2
 	if breakingConfig := bufPolicyYAMLFile.BreakingConfig(); breakingConfig != nil {
 		externalBreaking = getExternalBreakingForBreakingConfig(breakingConfig)
 	}
+
 	var externalPlugins []externalBufPolicyYAMLFilePluginV2
+
 	for _, pluginConfig := range bufPolicyYAMLFile.PluginConfigs() {
 		externalPlugin, err := newExternalPluginV2ForPluginConfig(pluginConfig)
 		if err != nil {
 			return syserror.Wrap(err)
 		}
+
 		externalPlugins = append(externalPlugins, externalPlugin)
 	}
+
 	externalBufPolicyYAMLFile := externalBufPolicyYAMLFileV2{
 		Version:  fileVersion.String(),
 		Name:     bufPolicyYAMLFile.Name(),
@@ -264,11 +280,14 @@ func writeBufPolicyYAMLFile(writer io.Writer, bufPolicyYAMLFile BufPolicyYAMLFil
 		Breaking: externalBreaking,
 		Plugins:  externalPlugins,
 	}
+
 	data, err := encoding.MarshalYAML(&externalBufPolicyYAMLFile)
 	if err != nil {
 		return err
 	}
+
 	_, err = writer.Write(data)
+
 	return err
 }
 
@@ -369,6 +388,7 @@ func getExternalBreakingForBreakingConfig(breakingConfig bufpolicy.BreakingConfi
 
 func newPluginConfigForExternalPluginV2(externalConfig externalBufPolicyYAMLFilePluginV2) (bufpolicy.PluginConfig, error) {
 	keyToValue := make(map[string]any)
+
 	for key, value := range externalConfig.Options {
 		if len(key) == 0 {
 			return nil, errors.New("must specify option key")
@@ -377,8 +397,10 @@ func newPluginConfigForExternalPluginV2(externalConfig externalBufPolicyYAMLFile
 		if value == nil {
 			return nil, errors.New("must specify option value")
 		}
+
 		keyToValue[key] = value
 	}
+
 	pluginOptions, err := option.NewOptions(keyToValue)
 	if err != nil {
 		return nil, fmt.Errorf("invalid plugin options: %w", err)
@@ -388,12 +410,15 @@ func newPluginConfigForExternalPluginV2(externalConfig externalBufPolicyYAMLFile
 	if err != nil {
 		return nil, err
 	}
+
 	if len(path) == 0 {
 		return nil, errors.New("must specify a path to the plugin")
 	}
+
 	name, args := path[0], path[1:]
 	// Remote plugins are specified as plugin references.
 	var pluginRef bufparse.Ref
+
 	if ref, err := bufparse.ParseRef(name); err == nil {
 		// Check if the local filepath exists, if it does presume its
 		// not a remote reference. Okay to use os.Stat instead of
@@ -402,6 +427,7 @@ func newPluginConfigForExternalPluginV2(externalConfig externalBufPolicyYAMLFile
 			pluginRef = ref
 		}
 	}
+
 	return bufpolicy.NewPluginConfig(
 		name,
 		pluginRef,
@@ -414,9 +440,11 @@ func newExternalPluginV2ForPluginConfig(
 	config bufpolicy.PluginConfig,
 ) (externalBufPolicyYAMLFilePluginV2, error) {
 	keyToValues := make(map[string]any)
+
 	config.Options().Range(func(key string, value any) {
 		keyToValues[key] = value
 	})
+
 	externalBufYAMLFilePluginV2 := externalBufPolicyYAMLFilePluginV2{
 		Options: keyToValues,
 	}
@@ -425,6 +453,7 @@ func newExternalPluginV2ForPluginConfig(
 	} else {
 		externalBufYAMLFilePluginV2.Plugin = config.Name()
 	}
+
 	return externalBufYAMLFilePluginV2, nil
 }
 
@@ -441,6 +470,7 @@ func newUnsupportedFileVersionError(name string, fileVersion bufconfig2.FileVers
 	if name == "" {
 		return fmt.Errorf("%s is not supported", fileVersion)
 	}
+
 	return fmt.Errorf("%s is not supported for %s files", fileVersion, name)
 }
 
@@ -456,6 +486,7 @@ func getFileVersionForData(
 	if err := getUnmarshalNonStrict(allowJSON)(data, &externalFileVersion); err != nil {
 		return 0, err
 	}
+
 	switch externalFileVersion.Version {
 	case bufconfig2.FileVersionV1Beta1.String():
 		return bufconfig2.FileVersionV1Beta1, nil

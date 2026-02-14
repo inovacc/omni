@@ -97,16 +97,20 @@ func (f CompositeResolver) FindFileByPath(path string) (SearchResult, error) {
 	if len(f) == 0 {
 		return SearchResult{}, protoregistry.NotFound
 	}
+
 	var firstErr error
+
 	for _, res := range f {
 		r, err := res.FindFileByPath(path)
 		if err == nil {
 			return r, nil
 		}
+
 		if firstErr == nil {
 			firstErr = err
 		}
 	}
+
 	return SearchResult{}, firstErr
 }
 
@@ -136,10 +140,12 @@ func (r *SourceResolver) FindFileByPath(path string) (SearchResult, error) {
 		if err != nil {
 			return SearchResult{}, err
 		}
+
 		return SearchResult{Source: reader}, nil
 	}
 
 	var e error
+
 	for _, importPath := range r.ImportPaths {
 		reader, err := r.accessFile(filepath.Join(importPath, path))
 		if err != nil {
@@ -147,10 +153,13 @@ func (r *SourceResolver) FindFileByPath(path string) (SearchResult, error) {
 				e = err
 				continue
 			}
+
 			return SearchResult{}, err
 		}
+
 		return SearchResult{Source: reader}, nil
 	}
+
 	return SearchResult{}, e
 }
 
@@ -158,6 +167,7 @@ func (r *SourceResolver) accessFile(path string) (io.ReadCloser, error) {
 	if r.Accessor != nil {
 		return r.Accessor(path)
 	}
+
 	return os.Open(path)
 }
 
@@ -174,6 +184,7 @@ func SourceAccessorFromMap(srcs map[string]string) func(string) (io.ReadCloser, 
 		if !ok {
 			return nil, os.ErrNotExist
 		}
+
 		return io.NopCloser(strings.NewReader(src)), nil
 	}
 }
@@ -210,6 +221,7 @@ func WithStandardImports(r Resolver) Resolver {
 				return SearchResult{Desc: d}, nil
 			}
 		}
+
 		return res, err
 	})
 }

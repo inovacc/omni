@@ -7,6 +7,8 @@ import (
 	"strings"
 	"syscall"
 	"testing"
+
+	"github.com/inovacc/omni/internal/cli/output"
 )
 
 func TestSignalMap(t *testing.T) {
@@ -26,6 +28,7 @@ func TestSignalMap(t *testing.T) {
 				t.Errorf("signal %q not found in signalMap", name)
 				return
 			}
+
 			if sig != expected {
 				t.Errorf("signalMap[%q] = %v, want %v", name, sig, expected)
 			}
@@ -35,10 +38,12 @@ func TestSignalMap(t *testing.T) {
 
 func TestRun_EmptyPattern(t *testing.T) {
 	var buf bytes.Buffer
+
 	err := Run(&buf, "", Options{})
 	if err == nil {
 		t.Fatal("expected error for empty pattern")
 	}
+
 	if !strings.Contains(err.Error(), "no pattern specified") {
 		t.Errorf("expected 'no pattern specified' error, got: %v", err)
 	}
@@ -46,10 +51,12 @@ func TestRun_EmptyPattern(t *testing.T) {
 
 func TestRun_InvalidPattern(t *testing.T) {
 	var buf bytes.Buffer
+
 	err := Run(&buf, "[invalid", Options{})
 	if err == nil {
 		t.Fatal("expected error for invalid regex pattern")
 	}
+
 	if !strings.Contains(err.Error(), "invalid pattern") {
 		t.Errorf("expected 'invalid pattern' error, got: %v", err)
 	}
@@ -57,10 +64,12 @@ func TestRun_InvalidPattern(t *testing.T) {
 
 func TestRun_InvalidSignal(t *testing.T) {
 	var buf bytes.Buffer
+
 	err := Run(&buf, "nonexistent_process_xyz_12345", Options{Signal: "INVALID"})
 	if err == nil {
 		t.Fatal("expected error for invalid signal")
 	}
+
 	if !strings.Contains(err.Error(), "invalid signal") {
 		t.Errorf("expected 'invalid signal' error, got: %v", err)
 	}
@@ -73,6 +82,7 @@ func TestRun_ListOnly(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	output := buf.String()
 	// Should have PID and name on each line
 	lines := strings.Split(strings.TrimSpace(output), "\n")
@@ -83,17 +93,21 @@ func TestRun_ListOnly(t *testing.T) {
 
 func TestRun_ListOnly_JSON(t *testing.T) {
 	var buf bytes.Buffer
-	err := Run(&buf, ".*", Options{ListOnly: true, JSON: true})
+
+	err := Run(&buf, ".*", Options{ListOnly: true, OutputFormat: output.FormatJSON})
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	var results []Result
 	if err := json.Unmarshal(buf.Bytes(), &results); err != nil {
 		t.Errorf("expected valid JSON output, got error: %v", err)
 	}
+
 	if len(results) == 0 {
 		t.Error("expected at least one result")
 	}
+
 	for _, r := range results {
 		if !r.Matched {
 			t.Errorf("expected all results to be matched, PID %d not matched", r.PID)
@@ -103,15 +117,18 @@ func TestRun_ListOnly_JSON(t *testing.T) {
 
 func TestRun_Count(t *testing.T) {
 	var buf bytes.Buffer
+
 	err := Run(&buf, ".*", Options{Count: true})
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	output := strings.TrimSpace(buf.String())
 	// Should be a number
 	if output == "" {
 		t.Error("expected count output")
 	}
+
 	if output == "0" {
 		t.Error("expected non-zero count")
 	}
@@ -119,14 +136,17 @@ func TestRun_Count(t *testing.T) {
 
 func TestRun_CountJSON(t *testing.T) {
 	var buf bytes.Buffer
-	err := Run(&buf, ".*", Options{Count: true, JSON: true})
+
+	err := Run(&buf, ".*", Options{Count: true, OutputFormat: output.FormatJSON})
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	var result map[string]int
 	if err := json.Unmarshal(buf.Bytes(), &result); err != nil {
 		t.Errorf("expected valid JSON, got error: %v", err)
 	}
+
 	if count, ok := result["count"]; !ok || count == 0 {
 		t.Error("expected non-zero count in JSON")
 	}
@@ -139,6 +159,7 @@ func TestRun_ExactMatch(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	output := strings.TrimSpace(buf.String())
 	if output != "" {
 		t.Errorf("expected no match for nonexistent process, got: %s", output)
@@ -147,6 +168,7 @@ func TestRun_ExactMatch(t *testing.T) {
 
 func TestRun_CaseInsensitive(t *testing.T) {
 	var buf bytes.Buffer
+
 	err := Run(&buf, ".*", Options{ListOnly: true, IgnoreCase: true})
 	if err != nil {
 		t.Fatal(err)
@@ -156,11 +178,14 @@ func TestRun_CaseInsensitive(t *testing.T) {
 
 func TestRun_Newest(t *testing.T) {
 	var buf bytes.Buffer
+
 	err := Run(&buf, ".*", Options{Newest: true, ListOnly: true})
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	output := strings.TrimSpace(buf.String())
+
 	lines := strings.Split(output, "\n")
 	if len(lines) != 1 {
 		t.Errorf("expected exactly 1 line (newest process), got %d", len(lines))
@@ -169,11 +194,14 @@ func TestRun_Newest(t *testing.T) {
 
 func TestRun_Oldest(t *testing.T) {
 	var buf bytes.Buffer
+
 	err := Run(&buf, ".*", Options{Oldest: true, ListOnly: true})
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	output := strings.TrimSpace(buf.String())
+
 	lines := strings.Split(output, "\n")
 	if len(lines) != 1 {
 		t.Errorf("expected exactly 1 line (oldest process), got %d", len(lines))
@@ -182,10 +210,12 @@ func TestRun_Oldest(t *testing.T) {
 
 func TestRun_NoMatch_JSON(t *testing.T) {
 	var buf bytes.Buffer
-	err := Run(&buf, "nonexistent_process_xyz_12345", Options{ListOnly: true, JSON: true})
+
+	err := Run(&buf, "nonexistent_process_xyz_12345", Options{ListOnly: true, OutputFormat: output.FormatJSON})
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	output := strings.TrimSpace(buf.String())
 	if output != "[]" {
 		t.Errorf("expected empty JSON array for no matches, got: %s", output)
@@ -210,6 +240,7 @@ func TestRun_SignalParsing(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var buf bytes.Buffer
+
 			err := Run(&buf, "nonexistent_process_xyz_12345", Options{Signal: tt.signal, ListOnly: true})
 			if tt.valid {
 				if err != nil {
@@ -226,10 +257,10 @@ func TestRun_SignalParsing(t *testing.T) {
 
 func TestPatternCompilation(t *testing.T) {
 	tests := []struct {
-		name       string
-		pattern    string
-		exact      bool
-		ignoreCase bool
+		name        string
+		pattern     string
+		exact       bool
+		ignoreCase  bool
 		shouldMatch string
 	}{
 		{"simple", "test", false, false, "testing"},
@@ -243,13 +274,16 @@ func TestPatternCompilation(t *testing.T) {
 			if tt.exact {
 				patternStr = "^" + regexp.QuoteMeta(tt.pattern) + "$"
 			}
+
 			if tt.ignoreCase {
 				patternStr = "(?i)" + patternStr
 			}
+
 			re, err := regexp.Compile(patternStr)
 			if err != nil {
 				t.Fatal(err)
 			}
+
 			if !re.MatchString(tt.shouldMatch) {
 				t.Errorf("pattern %q should match %q", patternStr, tt.shouldMatch)
 			}

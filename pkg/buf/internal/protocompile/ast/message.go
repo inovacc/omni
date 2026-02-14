@@ -79,27 +79,34 @@ func NewMessageNodeWithVisibility(visibility *KeywordNode, keyword *KeywordNode,
 	if keyword == nil {
 		panic("keyword is nil")
 	}
+
 	if name == nil {
 		panic("name is nil")
 	}
+
 	if openBrace == nil {
 		panic("openBrace is nil")
 	}
+
 	if closeBrace == nil {
 		panic("closeBrace is nil")
 	}
+
 	numChildren := 4 + len(decls) // keyword, name, openBrace, closeBrace + decls
 	if visibility != nil {
 		numChildren++
 	}
+
 	children := make([]Node, 0, numChildren)
 	if visibility != nil {
 		children = append(children, visibility)
 	}
+
 	children = append(children, keyword, name, openBrace)
 	for _, decl := range decls {
 		children = append(children, decl)
 	}
+
 	children = append(children, closeBrace)
 
 	ret := &MessageNode{
@@ -111,6 +118,7 @@ func NewMessageNodeWithVisibility(visibility *KeywordNode, keyword *KeywordNode,
 		Name:       name,
 	}
 	populateMessageBody(&ret.MessageBody, openBrace, decls, closeBrace)
+
 	return ret
 }
 
@@ -138,6 +146,7 @@ type MessageBody struct {
 
 func populateMessageBody(m *MessageBody, openBrace *RuneNode, decls []MessageElement, closeBrace *RuneNode) {
 	m.OpenBrace = openBrace
+
 	m.Decls = decls
 	for _, decl := range decls {
 		switch decl.(type) {
@@ -148,6 +157,7 @@ func populateMessageBody(m *MessageBody, openBrace *RuneNode, decls []MessageEle
 			panic(fmt.Sprintf("invalid MessageElement type: %T", decl))
 		}
 	}
+
 	m.CloseBrace = closeBrace
 }
 
@@ -177,6 +187,7 @@ var _ MessageElement = (*EmptyDeclNode)(nil)
 //	}
 type ExtendNode struct {
 	compositeNode
+
 	Keyword    *KeywordNode
 	Extendee   IdentValueNode
 	OpenBrace  *RuneNode
@@ -197,20 +208,26 @@ func NewExtendNode(keyword *KeywordNode, extendee IdentValueNode, openBrace *Run
 	if keyword == nil {
 		panic("keyword is nil")
 	}
+
 	if extendee == nil {
 		panic("extendee is nil")
 	}
+
 	if openBrace == nil {
 		panic("openBrace is nil")
 	}
+
 	if closeBrace == nil {
 		panic("closeBrace is nil")
 	}
+
 	children := make([]Node, 0, 4+len(decls))
+
 	children = append(children, keyword, extendee, openBrace)
 	for _, decl := range decls {
 		children = append(children, decl)
 	}
+
 	children = append(children, closeBrace)
 
 	ret := &ExtendNode{
@@ -234,6 +251,7 @@ func NewExtendNode(keyword *KeywordNode, extendee IdentValueNode, openBrace *Run
 			panic(fmt.Sprintf("invalid ExtendElement type: %T", decl))
 		}
 	}
+
 	return ret
 }
 

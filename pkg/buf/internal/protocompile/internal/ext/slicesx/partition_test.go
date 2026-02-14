@@ -75,14 +75,17 @@ func TestPartition(t *testing.T) {
 				ss    [][]int
 				count int
 			)
+
 			it := slicesx.Partition(test.slice)
 			it(func(i int, s []int) bool {
 				if test.breakAt == count {
 					return false
 				}
+
 				is = append(is, i)
 				ss = append(ss, s)
 				count++
+
 				return true
 			})
 

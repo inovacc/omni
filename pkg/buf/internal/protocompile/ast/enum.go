@@ -26,6 +26,7 @@ import "fmt"
 //	export enum ExportedEnum { ... }
 type EnumNode struct {
 	compositeNode
+
 	// Optional; if present indicates visibility modifier (export/local) for edition 2024
 	Visibility *KeywordNode
 	Keyword    *KeywordNode
@@ -63,12 +64,15 @@ func NewEnumNodeWithVisibility(visibility *KeywordNode, keyword *KeywordNode, na
 	if keyword == nil {
 		panic("keyword is nil")
 	}
+
 	if name == nil {
 		panic("name is nil")
 	}
+
 	if openBrace == nil {
 		panic("openBrace is nil")
 	}
+
 	if closeBrace == nil {
 		panic("closeBrace is nil")
 	}
@@ -77,19 +81,24 @@ func NewEnumNodeWithVisibility(visibility *KeywordNode, keyword *KeywordNode, na
 	if visibility != nil {
 		numChildren++
 	}
+
 	children := make([]Node, 0, numChildren)
 	if visibility != nil {
 		children = append(children, visibility)
 	}
+
 	children = append(children, keyword, name, openBrace)
+
 	for _, decl := range decls {
 		switch decl.(type) {
 		case *OptionNode, *EnumValueNode, *ReservedNode, *EmptyDeclNode:
 		default:
 			panic(fmt.Sprintf("invalid EnumElement type: %T", decl))
 		}
+
 		children = append(children, decl)
 	}
+
 	children = append(children, closeBrace)
 
 	return &EnumNode{
@@ -144,6 +153,7 @@ var _ EnumValueDeclNode = (*NoSourceNode)(nil)
 //	UNSET = 0 [deprecated = true];
 type EnumValueNode struct {
 	compositeNode
+
 	Name      *IdentNode
 	Equals    *RuneNode
 	Number    IntValueNode
@@ -164,27 +174,35 @@ func NewEnumValueNode(name *IdentNode, equals *RuneNode, number IntValueNode, op
 	if name == nil {
 		panic("name is nil")
 	}
+
 	if equals == nil {
 		panic("equals is nil")
 	}
+
 	if number == nil {
 		panic("number is nil")
 	}
+
 	numChildren := 3
 	if semicolon != nil {
 		numChildren++
 	}
+
 	if opts != nil {
 		numChildren++
 	}
+
 	children := make([]Node, 0, numChildren)
+
 	children = append(children, name, equals, number)
 	if opts != nil {
 		children = append(children, opts)
 	}
+
 	if semicolon != nil {
 		children = append(children, semicolon)
 	}
+
 	return &EnumValueNode{
 		compositeNode: compositeNode{
 			children: children,

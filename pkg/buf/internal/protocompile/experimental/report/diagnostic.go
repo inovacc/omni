@@ -133,10 +133,12 @@ func (d *Diagnostic) File() string {
 	if d.inFile != "" {
 		return d.inFile
 	}
+
 	span := d.Primary()
 	if span.File != nil {
-		return span.File.Path()
+		return span.Path()
 	}
+
 	return ""
 }
 
@@ -171,6 +173,7 @@ func (d *Diagnostic) Apply(options ...DiagnosticOption) *Diagnostic {
 			}
 		}
 	}
+
 	return d
 }
 
@@ -228,6 +231,7 @@ func Snippetf(at source.Spanner, format string, args ...any) DiagnosticOption {
 // rendered.
 func SuggestEdits(at source.Spanner, message string, edits ...Edit) DiagnosticOption {
 	span := source.GetSpan(at)
+
 	text := span.Text()
 	for _, edit := range edits {
 		// Force a bounds check here to make it easier to debug, instead of
@@ -319,7 +323,7 @@ type snippet struct {
 }
 
 func (a snippet) apply(d *Diagnostic) {
-	if a.Span.IsZero() {
+	if a.IsZero() {
 		return
 	}
 
@@ -378,5 +382,6 @@ func (pageBreak) apply(d *Diagnostic) {
 	if len(d.snippets) == 0 {
 		return
 	}
+
 	d.snippets[len(d.snippets)-1].pageBreak = true
 }

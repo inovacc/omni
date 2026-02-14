@@ -32,6 +32,7 @@ import (
 
 func TestGetConfigForBucket(t *testing.T) {
 	t.Parallel()
+
 	storageosProvider := storageos.NewProvider()
 	readWriteBucket, err := storageosProvider.NewReadWriteBucket(filepath.Join("testdata", "success", "go"))
 	require.NoError(t, err)
@@ -80,6 +81,7 @@ func TestGetConfigForBucket(t *testing.T) {
 
 func TestParsePluginConfigGoYAML(t *testing.T) {
 	t.Parallel()
+
 	pluginConfig, err := ParseConfig(filepath.Join("testdata", "success", "go", "buf.plugin.yaml"))
 	require.NoError(t, err)
 	pluginIdentity, err := bufremotepluginref.PluginIdentityForString("buf.build/library/go-grpc")
@@ -125,6 +127,7 @@ func TestParsePluginConfigGoYAML(t *testing.T) {
 
 func TestParsePluginConfigGoYAMLOverrideRemote(t *testing.T) {
 	t.Parallel()
+
 	pluginConfig, err := ParseConfig(filepath.Join("testdata", "success", "go", "buf.plugin.yaml"), WithOverrideRemote("buf.mydomain.com"))
 	require.NoError(t, err)
 	pluginIdentity, err := bufremotepluginref.PluginIdentityForString("buf.mydomain.com/library/go-grpc")
@@ -138,6 +141,7 @@ func TestParsePluginConfigGoYAMLOverrideRemote(t *testing.T) {
 
 func TestParsePluginConfigNPMYAML(t *testing.T) {
 	t.Parallel()
+
 	pluginConfig, err := ParseConfig(filepath.Join("testdata", "success", "npm", "buf.plugin.yaml"))
 	require.NoError(t, err)
 	pluginIdentity, err := bufremotepluginref.PluginIdentityForString("buf.build/protocolbuffers/js")
@@ -171,6 +175,7 @@ func TestParsePluginConfigNPMYAML(t *testing.T) {
 
 func TestParsePluginConfigMavenYAML(t *testing.T) {
 	t.Parallel()
+
 	pluginConfig, err := ParseConfig(filepath.Join("testdata", "success", "maven", "buf.plugin.yaml"))
 	require.NoError(t, err)
 	pluginIdentity, err := bufremotepluginref.PluginIdentityForString("buf.build/grpc/java")
@@ -266,6 +271,7 @@ func TestParsePluginConfigMavenYAML(t *testing.T) {
 
 func TestParsePluginConfigSwiftYAML(t *testing.T) {
 	t.Parallel()
+
 	pluginConfig, err := ParseConfig(filepath.Join("testdata", "success", "swift", "buf.plugin.yaml"))
 	require.NoError(t, err)
 	pluginIdentity, err := bufremotepluginref.PluginIdentityForString("buf.build/connectrpc/swift")
@@ -308,6 +314,7 @@ func TestParsePluginConfigSwiftYAML(t *testing.T) {
 
 func TestParsePluginConfigPythonYAML(t *testing.T) {
 	t.Parallel()
+
 	pluginConfig, err := ParseConfig(filepath.Join("testdata", "success", "python", "buf.plugin.yaml"))
 	require.NoError(t, err)
 	pluginIdentity, err := bufremotepluginref.PluginIdentityForString("buf.build/community/nipunn1313-mypy")
@@ -339,6 +346,7 @@ func TestParsePluginConfigPythonYAML(t *testing.T) {
 
 func TestParsePluginConfigCargoYAML(t *testing.T) {
 	t.Parallel()
+
 	pluginConfig, err := ParseConfig(filepath.Join("testdata", "success", "cargo", "buf.plugin.yaml"))
 	require.NoError(t, err)
 	pluginIdentity, err := bufremotepluginref.PluginIdentityForString("buf.build/community/neoeinstein-prost")
@@ -374,6 +382,7 @@ func TestParsePluginConfigCargoYAML(t *testing.T) {
 
 func TestParsePluginConfigNugetYAML(t *testing.T) {
 	t.Parallel()
+
 	pluginConfig, err := ParseConfig(filepath.Join("testdata", "success", "nuget", "buf.plugin.yaml"))
 	require.NoError(t, err)
 	pluginIdentity, err := bufremotepluginref.PluginIdentityForString("buf.build/grpc/csharp")
@@ -415,6 +424,7 @@ func TestParsePluginConfigNugetYAML(t *testing.T) {
 
 func TestParsePluginConfigCmakeYAML(t *testing.T) {
 	t.Parallel()
+
 	pluginConfig, err := ParseConfig(filepath.Join("testdata", "success", "cmake", "buf.plugin.yaml"))
 	require.NoError(t, err)
 	pluginIdentity, err := bufremotepluginref.PluginIdentityForString("buf.build/grpc/cpp")
@@ -443,6 +453,7 @@ func TestParsePluginConfigCmakeYAML(t *testing.T) {
 
 func TestParsePluginConfigOptionsYAML(t *testing.T) {
 	t.Parallel()
+
 	pluginConfig, err := ParseConfig(filepath.Join("testdata", "success", "options", "buf.plugin.yaml"))
 	require.NoError(t, err)
 	pluginIdentity, err := bufremotepluginref.PluginIdentityForString("buf.build/protocolbuffers/java")
@@ -459,18 +470,21 @@ func TestParsePluginConfigOptionsYAML(t *testing.T) {
 
 func TestParsePluginConfigMultipleRegistryConfigsYAML(t *testing.T) {
 	t.Parallel()
+
 	_, err := ParseConfig(filepath.Join("testdata", "failure", "invalid-multiple-registries.yaml"))
 	require.Error(t, err)
 }
 
 func TestParsePluginConfigEmptyVersionYAML(t *testing.T) {
 	t.Parallel()
+
 	_, err := ParseConfig(filepath.Join("testdata", "failure", "invalid-empty-version.yaml"))
 	require.Error(t, err)
 }
 
 func TestParsePluginConfigGoNoDepsOrMinVersion(t *testing.T) {
 	t.Parallel()
+
 	cfg, err := ParseConfig(filepath.Join("testdata", "success", "go-empty-registry", "buf.plugin.yaml"))
 	require.NoError(t, err)
 	assert.NotNil(t, cfg.Registry)
@@ -499,6 +513,7 @@ func assertPluginOptionsRoundTrip(t testing.TB, options map[string]string) {
 
 func TestGetConfigForDataInvalidDependency(t *testing.T) {
 	t.Parallel()
+
 	validConfig, err := os.ReadFile(filepath.Join("testdata", "success", "go", "buf.plugin.yaml"))
 	require.NoError(t, err)
 	// Valid dependencies
@@ -519,11 +534,14 @@ func verifyDependencies(t testing.TB, validConfigBytes []byte, fail bool, invali
 	t.Helper()
 	// make a defensive copy of a valid parsed config
 	var cloned *ExternalConfig
+
 	err := yaml.Unmarshal(validConfigBytes, &cloned)
 	require.NoError(t, err)
+
 	cloned.Deps = slices.Clone(invalidDependencies)
 	yamlBytes, err := yaml.Marshal(cloned)
 	require.NoError(t, err)
+
 	_, err = GetConfigForData(context.Background(), yamlBytes)
 	if fail {
 		assert.Error(t, err)

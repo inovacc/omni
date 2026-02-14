@@ -43,16 +43,18 @@ func Link(parsed parser.Result, dependencies Files, symbols *Symbols, handler *r
 	if symbols == nil {
 		symbols = &Symbols{}
 	}
+
 	prefix := parsed.FileDescriptorProto().GetPackage()
 	if prefix != "" {
 		prefix += "."
 	}
 
-	for _, imp := range parsed.FileDescriptorProto().Dependency {
+	for _, imp := range parsed.FileDescriptorProto().GetDependency() {
 		dep := dependencies.FindFileByPath(imp)
 		if dep == nil {
 			return nil, fmt.Errorf("dependencies is missing import %q", imp)
 		}
+
 		if err := symbols.Import(dep, handler); err != nil {
 			return nil, err
 		}

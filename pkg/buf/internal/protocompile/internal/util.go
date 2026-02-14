@@ -49,6 +49,7 @@ func MapEntry(name string) string {
 		NoLowercase: true,
 	}.Append(buf, name)
 	_, _ = buf.WriteString("Entry")
+
 	return buf.String()
 }
 
@@ -63,6 +64,7 @@ func MapEntry(name string) string {
 //	https://github.com/protocolbuffers/protobuf/blob/v21.3/src/google/protobuf/descriptor.cc#L922
 func TrimPrefix(str, prefix string) string {
 	j := 0
+
 	for i, r := range str {
 		if r == '_' {
 			// skip underscores in the input
@@ -83,14 +85,18 @@ func TrimPrefix(str, prefix string) string {
 				// result can't be empty string
 				return str
 			}
+
 			return result
 		}
+
 		if unicode.ToLower(r) != unicode.ToLower(p) {
 			// does not match prefix
 			return str
 		}
+
 		j += sz // consume matched rune of prefix
 	}
+
 	return str
 }
 
@@ -114,6 +120,7 @@ func CreatePrefixList(pkg string) []string {
 			numDots++
 		}
 	}
+
 	if numDots == 0 {
 		return []string{pkg, ""}
 	}
@@ -126,6 +133,7 @@ func CreatePrefixList(pkg string) []string {
 			numDots--
 		}
 	}
+
 	prefixes[0] = pkg
 
 	return prefixes
@@ -186,7 +194,9 @@ func ComputePath(d protoreflect.Descriptor) (protoreflect.SourcePath, bool) {
 	if ok {
 		return nil, true
 	}
+
 	var path protoreflect.SourcePath
+
 	for {
 		p := d.Parent()
 		switch d := d.(type) {
@@ -194,6 +204,7 @@ func ComputePath(d protoreflect.Descriptor) (protoreflect.SourcePath, bool) {
 			return reverse(path), true
 		case protoreflect.MessageDescriptor:
 			path = append(path, int32(d.Index()))
+
 			switch p.(type) {
 			case protoreflect.FileDescriptor:
 				path = append(path, FileMessagesTag)
@@ -204,6 +215,7 @@ func ComputePath(d protoreflect.Descriptor) (protoreflect.SourcePath, bool) {
 			}
 		case protoreflect.FieldDescriptor:
 			path = append(path, int32(d.Index()))
+
 			switch p.(type) {
 			case protoreflect.FileDescriptor:
 				if d.IsExtension() {
@@ -229,6 +241,7 @@ func ComputePath(d protoreflect.Descriptor) (protoreflect.SourcePath, bool) {
 			}
 		case protoreflect.EnumDescriptor:
 			path = append(path, int32(d.Index()))
+
 			switch p.(type) {
 			case protoreflect.FileDescriptor:
 				path = append(path, FileEnumsTag)
@@ -259,6 +272,7 @@ func ComputePath(d protoreflect.Descriptor) (protoreflect.SourcePath, bool) {
 				return nil, false
 			}
 		}
+
 		d = p
 	}
 }
@@ -277,6 +291,7 @@ func CanPack(k protoreflect.Kind) bool {
 func ClonePath(path protoreflect.SourcePath) protoreflect.SourcePath {
 	clone := make(protoreflect.SourcePath, len(path))
 	copy(clone, path)
+
 	return clone
 }
 
@@ -284,5 +299,6 @@ func reverse(p protoreflect.SourcePath) protoreflect.SourcePath {
 	for i, j := 0, len(p)-1; i < j; i, j = i+1, j-1 {
 		p[i], p[j] = p[j], p[i]
 	}
+
 	return p
 }

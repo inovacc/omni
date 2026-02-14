@@ -27,6 +27,7 @@ func NewPolicyKeyProvider(container appext.Container) (bufpolicy.PolicyKeyProvid
 	if err != nil {
 		return nil, err
 	}
+
 	return bufpolicyapi.NewPolicyKeyProvider(
 		container.Logger(),
 		bufregistryapipolicy.NewClientProvider(

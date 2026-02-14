@@ -79,6 +79,7 @@ func (r ReflectProtocol) String() string {
 	if !ok {
 		return strconv.Itoa(int(r))
 	}
+
 	return s
 }
 
@@ -90,6 +91,7 @@ func ParseReflectProtocol(s string) (ReflectProtocol, error) {
 	if ok {
 		return r, nil
 	}
+
 	return 0, fmt.Errorf("unknown ReflectProtocol: %q", s)
 }
 
@@ -105,10 +107,12 @@ func NewServerReflectionResolver(
 	printer verbose.Printer,
 ) (r Resolver, closeResolver func()) {
 	baseURL = strings.TrimSuffix(baseURL, "/")
+
 	var v1Client, v1alphaClient *reflectClient
 	if reflectProtocol != ReflectProtocolGRPCV1 {
 		v1alphaClient = connect.NewClient[reflectionv1.ServerReflectionRequest, reflectionv1.ServerReflectionResponse](httpClient, baseURL+"/grpc.reflection.v1alpha.ServerReflection/ServerReflectionInfo", opts...)
 	}
+
 	if reflectProtocol != ReflectProtocolGRPCV1Alpha {
 		v1Client = connect.NewClient[reflectionv1.ServerReflectionRequest, reflectionv1.ServerReflectionResponse](httpClient, baseURL+"/grpc.reflection.v1.ServerReflection/ServerReflectionInfo", opts...)
 	}
@@ -131,6 +135,7 @@ func NewServerReflectionResolver(
 		printer:          printer,
 		downloadedProtos: map[string]*descriptorpb.FileDescriptorProto{},
 	}
+
 	return res, res.Reset
 }
 
@@ -156,12 +161,14 @@ func (r *reflectionResolver) ListServices() ([]protoreflect.FullName, error) {
 	defer r.mu.Unlock()
 
 	r.printer.Printf("* Using server reflection to list services\n")
+
 	resp, err := r.sendLocked(reflectionv1.ServerReflectionRequest_builder{
 		ListServices: proto.String(""),
 	}.Build())
 	if err != nil {
 		return nil, err
 	}
+
 	switch resp.WhichMessageResponse() {
 	case reflectionv1.ServerReflectionResponse_ErrorResponse_case:
 		// This should never happen, however we do a bounds check to ensure we are doing a safe
@@ -169,12 +176,14 @@ func (r *reflectionResolver) ListServices() ([]protoreflect.FullName, error) {
 		if resp.GetErrorResponse().GetErrorCode() < 0 {
 			return nil, fmt.Errorf("server replied with unsupported error code: %v", resp.GetErrorResponse().GetErrorCode())
 		}
+
 		return nil, connect.NewWireError(connect.Code(resp.GetErrorResponse().GetErrorCode()), errors.New(resp.GetErrorResponse().GetErrorMessage()))
 	case reflectionv1.ServerReflectionResponse_ListServicesResponse_case:
 		serviceNames := make([]protoreflect.FullName, len(resp.GetListServicesResponse().GetService()))
 		for i, service := range resp.GetListServicesResponse().GetService() {
 			serviceNames[i] = protoreflect.FullName(service.GetName())
 		}
+
 		return serviceNames, nil
 	default:
 		return nil, fmt.Errorf("server replied with unsupported response type: %v", resp.WhichMessageResponse())
@@ -189,6 +198,7 @@ func (r *reflectionResolver) FindFileByPath(path string) (protoreflect.FileDescr
 	if d != nil {
 		return d, nil
 	}
+
 	if err != protoregistry.NotFound {
 		return nil, err
 	}
@@ -199,6 +209,7 @@ func (r *reflectionResolver) FindFileByPath(path string) (protoreflect.FileDescr
 		// app framework might incorrectly interpret it and report a bad error message.
 		return nil, fmt.Errorf("failed to resolve filename %q: %v", path, err)
 	}
+
 	if err := r.cacheFilesLocked(fileDescriptorProtos); err != nil {
 		return nil, err
 	}
@@ -214,6 +225,7 @@ func (r *reflectionResolver) FindDescriptorByName(name protoreflect.FullName) (p
 	if d != nil {
 		return d, nil
 	}
+
 	if err != protoregistry.NotFound {
 		return nil, err
 	}
@@ -224,6 +236,7 @@ func (r *reflectionResolver) FindDescriptorByName(name protoreflect.FullName) (p
 		// app framework might incorrectly interpret it and report a bad error message.
 		return nil, fmt.Errorf("failed to resolve symbol %q: %v", name, err)
 	}
+
 	if err := r.cacheFilesLocked(fileDescriptorProtos); err != nil {
 		return nil, err
 	}
@@ -236,10 +249,12 @@ func (r *reflectionResolver) FindEnumByName(enum protoreflect.FullName) (protore
 	if err != nil {
 		return nil, err
 	}
+
 	ed, ok := d.(protoreflect.EnumDescriptor)
 	if !ok {
 		return nil, fmt.Errorf("element %s is a %s, not an enum", enum, descriptorKind(d))
 	}
+
 	return dynamicpb.NewEnumType(ed), nil
 }
 
@@ -248,16 +263,19 @@ func (r *reflectionResolver) FindMessageByName(message protoreflect.FullName) (p
 	if err != nil {
 		return nil, err
 	}
+
 	md, ok := d.(protoreflect.MessageDescriptor)
 	if !ok {
 		return nil, fmt.Errorf("element %s is a %s, not a message", message, descriptorKind(d))
 	}
+
 	return dynamicpb.NewMessageType(md), nil
 }
 
 func (r *reflectionResolver) FindMessageByURL(url string) (protoreflect.MessageType, error) {
 	pos := strings.LastIndexByte(url, '/')
 	typeName := url[pos+1:]
+
 	return r.FindMessageByName(protoreflect.FullName(typeName))
 }
 
@@ -266,10 +284,12 @@ func (r *reflectionResolver) FindExtensionByName(field protoreflect.FullName) (p
 	if err != nil {
 		return nil, err
 	}
+
 	fd, ok := d.(protoreflect.FieldDescriptor)
 	if !ok || !fd.IsExtension() {
 		return nil, fmt.Errorf("element %s is a %s, not an extension", field, descriptorKind(d))
 	}
+
 	return dynamicpb.NewExtensionType(fd), nil
 }
 
@@ -281,6 +301,7 @@ func (r *reflectionResolver) FindExtensionByNumber(message protoreflect.FullName
 	if ext != nil {
 		return ext, nil
 	}
+
 	if err != protoregistry.NotFound {
 		return nil, err
 	}
@@ -291,6 +312,7 @@ func (r *reflectionResolver) FindExtensionByNumber(message protoreflect.FullName
 		// app framework might incorrectly interpret it and report a bad error message.
 		return nil, fmt.Errorf("failed to resolve extension %d for %q: %v", field, message, err)
 	}
+
 	if err := r.cacheFilesLocked(fileDescriptorProtos); err != nil {
 		return nil, err
 	}
@@ -300,17 +322,20 @@ func (r *reflectionResolver) FindExtensionByNumber(message protoreflect.FullName
 
 func (r *reflectionResolver) fileContainingSymbolLocked(name protoreflect.FullName) ([]*descriptorpb.FileDescriptorProto, error) {
 	r.printer.Printf("* Using server reflection to resolve %q\n", name)
+
 	resp, err := r.sendLocked(reflectionv1.ServerReflectionRequest_builder{
 		FileContainingSymbol: proto.String(string(name)),
 	}.Build())
 	if err != nil {
 		return nil, err
 	}
+
 	return descriptorsInResponse(resp)
 }
 
 func (r *reflectionResolver) fileContainingExtensionLocked(message protoreflect.FullName, field protoreflect.FieldNumber) ([]*descriptorpb.FileDescriptorProto, error) {
 	r.printer.Printf("* Using server reflection to retrieve extension %d for %q\n", field, message)
+
 	resp, err := r.sendLocked(reflectionv1.ServerReflectionRequest_builder{
 		FileContainingExtension: reflectionv1.ExtensionRequest_builder{
 			ContainingType:  string(message),
@@ -320,17 +345,20 @@ func (r *reflectionResolver) fileContainingExtensionLocked(message protoreflect.
 	if err != nil {
 		return nil, err
 	}
+
 	return descriptorsInResponse(resp)
 }
 
 func (r *reflectionResolver) fileByNameLocked(name string) ([]*descriptorpb.FileDescriptorProto, error) {
 	r.printer.Printf("* Using server reflection to download file %q\n", name)
+
 	resp, err := r.sendLocked(reflectionv1.ServerReflectionRequest_builder{
 		FileByFilename: proto.String(name),
 	}.Build())
 	if err != nil {
 		return nil, err
 	}
+
 	return descriptorsInResponse(resp)
 }
 
@@ -342,6 +370,7 @@ func descriptorsInResponse(resp *reflectionv1.ServerReflectionResponse) ([]*desc
 		if resp.GetErrorResponse().GetErrorCode() < 0 {
 			return nil, fmt.Errorf("server replied with unsupported error code: %v", resp.GetErrorResponse().GetErrorCode())
 		}
+
 		return nil, connect.NewWireError(connect.Code(resp.GetErrorResponse().GetErrorCode()), errors.New(resp.GetErrorResponse().GetErrorMessage()))
 	case reflectionv1.ServerReflectionResponse_FileDescriptorResponse_case:
 		files := make([]*descriptorpb.FileDescriptorProto, len(resp.GetFileDescriptorResponse().GetFileDescriptorProto()))
@@ -350,8 +379,10 @@ func descriptorsInResponse(resp *reflectionv1.ServerReflectionResponse) ([]*desc
 			if err := protoencoding.NewWireUnmarshaler(nil).Unmarshal(data, &file); err != nil {
 				return nil, err
 			}
+
 			files[i] = &file
 		}
+
 		return files, nil
 	default:
 		return nil, fmt.Errorf("server replied with unsupported response type: %v", resp.WhichMessageResponse())
@@ -363,13 +394,16 @@ func (r *reflectionResolver) cacheFilesLocked(files []*descriptorpb.FileDescript
 		if _, ok := r.downloadedProtos[file.GetName()]; ok {
 			continue // already downloaded, don't bother overwriting
 		}
+
 		r.downloadedProtos[file.GetName()] = file
 	}
+
 	for _, file := range files {
 		if err := r.cacheFileLocked(file.GetName(), nil); err != nil {
 			return err
 		}
 	}
+
 	return nil
 }
 
@@ -377,6 +411,7 @@ func (r *reflectionResolver) cacheFileLocked(name string, seen []string) error {
 	if _, err := r.cachedFiles.FindFileByPath(name); err == nil {
 		return nil // already processed this file
 	}
+
 	for i, alreadySeen := range seen {
 		if name == alreadySeen {
 			// we've seen this file already which means malformed
@@ -393,19 +428,21 @@ func (r *reflectionResolver) cacheFileLocked(name string, seen []string) error {
 		if err != nil {
 			return err
 		}
+
 		for _, newFile := range moreFiles {
 			r.downloadedProtos[newFile.GetName()] = newFile
 			if newFile.GetName() == name {
 				file = newFile
 			}
 		}
+
 		if file == nil {
 			return fmt.Errorf("requested file %q but response did not contain it", name)
 		}
 	}
 
 	// make sure imports have been downloaded and cached
-	for _, dep := range file.Dependency {
+	for _, dep := range file.GetDependency() {
 		if err := r.cacheFileLocked(dep, append(seen, name)); err != nil {
 			return err
 		}
@@ -416,16 +453,20 @@ func (r *reflectionResolver) cacheFileLocked(name string, seen []string) error {
 	if err != nil {
 		return err
 	}
+
 	if err := r.cachedFiles.RegisterFile(fileDescriptor); err != nil {
 		return err
 	}
+
 	registerExtensions(&r.cachedExts, fileDescriptor)
 	r.printer.Printf("* Server reflection has resolved file %q\n", fileDescriptor.Path())
+
 	return nil
 }
 
 func (r *reflectionResolver) sendLocked(req *reflectionv1.ServerReflectionRequest) (*reflectionv1.ServerReflectionResponse, error) {
 	stream, isNew := r.getStreamLocked()
+
 	resp, err := send(stream, req)
 	if isNotImplemented(err) && !r.useV1Alpha && r.v1alphaClient != nil {
 		r.resetLocked()
@@ -433,18 +474,22 @@ func (r *reflectionResolver) sendLocked(req *reflectionv1.ServerReflectionReques
 		stream, isNew = r.getStreamLocked()
 		resp, err = send(stream, req)
 	}
+
 	if err != nil && !isNew {
 		// the existing stream broke; try again with a new stream
 		r.resetLocked()
 		stream, _ = r.getStreamLocked()
 		resp, err = send(stream, req)
 	}
+
 	return resp, err
 }
 
 func isNotImplemented(err error) bool {
 	var connErr *connect.Error
+
 	ok := errors.As(err, &connErr)
+
 	return ok && connErr.Code() == connect.CodeUnimplemented
 }
 
@@ -456,6 +501,7 @@ func send(stream *reflectStream, req *reflectionv1.ServerReflectionRequest) (*re
 	if sendErr != nil && recvErr == nil {
 		return nil, sendErr
 	}
+
 	return resp, recvErr
 }
 
@@ -464,7 +510,9 @@ func (r *reflectionResolver) getStreamLocked() (*reflectStream, bool) {
 		isNew := r.maybeCreateStreamLocked(r.v1alphaClient, &r.v1alphaStream)
 		return r.v1alphaStream, isNew
 	}
+
 	isNew := r.maybeCreateStreamLocked(r.v1Client, &r.v1Stream)
+
 	return r.v1Stream, isNew
 }
 
@@ -472,14 +520,17 @@ func (r *reflectionResolver) maybeCreateStreamLocked(client *reflectClient, stre
 	if *stream != nil {
 		return false // already created
 	}
+
 	*stream = client.CallBidiStream(r.ctx)
 	maps.Copy((*stream).RequestHeader(), r.headers)
+
 	return true
 }
 
 func (r *reflectionResolver) Reset() {
 	r.mu.Lock()
 	defer r.mu.Unlock()
+
 	r.resetLocked()
 }
 
@@ -488,6 +539,7 @@ func (r *reflectionResolver) resetLocked() {
 		reset(r.v1Stream)
 		r.v1Stream = nil
 	}
+
 	if r.v1alphaStream != nil {
 		reset(r.v1alphaStream)
 		r.v1alphaStream = nil
@@ -516,6 +568,7 @@ func registerExtensions(reg *protoregistry.Types, descriptor extensionContainer)
 		extType := dynamicpb.NewExtensionType(exts.Get(i))
 		_ = reg.RegisterExtension(extType)
 	}
+
 	msgs := descriptor.Messages()
 	for i := range msgs.Len() {
 		registerExtensions(reg, msgs.Get(i))
@@ -533,6 +586,7 @@ func descriptorKind(d protoreflect.Descriptor) string {
 		if d.IsExtension() {
 			return "extension"
 		}
+
 		return "field"
 	case protoreflect.OneofDescriptor:
 		return "oneof"

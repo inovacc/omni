@@ -22,9 +22,11 @@ import (
 
 func TestRoundTrip(t *testing.T) {
 	t.Parallel()
+
 	for range 100 {
 		id, err := New()
 		require.NoError(t, err)
+
 		dashless := ToDashless(id)
 		roundTripID, err := FromDashless(dashless)
 		require.NoError(t, err)
@@ -34,8 +36,10 @@ func TestRoundTrip(t *testing.T) {
 
 func TestFromStringFailsWithDashless(t *testing.T) {
 	t.Parallel()
+
 	id, err := New()
 	require.NoError(t, err)
+
 	dashless := ToDashless(id)
 	_, err = FromString(dashless)
 	require.Error(t, err)
@@ -43,6 +47,7 @@ func TestFromStringFailsWithDashless(t *testing.T) {
 
 func TestFromDashlessFailsWithUUID(t *testing.T) {
 	t.Parallel()
+
 	id, err := New()
 	require.NoError(t, err)
 	_, err = FromDashless(id.String())
@@ -51,8 +56,10 @@ func TestFromDashlessFailsWithUUID(t *testing.T) {
 
 func TestValidateFailsWithDashless(t *testing.T) {
 	t.Parallel()
+
 	id, err := New()
 	require.NoError(t, err)
+
 	dashless := ToDashless(id)
 	err = Validate(dashless)
 	require.Error(t, err)
@@ -60,6 +67,7 @@ func TestValidateFailsWithDashless(t *testing.T) {
 
 func TestValidateDashlessFailsWithUUID(t *testing.T) {
 	t.Parallel()
+
 	id, err := New()
 	require.NoError(t, err)
 	err = ValidateDashless(id.String())
@@ -68,10 +76,12 @@ func TestValidateDashlessFailsWithUUID(t *testing.T) {
 
 func TestFromStringSliceFailsWithDashless(t *testing.T) {
 	t.Parallel()
+
 	id1, err := New()
 	require.NoError(t, err)
 	id2, err := New()
 	require.NoError(t, err)
+
 	dashless := []string{ToDashless(id1), ToDashless(id2)}
 	_, err = FromStringSlice(dashless)
 	require.Error(t, err)
@@ -79,10 +89,12 @@ func TestFromStringSliceFailsWithDashless(t *testing.T) {
 
 func TestFromStringSlice(t *testing.T) {
 	t.Parallel()
+
 	id1, err := New()
 	require.NoError(t, err)
 	id2, err := New()
 	require.NoError(t, err)
+
 	ids := []string{id1.String(), id2.String()}
 	uuids, err := FromStringSlice(ids)
 	require.NoError(t, err)

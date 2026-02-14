@@ -152,6 +152,7 @@ func (e Expr) AsToken() Token {
 	if e.Kind() != KindToken {
 		return Token{}
 	}
+
 	return Token{
 		ExprContext: e.Context(),
 		Token:       id.Wrap(e.Context().Stream(), id.ID[token.Token](e.ID().Value())),

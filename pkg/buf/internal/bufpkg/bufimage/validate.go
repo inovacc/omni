@@ -26,14 +26,17 @@ func validateProtoImage(protoImage *imagev1.Image) error {
 	if protoImage == nil {
 		return errors.New("nil Image")
 	}
+
 	if len(protoImage.GetFile()) == 0 {
 		return errors.New("image contains no files")
 	}
+
 	for _, protoImageFile := range protoImage.GetFile() {
 		if err := validateProtoImageFile(protoImageFile); err != nil {
 			return err
 		}
 	}
+
 	return nil
 }
 
@@ -45,10 +48,12 @@ func validateProtoImageFile(protoImageFile *imagev1.ImageFile) error {
 				return fmt.Errorf("unused dependency index %d is out of range", index)
 			}
 		}
+
 		if protoModuleInfo := protoImageFileExtension.GetModuleInfo(); protoModuleInfo != nil {
 			return validateProtoModuleInfo(protoModuleInfo)
 		}
 	}
+
 	return nil
 }
 
@@ -56,6 +61,7 @@ func validateProtoModuleInfo(protoModuleInfo *imagev1.ModuleInfo) error {
 	if protoModuleName := protoModuleInfo.GetName(); protoModuleName != nil {
 		return validateProtoModuleName(protoModuleInfo.GetName())
 	}
+
 	return nil
 }
 
@@ -63,11 +69,14 @@ func validateProtoModuleName(protoModuleName *imagev1.ModuleName) error {
 	if protoModuleName.GetRemote() == "" {
 		return errors.New("empty ModuleName.Remote")
 	}
+
 	if protoModuleName.GetOwner() == "" {
 		return errors.New("empty ModuleName.Owner")
 	}
+
 	if protoModuleName.GetRepository() == "" {
 		return errors.New("empty ModuleName.Repository")
 	}
+
 	return nil
 }

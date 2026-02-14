@@ -89,16 +89,16 @@ func parseGoMod(path string) *GoDeps {
 	inRequire := false
 	indirect := false
 
-	for _, line := range strings.Split(string(data), "\n") {
+	for line := range strings.SplitSeq(string(data), "\n") {
 		line = strings.TrimSpace(line)
 
-		if strings.HasPrefix(line, "module ") {
-			deps.Module = strings.TrimPrefix(line, "module ")
+		if after, ok := strings.CutPrefix(line, "module "); ok {
+			deps.Module = after
 			continue
 		}
 
-		if strings.HasPrefix(line, "go ") {
-			deps.GoVersion = strings.TrimPrefix(line, "go ")
+		if after, ok := strings.CutPrefix(line, "go "); ok {
+			deps.GoVersion = after
 			continue
 		}
 
@@ -198,7 +198,7 @@ func parseRequirementsTxt(path string) *PythonDeps {
 
 	deps := &PythonDeps{Source: "requirements.txt"}
 
-	for _, line := range strings.Split(string(data), "\n") {
+	for line := range strings.SplitSeq(string(data), "\n") {
 		line = strings.TrimSpace(line)
 		if line == "" || strings.HasPrefix(line, "#") || strings.HasPrefix(line, "-") {
 			continue
@@ -273,7 +273,7 @@ func parseCargoToml(path string) *RustDeps {
 			Version string `toml:"version"`
 			Edition string `toml:"edition"`
 		} `toml:"package"`
-		Dependencies map[string]interface{} `toml:"dependencies"`
+		Dependencies map[string]any `toml:"dependencies"`
 	}
 
 	if err := toml.Unmarshal(data, &cargo); err != nil {
@@ -302,9 +302,9 @@ func parsePomXML(path string) *JavaDeps {
 	}
 
 	var pom struct {
-		XMLName    xml.Name `xml:"project"`
-		GroupID    string   `xml:"groupId"`
-		ArtifactID string  `xml:"artifactId"`
+		XMLName      xml.Name `xml:"project"`
+		GroupID      string   `xml:"groupId"`
+		ArtifactID   string   `xml:"artifactId"`
 		Dependencies struct {
 			Dependency []struct {
 				GroupID    string `xml:"groupId"`
@@ -368,7 +368,7 @@ func parseGemfile(path string) *RubyDeps {
 
 	deps := &RubyDeps{}
 
-	for _, line := range strings.Split(string(data), "\n") {
+	for line := range strings.SplitSeq(string(data), "\n") {
 		if m := gemRegex.FindStringSubmatch(line); len(m) >= 2 {
 			deps.Dependencies = append(deps.Dependencies, m[1])
 		}

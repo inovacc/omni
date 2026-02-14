@@ -25,9 +25,11 @@ import (
 
 func TestPutAndGetBufWorkYAMLFileForPrefix(t *testing.T) {
 	t.Parallel()
+
 	ctx := context.Background()
 	bufWorkYAMLFile, err := NewBufWorkYAMLFile(FileVersionV1, []string{"foo", "bar"})
 	require.NoError(t, err)
+
 	readWriteBucket := storagemem.NewReadWriteBucket()
 	err = PutBufWorkYAMLFileForPrefix(ctx, readWriteBucket, "pre", bufWorkYAMLFile)
 	require.NoError(t, err)
@@ -44,7 +46,9 @@ func TestPutAndGetBufWorkYAMLFileForPrefix(t *testing.T) {
 
 func TestReadBufWorkYAMLFileValidateVersion(t *testing.T) {
 	t.Parallel()
+
 	ctx := context.Background()
+
 	testcases := []struct {
 		description      string
 		prefix           string
@@ -84,17 +88,20 @@ directories:
 	for _, testcase := range testcases {
 		t.Run(testcase.description, func(t *testing.T) {
 			t.Parallel()
+
 			readBucket, err := storagemem.NewReadBucket(
 				map[string][]byte{
 					filepath.Join(testcase.prefix, "buf.work.yaml"): []byte(testcase.content),
 				},
 			)
 			require.NoError(t, err)
+
 			bufWorkYAMLFile, err := GetBufWorkYAMLFileForPrefix(ctx, readBucket, testcase.prefix)
 			if testcase.isErr {
 				require.Error(t, err)
 				return
 			}
+
 			require.NoError(t, err)
 			require.Equal(t, testcase.expectedDirPaths, bufWorkYAMLFile.DirPaths())
 		})
@@ -103,6 +110,7 @@ directories:
 
 func TestNewBufWorkYAMLFile(t *testing.T) {
 	t.Parallel()
+
 	testcases := []struct {
 		description      string
 		version          FileVersion
@@ -131,6 +139,7 @@ func TestNewBufWorkYAMLFile(t *testing.T) {
 	for _, testcase := range testcases {
 		t.Run(testcase.description, func(t *testing.T) {
 			t.Parallel()
+
 			bufWorkYAMLFile, err := NewBufWorkYAMLFile(testcase.version, testcase.dirPaths)
 			require.NoError(t, err)
 			require.Equal(t, testcase.expectedDirPaths, bufWorkYAMLFile.DirPaths())
@@ -140,6 +149,7 @@ func TestNewBufWorkYAMLFile(t *testing.T) {
 
 func TestNewWorkYAMLFileFail(t *testing.T) {
 	t.Parallel()
+
 	testcases := []struct {
 		description string
 		version     FileVersion
@@ -189,6 +199,7 @@ func TestNewWorkYAMLFileFail(t *testing.T) {
 	for _, testcase := range testcases {
 		t.Run(testcase.description, func(t *testing.T) {
 			t.Parallel()
+
 			_, err := NewBufWorkYAMLFile(testcase.version, testcase.dirPaths)
 			require.Error(t, err)
 		})

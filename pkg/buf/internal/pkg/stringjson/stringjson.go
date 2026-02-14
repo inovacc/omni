@@ -42,8 +42,12 @@ func printInternal(writer io.Writer, object Object, asJSON bool, extra []byte) e
 	if object == nil {
 		return nil
 	}
-	var data []byte
-	var err error
+
+	var (
+		data []byte
+		err  error
+	)
+
 	if asJSON {
 		data, err = object.MarshalJSON()
 		if err != nil {
@@ -52,13 +56,16 @@ func printInternal(writer io.Writer, object Object, asJSON bool, extra []byte) e
 	} else {
 		data = []byte(object.String())
 	}
+
 	if len(data) > 0 {
 		if len(extra) > 0 {
 			data = append(data, extra...)
 		}
+
 		if _, err := writer.Write(data); err != nil {
 			return err
 		}
 	}
+
 	return nil
 }

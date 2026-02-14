@@ -73,6 +73,7 @@ func (f *File) Syntax() DeclSyntax {
 			return s
 		}
 	}
+
 	return DeclSyntax{}
 }
 
@@ -83,6 +84,7 @@ func (f *File) Package() DeclPackage {
 			return p
 		}
 	}
+
 	return DeclPackage{}
 }
 
@@ -92,6 +94,7 @@ func (f *File) Imports() iter.Seq[DeclImport] {
 		if imp := d.AsImport(); !imp.IsZero() {
 			return imp, true
 		}
+
 		return DeclImport{}, false
 	})
 }
@@ -101,6 +104,7 @@ func (f *File) Path() string {
 	if f == nil {
 		return ""
 	}
+
 	return f.path
 }
 
@@ -114,6 +118,7 @@ func (f *File) Stream() *token.Stream {
 	if f == nil {
 		return nil
 	}
+
 	return f.stream
 }
 

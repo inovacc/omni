@@ -8,8 +8,11 @@ import (
 
 func TestRunInteractivePromptURLThenQuit(t *testing.T) {
 	in := strings.NewReader("https://www.youtube.com/watch?v=dQw4w9WgXcQ\n8\n")
-	var out bytes.Buffer
-	var prompt bytes.Buffer
+
+	var (
+		out    bytes.Buffer
+		prompt bytes.Buffer
+	)
 
 	if err := RunInteractive(&out, &prompt, in, nil, Options{}); err != nil {
 		t.Fatalf("RunInteractive() error = %v", err)
@@ -27,8 +30,11 @@ func TestRunInteractivePromptURLThenQuit(t *testing.T) {
 
 func TestRunInteractiveQuitWithArgs(t *testing.T) {
 	in := strings.NewReader("8\n")
-	var out bytes.Buffer
-	var prompt bytes.Buffer
+
+	var (
+		out    bytes.Buffer
+		prompt bytes.Buffer
+	)
 
 	err := RunInteractive(&out, &prompt, in, []string{"https://example.com/video.mp4"}, Options{})
 	if err != nil {

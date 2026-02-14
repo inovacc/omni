@@ -132,7 +132,9 @@ func TestCompletion(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
+
 			var completionList *protocol.CompletionList
+
 			_, completionErr := clientJSONConn.Call(ctx, protocol.MethodTextDocumentCompletion, protocol.CompletionParams{
 				TextDocumentPositionParams: protocol.TextDocumentPositionParams{
 					TextDocument: protocol.TextDocumentIdentifier{
@@ -145,18 +147,23 @@ func TestCompletion(t *testing.T) {
 				},
 			}, &completionList)
 			require.NoError(t, completionErr)
+
 			if tt.expectNoCompletions {
 				assert.Nil(t, completionList, "expected no completions")
 				return
 			}
+
 			require.NotNil(t, completionList, "expected completion list to be non-nil")
+
 			labels := make([]string, 0, len(completionList.Items))
 			for _, item := range completionList.Items {
 				labels = append(labels, item.Label)
 			}
+
 			for _, expected := range tt.expectedContains {
 				assert.Contains(t, labels, expected, "expected completion list to contain %q", expected)
 			}
+
 			for _, notExpected := range tt.expectedNotContains {
 				assert.NotContains(t, labels, notExpected, "expected completion list to not contain %q", notExpected)
 			}
@@ -203,6 +210,7 @@ message User {
 	// Now request completions at the position where we just inserted "str"
 	// This should return completions for "string" and other types starting with "str"
 	var completionList *protocol.CompletionList
+
 	_, completionErr := clientJSONConn.Call(ctx, protocol.MethodTextDocumentCompletion, protocol.CompletionParams{
 		TextDocumentPositionParams: protocol.TextDocumentPositionParams{
 			TextDocument: protocol.TextDocumentIdentifier{
@@ -293,7 +301,9 @@ func TestCompletionMaps(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
+
 			var completionList *protocol.CompletionList
+
 			_, completionErr := clientJSONConn.Call(ctx, protocol.MethodTextDocumentCompletion, protocol.CompletionParams{
 				TextDocumentPositionParams: protocol.TextDocumentPositionParams{
 					TextDocument: protocol.TextDocumentIdentifier{
@@ -307,12 +317,14 @@ func TestCompletionMaps(t *testing.T) {
 			}, &completionList)
 			require.NoError(t, completionErr)
 			require.NotNil(t, completionList, "expected completion list to be non-nil")
+
 			labels := xslices.Map(completionList.Items, func(item protocol.CompletionItem) string {
 				return item.Label
 			})
 			for _, expected := range tt.expectedContains {
 				assert.Contains(t, labels, expected, "expected completion list to contain %q", expected)
 			}
+
 			for _, notExpected := range tt.expectedNotContains {
 				assert.NotContains(t, labels, notExpected, "expected completion list to not contain %q", notExpected)
 			}
@@ -489,6 +501,7 @@ func TestCompletionOptions(t *testing.T) {
 
 			// Request completions at the specified position in the static file
 			var completionList *protocol.CompletionList
+
 			_, completionErr := clientJSONConn.Call(ctx, protocol.MethodTextDocumentCompletion, protocol.CompletionParams{
 				TextDocumentPositionParams: protocol.TextDocumentPositionParams{
 					TextDocument: protocol.TextDocumentIdentifier{

@@ -354,6 +354,7 @@ func TestDetectTests(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			dir := t.TempDir()
+
 			for _, f := range tt.files {
 				if strings.HasSuffix(f, "/") {
 					_ = os.MkdirAll(filepath.Join(dir, f), 0o755)
@@ -385,6 +386,7 @@ func TestDetectLicenseType(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			dir := t.TempDir()
+
 			path := filepath.Join(dir, "LICENSE")
 			if err := os.WriteFile(path, []byte(tt.content), 0o644); err != nil {
 				t.Fatal(err)

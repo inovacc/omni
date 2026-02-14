@@ -46,16 +46,20 @@ func NewBlobForContent(reader io.Reader, options ...BlobOption) (Blob, error) {
 	for _, option := range options {
 		option(blobOptions)
 	}
+
 	buffer := bytes.NewBuffer(nil)
 	teeReader := io.TeeReader(reader, buffer)
+
 	digest, err := NewDigestForContent(teeReader, DigestWithDigestType(blobOptions.digestType))
 	if err != nil {
 		return nil, err
 	}
+
 	blob := newBlob(digest, buffer.Bytes())
 	if blobOptions.knownDigest != nil && !DigestEqual(blob.Digest(), blobOptions.knownDigest) {
 		return nil, fmt.Errorf("Digest %v did not match known Digest %v when creating a new Blob", blob.Digest(), blobOptions.knownDigest)
 	}
+
 	return blob, nil
 }
 

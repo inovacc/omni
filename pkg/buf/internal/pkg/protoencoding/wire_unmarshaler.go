@@ -28,6 +28,7 @@ func newWireUnmarshaler(resolver Resolver) Unmarshaler {
 	if resolver == nil {
 		resolver = EmptyResolver
 	}
+
 	return &wireUnmarshaler{
 		resolver: resolver,
 	}
@@ -40,5 +41,6 @@ func (m *wireUnmarshaler) Unmarshal(data []byte, message proto.Message) error {
 	if err := options.Unmarshal(data, message); err != nil {
 		return fmt.Errorf("wire unmarshal: %w", err)
 	}
+
 	return nil
 }

@@ -22,6 +22,7 @@ import (
 	"path/filepath"
 	"sort"
 
+	connect "connectrpc.com/connect"
 	"github.com/inovacc/omni/pkg/buf/internal/app"
 	"github.com/inovacc/omni/pkg/buf/internal/buf/bufprotopluginexec"
 	bufconfig2 "github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufconfig"
@@ -32,7 +33,6 @@ import (
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufprotoplugin/bufprotopluginos"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufremoteplugin"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufremoteplugin/bufremotepluginref"
-	connect "connectrpc.com/connect"
 	"github.com/inovacc/omni/pkg/buf/internal/gen/proto/connect/buf/alpha/registry/v1alpha1/registryv1alpha1connect"
 	"github.com/inovacc/omni/pkg/buf/internal/gen/proto/go/buf/alpha/registry/v1alpha1"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/connectclient"
@@ -90,20 +90,24 @@ func (g *generator) Generate(
 	for _, option := range options {
 		option(generateOptions)
 	}
+
 	if !config.GenerateManagedConfig().Enabled() {
 		if len(config.GenerateManagedConfig().Overrides()) != 0 || len(config.GenerateManagedConfig().Disables()) != 0 {
 			g.logger.Warn("managed mode configs are set but are not enabled")
 		}
 	}
+
 	for _, image := range images {
 		if err := bufimagemodify.Modify(image, config.GenerateManagedConfig()); err != nil {
 			return err
 		}
 	}
+
 	shouldDeleteOuts := config.CleanPluginOuts()
 	if generateOptions.deleteOuts != nil {
 		shouldDeleteOuts = *generateOptions.deleteOuts
 	}
+
 	if shouldDeleteOuts {
 		if err := g.deleteOuts(
 			ctx,
@@ -113,6 +117,7 @@ func (g *generator) Generate(
 			return err
 		}
 	}
+
 	for _, image := range images {
 		if err := g.generateCode(
 			ctx,
@@ -126,6 +131,7 @@ func (g *generator) Generate(
 			return err
 		}
 	}
+
 	return nil
 }
 
@@ -143,6 +149,7 @@ func (g *generator) deleteOuts(
 				if baseOutDir != "" && baseOutDir != "." {
 					return filepath.Join(baseOutDir, out)
 				}
+
 				return out
 			},
 		),
@@ -175,15 +182,18 @@ func (g *generator) generateCode(
 		g.storageosProvider,
 		bufprotopluginos.ResponseWriterWithCreateOutDirIfNotExists(),
 	)
+
 	for i, pluginConfig := range pluginConfigs {
 		out := pluginConfig.Out()
 		if baseOutDir != "" && baseOutDir != "." {
 			out = filepath.Join(baseOutDir, out)
 		}
+
 		response := responses[i]
 		if response == nil {
 			return fmt.Errorf("failed to get plugin response for %s", pluginConfig.Name())
 		}
+
 		if err := responseWriter.AddResponse(
 			ctx,
 			response,
@@ -192,9 +202,11 @@ func (g *generator) generateCode(
 			return fmt.Errorf("plugin %s: %v", pluginConfig.Name(), err)
 		}
 	}
+
 	if err := responseWriter.Close(); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -219,9 +231,11 @@ func (g *generator) execPlugins(
 
 		// Apply per-plugin filters.
 		includeTypes := pluginConfigForKey.IncludeTypes()
+
 		excludeTypes := pluginConfigForKey.ExcludeTypes()
 		if len(includeTypes) > 0 || len(excludeTypes) > 0 {
 			var err error
+
 			image, err = bufimageutil.FilterImage(
 				image,
 				bufimageutil.WithIncludeTypes(includeTypes...),
@@ -247,21 +261,26 @@ func (g *generator) execPlugins(
 				if err != nil {
 					return err
 				}
+
 				for _, result := range results {
 					responses[result.Index] = result.Value
 				}
+
 				return nil
 			})
+
 			continue
 		}
 
 		// Local plugins.
 		var images []bufimage.Image
+
 		switch Strategy(pluginConfigForKey.Strategy()) {
 		case StrategyAll:
 			images = []bufimage.Image{image}
 		case StrategyDirectory:
 			var err error
+
 			images, err = bufimage.ImageByDir(image)
 			if err != nil {
 				return nil, err
@@ -269,16 +288,19 @@ func (g *generator) execPlugins(
 		default:
 			return nil, fmt.Errorf("unknown strategy: %v", pluginConfigForKey.Strategy())
 		}
+
 		for _, indexedPluginConfig := range indexedPluginConfigs {
 			jobs = append(jobs, func(ctx context.Context) error {
 				includeImports := indexedPluginConfig.Value.IncludeImports()
 				if includeImportsOverride != nil {
 					includeImports = *includeImportsOverride
 				}
+
 				includeWellKnownTypes := indexedPluginConfig.Value.IncludeWKT()
 				if includeWellKnownTypesOverride != nil {
 					includeWellKnownTypes = *includeWellKnownTypesOverride
 				}
+
 				response, err := g.execLocalPlugin(
 					ctx,
 					container,
@@ -290,7 +312,9 @@ func (g *generator) execPlugins(
 				if err != nil {
 					return err
 				}
+
 				responses[indexedPluginConfig.Index] = response
+
 				return nil
 			})
 		}
@@ -314,12 +338,15 @@ func (g *generator) execPlugins(
 	); err != nil {
 		return nil, err
 	}
+
 	if err := validateResponses(responses, pluginConfigs); err != nil {
 		return nil, err
 	}
+
 	if err := checkRequiredFeatures(g.logger, requiredFeatures, responses, pluginConfigs); err != nil {
 		return nil, err
 	}
+
 	return responses, nil
 }
 
@@ -341,6 +368,7 @@ func (g *generator) execLocalPlugin(
 	if err != nil {
 		return nil, err
 	}
+
 	response, err := g.pluginexecGenerator.Generate(
 		ctx,
 		container,
@@ -352,6 +380,7 @@ func (g *generator) execLocalPlugin(
 	if err != nil {
 		return nil, fmt.Errorf("plugin %s: %v", pluginConfig.Name(), err)
 	}
+
 	return response, nil
 }
 
@@ -370,10 +399,12 @@ func (g *generator) execRemotePluginsV2(
 		if includeImportsOverride != nil {
 			includeImports = *includeImportsOverride
 		}
+
 		includeWellKnownTypes := indexedPluginConfig.Value.IncludeWKT()
 		if includeWellKnownTypesOverride != nil {
 			includeWellKnownTypes = *includeWellKnownTypesOverride
 		}
+
 		request, err := getPluginGenerationRequest(
 			indexedPluginConfig.Value,
 			includeImports,
@@ -382,13 +413,17 @@ func (g *generator) execRemotePluginsV2(
 		if err != nil {
 			return nil, err
 		}
+
 		requests[i] = request
 	}
+
 	codeGenerationService := connectclient.Make(g.clientConfig, remote, registryv1alpha1connect.NewCodeGenerationServiceClient)
+
 	protoImage, err := bufimage.ImageToProtoImage(image)
 	if err != nil {
 		return nil, err
 	}
+
 	response, err := codeGenerationService.GenerateCode(
 		ctx,
 		connect.NewRequest(
@@ -401,21 +436,25 @@ func (g *generator) execRemotePluginsV2(
 	if err != nil {
 		return nil, err
 	}
+
 	responses := response.Msg.GetResponses()
 	if len(responses) != len(requests) {
 		return nil, fmt.Errorf("unexpected number of responses received, got %d, wanted %d", len(responses), len(requests))
 	}
+
 	result := make([]xslices.Indexed[*pluginpb.CodeGeneratorResponse], 0, len(responses))
 	for i := range requests {
 		codeGeneratorResponse := responses[i].GetResponse()
 		if codeGeneratorResponse == nil {
 			return nil, errors.New("expected code generator response")
 		}
+
 		result = append(result, xslices.Indexed[*pluginpb.CodeGeneratorResponse]{
 			Value: codeGeneratorResponse,
 			Index: indexedPluginConfigs[i].Index,
 		})
 	}
+
 	return result, nil
 }
 
@@ -433,13 +472,16 @@ func getPluginGenerationRequest(
 		if err != nil {
 			return nil, fmt.Errorf("invalid remote plugin %q", pluginConfig.Name())
 		}
+
 		curatedPluginReference = bufremoteplugin.PluginIdentityToProtoCuratedPluginReference(identity)
 	}
+
 	var options []string
 	if len(pluginConfig.Opt()) > 0 {
 		// Only include parameters if they're not empty.
 		options = []string{pluginConfig.Opt()}
 	}
+
 	return registryv1alpha1.PluginGenerationRequest_builder{
 		PluginReference:       curatedPluginReference,
 		Options:               options,
@@ -458,12 +500,14 @@ func validateResponses(
 	if len(responses) != len(pluginConfigs) {
 		return fmt.Errorf("unexpected number of responses: expected %d but got %d", len(pluginConfigs), len(responses))
 	}
+
 	pluginResponses := make([]*bufprotoplugin.PluginResponse, 0, len(responses))
 	for i, response := range responses {
 		pluginConfig := pluginConfigs[i]
 		if response == nil {
 			return fmt.Errorf("failed to create a response for %q", pluginConfig.Name())
 		}
+
 		pluginResponses = append(
 			pluginResponses,
 			bufprotoplugin.NewPluginResponse(
@@ -473,9 +517,11 @@ func validateResponses(
 			),
 		)
 	}
+
 	if err := bufprotoplugin.ValidatePluginResponses(pluginResponses); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -508,6 +554,7 @@ func createPluginConfigKeyForImage(pluginConfig bufconfig2.GeneratePluginConfig)
 	// Sort the types and excludeTypes so that the key is deterministic.
 	sort.Strings(pluginConfig.IncludeTypes())
 	sort.Strings(pluginConfig.ExcludeTypes())
+
 	return pluginConfigKeyForImage{
 		includeTypes: fmt.Sprintf("%v", pluginConfig.IncludeTypes()),
 		excludeTypes: fmt.Sprintf("%v", pluginConfig.ExcludeTypes()),

@@ -19,11 +19,11 @@ import (
 	"fmt"
 	"log/slog"
 
+	"connectrpc.com/connect"
 	"github.com/google/uuid"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufparse"
 	bufplugin2 "github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufplugin"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufregistryapi/bufregistryapiplugin"
-	"connectrpc.com/connect"
 	pluginv1beta1 "github.com/inovacc/omni/pkg/buf/internal/gen/bufbuild/registry/protocolbuffers/go/buf/registry/plugin/v1beta1"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/syserror"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/uuidutil"
@@ -71,13 +71,16 @@ func (p *pluginDataProvider) GetPluginDatasForPluginKeys(
 	if len(pluginKeys) == 0 {
 		return nil, nil
 	}
+
 	digestType, err := bufplugin2.UniqueDigestTypeForPluginKeys(pluginKeys)
 	if err != nil {
 		return nil, err
 	}
+
 	if digestType != bufplugin2.DigestTypeP1 {
 		return nil, syserror.Newf("unsupported digest type: %v", digestType)
 	}
+
 	if _, err := bufparse.FullNameStringToUniqueValue(pluginKeys); err != nil {
 		return nil, err
 	}
@@ -89,6 +92,7 @@ func (p *pluginDataProvider) GetPluginDatasForPluginKeys(
 		},
 	)
 	indexedPluginDatas := make([]xslices.Indexed[bufplugin2.PluginData], 0, len(pluginKeys))
+
 	for registry, indexedPluginKeys := range registryToIndexedPluginKeys {
 		indexedRegistryPluginDatas, err := p.getIndexedPluginDatasForRegistryAndIndexedPluginKeys(
 			ctx,
@@ -98,8 +102,10 @@ func (p *pluginDataProvider) GetPluginDatasForPluginKeys(
 		if err != nil {
 			return nil, err
 		}
+
 		indexedPluginDatas = append(indexedPluginDatas, indexedRegistryPluginDatas...)
 	}
+
 	return xslices.IndexedToSortedValues(indexedPluginDatas), nil
 }
 
@@ -133,7 +139,8 @@ func (p *pluginDataProvider) getIndexedPluginDatasForRegistryAndIndexedPluginKey
 	if err != nil {
 		return nil, err
 	}
-	pluginContents := pluginResponse.Msg.Contents
+
+	pluginContents := pluginResponse.Msg.GetContents()
 	if len(pluginContents) != len(indexedPluginKeys) {
 		return nil, syserror.New("did not get the expected number of plugin datas")
 	}
@@ -149,20 +156,24 @@ func (p *pluginDataProvider) getIndexedPluginDatasForRegistryAndIndexedPluginKey
 	}
 
 	indexedPluginDatas := make([]xslices.Indexed[bufplugin2.PluginData], 0, len(indexedPluginKeys))
+
 	for _, pluginContent := range pluginContents {
-		commitID, err := uuid.Parse(pluginContent.Commit.Id)
+		commitID, err := uuid.Parse(pluginContent.GetCommit().GetId())
 		if err != nil {
 			return nil, err
 		}
+
 		indexedPluginKey, ok := commitIDToIndexedPluginKeys[commitID]
 		if !ok {
 			return nil, syserror.Newf("did not get plugin key from store with commitID %q", commitID)
 		}
+
 		var getData func() ([]byte, error)
-		switch compressionType := pluginContent.CompressionType; compressionType {
+
+		switch compressionType := pluginContent.GetCompressionType(); compressionType {
 		case pluginv1beta1.CompressionType_COMPRESSION_TYPE_NONE:
 			getData = func() ([]byte, error) {
-				return pluginContent.Content, nil
+				return pluginContent.GetContent(), nil
 			}
 		case pluginv1beta1.CompressionType_COMPRESSION_TYPE_ZSTD:
 			getData = func() ([]byte, error) {
@@ -171,15 +182,18 @@ func (p *pluginDataProvider) getIndexedPluginDatasForRegistryAndIndexedPluginKey
 					return nil, err
 				}
 				defer zstdDecoder.Close() // Does not return an error.
-				return zstdDecoder.DecodeAll(pluginContent.Content, nil)
+
+				return zstdDecoder.DecodeAll(pluginContent.GetContent(), nil)
 			}
 		default:
 			return nil, fmt.Errorf("unknown CompressionType: %v", compressionType)
 		}
+
 		pluginData, err := bufplugin2.NewPluginData(ctx, indexedPluginKey.Value, getData)
 		if err != nil {
 			return nil, err
 		}
+
 		indexedPluginDatas = append(
 			indexedPluginDatas,
 			xslices.Indexed[bufplugin2.PluginData]{
@@ -188,5 +202,6 @@ func (p *pluginDataProvider) getIndexedPluginDatasForRegistryAndIndexedPluginKey
 			},
 		)
 	}
+
 	return indexedPluginDatas, nil
 }

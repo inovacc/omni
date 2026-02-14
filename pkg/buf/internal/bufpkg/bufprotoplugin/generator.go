@@ -53,6 +53,7 @@ func (g *generator) Generate(
 			},
 		),
 	)
+
 	jobs := make([]func(context.Context) error, len(codeGeneratorRequests))
 	for i, codeGeneratorRequest := range codeGeneratorRequests {
 		jobs[i] = func(ctx context.Context) error {
@@ -60,6 +61,7 @@ func (g *generator) Generate(
 			if err != nil {
 				return err
 			}
+
 			return g.handler.Handle(
 				ctx,
 				protoplugin.PluginEnv{
@@ -71,15 +73,19 @@ func (g *generator) Generate(
 			)
 		}
 	}
+
 	if err := thread.Parallelize(ctx, jobs, thread.ParallelizeWithCancelOnFailure()); err != nil {
 		return nil, err
 	}
+
 	codeGeneratorResponse, err := protopluginResponseWriter.ToCodeGeneratorResponse()
 	if err != nil {
 		return nil, err
 	}
+
 	if errString := codeGeneratorResponse.GetError(); errString != "" {
 		return nil, errors.New(errString)
 	}
+
 	return codeGeneratorResponse, nil
 }

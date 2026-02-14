@@ -97,6 +97,7 @@ func NewRequest(codeGeneratorRequest *pluginpb.CodeGeneratorRequest) (Request, e
 	if err := validateCodeGeneratorRequest(codeGeneratorRequest); err != nil {
 		return nil, err
 	}
+
 	request := &request{
 		codeGeneratorRequest: codeGeneratorRequest,
 	}
@@ -104,6 +105,7 @@ func NewRequest(codeGeneratorRequest *pluginpb.CodeGeneratorRequest) (Request, e
 		sync.OnceValue(request.getFilesToGenerateMapUncached)
 	request.getSourceFileDescriptorNameToFileDescriptorProtoMap =
 		sync.OnceValue(request.getSourceFileDescriptorNameToFileDescriptorProtoMapUncached)
+
 	return request, nil
 }
 
@@ -127,14 +129,17 @@ func (r *request) FileDescriptorsToGenerate() ([]protoreflect.FileDescriptor, er
 	if err != nil {
 		return nil, err
 	}
+
 	fileDescriptors := make([]protoreflect.FileDescriptor, len(r.codeGeneratorRequest.GetFileToGenerate()))
 	for i, fileToGenerate := range r.codeGeneratorRequest.GetFileToGenerate() {
 		fileDescriptor, err := files.FindFileByPath(fileToGenerate)
 		if err != nil {
 			return nil, err
 		}
+
 		fileDescriptors[i] = fileDescriptor
 	}
+
 	return fileDescriptors, nil
 }
 
@@ -151,12 +156,14 @@ func (r *request) FileDescriptorProtosToGenerate() []*descriptorpb.FileDescripto
 	}
 	// Otherwise, we need to get the values in proto_file that are in file_to_generate.
 	filesToGenerateMap := r.getFilesToGenerateMap()
+
 	fileDescriptorProtos := make([]*descriptorpb.FileDescriptorProto, 0, len(r.codeGeneratorRequest.GetFileToGenerate()))
 	for _, protoFile := range r.codeGeneratorRequest.GetProtoFile() {
 		if _, ok := filesToGenerateMap[protoFile.GetName()]; ok {
 			fileDescriptorProtos = append(fileDescriptorProtos, protoFile)
 		}
 	}
+
 	return fileDescriptorProtos
 }
 
@@ -171,14 +178,17 @@ func (r *request) AllFileDescriptorProtos() []*descriptorpb.FileDescriptorProto 
 	// We have validated that source_file_descriptors is populated via WithSourceRetentionOptions.
 	filesToGenerateMap := r.getFilesToGenerateMap()
 	sourceFileDescriptorNameToFileDescriptorProtoMap := r.getSourceFileDescriptorNameToFileDescriptorProtoMap()
+
 	fileDescriptorProtos := make([]*descriptorpb.FileDescriptorProto, len(r.codeGeneratorRequest.GetProtoFile()))
 	for i, protoFile := range r.codeGeneratorRequest.GetProtoFile() {
 		if _, ok := filesToGenerateMap[protoFile.GetName()]; ok {
 			// We assume we've done validation that source_file_descriptors contains file_to_generate.
 			protoFile = sourceFileDescriptorNameToFileDescriptorProtoMap[protoFile.GetName()]
 		}
+
 		fileDescriptorProtos[i] = protoFile
 	}
+
 	return fileDescriptorProtos
 }
 
@@ -192,6 +202,7 @@ func (r *request) CompilerVersion() *CompilerVersion {
 			Suffix: version.GetSuffix(),
 		}
 	}
+
 	return nil
 }
 
@@ -203,6 +214,7 @@ func (r *request) WithSourceRetentionOptions() (Request, error) {
 	if err := r.validateSourceFileDescriptorsPresent(); err != nil {
 		return nil, err
 	}
+
 	return &request{
 		codeGeneratorRequest:                                r.codeGeneratorRequest,
 		getFilesToGenerateMap:                               r.getFilesToGenerateMap,
@@ -216,6 +228,7 @@ func (r *request) validateSourceFileDescriptorsPresent() error {
 		len(r.codeGeneratorRequest.GetProtoFile()) > 0 {
 		return errors.New("source_file_descriptors not set on CodeGeneratorRequest but source-retention options requested - you likely need to upgrade your protobuf compiler")
 	}
+
 	return nil
 }
 
@@ -227,6 +240,7 @@ func (r *request) getFilesToGenerateMapUncached() map[string]struct{} {
 	for _, fileToGenerate := range r.codeGeneratorRequest.GetFileToGenerate() {
 		filesToGenerateMap[fileToGenerate] = struct{}{}
 	}
+
 	return filesToGenerateMap
 }
 
@@ -238,6 +252,7 @@ func (r *request) getSourceFileDescriptorNameToFileDescriptorProtoMapUncached() 
 	for _, sourceFileDescriptor := range r.codeGeneratorRequest.GetSourceFileDescriptors() {
 		sourceFileDescriptorNameToFileDescriptorProtoMap[sourceFileDescriptor.GetName()] = sourceFileDescriptor
 	}
+
 	return sourceFileDescriptorNameToFileDescriptorProtoMap
 }
 

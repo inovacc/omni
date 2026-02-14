@@ -33,6 +33,7 @@ import (
 
 func TestStripSourceOnlyOptions(t *testing.T) {
 	t.Parallel()
+
 	optsFileProto := &descriptorpb.FileDescriptorProto{
 		Name:       proto.String("opts.proto"),
 		Package:    proto.String("foo.bar"),
@@ -80,6 +81,7 @@ func TestStripSourceOnlyOptions(t *testing.T) {
 	}
 	optsFile, err := protodesc.NewFile(optsFileProto, protoregistry.GlobalFiles)
 	require.NoError(t, err)
+
 	extNoRetention := dynamicpb.NewExtensionType(optsFile.Extensions().ByName("no_retention"))
 	extUnknownRetention := dynamicpb.NewExtensionType(optsFile.Extensions().ByName("unknown_retention"))
 	extRuntimeRetention := dynamicpb.NewExtensionType(optsFile.Extensions().ByName("runtime_retention"))
@@ -89,6 +91,7 @@ func TestStripSourceOnlyOptions(t *testing.T) {
 	optionsMsg := &descriptorpb.FileOptions{}
 	options := optionsMsg.ProtoReflect()
 	options.Set(extNoRetention.TypeDescriptor(), protoreflect.ValueOfString("abc"))
+
 	listVal := extUnknownRetention.New().List()
 	listVal.Append(protoreflect.ValueOfString("foo"))
 	listVal.Append(protoreflect.ValueOfString("bar"))
@@ -132,6 +135,7 @@ func TestStripSourceOnlyOptions(t *testing.T) {
 
 func TestStripSourceOnlyOptionsFromFile(t *testing.T) {
 	t.Parallel()
+
 	makeCustomOptionSet := func(startTag int32, extendee string, prefix string, label descriptorpb.FieldDescriptorProto_Label) []*descriptorpb.FieldDescriptorProto {
 		return []*descriptorpb.FieldDescriptorProto{
 			{
@@ -202,7 +206,9 @@ func TestStripSourceOnlyOptionsFromFile(t *testing.T) {
 
 	applyCustomOptionSet := func(all, retained protoreflect.Message, prefix protoreflect.Name, isList bool, file protoreflect.FileDescriptor) {
 		extType := dynamicpb.NewExtensionType(file.Extensions().ByName(prefix + "no_retention"))
+
 		var val protoreflect.Value
+
 		if isList {
 			listVal := extType.New().List()
 			listVal.Append(protoreflect.ValueOfString("foo"))
@@ -211,6 +217,7 @@ func TestStripSourceOnlyOptionsFromFile(t *testing.T) {
 		} else {
 			val = protoreflect.ValueOfString("abc")
 		}
+
 		all.Set(extType.TypeDescriptor(), val)
 		retained.Set(extType.TypeDescriptor(), val)
 
@@ -223,6 +230,7 @@ func TestStripSourceOnlyOptionsFromFile(t *testing.T) {
 		} else {
 			val = protoreflect.ValueOfBool(true)
 		}
+
 		all.Set(extType.TypeDescriptor(), val)
 		retained.Set(extType.TypeDescriptor(), val)
 
@@ -235,6 +243,7 @@ func TestStripSourceOnlyOptionsFromFile(t *testing.T) {
 		} else {
 			val = protoreflect.ValueOfBytes([]byte{0, 1, 2, 3})
 		}
+
 		all.Set(extType.TypeDescriptor(), val)
 		retained.Set(extType.TypeDescriptor(), val)
 
@@ -247,6 +256,7 @@ func TestStripSourceOnlyOptionsFromFile(t *testing.T) {
 		} else {
 			val = protoreflect.ValueOfInt32(123)
 		}
+
 		all.Set(extType.TypeDescriptor(), val)
 		// don't set retained because this is a source-only option (won't be retained)
 	}
@@ -255,6 +265,7 @@ func TestStripSourceOnlyOptionsFromFile(t *testing.T) {
 		strippedRef := proto.Clone(message).ProtoReflect()
 		applyCustomOptionSet(allRef, strippedRef, prefix, false, file)
 		applyCustomOptionSet(allRef, strippedRef, prefix+"rep_", true, file)
+
 		return allRef.Interface(), strippedRef.Interface()
 	}
 
@@ -299,11 +310,11 @@ func TestStripSourceOnlyOptionsFromFile(t *testing.T) {
 
 	beforeFile := &descriptorpb.FileDescriptorProto{
 		Name:    proto.String("foo.proto"),
-		Options: fileOpts.(*descriptorpb.FileOptions), //nolint:errcheck
+		Options: fileOpts.(*descriptorpb.FileOptions),
 		MessageType: []*descriptorpb.DescriptorProto{
 			{
 				Name:    proto.String("Message"),
-				Options: msgOpts.(*descriptorpb.MessageOptions), //nolint:errcheck
+				Options: msgOpts.(*descriptorpb.MessageOptions),
 				Field: []*descriptorpb.FieldDescriptorProto{
 					{
 						Name:       proto.String("field"),
@@ -311,7 +322,7 @@ func TestStripSourceOnlyOptionsFromFile(t *testing.T) {
 						Label:      descriptorpb.FieldDescriptorProto_LABEL_OPTIONAL.Enum(),
 						Type:       descriptorpb.FieldDescriptorProto_TYPE_STRING.Enum(),
 						JsonName:   proto.String("field"),
-						Options:    fieldOpts.(*descriptorpb.FieldOptions), //nolint:errcheck
+						Options:    fieldOpts.(*descriptorpb.FieldOptions),
 						OneofIndex: proto.Int32(0),
 					},
 					{
@@ -320,26 +331,26 @@ func TestStripSourceOnlyOptionsFromFile(t *testing.T) {
 						Label:    descriptorpb.FieldDescriptorProto_LABEL_OPTIONAL.Enum(),
 						Type:     descriptorpb.FieldDescriptorProto_TYPE_STRING.Enum(),
 						JsonName: proto.String("anotherField"),
-						Options:  fieldOpts.(*descriptorpb.FieldOptions), //nolint:errcheck
+						Options:  fieldOpts.(*descriptorpb.FieldOptions),
 					},
 				},
 				OneofDecl: []*descriptorpb.OneofDescriptorProto{
 					{
 						Name:    proto.String("oo"),
-						Options: oneofOpts.(*descriptorpb.OneofOptions), //nolint:errcheck
+						Options: oneofOpts.(*descriptorpb.OneofOptions),
 					},
 				},
 				ExtensionRange: []*descriptorpb.DescriptorProto_ExtensionRange{
 					{
 						Start:   proto.Int32(100),
 						End:     proto.Int32(200),
-						Options: extRangeOpts.(*descriptorpb.ExtensionRangeOptions), //nolint:errcheck
+						Options: extRangeOpts.(*descriptorpb.ExtensionRangeOptions),
 					},
 				},
 				NestedType: []*descriptorpb.DescriptorProto{
 					{
 						Name:    proto.String("NestedMessage"),
-						Options: msgOpts.(*descriptorpb.MessageOptions), //nolint:errcheck
+						Options: msgOpts.(*descriptorpb.MessageOptions),
 						Field: []*descriptorpb.FieldDescriptorProto{
 							{
 								Name:       proto.String("field"),
@@ -347,7 +358,7 @@ func TestStripSourceOnlyOptionsFromFile(t *testing.T) {
 								Label:      descriptorpb.FieldDescriptorProto_LABEL_OPTIONAL.Enum(),
 								Type:       descriptorpb.FieldDescriptorProto_TYPE_STRING.Enum(),
 								JsonName:   proto.String("field"),
-								Options:    fieldOpts.(*descriptorpb.FieldOptions), //nolint:errcheck
+								Options:    fieldOpts.(*descriptorpb.FieldOptions),
 								OneofIndex: proto.Int32(0),
 							},
 						},
@@ -356,17 +367,17 @@ func TestStripSourceOnlyOptionsFromFile(t *testing.T) {
 				EnumType: []*descriptorpb.EnumDescriptorProto{
 					{
 						Name:    proto.String("NestedEnum"),
-						Options: enumOpts.(*descriptorpb.EnumOptions), //nolint:errcheck
+						Options: enumOpts.(*descriptorpb.EnumOptions),
 						Value: []*descriptorpb.EnumValueDescriptorProto{
 							{
 								Name:    proto.String("ZERO"),
 								Number:  proto.Int32(0),
-								Options: enumValOpts.(*descriptorpb.EnumValueOptions), //nolint:errcheck
+								Options: enumValOpts.(*descriptorpb.EnumValueOptions),
 							},
 							{
 								Name:    proto.String("ONE"),
 								Number:  proto.Int32(1),
-								Options: enumValOpts.(*descriptorpb.EnumValueOptions), //nolint:errcheck
+								Options: enumValOpts.(*descriptorpb.EnumValueOptions),
 							},
 						},
 					},
@@ -378,7 +389,7 @@ func TestStripSourceOnlyOptionsFromFile(t *testing.T) {
 						Number:   proto.Int32(101),
 						Label:    descriptorpb.FieldDescriptorProto_LABEL_OPTIONAL.Enum(),
 						Type:     descriptorpb.FieldDescriptorProto_TYPE_STRING.Enum(),
-						Options:  fieldOpts.(*descriptorpb.FieldOptions), //nolint:errcheck
+						Options:  fieldOpts.(*descriptorpb.FieldOptions),
 					},
 				},
 			},
@@ -386,17 +397,17 @@ func TestStripSourceOnlyOptionsFromFile(t *testing.T) {
 		EnumType: []*descriptorpb.EnumDescriptorProto{
 			{
 				Name:    proto.String("Enum"),
-				Options: enumOpts.(*descriptorpb.EnumOptions), //nolint:errcheck
+				Options: enumOpts.(*descriptorpb.EnumOptions),
 				Value: []*descriptorpb.EnumValueDescriptorProto{
 					{
 						Name:    proto.String("ZERO"),
 						Number:  proto.Int32(0),
-						Options: enumValOpts.(*descriptorpb.EnumValueOptions), //nolint:errcheck
+						Options: enumValOpts.(*descriptorpb.EnumValueOptions),
 					},
 					{
 						Name:    proto.String("ONE"),
 						Number:  proto.Int32(1),
-						Options: enumValOpts.(*descriptorpb.EnumValueOptions), //nolint:errcheck
+						Options: enumValOpts.(*descriptorpb.EnumValueOptions),
 					},
 				},
 			},
@@ -408,19 +419,19 @@ func TestStripSourceOnlyOptionsFromFile(t *testing.T) {
 				Number:   proto.Int32(100),
 				Label:    descriptorpb.FieldDescriptorProto_LABEL_OPTIONAL.Enum(),
 				Type:     descriptorpb.FieldDescriptorProto_TYPE_STRING.Enum(),
-				Options:  fieldOpts.(*descriptorpb.FieldOptions), //nolint:errcheck
+				Options:  fieldOpts.(*descriptorpb.FieldOptions),
 			},
 		},
 		Service: []*descriptorpb.ServiceDescriptorProto{
 			{
 				Name:    proto.String("Service"),
-				Options: svcOpts.(*descriptorpb.ServiceOptions), //nolint:errcheck
+				Options: svcOpts.(*descriptorpb.ServiceOptions),
 				Method: []*descriptorpb.MethodDescriptorProto{
 					{
 						Name:       proto.String("Do"),
 						InputType:  proto.String(".Message"),
 						OutputType: proto.String(".Message"),
-						Options:    methodOpts.(*descriptorpb.MethodOptions), //nolint:errcheck
+						Options:    methodOpts.(*descriptorpb.MethodOptions),
 					},
 				},
 			},
@@ -452,11 +463,11 @@ func TestStripSourceOnlyOptionsFromFile(t *testing.T) {
 	// This one is the same as above, but uses the stripped option messages
 	afterFile := &descriptorpb.FileDescriptorProto{
 		Name:    proto.String("foo.proto"),
-		Options: fileOptsStripped.(*descriptorpb.FileOptions), //nolint:errcheck
+		Options: fileOptsStripped.(*descriptorpb.FileOptions),
 		MessageType: []*descriptorpb.DescriptorProto{
 			{
 				Name:    proto.String("Message"),
-				Options: msgOptsStripped.(*descriptorpb.MessageOptions), //nolint:errcheck
+				Options: msgOptsStripped.(*descriptorpb.MessageOptions),
 				Field: []*descriptorpb.FieldDescriptorProto{
 					{
 						Name:       proto.String("field"),
@@ -464,7 +475,7 @@ func TestStripSourceOnlyOptionsFromFile(t *testing.T) {
 						Label:      descriptorpb.FieldDescriptorProto_LABEL_OPTIONAL.Enum(),
 						Type:       descriptorpb.FieldDescriptorProto_TYPE_STRING.Enum(),
 						JsonName:   proto.String("field"),
-						Options:    fieldOptsStripped.(*descriptorpb.FieldOptions), //nolint:errcheck
+						Options:    fieldOptsStripped.(*descriptorpb.FieldOptions),
 						OneofIndex: proto.Int32(0),
 					},
 					{
@@ -473,26 +484,26 @@ func TestStripSourceOnlyOptionsFromFile(t *testing.T) {
 						Label:    descriptorpb.FieldDescriptorProto_LABEL_OPTIONAL.Enum(),
 						Type:     descriptorpb.FieldDescriptorProto_TYPE_STRING.Enum(),
 						JsonName: proto.String("anotherField"),
-						Options:  fieldOptsStripped.(*descriptorpb.FieldOptions), //nolint:errcheck
+						Options:  fieldOptsStripped.(*descriptorpb.FieldOptions),
 					},
 				},
 				OneofDecl: []*descriptorpb.OneofDescriptorProto{
 					{
 						Name:    proto.String("oo"),
-						Options: oneofOptsStripped.(*descriptorpb.OneofOptions), //nolint:errcheck
+						Options: oneofOptsStripped.(*descriptorpb.OneofOptions),
 					},
 				},
 				ExtensionRange: []*descriptorpb.DescriptorProto_ExtensionRange{
 					{
 						Start:   proto.Int32(100),
 						End:     proto.Int32(200),
-						Options: extRangeOptsStripped.(*descriptorpb.ExtensionRangeOptions), //nolint:errcheck
+						Options: extRangeOptsStripped.(*descriptorpb.ExtensionRangeOptions),
 					},
 				},
 				NestedType: []*descriptorpb.DescriptorProto{
 					{
 						Name:    proto.String("NestedMessage"),
-						Options: msgOptsStripped.(*descriptorpb.MessageOptions), //nolint:errcheck
+						Options: msgOptsStripped.(*descriptorpb.MessageOptions),
 						Field: []*descriptorpb.FieldDescriptorProto{
 							{
 								Name:       proto.String("field"),
@@ -500,7 +511,7 @@ func TestStripSourceOnlyOptionsFromFile(t *testing.T) {
 								Label:      descriptorpb.FieldDescriptorProto_LABEL_OPTIONAL.Enum(),
 								Type:       descriptorpb.FieldDescriptorProto_TYPE_STRING.Enum(),
 								JsonName:   proto.String("field"),
-								Options:    fieldOptsStripped.(*descriptorpb.FieldOptions), //nolint:errcheck
+								Options:    fieldOptsStripped.(*descriptorpb.FieldOptions),
 								OneofIndex: proto.Int32(0),
 							},
 						},
@@ -509,17 +520,17 @@ func TestStripSourceOnlyOptionsFromFile(t *testing.T) {
 				EnumType: []*descriptorpb.EnumDescriptorProto{
 					{
 						Name:    proto.String("NestedEnum"),
-						Options: enumOptsStripped.(*descriptorpb.EnumOptions), //nolint:errcheck
+						Options: enumOptsStripped.(*descriptorpb.EnumOptions),
 						Value: []*descriptorpb.EnumValueDescriptorProto{
 							{
 								Name:    proto.String("ZERO"),
 								Number:  proto.Int32(0),
-								Options: enumValOptsStripped.(*descriptorpb.EnumValueOptions), //nolint:errcheck
+								Options: enumValOptsStripped.(*descriptorpb.EnumValueOptions),
 							},
 							{
 								Name:    proto.String("ONE"),
 								Number:  proto.Int32(1),
-								Options: enumValOptsStripped.(*descriptorpb.EnumValueOptions), //nolint:errcheck
+								Options: enumValOptsStripped.(*descriptorpb.EnumValueOptions),
 							},
 						},
 					},
@@ -531,7 +542,7 @@ func TestStripSourceOnlyOptionsFromFile(t *testing.T) {
 						Number:   proto.Int32(101),
 						Label:    descriptorpb.FieldDescriptorProto_LABEL_OPTIONAL.Enum(),
 						Type:     descriptorpb.FieldDescriptorProto_TYPE_STRING.Enum(),
-						Options:  fieldOptsStripped.(*descriptorpb.FieldOptions), //nolint:errcheck
+						Options:  fieldOptsStripped.(*descriptorpb.FieldOptions),
 					},
 				},
 			},
@@ -539,17 +550,17 @@ func TestStripSourceOnlyOptionsFromFile(t *testing.T) {
 		EnumType: []*descriptorpb.EnumDescriptorProto{
 			{
 				Name:    proto.String("Enum"),
-				Options: enumOptsStripped.(*descriptorpb.EnumOptions), //nolint:errcheck
+				Options: enumOptsStripped.(*descriptorpb.EnumOptions),
 				Value: []*descriptorpb.EnumValueDescriptorProto{
 					{
 						Name:    proto.String("ZERO"),
 						Number:  proto.Int32(0),
-						Options: enumValOptsStripped.(*descriptorpb.EnumValueOptions), //nolint:errcheck
+						Options: enumValOptsStripped.(*descriptorpb.EnumValueOptions),
 					},
 					{
 						Name:    proto.String("ONE"),
 						Number:  proto.Int32(1),
-						Options: enumValOptsStripped.(*descriptorpb.EnumValueOptions), //nolint:errcheck
+						Options: enumValOptsStripped.(*descriptorpb.EnumValueOptions),
 					},
 				},
 			},
@@ -561,19 +572,19 @@ func TestStripSourceOnlyOptionsFromFile(t *testing.T) {
 				Number:   proto.Int32(100),
 				Label:    descriptorpb.FieldDescriptorProto_LABEL_OPTIONAL.Enum(),
 				Type:     descriptorpb.FieldDescriptorProto_TYPE_STRING.Enum(),
-				Options:  fieldOptsStripped.(*descriptorpb.FieldOptions), //nolint:errcheck
+				Options:  fieldOptsStripped.(*descriptorpb.FieldOptions),
 			},
 		},
 		Service: []*descriptorpb.ServiceDescriptorProto{
 			{
 				Name:    proto.String("Service"),
-				Options: svcOptsStripped.(*descriptorpb.ServiceOptions), //nolint:errcheck
+				Options: svcOptsStripped.(*descriptorpb.ServiceOptions),
 				Method: []*descriptorpb.MethodDescriptorProto{
 					{
 						Name:       proto.String("Do"),
 						InputType:  proto.String(".Message"),
 						OutputType: proto.String(".Message"),
-						Options:    methodOptsStripped.(*descriptorpb.MethodOptions), //nolint:errcheck
+						Options:    methodOptsStripped.(*descriptorpb.MethodOptions),
 					},
 				},
 			},
@@ -623,12 +634,15 @@ func TestStripOptionsFromAll(t *testing.T) {
 		if i == nil {
 			return proto.Int32(-1), nil
 		}
+
 		if *i <= -100 {
 			return nil, errInvalid
 		}
+
 		if *i > 5 {
 			return proto.Int32(*i * 2), nil
 		}
+
 		return i, nil
 	}
 
@@ -640,6 +654,7 @@ func TestStripOptionsFromAll(t *testing.T) {
 	newVals, changed, err := stripOptionsFromAll(vals, updateFunc, nil, nil)
 	require.NoError(t, err)
 	require.True(t, changed)
+
 	expected := []*int32{
 		proto.Int32(0), proto.Int32(1), proto.Int32(2),
 		proto.Int32(3), proto.Int32(4), proto.Int32(5),
@@ -654,6 +669,7 @@ func TestStripOptionsFromAll(t *testing.T) {
 	newVals, changed, err = stripOptionsFromAll(vals, updateFunc, nil, nil)
 	require.NoError(t, err)
 	require.True(t, changed)
+
 	expected = []*int32{
 		proto.Int32(-1), proto.Int32(1), proto.Int32(2),
 		proto.Int32(3), proto.Int32(4), proto.Int32(5),
@@ -684,5 +700,6 @@ func combineAll[T any](slices ...[]T) []T {
 	for _, exts := range slices[1:] {
 		result = append(result, exts...)
 	}
+
 	return result
 }

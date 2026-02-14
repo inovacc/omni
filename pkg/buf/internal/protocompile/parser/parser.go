@@ -55,6 +55,7 @@ func setTokenName(token int, text string) {
 				intern = protoTok2[token-protoPrivate]
 			}
 		}
+
 		if intern == 0 {
 			for i := 0; i+1 < len(protoTok3); i += 2 {
 				if int(protoTok3[i]) == token {
@@ -96,12 +97,15 @@ func Parse(filename string, r io.Reader, handler *reporter.Handler) (*ast.FileNo
 	if err != nil {
 		return nil, err
 	}
+
 	protoParse(lx)
+
 	if lx.res == nil {
 		// nil AST means there was an error that prevented any parsing
 		// or the file was empty; synthesize empty non-nil AST
 		lx.res = ast.NewEmptyFileNode(filename)
 	}
+
 	return lx.res, handler.Error()
 }
 

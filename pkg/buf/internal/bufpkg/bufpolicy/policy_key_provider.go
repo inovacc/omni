@@ -72,8 +72,10 @@ type staticPolicyKeyProvider struct {
 
 func newStaticPolicyKeyProvider(policyKeys []PolicyKey) (*staticPolicyKeyProvider, error) {
 	var policyKeysByFullName map[string]PolicyKey
+
 	if len(policyKeys) > 0 {
 		var err error
+
 		policyKeysByFullName, err = xslices.ToUniqueValuesMap(policyKeys, func(policyKey PolicyKey) string {
 			return policyKey.FullName().String()
 		})
@@ -81,6 +83,7 @@ func newStaticPolicyKeyProvider(policyKeys []PolicyKey) (*staticPolicyKeyProvide
 			return nil, err
 		}
 	}
+
 	return &staticPolicyKeyProvider{
 		policyKeysByFullName: policyKeysByFullName,
 	}, nil
@@ -100,14 +103,18 @@ func (s staticPolicyKeyProvider) GetPolicyKeysForPolicyRefs(
 		if !ok {
 			return nil, fs.ErrNotExist
 		}
+
 		digest, err := policyKey.Digest()
 		if err != nil {
 			return nil, err
 		}
+
 		if digest.Type() != digestType {
 			return nil, fmt.Errorf("expected DigestType %v, got %v", digestType, digest.Type())
 		}
+
 		policyKeys[i] = policyKey
 	}
+
 	return policyKeys, nil
 }

@@ -54,6 +54,7 @@ func Main(handler Handler, options ...MainOption) {
 	for _, option := range options {
 		option.applyMainOption(opts)
 	}
+
 	ctx, cancel := withCancelInterruptSignal(context.Background())
 	if err := run(ctx, osEnv, handler, opts); err != nil {
 		exitError := &exec.ExitError{}
@@ -62,12 +63,15 @@ func Main(handler Handler, options ...MainOption) {
 			// Swallow error message - it was printed via os.Stderr redirection.
 			os.Exit(exitError.ExitCode())
 		}
+
 		if errString := err.Error(); errString != "" {
 			_, _ = fmt.Fprintln(os.Stderr, errString)
 		}
+
 		cancel()
 		os.Exit(1)
 	}
+
 	cancel()
 }
 
@@ -86,6 +90,7 @@ func Run(
 	for _, option := range options {
 		option.applyRunOption(opts)
 	}
+
 	return run(ctx, env, handler, opts)
 }
 
@@ -169,6 +174,7 @@ func run(
 			_, err := fmt.Fprintln(env.Stdout, opts.version)
 			return err
 		}
+
 		return newUnknownArgumentsError(env.Args)
 	default:
 		return newUnknownArgumentsError(env.Args)
@@ -178,15 +184,19 @@ func run(
 	if err != nil {
 		return err
 	}
+
 	codeGeneratorRequest := &pluginpb.CodeGeneratorRequest{}
+
 	unmarshalOptions := proto.UnmarshalOptions{Resolver: opts.extensionTypeResolver}
 	if err := unmarshalOptions.Unmarshal(input, codeGeneratorRequest); err != nil {
 		return err
 	}
+
 	request, err := NewRequest(codeGeneratorRequest)
 	if err != nil {
 		return err
 	}
+
 	responseWriter := NewResponseWriter(ResponseWriterWithLenientValidation(opts.lenientValidateErrorFunc))
 	if err := handler.Handle(
 		ctx,
@@ -199,15 +209,19 @@ func run(
 	); err != nil {
 		return err
 	}
+
 	codeGeneratorResponse, err := responseWriter.ToCodeGeneratorResponse()
 	if err != nil {
 		return err
 	}
+
 	data, err := proto.Marshal(codeGeneratorResponse)
 	if err != nil {
 		return err
 	}
+
 	_, err = env.Stdout.Write(data)
+
 	return err
 }
 
@@ -215,11 +229,13 @@ func run(
 func withCancelInterruptSignal(ctx context.Context) (context.Context, context.CancelFunc) {
 	interruptSignalC, closer := newInterruptSignalChannel()
 	ctx, cancel := context.WithCancel(ctx)
+
 	go func() {
 		<-interruptSignalC
 		closer()
 		cancel()
 	}()
+
 	return ctx, cancel
 }
 
@@ -229,6 +245,7 @@ func withCancelInterruptSignal(ctx context.Context) (context.Context, context.Ca
 func newInterruptSignalChannel() (<-chan os.Signal, func()) {
 	signalC := make(chan os.Signal, 1)
 	signal.Notify(signalC, interruptSignals...)
+
 	return signalC, func() {
 		signal.Stop(signalC)
 		close(signalC)

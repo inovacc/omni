@@ -24,21 +24,21 @@ import (
 func fieldToLowerSnakeCase(s string) string {
 	// Try running this on googleapis and watch
 	// We allow both effectively by not passing the option
-	//return xstrings.ToLowerSnakeCase(s, xstrings.SnakeCaseWithNewWordOnDigits())
+	// return xstrings.ToLowerSnakeCase(s, xstrings.SnakeCaseWithNewWordOnDigits())
 	return xstrings.ToLowerSnakeCase(s)
 }
 
 func fieldToUpperSnakeCase(s string) string {
 	// Try running this on googleapis and watch
 	// We allow both effectively by not passing the option
-	//return xstrings.ToUpperSnakeCase(s, xstrings.SnakeCaseWithNewWordOnDigits())
+	// return xstrings.ToUpperSnakeCase(s, xstrings.SnakeCaseWithNewWordOnDigits())
 	return xstrings.ToUpperSnakeCase(s)
 }
 
 // validLeadingComment returns true if comment has at least one line that isn't empty
 // and doesn't start with one of the comment excludes.
 func validLeadingComment(commentExcludes []string, comment string) bool {
-	for _, line := range strings.Split(comment, "\n") {
+	for line := range strings.SplitSeq(comment, "\n") {
 		line = strings.TrimSpace(line)
 		for _, commentExclude := range commentExcludes {
 			if line != "" && !strings.HasPrefix(line, commentExclude) {
@@ -46,6 +46,7 @@ func validLeadingComment(commentExcludes []string, comment string) bool {
 			}
 		}
 	}
+
 	return false
 }
 
@@ -69,8 +70,10 @@ func getImportCycleIfExists(
 		if usedPackageList[0] == usedPackageList[len(usedPackageList)-1] {
 			return usedPackageList
 		}
+
 		return nil
 	}
+
 	usedPackageMap[pkg] = struct{}{}
 	// Will never equal pkg
 	for directlyImportedPackage := range packageToDirectlyImportedPackageToFileImports[pkg] {
@@ -78,6 +81,7 @@ func getImportCycleIfExists(
 		if directlyImportedPackage == "" {
 			continue
 		}
+
 		if importCycle := getImportCycleIfExists(
 			directlyImportedPackage,
 			packageToDirectlyImportedPackageToFileImports,
@@ -87,6 +91,8 @@ func getImportCycleIfExists(
 			return importCycle
 		}
 	}
+
 	delete(usedPackageMap, pkg)
+
 	return nil
 }

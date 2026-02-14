@@ -37,6 +37,7 @@ func MapReadBucket(readBucket ReadBucket, mappers ...Mapper) ReadBucket {
 	if len(mappers) == 0 {
 		return readBucket
 	}
+
 	return newMapReadBucketCloser(readBucket, nil, MapChain(mappers...))
 }
 
@@ -52,6 +53,7 @@ func MapReadBucketCloser(readBucketCloser ReadBucketCloser, mappers ...Mapper) R
 	if len(mappers) == 0 {
 		return readBucketCloser
 	}
+
 	return newMapReadBucketCloser(readBucketCloser, readBucketCloser.Close, MapChain(mappers...))
 }
 
@@ -69,6 +71,7 @@ func MapWriteBucket(writeBucket WriteBucket, mappers ...Mapper) WriteBucket {
 	if len(mappers) == 0 {
 		return writeBucket
 	}
+
 	return newMapWriteBucketCloser(writeBucket, nil, MapChain(mappers...))
 }
 
@@ -86,6 +89,7 @@ func MapWriteBucketCloser(writeBucketCloser WriteBucketCloser, mappers ...Mapper
 	if len(mappers) == 0 {
 		return writeBucketCloser
 	}
+
 	return newMapWriteBucketCloser(writeBucketCloser, writeBucketCloser.Close, MapChain(mappers...))
 }
 
@@ -101,7 +105,9 @@ func MapReadWriteBucket(readWriteBucket ReadWriteBucket, mappers ...Mapper) Read
 	if len(mappers) == 0 {
 		return readWriteBucket
 	}
+
 	mapper := MapChain(mappers...)
+
 	return compositeReadWriteBucketCloser{
 		newMapReadBucketCloser(readWriteBucket, nil, mapper),
 		newMapWriteBucketCloser(readWriteBucket, nil, mapper),
@@ -121,7 +127,9 @@ func MapReadWriteBucketCloser(readWriteBucketCloser ReadWriteBucketCloser, mappe
 	if len(mappers) == 0 {
 		return readWriteBucketCloser
 	}
+
 	mapper := MapChain(mappers...)
+
 	return compositeReadWriteBucketCloser{
 		newMapReadBucketCloser(readWriteBucketCloser, nil, mapper),
 		newMapWriteBucketCloser(readWriteBucketCloser, nil, mapper),
@@ -152,11 +160,13 @@ func (r *mapReadBucketCloser) Get(ctx context.Context, path string) (ReadObjectC
 	if err != nil {
 		return nil, err
 	}
+
 	readObjectCloser, err := r.delegate.Get(ctx, fullPath)
 	// TODO: if this is a path error, we should replace the path
 	if err != nil {
 		return nil, err
 	}
+
 	return replaceReadObjectCloserPath(readObjectCloser, path), nil
 }
 
@@ -165,11 +175,13 @@ func (r *mapReadBucketCloser) Stat(ctx context.Context, path string) (ObjectInfo
 	if err != nil {
 		return nil, err
 	}
+
 	objectInfo, err := r.delegate.Stat(ctx, fullPath)
 	// TODO: if this is a path error, we should replace the path
 	if err != nil {
 		return nil, err
 	}
+
 	return replaceObjectInfoPath(objectInfo, path), nil
 }
 
@@ -178,10 +190,12 @@ func (r *mapReadBucketCloser) Walk(ctx context.Context, prefix string, f func(Ob
 	if err != nil {
 		return err
 	}
+
 	fullPrefix, matches := r.mapper.MapPath(prefix)
 	if !matches {
 		return nil
 	}
+
 	return r.delegate.Walk(
 		ctx,
 		fullPrefix,
@@ -190,9 +204,11 @@ func (r *mapReadBucketCloser) Walk(ctx context.Context, prefix string, f func(Ob
 			if err != nil {
 				return err
 			}
+
 			if !matches {
 				return nil
 			}
+
 			return f(replaceObjectInfoPath(objectInfo, path))
 		},
 	)
@@ -202,6 +218,7 @@ func (r *mapReadBucketCloser) Close() error {
 	if r.closeFunc != nil {
 		return r.closeFunc()
 	}
+
 	return nil
 }
 
@@ -210,13 +227,16 @@ func (r *mapReadBucketCloser) getFullPath(op string, path string) (string, error
 	if err != nil {
 		return "", err
 	}
+
 	if path == "." {
 		return "", errors.New("cannot get root")
 	}
+
 	fullPath, matches := r.mapper.MapPath(path)
 	if !matches {
 		return "", &fs.PathError{Op: op, Path: path, Err: fs.ErrNotExist}
 	}
+
 	return fullPath, nil
 }
 
@@ -243,11 +263,13 @@ func (w *mapWriteBucketCloser) Put(ctx context.Context, path string, opts ...Put
 	if err != nil {
 		return nil, err
 	}
+
 	writeObjectCloser, err := w.delegate.Put(ctx, fullPath, opts...)
 	// TODO: if this is a path error, we should replace the path
 	if err != nil {
 		return nil, err
 	}
+
 	return replaceWriteObjectCloserExternalAndLocalPathsNotSupported(writeObjectCloser), nil
 }
 
@@ -256,6 +278,7 @@ func (w *mapWriteBucketCloser) Delete(ctx context.Context, path string) error {
 	if err != nil {
 		return err
 	}
+
 	return w.delegate.Delete(ctx, fullPath)
 }
 
@@ -264,10 +287,12 @@ func (w *mapWriteBucketCloser) DeleteAll(ctx context.Context, prefix string) err
 	if err != nil {
 		return err
 	}
+
 	fullPrefix, matches := w.mapper.MapPath(prefix)
 	if !matches {
 		return nil
 	}
+
 	return w.delegate.DeleteAll(ctx, fullPrefix)
 }
 
@@ -279,6 +304,7 @@ func (w *mapWriteBucketCloser) Close() error {
 	if w.closeFunc != nil {
 		return w.closeFunc()
 	}
+
 	return nil
 }
 
@@ -287,13 +313,16 @@ func (w *mapWriteBucketCloser) getFullPath(path string) (string, error) {
 	if err != nil {
 		return "", err
 	}
+
 	if path == "." {
 		return "", errors.New("cannot get root")
 	}
+
 	fullPath, matches := w.mapper.MapPath(path)
 	if !matches {
 		return "", fmt.Errorf("path does not match: %s", path)
 	}
+
 	return fullPath, nil
 }
 
@@ -301,6 +330,7 @@ func replaceObjectInfoPath(objectInfo ObjectInfo, path string) ObjectInfo {
 	if objectInfo.Path() == path {
 		return objectInfo
 	}
+
 	return storageutil.NewObjectInfo(
 		path,
 		objectInfo.ExternalPath(),
@@ -312,6 +342,7 @@ func replaceReadObjectCloserPath(readObjectCloser ReadObjectCloser, path string)
 	if readObjectCloser.Path() == path {
 		return readObjectCloser
 	}
+
 	return compositeReadObjectCloser{replaceObjectInfoPath(readObjectCloser, path), readObjectCloser}
 }
 

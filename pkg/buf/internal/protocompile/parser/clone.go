@@ -42,8 +42,9 @@ func Clone(r Result) Result {
 	if cl, ok := r.(interface{ Clone() Result }); ok {
 		return cl.Clone()
 	}
+
 	if res, ok := r.(*result); ok {
-		newProto := proto.Clone(res.proto).(*descriptorpb.FileDescriptorProto) //nolint:errcheck
+		newProto := proto.Clone(res.proto).(*descriptorpb.FileDescriptorProto)
 		newNodes := make(map[proto.Message]ast.Node, len(res.nodes))
 		newResult := &result{
 			file:  res.file,
@@ -51,6 +52,7 @@ func Clone(r Result) Result {
 			nodes: newNodes,
 		}
 		recreateNodeIndexForFile(res, newResult, res.proto, newProto)
+
 		return newResult
 	}
 
@@ -58,7 +60,7 @@ func Clone(r Result) Result {
 	// different tactic.
 	if r.AST() == nil {
 		// no AST? all we have to do is copy the proto
-		fileProto := proto.Clone(r.FileDescriptorProto()).(*descriptorpb.FileDescriptorProto) //nolint:errcheck
+		fileProto := proto.Clone(r.FileDescriptorProto()).(*descriptorpb.FileDescriptorProto)
 		return ResultWithoutAST(fileProto)
 	}
 	// Otherwise, we have an AST, but no way to clone the result's
@@ -67,28 +69,34 @@ func Clone(r Result) Result {
 	if err != nil {
 		panic(err)
 	}
+
 	return res
 }
 
 func recreateNodeIndexForFile(orig, clone *result, origProto, cloneProto *descriptorpb.FileDescriptorProto) {
 	updateNodeIndexWithOptions[*descriptorpb.FileOptions](orig, clone, origProto, cloneProto)
-	for i, origMd := range origProto.MessageType {
-		cloneMd := cloneProto.MessageType[i]
+
+	for i, origMd := range origProto.GetMessageType() {
+		cloneMd := cloneProto.GetMessageType()[i]
 		recreateNodeIndexForMessage(orig, clone, origMd, cloneMd)
 	}
-	for i, origEd := range origProto.EnumType {
-		cloneEd := cloneProto.EnumType[i]
+
+	for i, origEd := range origProto.GetEnumType() {
+		cloneEd := cloneProto.GetEnumType()[i]
 		recreateNodeIndexForEnum(orig, clone, origEd, cloneEd)
 	}
-	for i, origExtd := range origProto.Extension {
-		cloneExtd := cloneProto.Extension[i]
+
+	for i, origExtd := range origProto.GetExtension() {
+		cloneExtd := cloneProto.GetExtension()[i]
 		updateNodeIndexWithOptions[*descriptorpb.FieldOptions](orig, clone, origExtd, cloneExtd)
 	}
-	for i, origSd := range origProto.Service {
-		cloneSd := cloneProto.Service[i]
+
+	for i, origSd := range origProto.GetService() {
+		cloneSd := cloneProto.GetService()[i]
 		updateNodeIndexWithOptions[*descriptorpb.ServiceOptions](orig, clone, origSd, cloneSd)
-		for j, origMtd := range origSd.Method {
-			cloneMtd := cloneSd.Method[j]
+
+		for j, origMtd := range origSd.GetMethod() {
+			cloneMtd := cloneSd.GetMethod()[j]
 			updateNodeIndexWithOptions[*descriptorpb.MethodOptions](orig, clone, origMtd, cloneMtd)
 		}
 	}
@@ -96,45 +104,54 @@ func recreateNodeIndexForFile(orig, clone *result, origProto, cloneProto *descri
 
 func recreateNodeIndexForMessage(orig, clone *result, origProto, cloneProto *descriptorpb.DescriptorProto) {
 	updateNodeIndexWithOptions[*descriptorpb.MessageOptions](orig, clone, origProto, cloneProto)
-	for i, origFld := range origProto.Field {
-		cloneFld := cloneProto.Field[i]
+
+	for i, origFld := range origProto.GetField() {
+		cloneFld := cloneProto.GetField()[i]
 		updateNodeIndexWithOptions[*descriptorpb.FieldOptions](orig, clone, origFld, cloneFld)
 	}
-	for i, origOod := range origProto.OneofDecl {
-		cloneOod := cloneProto.OneofDecl[i]
+
+	for i, origOod := range origProto.GetOneofDecl() {
+		cloneOod := cloneProto.GetOneofDecl()[i]
 		updateNodeIndexWithOptions[*descriptorpb.OneofOptions](orig, clone, origOod, cloneOod)
 	}
-	for i, origExtr := range origProto.ExtensionRange {
-		cloneExtr := cloneProto.ExtensionRange[i]
+
+	for i, origExtr := range origProto.GetExtensionRange() {
+		cloneExtr := cloneProto.GetExtensionRange()[i]
 		updateNodeIndex(orig, clone, asExtsNode(origExtr), asExtsNode(cloneExtr))
 		updateNodeIndexWithOptions[*descriptorpb.ExtensionRangeOptions](orig, clone, origExtr, cloneExtr)
 	}
-	for i, origRr := range origProto.ReservedRange {
-		cloneRr := cloneProto.ReservedRange[i]
+
+	for i, origRr := range origProto.GetReservedRange() {
+		cloneRr := cloneProto.GetReservedRange()[i]
 		updateNodeIndex(orig, clone, origRr, cloneRr)
 	}
-	for i, origNmd := range origProto.NestedType {
-		cloneNmd := cloneProto.NestedType[i]
+
+	for i, origNmd := range origProto.GetNestedType() {
+		cloneNmd := cloneProto.GetNestedType()[i]
 		recreateNodeIndexForMessage(orig, clone, origNmd, cloneNmd)
 	}
-	for i, origEd := range origProto.EnumType {
-		cloneEd := cloneProto.EnumType[i]
+
+	for i, origEd := range origProto.GetEnumType() {
+		cloneEd := cloneProto.GetEnumType()[i]
 		recreateNodeIndexForEnum(orig, clone, origEd, cloneEd)
 	}
-	for i, origExtd := range origProto.Extension {
-		cloneExtd := cloneProto.Extension[i]
+
+	for i, origExtd := range origProto.GetExtension() {
+		cloneExtd := cloneProto.GetExtension()[i]
 		updateNodeIndexWithOptions[*descriptorpb.FieldOptions](orig, clone, origExtd, cloneExtd)
 	}
 }
 
 func recreateNodeIndexForEnum(orig, clone *result, origProto, cloneProto *descriptorpb.EnumDescriptorProto) {
 	updateNodeIndexWithOptions[*descriptorpb.EnumOptions](orig, clone, origProto, cloneProto)
-	for i, origEvd := range origProto.Value {
-		cloneEvd := cloneProto.Value[i]
+
+	for i, origEvd := range origProto.GetValue() {
+		cloneEvd := cloneProto.GetValue()[i]
 		updateNodeIndexWithOptions[*descriptorpb.EnumValueOptions](orig, clone, origEvd, cloneEvd)
 	}
-	for i, origRr := range origProto.ReservedRange {
-		cloneRr := cloneProto.ReservedRange[i]
+
+	for i, origRr := range origProto.GetReservedRange() {
+		cloneRr := cloneProto.GetReservedRange()[i]
 		updateNodeIndex(orig, clone, origRr, cloneRr)
 	}
 }
@@ -143,8 +160,9 @@ func recreateNodeIndexForOptions(orig, clone *result, origProtos, cloneProtos []
 	for i, origOpt := range origProtos {
 		cloneOpt := cloneProtos[i]
 		updateNodeIndex(orig, clone, origOpt, cloneOpt)
-		for j, origName := range origOpt.Name {
-			cloneName := cloneOpt.Name[j]
+
+		for j, origName := range origOpt.GetName() {
+			cloneName := cloneOpt.GetName()[j]
 			updateNodeIndex(orig, clone, origName, cloneName)
 		}
 	}
@@ -176,6 +194,7 @@ type withOptions[O options[T], T any] interface {
 func updateNodeIndexWithOptions[O options[T], M withOptions[O, T], T any](orig, clone *result, origProto, cloneProto M) {
 	updateNodeIndex(orig, clone, origProto, cloneProto)
 	origOpts := origProto.GetOptions()
+
 	cloneOpts := cloneProto.GetOptions()
 	if origOpts != nil {
 		recreateNodeIndexForOptions(orig, clone, origOpts.GetUninterpretedOption(), cloneOpts.GetUninterpretedOption())

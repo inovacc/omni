@@ -105,6 +105,7 @@ func TestFoldingRange(t *testing.T) {
 				t.Helper()
 				// Should have exactly 1 range (the Simple message)
 				assert.Len(t, ranges, 1, "expected exactly 1 folding range")
+
 				if len(ranges) > 0 {
 					assert.Equal(t, uint32(5), ranges[0].StartLine)
 					assert.Equal(t, uint32(7), ranges[0].EndLine)
@@ -119,6 +120,7 @@ func TestFoldingRange(t *testing.T) {
 				t.Helper()
 				// Count import groups
 				importGroupCount := 0
+
 				for _, r := range ranges {
 					if r.Kind == protocol.ImportsFoldingRange {
 						importGroupCount++
@@ -149,6 +151,7 @@ func TestFoldingRange(t *testing.T) {
 				t.Helper()
 				// Count comment folding ranges
 				commentCount := 0
+
 				for _, r := range ranges {
 					if r.Kind == protocol.CommentFoldingRange {
 						commentCount++
@@ -159,12 +162,14 @@ func TestFoldingRange(t *testing.T) {
 
 				// Verify the large comment block is found (spans at least 8 lines)
 				foundLarge := false
+
 				for _, r := range ranges {
 					if r.Kind == protocol.CommentFoldingRange && r.EndLine-r.StartLine >= 8 {
 						foundLarge = true
 						break
 					}
 				}
+
 				assert.True(t, foundLarge, "expected large multi-line comment block")
 			},
 		},
@@ -175,6 +180,7 @@ func TestFoldingRange(t *testing.T) {
 				t.Helper()
 				// Count multi-line option blocks (small regions)
 				optionBlockCount := 0
+
 				for _, r := range ranges {
 					if r.Kind == protocol.RegionFoldingRange && r.EndLine-r.StartLine <= 3 {
 						optionBlockCount++
@@ -201,6 +207,7 @@ func TestFoldingRange(t *testing.T) {
 			clientJSONConn, protoURI := setupLSPServer(t, protoPath)
 
 			var ranges []protocol.FoldingRange
+
 			_, err = clientJSONConn.Call(ctx, protocol.MethodTextDocumentFoldingRange, protocol.FoldingRangeParams{
 				TextDocumentPositionParams: protocol.TextDocumentPositionParams{
 					TextDocument: protocol.TextDocumentIdentifier{
@@ -226,6 +233,7 @@ func findRange(ranges []protocol.FoldingRange, startLine, endLine uint32, kind p
 			return true
 		}
 	}
+
 	return false
 }
 
@@ -236,6 +244,7 @@ func findRangeMinEnd(ranges []protocol.FoldingRange, startLine, minEndLine uint3
 			return true
 		}
 	}
+
 	return false
 }
 
@@ -243,7 +252,7 @@ func findRangeMinEnd(ranges []protocol.FoldingRange, startLine, minEndLine uint3
 func assertNoOverlappingFoldingRanges(t *testing.T, ranges []protocol.FoldingRange) {
 	t.Helper()
 
-	for i := 0; i < len(ranges); i++ {
+	for i := range ranges {
 		for j := i + 1; j < len(ranges); j++ {
 			r1 := ranges[i]
 			r2 := ranges[j]

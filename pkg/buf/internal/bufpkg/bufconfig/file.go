@@ -58,24 +58,32 @@ func getFileForPrefix[F File](
 ) (F, error) {
 	for _, fileName := range fileNames {
 		path := normalpath.Join(prefix, fileName)
+
 		data, err := storage2.ReadPath(ctx, bucket, path)
 		if err != nil {
 			if errors.Is(err, fs.ErrNotExist) {
 				continue
 			}
+
 			var f F
+
 			return f, err
 		}
+
 		f, err := readFileFunc(data, newObjectData(fileName, data), false)
 		if err != nil {
 			return f, newDecodeError(path, err)
 		}
+
 		if err := validateSupportedFileVersion(fileName, f.FileVersion(), fileNameToSupportedFileVersions); err != nil {
 			return f, newDecodeError(path, err)
 		}
+
 		return f, nil
 	}
+
 	var f F
+
 	return f, &fs.PathError{Op: "read", Path: normalpath.Join(prefix, fileNames[0]), Err: fs.ErrNotExist}
 }
 
@@ -91,22 +99,28 @@ func getFileVersionForPrefix(
 ) (FileVersion, error) {
 	for _, fileName := range fileNames {
 		path := normalpath.Join(prefix, fileName)
+
 		data, err := storage2.ReadPath(ctx, bucket, path)
 		if err != nil {
 			if errors.Is(err, fs.ErrNotExist) {
 				continue
 			}
+
 			return 0, err
 		}
+
 		fileVersion, err := getFileVersionForData(data, false, fileVersionRequired, fileNameToSupportedFileVersions, suggestedFileVersion, defaultFileVersion)
 		if err != nil {
 			return 0, newDecodeError(path, err)
 		}
+
 		if err := validateSupportedFileVersion(fileName, fileVersion, fileNameToSupportedFileVersions); err != nil {
 			return 0, newDecodeError(path, err)
 		}
+
 		return fileVersion, nil
 	}
+
 	return 0, &fs.PathError{Op: "read", Path: normalpath.Join(prefix, fileNames[0]), Err: fs.ErrNotExist}
 }
 
@@ -126,14 +140,18 @@ func putFileForPrefix[F File](
 		// This is effectively a system error. We should be able to write with whatever file name we have.
 		return syserror.Wrap(newEncodeError(fileName, err))
 	}
+
 	path := normalpath.Join(prefix, fileName)
+
 	writeObjectCloser, err := bucket.Put(ctx, path, storage2.PutWithAtomic())
 	if err != nil {
 		return err
 	}
+
 	defer func() {
 		retErr = errors.Join(retErr, writeObjectCloser.Close())
 	}()
+
 	return writeFileFunc(writeObjectCloser, f)
 }
 
@@ -151,10 +169,12 @@ func readFile[F File](
 		var f F
 		return f, err
 	}
+
 	f, err := readFileFunc(data, newObjectData(fileName, data), true)
 	if err != nil {
 		return f, newDecodeError(fileName, err)
 	}
+
 	return f, nil
 }
 
@@ -171,8 +191,10 @@ func writeFile[F File](
 		if objectData := f.ObjectData(); objectData != nil {
 			fileName = objectData.Name()
 		}
+
 		return newDecodeError(fileName, err)
 	}
+
 	return nil
 }
 
@@ -180,6 +202,7 @@ func getUnmarshalStrict(allowJSON bool) func([]byte, any) error {
 	if allowJSON {
 		return encoding.UnmarshalJSONOrYAMLStrict
 	}
+
 	return encoding.UnmarshalYAMLStrict
 }
 
@@ -187,6 +210,7 @@ func getUnmarshalNonStrict(allowJSON bool) func([]byte, any) error {
 	if allowJSON {
 		return encoding.UnmarshalJSONOrYAMLNonStrict
 	}
+
 	return encoding.UnmarshalYAMLNonStrict
 }
 

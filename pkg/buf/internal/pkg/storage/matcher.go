@@ -102,6 +102,7 @@ func (o orMatcher) MatchPath(path string) bool {
 			return true
 		}
 	}
+
 	return false
 }
 
@@ -115,6 +116,7 @@ func (a andMatcher) MatchPath(path string) bool {
 			return false
 		}
 	}
+
 	return true
 }
 

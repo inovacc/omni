@@ -128,9 +128,11 @@ func NewUploadOptions(options []UploadOption) (UploadOptions, error) {
 	for _, option := range options {
 		option(uploadOptions)
 	}
+
 	if err := uploadOptions.validate(); err != nil {
 		return nil, err
 	}
+
 	return uploadOptions, nil
 }
 
@@ -193,11 +195,13 @@ func (u *uploadOptions) validate() error {
 	if len(u.labels) > 0 && len(u.tags) > 0 {
 		return syserror.New("cannot set both labels and tags")
 	}
+
 	if u.sourceControlURL != "" {
 		if _, err := url.Parse(u.sourceControlURL); err != nil {
 			return fmt.Errorf("must set a valid url for the source control url: %w", err)
 		}
 	}
+
 	return nil
 }
 

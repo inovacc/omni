@@ -92,6 +92,7 @@ func Parse(path string, source *source.File, r *report.Report) (file *ast.File, 
 	})
 
 	ok = true
+
 	for _, d := range r.Diagnostics[prior:] {
 		if d.Level() >= report.Error {
 			ok = false
@@ -116,6 +117,7 @@ func parse(file *ast.File, errs *report.Report) {
 	var mark token.CursorMark
 	for !c.Done() {
 		ensureProgress(c, &mark)
+
 		node := parseDecl(p, c, taxa.TopLevel)
 		if !node.IsZero() {
 			seq.Append(file.Decls(), node)
@@ -133,5 +135,6 @@ func ensureProgress(c *token.Cursor, m *token.CursorMark) {
 	if *m == next {
 		panic("protocompile/parser: parser failed to make progress; this is a bug in protocompile")
 	}
+
 	*m = next
 }

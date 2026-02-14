@@ -41,6 +41,7 @@ at varied indentation levels
 
 	t.Run("basic", func(t *testing.T) {
 		t.Parallel()
+
 		insertionPointName := "ip1"
 		insertionPointConsumer := &pluginpb.CodeGeneratorResponse_File{
 			Name:           &targetFileName,
@@ -54,6 +55,7 @@ at varied indentation levels
 			strings.NewReader(targetFileContent),
 		)
 		require.NoError(t, err)
+
 		expectContent := []byte(`This is a test file
 !!! this content was inserted; こんにちは
 // @@protoc_insertion_point(ip1)
@@ -68,6 +70,7 @@ at varied indentation levels
 	})
 	t.Run("basic_indent", func(t *testing.T) {
 		t.Parallel()
+
 		insertionPointName := "ip2"
 		insertionPointConsumer := &pluginpb.CodeGeneratorResponse_File{
 			Name:           &targetFileName,
@@ -81,6 +84,7 @@ at varied indentation levels
 			strings.NewReader(targetFileContent),
 		)
 		require.NoError(t, err)
+
 		expectContent := []byte(`This is a test file
 // @@protoc_insertion_point(ip1)
 
@@ -95,6 +99,7 @@ at varied indentation levels
 	})
 	t.Run("basic_unicode_indent", func(t *testing.T) {
 		t.Parallel()
+
 		insertionPointName := "ip3"
 		insertionPointConsumer := &pluginpb.CodeGeneratorResponse_File{
 			Name:           &targetFileName,
@@ -108,6 +113,7 @@ at varied indentation levels
 			strings.NewReader(targetFileContent),
 		)
 		require.NoError(t, err)
+
 		expectContent := []byte(`This is a test file
 // @@protoc_insertion_point(ip1)
 
@@ -125,6 +131,7 @@ at varied indentation levels
 	})
 	t.Run("invalid_empty", func(t *testing.T) {
 		t.Parallel()
+
 		insertionPointName := "missing"
 		insertionPointContent := ""
 		insertionPointConsumer := &pluginpb.CodeGeneratorResponse_File{
@@ -141,6 +148,7 @@ at varied indentation levels
 	})
 	t.Run("invalid_not_found", func(t *testing.T) {
 		t.Parallel()
+
 		insertionPointName := "not_found"
 		insertionPointConsumer := &pluginpb.CodeGeneratorResponse_File{
 			Name:           &targetFileName,
@@ -171,15 +179,17 @@ at varied indentation levels` + whitespacePrefix + "// @@protoc_insertion_point(
 	// Our generated files in private/gen/proto are on average 1100 lines.
 	inflatedLines := 1100
 
-	inflatedTargetFileContent := targetFileContent
+	var inflatedTargetFileContent strings.Builder
+	inflatedTargetFileContent.WriteString(targetFileContent)
 	for range inflatedLines - 1 {
-		inflatedTargetFileContent += "// this is just extra garbage\n"
+		inflatedTargetFileContent.WriteString("// this is just extra garbage\n")
 	}
 	// no trailing newline
-	inflatedTargetFileContent += "// this is just extra garbage"
+	inflatedTargetFileContent.WriteString("// this is just extra garbage")
 
 	b.Run("basic", func(b *testing.B) {
 		var postInsertionContent []byte
+
 		insertionPointName := "ip1"
 		insertionPointConsumer := &pluginpb.CodeGeneratorResponse_File{
 			Name:           &targetFileName,
@@ -204,6 +214,7 @@ at varied indentation levels` + whitespacePrefix + "// @@protoc_insertion_point(
 				strings.NewReader(targetFileContent),
 			)
 		}
+
 		assert.Equal(b, expectContent, postInsertionContent)
 	})
 
@@ -214,6 +225,7 @@ at varied indentation levels` + whitespacePrefix + "// @@protoc_insertion_point(
 			InsertionPoint: &insertionPointName,
 			Content:        &insertionPointContent,
 		}
+
 		inflatedExpectContent := []byte(`This is a test file
 !!! this content was inserted; こんにちは
 // @@protoc_insertion_point(ip1)
@@ -229,15 +241,17 @@ at varied indentation levels` + whitespacePrefix + "// @@protoc_insertion_point(
 		inflatedExpectContent = append(inflatedExpectContent, []byte("// this is just extra garbage")...)
 
 		var postInsertionContent []byte
+
 		for i := 0; i < b.N; i++ {
 			b.ReportAllocs()
 
 			postInsertionContent, _ = writeInsertionPoint(
 				context.Background(),
 				insertionPointConsumer,
-				strings.NewReader(inflatedTargetFileContent),
+				strings.NewReader(inflatedTargetFileContent.String()),
 			)
 		}
+
 		assert.Equal(b, inflatedExpectContent, postInsertionContent)
 	})
 }

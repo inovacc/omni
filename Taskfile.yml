@@ -302,6 +302,26 @@ tasks:
       - cmd: bash tests/test_all_commands.sh --category {{.CATEGORY}}
         platforms: [ linux, darwin ]
 
+  git:history:purge:path:
+    desc: Rewrite git history removing PATH_TO_REMOVE (default .claude)
+    vars:
+      PATH_TO_REMOVE: '{{.PATH_TO_REMOVE | default ".claude"}}'
+    cmds:
+      - cmd: pwsh -ExecutionPolicy Bypass -File scripts/git/remove_path_from_history.ps1 -PathToRemove "{{.PATH_TO_REMOVE}}"
+        platforms: [ windows ]
+      - cmd: bash scripts/git/remove_path_from_history.sh "{{.PATH_TO_REMOVE}}"
+        platforms: [ linux, darwin ]
+
+  git:history:purge:path:push:
+    desc: Rewrite history and force-push rewritten refs
+    vars:
+      PATH_TO_REMOVE: '{{.PATH_TO_REMOVE | default ".claude"}}'
+    cmds:
+      - cmd: pwsh -ExecutionPolicy Bypass -File scripts/git/remove_path_from_history.ps1 -PathToRemove "{{.PATH_TO_REMOVE}}" -Push
+        platforms: [ windows ]
+      - cmd: PUSH=true bash scripts/git/remove_path_from_history.sh "{{.PATH_TO_REMOVE}}"
+        platforms: [ linux, darwin ]
+
   # === CODE QUALITY ===
   fmt:
     desc: Format all Go code

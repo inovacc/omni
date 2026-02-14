@@ -58,16 +58,20 @@ func newGitRef(
 	if err != nil {
 		return nil, err
 	}
+
 	if depth == 0 {
 		return nil, NewDepthZeroError()
 	}
+
 	subDirPath, err = normalpath2.NormalizeAndValidate(subDirPath)
 	if err != nil {
 		return nil, err
 	}
+
 	if subDirPath == "." {
 		subDirPath = ""
 	}
+
 	return newDirectGitRef(
 		format,
 		path,
@@ -142,26 +146,33 @@ func getGitSchemeAndPath(format string, path string) (GitScheme, string, error) 
 	if path == "" {
 		return 0, "", NewNoPathError()
 	}
+
 	if app.IsDevStderr(path) {
 		return 0, "", NewInvalidPathError(format, path)
 	}
+
 	if path == "-" || app.IsDevNull(path) || app.IsDevStdin(path) || app.IsDevStdout(path) {
 		return 0, "", NewInvalidPathError(format, path)
 	}
+
 	for prefix, gitScheme := range gitSchemePrefixToGitScheme {
-		if strings.HasPrefix(path, prefix) {
-			path := strings.TrimPrefix(path, prefix)
+		if after, ok := strings.CutPrefix(path, prefix); ok {
+			path := after
 			if gitScheme == GitSchemeLocal {
 				path = normalpath2.Normalize(path)
 			}
+
 			if path == "" {
 				return 0, "", NewNoPathError()
 			}
+
 			return gitScheme, path, nil
 		}
 	}
+
 	if strings.Contains(path, "://") {
 		return 0, "", NewInvalidPathError(format, path)
 	}
+
 	return GitSchemeLocal, normalpath2.Normalize(path), nil
 }

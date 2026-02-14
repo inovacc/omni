@@ -40,11 +40,13 @@ type parser struct {
 // classified is a spanner that has been classified by taxa.
 type classified struct {
 	source.Spanner
+
 	what taxa.Noun
 }
 
 type punctParser struct {
 	*parser
+
 	c      *token.Cursor
 	want   keyword.Keyword
 	where  taxa.Place
@@ -65,6 +67,7 @@ func (p punctParser) parse() (token.Token, report.Diagnose) {
 	}
 
 	wanted := taxa.Noun(p.want).AsSet()
+
 	err := errtoken.Unexpected{
 		What:  next,
 		Where: p.where,

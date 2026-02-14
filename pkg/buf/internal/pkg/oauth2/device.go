@@ -84,9 +84,11 @@ type DeviceAuthorizationRequest struct {
 func (d *DeviceAuthorizationRequest) ToValues() url.Values {
 	values := make(url.Values, 2)
 	values.Set("client_id", d.ClientID)
+
 	if d.ClientSecret != "" {
 		values.Set("client_secret", d.ClientSecret)
 	}
+
 	return values
 }
 
@@ -94,6 +96,7 @@ func (d *DeviceAuthorizationRequest) ToValues() url.Values {
 func (d *DeviceAuthorizationRequest) FromValues(values url.Values) error {
 	d.ClientID = values.Get("client_id")
 	d.ClientSecret = values.Get("client_secret")
+
 	return nil
 }
 
@@ -134,11 +137,14 @@ type DeviceAccessTokenRequest struct {
 func (d *DeviceAccessTokenRequest) ToValues() url.Values {
 	values := make(url.Values, 4)
 	values.Set("client_id", d.ClientID)
+
 	if d.ClientSecret != "" {
 		values.Set("client_secret", d.ClientSecret)
 	}
+
 	values.Set("device_code", d.DeviceCode)
 	values.Set("grant_type", d.GrantType)
+
 	return values
 }
 
@@ -148,6 +154,7 @@ func (d *DeviceAccessTokenRequest) FromValues(values url.Values) error {
 	d.ClientSecret = values.Get("client_secret")
 	d.DeviceCode = values.Get("device_code")
 	d.GrantType = values.Get("grant_type")
+
 	return nil
 }
 

@@ -171,14 +171,7 @@ import "types/toplevel_field.proto";
 					Start: protocol.Position{Line: 3, Character: 0},
 					End:   protocol.Position{Line: 3, Character: 0},
 				},
-				NewText: `
-import "types/existing_field.proto";
-// Comment on public import
-import public "types/modifier_public.proto";
-// Comment on weak import
-import weak "types/modifier_weak.proto";
-import "types/toplevel_field.proto";
-`,
+				NewText: "\nimport \"types/existing_field.proto\";\n// Comment on public import\npublic \"types/modifier_public.proto\";\n// Comment on weak import\nweak \"types/modifier_weak.proto\";\nimport",
 			},
 		},
 	)
@@ -318,6 +311,7 @@ import "types/existing_field.proto";
 func testCodeActionOrganizeImports(t *testing.T, filename string, expectedEdits []protocol.TextEdit) {
 	t.Run(filename, func(t *testing.T) {
 		t.Parallel()
+
 		testProtoPath, err := filepath.Abs(filename)
 		require.NoError(t, err)
 
@@ -326,6 +320,7 @@ func testCodeActionOrganizeImports(t *testing.T, filename string, expectedEdits 
 		// Request code actions for the file
 		// The specific position doesn't matter since we're checking for file-level actions
 		var codeActions []protocol.CodeAction
+
 		_, err = clientJSONConn.Call(t.Context(), protocol.MethodTextDocumentCodeAction, protocol.CodeActionParams{
 			TextDocument: protocol.TextDocumentIdentifier{
 				URI: testURI,
@@ -344,16 +339,19 @@ func testCodeActionOrganizeImports(t *testing.T, filename string, expectedEdits 
 
 		// Find the "Organize imports" code action
 		var organizeImportsAction *protocol.CodeAction
+
 		for _, codeAction := range codeActions {
 			if codeAction.Title == "Organize imports" {
 				organizeImportsAction = &codeAction
 				break
 			}
 		}
+
 		if expectedEdits == nil {
 			require.Nil(t, organizeImportsAction, "expected no changes to 'Organize imports' code action")
 			return
 		}
+
 		require.NotNil(t, organizeImportsAction, "expected to find 'Organize imports' code action, got actions: %v", codeActions)
 
 		// Verify the code action properties

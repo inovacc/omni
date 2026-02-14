@@ -222,6 +222,7 @@ func assertPluginRegistryRoundTrip(t testing.TB, config *bufremotepluginconfig.R
 
 func TestLanguagesToProtoLanguages(t *testing.T) {
 	t.Parallel()
+
 	protoLanguages, err := OutputLanguagesToProtoLanguages([]string{"go"})
 	require.NoError(t, err)
 	assert.Equal(t,
@@ -249,6 +250,7 @@ func TestLanguagesToProtoLanguages(t *testing.T) {
 		},
 		protoLanguages,
 	)
+
 	_, err = OutputLanguagesToProtoLanguages([]string{"unknown_language", "another_unknown_language"})
 	require.Error(t, err)
 	protoLanguages, err = OutputLanguagesToProtoLanguages(nil)

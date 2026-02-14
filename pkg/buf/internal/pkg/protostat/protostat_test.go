@@ -26,6 +26,7 @@ import (
 
 func TestGetStatsDeprecatedTypes(t *testing.T) {
 	t.Parallel()
+
 	testCases := []struct {
 		name                       string
 		content                    string
@@ -214,6 +215,7 @@ func TestGetStatsDeprecatedTypes(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
+
 			walker := &testFileWalker{contents: []string{tc.content}}
 			stats, err := GetStats(context.Background(), walker)
 			require.NoError(t, err)
@@ -227,6 +229,7 @@ func TestGetStatsDeprecatedTypes(t *testing.T) {
 
 func TestGetStatsMultipleFiles(t *testing.T) {
 	t.Parallel()
+
 	file1 := `
 		syntax = "proto3";
 		message DeprecatedFoo {
@@ -266,11 +269,13 @@ func (w *testFileWalker) Walk(ctx context.Context, f func(io.Reader) error) erro
 			return err
 		}
 	}
+
 	return nil
 }
 
 func TestMergeStats(t *testing.T) {
 	t.Parallel()
+
 	stats1 := &Stats{
 		Files:              2,
 		Types:              10,

@@ -21,5 +21,6 @@ func copyStringToStringSliceMap(m map[string][]string) map[string][]string {
 	for k, v := range m {
 		c[k] = slices.Clone(v)
 	}
+
 	return c
 }

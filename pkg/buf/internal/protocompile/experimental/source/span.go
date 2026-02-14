@@ -91,8 +91,10 @@ func (s Span) GrowLeft(p func(r rune) bool) Span {
 		if r == utf8.RuneError || !p(r) {
 			break
 		}
+
 		s.Start -= sz
 	}
+
 	return s
 }
 
@@ -104,8 +106,10 @@ func (s Span) GrowRight(p func(r rune) bool) Span {
 		if r == utf8.RuneError || !p(r) {
 			break
 		}
+
 		s.End += sz
 	}
+
 	return s
 }
 
@@ -137,10 +141,12 @@ func (s Span) Span() Span {
 // (or an empty span, if s is empty).
 func (s Span) Range(i, j int) Span {
 	i = idxToByteOffset(s.Text(), i)
+
 	j = idxToByteOffset(s.Text(), j)
 	if i > j {
 		i, j = j, i
 	}
+
 	return s.File.Span(i+s.Start, j+s.Start)
 }
 
@@ -155,10 +161,12 @@ func (s Span) Range(i, j int) Span {
 // (or an empty span, if s is empty).
 func (s Span) RuneRange(i, j int) Span {
 	i = runeIdxToByteOffset(s.Text(), i)
+
 	j = runeIdxToByteOffset(s.Text(), j)
 	if i > j {
 		i, j = j, i
 	}
+
 	return s.File.Span(i+s.Start, j+s.Start)
 }
 
@@ -168,6 +176,7 @@ func (s Span) Rune(i int) Span {
 	if i < 0 {
 		return s.RuneRange(i-1, i)
 	}
+
 	return s.RuneRange(i, i+1)
 }
 
@@ -192,6 +201,7 @@ func Join(spans ...Spanner) Span {
 // JoinSeq is like [Join], but takes a sequence of any spannable type.
 func JoinSeq[S Spanner](seq iter.Seq[S]) Span {
 	joined := Span{Start: math.MaxInt}
+
 	for spanner := range seq {
 		span := GetSpan(spanner)
 		if span.IsZero() {
@@ -203,8 +213,8 @@ func JoinSeq[S Spanner](seq iter.Seq[S]) Span {
 		} else if joined.File != span.File {
 			panic(fmt.Sprintf(
 				"protocompile/source: passed spans with distinct files to JoinSpans(): %q != %q",
-				joined.File.Path(),
-				span.File.Path(),
+				joined.Path(),
+				span.Path(),
 			))
 		}
 
@@ -215,6 +225,7 @@ func JoinSeq[S Spanner](seq iter.Seq[S]) Span {
 	if joined.File == nil {
 		return Span{}
 	}
+
 	return joined
 }
 
@@ -224,6 +235,7 @@ func GetSpan(s Spanner) Span {
 	if s == nil {
 		return Span{}
 	}
+
 	return s.Span()
 }
 
@@ -260,6 +272,7 @@ func runeIdxToByteOffset(s string, i int) int {
 		if i == 0 || s == "" {
 			return len(s)
 		}
+
 		_, j := utf8.DecodeLastRuneInString(s)
 		s = s[:len(s)-j]
 	}
@@ -268,7 +281,9 @@ func runeIdxToByteOffset(s string, i int) int {
 		if i == 0 {
 			return j
 		}
+
 		i--
 	}
+
 	return len(s)
 }

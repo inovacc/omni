@@ -90,6 +90,7 @@ func TestTreeTokens(t *testing.T) {
 	x := s.Push(1, token.Ident)
 	close2 := s.Push(1, token.Keyword)
 	token.Fuse(open2, close2)
+
 	comma := s.Push(1, token.Keyword)
 	s.Push(1, token.Space)
 	message := s.PushKeyword(7, token.Ident, keyword.Message)
@@ -135,6 +136,7 @@ func TestTreeTokens(t *testing.T) {
 	assert.Equal(keyword.Parens, close3.Keyword())
 	assert.False(open3.IsLeaf())
 	assert.False(close3.IsLeaf())
+
 	start, end = open3.StartEnd()
 	tokenEq(t, start, open3)
 	tokenEq(t, end, close3)
@@ -156,9 +158,11 @@ func tokensEq(t *testing.T, tokens []token.Token, expected ...token.Token) {
 	for i, t := range tokens {
 		a[i] = t.String()
 	}
+
 	b := make([]string, len(expected))
 	for i, t := range expected {
 		b[i] = t.String()
 	}
+
 	assert.Equal(t, b, a)
 }

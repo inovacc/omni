@@ -179,6 +179,7 @@ func TestNesting(t *testing.T) {
 
 	t.Run("include-excluded", func(t *testing.T) {
 		t.Parallel()
+
 		ctx := context.Background()
 		_, image, err := getImage(ctx, slogtestext.NewLogger(t), "testdata/nesting", bufimage.WithExcludeSourceCodeInfo())
 		require.NoError(t, err)
@@ -251,6 +252,7 @@ func TestOptionImports(t *testing.T) {
 	testdataDir := "testdata/imports"
 	bucket, err := storageos.NewProvider().NewReadWriteBucket(testdataDir)
 	require.NoError(t, err)
+
 	testModuleData := []bufmoduletesting.ModuleData{
 		{
 			Bucket: storage2.FilterReadBucket(bucket, storage2.MatchPathEqual("a.proto")),
@@ -335,6 +337,7 @@ func TestAny(t *testing.T) {
 
 func TestSourceCodeInfo(t *testing.T) {
 	t.Parallel()
+
 	noExts := []ImageFilterOption{WithExcludeCustomOptions(), WithExcludeKnownExtensions()}
 	runSourceCodeInfoTest(t, "foo.bar.Foo", "Foo.txtar", noExts...)
 	runSourceCodeInfoTest(t, "foo.bar.Foo", "Foo+Ext.txtar")
@@ -355,6 +358,7 @@ func TestUnusedDeps(t *testing.T) {
 
 func TestTransitivePublic(t *testing.T) {
 	t.Parallel()
+
 	ctx := context.Background()
 	moduleSet, err := bufmoduletesting.NewModuleSetForPathToData(
 		map[string][]byte{
@@ -412,6 +416,7 @@ func TestTypesFromMainModule(t *testing.T) {
 	bProtoFileInfo, err := dep.StatFileInfo(ctx, "b.proto")
 	require.NoError(t, err)
 	require.False(t, bProtoFileInfo.IsTargetFile())
+
 	_, err = FilterImage(image, WithIncludeTypes("dependency.Dep"))
 	require.Error(t, err)
 	assert.ErrorIs(t, err, ErrImageFilterTypeIsImport)
@@ -427,17 +432,18 @@ func TestTypesFromMainModule(t *testing.T) {
 
 func TestMutateInPlace(t *testing.T) {
 	t.Parallel()
+
 	ctx := context.Background()
 	_, image, err := getImage(ctx, slogtestext.NewLogger(t), "testdata/options")
 	require.NoError(t, err)
 
 	aProtoFile := image.GetFile("a.proto")
 	aFileDescriptorProto := aProtoFile.FileDescriptorProto()
-	assert.Len(t, aFileDescriptorProto.MessageType, 2) // Foo, Empty
-	assert.Len(t, aFileDescriptorProto.EnumType, 1)    // FooEnum
-	assert.Len(t, aFileDescriptorProto.Service, 1)
+	assert.Len(t, aFileDescriptorProto.GetMessageType(), 2) // Foo, Empty
+	assert.Len(t, aFileDescriptorProto.GetEnumType(), 1)    // FooEnum
+	assert.Len(t, aFileDescriptorProto.GetService(), 1)
 
-	locationLen := len(aFileDescriptorProto.SourceCodeInfo.Location)
+	locationLen := len(aFileDescriptorProto.GetSourceCodeInfo().GetLocation())
 
 	// Shallow copy
 	shallowFilteredImage, err := FilterImage(image, WithIncludeTypes("pkg.Foo"))
@@ -445,7 +451,7 @@ func TestMutateInPlace(t *testing.T) {
 
 	filteredAFileDescriptorProto := shallowFilteredImage.GetFile("a.proto").FileDescriptorProto()
 	assert.NotSame(t, aFileDescriptorProto, filteredAFileDescriptorProto)
-	filterLocationLen := len(filteredAFileDescriptorProto.SourceCodeInfo.Location)
+	filterLocationLen := len(filteredAFileDescriptorProto.GetSourceCodeInfo().GetLocation())
 	assert.Less(t, filterLocationLen, locationLen)
 
 	// Mutate in place
@@ -454,16 +460,18 @@ func TestMutateInPlace(t *testing.T) {
 
 	// Check that the original image was mutated
 	assert.Same(t, aFileDescriptorProto, mutateFilteredImage.GetFile("a.proto").FileDescriptorProto())
-	assert.Len(t, aFileDescriptorProto.MessageType, 1) // Foo
-	if assert.GreaterOrEqual(t, cap(aFileDescriptorProto.MessageType), 2) {
-		slice := aFileDescriptorProto.MessageType[1:cap(aFileDescriptorProto.MessageType)]
+	assert.Len(t, aFileDescriptorProto.GetMessageType(), 1) // Foo
+
+	if assert.GreaterOrEqual(t, cap(aFileDescriptorProto.GetMessageType()), 2) {
+		slice := aFileDescriptorProto.GetMessageType()[1:cap(aFileDescriptorProto.GetMessageType())]
 		for _, elem := range slice {
 			assert.Nil(t, elem) // Empty
 		}
 	}
-	assert.Nil(t, aFileDescriptorProto.EnumType)
-	assert.Nil(t, aFileDescriptorProto.Service)
-	assert.Equal(t, filterLocationLen, len(aFileDescriptorProto.SourceCodeInfo.Location))
+
+	assert.Nil(t, aFileDescriptorProto.GetEnumType())
+	assert.Nil(t, aFileDescriptorProto.GetService())
+	assert.Equal(t, filterLocationLen, len(aFileDescriptorProto.GetSourceCodeInfo().GetLocation()))
 }
 
 func TestConsecutiveFilters(t *testing.T) {
@@ -475,6 +483,7 @@ func TestConsecutiveFilters(t *testing.T) {
 
 	t.Run("options", func(t *testing.T) {
 		t.Parallel()
+
 		filteredImage, err := FilterImage(image, WithIncludeTypes("pkg.Foo"), WithExcludeTypes("message_baz"))
 		require.NoError(t, err)
 		_, err = FilterImage(filteredImage, WithExcludeTypes("message_foo"))
@@ -521,10 +530,12 @@ func getImage(ctx context.Context, logger *slog.Logger, testdataDir string, opti
 	if err != nil {
 		return nil, nil, err
 	}
+
 	moduleSet, err := bufmoduletesting.NewModuleSetForBucket(bucket)
 	if err != nil {
 		return nil, nil, err
 	}
+
 	image, err := bufimage.BuildImage(
 		ctx,
 		logger,
@@ -534,6 +545,7 @@ func getImage(ctx context.Context, logger *slog.Logger, testdataDir string, opti
 	if err != nil {
 		return nil, nil, err
 	}
+
 	return bucket, image, nil
 }
 
@@ -578,6 +590,7 @@ func runFilterImage(t *testing.T, image bufimage.Image, opts ...ImageFilterOptio
 		SortElements: true,
 		Compact:      true,
 	}
+
 	files.RangeFiles(func(fileDescriptor protoreflect.FileDescriptor) bool {
 		fileBuilder := &bytes.Buffer{}
 		require.NoError(t, printer.PrintProtoFile(fileDescriptor, fileBuilder), "expected no error while printing %q", fileDescriptor.Path())
@@ -588,12 +601,14 @@ func runFilterImage(t *testing.T, image bufimage.Image, opts ...ImageFilterOptio
 				Data: fileBuilder.Bytes(),
 			},
 		)
+
 		return true
 	})
 	sort.SliceStable(archive.Files, func(i, j int) bool {
 		return archive.Files[i].Name < archive.Files[j].Name
 	})
 	generated := txtar.Format(archive)
+
 	return generated
 }
 
@@ -637,23 +652,28 @@ func runSourceCodeInfoTest(t *testing.T, typename string, expectedFile string, o
 
 func imageIsDependencyOrdered(image bufimage.Image) bool {
 	seen := make(map[string]struct{})
+
 	for _, imageFile := range image.Files() {
-		for _, importName := range imageFile.FileDescriptorProto().Dependency {
+		for _, importName := range imageFile.FileDescriptorProto().GetDependency() {
 			if _, ok := seen[importName]; !ok {
 				return false
 			}
 		}
+
 		seen[imageFile.Path()] = struct{}{}
 	}
+
 	return true
 }
 
 func examineComments(t *testing.T, file protoreflect.FileDescriptor) {
 	examineCommentsInTypeContainer(t, file, file)
+
 	svcs := file.Services()
 	for i, numSvcs := 0, svcs.Len(); i < numSvcs; i++ {
 		svc := svcs.Get(i)
 		examineComment(t, file, svc)
+
 		methods := svc.Methods()
 		for j, numMethods := 0, methods.Len(); j < numMethods; j++ {
 			method := methods.Get(j)
@@ -673,28 +693,34 @@ func examineCommentsInTypeContainer(t *testing.T, file protoreflect.FileDescript
 	for i, numMsgs := 0, msgs.Len(); i < numMsgs; i++ {
 		msg := msgs.Get(i)
 		examineComment(t, file, msg)
+
 		fields := msg.Fields()
 		for j, numFields := 0, fields.Len(); j < numFields; j++ {
 			field := fields.Get(j)
 			examineComment(t, file, field)
 		}
+
 		oneofs := msg.Oneofs()
 		for j, numOneofs := 0, oneofs.Len(); j < numOneofs; j++ {
 			oneof := oneofs.Get(j)
 			examineComment(t, file, oneof)
 		}
+
 		examineCommentsInTypeContainer(t, file, msg)
 	}
+
 	enums := descriptor.Enums()
 	for i, numEnums := 0, enums.Len(); i < numEnums; i++ {
 		enum := enums.Get(i)
 		examineComment(t, file, enum)
+
 		vals := enum.Values()
 		for j, numVals := 0, vals.Len(); j < numVals; j++ {
 			val := vals.Get(j)
 			examineComment(t, file, val)
 		}
 	}
+
 	exts := descriptor.Extensions()
 	for i, numExts := 0, exts.Len(); i < numExts; i++ {
 		ext := exts.Get(i)
@@ -746,33 +772,42 @@ func benchmarkFilterImage(b *testing.B, opts ...bufimage.BuildImageOption) {
 			types:  []string{"pkg.Foo", "pkg.FooEnum", "pkg.FooService", "pkg.FooService.Do"},
 		},
 	}
+
 	ctx := context.Background()
 	for _, benchmarkCase := range benchmarkCases {
 		_, image, err := getImage(ctx, slogtestext.NewLogger(b, slogtestext.WithLogLevel(appext.LogLevelError)), benchmarkCase.folder, opts...)
 		require.NoError(b, err)
+
 		benchmarkCase.image = image
 	}
+
 	b.ResetTimer()
 
 	i := 0
+
 	for {
 		for _, benchmarkCase := range benchmarkCases {
 			for _, typeName := range benchmarkCase.types {
 				// filtering is destructive, so we have to make a copy
 				b.StopTimer()
+
 				imageFiles := make([]bufimage.ImageFile, len(benchmarkCase.image.Files()))
 				for j, imageFile := range benchmarkCase.image.Files() {
 					clone := proto.CloneOf(imageFile.FileDescriptorProto())
+
 					var err error
+
 					imageFiles[j], err = bufimage.NewImageFile(clone, nil, uuid.Nil, "", "", false, false, nil)
 					require.NoError(b, err)
 				}
+
 				image, err := bufimage.NewImage(imageFiles)
 				require.NoError(b, err)
 				b.StartTimer()
 
 				_, err = FilterImage(image, WithIncludeTypes(typeName), WithMutateInPlace())
 				require.NoError(b, err)
+
 				i++
 				if i == b.N {
 					return

@@ -51,6 +51,7 @@ func (c *Context) Stream() *token.Stream {
 	if c == nil {
 		return nil
 	}
+
 	return c.stream
 }
 
@@ -222,12 +223,14 @@ func (n *Nodes) panicIfNotOurs(that ...any) {
 		}
 
 		var path string
+
 		switch that := that.(type) {
 		case interface{ Context() *token.Stream }:
 			ctx := that.Context()
 			if ctx == nil || ctx == n.Context().Stream() {
 				continue
 			}
+
 			path = ctx.Path()
 
 		case interface{ Context() *Context }:
@@ -235,6 +238,7 @@ func (n *Nodes) panicIfNotOurs(that ...any) {
 			if ctx == nil || ctx == n.Context() {
 				continue
 			}
+
 			path = ctx.Stream().Path()
 
 		default:

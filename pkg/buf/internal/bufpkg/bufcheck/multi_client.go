@@ -57,9 +57,12 @@ func (c *multiClient) Check(ctx context.Context, request check.Request) ([]*anno
 		requestRuleIDMap[requestRuleID] = struct{}{}
 	}
 
-	var allAnnotations []*annotation
-	var jobs []func(context.Context) error
-	var lock sync.Mutex
+	var (
+		allAnnotations []*annotation
+		jobs           []func(context.Context) error
+		lock           sync.Mutex
+	)
+
 	for i, delegate := range c.checkClientSpecs {
 		// This is all ruleIDs for this client.
 		allDelegateRuleIDs := chunkedRuleIDs[i]
@@ -80,6 +83,7 @@ func (c *multiClient) Check(ctx context.Context, request check.Request) ([]*anno
 			c.logger.DebugContext(ctx, "skipping delegate client", slog.String("pluginName", delegate.PluginName))
 			continue
 		}
+
 		delegateRequest, err := check.NewRequest(
 			request.FileDescriptors(),
 			check.WithAgainstFileDescriptors(request.AgainstFileDescriptors()),
@@ -91,36 +95,46 @@ func (c *multiClient) Check(ctx context.Context, request check.Request) ([]*anno
 		if err != nil {
 			return nil, err
 		}
+
 		jobs = append(
 			jobs,
 			func(ctx context.Context) error {
 				defer xslog.DebugProfile(c.logger, slog.String("plugin", delegate.PluginName))()
+
 				delegateResponse, err := delegate.Client.Check(ctx, delegateRequest)
 				if err != nil {
 					return formatDelegateError(delegate, err)
 				}
+
 				annotations := xslices.Map(
 					delegateResponse.Annotations(),
 					func(checkAnnotation check.Annotation) *annotation {
 						return newAnnotation(checkAnnotation, delegate.PluginName, delegate.PolicyName)
 					},
 				)
+
 				lock.Lock()
+
 				allAnnotations = append(allAnnotations, annotations...)
+
 				lock.Unlock()
+
 				return nil
 			},
 		)
 	}
+
 	if err := thread.Parallelize(ctx, jobs); err != nil {
 		return nil, err
 	}
+
 	sort.Slice(
 		allAnnotations,
 		func(i int, j int) bool {
 			return check.CompareAnnotations(allAnnotations[i], allAnnotations[j]) < 0
 		},
 	)
+
 	return allAnnotations, nil
 }
 
@@ -129,6 +143,7 @@ func (c *multiClient) ListRulesAndCategories(ctx context.Context) ([]Rule, []Cat
 	if err != nil {
 		return nil, nil, err
 	}
+
 	return rules, categories, nil
 }
 
@@ -147,13 +162,16 @@ func (c *multiClient) getRulesCategoriesAndChunkedIDs(ctx context.Context) (
 	retErr error,
 ) {
 	defer xslog.DebugProfile(c.logger)()
+
 	var rules []Rule
+
 	chunkedRuleIDs := make([][]string, len(c.checkClientSpecs))
 	for i, delegate := range c.checkClientSpecs {
 		delegateCheckRules, err := delegate.Client.ListRules(ctx)
 		if err != nil {
 			return nil, nil, nil, nil, formatDelegateError(delegate, err)
 		}
+
 		delegateRules := xslices.Map(
 			delegateCheckRules,
 			func(checkRule check.Rule) Rule {
@@ -166,12 +184,14 @@ func (c *multiClient) getRulesCategoriesAndChunkedIDs(ctx context.Context) (
 	}
 
 	var categories []Category
+
 	chunkedCategoryIDs := make([][]string, len(c.checkClientSpecs))
 	for i, delegate := range c.checkClientSpecs {
 		delegateCheckCategories, err := delegate.Client.ListCategories(ctx)
 		if err != nil {
 			return nil, nil, nil, nil, formatDelegateError(delegate, err)
 		}
+
 		delegateCategories := xslices.Map(
 			delegateCheckCategories,
 			func(checkCategory check.Category) Category {
@@ -211,20 +231,24 @@ func validateNoDuplicateRulesOrCategories(rules []Rule, categories []Category) e
 			rule,
 		)
 	}
+
 	for _, category := range categories {
 		idToRuleOrCategories[category.ID()] = append(
 			idToRuleOrCategories[category.ID()],
 			category,
 		)
 	}
+
 	for id, ruleOrCategories := range idToRuleOrCategories {
 		if len(ruleOrCategories) <= 1 {
 			delete(idToRuleOrCategories, id)
 		}
 	}
+
 	if len(idToRuleOrCategories) > 0 {
 		return newDuplicateRuleOrCategoryError(idToRuleOrCategories)
 	}
+
 	return nil
 }
 
@@ -244,12 +268,15 @@ func (d *duplicateRuleOrCategoryError) Error() string {
 	if d == nil {
 		return ""
 	}
+
 	if len(d.duplicateIDToRuleOrCategories) == 0 {
 		return ""
 	}
 
 	var sb strings.Builder
+
 	_, _ = sb.WriteString("duplicate rule IDs detected from plugins:\n")
+
 	duplicateIDs := d.duplicateIDs()
 	for i, duplicateID := range duplicateIDs {
 		// Example of this loop:
@@ -265,6 +292,7 @@ func (d *duplicateRuleOrCategoryError) Error() string {
 				return ruleOrCategories[i].ID() < ruleOrCategories[j].ID()
 			},
 		)
+
 		_, _ = sb.WriteString(
 			strings.Join(
 				xslices.Map(
@@ -273,6 +301,7 @@ func (d *duplicateRuleOrCategoryError) Error() string {
 						if pluginName := ruleOrCategory.PluginName(); pluginName != "" {
 							return pluginName
 						}
+
 						return "builtin"
 					},
 				),
@@ -283,6 +312,7 @@ func (d *duplicateRuleOrCategoryError) Error() string {
 			_, _ = sb.WriteString("\n")
 		}
 	}
+
 	return sb.String()
 }
 
@@ -290,9 +320,11 @@ func (d *duplicateRuleOrCategoryError) duplicateIDs() []string {
 	if d == nil {
 		return nil
 	}
+
 	if len(d.duplicateIDToRuleOrCategories) == 0 {
 		return nil
 	}
+
 	return xslices.MapKeysToSortedSlice(d.duplicateIDToRuleOrCategories)
 }
 
@@ -301,13 +333,17 @@ func formatDelegateError(delegate *checkClientSpec, err error) error {
 	if delegate.PluginName == "" {
 		return err // Built-in rule, return error as-is
 	}
+
 	var errorMsg strings.Builder
 	errorMsg.WriteString("plugin ")
 	errorMsg.WriteString(fmt.Sprintf("%q", delegate.PluginName))
+
 	if delegate.PolicyName != "" {
 		errorMsg.WriteString(" from policy ")
 		errorMsg.WriteString(fmt.Sprintf("%q", delegate.PolicyName))
 	}
+
 	errorMsg.WriteString(" failed: ")
+
 	return fmt.Errorf("%s%w", errorMsg.String(), err)
 }

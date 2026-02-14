@@ -28,6 +28,7 @@ func TestMap(t *testing.T) {
 	value, found := table.Insert("foo")
 	assert.Equal(t, *value, 0)
 	assert.Equal(t, found, false)
+
 	*value = 42
 
 	value, found = table.Insert("foo")

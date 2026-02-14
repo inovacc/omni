@@ -71,6 +71,7 @@ func validateConstraints(f *File, r *report.Report) {
 	for ty := range seq.Values(f.AllTypes()) {
 		validateReservedNames(ty, r)
 		validateVisibility(ty, r)
+
 		switch {
 		case ty.IsEnum():
 			validateEnum(ty, r)
@@ -83,6 +84,7 @@ func validateConstraints(f *File, r *report.Report) {
 			for oneof := range seq.Values(ty.Oneofs()) {
 				validateOneof(oneof, r)
 			}
+
 			validateExtensionDeclarations(ty, r)
 		}
 
@@ -118,6 +120,7 @@ func validateConstraints(f *File, r *report.Report) {
 	i := 0
 	for p := range f.arenas.messages.Values() {
 		i++
+
 		m := id.WrapRaw(f, id.ID[MessageValue](i), p)
 		for v := range m.Fields() {
 			// This is a simple way of picking up all of the option values
@@ -139,6 +142,7 @@ func validateEnum(ty Type, r *report.Report) {
 		r.Errorf("%s must define at least one value", taxa.EnumType).Apply(
 			report.Snippet(ty.AST()),
 		)
+
 		return
 	}
 
@@ -149,6 +153,7 @@ func validateEnum(ty Type, r *report.Report) {
 		// Check to see if there are at least two enum values with the same
 		// number.
 		var hasAlias bool
+
 		numbers := make(map[int32]struct{})
 		for member := range seq.Values(ty.Members()) {
 			if !mapsx.AddZero(numbers, member.Number()) {
@@ -169,6 +174,7 @@ func validateEnum(ty Type, r *report.Report) {
 	if first.Number() != 0 && !ty.IsClosedEnum() {
 		// Figure out why this enum is open.
 		feature := ty.FeatureSet().Lookup(builtins.FeatureEnum)
+
 		why := feature.Value().ValueAST().Span()
 		if feature.IsDefault() {
 			why = ty.Context().AST().Syntax().Value().Span()
@@ -327,6 +333,7 @@ func validateMessageSet(ty Type, r *report.Report) {
 			report.Helpf("%ss cannot be defined in \"proto3\" only", taxa.MessageSet),
 			report.Helpf("%ss are not implemented correctly in most Protobuf implementations", taxa.MessageSet),
 		)
+
 		return
 	}
 
@@ -334,6 +341,7 @@ func validateMessageSet(ty Type, r *report.Report) {
 
 	for member := range seq.Values(ty.Members()) {
 		ok = false
+
 		r.Errorf("field declared in %s `%s`", taxa.MessageSet, ty.FullName()).Apply(
 			report.Snippet(member.AST()),
 			report.PageBreak,
@@ -345,6 +353,7 @@ func validateMessageSet(ty Type, r *report.Report) {
 
 	for oneof := range seq.Values(ty.Oneofs()) {
 		ok = false
+
 		r.Errorf("field declared in %s `%s`", taxa.MessageSet, ty.FullName()).Apply(
 			report.Snippet(oneof.AST()),
 			report.PageBreak,
@@ -356,6 +365,7 @@ func validateMessageSet(ty Type, r *report.Report) {
 
 	if ty.ExtensionRanges().Len() == 0 {
 		ok = false
+
 		r.Errorf("%s `%s` declares no %ss", taxa.MessageSet, ty.FullName(), taxa.Extensions).Apply(
 			report.Snippetf(ty.Options().Field(builtins.MessageSet).KeyAST(), "declared as message set here"),
 			report.Snippet(ty.AST().Stem()),
@@ -373,6 +383,7 @@ func validateMessageSet(ty Type, r *report.Report) {
 
 func validateMessageSetExtension(extn Member, r *report.Report) {
 	builtins := extn.Context().builtins()
+
 	extendee := extn.Container()
 	if extn.IsRepeated() {
 		_, repeated := iterx.Find(extn.AST().Type().Prefixes(), func(ty ast.TypePrefixed) bool {
@@ -405,10 +416,12 @@ func validateExtensionDeclarations(ty Type, r *report.Report) {
 	// First, walk through all of the extension ranges to get their associated
 	// option objects.
 	options := make(map[MessageValue][]ReservedRange)
+
 	for r := range seq.Values(ty.ExtensionRanges()) {
 		if r.Options().IsZero() {
 			continue
 		}
+
 		mapsx.Append(options, r.Options(), r)
 	}
 
@@ -422,6 +435,7 @@ func validateExtensionDeclarations(ty Type, r *report.Report) {
 		}
 
 		decls := options.Field(builtins.ExtnDecls)
+
 		verification := options.Field(builtins.ExtnVerification)
 		if v, ok := verification.AsInt(); ok && (v == 1) != decls.IsZero() {
 			if decls.IsZero() {
@@ -452,7 +466,9 @@ func validateExtensionDeclarations(ty Type, r *report.Report) {
 		}
 
 		var haveMissingField bool
+
 		numbers := make(map[int32]struct{})
+
 		for elem := range seq.Values(decls.Elements()) {
 			decl := elem.AsMessage()
 
@@ -460,11 +476,13 @@ func validateExtensionDeclarations(ty Type, r *report.Report) {
 			if n, ok := number.AsInt(); ok {
 				// Find the range that contains n.
 				var found bool
+
 				for _, r := range ranges {
 					start, end := r.Range()
 					if int64(start) <= n && n <= int64(end) {
 						found = true
 						numbers[int32(n)] = struct{}{}
+
 						break
 					}
 				}
@@ -479,12 +497,14 @@ func validateExtensionDeclarations(ty Type, r *report.Report) {
 				r.Errorf("extension declaration must specify `%s`", builtins.ExtnDeclNumber.Name()).Apply(
 					report.Snippet(elem.AST()),
 				)
+
 				haveMissingField = true
 			}
 
 			validatePath := func(v Value, want any) bool {
 				// First, check this is a valid name in the first place.
 				s, _ := v.AsString()
+
 				name := FullName(s)
 				for component := range name.Components() {
 					if !asciiIdent.MatchString(component) {
@@ -496,6 +516,7 @@ func validateExtensionDeclarations(ty Type, r *report.Report) {
 						if strings.ContainsFunc(component, unicode.IsSpace) {
 							d.Apply(report.Helpf("the name may not contain whitespace"))
 						}
+
 						return false
 					}
 				}
@@ -530,6 +551,7 @@ func validateExtensionDeclarations(ty Type, r *report.Report) {
 				r.Errorf("extension declaration must specify `%s`", builtins.ExtnDeclName.Name()).Apply(
 					report.Snippet(elem.AST()),
 				)
+
 				haveMissingField = true
 			}
 
@@ -555,6 +577,7 @@ func validateExtensionDeclarations(ty Type, r *report.Report) {
 				r.Errorf("extension declaration must specify `%s`", builtins.ExtnDeclType.Name()).Apply(
 					report.Snippet(elem.AST()),
 				)
+
 				haveMissingField = true
 			}
 		}
@@ -572,6 +595,7 @@ func validateExtensionDeclarations(ty Type, r *report.Report) {
 						report.Snippetf(rr.AST(), "required by this range"),
 						report.Notef("this is likely a mistake, but it is not rejected by protoc"),
 					)
+
 					break missingDecls // Only diagnose the first problematic range.
 				}
 			}
@@ -584,21 +608,28 @@ func validateDeclaredExtension(m Member, r *report.Report) {
 
 	// First, figure out whether this is a declared extension.
 	extendee := m.Container()
-	var decl MessageValue
-	var elem Element
+
+	var (
+		decl MessageValue
+		elem Element
+	)
+
 declSearch:
 	for r := range extendee.Ranges(m.Number()) {
 		decls := r.AsReserved().Options().Field(builtins.ExtnDecls)
 		for v := range seq.Values(decls.Elements()) {
 			msg := v.AsMessage()
+
 			number := msg.Field(builtins.ExtnDeclNumber)
 			if n, ok := number.AsInt(); ok && n == int64(m.Number()) {
 				elem = v
 				decl = msg
+
 				break declSearch
 			}
 		}
 	}
+
 	if decl.IsZero() {
 		return // Not a declared extension.
 	}
@@ -628,6 +659,7 @@ declSearch:
 
 	if v, ok := tyName.AsString(); ok {
 		ty := PredeclaredType(predeclared.Lookup(v))
+
 		var sym Symbol
 		if ty.IsZero() {
 			sym = m.Context().FindSymbol(FullName(v).ToRelative())
@@ -670,6 +702,7 @@ func validatePresence(m Member, r *report.Report) {
 	}
 
 	builtins := m.Context().builtins()
+
 	feature := m.FeatureSet().Lookup(builtins.FeaturePresence)
 	if !feature.IsExplicit() {
 		return
@@ -770,10 +803,12 @@ func validatePacked(m Member, r *report.Report) {
 	if !option.IsZero() {
 		if m.Context().Syntax().IsEdition() {
 			packed, _ := option.AsBool()
+
 			want := "PACKED"
 			if !packed {
 				want = "EXPANDED"
 			}
+
 			r.Error(erredition.TooNew{
 				Current: m.Context().Syntax(),
 				Decl:    m.Context().AST().Syntax(),
@@ -805,6 +840,7 @@ func validateLazy(m Member, r *report.Report) {
 		if lazy.IsZero() {
 			return
 		}
+
 		set, _ := lazy.AsBool()
 
 		if !m.Element().IsMessage() {
@@ -828,6 +864,7 @@ func validateLazy(m Member, r *report.Report) {
 		}
 
 		group := m.FeatureSet().Lookup(builtins.FeatureGroup)
+
 		groupValue, _ := group.Value().AsInt()
 		if groupValue == 2 { // FeatureSet.DELIMITED
 			d := r.SoftErrorf(set, "expected length-prefixed field").Apply(
@@ -839,6 +876,7 @@ func validateLazy(m Member, r *report.Report) {
 			if group.IsInherited() {
 				d.Apply(report.PageBreak)
 			}
+
 			d.Apply(report.Snippetf(group.Value().ValueAST(), "set to use delimited encoding here"))
 		}
 	}
@@ -881,6 +919,7 @@ func validateCType(m Member, r *report.Report) {
 	ctypeValue, _ := ctype.AsInt()
 
 	var want string
+
 	switch ctypeValue {
 	case 0: // FieldOptions.STRING
 		want = "STRING"
@@ -956,10 +995,12 @@ func validateUTF8(m Member, r *report.Report) {
 	if m.Element().Predeclared() == predeclared.String {
 		return
 	}
+
 	if k, v := m.Element().EntryFields(); k.Element().Predeclared() == predeclared.String ||
 		v.Element().Predeclared() == predeclared.String {
 		return
 	}
+
 	r.Error(errTypeConstraint{
 		want: "`string`",
 		got:  m.Element(),
@@ -979,6 +1020,7 @@ func validateUTF8(m Member, r *report.Report) {
 
 func validateMessageEncoding(m Member, r *report.Report) {
 	builtins := m.Context().builtins()
+
 	feature := m.FeatureSet().Lookup(builtins.FeatureGroup)
 	if !feature.IsExplicit() {
 		return
@@ -1070,10 +1112,13 @@ func validateVisibility(ty Type, r *report.Report) {
 	if key.IsZero() {
 		return
 	}
+
 	feature := ty.FeatureSet().Lookup(key)
 	value, _ := feature.Value().AsInt()
 	strict := value == 4 // STRICT
+
 	var impliedExport bool
+
 	switch value {
 	case 0, 1: // DEFAULT_SYMBOL_VISIBILITY_UNKNOWN, EXPORT_ALL
 		impliedExport = true
@@ -1091,6 +1136,7 @@ func validateVisibility(ty Type, r *report.Report) {
 	}
 
 	vis := id.Wrap(ty.AST().Context().Stream(), ty.Raw().visibility)
+
 	export := vis.Keyword() == keyword.Export
 	if !ty.Raw().visibility.IsZero() && export == impliedExport {
 		r.Warnf("redundant visibility modifier").Apply(
@@ -1118,6 +1164,7 @@ func validateVisibility(ty Type, r *report.Report) {
 
 	// Find any gaps in the reserved ranges.
 	gap := start
+
 	ranges := slices.Collect(seq.Values(parent.ReservedRanges()))
 	if len(ranges) > 0 {
 		slices.SortFunc(ranges, cmpx.Join(
@@ -1137,6 +1184,7 @@ func validateVisibility(ty Type, r *report.Report) {
 			if end >= start {
 				break
 			}
+
 			ranges = ranges[1:]
 		}
 
@@ -1146,6 +1194,7 @@ func validateVisibility(ty Type, r *report.Report) {
 				// We're done, gap is not reserved.
 				break
 			}
+
 			gap = b + 1
 		}
 	}
@@ -1159,6 +1208,7 @@ func validateVisibility(ty Type, r *report.Report) {
 				report.Snippetf(vis, "nested type exported here"),
 				report.Snippetf(parent.AST(), "... within this type"),
 			)
+
 			ranges := parent.ReservedRanges()
 			if ranges.Len() > 0 {
 				d.Apply(
@@ -1217,6 +1267,7 @@ func validateNamingStyle(f *File, r *report.Report) {
 	isStyle2024 := func(featureSet FeatureSet) bool {
 		feature := featureSet.Lookup(key)
 		value, _ := feature.Value().AsInt()
+
 		return value == 1 // STYLE2024
 	}
 
@@ -1247,6 +1298,7 @@ func validateNamingStyle(f *File, r *report.Report) {
 			if method.IsZero() || !isStyle2024(method.FeatureSet()) {
 				continue
 			}
+
 			methodName := method.Name()
 			if !isPascalCase(methodName) {
 				r.Errorf("RPC method name should be PascalCase").Apply(
@@ -1275,6 +1327,7 @@ func validateNamingStyle(f *File, r *report.Report) {
 				if field.IsZero() || field.IsGroup() || !isStyle2024(field.FeatureSet()) {
 					continue
 				}
+
 				fieldName := field.Name()
 				if !isSnakeCase(fieldName) {
 					r.Errorf("field name should be snake_case").Apply(
@@ -1289,6 +1342,7 @@ func validateNamingStyle(f *File, r *report.Report) {
 				if oneof.IsZero() || !isStyle2024(oneof.FeatureSet()) {
 					continue
 				}
+
 				oneofName := oneof.Name()
 				if !isSnakeCase(oneofName) {
 					r.Errorf("oneof name should be snake_case").Apply(
@@ -1311,6 +1365,7 @@ func validateNamingStyle(f *File, r *report.Report) {
 				if value.IsZero() || !isStyle2024(value.FeatureSet()) {
 					continue
 				}
+
 				valueName := value.Name()
 				if !isScreamingSnakeCase(valueName) {
 					r.Errorf("enum value name should be SCREAMING_SNAKE_CASE").Apply(
@@ -1342,6 +1397,7 @@ func isPascalCase(name string) bool {
 			return false
 		}
 	}
+
 	return true
 }
 
@@ -1375,6 +1431,7 @@ func isSnakeCase(name string) bool {
 	if strings.Contains(name, "__") || strings.HasSuffix(name, "_") {
 		return false
 	}
+
 	return true
 }
 
@@ -1400,6 +1457,7 @@ func isScreamingSnakeCase(name string) bool {
 	if strings.Contains(name, "__") || strings.HasPrefix(name, "_") || strings.HasSuffix(name, "_") {
 		return false
 	}
+
 	return true
 }
 
@@ -1418,6 +1476,7 @@ func isValidPackageName(name string) bool {
 			return false
 		}
 	}
+
 	return true
 }
 
@@ -1434,7 +1493,9 @@ func (e *errNotUTF8) Diagnose(d *report.Diagnostic) {
 		// necessarily have come from a \xNN escape, we should look for it.
 		text := lit.Text()
 		offset := 0
+
 		var invalid byte
+
 		for text != "" {
 			r, n := utf8.DecodeRuneInString(text[offset:])
 			if r == utf8.RuneError {
@@ -1447,6 +1508,7 @@ func (e *errNotUTF8) Diagnose(d *report.Diagnostic) {
 
 		// Now, find the invalid escape...
 		var esc token.Escape
+
 		for escape := range seq.Values(lit.Escapes()) {
 			if escape.Byte == invalid {
 				esc = escape
@@ -1466,11 +1528,13 @@ func (e *errNotUTF8) Diagnose(d *report.Diagnostic) {
 
 	// Figure out where the relevant feature was set.
 	builtins := e.value.Context().builtins()
+
 	feature := e.value.Field().FeatureSet().Lookup(builtins.FeatureUTF8)
 	if !feature.IsDefault() {
 		if feature.IsInherited() {
 			d.Apply(report.PageBreak)
 		}
+
 		d.Apply(report.Snippetf(feature.Value().ValueAST(), "UTF-8 required here"))
 	} else {
 		d.Apply(

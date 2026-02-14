@@ -34,6 +34,7 @@ func TestParse(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		t.Skip("Skipped on Windows: golden files have Unix line endings affecting byte offsets")
 	}
+
 	t.Parallel()
 
 	corpus := golden.Corpus{
@@ -56,6 +57,7 @@ func TestParse(t *testing.T) {
 			ShowDebug: true,
 		}.RenderString(errs)
 		t.Log(stderr)
+
 		outputs[1], _, _ = report.Renderer{}.RenderString(errs)
 
 		// Make sure we catch panics that were converted to ICEs.

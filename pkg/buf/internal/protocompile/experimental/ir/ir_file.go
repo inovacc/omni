@@ -31,7 +31,7 @@ import (
 // File is an IR file, which provides access to the top-level declarations of
 // a Protobuf *File.
 //
-//nolint:govet // For some reason, this lint mangles the field order on this struct. >:(
+
 type File struct {
 	_       unsafex.NoCopy
 	session *Session
@@ -103,6 +103,7 @@ func (f *File) builtins() *builtins {
 	if f.dpBuiltins != nil {
 		return f.dpBuiltins
 	}
+
 	return f.imports.DescriptorProto().dpBuiltins
 }
 
@@ -111,6 +112,7 @@ func (f *File) AST() *ast.File {
 	if f == nil {
 		return nil
 	}
+
 	return f.ast
 }
 
@@ -119,6 +121,7 @@ func (f *File) Syntax() syntax.Syntax {
 	if f == nil {
 		return syntax.Unknown
 	}
+
 	return f.syntax
 }
 
@@ -129,10 +132,13 @@ func (f *File) Path() string {
 	if f == nil {
 		return ""
 	}
+
 	if f == primitiveCtx {
 		return "<predeclared>"
 	}
+
 	c := f
+
 	return c.session.intern.Value(c.path)
 }
 
@@ -141,6 +147,7 @@ func (f *File) InternedPath() intern.ID {
 	if f == nil {
 		return 0
 	}
+
 	return f.path
 }
 
@@ -151,6 +158,7 @@ func (f *File) IsDescriptorProto() bool {
 	if f == nil {
 		return false
 	}
+
 	return f.InternedPath() == f.session.builtins.DescriptorFile
 }
 
@@ -162,10 +170,12 @@ func (f *File) Package() FullName {
 	if f == nil {
 		return ""
 	}
+
 	c := f
 	if f == primitiveCtx {
 		return ""
 	}
+
 	return FullName(c.session.intern.Value(c.pkg))
 }
 
@@ -174,6 +184,7 @@ func (f *File) InternedPackage() intern.ID {
 	if f == nil {
 		return 0
 	}
+
 	return f.pkg
 }
 
@@ -183,6 +194,7 @@ func (f *File) Imports() seq.Indexer[Import] {
 	if f != nil {
 		imp = f.imports
 	}
+
 	return imp.Directs()
 }
 
@@ -195,6 +207,7 @@ func (f *File) TransitiveImports() seq.Indexer[Import] {
 	if f != nil {
 		imp = f.imports
 	}
+
 	return imp.Transitive()
 }
 
@@ -214,6 +227,7 @@ func (f *File) Types() seq.Indexer[Type] {
 	if f != nil {
 		types = f.types[:f.topLevelTypesEnd]
 	}
+
 	return seq.NewFixedSlice(
 		types,
 		func(_ int, p id.ID[Type]) Type {
@@ -228,6 +242,7 @@ func (f *File) AllTypes() seq.Indexer[Type] {
 	if f != nil {
 		types = f.types
 	}
+
 	return seq.NewFixedSlice(
 		types,
 		func(_ int, p id.ID[Type]) Type {
@@ -243,6 +258,7 @@ func (f *File) Extensions() seq.Indexer[Member] {
 	if f != nil {
 		slice = f.extns[:f.topLevelExtnsEnd]
 	}
+
 	return seq.NewFixedSlice(
 		slice,
 		func(_ int, p id.ID[Member]) Member {
@@ -257,6 +273,7 @@ func (f *File) AllExtensions() seq.Indexer[Member] {
 	if f != nil {
 		extns = f.extns
 	}
+
 	return seq.NewFixedSlice(
 		extns,
 		func(_ int, p id.ID[Member]) Member {
@@ -271,6 +288,7 @@ func (f *File) Extends() seq.Indexer[Extend] {
 	if f != nil {
 		slice = f.extends[:f.topLevelExtendsEnd]
 	}
+
 	return seq.NewFixedSlice(
 		slice,
 		func(_ int, p id.ID[Extend]) Extend {
@@ -285,6 +303,7 @@ func (f *File) AllExtends() seq.Indexer[Extend] {
 	if f != nil {
 		extends = f.extends
 	}
+
 	return seq.NewFixedSlice(
 		extends,
 		func(_ int, p id.ID[Extend]) Extend {
@@ -300,7 +319,9 @@ func (f *File) AllMembers() iter.Seq[Member] {
 	if f != nil {
 		raw = f.arenas.members.Values()
 	}
+
 	i := 0
+
 	return iterx.Map(raw, func(raw *rawMember) Member {
 		i++
 		return id.WrapRaw(f, id.ID[Member](i), raw)
@@ -313,6 +334,7 @@ func (f *File) Services() seq.Indexer[Service] {
 	if f != nil {
 		services = f.services
 	}
+
 	return seq.NewFixedSlice(
 		services,
 		func(_ int, p id.ID[Service]) Service {
@@ -327,6 +349,7 @@ func (f *File) Options() MessageValue {
 	if f != nil {
 		options = f.options
 	}
+
 	return id.Wrap(f, options).AsMessage()
 }
 
@@ -335,6 +358,7 @@ func (f *File) FeatureSet() FeatureSet {
 	if f == nil {
 		return FeatureSet{}
 	}
+
 	return id.Wrap(f, f.features)
 }
 
@@ -344,11 +368,14 @@ func (f *File) Deprecated() Value {
 	if f == nil {
 		return Value{}
 	}
+
 	builtins := f.builtins()
+
 	d := f.Options().Field(builtins.FileDeprecated)
 	if b, _ := d.AsBool(); b {
 		return d
 	}
+
 	return Value{}
 }
 
@@ -362,6 +389,7 @@ func (f *File) Symbols() seq.Indexer[Symbol] {
 	if f != nil {
 		symbols = f.imported
 	}
+
 	return seq.NewFixedSlice(
 		symbols,
 		func(_ int, r Ref[Symbol]) Symbol {

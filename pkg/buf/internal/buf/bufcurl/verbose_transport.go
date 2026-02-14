@@ -39,9 +39,10 @@ func skippingUploadFinishedMessage(ctx context.Context) context.Context {
 type userAgentKey struct{}
 
 func withUserAgent(ctx context.Context, headers http.Header) context.Context {
-	if userAgentHeaders := headers.Values("user-agent"); len(userAgentHeaders) > 0 {
+	if userAgentHeaders := headers.Values("User-Agent"); len(userAgentHeaders) > 0 {
 		return context.WithValue(ctx, userAgentKey{}, userAgentHeaders)
 	}
+
 	return ctx // no change
 }
 
@@ -53,6 +54,7 @@ func DefaultUserAgent(protocol string, bufVersion string) string {
 	if strings.Contains(protocol, "grpc") {
 		libUserAgent = "grpc-go-connect"
 	}
+
 	return fmt.Sprintf("%s/%s (%s) buf/%s", libUserAgent, connect.Version, runtime.Version(), bufVersion)
 }
 
@@ -86,10 +88,12 @@ func (v *verboseClient) Do(req *http.Request) (*http.Response, error) {
 		// the ":authority" meta-header in HTTP/2.
 		req.Host = host
 	}
+
 	if userAgentHeaders, _ := req.Context().Value(userAgentKey{}).([]string); len(userAgentHeaders) > 0 {
-		req.Header.Del("user-agent")
+		req.Header.Del("User-Agent")
+
 		for _, val := range userAgentHeaders {
-			req.Header.Add("user-agent", val)
+			req.Header.Add("User-Agent", val)
 		}
 	}
 
@@ -97,10 +101,12 @@ func (v *verboseClient) Do(req *http.Request) (*http.Response, error) {
 	if reqNumAddr, _ := req.Context().Value(reqNumAddrKey{}).(*int32); reqNumAddr != nil {
 		*reqNumAddr = reqNum
 	}
+
 	rawBody := req.Body
 	if rawBody == nil {
 		rawBody = io.NopCloser(bytes.NewBuffer(nil))
 	}
+
 	var atEnd func(error)
 	if skip, _ := req.Context().Value(skipUploadFinishedMessageKey{}).(bool); !skip {
 		atEnd = func(err error) {
@@ -109,6 +115,7 @@ func (v *verboseClient) Do(req *http.Request) (*http.Response, error) {
 			}
 		}
 	}
+
 	req.Body = &verboseReader{
 		ReadCloser: rawBody,
 		callback: func(count int) {
@@ -122,9 +129,11 @@ func (v *verboseClient) Do(req *http.Request) (*http.Response, error) {
 			v.traceRequest(req, reqNum)
 		},
 	}
+
 	resp, err := v.transport.RoundTrip(req)
 	if resp != nil {
 		v.traceResponse(resp, reqNum)
+
 		if resp.Body != nil {
 			resp.Body = &verboseReader{
 				ReadCloser: resp.Body,
@@ -152,6 +161,7 @@ func (v *verboseClient) traceRequest(r *http.Request, reqNum int32) {
 	} else if r.URL.ForceQuery {
 		queryString = "?"
 	}
+
 	v.printer.Printf("> (#%d) %s %s%s\n", reqNum, r.Method, r.URL.Path, queryString)
 	traceMetadata(v.printer, r.Header, fmt.Sprintf("> (#%d) ", reqNum))
 	v.printer.Printf("> (#%d)\n", reqNum)
@@ -176,7 +186,9 @@ func traceMetadata(printer verbose.Printer, meta http.Header, prefix string) {
 	for key := range meta {
 		keys = append(keys, key)
 	}
+
 	sort.Strings(keys)
+
 	for _, key := range keys {
 		vals := meta[key]
 		for _, val := range vals {
@@ -189,17 +201,21 @@ func traceTrailers(printer verbose.Printer, trailers http.Header, synthetic bool
 	if len(trailers) == 0 {
 		return
 	}
+
 	printer.Printf("< (#%d)\n", reqNum)
+
 	prefix := fmt.Sprintf("< (#%d) ", reqNum)
 	if synthetic {
 		// mark synthetic trailers with an asterisk
 		prefix += "[*] "
 	}
+
 	traceMetadata(printer, trailers, prefix)
 }
 
 type verboseReader struct {
 	io.ReadCloser
+
 	callback  func(int)
 	whenStart func()
 	whenDone  func(error)
@@ -211,15 +227,18 @@ func (v *verboseReader) Read(dest []byte) (n int, err error) {
 	if v.started.CompareAndSwap(false, true) && v.whenStart != nil {
 		v.whenStart()
 	}
+
 	n, err = v.ReadCloser.Read(dest)
 	if n > 0 && v.callback != nil {
 		v.callback(n)
 	}
+
 	if err != nil {
 		if v.done.CompareAndSwap(false, true) && v.whenDone != nil {
 			v.whenDone(err)
 		}
 	}
+
 	return n, err
 }
 
@@ -230,8 +249,10 @@ func (v *verboseReader) Close() error {
 		if reportError == nil {
 			reportError = io.EOF
 		}
+
 		v.whenDone(reportError)
 	}
+
 	return err
 }
 
@@ -246,7 +267,9 @@ func (t traceTrailersInterceptor) WrapUnary(unaryFunc connect.UnaryFunc) connect
 func (t traceTrailersInterceptor) WrapStreamingClient(clientFunc connect.StreamingClientFunc) connect.StreamingClientFunc {
 	return func(ctx context.Context, spec connect.Spec) connect.StreamingClientConn {
 		var reqNum int32
+
 		ctx = context.WithValue(ctx, reqNumAddrKey{}, &reqNum)
+
 		return &traceTrailersStream{StreamingClientConn: clientFunc(ctx, spec), reqNum: &reqNum, printer: t.printer}
 	}
 }
@@ -257,6 +280,7 @@ func (t traceTrailersInterceptor) WrapStreamingHandler(handlerFunc connect.Strea
 
 type traceTrailersStream struct {
 	connect.StreamingClientConn
+
 	reqNum  *int32
 	printer verbose.Printer
 	done    atomic.Bool
@@ -267,5 +291,6 @@ func (s *traceTrailersStream) Receive(msg any) error {
 	if err != nil && s.done.CompareAndSwap(false, true) {
 		traceTrailers(s.printer, s.ResponseTrailer(), true, *s.reqNum)
 	}
+
 	return err
 }

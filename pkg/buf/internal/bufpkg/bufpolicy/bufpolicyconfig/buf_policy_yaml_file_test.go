@@ -105,6 +105,7 @@ func testReadBufPolicyYAMLFile(
 		"buf.policy.yaml",
 	)
 	require.NoError(t, err)
+
 	return bufPolicyYAMLFile
 }
 
@@ -117,6 +118,7 @@ func testReadWriteBufPolicyYAMLFileRoundTrip(
 	buffer := bytes.NewBuffer(nil)
 	err := WriteBufPolicyYAMLFile(buffer, bufPolicyYAMLFile)
 	require.NoError(t, err)
+
 	outputBufPolicyYAMLData := testCleanYAMLData(buffer.String())
 	assert.Equal(t, testCleanYAMLData(expectedOutputBufYAMLFileData), outputBufPolicyYAMLData, "output:\n%s", outputBufPolicyYAMLData)
 }

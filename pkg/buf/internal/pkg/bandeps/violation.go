@@ -57,5 +57,6 @@ func (v *violation) key() string {
 	_, _ = hash.Write([]byte(v.pkg))
 	_, _ = hash.Write([]byte(v.dep))
 	_, _ = hash.Write([]byte(v.note))
+
 	return string(hash.Sum(nil))
 }

@@ -72,8 +72,10 @@ type staticPluginKeyProvider struct {
 
 func newStaticPluginKeyProvider(pluginKeys []PluginKey) (*staticPluginKeyProvider, error) {
 	var pluginKeysByFullName map[string]PluginKey
+
 	if len(pluginKeys) > 0 {
 		var err error
+
 		pluginKeysByFullName, err = xslices.ToUniqueValuesMap(pluginKeys, func(pluginKey PluginKey) string {
 			return pluginKey.FullName().String()
 		})
@@ -81,6 +83,7 @@ func newStaticPluginKeyProvider(pluginKeys []PluginKey) (*staticPluginKeyProvide
 			return nil, err
 		}
 	}
+
 	return &staticPluginKeyProvider{
 		pluginKeysByFullName: pluginKeysByFullName,
 	}, nil
@@ -100,14 +103,18 @@ func (s staticPluginKeyProvider) GetPluginKeysForPluginRefs(
 		if !ok {
 			return nil, fs.ErrNotExist
 		}
+
 		digest, err := pluginKey.Digest()
 		if err != nil {
 			return nil, err
 		}
+
 		if digest.Type() != digestType {
 			return nil, fmt.Errorf("expected DigestType %v, got %v", digestType, digest.Type())
 		}
+
 		pluginKeys[i] = pluginKey
 	}
+
 	return pluginKeys, nil
 }

@@ -63,6 +63,7 @@ func RunNote(w io.Writer, args []string, opts Options) error {
 		}
 
 		_, _ = fmt.Fprintln(w, string(data))
+
 		return nil
 	}
 
@@ -100,6 +101,7 @@ func RunRemove(w io.Writer, args []string, opts Options) error {
 		}
 
 		_, _ = fmt.Fprintln(w, string(data))
+
 		return nil
 	}
 
@@ -126,6 +128,7 @@ func runList(w io.Writer, path string, opts Options) error {
 		}
 
 		_, _ = fmt.Fprintln(w, string(data))
+
 		return nil
 	}
 
@@ -151,12 +154,14 @@ func remove(path, target string) (Entry, int, error) {
 		return Entry{}, 0, fmt.Errorf("note: no notes to remove")
 	}
 
-	var idx int = -1
+	var idx = -1
+
 	parsedIndex := false
 	parsedIndexValue := 0
 
 	if n, convErr := strconv.Atoi(target); convErr == nil {
 		parsedIndex = true
+
 		parsedIndexValue = n
 		if n >= 1 && n <= len(store.Notes) {
 			idx = n - 1

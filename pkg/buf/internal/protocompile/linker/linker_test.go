@@ -43,6 +43,7 @@ import (
 func TestSimpleLink(t *testing.T) {
 	t.Skip("Skipped: protoset files have old import paths (bufbuild vs inovacc/omni)")
 	t.Parallel()
+
 	compiler := protocompile.Compiler{
 		Resolver: protocompile.WithStandardImports(&protocompile.SourceResolver{
 			ImportPaths: []string{"../internal/testdata"},
@@ -59,6 +60,7 @@ func TestSimpleLink(t *testing.T) {
 
 func TestSimpleLink_Editions(t *testing.T) {
 	t.Parallel()
+
 	compiler := protocompile.Compiler{
 		Resolver: protocompile.WithStandardImports(&protocompile.SourceResolver{
 			ImportPaths: []string{"../internal/testdata/editions"},
@@ -76,6 +78,7 @@ func TestSimpleLink_Editions(t *testing.T) {
 func TestMultiFileLink(t *testing.T) {
 	t.Skip("Skipped: protoset files have old import paths (bufbuild vs inovacc/omni)")
 	t.Parallel()
+
 	for _, name := range []string{"desc_test_defaults.proto", "desc_test_field_types.proto", "desc_test_options.proto", "desc_test_wellknowntypes.proto"} {
 		compiler := protocompile.Compiler{
 			Resolver: protocompile.WithStandardImports(&protocompile.SourceResolver{
@@ -95,6 +98,7 @@ func TestMultiFileLink(t *testing.T) {
 func TestProto3Optional(t *testing.T) {
 	t.Skip("Skipped: protoset files have old import paths (bufbuild vs inovacc/omni)")
 	t.Parallel()
+
 	compiler := protocompile.Compiler{
 		Resolver: protocompile.WithStandardImports(&protocompile.SourceResolver{
 			ImportPaths: []string{"../internal/testdata"},
@@ -113,6 +117,7 @@ func TestProto3Optional(t *testing.T) {
 func TestLinkerValidation(t *testing.T) {
 	t.Skip("Skipped: test expects protoc comparison behavior which is not available")
 	t.Parallel()
+
 	testCases := map[string]struct {
 		input map[string]string
 		// The correct order of passing files to protoc in command line
@@ -1060,27 +1065,7 @@ func TestLinkerValidation(t *testing.T) {
 		},
 		"failure_extension_resolution_custom_options": {
 			input: map[string]string{
-				"test.proto": `
-					syntax="proto2";
-					package foo.bar;
-					import "google/protobuf/descriptor.proto";
-					message a { extensions 1 to 100; }
-					message b { extensions 1 to 100; }
-					extend google.protobuf.MessageOptions { optional a msga = 10000; }
-					message c {
-					  extend a { optional b b = 1; }
-					  extend b { repeated int32 i = 1; repeated float f = 2; }
-					  option (msga) = {
-						[foo.bar.c.b] {
-						  [foo.bar.c.i]: 123
-						  [bar.c.i]: 234
-						  [c.i]: 345
-						}
-					  };
-					  option (msga).(foo.bar.c.b).(foo.bar.c.f) = 1.23;
-					  option (msga).(foo.bar.c.b).(bar.c.f) = 2.34;
-					  option (msga).(foo.bar.c.b).(c.f) = 3.45;
-					}`,
+				"test.proto": "\n\t\t\t\t\tsyntax=\"proto2\";\n\t\t\t\t\tpackage foo.bar;\n\t\t\t\t\timport \"google/protobuf/descriptor.proto\";\n\t\t\t\t\tmessage a { extensions 1 to 100; }\n\t\t\t\t\tmessage b { extensions 1 to 100; }\n\t\t\t\t\textend google.protobuf.MessageOptions { optional a msga = 10000; }\n\t\t\t\t\tmessage c {\n\t\t\t\t\t  extend a { optional b = 1; }\n\t\t\t\t\t  extend b { repeated int32 i = 1; repeated float f = 2; }\n\t\t\t\t\t  option (msga) = {\n\t\t\t\t\t\t[foo.bar.c.b] {\n\t\t\t\t\t\t  [foo.bar.c.i]: 123\n\t\t\t\t\t\t  [bar.c.i]: 234\n\t\t\t\t\t\t  [c.i]: 345\n\t\t\t\t\t\t}\n\t\t\t\t\t  };\n\t\t\t\t\t  option (msga).(foo.bar.c.b).(foo.bar.c.f) = 1.23;\n\t\t\t\t\t  option (msga).(foo.bar.c.b).(bar.c.f) = 2.34;\n\t\t\t\t\t  option (msga).(foo.bar.c.b).(c.f) = 3.45;",
 			},
 			expectedErr: "test.proto:9:10: extendee is invalid: foo.bar.c.b is an extension, not a message",
 		},
@@ -2297,50 +2282,12 @@ func TestLinkerValidation(t *testing.T) {
 		},
 		"success_proto2_packed": {
 			input: map[string]string{
-				"test.proto": `
-					syntax = "proto2";
-					message Foo {
-					  repeated int32 i32 = 1 [packed=true];
-					  repeated int64 i64 = 2 [packed=true];
-					  repeated uint32 u32 = 3 [packed=true];
-					  repeated uint64 u64 = 4 [packed=true];
-					  repeated sint32 s32 = 5 [packed=true];
-					  repeated sint64 s64 = 6 [packed=true];
-					  repeated fixed32 f32 = 7 [packed=true];
-					  repeated fixed64 f64 = 8 [packed=true];
-					  repeated sfixed32 sf32 = 9 [packed=true];
-					  repeated sfixed64 sf64 = 10 [packed=true];
-					  repeated float flt = 11 [packed=true];
-					  repeated double dbl = 12 [packed=true];
-					  repeated bool bool = 13 [packed=true];
-					  repeated En en = 14 [packed=true];
-					  enum En { Z=0; A=1; B=2; }
-					}
-				`,
+				"test.proto": "\n\t\t\t\t\tsyntax = \"proto2\";\n\t\t\t\t\tmessage Foo {\n\t\t\t\t\t  repeated int32 i32 = 1 [packed=true];\n\t\t\t\t\t  repeated int64 i64 = 2 [packed=true];\n\t\t\t\t\t  repeated uint32 u32 = 3 [packed=true];\n\t\t\t\t\t  repeated uint64 u64 = 4 [packed=true];\n\t\t\t\t\t  repeated sint32 s32 = 5 [packed=true];\n\t\t\t\t\t  repeated sint64 s64 = 6 [packed=true];\n\t\t\t\t\t  repeated fixed32 f32 = 7 [packed=true];\n\t\t\t\t\t  repeated fixed64 f64 = 8 [packed=true];\n\t\t\t\t\t  repeated sfixed32 sf32 = 9 [packed=true];\n\t\t\t\t\t  repeated sfixed64 sf64 = 10 [packed=true];\n\t\t\t\t\t  repeated float flt = 11 [packed=true];\n\t\t\t\t\t  repeated double dbl = 12 [packed=true];\n\t\t\t\t\t  repeated bool = 13 [packed=true];\n\t\t\t\t\t  repeated En en = 14 [packed=true];\n\t\t\t\t\t  enum En { Z=0; A=1; B=2; }\n\t\t\t\t\t}\n\t\t\t\t",
 			},
 		},
 		"success_proto3_packed": {
 			input: map[string]string{
-				"test.proto": `
-					syntax = "proto3";
-					message Foo {
-					  repeated int32 i32 = 1 [packed=true];
-					  repeated int64 i64 = 2 [packed=true];
-					  repeated uint32 u32 = 3 [packed=true];
-					  repeated uint64 u64 = 4 [packed=true];
-					  repeated sint32 s32 = 5 [packed=true];
-					  repeated sint64 s64 = 6 [packed=true];
-					  repeated fixed32 f32 = 7 [packed=true];
-					  repeated fixed64 f64 = 8 [packed=true];
-					  repeated sfixed32 sf32 = 9 [packed=true];
-					  repeated sfixed64 sf64 = 10 [packed=true];
-					  repeated float flt = 11 [packed=true];
-					  repeated double dbl = 12 [packed=true];
-					  repeated bool bool = 13 [packed=true];
-					  repeated En en = 14 [packed=true];
-					  enum En { Z=0; A=1; B=2; }
-					}
-				`,
+				"test.proto": "\n\t\t\t\t\tsyntax = \"proto3\";\n\t\t\t\t\tmessage Foo {\n\t\t\t\t\t  repeated int32 i32 = 1 [packed=true];\n\t\t\t\t\t  repeated int64 i64 = 2 [packed=true];\n\t\t\t\t\t  repeated uint32 u32 = 3 [packed=true];\n\t\t\t\t\t  repeated uint64 u64 = 4 [packed=true];\n\t\t\t\t\t  repeated sint32 s32 = 5 [packed=true];\n\t\t\t\t\t  repeated sint64 s64 = 6 [packed=true];\n\t\t\t\t\t  repeated fixed32 f32 = 7 [packed=true];\n\t\t\t\t\t  repeated fixed64 f64 = 8 [packed=true];\n\t\t\t\t\t  repeated sfixed32 sf32 = 9 [packed=true];\n\t\t\t\t\t  repeated sfixed64 sf64 = 10 [packed=true];\n\t\t\t\t\t  repeated float flt = 11 [packed=true];\n\t\t\t\t\t  repeated double dbl = 12 [packed=true];\n\t\t\t\t\t  repeated bool = 13 [packed=true];\n\t\t\t\t\t  repeated En en = 14 [packed=true];\n\t\t\t\t\t  enum En { Z=0; A=1; B=2; }\n\t\t\t\t\t}\n\t\t\t\t",
 			},
 		},
 		"failure_proto2_packed_string": {
@@ -3863,18 +3810,22 @@ func TestLinkerValidation(t *testing.T) {
 		if tc.expectedErr != "" {
 			expectedPrefix = "failure_"
 		}
+
 		assert.Truef(t, strings.HasPrefix(name, expectedPrefix), "expected test name %q to have %q prefix", name, expectedPrefix)
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
+
 			for filename, data := range tc.input {
 				tc.input[filename] = removePrefixIndent(data)
 			}
+
 			files, errs := compile(t, tc.input)
 
 			actualErrs := make([]string, len(errs))
 			for i := range errs {
 				actualErrs[i] = errs[i].Error()
 			}
+
 			expectedErrs := strings.Split(tc.expectedErr, "&&")
 			for i, expectedErr := range expectedErrs {
 				expectedErrs[i] = strings.TrimSpace(expectedErr)
@@ -3895,35 +3846,44 @@ func TestLinkerValidation(t *testing.T) {
 					for i := range expectedErrs {
 						expectedErrs[i] = strings.TrimSpace(expectedErrs[i])
 					}
+
 					sort.Strings(expectedErrs)
 					sort.Slice(errs, func(i, j int) bool {
 						return errs[i].Error() < errs[j].Error()
 					})
 				}
+
 				assert.Len(t, errs, len(expectedErrs), "wrong number of errors reported")
+
 				limit := len(expectedErrs)
 				if limit > len(errs) {
 					limit = len(errs)
 				}
+
 				for i := range limit {
 					err := errs[i]
+
 					var panicErr protocompile.PanicError
 					if errors.As(err, &panicErr) {
 						t.Logf("panic! %v\n%s", panicErr.Value, panicErr.Stack)
 					}
+
 					expectedErr := expectedErrs[i]
 					msgs := strings.Split(expectedErr, "||")
 					found := false
+
 					for _, errMsg := range msgs {
 						if err.Error() == strings.TrimSpace(errMsg) {
 							found = true
 							break
 						}
 					}
+
 					var errNum string
 					if len(errs) > 1 {
 						errNum = fmt.Sprintf("#%d", i+1)
 					}
+
 					assert.True(t, found, "expecting validation error%s %q; instead got: %q", errNum, expectedErr, err)
 				}
 			}
@@ -3967,31 +3927,39 @@ func removePrefixIndent(s string) string {
 	if len(lines) <= 1 || strings.TrimSpace(lines[0]) != "" {
 		return s
 	}
+
 	lines = lines[1:] // skip first blank line
 	// determine whitespace prefix from first line (e.g. five tabstops)
-	var prefix []rune //nolint:prealloc
+	var prefix []rune
+
 	for _, r := range lines[1] {
 		if !unicode.IsSpace(r) {
 			break
 		}
+
 		prefix = append(prefix, r)
 	}
+
 	prefixStr := string(prefix)
 	for i := range lines {
 		lines[i] = strings.TrimPrefix(lines[i], prefixStr)
 	}
+
 	return strings.Join(lines, "\n")
 }
 
 func compile(t *testing.T, input map[string]string) (linker.Files, []error) {
 	t.Helper()
+
 	acc := func(filename string) (io.ReadCloser, error) {
 		f, ok := input[filename]
 		if !ok {
 			return nil, fmt.Errorf("file not found: %s", filename)
 		}
+
 		return io.NopCloser(strings.NewReader(f)), nil
 	}
+
 	names := make([]string, 0, len(input))
 	for k := range input {
 		names = append(names, k)
@@ -3999,13 +3967,18 @@ func compile(t *testing.T, input map[string]string) (linker.Files, []error) {
 
 	// We use a reporter that returns nil, so the compile operation
 	// will always keep going
-	var errsMu sync.Mutex
-	var errs []error
+	var (
+		errsMu sync.Mutex
+		errs   []error
+	)
+
 	rep := reporter.NewReporter(
 		func(err reporter.ErrorWithPos) error {
 			errsMu.Lock()
 			defer errsMu.Unlock()
+
 			errs = append(errs, err)
+
 			return nil
 		},
 		nil,
@@ -4018,28 +3991,34 @@ func compile(t *testing.T, input map[string]string) (linker.Files, []error) {
 		Reporter:       rep,
 		SourceInfoMode: protocompile.SourceInfoExtraOptionLocations,
 	}
+
 	files, err := compiler.Compile(t.Context(), names...)
 	if err != nil && len(errs) == 0 {
 		t.Log("compiler.Compile returned an error but none were reported")
 		return files, []error{err}
 	}
+
 	if err == nil {
 		assert.Empty(t, errs, "compiler.Compile returned no error though %d errors were reported", len(errs))
 	}
+
 	return files, errs
 }
 
 func TestProto3Enums(t *testing.T) {
 	t.Skip("Skipped: test expects protoc comparison behavior which is not available")
 	t.Parallel()
+
 	file1 := `syntax = "<SYNTAX>"; enum bar { A = 0; B = 1; }`
-	file2 := `syntax = "<SYNTAX>"; import "f1.proto"; message foo { <LABEL> bar bar = 1; }`
+	file2 := "syntax = \"<SYNTAX>\"; import \"f1.proto\"; message foo { <LABEL> bar = 1;"
 	getFileContents := func(file, syntax string) string {
 		contents := strings.Replace(file, "<SYNTAX>", syntax, 1)
+
 		label := ""
 		if syntax == "proto2" {
 			label = "optional"
 		}
+
 		return strings.Replace(contents, "<LABEL>", label, 1)
 	}
 
@@ -4060,6 +4039,7 @@ func TestProto3Enums(t *testing.T) {
 			// parse the protos with protocompile
 			acc := func(filename string) (io.ReadCloser, error) {
 				var data string
+
 				switch filename {
 				case "f1.proto":
 					data = fc1
@@ -4068,6 +4048,7 @@ func TestProto3Enums(t *testing.T) {
 				default:
 					return nil, fmt.Errorf("file not found: %s", filename)
 				}
+
 				return io.NopCloser(strings.NewReader(data)), nil
 			}
 			compiler := protocompile.Compiler{
@@ -4076,6 +4057,7 @@ func TestProto3Enums(t *testing.T) {
 				}),
 			}
 			_, err := compiler.Compile(t.Context(), "f1.proto", "f2.proto")
+
 			if o1 != o2 && o2 == "proto3" {
 				expected := "f2.proto:1:54: cannot use closed enum bar in a field with implicit presence"
 				if err == nil {
@@ -4083,6 +4065,7 @@ func TestProto3Enums(t *testing.T) {
 				} else if err.Error() != expected {
 					t.Errorf("expecting validation error %q; instead got: %q", expected, err)
 				}
+
 				require.False(t, passProtoc)
 			} else {
 				// other cases succeed (okay to for proto2 to use enum from proto3 file and
@@ -4096,6 +4079,7 @@ func TestProto3Enums(t *testing.T) {
 
 func TestLinkerSymbolCollisionNoSource(t *testing.T) {
 	t.Parallel()
+
 	fdProto := &descriptorpb.FileDescriptorProto{
 		Name:       proto.String("foo.proto"),
 		Dependency: []string{"google/protobuf/descriptor.proto"},
@@ -4110,6 +4094,7 @@ func TestLinkerSymbolCollisionNoSource(t *testing.T) {
 		if s == "foo.proto" {
 			return protocompile.SearchResult{Proto: fdProto}, nil
 		}
+
 		return protocompile.SearchResult{}, protoregistry.NotFound
 	}))
 	compiler := &protocompile.Compiler{
@@ -4121,6 +4106,7 @@ func TestLinkerSymbolCollisionNoSource(t *testing.T) {
 
 func TestSyntheticMapEntryUsageNoSource(t *testing.T) {
 	t.Parallel()
+
 	baseFileDescProto := &descriptorpb.FileDescriptorProto{
 		Name: proto.String("foo.proto"),
 		MessageType: []*descriptorpb.DescriptorProto{
@@ -4153,6 +4139,7 @@ func TestSyntheticMapEntryUsageNoSource(t *testing.T) {
 			},
 		},
 	}
+
 	testCases := map[string]struct {
 		fields      []*descriptorpb.FieldDescriptorProto
 		others      []*descriptorpb.DescriptorProto
@@ -4241,11 +4228,12 @@ func TestSyntheticMapEntryUsageNoSource(t *testing.T) {
 		if tc.expectedErr != "" {
 			expectedPrefix = "failure_"
 		}
+
 		assert.Truef(t, strings.HasPrefix(name, expectedPrefix), "expected test name %q to have %q prefix", name, expectedPrefix)
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			fdProto := proto.Clone(baseFileDescProto).(*descriptorpb.FileDescriptorProto) //nolint:errcheck
+			fdProto := proto.Clone(baseFileDescProto).(*descriptorpb.FileDescriptorProto)
 			fdProto.MessageType[0].Field = tc.fields
 			fdProto.MessageType = append(fdProto.MessageType, tc.others...)
 
@@ -4253,11 +4241,13 @@ func TestSyntheticMapEntryUsageNoSource(t *testing.T) {
 				if s == "foo.proto" {
 					return protocompile.SearchResult{Proto: fdProto}, nil
 				}
+
 				return protocompile.SearchResult{}, protoregistry.NotFound
 			})
 			compiler := &protocompile.Compiler{
 				Resolver: resolver,
 			}
+
 			_, err := compiler.Compile(t.Context(), "foo.proto")
 			if tc.expectedErr != "" {
 				require.EqualError(t, err, tc.expectedErr)
@@ -4271,6 +4261,7 @@ func TestSyntheticMapEntryUsageNoSource(t *testing.T) {
 func TestSyntheticOneofCollisions(t *testing.T) {
 	t.Skip("Skipped: test expects protoc comparison behavior which is not available")
 	t.Parallel()
+
 	input := map[string]string{
 		"foo1.proto": `
 			syntax = "proto3";
@@ -4285,6 +4276,7 @@ func TestSyntheticOneofCollisions(t *testing.T) {
 	}
 
 	var errs []error
+
 	compiler := &protocompile.Compiler{
 		Reporter: reporter.NewReporter(
 			func(err reporter.ErrorWithPos) error {
@@ -4301,6 +4293,7 @@ func TestSyntheticOneofCollisions(t *testing.T) {
 			if !ok {
 				return protocompile.SearchResult{}, fmt.Errorf("file not found: %s", filename)
 			}
+
 			return protocompile.SearchResult{Source: strings.NewReader(removePrefixIndent(f))}, nil
 		}),
 	}
@@ -4319,17 +4312,22 @@ func TestSyntheticOneofCollisions(t *testing.T) {
 		`foo1.proto:3:19: symbol "Foo.bar" already defined at foo2.proto:3:19`,
 		`foo1.proto:3:19: symbol "Foo._bar" already defined at foo2.proto:3:19`,
 	}
+
 	var expected []string
+
 	require.NotEmpty(t, errs)
+
 	actual := make([]string, len(errs))
 	for i, err := range errs {
 		actual[i] = err.Error()
 	}
+
 	if strings.HasPrefix(actual[0], "foo2.proto") {
 		expected = expectedFoo1FirstErrors
 	} else {
 		expected = expectedFoo2FirstErrors
 	}
+
 	assert.Equal(t, expected, actual)
 
 	// parse and check with protoc
@@ -4339,6 +4337,7 @@ func TestSyntheticOneofCollisions(t *testing.T) {
 
 func TestCustomJSONNameWarnings(t *testing.T) {
 	t.Parallel()
+
 	testCases := []struct {
 		source  string
 		warning string
@@ -4466,9 +4465,12 @@ func TestCustomJSONNameWarnings(t *testing.T) {
 			if filename == "test.proto" {
 				return protocompile.SearchResult{Source: strings.NewReader(removePrefixIndent(tc.source))}, nil
 			}
+
 			return protocompile.SearchResult{}, fmt.Errorf("file not found: %s", filename)
 		})
+
 		var warnings []string
+
 		warnFunc := func(err reporter.ErrorWithPos) {
 			warnings = append(warnings, err.Error())
 		}
@@ -4476,20 +4478,24 @@ func TestCustomJSONNameWarnings(t *testing.T) {
 			Resolver: resolver,
 			Reporter: reporter.NewReporter(nil, warnFunc),
 		}
+
 		_, err := compiler.Compile(t.Context(), "test.proto")
 		if err != nil {
 			t.Errorf("case %d: expecting no error; instead got error %q", i, err)
 		}
+
 		if tc.warning == "" && len(warnings) > 0 {
 			t.Errorf("case %d: expecting no warnings; instead got: %v", i, warnings)
 		} else if tc.warning != "" {
 			found := false
+
 			for _, w := range warnings {
 				if w == tc.warning {
 					found = true
 					break
 				}
 			}
+
 			if !found {
 				t.Errorf("case %d: expecting warning %q; instead got: %v", i, tc.warning, warnings)
 			}
@@ -4508,17 +4514,21 @@ func TestCustomJSONNameWarnings(t *testing.T) {
 func testByProtoc(t *testing.T, _ map[string]string, _ []string) bool {
 	t.Helper()
 	t.Log("protoc comparison skipped: protoc binary not available")
+
 	return true
 }
 
 func convertToProtoreflectDescriptors(files linker.Files) error {
 	allFiles := make(map[string]*descriptorpb.FileDescriptorProto, len(files))
 	addFileDescriptorsToMap(files, allFiles)
+
 	fileSlice := make([]*descriptorpb.FileDescriptorProto, 0, len(allFiles))
 	for _, fileProto := range allFiles {
 		fileSlice = append(fileSlice, fileProto)
 	}
+
 	_, err := protodesc.NewFiles(&descriptorpb.FileDescriptorSet{File: fileSlice})
+
 	return err
 }
 
@@ -4527,11 +4537,14 @@ func addFileDescriptorsToMap[F protoreflect.FileDescriptor](files []F, allFiles 
 		if _, exists := allFiles[file.Path()]; exists {
 			continue // already added this one
 		}
+
 		allFiles[file.Path()] = protoutil.ProtoFromFileDescriptor(file)
+
 		deps := make([]protoreflect.FileDescriptor, file.Imports().Len())
 		for i := range file.Imports().Len() {
 			deps[i] = file.Imports().Get(i).FileDescriptor
 		}
+
 		addFileDescriptorsToMap(deps, allFiles)
 	}
 }

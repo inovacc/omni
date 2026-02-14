@@ -44,11 +44,13 @@ func enums(
 			childAssociatedPath(fullSourcePath, index, enumNameTypeTag),
 		)
 	}
+
 	if len(fullSourcePath) == index+1 {
 		// This path does not extend beyond the enum declaration, return associated paths and
 		// terminate here.
 		return nil, associatedPaths, nil
 	}
+
 	return enum, associatedPaths, nil
 }
 
@@ -65,6 +67,7 @@ func enum(token int32, fullSourcePath protoreflect.SourcePath, index int, _ bool
 		if len(fullSourcePath) < index+2 {
 			return nil, nil, newInvalidSourcePathError(fullSourcePath, "cannot have enum value declaration without index")
 		}
+
 		return enumValues, nil, nil
 	case enumOptionTypeTag:
 		// For options, we add the full path and then return the options state to validate
@@ -79,5 +82,6 @@ func enum(token int32, fullSourcePath protoreflect.SourcePath, index int, _ bool
 		// validate the path.
 		return reservedNames, []protoreflect.SourcePath{currentPath(fullSourcePath, index)}, nil
 	}
+
 	return nil, nil, newInvalidSourcePathError(fullSourcePath, "invalid enum path")
 }

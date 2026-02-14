@@ -33,9 +33,11 @@ func (n *notFoundError) Error() string {
 	if n == nil {
 		return ""
 	}
+
 	if n.message == "" {
 		return "not found"
 	}
+
 	return n.message
 }
 
@@ -46,6 +48,7 @@ func (n *notFoundError) Unwrap() error {
 	if n == nil {
 		return nil
 	}
+
 	return fs.ErrNotExist
 }
 
@@ -56,13 +59,16 @@ func maybeNewNotFoundError(err error) error {
 	if err == nil {
 		return nil
 	}
+
 	var connectError *connect.Error
 	if !errors.As(err, &connectError) {
 		return err
 	}
+
 	if connectError.Code() != connect.CodeNotFound {
 		return err
 	}
+
 	return &notFoundError{
 		message: connectError.Message(),
 	}
