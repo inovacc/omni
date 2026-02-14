@@ -1,13 +1,14 @@
 package du
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"io/fs"
 	"os"
 	"path/filepath"
 	"sort"
+
+	"github.com/inovacc/omni/internal/cli/output"
 )
 
 // DUOptions configures the du command behavior
@@ -22,7 +23,7 @@ type DUOptions struct {
 	OneFileSystem  bool  // -x: skip directories on different file systems
 	ApparentSize   bool  // --apparent-size: print apparent sizes rather than disk usage
 	NullTerminator bool  // -0: end each output line with NUL, not newline
-	JSON           bool  // --json: output as JSON
+	OutputFormat output.Format // output format (text/json/table)
 }
 
 // DUResult represents the result of a du operation
@@ -53,6 +54,9 @@ func RunDU(w io.Writer, args []string, opts DUOptions) error {
 		paths = []string{"."}
 	}
 
+	f := output.New(w, opts.OutputFormat)
+	jsonMode := f.IsJSON()
+
 	var (
 		grandTotal  int64
 		jsonEntries []DUResult
@@ -64,7 +68,7 @@ func RunDU(w io.Writer, args []string, opts DUOptions) error {
 	}
 
 	for _, path := range paths {
-		total, entries, err := duPath(w, path, opts, 0, terminator)
+		total, entries, err := duPath(w, path, opts, 0, terminator, jsonMode)
 		if err != nil {
 			_, _ = fmt.Fprintf(os.Stderr, "du: %s: %v\n", path, err)
 			continue
@@ -72,18 +76,18 @@ func RunDU(w io.Writer, args []string, opts DUOptions) error {
 
 		grandTotal += total
 
-		if opts.JSON {
+		if jsonMode {
 			jsonEntries = append(jsonEntries, entries...)
 		}
 	}
 
-	if opts.JSON {
-		output := DUOutput{Entries: jsonEntries}
+	if jsonMode {
+		duOut := DUOutput{Entries: jsonEntries}
 		if opts.Total && len(paths) > 1 {
-			output.GrandTotal = grandTotal
+			duOut.GrandTotal = grandTotal
 		}
 
-		return json.NewEncoder(w).Encode(output)
+		return f.Print(duOut)
 	}
 
 	if opts.Total && len(paths) > 1 {
@@ -93,7 +97,7 @@ func RunDU(w io.Writer, args []string, opts DUOptions) error {
 	return nil
 }
 
-func duPath(w io.Writer, path string, opts DUOptions, _ int, terminator string) (int64, []DUResult, error) {
+func duPath(w io.Writer, path string, opts DUOptions, _ int, terminator string, jsonMode bool) (int64, []DUResult, error) {
 	var results []DUResult
 
 	info, err := os.Lstat(path)
@@ -106,7 +110,7 @@ func duPath(w io.Writer, path string, opts DUOptions, _ int, terminator string) 
 		size := info.Size()
 
 		if opts.All || opts.SummarizeOnly {
-			if opts.JSON {
+			if jsonMode {
 				results = append(results, DUResult{Path: path, Size: size})
 			} else {
 				printDUSize(w, size, path, opts, terminator)
@@ -149,7 +153,7 @@ func duPath(w io.Writer, path string, opts DUOptions, _ int, terminator string) 
 
 			relDepth := len(filepath.SplitList(rel))
 			if opts.MaxDepth == 0 || relDepth <= opts.MaxDepth {
-				if opts.JSON {
+				if jsonMode {
 					results = append(results, DUResult{Path: p, Size: size})
 				} else {
 					printDUSize(w, size, p, opts, terminator)
@@ -179,7 +183,7 @@ func duPath(w io.Writer, path string, opts DUOptions, _ int, terminator string) 
 
 			relDepth := len(filepath.SplitList(rel))
 			if opts.MaxDepth == 0 || relDepth <= opts.MaxDepth {
-				if opts.JSON {
+				if jsonMode {
 					results = append(results, DUResult{Path: dir, Size: dirSize})
 				} else {
 					printDUSize(w, dirSize, dir, opts, terminator)
@@ -189,7 +193,7 @@ func duPath(w io.Writer, path string, opts DUOptions, _ int, terminator string) 
 	}
 
 	// Always print/record the root path
-	if opts.JSON {
+	if jsonMode {
 		results = append(results, DUResult{Path: path, Size: totalSize})
 	} else {
 		printDUSize(w, totalSize, path, opts, terminator)

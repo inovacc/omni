@@ -1,18 +1,19 @@
 package uptime
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"strings"
 	"time"
+
+	"github.com/inovacc/omni/internal/cli/output"
 )
 
 // UptimeOptions configures the uptime command behavior
 type UptimeOptions struct {
 	Pretty bool // -p: show uptime in pretty format
 	Since  bool // -s: system up since
-	JSON   bool // --json: output as JSON
+	OutputFormat output.Format // output format (text/json/table)
 }
 
 // UptimeInfo contains system uptime information
@@ -32,8 +33,9 @@ func RunUptime(w io.Writer, opts UptimeOptions) error {
 		return fmt.Errorf("uptime: %w", err)
 	}
 
-	if opts.JSON {
-		return json.NewEncoder(w).Encode(info)
+	f := output.New(w, opts.OutputFormat)
+	if f.IsJSON() {
+		return f.Print(info)
 	}
 
 	if opts.Since {

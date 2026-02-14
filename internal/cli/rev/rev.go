@@ -2,16 +2,16 @@ package rev
 
 import (
 	"bufio"
-	"encoding/json"
 	"fmt"
 	"io"
 
 	"github.com/inovacc/omni/internal/cli/input"
+	"github.com/inovacc/omni/internal/cli/output"
 )
 
 // RevOptions configures the rev command behavior
 type RevOptions struct {
-	JSON bool // --json: output as JSON
+	OutputFormat output.Format // output format (text/json/table)
 }
 
 // RevResult represents rev output for JSON
@@ -29,10 +29,13 @@ func RunRev(w io.Writer, r io.Reader, args []string, opts RevOptions) error {
 	}
 	defer input.CloseAll(sources)
 
+	f := output.New(w, opts.OutputFormat)
+	jsonMode := f.IsJSON()
+
 	var allLines []string
 
 	for _, src := range sources {
-		if opts.JSON {
+		if jsonMode {
 			lines, err := revReaderLines(src.Reader)
 			if err != nil {
 				return err
@@ -46,8 +49,8 @@ func RunRev(w io.Writer, r io.Reader, args []string, opts RevOptions) error {
 		}
 	}
 
-	if opts.JSON {
-		return json.NewEncoder(w).Encode(RevResult{Lines: allLines, Count: len(allLines)})
+	if jsonMode {
+		return f.Print(RevResult{Lines: allLines, Count: len(allLines)})
 	}
 
 	return nil

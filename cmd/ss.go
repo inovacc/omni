@@ -52,7 +52,7 @@ Examples:
 		opts.Summary, _ = cmd.Flags().GetBool("summary")
 		opts.Extended, _ = cmd.Flags().GetBool("extended")
 		opts.NoHeaders, _ = cmd.Flags().GetBool("no-header")
-		opts.JSON, _ = cmd.Flags().GetBool("json")
+		opts.OutputFormat = getOutputOpts(cmd).GetFormat()
 		opts.State, _ = cmd.Flags().GetString("state")
 
 		return ss.Run(cmd.OutOrStdout(), opts)
@@ -85,7 +85,7 @@ Examples:
 		opts.UDP, _ = cmd.Flags().GetBool("udp")
 		opts.Processes, _ = cmd.Flags().GetBool("processes")
 		opts.Numeric, _ = cmd.Flags().GetBool("numeric")
-		opts.JSON, _ = cmd.Flags().GetBool("json")
+		opts.OutputFormat = getOutputOpts(cmd).GetFormat()
 
 		return ss.Run(cmd.OutOrStdout(), opts)
 	},
@@ -108,7 +108,6 @@ func init() {
 	ssCmd.Flags().BoolP("summary", "s", false, "print summary statistics")
 	ssCmd.Flags().BoolP("extended", "e", false, "show extended socket info")
 	ssCmd.Flags().Bool("no-header", false, "don't print headers")
-	ssCmd.Flags().BoolP("json", "j", false, "output as JSON")
 	ssCmd.Flags().String("state", "", "filter by state (established, listen, time_wait, etc.)")
 
 	// netstat flags (subset)
@@ -118,5 +117,4 @@ func init() {
 	netstatCmd.Flags().BoolP("udp", "u", false, "display UDP sockets")
 	netstatCmd.Flags().BoolP("processes", "p", false, "show process using socket")
 	netstatCmd.Flags().BoolP("numeric", "n", false, "don't resolve service names")
-	netstatCmd.Flags().BoolP("json", "j", false, "output as JSON")
 }

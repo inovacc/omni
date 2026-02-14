@@ -1,10 +1,11 @@
 package cmp
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"os"
+
+	"github.com/inovacc/omni/internal/cli/output"
 )
 
 // CmpOptions configures the cmp command behavior
@@ -15,7 +16,7 @@ type CmpOptions struct {
 	SkipBytes1 int64 // -i SKIP1: skip first SKIP1 bytes of FILE1
 	SkipBytes2 int64 // -i SKIP2: skip first SKIP2 bytes of FILE2
 	MaxBytes   int64 // -n LIMIT: compare at most LIMIT bytes
-	JSON       bool  // --json: output as JSON
+	OutputFormat output.Format // output format
 }
 
 // CmpJSONResult represents the JSON output for cmp
@@ -44,6 +45,9 @@ func RunCmp(w io.Writer, args []string, opts CmpOptions) (CmpResult, error) {
 	if len(args) < 2 {
 		return CmpError, fmt.Errorf("cmp: missing operand")
 	}
+
+	f := output.New(w, opts.OutputFormat)
+	jsonMode := f.IsJSON()
 
 	file1, file2 := args[0], args[1]
 
@@ -115,7 +119,7 @@ func RunCmp(w io.Writer, args []string, opts CmpOptions) (CmpResult, error) {
 
 		for i := range minN {
 			if buf1[i] != buf2[i] {
-				if opts.JSON {
+				if jsonMode {
 					result := CmpJSONResult{
 						File1:     file1,
 						File2:     file2,
@@ -126,7 +130,7 @@ func RunCmp(w io.Writer, args []string, opts CmpOptions) (CmpResult, error) {
 						Byte2:     buf2[i],
 					}
 
-					if err := json.NewEncoder(w).Encode(result); err != nil {
+					if err := f.Print(result); err != nil {
 						return CmpError, fmt.Errorf("cmp: json encode: %w", err)
 					}
 
@@ -162,7 +166,7 @@ func RunCmp(w io.Writer, args []string, opts CmpOptions) (CmpResult, error) {
 
 		// Check for EOF differences
 		if n1 != n2 {
-			if opts.JSON {
+			if jsonMode {
 				eofFile := file1
 				if n1 > n2 {
 					eofFile = file2
@@ -176,7 +180,7 @@ func RunCmp(w io.Writer, args []string, opts CmpOptions) (CmpResult, error) {
 					EOF:       eofFile,
 				}
 
-				if err := json.NewEncoder(w).Encode(result); err != nil {
+				if err := f.Print(result); err != nil {
 					return CmpError, fmt.Errorf("cmp: json encode: %w", err)
 				}
 
@@ -207,14 +211,14 @@ func RunCmp(w io.Writer, args []string, opts CmpOptions) (CmpResult, error) {
 		}
 	}
 
-	if opts.JSON {
+	if jsonMode {
 		result := CmpJSONResult{
 			File1:     file1,
 			File2:     file2,
 			Identical: true,
 		}
 
-		if err := json.NewEncoder(w).Encode(result); err != nil {
+		if err := f.Print(result); err != nil {
 			return CmpError, fmt.Errorf("cmp: json encode: %w", err)
 		}
 	}

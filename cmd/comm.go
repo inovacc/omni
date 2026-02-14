@@ -13,7 +13,6 @@ var (
 	commNoCheckOrder bool
 	commOutputDelim  string
 	commZeroTerm     bool
-	commJSON         bool
 )
 
 var commCmd = &cobra.Command{
@@ -48,7 +47,7 @@ Examples:
 			NoCheckOrder: commNoCheckOrder,
 			OutputDelim:  commOutputDelim,
 			ZeroTerm:     commZeroTerm,
-			JSON:         commJSON,
+			OutputFormat: getOutputOpts(cmd).GetFormat(),
 		}
 
 		return comm.RunComm(cmd.OutOrStdout(), args, opts)
@@ -65,5 +64,4 @@ func init() {
 	commCmd.Flags().BoolVar(&commNoCheckOrder, "nocheck-order", false, "do not check input order")
 	commCmd.Flags().StringVar(&commOutputDelim, "output-delimiter", "", "use STR as output delimiter")
 	commCmd.Flags().BoolVarP(&commZeroTerm, "zero-terminated", "z", false, "line delimiter is NUL")
-	commCmd.Flags().BoolVar(&commJSON, "json", false, "output as JSON")
 }

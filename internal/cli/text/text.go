@@ -2,13 +2,13 @@ package text
 
 import (
 	"bufio"
-	"encoding/json"
 	"fmt"
 	"io"
 	"os"
 	"strings"
 
 	"github.com/inovacc/omni/internal/cli/input"
+	"github.com/inovacc/omni/internal/cli/output"
 	"github.com/inovacc/omni/pkg/textutil"
 )
 
@@ -25,7 +25,7 @@ type SortOptions struct {
 	Check         bool   // -c: check for sorted input
 	Stable        bool   // -s: stabilize sort by disabling last-resort comparison
 	Output        string // -o: write result to FILE
-	JSON          bool   // --json: output as JSON
+	OutputFormat  output.Format // output format (text/json/table)
 }
 
 // SortResult represents sort output for JSON
@@ -45,7 +45,7 @@ type UniqOptions struct {
 	SkipChars     int  // -s: avoid comparing the first N characters
 	CheckChars    int  // -w: compare no more than N characters
 	ZeroTerminate bool // -z: line delimiter is NUL, not newline
-	JSON          bool // --json: output as JSON
+	OutputFormat  output.Format // output format (text/json/table)
 }
 
 // UniqResult represents uniq output for JSON
@@ -85,10 +85,12 @@ func RunSort(w io.Writer, r io.Reader, args []string, opts SortOptions) error {
 	// Check mode
 	if opts.Check {
 		pkgOpts := toPkgSortOptions(opts)
+
 		disorder := textutil.CheckSorted(lines, pkgOpts)
 		if disorder != "" {
 			return fmt.Errorf("sort: disorder: %s", disorder)
 		}
+
 		return nil
 	}
 
@@ -100,28 +102,29 @@ func RunSort(w io.Writer, r io.Reader, args []string, opts SortOptions) error {
 		lines = textutil.UniqueConsecutive(lines, opts.IgnoreCase)
 	}
 
-	if opts.JSON {
-		return json.NewEncoder(w).Encode(SortResult{Lines: lines, Count: len(lines)})
+	f := output.New(w, opts.OutputFormat)
+	if f.IsJSON() {
+		return f.Print(SortResult{Lines: lines, Count: len(lines)})
 	}
 
 	// Write output
-	var output = w
+	var out = w
 
 	if opts.Output != "" {
-		f, err := os.Create(opts.Output)
+		outFile, err := os.Create(opts.Output)
 		if err != nil {
 			return fmt.Errorf("sort: %w", err)
 		}
 
 		defer func() {
-			_ = f.Close()
+			_ = outFile.Close()
 		}()
 
-		output = f
+		out = outFile
 	}
 
 	for _, line := range lines {
-		_, _ = fmt.Fprintln(output, line)
+		_, _ = fmt.Fprintln(out, line)
 	}
 
 	return nil
@@ -148,6 +151,8 @@ func RunUniq(w io.Writer, r io.Reader, args []string, opts UniqOptions) error {
 	defer input.MustClose(&src)
 
 	scanner := bufio.NewScanner(src.Reader)
+	f := output.New(w, opts.OutputFormat)
+	jsonMode := f.IsJSON()
 
 	var (
 		prevLine string
@@ -168,7 +173,7 @@ func RunUniq(w io.Writer, r io.Reader, args []string, opts UniqOptions) error {
 			return
 		}
 
-		if opts.JSON {
+		if jsonMode {
 			jsonLines = append(jsonLines, UniqLine{Line: line, Count: cnt})
 			return
 		}
@@ -196,7 +201,7 @@ func RunUniq(w io.Writer, r io.Reader, args []string, opts UniqOptions) error {
 		if keysEqual(prevKey, key, opts) {
 			count++
 
-			if opts.AllRepeated && !opts.JSON {
+			if opts.AllRepeated && !jsonMode {
 				_, _ = fmt.Fprintln(w, line)
 			}
 		} else {
@@ -212,8 +217,8 @@ func RunUniq(w io.Writer, r io.Reader, args []string, opts UniqOptions) error {
 		outputLine(prevLine, count)
 	}
 
-	if opts.JSON {
-		return json.NewEncoder(w).Encode(UniqResult{Lines: jsonLines, Count: len(jsonLines)})
+	if jsonMode {
+		return f.Print(UniqResult{Lines: jsonLines, Count: len(jsonLines)})
 	}
 
 	return scanner.Err()

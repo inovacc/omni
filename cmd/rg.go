@@ -94,7 +94,7 @@ Gitignore Support:
 		opts.MaxCount, _ = cmd.Flags().GetInt("max-count")
 		opts.MaxDepth, _ = cmd.Flags().GetInt("max-depth")
 		opts.FollowSymlinks, _ = cmd.Flags().GetBool("follow")
-		opts.JSON, _ = cmd.Flags().GetBool("json")
+		opts.OutputFormat = getOutputOpts(cmd).GetFormat()
 		opts.JSONStream, _ = cmd.Flags().GetBool("json-stream")
 		opts.NoHeading, _ = cmd.Flags().GetBool("no-heading")
 		opts.OnlyMatching, _ = cmd.Flags().GetBool("only-matching")
@@ -137,7 +137,6 @@ func init() {
 	rgCmd.Flags().BoolP("only-matching", "o", false, "show only matching part of line")
 	rgCmd.Flags().BoolP("no-heading", "H", false, "don't group matches by file name")
 	rgCmd.Flags().BoolP("quiet", "q", false, "quiet mode, exit on first match")
-	rgCmd.Flags().Bool("json", false, "output results as JSON")
 	rgCmd.Flags().Bool("json-stream", false, "output results as streaming NDJSON (one JSON object per line)")
 
 	// Context

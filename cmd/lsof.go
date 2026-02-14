@@ -40,7 +40,7 @@ Examples:
 		opts.Network, _ = cmd.Flags().GetBool("network")
 		opts.Command, _ = cmd.Flags().GetString("command")
 		opts.NoHeaders, _ = cmd.Flags().GetBool("no-headers")
-		opts.JSON, _ = cmd.Flags().GetBool("json")
+		opts.OutputFormat = getOutputOpts(cmd).GetFormat()
 		opts.IPv4, _ = cmd.Flags().GetBool("ipv4")
 		opts.IPv6, _ = cmd.Flags().GetBool("ipv6")
 		opts.Listen, _ = cmd.Flags().GetBool("listen")
@@ -81,5 +81,5 @@ func init() {
 	lsofCmd.Flags().BoolP("listen", "l", false, "show only listening sockets")
 	lsofCmd.Flags().BoolP("established", "e", false, "show only established connections")
 	lsofCmd.Flags().BoolP("no-headers", "n", false, "don't print headers")
-	lsofCmd.Flags().BoolP("json", "j", false, "output as JSON")
+
 }

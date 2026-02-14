@@ -37,7 +37,7 @@ Examples:
 		opts.Quiet, _ = cmd.Flags().GetBool("quiet")
 		opts.Status, _ = cmd.Flags().GetBool("status")
 		opts.Warn, _ = cmd.Flags().GetBool("warn")
-		opts.JSON, _ = cmd.Flags().GetBool("json")
+		opts.OutputFormat = getOutputOpts(cmd).GetFormat()
 
 		return hash.RunHash(cmd.OutOrStdout(), args, opts)
 	},
@@ -53,5 +53,4 @@ func init() {
 	hashCmd.Flags().Bool("quiet", false, "don't print OK for verified files")
 	hashCmd.Flags().Bool("status", false, "don't output anything, use status code")
 	hashCmd.Flags().BoolP("warn", "w", false, "warn about improperly formatted lines")
-	hashCmd.Flags().Bool("json", false, "output as JSON")
 }

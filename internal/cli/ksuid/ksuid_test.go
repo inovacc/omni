@@ -6,6 +6,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/inovacc/omni/internal/cli/output"
 )
 
 func TestNew(t *testing.T) {
@@ -80,7 +82,7 @@ func TestRunKSUID(t *testing.T) {
 func TestRunKSUIDJSON(t *testing.T) {
 	var buf bytes.Buffer
 
-	opts := Options{Count: 2, JSON: true}
+	opts := Options{Count: 2, OutputFormat: output.FormatJSON}
 
 	err := RunKSUID(&buf, opts)
 	if err != nil {

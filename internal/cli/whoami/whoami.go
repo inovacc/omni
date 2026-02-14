@@ -1,15 +1,16 @@
 package whoami
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"os/user"
+
+	"github.com/inovacc/omni/internal/cli/output"
 )
 
 // WhoamiOptions configures the whoami command behavior
 type WhoamiOptions struct {
-	JSON bool // --json: output as JSON
+	OutputFormat output.Format // output format (text/json/table)
 }
 
 // WhoamiResult represents whoami output for JSON
@@ -28,7 +29,8 @@ func RunWhoami(w io.Writer, opts WhoamiOptions) error {
 		return fmt.Errorf("cannot get current user: %w", err)
 	}
 
-	if opts.JSON {
+	f := output.New(w, opts.OutputFormat)
+	if f.IsJSON() {
 		result := WhoamiResult{
 			Username: u.Username,
 			UID:      u.Uid,
@@ -37,7 +39,7 @@ func RunWhoami(w io.Writer, opts WhoamiOptions) error {
 			HomeDir:  u.HomeDir,
 		}
 
-		return json.NewEncoder(w).Encode(result)
+		return f.Print(result)
 	}
 
 	_, _ = fmt.Fprintln(w, u.Username)

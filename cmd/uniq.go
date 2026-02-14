@@ -28,7 +28,7 @@ You may want to sort the input first, or use 'sort -u' without 'uniq'.`,
 		opts.SkipChars, _ = cmd.Flags().GetInt("skip-chars")
 		opts.CheckChars, _ = cmd.Flags().GetInt("check-chars")
 		opts.ZeroTerminate, _ = cmd.Flags().GetBool("zero-terminated")
-		opts.JSON, _ = cmd.Flags().GetBool("json")
+		opts.OutputFormat = getOutputOpts(cmd).GetFormat()
 
 		return text.RunUniq(cmd.OutOrStdout(), cmd.InOrStdin(), args, opts)
 	},
@@ -46,5 +46,4 @@ func init() {
 	uniqCmd.Flags().IntP("skip-chars", "s", 0, "avoid comparing the first N characters")
 	uniqCmd.Flags().IntP("check-chars", "w", 0, "compare no more than N characters in lines")
 	uniqCmd.Flags().BoolP("zero-terminated", "z", false, "line delimiter is NUL, not newline")
-	uniqCmd.Flags().Bool("json", false, "output as JSON")
 }

@@ -1,12 +1,13 @@
 package id
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"os/user"
 	"strconv"
 	"strings"
+
+	"github.com/inovacc/omni/internal/cli/output"
 )
 
 // IDOptions configures the id command behavior
@@ -17,7 +18,7 @@ type IDOptions struct {
 	Name     bool   // -n: print name instead of number (requires -u, -g, or -G)
 	Real     bool   // -r: print real ID instead of effective ID
 	Username string // username to look up (optional)
-	JSON     bool   // --json: output as JSON
+	OutputFormat output.Format // output format (text/json/table)
 }
 
 // IDInfo contains user identity information
@@ -48,7 +49,8 @@ func RunID(w io.Writer, opts IDOptions) error {
 	// Get group info
 	groups, _ := u.GroupIds()
 
-	if opts.JSON {
+	f := output.New(w, opts.OutputFormat)
+	if f.IsJSON() {
 		info := IDInfo{
 			UID:      u.Uid,
 			GID:      u.Gid,
@@ -56,7 +58,7 @@ func RunID(w io.Writer, opts IDOptions) error {
 			Groups:   groups,
 		}
 
-		return json.NewEncoder(w).Encode(info)
+		return f.Print(info)
 	}
 
 	// Single value modes

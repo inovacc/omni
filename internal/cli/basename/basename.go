@@ -1,16 +1,17 @@
 package basename
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"path/filepath"
+
+	"github.com/inovacc/omni/internal/cli/output"
 )
 
 // BasenameOptions configures the basename command behavior
 type BasenameOptions struct {
-	Suffix string // -s: suffix to remove
-	JSON   bool   // --json: output as JSON
+	Suffix       string        // -s: suffix to remove
+	OutputFormat output.Format // output format (text, json, table)
 }
 
 // BasenameResult represents basename output for JSON
@@ -25,6 +26,9 @@ func RunBasename(w io.Writer, args []string, opts BasenameOptions) error {
 		return fmt.Errorf("basename: missing operand")
 	}
 
+	f := output.New(w, opts.OutputFormat)
+	jsonMode := f.IsJSON()
+
 	var results []BasenameResult
 
 	for _, arg := range args {
@@ -33,15 +37,15 @@ func RunBasename(w io.Writer, args []string, opts BasenameOptions) error {
 			name = name[:len(name)-len(opts.Suffix)]
 		}
 
-		if opts.JSON {
+		if jsonMode {
 			results = append(results, BasenameResult{Original: arg, Basename: name})
 		} else {
 			_, _ = fmt.Fprintln(w, name)
 		}
 	}
 
-	if opts.JSON {
-		return json.NewEncoder(w).Encode(results)
+	if jsonMode {
+		return f.Print(results)
 	}
 
 	return nil

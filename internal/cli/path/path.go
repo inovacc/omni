@@ -1,10 +1,11 @@
 package path
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"path/filepath"
+
+	"github.com/inovacc/omni/internal/cli/output"
 )
 
 func Realpath(path string) (string, error) {
@@ -38,7 +39,7 @@ func Abs(p string) (string, error) {
 
 // CleanOptions configures the path clean command behavior
 type CleanOptions struct {
-	JSON bool // --json: output as JSON
+	OutputFormat output.Format // output format (text, json, table)
 }
 
 // CleanResult represents clean output for JSON
@@ -53,19 +54,22 @@ func RunClean(w io.Writer, args []string, opts CleanOptions) error {
 		return fmt.Errorf("path clean: missing operand")
 	}
 
+	f := output.New(w, opts.OutputFormat)
+	jsonMode := f.IsJSON()
+
 	var results []CleanResult
 
 	for _, arg := range args {
 		cleaned := filepath.Clean(arg)
-		if opts.JSON {
+		if jsonMode {
 			results = append(results, CleanResult{Original: arg, Cleaned: cleaned})
 		} else {
 			_, _ = fmt.Fprintln(w, cleaned)
 		}
 	}
 
-	if opts.JSON {
-		return json.NewEncoder(w).Encode(results)
+	if jsonMode {
+		return f.Print(results)
 	}
 
 	return nil
@@ -73,7 +77,7 @@ func RunClean(w io.Writer, args []string, opts CleanOptions) error {
 
 // AbsOptions configures the path abs command behavior
 type AbsOptions struct {
-	JSON bool // --json: output as JSON
+	OutputFormat output.Format // output format (text, json, table)
 }
 
 // AbsResult represents abs output for JSON
@@ -88,6 +92,9 @@ func RunAbs(w io.Writer, args []string, opts AbsOptions) error {
 		return fmt.Errorf("path abs: missing operand")
 	}
 
+	f := output.New(w, opts.OutputFormat)
+	jsonMode := f.IsJSON()
+
 	var results []AbsResult
 
 	for _, arg := range args {
@@ -96,15 +103,15 @@ func RunAbs(w io.Writer, args []string, opts AbsOptions) error {
 			return fmt.Errorf("path abs: %w", err)
 		}
 
-		if opts.JSON {
+		if jsonMode {
 			results = append(results, AbsResult{Original: arg, Absolute: abs})
 		} else {
 			_, _ = fmt.Fprintln(w, abs)
 		}
 	}
 
-	if opts.JSON {
-		return json.NewEncoder(w).Encode(results)
+	if jsonMode {
+		return f.Print(results)
 	}
 
 	return nil

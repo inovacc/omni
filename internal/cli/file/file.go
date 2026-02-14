@@ -4,21 +4,22 @@ import (
 	"bufio"
 	"bytes"
 	"encoding/binary"
-	"encoding/json"
 	"fmt"
 	"io"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/inovacc/omni/internal/cli/output"
 )
 
 // FileOptions configures the file command behavior
 type FileOptions struct {
-	Brief     bool   // -b: do not prepend filenames
-	MimeType  bool   // -i: output MIME type
-	NoDeref   bool   // -h: don't follow symlinks
-	Separator string // -F: use string as separator
-	JSON      bool   // --json: output as JSON
+	Brief        bool          // -b: do not prepend filenames
+	MimeType     bool          // -i: output MIME type
+	NoDeref      bool          // -h: don't follow symlinks
+	Separator    string        // -F: use string as separator
+	OutputFormat output.Format // output format (text, json, table)
 }
 
 // FileResult represents file output for JSON
@@ -38,33 +39,36 @@ func RunFile(w io.Writer, args []string, opts FileOptions) error {
 		opts.Separator = ":"
 	}
 
+	f := output.New(w, opts.OutputFormat)
+	jsonMode := f.IsJSON()
+
 	var jsonResults []FileResult
 
 	for _, path := range args {
 		fileType, mimeType := detectFileType(path, opts.NoDeref)
 
-		if opts.JSON {
+		if jsonMode {
 			jsonResults = append(jsonResults, FileResult{Path: path, Type: fileType, MimeType: mimeType})
 			continue
 		}
 
-		var output string
+		var out string
 
 		if opts.MimeType {
-			output = mimeType
+			out = mimeType
 		} else {
-			output = fileType
+			out = fileType
 		}
 
 		if opts.Brief {
-			_, _ = fmt.Fprintln(w, output)
+			_, _ = fmt.Fprintln(w, out)
 		} else {
-			_, _ = fmt.Fprintf(w, "%s%s %s\n", path, opts.Separator, output)
+			_, _ = fmt.Fprintf(w, "%s%s %s\n", path, opts.Separator, out)
 		}
 	}
 
-	if opts.JSON {
-		return json.NewEncoder(w).Encode(jsonResults)
+	if jsonMode {
+		return f.Print(jsonResults)
 	}
 
 	return nil

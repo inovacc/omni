@@ -2,12 +2,12 @@ package cssfmt
 
 import (
 	"bufio"
-	"encoding/json"
 	"fmt"
 	"io"
 	"os"
 	"strings"
 
+	"github.com/inovacc/omni/internal/cli/output"
 	pkgcss "github.com/inovacc/omni/pkg/cssfmt"
 )
 
@@ -21,7 +21,7 @@ type Options struct {
 
 // ValidateOptions configures CSS validation
 type ValidateOptions struct {
-	JSON bool // Output as JSON
+	OutputFormat output.Format // Output format
 }
 
 // ValidateResult is an alias for the pkg type
@@ -42,12 +42,15 @@ func Run(w io.Writer, r io.Reader, args []string, opts Options) error {
 		if opts.Indent != "" {
 			pkgOpts = append(pkgOpts, pkgcss.WithIndent(opts.Indent))
 		}
+
 		if opts.SortProps {
 			pkgOpts = append(pkgOpts, pkgcss.WithSortProps())
 		}
+
 		if opts.SortRules {
 			pkgOpts = append(pkgOpts, pkgcss.WithSortRules())
 		}
+
 		output = pkgcss.Format(input, pkgOpts...)
 	}
 
@@ -71,11 +74,9 @@ func RunValidate(w io.Writer, r io.Reader, args []string, opts ValidateOptions) 
 
 	result := pkgcss.Validate(input)
 
-	if opts.JSON {
-		enc := json.NewEncoder(w)
-		enc.SetIndent("", "  ")
-
-		return enc.Encode(result)
+	f := output.New(w, opts.OutputFormat)
+	if f.IsJSON() {
+		return f.Print(result)
 	}
 
 	if result.Valid {

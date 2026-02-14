@@ -1,9 +1,8 @@
 package cmd
 
 import (
-	"os"
-
 	"github.com/inovacc/omni/internal/cli/cmp"
+	"github.com/inovacc/omni/internal/cli/cmderr"
 	"github.com/spf13/cobra"
 )
 
@@ -13,7 +12,6 @@ var (
 	cmpPrintBytes bool
 	cmpSkipBytes  int64
 	cmpMaxBytes   int64
-	cmpJSON       bool
 )
 
 var cmpCmd = &cobra.Command{
@@ -45,7 +43,7 @@ Examples:
 			SkipBytes1: cmpSkipBytes,
 			SkipBytes2: cmpSkipBytes,
 			MaxBytes:   cmpMaxBytes,
-			JSON:       cmpJSON,
+			OutputFormat: getOutputOpts(cmd).GetFormat(),
 		}
 
 		result, err := cmp.RunCmp(cmd.OutOrStdout(), args, opts)
@@ -54,7 +52,7 @@ Examples:
 		}
 
 		if result == cmp.CmpDiffer {
-			os.Exit(1)
+			return cmderr.ErrConflict
 		}
 
 		return nil
@@ -69,5 +67,4 @@ func init() {
 	cmpCmd.Flags().BoolVarP(&cmpPrintBytes, "print-bytes", "b", false, "print differing bytes")
 	cmpCmd.Flags().Int64VarP(&cmpSkipBytes, "ignore-initial", "i", 0, "skip first SKIP bytes")
 	cmpCmd.Flags().Int64VarP(&cmpMaxBytes, "bytes", "n", 0, "compare at most LIMIT bytes")
-	cmpCmd.Flags().BoolVar(&cmpJSON, "json", false, "output as JSON")
 }

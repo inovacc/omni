@@ -1,19 +1,20 @@
 package which
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"os"
 	"path/filepath"
 	"runtime"
 	"strings"
+
+	"github.com/inovacc/omni/internal/cli/output"
 )
 
 // WhichOptions configures the which command behavior
 type WhichOptions struct {
 	All  bool // -a: print all matches
-	JSON bool // --json: output as JSON
+	OutputFormat output.Format // output format
 }
 
 // WhichResult represents which output for JSON
@@ -34,6 +35,9 @@ func RunWhich(w io.Writer, args []string, opts WhichOptions) error {
 		return fmt.Errorf("which: PATH not set")
 	}
 
+	f := output.New(w, opts.OutputFormat)
+	jsonMode := f.IsJSON()
+
 	pathSep := string(os.PathListSeparator)
 	paths := strings.Split(pathEnv, pathSep)
 
@@ -51,7 +55,7 @@ func RunWhich(w io.Writer, args []string, opts WhichOptions) error {
 			matches := findExecutable(fullPath)
 
 			for _, match := range matches {
-				if opts.JSON {
+				if jsonMode {
 					foundPaths = append(foundPaths, match)
 				} else {
 					_, _ = fmt.Fprintln(w, match)
@@ -69,7 +73,7 @@ func RunWhich(w io.Writer, args []string, opts WhichOptions) error {
 			}
 		}
 
-		if opts.JSON {
+		if jsonMode {
 			jsonResults = append(jsonResults, WhichResult{Command: cmd, Paths: foundPaths, Found: found})
 		}
 
@@ -78,8 +82,8 @@ func RunWhich(w io.Writer, args []string, opts WhichOptions) error {
 		}
 	}
 
-	if opts.JSON {
-		return json.NewEncoder(w).Encode(jsonResults)
+	if jsonMode {
+		return f.Print(jsonResults)
 	}
 
 	if exitCode != 0 {

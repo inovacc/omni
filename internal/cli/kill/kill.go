@@ -1,13 +1,14 @@
 package kill
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"os"
 	"strconv"
 	"strings"
 	"syscall"
+
+	"github.com/inovacc/omni/internal/cli/output"
 )
 
 // KillOptions configures the kill command behavior
@@ -15,7 +16,7 @@ type KillOptions struct {
 	Signal  string // -s: specify a signal to send
 	List    bool   // -l: list signal names
 	Verbose bool   // -v: verbose output
-	JSON    bool   // -j: output as JSON
+	OutputFormat output.Format // output format (text/json/table)
 }
 
 // KillResult represents the result of a kill operation for JSON output
@@ -28,9 +29,12 @@ type KillResult struct {
 
 // RunKill sends a signal to a process
 func RunKill(w io.Writer, args []string, opts KillOptions) error {
+	f := output.New(w, opts.OutputFormat)
+	jsonMode := f.IsJSON()
+
 	if opts.List {
-		if opts.JSON {
-			return listSignalsJSON(w)
+		if jsonMode {
+			return listSignalsJSON(w, f)
 		}
 
 		listSignals(w)
@@ -81,7 +85,7 @@ func RunKill(w io.Writer, args []string, opts KillOptions) error {
 
 		pid, err := strconv.Atoi(arg)
 		if err != nil {
-			if opts.JSON {
+			if jsonMode {
 				results = append(results, KillResult{
 					PID:     0,
 					Signal:  int(sig),
@@ -99,7 +103,7 @@ func RunKill(w io.Writer, args []string, opts KillOptions) error {
 
 		process, err := os.FindProcess(pid)
 		if err != nil {
-			if opts.JSON {
+			if jsonMode {
 				results = append(results, KillResult{
 					PID:     pid,
 					Signal:  int(sig),
@@ -116,7 +120,7 @@ func RunKill(w io.Writer, args []string, opts KillOptions) error {
 		}
 
 		if err := process.Signal(sig); err != nil {
-			if opts.JSON {
+			if jsonMode {
 				results = append(results, KillResult{
 					PID:     pid,
 					Signal:  int(sig),
@@ -132,7 +136,7 @@ func RunKill(w io.Writer, args []string, opts KillOptions) error {
 			continue
 		}
 
-		if opts.JSON {
+		if jsonMode {
 			results = append(results, KillResult{
 				PID:     pid,
 				Signal:  int(sig),
@@ -143,18 +147,15 @@ func RunKill(w io.Writer, args []string, opts KillOptions) error {
 		}
 	}
 
-	if opts.JSON {
-		encoder := json.NewEncoder(w)
-		encoder.SetIndent("", "  ")
-
-		return encoder.Encode(results)
+	if jsonMode {
+		return f.Print(results)
 	}
 
 	return lastErr
 }
 
 // listSignalsJSON outputs signal list as JSON
-func listSignalsJSON(w io.Writer) error {
+func listSignalsJSON(_ io.Writer, f *output.Formatter) error {
 	type SignalInfo struct {
 		Number int    `json:"number"`
 		Name   string `json:"name"`
@@ -169,10 +170,7 @@ func listSignalsJSON(w io.Writer) error {
 		})
 	}
 
-	encoder := json.NewEncoder(w)
-	encoder.SetIndent("", "  ")
-
-	return encoder.Encode(signals)
+	return f.Print(signals)
 }
 
 // Kill sends a signal to a process

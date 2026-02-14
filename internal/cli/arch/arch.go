@@ -1,17 +1,17 @@
 package arch
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"runtime"
 
+	"github.com/inovacc/omni/internal/cli/output"
 	"github.com/inovacc/omni/internal/cli/uname"
 )
 
 // ArchOptions configures the arch command behavior
 type ArchOptions struct {
-	JSON bool // --json: output as JSON
+	OutputFormat output.Format // output format
 }
 
 // ArchResult represents arch output for JSON
@@ -24,8 +24,9 @@ type ArchResult struct {
 func RunArch(w io.Writer, opts ArchOptions) error {
 	arch := uname.MapMachine(runtime.GOARCH)
 
-	if opts.JSON {
-		return json.NewEncoder(w).Encode(ArchResult{Architecture: arch, GOARCH: runtime.GOARCH})
+	f := output.New(w, opts.OutputFormat)
+	if f.IsJSON() {
+		return f.Print(ArchResult{Architecture: arch, GOARCH: runtime.GOARCH})
 	}
 
 	_, _ = fmt.Fprintln(w, arch)

@@ -1,12 +1,13 @@
 package env
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"os"
 	"sort"
 	"strings"
+
+	"github.com/inovacc/omni/internal/cli/output"
 )
 
 // EnvOptions configures the env command behavior
@@ -14,7 +15,7 @@ type EnvOptions struct {
 	NullTerminated bool   // -0: end each output line with NUL, not newline
 	Unset          string // -u: remove variable from the environment (for display only)
 	Ignore         bool   // -i: start with an empty environment
-	JSON           bool   // --json: output in JSON format
+	OutputFormat output.Format // output format (text/json/table)
 }
 
 // EnvVar represents an environment variable for JSON output
@@ -48,9 +49,11 @@ func RunEnv(w io.Writer, args []string, opts EnvOptions) error {
 		envVars = filtered
 	}
 
+	f := output.New(w, opts.OutputFormat)
+
 	// If args provided, print only those variables
 	if len(args) > 0 {
-		if opts.JSON {
+		if f.IsJSON() {
 			result := make([]EnvVar, 0, len(args))
 			for _, name := range args {
 				value := os.Getenv(name)
@@ -59,7 +62,7 @@ func RunEnv(w io.Writer, args []string, opts EnvOptions) error {
 				}
 			}
 
-			return json.NewEncoder(w).Encode(result)
+			return f.Print(result)
 		}
 
 		for _, name := range args {
@@ -80,7 +83,7 @@ func RunEnv(w io.Writer, args []string, opts EnvOptions) error {
 	sort.Strings(envVars)
 
 	// JSON output
-	if opts.JSON {
+	if f.IsJSON() {
 		result := make([]EnvVar, 0, len(envVars))
 		for _, env := range envVars {
 			if idx := strings.Index(env, "="); idx > 0 {
@@ -88,7 +91,7 @@ func RunEnv(w io.Writer, args []string, opts EnvOptions) error {
 			}
 		}
 
-		return json.NewEncoder(w).Encode(result)
+		return f.Print(result)
 	}
 
 	terminator := "\n"

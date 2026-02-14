@@ -1,15 +1,16 @@
 package pwd
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"os"
+
+	"github.com/inovacc/omni/internal/cli/output"
 )
 
 // PwdOptions configures the pwd command behavior
 type PwdOptions struct {
-	JSON bool // --json: output as JSON
+	OutputFormat output.Format // output format (text, json, table)
 }
 
 // PwdResult represents pwd output for JSON
@@ -24,8 +25,10 @@ func RunPwd(w io.Writer, opts PwdOptions) error {
 		return err
 	}
 
-	if opts.JSON {
-		return json.NewEncoder(w).Encode(PwdResult{Path: wd})
+	f := output.New(w, opts.OutputFormat)
+
+	if f.IsJSON() {
+		return f.Print(PwdResult{Path: wd})
 	}
 
 	_, _ = fmt.Fprintln(w, wd)

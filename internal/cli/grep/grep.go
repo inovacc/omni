@@ -2,13 +2,13 @@ package grep
 
 import (
 	"bufio"
-	"encoding/json"
 	"fmt"
 	"io"
 	"os"
 	"regexp"
 
 	"github.com/inovacc/omni/internal/cli/input"
+	"github.com/inovacc/omni/internal/cli/output"
 	pkggrep "github.com/inovacc/omni/pkg/search/grep"
 )
 
@@ -33,7 +33,7 @@ type GrepOptions struct {
 	AfterContext   int  // -A: print NUM lines of trailing context
 	MaxCount       int  // -m: stop after NUM matches
 	Recursive      bool // -r/-R: search recursively
-	JSON           bool // --json: output as JSON
+	OutputFormat output.Format // output format
 }
 
 // GrepResult represents the result of a grep operation
@@ -82,6 +82,9 @@ func RunGrep(w io.Writer, r io.Reader, pattern string, args []string, opts GrepO
 	// Auto-enable filename display for multiple sources
 	showFilename := opts.WithFilename || (len(sources) > 1 && !opts.NoFilename)
 
+	f := output.New(w, opts.OutputFormat)
+	jsonMode := f.IsJSON()
+
 	totalMatches := 0
 	anyMatch := false
 	filesWithMatch := 0
@@ -94,7 +97,7 @@ func RunGrep(w io.Writer, r io.Reader, pattern string, args []string, opts GrepO
 			filename = "(standard input)"
 		}
 
-		matches, hasMatch, results, err := grepReader(w, src.Reader, filename, re, opts, showFilename)
+		matches, hasMatch, results, err := grepReader(w, src.Reader, filename, re, opts, showFilename, jsonMode)
 		if err != nil {
 			return err
 		}
@@ -106,7 +109,7 @@ func RunGrep(w io.Writer, r io.Reader, pattern string, args []string, opts GrepO
 			filesWithMatch++
 		}
 
-		if opts.JSON {
+		if jsonMode {
 			allResults = append(allResults, results...)
 		}
 
@@ -115,14 +118,14 @@ func RunGrep(w io.Writer, r io.Reader, pattern string, args []string, opts GrepO
 		}
 	}
 
-	if opts.JSON {
+	if jsonMode {
 		// Build file list for JSON output
 		fileList := make([]string, len(sources))
 		for i, src := range sources {
 			fileList[i] = src.Name
 		}
 
-		output := GrepOutput{
+		grepOut := GrepOutput{
 			Pattern:        pattern,
 			Files:          fileList,
 			Matches:        allResults,
@@ -130,7 +133,7 @@ func RunGrep(w io.Writer, r io.Reader, pattern string, args []string, opts GrepO
 			FilesWithMatch: filesWithMatch,
 		}
 
-		return json.NewEncoder(w).Encode(output)
+		return f.Print(grepOut)
 	}
 
 	if opts.Quiet {
@@ -156,10 +159,11 @@ func compilePattern(pattern string, opts GrepOptions) (*regexp.Regexp, error) {
 		WordRegexp:   opts.WordRegexp,
 		LineRegexp:   opts.LineRegexp,
 	}
+
 	return pkggrep.CompilePattern(pattern, pkgOpts)
 }
 
-func grepReader(w io.Writer, r io.Reader, filename string, re *regexp.Regexp, opts GrepOptions, showFilename bool) (int, bool, []GrepResult, error) {
+func grepReader(w io.Writer, r io.Reader, filename string, re *regexp.Regexp, opts GrepOptions, showFilename bool, jsonMode bool) (int, bool, []GrepResult, error) {
 	scanner := bufio.NewScanner(r)
 	lineNum := 0
 	matchCount := 0
@@ -193,7 +197,7 @@ func grepReader(w io.Writer, r io.Reader, filename string, re *regexp.Regexp, op
 				return matchCount, true, results, nil
 			}
 
-			if opts.JSON {
+			if jsonMode {
 				matchedPart := ""
 				if matched := re.FindString(line); matched != "" {
 					matchedPart = matched

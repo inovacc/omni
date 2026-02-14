@@ -1,15 +1,16 @@
 package realpath
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"path/filepath"
+
+	"github.com/inovacc/omni/internal/cli/output"
 )
 
 // RealpathOptions configures the realpath command behavior
 type RealpathOptions struct {
-	JSON bool // --json: output as JSON
+	OutputFormat output.Format // output format (text, json, table)
 }
 
 // RealpathResult represents realpath output for JSON
@@ -24,6 +25,9 @@ func RunRealpath(w io.Writer, args []string, opts RealpathOptions) error {
 		return fmt.Errorf("realpath: missing operand")
 	}
 
+	f := output.New(w, opts.OutputFormat)
+	jsonMode := f.IsJSON()
+
 	var results []RealpathResult
 
 	for _, arg := range args {
@@ -37,15 +41,15 @@ func RunRealpath(w io.Writer, args []string, opts RealpathOptions) error {
 			return err
 		}
 
-		if opts.JSON {
+		if jsonMode {
 			results = append(results, RealpathResult{Original: arg, Resolved: resolved})
 		} else {
 			_, _ = fmt.Fprintln(w, resolved)
 		}
 	}
 
-	if opts.JSON {
-		return json.NewEncoder(w).Encode(results)
+	if jsonMode {
+		return f.Print(results)
 	}
 
 	return nil

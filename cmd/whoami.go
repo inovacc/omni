@@ -13,7 +13,7 @@ var whoamiCmd = &cobra.Command{
 	Args:  cobra.NoArgs,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		opts := whoami.WhoamiOptions{}
-		opts.JSON, _ = cmd.Flags().GetBool("json")
+		opts.OutputFormat = getOutputOpts(cmd).GetFormat()
 		return whoami.RunWhoami(cmd.OutOrStdout(), opts)
 	},
 }
@@ -21,5 +21,5 @@ var whoamiCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(whoamiCmd)
 
-	whoamiCmd.Flags().Bool("json", false, "output as JSON")
+
 }

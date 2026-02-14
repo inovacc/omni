@@ -11,12 +11,10 @@ var statCmd = &cobra.Command{
 	Short: "Display file or file system status",
 	Long:  `Display file or file system status.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		jsonMode, _ := cmd.Flags().GetBool("json")
-		return stat.RunStat(cmd.OutOrStdout(), args, stat.StatOptions{JSON: jsonMode})
+		return stat.RunStat(cmd.OutOrStdout(), args, stat.StatOptions{OutputFormat: getOutputOpts(cmd).GetFormat()})
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(statCmd)
-	statCmd.Flags().Bool("json", false, "Output in JSON format")
 }

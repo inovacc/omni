@@ -27,6 +27,7 @@ Examples:
 			dir = args[0]
 		}
 
+		testcheckOpts.OutputFormat = getOutputOpts(cmd).GetFormat()
 		return testcheck.Run(cmd.OutOrStdout(), dir, testcheckOpts)
 	},
 }
@@ -34,7 +35,6 @@ Examples:
 func init() {
 	rootCmd.AddCommand(testcheckCmd)
 
-	testcheckCmd.Flags().BoolVarP(&testcheckOpts.JSON, "json", "j", false, "output as JSON")
 	testcheckCmd.Flags().BoolVarP(&testcheckOpts.ShowAll, "all", "a", false, "show all packages (default shows only missing)")
 	testcheckCmd.Flags().BoolVarP(&testcheckOpts.Summary, "summary", "s", false, "show only summary")
 	testcheckCmd.Flags().BoolVarP(&testcheckOpts.Verbose, "verbose", "v", false, "show test file names")

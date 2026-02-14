@@ -31,7 +31,7 @@ var readlinkCmd = &cobra.Command{
 		opts.Silent, _ = cmd.Flags().GetBool("silent")
 		opts.Verbose, _ = cmd.Flags().GetBool("verbose")
 		opts.Zero, _ = cmd.Flags().GetBool("zero")
-		opts.JSON, _ = cmd.Flags().GetBool("json")
+		opts.OutputFormat = getOutputOpts(cmd).GetFormat()
 
 		return readlink.RunReadlink(cmd.OutOrStdout(), args, opts)
 	},
@@ -48,5 +48,4 @@ func init() {
 	readlinkCmd.Flags().BoolP("silent", "s", false, "suppress most error messages")
 	readlinkCmd.Flags().BoolP("verbose", "v", false, "report error messages")
 	readlinkCmd.Flags().BoolP("zero", "z", false, "end each output line with NUL, not newline")
-	readlinkCmd.Flags().Bool("json", false, "output as JSON")
 }

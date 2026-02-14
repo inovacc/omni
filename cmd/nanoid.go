@@ -36,7 +36,7 @@ Examples:
 		opts.Count, _ = cmd.Flags().GetInt("count")
 		opts.Length, _ = cmd.Flags().GetInt("length")
 		opts.Alphabet, _ = cmd.Flags().GetString("alphabet")
-		opts.JSON, _ = cmd.Flags().GetBool("json")
+		opts.OutputFormat = getOutputOpts(cmd).GetFormat()
 
 		return nanoid.RunNanoID(cmd.OutOrStdout(), opts)
 	},
@@ -48,5 +48,4 @@ func init() {
 	nanoidCmd.Flags().IntP("count", "n", 1, "generate N NanoIDs")
 	nanoidCmd.Flags().IntP("length", "l", 21, "length of NanoID")
 	nanoidCmd.Flags().StringP("alphabet", "a", "", "custom alphabet")
-	nanoidCmd.Flags().Bool("json", false, "output as JSON")
 }

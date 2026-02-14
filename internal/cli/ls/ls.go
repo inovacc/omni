@@ -1,7 +1,6 @@
 package ls
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"io/fs"
@@ -10,24 +9,26 @@ import (
 	"sort"
 	"strings"
 	"time"
+
+	"github.com/inovacc/omni/internal/cli/output"
 )
 
 // Options configures the ls command behavior
 type Options struct {
-	All          bool // -a: show hidden files
-	AlmostAll    bool // -A: show hidden except . and ..
-	LongFormat   bool // -l: long listing format
-	HumanReadble bool // -h: human readable sizes
-	OnePerLine   bool // -1: one entry per line
-	Recursive    bool // -R: recursive listing
-	Reverse      bool // -r: reverse order
-	SortByTime   bool // -t: sort by modification time
-	SortBySize   bool // -S: sort by size
-	NoSort       bool // -U: do not sort
-	Directory    bool // -d: list directories themselves, not contents
-	Classify     bool // -F: append indicator (*/=>@|)
-	Inode        bool // -i: show inode numbers
-	JSON         bool // --json: output in JSON format
+	All          bool          // -a: show hidden files
+	AlmostAll    bool          // -A: show hidden except . and ..
+	LongFormat   bool          // -l: long listing format
+	HumanReadble bool          // -h: human readable sizes
+	OnePerLine   bool          // -1: one entry per line
+	Recursive    bool          // -R: recursive listing
+	Reverse      bool          // -r: reverse order
+	SortByTime   bool          // -t: sort by modification time
+	SortBySize   bool          // -S: sort by size
+	NoSort       bool          // -U: do not sort
+	Directory    bool          // -d: list directories themselves, not contents
+	Classify     bool          // -F: append indicator (*/=>@|)
+	Inode        bool          // -i: show inode numbers
+	OutputFormat output.Format // output format (text, json, table)
 }
 
 // Entry represents a file entry for ls output
@@ -53,6 +54,9 @@ func Run(w io.Writer, args []string, opts Options) error {
 		paths = []string{"."}
 	}
 
+	f := output.New(w, opts.OutputFormat)
+	jsonMode := f.IsJSON()
+
 	var (
 		allEntries []Entry
 		errors     []error
@@ -65,7 +69,7 @@ func Run(w io.Writer, args []string, opts Options) error {
 			continue
 		}
 
-		if opts.JSON {
+		if jsonMode {
 			allEntries = append(allEntries, entries...)
 		} else {
 			// Print header for multiple paths
@@ -81,8 +85,8 @@ func Run(w io.Writer, args []string, opts Options) error {
 		}
 	}
 
-	if opts.JSON {
-		return json.NewEncoder(w).Encode(allEntries)
+	if jsonMode {
+		return f.Print(allEntries)
 	}
 
 	if len(errors) > 0 {

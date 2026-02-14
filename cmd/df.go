@@ -31,7 +31,7 @@ or all file systems by default.
 		opts.ExcludeType, _ = cmd.Flags().GetString("exclude-type")
 		opts.Local, _ = cmd.Flags().GetBool("local")
 		opts.Portability, _ = cmd.Flags().GetBool("portability")
-		opts.JSON, _ = cmd.Flags().GetBool("json")
+		opts.OutputFormat = getOutputOpts(cmd).GetFormat()
 
 		return df.RunDF(cmd.OutOrStdout(), args, opts)
 	},
@@ -48,5 +48,5 @@ func init() {
 	dfCmd.Flags().StringP("exclude-type", "x", "", "exclude file systems of type TYPE")
 	dfCmd.Flags().BoolP("local", "l", false, "limit listing to local file systems")
 	dfCmd.Flags().BoolP("portability", "P", false, "use the POSIX output format")
-	dfCmd.Flags().Bool("json", false, "output as JSON")
+
 }

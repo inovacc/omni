@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"strings"
 	"testing"
+
+	"github.com/inovacc/omni/internal/cli/output"
 )
 
 func TestRunValidate(t *testing.T) {
@@ -73,7 +75,7 @@ func TestRunValidate(t *testing.T) {
 func TestRunValidateJSON(t *testing.T) {
 	var buf bytes.Buffer
 
-	opts := ValidateOptions{JSON: true}
+	opts := ValidateOptions{OutputFormat: output.FormatJSON}
 
 	err := RunValidate(&buf, []string{"name = \"test\"\nvalue = 123"}, opts)
 	if err != nil {
@@ -93,7 +95,7 @@ func TestRunValidateJSON(t *testing.T) {
 func TestRunValidateJSONInvalid(t *testing.T) {
 	var buf bytes.Buffer
 
-	opts := ValidateOptions{JSON: true}
+	opts := ValidateOptions{OutputFormat: output.FormatJSON}
 
 	_ = RunValidate(&buf, []string{"name = \"unclosed"}, opts)
 

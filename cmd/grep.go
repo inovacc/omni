@@ -35,7 +35,7 @@ With no FILE, read '.' if recursive; otherwise, read standard input.`,
 		opts.AfterContext, _ = cmd.Flags().GetInt("after-context")
 		opts.MaxCount, _ = cmd.Flags().GetInt("max-count")
 		opts.Recursive, _ = cmd.Flags().GetBool("recursive")
-		opts.JSON, _ = cmd.Flags().GetBool("json")
+		opts.OutputFormat = getOutputOpts(cmd).GetFormat()
 
 		pattern := args[0]
 		files := args[1:]
@@ -76,6 +76,4 @@ func init() {
 	// File and directory selection
 	grepCmd.Flags().BoolP("recursive", "r", false, "search directories recursively")
 
-	// Output format
-	grepCmd.Flags().Bool("json", false, "output as JSON")
 }

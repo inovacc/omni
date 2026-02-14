@@ -1,9 +1,10 @@
 package free
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
+
+	"github.com/inovacc/omni/internal/cli/output"
 )
 
 // FreeOptions configures the free command behavior
@@ -17,7 +18,7 @@ type FreeOptions struct {
 	Total     bool // -t: show total for RAM + swap
 	Seconds   int  // -s: continuously display every N seconds
 	Count     int  // -c: display N times, then exit
-	JSON      bool // --json: output as JSON
+	OutputFormat output.Format // output format (text/json/table)
 }
 
 // MemInfo contains memory information
@@ -38,8 +39,9 @@ func RunFree(w io.Writer, opts FreeOptions) error {
 		return fmt.Errorf("free: %w", err)
 	}
 
-	if opts.JSON {
-		return json.NewEncoder(w).Encode(info)
+	f := output.New(w, opts.OutputFormat)
+	if f.IsJSON() {
+		return f.Print(info)
 	}
 
 	// Determine unit divisor and suffix

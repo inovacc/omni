@@ -34,7 +34,7 @@ Examples:
 		opts.Count, _ = cmd.Flags().GetInt("count")
 		opts.Upper, _ = cmd.Flags().GetBool("upper")
 		opts.NoDashes, _ = cmd.Flags().GetBool("no-dashes")
-		opts.JSON, _ = cmd.Flags().GetBool("json")
+		opts.OutputFormat = getOutputOpts(cmd).GetFormat()
 
 		return uuid.RunUUID(cmd.OutOrStdout(), opts)
 	},
@@ -47,5 +47,4 @@ func init() {
 	uuidCmd.Flags().IntP("count", "n", 1, "generate N UUIDs")
 	uuidCmd.Flags().BoolP("upper", "u", false, "output in uppercase")
 	uuidCmd.Flags().BoolP("no-dashes", "x", false, "output without dashes")
-	uuidCmd.Flags().Bool("json", false, "output as JSON")
 }

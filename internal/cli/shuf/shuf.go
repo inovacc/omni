@@ -2,13 +2,14 @@ package shuf
 
 import (
 	"bufio"
-	"encoding/json"
 	"fmt"
 	"io"
 	"math/rand"
 	"os"
 	"strconv"
 	"strings"
+
+	"github.com/inovacc/omni/internal/cli/output"
 )
 
 // ShufOptions configures the shuf command behavior
@@ -18,7 +19,7 @@ type ShufOptions struct {
 	HeadCount  int    // -n: output at most COUNT lines
 	Repeat     bool   // -r: output lines can be repeated
 	ZeroTerm   bool   // -z: line delimiter is NUL
-	JSON       bool   // --json: output as JSON
+	OutputFormat output.Format // output format
 }
 
 // ShufResult represents shuf output for JSON
@@ -107,8 +108,9 @@ func RunShuf(w io.Writer, args []string, opts ShufOptions) error {
 		count = opts.HeadCount
 	}
 
-	if opts.JSON {
-		var output []string
+	f := output.New(w, opts.OutputFormat)
+	if f.IsJSON() {
+		var shufOutput []string
 
 		if opts.Repeat {
 			if opts.HeadCount == 0 {
@@ -117,13 +119,13 @@ func RunShuf(w io.Writer, args []string, opts ShufOptions) error {
 
 			for i := 0; i < opts.HeadCount; i++ {
 				idx := rand.Intn(len(lines))
-				output = append(output, lines[idx])
+				shufOutput = append(shufOutput, lines[idx])
 			}
 		} else {
-			output = lines[:count]
+			shufOutput = lines[:count]
 		}
 
-		return json.NewEncoder(w).Encode(ShufResult{Lines: output, Count: len(output)})
+		return f.Print(ShufResult{Lines: shufOutput, Count: len(shufOutput)})
 	}
 
 	if opts.Repeat {

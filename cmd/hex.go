@@ -34,7 +34,7 @@ Examples:
   omni hex encode file.txt             # Read from file`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		opts := hexenc.Options{}
-		opts.JSON, _ = cmd.Flags().GetBool("json")
+		opts.OutputFormat = getOutputOpts(cmd).GetFormat()
 		opts.Uppercase, _ = cmd.Flags().GetBool("upper")
 
 		return hexenc.RunEncode(cmd.OutOrStdout(), args, opts)
@@ -55,7 +55,7 @@ Examples:
   echo "74657374" | omni hex decode    # Read from stdin`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		opts := hexenc.Options{}
-		opts.JSON, _ = cmd.Flags().GetBool("json")
+		opts.OutputFormat = getOutputOpts(cmd).GetFormat()
 
 		return hexenc.RunDecode(cmd.OutOrStdout(), args, opts)
 	},
@@ -66,8 +66,5 @@ func init() {
 	hexCmd.AddCommand(hexEncodeCmd)
 	hexCmd.AddCommand(hexDecodeCmd)
 
-	hexEncodeCmd.Flags().Bool("json", false, "output as JSON")
 	hexEncodeCmd.Flags().BoolP("upper", "u", false, "use uppercase hex letters")
-
-	hexDecodeCmd.Flags().Bool("json", false, "output as JSON")
 }

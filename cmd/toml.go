@@ -33,7 +33,7 @@ Examples:
   omni toml validate --json config.toml`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		opts := tomlutil.ValidateOptions{}
-		opts.JSON, _ = cmd.Flags().GetBool("json")
+		opts.OutputFormat = getOutputOpts(cmd).GetFormat()
 
 		return tomlutil.RunValidate(cmd.OutOrStdout(), args, opts)
 	},
@@ -63,7 +63,7 @@ func init() {
 	tomlCmd.AddCommand(tomlValidateCmd)
 	tomlCmd.AddCommand(tomlFmtCmd)
 
-	tomlValidateCmd.Flags().Bool("json", false, "output as JSON")
+	// toml validate (--json provided by root persistent flag)
 
 	tomlFmtCmd.Flags().IntP("indent", "i", 2, "indentation width")
 }

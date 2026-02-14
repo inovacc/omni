@@ -2,13 +2,13 @@ package cut
 
 import (
 	"bufio"
-	"encoding/json"
 	"fmt"
 	"io"
 	"strconv"
 	"strings"
 
 	"github.com/inovacc/omni/internal/cli/input"
+	"github.com/inovacc/omni/internal/cli/output"
 )
 
 // CutOptions configures the cut command behavior
@@ -20,7 +20,7 @@ type CutOptions struct {
 	OnlyDelim   bool   // -s: do not print lines not containing delimiters
 	OutputDelim string // --output-delimiter: use STRING as the output delimiter
 	Complement  bool   // --complement: complement the set of selected bytes/chars/fields
-	JSON        bool   // --json: output as JSON
+	OutputFormat output.Format // output format (text/json/table)
 }
 
 // CutResult represents cut output for JSON
@@ -72,27 +72,30 @@ func RunCut(w io.Writer, r io.Reader, args []string, opts CutOptions) error {
 	}
 	defer input.CloseAll(sources)
 
+	f := output.New(w, opts.OutputFormat)
+	jsonMode := f.IsJSON()
+
 	var allLines []string
 
 	for _, src := range sources {
-		lines, err := cutReader(w, src.Reader, opts)
+		lines, err := cutReader(w, src.Reader, opts, jsonMode)
 		if err != nil {
 			return err
 		}
 
-		if opts.JSON {
+		if jsonMode {
 			allLines = append(allLines, lines...)
 		}
 	}
 
-	if opts.JSON {
-		return json.NewEncoder(w).Encode(CutResult{Lines: allLines, Count: len(allLines)})
+	if jsonMode {
+		return f.Print(CutResult{Lines: allLines, Count: len(allLines)})
 	}
 
 	return nil
 }
 
-func cutReader(w io.Writer, r io.Reader, opts CutOptions) ([]string, error) {
+func cutReader(w io.Writer, r io.Reader, opts CutOptions, jsonMode bool) ([]string, error) {
 	scanner := bufio.NewScanner(r)
 
 	var lines []string
@@ -119,7 +122,7 @@ func cutReader(w io.Writer, r io.Reader, opts CutOptions) ([]string, error) {
 		}
 
 		if result != "" || !opts.OnlyDelim {
-			if opts.JSON {
+			if jsonMode {
 				lines = append(lines, result)
 			} else {
 				_, _ = fmt.Fprintln(w, result)

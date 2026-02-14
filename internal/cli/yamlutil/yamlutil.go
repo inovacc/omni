@@ -8,13 +8,14 @@ import (
 	"os"
 	"strings"
 
+	"github.com/inovacc/omni/internal/cli/output"
 	"gopkg.in/yaml.v3"
 )
 
 // ValidateOptions configures the yaml validate command behavior
 type ValidateOptions struct {
-	JSON   bool // --json: output as JSON
-	Strict bool // --strict: fail on unknown fields
+	OutputFormat output.Format // Output format
+	Strict       bool          // --strict: fail on unknown fields
 }
 
 // ValidateResult represents the output for JSON mode
@@ -120,11 +121,9 @@ func validateReader(w io.Writer, r io.Reader, name string, opts ValidateOptions)
 }
 
 func outputResult(w io.Writer, result ValidateResult, opts ValidateOptions) error {
-	if opts.JSON {
-		enc := json.NewEncoder(w)
-		enc.SetIndent("", "  ")
-
-		return enc.Encode(result)
+	f := output.New(w, opts.OutputFormat)
+	if f.IsJSON() {
+		return f.Print(result)
 	}
 
 	if result.Valid {
@@ -142,12 +141,12 @@ func outputResult(w io.Writer, result ValidateResult, opts ValidateOptions) erro
 
 // FormatOptions configures the yaml format command behavior
 type FormatOptions struct {
-	Indent      int    // indentation width
-	JSON        bool   // output as JSON instead
-	SortKeys    bool   // sort keys alphabetically
-	RemoveEmpty bool   // remove empty/null values
-	InPlace     bool   // modify file in place
-	K8s         bool   // use Kubernetes key ordering
+	Indent      int  // indentation width
+	JSON        bool // output as JSON instead
+	SortKeys    bool // sort keys alphabetically
+	RemoveEmpty bool // remove empty/null values
+	InPlace     bool // modify file in place
+	K8s         bool // use Kubernetes key ordering
 }
 
 // RunFormat formats YAML input
@@ -168,12 +167,15 @@ func RunFormat(w io.Writer, args []string, opts FormatOptions) error {
 		if opts.RemoveEmpty {
 			doc = removeEmptyValues(doc)
 		}
+
 		if opts.SortKeys {
 			doc = sortKeys(doc)
 		}
+
 		if opts.K8s {
 			doc = sortK8sKeys(doc)
 		}
+
 		docs[i] = doc
 	}
 
@@ -183,7 +185,9 @@ func RunFormat(w io.Writer, args []string, opts FormatOptions) error {
 		if err != nil {
 			return fmt.Errorf("yaml format: %w", err)
 		}
+
 		defer func() { _ = f.Close() }()
+
 		w = f
 	}
 
@@ -191,9 +195,11 @@ func RunFormat(w io.Writer, args []string, opts FormatOptions) error {
 	if opts.JSON {
 		enc := json.NewEncoder(w)
 		enc.SetIndent("", strings.Repeat(" ", opts.Indent))
+
 		if len(docs) == 1 {
 			return enc.Encode(docs[0])
 		}
+
 		return enc.Encode(docs)
 	}
 
@@ -224,23 +230,28 @@ func RunK8sFormat(w io.Writer, args []string, opts K8sFormatOptions) error {
 		InPlace:     opts.InPlace,
 		K8s:         true,
 	}
+
 	return RunFormat(w, args, fmtOpts)
 }
 
 // parseMultiDoc parses a YAML string with multiple documents
 func parseMultiDoc(input string) ([]any, error) {
 	var docs []any
+
 	decoder := yaml.NewDecoder(strings.NewReader(input))
 
 	for {
 		var doc any
+
 		err := decoder.Decode(&doc)
 		if err == io.EOF {
 			break
 		}
+
 		if err != nil {
 			return nil, err
 		}
+
 		if doc != nil {
 			docs = append(docs, doc)
 		}
@@ -257,12 +268,14 @@ func sortKeys(v any) any {
 		for k, v := range val {
 			sorted[k] = sortKeys(v)
 		}
+
 		return sorted
 	case []any:
 		result := make([]any, len(val))
 		for i, item := range val {
 			result[i] = sortKeys(item)
 		}
+
 		return result
 	default:
 		return v
@@ -301,6 +314,7 @@ func sortK8sKeysWithOrder(v any, keyOrder []string) any {
 	case map[string]any:
 		// Process values recursively with appropriate ordering
 		processed := make(map[string]any)
+
 		for k, v := range val {
 			if k == "metadata" {
 				// Use metadata-specific ordering for metadata field
@@ -309,12 +323,14 @@ func sortK8sKeysWithOrder(v any, keyOrder []string) any {
 				processed[k] = sortK8sKeysWithOrder(v, k8sKeyOrder)
 			}
 		}
+
 		return createOrderedMap(processed, keyOrder)
 	case []any:
 		items := make([]any, len(val))
 		for i, item := range val {
 			items[i] = sortK8sKeysWithOrder(item, k8sKeyOrder)
 		}
+
 		return items
 	default:
 		return v
@@ -335,10 +351,12 @@ func (o OrderedMap) MarshalYAML() (any, error) {
 
 	for _, k := range o.Keys {
 		keyNode := &yaml.Node{Kind: yaml.ScalarNode, Value: k}
+
 		var valueNode yaml.Node
 		if err := valueNode.Encode(o.Values[k]); err != nil {
 			return nil, err
 		}
+
 		node.Content = append(node.Content, keyNode, &valueNode)
 	}
 
@@ -364,11 +382,13 @@ func createOrderedMap(m map[string]any, keyOrder []string) OrderedMap {
 
 	// Add remaining keys alphabetically
 	var remaining []string
+
 	for k := range m {
 		if !added[k] {
 			remaining = append(remaining, k)
 		}
 	}
+
 	sortStrings(remaining)
 	result.Keys = append(result.Keys, remaining...)
 
@@ -391,27 +411,33 @@ func removeEmptyValues(v any) any {
 	switch val := v.(type) {
 	case map[string]any:
 		result := make(map[string]any)
+
 		for k, v := range val {
 			cleaned := removeEmptyValues(v)
 			if !isEmpty(cleaned) {
 				result[k] = cleaned
 			}
 		}
+
 		if len(result) == 0 {
 			return nil
 		}
+
 		return result
 	case []any:
 		var result []any
+
 		for _, item := range val {
 			cleaned := removeEmptyValues(item)
 			if !isEmpty(cleaned) {
 				result = append(result, cleaned)
 			}
 		}
+
 		if len(result) == 0 {
 			return nil
 		}
+
 		return result
 	default:
 		return v
@@ -423,6 +449,7 @@ func isEmpty(v any) bool {
 	if v == nil {
 		return true
 	}
+
 	switch val := v.(type) {
 	case string:
 		return val == ""
@@ -431,6 +458,7 @@ func isEmpty(v any) bool {
 	case []any:
 		return len(val) == 0
 	}
+
 	return false
 }
 
@@ -443,6 +471,7 @@ func getInputWithFilename(args []string) (string, string, error) {
 			if err != nil {
 				return "", "", fmt.Errorf("yaml: %w", err)
 			}
+
 			return string(content), args[0], nil
 		}
 		// Treat as literal string
@@ -451,12 +480,15 @@ func getInputWithFilename(args []string) (string, string, error) {
 
 	// Read from stdin
 	scanner := bufio.NewScanner(os.Stdin)
+
 	var lines []string
 	for scanner.Scan() {
 		lines = append(lines, scanner.Text())
 	}
+
 	if err := scanner.Err(); err != nil {
 		return "", "", fmt.Errorf("yaml: %w", err)
 	}
+
 	return strings.Join(lines, "\n"), "", nil
 }

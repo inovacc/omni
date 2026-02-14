@@ -45,7 +45,7 @@ Examples:
 		opts.Pid, _ = cmd.Flags().GetInt("pid")
 		opts.NoHeaders, _ = cmd.Flags().GetBool("no-headers")
 		opts.Sort, _ = cmd.Flags().GetString("sort")
-		opts.JSON, _ = cmd.Flags().GetBool("json")
+		opts.OutputFormat = getOutputOpts(cmd).GetFormat()
 		opts.GoOnly, _ = cmd.Flags().GetBool("go")
 
 		// Check for aux style (positional arg)
@@ -70,6 +70,6 @@ func init() {
 	psCmd.Flags().IntP("pid", "p", 0, "show process with specified PID")
 	psCmd.Flags().Bool("no-headers", false, "don't print header line")
 	psCmd.Flags().String("sort", "", "sort by column (pid, cpu, mem, time)")
-	psCmd.Flags().BoolP("json", "j", false, "output as JSON")
+
 	psCmd.Flags().Bool("go", false, "show only Go processes")
 }

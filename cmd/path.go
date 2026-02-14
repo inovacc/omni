@@ -19,8 +19,7 @@ var pathCleanCmd = &cobra.Command{
 	Long:  `Clean returns the shortest path name equivalent to path by purely lexical processing. It applies OS-native separators.`,
 	Args:  cobra.MinimumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		opts := pathutil.CleanOptions{}
-		opts.JSON, _ = cmd.Flags().GetBool("json")
+		opts := pathutil.CleanOptions{OutputFormat: getOutputOpts(cmd).GetFormat()}
 		return pathutil.RunClean(cmd.OutOrStdout(), args, opts)
 	},
 }
@@ -32,8 +31,7 @@ var pathAbsCmd = &cobra.Command{
 	Long:  `Abs returns an absolute representation of path. Relative paths are resolved from the current working directory.`,
 	Args:  cobra.MinimumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		opts := pathutil.AbsOptions{}
-		opts.JSON, _ = cmd.Flags().GetBool("json")
+		opts := pathutil.AbsOptions{OutputFormat: getOutputOpts(cmd).GetFormat()}
 		return pathutil.RunAbs(cmd.OutOrStdout(), args, opts)
 	},
 }
@@ -42,8 +40,5 @@ func init() {
 	rootCmd.AddCommand(pathCmd)
 
 	pathCmd.AddCommand(pathCleanCmd)
-	pathCleanCmd.Flags().Bool("json", false, "output as JSON")
-
 	pathCmd.AddCommand(pathAbsCmd)
-	pathAbsCmd.Flags().Bool("json", false, "output as JSON")
 }

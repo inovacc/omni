@@ -2,7 +2,6 @@
 package find
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"io/fs"
@@ -12,6 +11,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/inovacc/omni/internal/cli/output"
 )
 
 // FindOptions configures the find command behavior
@@ -35,7 +36,7 @@ type FindOptions struct {
 	Readable   bool   // -readable
 	Writable   bool   // -writable
 	Print0     bool   // -print0 (null separator)
-	JSON       bool   // --json output
+	OutputFormat output.Format // output format
 	// Logical operators
 	Not bool // -not (negate next condition)
 }
@@ -52,6 +53,9 @@ type FindResult struct {
 
 // RunFind searches for files matching criteria
 func RunFind(w io.Writer, paths []string, opts FindOptions) error {
+	f := output.New(w, opts.OutputFormat)
+	jsonMode := f.IsJSON()
+
 	if len(paths) == 0 {
 		paths = []string{"."}
 	}
@@ -254,7 +258,7 @@ func RunFind(w io.Writer, paths []string, opts FindOptions) error {
 			}
 
 			if match {
-				if opts.JSON {
+				if jsonMode {
 					info, _ := d.Info()
 
 					result := FindResult{
@@ -281,8 +285,8 @@ func RunFind(w io.Writer, paths []string, opts FindOptions) error {
 		}
 	}
 
-	if opts.JSON {
-		return json.NewEncoder(w).Encode(results)
+	if jsonMode {
+		return f.Print(results)
 	}
 
 	return nil

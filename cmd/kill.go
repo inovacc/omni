@@ -34,7 +34,7 @@ Examples:
 		opts.Signal, _ = cmd.Flags().GetString("signal")
 		opts.List, _ = cmd.Flags().GetBool("list")
 		opts.Verbose, _ = cmd.Flags().GetBool("verbose")
-		opts.JSON, _ = cmd.Flags().GetBool("json")
+		opts.OutputFormat = getOutputOpts(cmd).GetFormat()
 
 		return kill.RunKill(cmd.OutOrStdout(), args, opts)
 	},
@@ -46,5 +46,5 @@ func init() {
 	killCmd.Flags().StringP("signal", "s", "", "specify the signal to be sent")
 	killCmd.Flags().BoolP("list", "l", false, "list signal names")
 	killCmd.Flags().BoolP("verbose", "v", false, "report successful signals")
-	killCmd.Flags().BoolP("json", "j", false, "output as JSON")
+
 }

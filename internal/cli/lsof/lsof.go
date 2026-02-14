@@ -1,13 +1,13 @@
 package lsof
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"sort"
 	"strconv"
 	"strings"
 
+	"github.com/inovacc/omni/internal/cli/output"
 	gnet "github.com/shirou/gopsutil/v3/net"
 	"github.com/shirou/gopsutil/v3/process"
 )
@@ -22,7 +22,7 @@ type Options struct {
 	Files       bool   // show file descriptors (default behavior)
 	Command     string // -c: filter by command name prefix
 	NoHeaders   bool   // -n: don't print headers
-	JSON        bool   // -j: output as JSON
+	OutputFormat output.Format // output format (text/json/table)
 	IPv4        bool   // -4: show only IPv4
 	IPv6        bool   // -6: show only IPv6
 	Listen      bool   // show only listening sockets
@@ -67,11 +67,9 @@ func Run(w io.Writer, opts Options) error {
 		return files[i].FD < files[j].FD
 	})
 
-	if opts.JSON {
-		encoder := json.NewEncoder(w)
-		encoder.SetIndent("", "  ")
-
-		return encoder.Encode(files)
+	f := output.New(w, opts.OutputFormat)
+	if f.IsJSON() {
+		return f.Print(files)
 	}
 
 	return printFiles(w, files, opts)

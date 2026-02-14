@@ -1,10 +1,11 @@
 package echo
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"strings"
+
+	"github.com/inovacc/omni/internal/cli/output"
 )
 
 // EchoOptions holds the options for the echo command.
@@ -12,7 +13,7 @@ type EchoOptions struct {
 	NoNewline      bool // -n: do not output trailing newline
 	EnableEscapes  bool // -e: enable interpretation of backslash escapes
 	DisableEscapes bool // -E: disable interpretation of backslash escapes (default)
-	JSON           bool // --json: output as JSON
+	OutputFormat output.Format // output format
 }
 
 // EchoResult represents echo output for JSON
@@ -23,22 +24,23 @@ type EchoResult struct {
 
 // RunEcho writes the arguments to the writer.
 func RunEcho(w io.Writer, args []string, opts EchoOptions) error {
-	output := strings.Join(args, " ")
+	echoOutput := strings.Join(args, " ")
 
 	if opts.EnableEscapes && !opts.DisableEscapes {
-		output = interpretEscapes(output)
+		echoOutput = interpretEscapes(echoOutput)
 	}
 
-	if opts.JSON {
-		return json.NewEncoder(w).Encode(EchoResult{Output: output, Args: args})
+	f := output.New(w, opts.OutputFormat)
+	if f.IsJSON() {
+		return f.Print(EchoResult{Output: echoOutput, Args: args})
 	}
 
 	if opts.NoNewline {
-		_, err := fmt.Fprint(w, output)
+		_, err := fmt.Fprint(w, echoOutput)
 		return err
 	}
 
-	_, err := fmt.Fprintln(w, output)
+	_, err := fmt.Fprintln(w, echoOutput)
 
 	return err
 }

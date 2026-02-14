@@ -25,7 +25,7 @@ or (when USER omitted) for the current user.
 		opts.Groups, _ = cmd.Flags().GetBool("groups")
 		opts.Name, _ = cmd.Flags().GetBool("name")
 		opts.Real, _ = cmd.Flags().GetBool("real")
-		opts.JSON, _ = cmd.Flags().GetBool("json")
+		opts.OutputFormat = getOutputOpts(cmd).GetFormat()
 
 		if len(args) > 0 {
 			opts.Username = args[0]
@@ -43,5 +43,5 @@ func init() {
 	idCmd.Flags().BoolP("groups", "G", false, "print all group IDs")
 	idCmd.Flags().BoolP("name", "n", false, "print a name instead of a number")
 	idCmd.Flags().BoolP("real", "r", false, "print the real ID instead of the effective ID")
-	idCmd.Flags().Bool("json", false, "output as JSON")
+
 }

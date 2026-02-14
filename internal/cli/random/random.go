@@ -2,23 +2,24 @@ package random
 
 import (
 	"crypto/rand"
-	"encoding/json"
 	"fmt"
 	"io"
 	"math/big"
 	"strings"
+
+	"github.com/inovacc/omni/internal/cli/output"
 )
 
 // RandomOptions configures the random command behavior
 type RandomOptions struct {
-	Count   int    // -n: number of values to generate
-	Length  int    // -l: length of random strings
-	Min     int64  // --min: minimum value for numbers
-	Max     int64  // --max: maximum value for numbers
-	Type    string // -t: type (int, float, string, hex, alpha, alnum, bytes)
-	Charset string // -c: custom character set
-	Sep     string // -s: separator between values
-	JSON    bool   // --json: output as JSON
+	Count        int           // -n: number of values to generate
+	Length       int           // -l: length of random strings
+	Min          int64         // --min: minimum value for numbers
+	Max          int64         // --max: maximum value for numbers
+	Type         string        // -t: type (int, float, string, hex, alpha, alnum, bytes)
+	Charset      string        // -c: custom character set
+	Sep          string        // -s: separator between values
+	OutputFormat output.Format // output format (text, json, table)
 }
 
 // RandomResult represents random output for JSON
@@ -97,8 +98,10 @@ func RunRandom(w io.Writer, opts RandomOptions) error {
 		results = append(results, result)
 	}
 
-	if opts.JSON {
-		return json.NewEncoder(w).Encode(RandomResult{Type: opts.Type, Values: results, Count: len(results)})
+	f := output.New(w, opts.OutputFormat)
+
+	if f.IsJSON() {
+		return f.Print(RandomResult{Type: opts.Type, Values: results, Count: len(results)})
 	}
 
 	_, _ = fmt.Fprintln(w, strings.Join(results, opts.Sep))

@@ -38,7 +38,7 @@ FORMAT is one of:
 		opts.StartingNumber, _ = cmd.Flags().GetInt("starting-line-number")
 		opts.Increment, _ = cmd.Flags().GetInt("line-increment")
 		opts.NumberWidth, _ = cmd.Flags().GetInt("number-width")
-		opts.JSON, _ = cmd.Flags().GetBool("json")
+		opts.OutputFormat = getOutputOpts(cmd).GetFormat()
 
 		return nl.RunNl(cmd.OutOrStdout(), cmd.InOrStdin(), args, opts)
 	},
@@ -53,5 +53,4 @@ func init() {
 	nlCmd.Flags().IntP("starting-line-number", "v", 1, "first line number")
 	nlCmd.Flags().IntP("line-increment", "i", 1, "line number increment")
 	nlCmd.Flags().IntP("number-width", "w", 6, "use N columns for line numbers")
-	nlCmd.Flags().Bool("json", false, "output as JSON")
 }

@@ -7,6 +7,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	outputpkg "github.com/inovacc/omni/internal/cli/output"
 )
 
 func TestRun(t *testing.T) {
@@ -170,7 +172,7 @@ func Nested() {
 
 			output := buf.String()
 
-			if tt.wantMatch && output == "" && !tt.opts.JSON {
+			if tt.wantMatch && output == "" && tt.opts.OutputFormat != outputpkg.FormatJSON {
 				t.Error("expected matches but got none")
 			}
 
@@ -449,7 +451,7 @@ func hello() {
 
 	var buf bytes.Buffer
 
-	opts := Options{JSON: true}
+	opts := Options{OutputFormat: outputpkg.FormatJSON}
 
 	err := Run(&buf, "hello", []string{dir}, opts)
 	if err != nil {

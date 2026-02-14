@@ -15,23 +15,23 @@ import (
 
 // TreeOptions configures the tree command behavior
 type TreeOptions struct {
-	All        bool     // -a: show hidden files
-	DirsOnly   bool     // -d: show only directories
-	Depth      int      // --depth: maximum depth (-1 for unlimited)
-	Ignore     []string // -i: patterns to ignore
-	NoDirSlash bool     // don't add trailing slash to directories
-	Stats      bool     // -s: show statistics
-	Hash       bool     // --hash: show file hashes
-	JSON       bool     // -j: output as JSON
-	JSONStream bool     // --json-stream: streaming NDJSON output
-	NoColor    bool     // --no-color: disable colors
-	Size       bool     // --size: show file sizes
-	Date       bool     // --date: show modification dates
-	MaxFiles   int      // --max-files: cap total scanned items
-	MaxHashSize int64   // --max-hash-size: skip hashing large files
-	Threads    int      // -t/--threads: parallel workers
-	Compare    []string // --compare: two JSON files to compare
-	DetectMoves bool    // --detect-moves: detect moved files in compare
+	All         bool     // -a: show hidden files
+	DirsOnly    bool     // -d: show only directories
+	Depth       int      // --depth: maximum depth (-1 for unlimited)
+	Ignore      []string // -i: patterns to ignore
+	NoDirSlash  bool     // don't add trailing slash to directories
+	Stats       bool     // -s: show statistics
+	Hash        bool     // --hash: show file hashes
+	JSON        bool     // -j: output as JSON
+	JSONStream  bool     // --json-stream: streaming NDJSON output
+	NoColor     bool     // --no-color: disable colors
+	Size        bool     // --size: show file sizes
+	Date        bool     // --date: show modification dates
+	MaxFiles    int      // --max-files: cap total scanned items
+	MaxHashSize int64    // --max-hash-size: skip hashing large files
+	Threads     int      // -t/--threads: parallel workers
+	Compare     []string // --compare: two JSON files to compare
+	DetectMoves bool     // --detect-moves: detect moved files in compare
 }
 
 // RunTree executes the tree command
@@ -127,6 +127,7 @@ func runCompare(w io.Writer, opts TreeOptions) error {
 	if opts.JSON {
 		enc := json.NewEncoder(w)
 		enc.SetIndent("", "  ")
+
 		if err := enc.Encode(result); err != nil {
 			return fmt.Errorf("tree compare: %w", err)
 		}

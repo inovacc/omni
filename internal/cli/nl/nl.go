@@ -2,12 +2,12 @@ package nl
 
 import (
 	"bufio"
-	"encoding/json"
 	"fmt"
 	"io"
 	"strings"
 
 	"github.com/inovacc/omni/internal/cli/input"
+	"github.com/inovacc/omni/internal/cli/output"
 )
 
 // NlOptions configures the nl command behavior
@@ -21,7 +21,7 @@ type NlOptions struct {
 	StartingNumber  int    // -v: starting line number
 	Increment       int    // -i: line number increment
 	NoRenumber      bool   // -p: do not reset line numbers at sections
-	JSON            bool   // --json: output as JSON
+	OutputFormat    output.Format // output format (text/json/table)
 }
 
 // NlLine represents a numbered line for JSON output
@@ -78,6 +78,8 @@ func RunNl(w io.Writer, r io.Reader, args []string, opts NlOptions) error {
 	}
 	defer input.CloseAll(sources)
 
+	f := output.New(w, opts.OutputFormat)
+	jsonMode := f.IsJSON()
 	lineNum := opts.StartingNumber
 
 	var jsonLines []NlLine
@@ -99,7 +101,7 @@ func RunNl(w io.Writer, r io.Reader, args []string, opts NlOptions) error {
 				shouldNumber = false
 			}
 
-			if opts.JSON {
+			if jsonMode {
 				if shouldNumber {
 					jsonLines = append(jsonLines, NlLine{Number: lineNum, Text: line})
 					lineNum += opts.Increment
@@ -122,8 +124,8 @@ func RunNl(w io.Writer, r io.Reader, args []string, opts NlOptions) error {
 		}
 	}
 
-	if opts.JSON {
-		return json.NewEncoder(w).Encode(NlResult{Lines: jsonLines, Count: len(jsonLines)})
+	if jsonMode {
+		return f.Print(NlResult{Lines: jsonLines, Count: len(jsonLines)})
 	}
 
 	return nil

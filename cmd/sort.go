@@ -26,7 +26,7 @@ With no FILE, or when FILE is -, read standard input.`,
 		opts.Check, _ = cmd.Flags().GetBool("check")
 		opts.Stable, _ = cmd.Flags().GetBool("stable")
 		opts.Output, _ = cmd.Flags().GetString("output")
-		opts.JSON, _ = cmd.Flags().GetBool("json")
+		opts.OutputFormat = getOutputOpts(cmd).GetFormat()
 
 		return text.RunSort(cmd.OutOrStdout(), cmd.InOrStdin(), args, opts)
 	},
@@ -49,5 +49,4 @@ func init() {
 	sortCmd.Flags().BoolP("check", "c", false, "check for sorted input; do not sort")
 	sortCmd.Flags().BoolP("stable", "s", false, "stabilize sort by disabling last-resort comparison")
 	sortCmd.Flags().StringP("output", "o", "", "write result to FILE instead of standard output")
-	sortCmd.Flags().Bool("json", false, "output as JSON")
 }

@@ -33,7 +33,7 @@ Examples:
 
 		opts.Count, _ = cmd.Flags().GetInt("count")
 		opts.Lower, _ = cmd.Flags().GetBool("lower")
-		opts.JSON, _ = cmd.Flags().GetBool("json")
+		opts.OutputFormat = getOutputOpts(cmd).GetFormat()
 
 		return ulid.RunULID(cmd.OutOrStdout(), opts)
 	},
@@ -44,5 +44,4 @@ func init() {
 
 	ulidCmd.Flags().IntP("count", "n", 1, "generate N ULIDs")
 	ulidCmd.Flags().BoolP("lower", "l", false, "output in lowercase")
-	ulidCmd.Flags().Bool("json", false, "output as JSON")
 }

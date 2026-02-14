@@ -7,7 +7,6 @@ import (
 
 var (
 	whichAll  bool
-	whichJSON bool
 )
 
 var whichCmd = &cobra.Command{
@@ -24,8 +23,8 @@ Examples:
 	Args: cobra.MinimumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		opts := which.WhichOptions{
-			All:  whichAll,
-			JSON: whichJSON,
+			All:          whichAll,
+			OutputFormat: getOutputOpts(cmd).GetFormat(),
 		}
 
 		return which.RunWhich(cmd.OutOrStdout(), args, opts)
@@ -36,5 +35,4 @@ func init() {
 	rootCmd.AddCommand(whichCmd)
 
 	whichCmd.Flags().BoolVarP(&whichAll, "all", "a", false, "print all matches")
-	whichCmd.Flags().BoolVar(&whichJSON, "json", false, "output as JSON")
 }
