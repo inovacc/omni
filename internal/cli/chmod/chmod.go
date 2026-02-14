@@ -120,8 +120,10 @@ func chmodFile(w io.Writer, path string, newMode fs.FileMode, isSymbolic bool, s
 }
 
 func isOctalMode(s string) bool {
+	// Treat any all-digit string as an octal mode attempt
+	// so that invalid octals like "999" produce proper errors
 	for _, c := range s {
-		if c < '0' || c > '7' {
+		if c < '0' || c > '9' {
 			return false
 		}
 	}

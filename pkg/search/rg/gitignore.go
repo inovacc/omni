@@ -165,7 +165,7 @@ func PatternToRegex(pattern string) string {
 				// ** matches any path segments
 				if i+2 < len(pattern) && pattern[i+2] == '/' {
 					// **/ at start or middle
-					result.WriteString("(?:.*(?:/|$))?")
+					result.WriteString("(?:.*/)?")
 
 					i += 3
 
@@ -242,9 +242,8 @@ func PatternToRegex(pattern string) string {
 // Returns Ignore, Include (negation), or NoMatch.
 func (gs *GitignoreSet) Match(path string, isDir bool) MatchResult {
 	// Make path relative to the base path if it's absolute
-	absPath, err := filepath.Abs(path)
-	if err == nil && gs.BasePath != "" {
-		if rel, err := filepath.Rel(gs.BasePath, absPath); err == nil {
+	if filepath.IsAbs(path) && gs.BasePath != "" {
+		if rel, err := filepath.Rel(gs.BasePath, path); err == nil {
 			path = rel
 		}
 	}
@@ -271,14 +270,11 @@ func (gi *Gitignore) Match(path string, isDir bool) MatchResult {
 
 	// Get the path relative to the gitignore base
 	relPath := path
-	if gi.BasePath != "" {
-		absPath, err := filepath.Abs(path)
+	if gi.BasePath != "" && filepath.IsAbs(path) {
+		absBase, err := filepath.Abs(gi.BasePath)
 		if err == nil {
-			absBase, err := filepath.Abs(gi.BasePath)
-			if err == nil {
-				if rel, err := filepath.Rel(absBase, absPath); err == nil {
-					relPath = filepath.ToSlash(rel)
-				}
+			if rel, err := filepath.Rel(absBase, path); err == nil {
+				relPath = filepath.ToSlash(rel)
 			}
 		}
 	}
