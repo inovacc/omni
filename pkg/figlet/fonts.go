@@ -12,6 +12,7 @@ func LoadEmbedded(name string) (*Font, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return LoadFont(data)
 }
 
@@ -23,11 +24,13 @@ func ListFonts() []string {
 	}
 
 	var names []string
+
 	for _, e := range entries {
 		name := e.Name()
 		if len(name) > 4 && name[len(name)-4:] == ".flf" {
 			names = append(names, name[:len(name)-4])
 		}
 	}
+
 	return names
 }

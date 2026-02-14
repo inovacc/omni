@@ -64,8 +64,10 @@ func (p *Pipeline) Run(ctx context.Context, in io.Reader, out io.Writer) error {
 		go func(idx int, s Stage) {
 			defer wg.Done()
 
-			var r io.Reader
-			var w io.Writer
+			var (
+				r io.Reader
+				w io.Writer
+			)
 
 			if idx == 0 {
 				r = in

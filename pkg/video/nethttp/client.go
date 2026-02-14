@@ -210,6 +210,12 @@ func (c *Client) HTTPClient() *http.Client {
 	return c.http
 }
 
+// CookieJar returns the cookie jar used by this client.
+// Extractors use this to read cookies (e.g., SAPISID for authenticated requests).
+func (c *Client) CookieJar() http.CookieJar {
+	return c.http.Jar
+}
+
 func (c *Client) setDefaults(req *http.Request) {
 	if req.Header.Get("User-Agent") == "" {
 		req.Header.Set("User-Agent", c.ua)

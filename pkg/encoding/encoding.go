@@ -18,10 +18,12 @@ func Base64Encode(data []byte) string {
 func Base64Decode(s string) ([]byte, error) {
 	// Remove whitespace
 	clean := stripWhitespace(s)
+
 	decoded, err := base64.StdEncoding.DecodeString(clean)
 	if err != nil {
 		return nil, fmt.Errorf("base64: invalid input: %w", err)
 	}
+
 	return decoded, nil
 }
 
@@ -33,10 +35,12 @@ func Base32Encode(data []byte) string {
 // Base32Decode decodes base32 data
 func Base32Decode(s string) ([]byte, error) {
 	clean := stripWhitespace(s)
+
 	decoded, err := base32.StdEncoding.DecodeString(clean)
 	if err != nil {
 		return nil, fmt.Errorf("base32: invalid input: %w", err)
 	}
+
 	return decoded, nil
 }
 
@@ -76,6 +80,7 @@ func stripWhitespace(s string) string {
 		if r == ' ' || r == '\n' || r == '\r' || r == '\t' {
 			return -1
 		}
+
 		return r
 	}, s)
 }

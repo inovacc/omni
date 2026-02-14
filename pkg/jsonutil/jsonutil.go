@@ -33,6 +33,7 @@ func QueryReader(r io.Reader, filter string) ([]byte, error) {
 	if err != nil {
 		return nil, fmt.Errorf("jsonutil: %w", err)
 	}
+
 	return Query(data, filter)
 }
 
@@ -42,6 +43,7 @@ func QueryString(jsonStr, filter string) (string, error) {
 	if err != nil {
 		return "", err
 	}
+
 	return string(result), nil
 }
 
@@ -79,6 +81,7 @@ func ApplyFilter(input any, filter string) ([]any, error) {
 		if idx, err := strconv.Atoi(indexStr); err == nil {
 			return filterArrayIndex(input, idx)
 		}
+
 		if strings.HasPrefix(indexStr, "\"") && strings.HasSuffix(indexStr, "\"") {
 			key := indexStr[1 : len(indexStr)-1]
 			return filterObjectKey(input, key)
@@ -99,12 +102,14 @@ func filterKeys(input any) ([]any, error) {
 		for k := range v {
 			keys = append(keys, k)
 		}
+
 		return []any{keys}, nil
 	case []any:
 		keys := make([]any, 0, len(v))
 		for i := range v {
 			keys = append(keys, i)
 		}
+
 		return []any{keys}, nil
 	default:
 		return nil, fmt.Errorf("cannot get keys of %T", input)
@@ -154,6 +159,7 @@ func filterIterate(input any) ([]any, error) {
 		for _, val := range v {
 			values = append(values, val)
 		}
+
 		return values, nil
 	default:
 		return nil, fmt.Errorf("cannot iterate over %T", input)
@@ -182,6 +188,7 @@ func filterObjectKey(input any, key string) ([]any, error) {
 	if !ok {
 		return nil, fmt.Errorf("cannot index %T with string", input)
 	}
+
 	return []any{obj[key]}, nil
 }
 
@@ -203,6 +210,7 @@ func filterFieldAccess(input any, path string) ([]any, error) {
 				if !ok {
 					return []any{nil}, nil
 				}
+
 				current = obj[fieldName]
 			}
 
@@ -213,12 +221,15 @@ func filterFieldAccess(input any, path string) ([]any, error) {
 					if !ok {
 						return []any{nil}, nil
 					}
+
 					if i < 0 {
 						i = len(arr) + i
 					}
+
 					if i < 0 || i >= len(arr) {
 						return []any{nil}, nil
 					}
+
 					current = arr[i]
 				}
 			}
@@ -230,6 +241,7 @@ func filterFieldAccess(input any, path string) ([]any, error) {
 		if !ok {
 			return []any{nil}, nil
 		}
+
 		current = obj[part]
 	}
 
@@ -248,11 +260,13 @@ func filterPipe(input any, filter string) ([]any, error) {
 	}
 
 	var results []any
+
 	for _, item := range intermediate {
 		r, err := ApplyFilter(item, strings.TrimSpace(parts[1]))
 		if err != nil {
 			return nil, err
 		}
+
 		results = append(results, r...)
 	}
 

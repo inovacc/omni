@@ -28,6 +28,16 @@ type Client struct {
 func New(opts ...Option) (*Client, error) {
 	o := applyOptions(opts)
 
+	// Auto-load cookies from well-known path when requested,
+	// or as fallback when no explicit cookie file is set.
+	if o.CookieFile == "" {
+		if o.CookiesFromBrowser {
+			o.CookieFile = nethttp.DefaultCookiePath()
+		} else if path := nethttp.DefaultCookiePath(); fileExists(path) {
+			o.CookieFile = path
+		}
+	}
+
 	httpOpts := nethttp.ClientOptions{
 		Proxy:      o.Proxy,
 		CookieFile: o.CookieFile,
@@ -45,6 +55,11 @@ func New(opts ...Option) (*Client, error) {
 		opts:   o,
 		client: httpClient,
 	}, nil
+}
+
+func fileExists(path string) bool {
+	_, err := os.Stat(path)
+	return err == nil
 }
 
 // Extract retrieves video metadata from the given URL.
@@ -102,6 +117,13 @@ func (c *Client) DownloadInfo(ctx context.Context, info *VideoInfo) error {
 	// Write info JSON if requested.
 	if c.opts.WriteInfo {
 		if err := c.writeInfoJSON(info, filename); err != nil {
+			return err
+		}
+	}
+
+	// Write markdown if requested.
+	if c.opts.WriteMarkdown {
+		if err := c.writeMarkdown(info, filename); err != nil {
 			return err
 		}
 	}
@@ -292,6 +314,32 @@ func (c *Client) writeInfoJSON(info *VideoInfo, videoPath string) error {
 	}
 
 	return os.WriteFile(jsonPath, data, 0o644)
+}
+
+func (c *Client) writeMarkdown(info *VideoInfo, videoPath string) error {
+	mdPath := strings.TrimSuffix(videoPath, filepath.Ext(videoPath)) + ".md"
+
+	var b strings.Builder
+
+	title := info.Title
+	if title == "" {
+		title = info.ID
+	}
+	_, _ = fmt.Fprintf(&b, "# %s\n\n", title)
+
+	link := info.WebpageURL
+	if link == "" {
+		link = info.URL
+	}
+	if link != "" {
+		_, _ = fmt.Fprintf(&b, "**Link:** [%s](%s)\n\n", link, link)
+	}
+
+	if info.Description != "" {
+		_, _ = fmt.Fprintf(&b, "## Description\n\n%s\n", info.Description)
+	}
+
+	return os.WriteFile(mdPath, []byte(b.String()), 0o644)
 }
 
 func ensureOutputDir(path string) error {

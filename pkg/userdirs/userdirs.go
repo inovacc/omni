@@ -44,6 +44,7 @@ func homeDir() (string, error) {
 
 	if runtime.GOOS == "windows" {
 		drive := os.Getenv("HOMEDRIVE")
+
 		path := os.Getenv("HOMEPATH")
 		if drive != "" && path != "" {
 			return drive + path, nil

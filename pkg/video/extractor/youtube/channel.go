@@ -172,7 +172,18 @@ func (e *YoutubeChannelExtractor) browseChannel(ctx context.Context, client *net
 
 	apiURL := InnerTubeBrowseURL(clientWeb.APIKey)
 
-	data, err := client.PostJSON(ctx, apiURL, bytes.NewReader(bodyJSON))
+	// Build headers with auth if cookies are available.
+	var sapisidHash string
+	if jar := client.CookieJar(); jar != nil {
+		origin := "https://www.youtube.com"
+		if sapisid := nethttp.ExtractSAPISID(jar, origin); sapisid != "" {
+			sapisidHash = nethttp.ComputeSAPISIDHash(sapisid, origin)
+		}
+	}
+
+	headers := InnerTubeHeaders("", clientWeb, sapisidHash)
+
+	data, err := client.PostJSON(ctx, apiURL, bytes.NewReader(bodyJSON), headers)
 	if err != nil {
 		return nil, &types.ExtractorError{
 			Extractor: "YoutubeChannel",

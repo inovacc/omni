@@ -262,7 +262,7 @@ func parseCut(args []string) (Stage, error) {
 func parseFieldSpec(spec string) ([]int, error) {
 	var fields []int
 
-	for _, part := range strings.Split(spec, ",") {
+	for part := range strings.SplitSeq(spec, ",") {
 		part = strings.TrimSpace(part)
 		if part == "" {
 			continue
@@ -330,19 +330,24 @@ func splitSedExpr(s string, delim rune) []string {
 	for _, r := range s {
 		if escaped {
 			current.WriteRune(r)
+
 			escaped = false
+
 			continue
 		}
 
 		if r == '\\' {
 			escaped = true
+
 			current.WriteRune(r)
+
 			continue
 		}
 
 		if r == delim {
 			parts = append(parts, current.String())
 			current.Reset()
+
 			continue
 		}
 
@@ -411,7 +416,9 @@ func parseCommandLine(cmdLine string) []string {
 	for _, r := range cmdLine {
 		if escaped {
 			current.WriteRune(r)
+
 			escaped = false
+
 			continue
 		}
 
@@ -426,6 +433,7 @@ func parseCommandLine(cmdLine string) []string {
 			} else {
 				current.WriteRune(r)
 			}
+
 			continue
 		}
 
@@ -439,6 +447,7 @@ func parseCommandLine(cmdLine string) []string {
 				parts = append(parts, current.String())
 				current.Reset()
 			}
+
 			continue
 		}
 

@@ -35,6 +35,7 @@ func HashFile(path string, algo Algorithm) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("hashutil: %w", err)
 	}
+
 	defer func() { _ = f.Close() }()
 
 	return HashReader(f, algo)
@@ -46,6 +47,7 @@ func HashReader(r io.Reader, algo Algorithm) (string, error) {
 	if _, err := io.Copy(h, r); err != nil {
 		return "", fmt.Errorf("hashutil: %w", err)
 	}
+
 	return hex.EncodeToString(h.Sum(nil)), nil
 }
 
@@ -53,6 +55,7 @@ func HashReader(r io.Reader, algo Algorithm) (string, error) {
 func HashString(s string, algo Algorithm) string {
 	h := newHasher(algo)
 	_, _ = io.WriteString(h, s)
+
 	return hex.EncodeToString(h.Sum(nil))
 }
 
@@ -60,6 +63,7 @@ func HashString(s string, algo Algorithm) string {
 func HashBytes(data []byte, algo Algorithm) string {
 	h := newHasher(algo)
 	_, _ = h.Write(data)
+
 	return hex.EncodeToString(h.Sum(nil))
 }
 

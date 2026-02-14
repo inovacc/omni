@@ -112,7 +112,17 @@ func (e *YoutubeExtractor) callInnerTubePlayer(ctx context.Context, client *neth
 	}
 
 	apiURL := InnerTubePlayerURL(cfg.APIKey)
-	headers := InnerTubeHeaders(videoID, cfg)
+
+	// Compute SAPISIDHASH for authenticated requests if cookies are available.
+	var sapisidHash string
+	if jar := client.CookieJar(); jar != nil {
+		origin := "https://www.youtube.com"
+		if sapisid := nethttp.ExtractSAPISID(jar, origin); sapisid != "" {
+			sapisidHash = nethttp.ComputeSAPISIDHash(sapisid, origin)
+		}
+	}
+
+	headers := InnerTubeHeaders(videoID, cfg, sapisidHash)
 	headers["User-Agent"] = cfg.UserAgent
 
 	data, err := client.PostJSON(ctx, apiURL, bytes.NewReader(bodyJSON), headers)

@@ -10,7 +10,7 @@ import (
 
 // Line represents a single line in a diff.
 type Line struct {
-	Type    rune   // ' ' for context, '-' for removed, '+' for added
+	Type    rune // ' ' for context, '-' for removed, '+' for added
 	Content string
 }
 
@@ -43,6 +43,7 @@ func ComputeDiff(lines1, lines2 []string, opts ...Option) []Hunk {
 	for _, o := range opts {
 		o(&cfg)
 	}
+
 	return computeDiff(lines1, lines2, cfg)
 }
 
@@ -74,6 +75,7 @@ func CompareJSONBytes(data1, data2 []byte) ([]string, error) {
 	if err := json.Unmarshal(data1, &j1); err != nil {
 		return nil, fmt.Errorf("diff: invalid JSON in first input: %w", err)
 	}
+
 	if err := json.Unmarshal(data2, &j2); err != nil {
 		return nil, fmt.Errorf("diff: invalid JSON in second input: %w", err)
 	}
@@ -106,6 +108,7 @@ func computeDiff(lines1, lines2 []string, opts Options) []Hunk {
 
 	// Backtrack to find diff
 	var allLines []Line
+
 	i, j := m, n
 	for i > 0 || j > 0 {
 		if i > 0 && j > 0 && lines1[i-1] == lines2[j-1] {
@@ -145,9 +148,11 @@ func groupIntoHunks(allLines []Line, opts Options) []Hunk {
 			if currentHunk == nil {
 				start1 := pos1 - len(contextBuffer)
 				start2 := pos2 - len(contextBuffer)
+
 				if start1 < 0 {
 					start1 = 0
 				}
+
 				if start2 < 0 {
 					start2 = 0
 				}
@@ -158,11 +163,13 @@ func groupIntoHunks(allLines []Line, opts Options) []Hunk {
 					Lines:  append([]Line{}, contextBuffer...),
 				}
 			}
+
 			currentHunk.Lines = append(currentHunk.Lines, line)
 		} else {
 			if currentHunk != nil {
 				currentHunk.Lines = append(currentHunk.Lines, line)
 				trailingContext := 0
+
 				for i := len(currentHunk.Lines) - 1; i >= 0; i-- {
 					if currentHunk.Lines[i].Type == ' ' {
 						trailingContext++
@@ -199,6 +206,7 @@ func groupIntoHunks(allLines []Line, opts Options) []Hunk {
 
 	if currentHunk != nil {
 		trailingContext := 0
+
 		for i := len(currentHunk.Lines) - 1; i >= 0; i-- {
 			if currentHunk.Lines[i].Type == ' ' {
 				trailingContext++
@@ -230,6 +238,7 @@ func countLines(lines []Line) (count1, count2 int) {
 			count2++
 		}
 	}
+
 	return
 }
 
@@ -244,10 +253,12 @@ func compareJSON(path string, v1, v2 any) []string {
 	switch val1 := v1.(type) {
 	case map[string]any:
 		val2 := v2.(map[string]any)
+
 		allKeys := make(map[string]bool)
 		for k := range val1 {
 			allKeys[k] = true
 		}
+
 		for k := range val2 {
 			allKeys[k] = true
 		}
@@ -257,6 +268,7 @@ func compareJSON(path string, v1, v2 any) []string {
 			if path == "" {
 				p = k
 			}
+
 			_, in1 := val1[k]
 			_, in2 := val2[k]
 
@@ -299,6 +311,7 @@ func pathOrRoot(path string) string {
 	if path == "" {
 		return "(root)"
 	}
+
 	return path
 }
 
@@ -307,5 +320,6 @@ func TruncateOrPad(s string, width int) string {
 	if len(s) > width {
 		return s[:width-1] + ">"
 	}
+
 	return s + strings.Repeat(" ", width-len(s))
 }

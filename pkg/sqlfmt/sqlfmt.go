@@ -54,6 +54,7 @@ func Format(input string, opts ...Option) string {
 	for _, o := range opts {
 		o(&cfg)
 	}
+
 	return formatSQL(input, cfg)
 }
 
@@ -92,6 +93,7 @@ func formatSQL(input string, opts Options) string {
 	tokens := tokenizeSQL(input)
 
 	var result strings.Builder
+
 	indent := 0
 	atLineStart := true
 	prevToken := ""
@@ -113,6 +115,7 @@ func formatSQL(input string, opts Options) string {
 
 		if isMajorKeyword && i > 0 && !atLineStart {
 			result.WriteString("\n")
+
 			atLineStart = true
 		}
 
@@ -134,11 +137,13 @@ func formatSQL(input string, opts Options) string {
 
 		if upper == "," {
 			result.WriteString("\n")
+
 			atLineStart = true
 		}
 
 		if upper == ";" {
 			result.WriteString("\n")
+
 			atLineStart = true
 		}
 	}
@@ -154,6 +159,7 @@ func isMajorClause(upper string) bool {
 		"INSERT", "VALUES", "UPDATE", "SET", "CREATE", "ALTER",
 		"DROP", "CASE", "WHEN", "THEN", "ELSE", "END",
 	}
+
 	return slices.Contains(clauses, upper)
 }
 
@@ -162,12 +168,15 @@ func minifySQL(input string) string {
 	tokens := tokenizeSQL(input)
 
 	var result strings.Builder
+
 	for i, token := range tokens {
 		if i > 0 && needsSpace(tokens[i-1], token) {
 			result.WriteString(" ")
 		}
+
 		result.WriteString(token)
 	}
+
 	return result.String()
 }
 
@@ -178,6 +187,7 @@ func validateSQL(input string) ValidateResult {
 	}
 
 	parenCount := 0
+
 	for _, ch := range input {
 		switch ch {
 		case '(':
@@ -185,6 +195,7 @@ func validateSQL(input string) ValidateResult {
 		case ')':
 			parenCount--
 		}
+
 		if parenCount < 0 {
 			return ValidateResult{Valid: false, Error: "unbalanced parentheses: unexpected ')'"}
 		}
@@ -225,8 +236,10 @@ func validateSQL(input string) ValidateResult {
 }
 
 func tokenizeSQL(input string) []string {
-	var tokens []string
-	var current strings.Builder
+	var (
+		tokens  []string
+		current strings.Builder
+	)
 
 	inString := false
 	stringChar := rune(0)
@@ -241,24 +254,29 @@ func tokenizeSQL(input string) []string {
 			if !inString {
 				inString = true
 				stringChar = ch
+
 				if current.Len() > 0 {
 					tokens = append(tokens, current.String())
 					current.Reset()
 				}
+
 				current.WriteRune(ch)
 			} else if ch == stringChar {
 				current.WriteRune(ch)
+
 				if i+1 < len(runes) && runes[i+1] == stringChar {
 					i++
 					current.WriteRune(runes[i])
 				} else {
 					inString = false
+
 					tokens = append(tokens, current.String())
 					current.Reset()
 				}
 			} else {
 				current.WriteRune(ch)
 			}
+
 			continue
 		}
 
@@ -271,39 +289,51 @@ func tokenizeSQL(input string) []string {
 			if ch == '-' && i+1 < len(runes) && runes[i+1] == '-' {
 				inComment = true
 				commentType = "--"
+
 				if current.Len() > 0 {
 					tokens = append(tokens, current.String())
 					current.Reset()
 				}
+
 				current.WriteString("--")
+
 				i++
+
 				continue
 			}
 
 			if ch == '/' && i+1 < len(runes) && runes[i+1] == '*' {
 				inComment = true
 				commentType = "/*"
+
 				if current.Len() > 0 {
 					tokens = append(tokens, current.String())
 					current.Reset()
 				}
+
 				current.WriteString("/*")
+
 				i++
+
 				continue
 			}
 		} else {
 			current.WriteRune(ch)
+
 			if commentType == "--" && ch == '\n' {
 				inComment = false
+
 				tokens = append(tokens, current.String())
 				current.Reset()
 			} else if commentType == "/*" && ch == '*' && i+1 < len(runes) && runes[i+1] == '/' {
 				current.WriteRune(runes[i+1])
 				i++
 				inComment = false
+
 				tokens = append(tokens, current.String())
 				current.Reset()
 			}
+
 			continue
 		}
 
@@ -321,11 +351,13 @@ func tokenizeSQL(input string) []string {
 					(ch == '|' && next == '|') {
 					tokens = append(tokens, string([]rune{ch, next}))
 					i++
+
 					continue
 				}
 			}
 
 			tokens = append(tokens, string(ch))
+
 			continue
 		}
 
@@ -334,6 +366,7 @@ func tokenizeSQL(input string) []string {
 				tokens = append(tokens, current.String())
 				current.Reset()
 			}
+
 			continue
 		}
 
@@ -361,21 +394,27 @@ func needsSpace(prev, curr string) bool {
 	if prev == "" || curr == "" {
 		return false
 	}
+
 	if prev == "(" || curr == ")" {
 		return false
 	}
+
 	if curr == "(" && isFunction(prev) {
 		return false
 	}
+
 	if curr == "," || curr == ";" {
 		return false
 	}
+
 	if prev == "," {
 		return false
 	}
+
 	if prev == "." || curr == "." {
 		return false
 	}
+
 	return true
 }
 
@@ -388,6 +427,7 @@ func isFunction(token string) bool {
 		"YEAR", "MONTH", "DAY", "HOUR", "MINUTE", "SECOND",
 		"IF", "IFNULL", "NVL", "IIF", "CASE",
 	}
+
 	return slices.Contains(functions, upper)
 }
 
@@ -400,9 +440,11 @@ func checkBalancedQuotes(s string, quote rune) bool {
 			escaped = !escaped
 			continue
 		}
+
 		if ch == quote && !escaped {
 			count++
 		}
+
 		escaped = false
 	}
 

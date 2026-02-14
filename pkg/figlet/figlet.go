@@ -49,6 +49,7 @@ func Render(text string, opts ...Option) (string, error) {
 	if err != nil {
 		return "", err
 	}
+
 	return strings.Join(lines, "\n"), nil
 }
 
@@ -62,6 +63,7 @@ func RenderLines(text string, opts ...Option) ([]string, error) {
 	f := cfg.font
 	if f == nil {
 		var err error
+
 		f, err = LoadEmbedded(cfg.fontName)
 		if err != nil {
 			return nil, fmt.Errorf("figlet: load font %q: %w", cfg.fontName, err)
@@ -82,6 +84,7 @@ func LoadFontFile(path string) (*Font, error) {
 	if err != nil {
 		return nil, fmt.Errorf("figlet: read font file: %w", err)
 	}
+
 	return LoadFont(data)
 }
 
@@ -112,6 +115,7 @@ func parseFont(data string) (*Font, error) {
 		if err != nil {
 			return nil, fmt.Errorf("figlet: char %d (%c): %w", ch, ch, err)
 		}
+
 		f.Characters[ch] = charLines
 		pos = newPos
 	}
@@ -131,10 +135,12 @@ func parseFont(data string) (*Font, error) {
 		}
 
 		pos++
+
 		charLines, newPos, err := readCharacter(lines, pos, f.Height)
 		if err != nil {
 			break
 		}
+
 		f.Characters[rune(code)] = charLines
 		pos = newPos
 	}
@@ -204,7 +210,7 @@ func readCharacter(lines []string, start, height int) ([]string, int, error) {
 	result := make([]string, 0, height)
 	pos := start
 
-	for i := 0; i < height; i++ {
+	for range height {
 		if pos >= len(lines) {
 			return nil, pos, fmt.Errorf("unexpected end of font data")
 		}

@@ -94,6 +94,7 @@ func TestQuery(t *testing.T) {
 				t.Errorf("Query() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
+
 			if !tt.wantErr {
 				gotStr := strings.TrimSpace(string(got))
 				if gotStr != tt.want {
@@ -109,6 +110,7 @@ func TestQueryString(t *testing.T) {
 	if err != nil {
 		t.Fatalf("QueryString() error = %v", err)
 	}
+
 	if got != `"hello"` {
 		t.Errorf("QueryString() = %v, want %q", got, `"hello"`)
 	}
@@ -116,10 +118,12 @@ func TestQueryString(t *testing.T) {
 
 func TestQueryReader(t *testing.T) {
 	r := strings.NewReader(`{"key":"value"}`)
+
 	got, err := QueryReader(r, ".key")
 	if err != nil {
 		t.Fatalf("QueryReader() error = %v", err)
 	}
+
 	if strings.TrimSpace(string(got)) != `"value"` {
 		t.Errorf("QueryReader() = %v", string(got))
 	}
@@ -128,17 +132,21 @@ func TestQueryReader(t *testing.T) {
 func TestApplyFilter(t *testing.T) {
 	t.Run("keys", func(t *testing.T) {
 		input := map[string]any{"a": 1, "b": 2}
+
 		results, err := ApplyFilter(input, "keys")
 		if err != nil {
 			t.Fatal(err)
 		}
+
 		if len(results) != 1 {
 			t.Fatalf("expected 1 result, got %d", len(results))
 		}
+
 		keys, ok := results[0].([]any)
 		if !ok {
 			t.Fatal("expected []any result")
 		}
+
 		if len(keys) != 2 {
 			t.Errorf("expected 2 keys, got %d", len(keys))
 		}
@@ -161,6 +169,7 @@ func TestApplyFilter(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
+
 			if results[0] != tt.want {
 				t.Errorf("type of %v = %v, want %v", tt.input, results[0], tt.want)
 			}
@@ -169,10 +178,12 @@ func TestApplyFilter(t *testing.T) {
 
 	t.Run("iterate array", func(t *testing.T) {
 		input := []any{1.0, 2.0, 3.0}
+
 		results, err := ApplyFilter(input, ".[]")
 		if err != nil {
 			t.Fatal(err)
 		}
+
 		if len(results) != 3 {
 			t.Errorf("expected 3 results, got %d", len(results))
 		}
@@ -180,10 +191,12 @@ func TestApplyFilter(t *testing.T) {
 
 	t.Run("iterate object", func(t *testing.T) {
 		input := map[string]any{"a": 1.0, "b": 2.0}
+
 		results, err := ApplyFilter(input, ".[]")
 		if err != nil {
 			t.Fatal(err)
 		}
+
 		if len(results) != 2 {
 			t.Errorf("expected 2 results, got %d", len(results))
 		}
@@ -199,10 +212,12 @@ func TestApplyFilter(t *testing.T) {
 				},
 			},
 		}
+
 		results, err := ApplyFilter(input, ".l1.l2.l3.value")
 		if err != nil {
 			t.Fatal(err)
 		}
+
 		if results[0] != "deep" {
 			t.Errorf("got %v, want deep", results[0])
 		}
@@ -212,6 +227,7 @@ func TestApplyFilter(t *testing.T) {
 func TestQueryConsistency(t *testing.T) {
 	data := []byte(`{"key":"value"}`)
 	r1, _ := Query(data, ".")
+
 	r2, _ := Query(data, ".")
 	if string(r1) != string(r2) {
 		t.Error("Query should produce consistent results")

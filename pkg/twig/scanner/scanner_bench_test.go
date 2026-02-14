@@ -10,39 +10,46 @@ import (
 
 func createBenchScanDir(b *testing.B, dirs, filesPerDir int) string {
 	b.Helper()
+
 	root := b.TempDir()
-	for d := 0; d < dirs; d++ {
+	for d := range dirs {
 		dir := filepath.Join(root, fmt.Sprintf("dir_%d", d))
 		if err := os.MkdirAll(dir, 0755); err != nil {
 			b.Fatal(err)
 		}
-		for f := 0; f < filesPerDir; f++ {
+
+		for f := range filesPerDir {
 			path := filepath.Join(dir, fmt.Sprintf("file_%d.txt", f))
+
 			data := fmt.Sprintf("content for file %d in dir %d", f, d)
 			if err := os.WriteFile(path, []byte(data), 0644); err != nil {
 				b.Fatal(err)
 			}
 		}
 	}
+
 	return root
 }
 
 func createDeepScanDir(b *testing.B, depth, filesPerLevel int) string {
 	b.Helper()
 	root := b.TempDir()
+
 	current := root
-	for d := 0; d < depth; d++ {
+	for d := range depth {
 		current = filepath.Join(current, fmt.Sprintf("level_%d", d))
 		if err := os.MkdirAll(current, 0755); err != nil {
 			b.Fatal(err)
 		}
-		for f := 0; f < filesPerLevel; f++ {
+
+		for f := range filesPerLevel {
 			path := filepath.Join(current, fmt.Sprintf("file_%d.txt", f))
 			if err := os.WriteFile(path, []byte("data"), 0644); err != nil {
 				b.Fatal(err)
 			}
 		}
 	}
+
 	return root
 }
 
@@ -53,8 +60,7 @@ func BenchmarkScan_Shallow(b *testing.B) {
 	s := NewScanner(config)
 	ctx := context.Background()
 
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		_, _ = s.Scan(ctx, root)
 	}
 }
@@ -66,8 +72,7 @@ func BenchmarkScan_Deep(b *testing.B) {
 	s := NewScanner(config)
 	ctx := context.Background()
 
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		_, _ = s.Scan(ctx, root)
 	}
 }
@@ -79,8 +84,7 @@ func BenchmarkScan_Large(b *testing.B) {
 	s := NewScanner(config)
 	ctx := context.Background()
 
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		_, _ = s.Scan(ctx, root)
 	}
 }
@@ -93,8 +97,7 @@ func BenchmarkScan_WithHash(b *testing.B) {
 	s := NewScanner(config)
 	ctx := context.Background()
 
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		_, _ = s.Scan(ctx, root)
 	}
 }
@@ -107,8 +110,7 @@ func BenchmarkScan_MaxFiles(b *testing.B) {
 	s := NewScanner(config)
 	ctx := context.Background()
 
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		_, _ = s.Scan(ctx, root)
 	}
 }
@@ -121,8 +123,7 @@ func BenchmarkScan_Parallel_2(b *testing.B) {
 	s := NewScanner(config)
 	ctx := context.Background()
 
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		_, _ = s.Scan(ctx, root)
 	}
 }
@@ -135,8 +136,7 @@ func BenchmarkScan_Parallel_4(b *testing.B) {
 	s := NewScanner(config)
 	ctx := context.Background()
 
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		_, _ = s.Scan(ctx, root)
 	}
 }
@@ -149,8 +149,7 @@ func BenchmarkScan_Parallel_8(b *testing.B) {
 	s := NewScanner(config)
 	ctx := context.Background()
 
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		_, _ = s.Scan(ctx, root)
 	}
 }
@@ -163,8 +162,7 @@ func BenchmarkScan_Sequential(b *testing.B) {
 	s := NewScanner(config)
 	ctx := context.Background()
 
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		_, _ = s.Scan(ctx, root)
 	}
 }
@@ -177,8 +175,7 @@ func BenchmarkScan_DirsOnly(b *testing.B) {
 	s := NewScanner(config)
 	ctx := context.Background()
 
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		_, _ = s.Scan(ctx, root)
 	}
 }

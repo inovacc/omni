@@ -36,10 +36,10 @@ type ScanConfig struct {
 	ShowHidden     bool
 	IgnorePatterns []string
 	DirsOnly       bool
-	ShowHash       bool // Calculate file hashes
-	MaxFiles       int  // Cap total scanned items (0 = unlimited)
-	MaxHashSize    int64           // Skip hashing files larger than N bytes (0 = unlimited)
-	Parallel       int             // Worker count (0 = runtime.NumCPU(), 1 = sequential)
+	ShowHash       bool              // Calculate file hashes
+	MaxFiles       int               // Cap total scanned items (0 = unlimited)
+	MaxHashSize    int64             // Skip hashing files larger than N bytes (0 = unlimited)
+	Parallel       int               // Worker count (0 = runtime.NumCPU(), 1 = sequential)
 	OnProgress     func(scanned int) // Optional progress callback
 }
 
@@ -118,6 +118,7 @@ func (s *Scanner) Scan(ctx context.Context, rootPath string) (*models.Node, erro
 				if errors.Is(err, ErrMaxFilesReached) {
 					return root, err
 				}
+
 				return nil, err
 			}
 		} else {
@@ -125,6 +126,7 @@ func (s *Scanner) Scan(ctx context.Context, rootPath string) (*models.Node, erro
 				if errors.Is(err, ErrMaxFilesReached) {
 					return root, err
 				}
+
 				return nil, err
 			}
 		}
@@ -284,27 +286,24 @@ func (s *Scanner) scanDirParallel(ctx context.Context, root *models.Node, worker
 	for _, d := range dirs {
 		workCh <- d
 	}
+
 	close(workCh)
 
 	var wg sync.WaitGroup
+
 	errCh := make(chan error, workers)
 
-	numWorkers := workers
-	if numWorkers > len(dirs) {
-		numWorkers = len(dirs)
-	}
+	numWorkers := min(workers, len(dirs))
 
 	for range numWorkers {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
+		wg.Go(func() {
 			for work := range workCh {
 				if err := s.scanDir(ctx, work.node, 1); err != nil {
 					errCh <- err
 					return
 				}
 			}
-		}()
+		})
 	}
 
 	wg.Wait()
@@ -347,6 +346,7 @@ func (s *Scanner) calculateFileHash(filePath string) (string, error) {
 	if err != nil {
 		return "", err
 	}
+
 	defer func() { _ = file.Close() }()
 
 	hasher := sha256.New()

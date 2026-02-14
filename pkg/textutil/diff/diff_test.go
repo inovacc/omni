@@ -9,6 +9,7 @@ import (
 func TestComputeDiff(t *testing.T) {
 	t.Run("identical", func(t *testing.T) {
 		lines := []string{"a", "b", "c"}
+
 		hunks := ComputeDiff(lines, lines)
 		if len(hunks) != 0 {
 			t.Errorf("expected no hunks for identical input, got %d", len(hunks))
@@ -18,6 +19,7 @@ func TestComputeDiff(t *testing.T) {
 	t.Run("single change", func(t *testing.T) {
 		lines1 := []string{"a", "b", "c"}
 		lines2 := []string{"a", "x", "c"}
+
 		hunks := ComputeDiff(lines1, lines2)
 		if len(hunks) == 0 {
 			t.Error("expected hunks for different input")
@@ -27,6 +29,7 @@ func TestComputeDiff(t *testing.T) {
 	t.Run("added lines", func(t *testing.T) {
 		lines1 := []string{"a", "b"}
 		lines2 := []string{"a", "b", "c", "d"}
+
 		hunks := ComputeDiff(lines1, lines2)
 		if len(hunks) == 0 {
 			t.Error("expected hunks for added lines")
@@ -36,6 +39,7 @@ func TestComputeDiff(t *testing.T) {
 	t.Run("removed lines", func(t *testing.T) {
 		lines1 := []string{"a", "b", "c"}
 		lines2 := []string{"a"}
+
 		hunks := ComputeDiff(lines1, lines2)
 		if len(hunks) == 0 {
 			t.Error("expected hunks for removed lines")
@@ -59,6 +63,7 @@ func TestComputeDiff(t *testing.T) {
 	t.Run("with context option", func(t *testing.T) {
 		lines1 := []string{"a", "b", "c", "d", "e"}
 		lines2 := []string{"a", "b", "X", "d", "e"}
+
 		hunks := ComputeDiff(lines1, lines2, WithContext(1))
 		if len(hunks) == 0 {
 			t.Error("expected hunks")
@@ -78,9 +83,11 @@ func TestFormatUnified(t *testing.T) {
 	if !strings.Contains(output, "--- a.txt") {
 		t.Error("expected --- header")
 	}
+
 	if !strings.Contains(output, "+++ b.txt") {
 		t.Error("expected +++ header")
 	}
+
 	if !strings.Contains(output, "@@") {
 		t.Error("expected @@ hunk header")
 	}
@@ -89,6 +96,7 @@ func TestFormatUnified(t *testing.T) {
 func TestFormatUnifiedEmpty(t *testing.T) {
 	var buf bytes.Buffer
 	FormatUnified(&buf, "a.txt", "b.txt", nil)
+
 	if buf.Len() != 0 {
 		t.Error("expected empty output for nil hunks")
 	}
@@ -97,6 +105,7 @@ func TestFormatUnifiedEmpty(t *testing.T) {
 func TestCompareJSON(t *testing.T) {
 	t.Run("identical", func(t *testing.T) {
 		v := map[string]any{"a": float64(1)}
+
 		diffs := CompareJSON(v, v)
 		if len(diffs) != 0 {
 			t.Errorf("expected no diffs, got %v", diffs)
@@ -106,10 +115,12 @@ func TestCompareJSON(t *testing.T) {
 	t.Run("value change", func(t *testing.T) {
 		v1 := map[string]any{"a": float64(1)}
 		v2 := map[string]any{"a": float64(2)}
+
 		diffs := CompareJSON(v1, v2)
 		if len(diffs) == 0 {
 			t.Error("expected diffs for value change")
 		}
+
 		if !strings.Contains(diffs[0], "~") {
 			t.Errorf("expected ~ prefix, got %v", diffs[0])
 		}
@@ -120,11 +131,13 @@ func TestCompareJSON(t *testing.T) {
 		v2 := map[string]any{"a": float64(1), "b": float64(2)}
 		diffs := CompareJSON(v1, v2)
 		found := false
+
 		for _, d := range diffs {
 			if strings.Contains(d, "+ b") {
 				found = true
 			}
 		}
+
 		if !found {
 			t.Errorf("expected + b diff, got %v", diffs)
 		}
@@ -135,11 +148,13 @@ func TestCompareJSON(t *testing.T) {
 		v2 := map[string]any{"a": float64(1)}
 		diffs := CompareJSON(v1, v2)
 		found := false
+
 		for _, d := range diffs {
 			if strings.Contains(d, "- b") {
 				found = true
 			}
 		}
+
 		if !found {
 			t.Errorf("expected - b diff, got %v", diffs)
 		}
@@ -148,6 +163,7 @@ func TestCompareJSON(t *testing.T) {
 	t.Run("type mismatch", func(t *testing.T) {
 		v1 := map[string]any{"a": float64(1)}
 		v2 := "string"
+
 		diffs := CompareJSON(v1, v2)
 		if len(diffs) == 0 {
 			t.Error("expected type mismatch diff")
@@ -157,6 +173,7 @@ func TestCompareJSON(t *testing.T) {
 	t.Run("array diff", func(t *testing.T) {
 		v1 := []any{float64(1), float64(2)}
 		v2 := []any{float64(1), float64(3)}
+
 		diffs := CompareJSON(v1, v2)
 		if len(diffs) == 0 {
 			t.Error("expected array diff")
@@ -170,6 +187,7 @@ func TestCompareJSONBytes(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
+
 		if len(diffs) != 0 {
 			t.Errorf("expected no diffs, got %v", diffs)
 		}
@@ -180,6 +198,7 @@ func TestCompareJSONBytes(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
+
 		if len(diffs) == 0 {
 			t.Error("expected diffs")
 		}
@@ -241,6 +260,7 @@ func TestPathOrRoot(t *testing.T) {
 	if pathOrRoot("") != "(root)" {
 		t.Error("empty path should return (root)")
 	}
+
 	if pathOrRoot("a.b") != "a.b" {
 		t.Error("non-empty path should return as-is")
 	}

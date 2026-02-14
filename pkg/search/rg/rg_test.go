@@ -26,12 +26,15 @@ func TestParsePattern(t *testing.T) {
 			if p == nil {
 				t.Fatal("ParsePattern() returned nil")
 			}
+
 			if p.Negation != tt.negation {
 				t.Errorf("Negation = %v, want %v", p.Negation, tt.negation)
 			}
+
 			if p.DirOnly != tt.dirOnly {
 				t.Errorf("DirOnly = %v, want %v", p.DirOnly, tt.dirOnly)
 			}
+
 			if p.Anchored != tt.anchored {
 				t.Errorf("Anchored = %v, want %v", p.Anchored, tt.anchored)
 			}
@@ -60,6 +63,7 @@ func TestPatternToRegex(t *testing.T) {
 			if p == nil {
 				t.Fatal("ParsePattern() returned nil")
 			}
+
 			got := p.Regex.MatchString(tt.input)
 			if got != tt.match {
 				t.Errorf("MatchString(%q) = %v, want %v (regex: %s)", tt.input, got, tt.match, p.Regex.String())
@@ -133,6 +137,7 @@ func TestGitignoreSetShouldIgnore(t *testing.T) {
 	if !gs.ShouldIgnore("test.log", false) {
 		t.Error("ShouldIgnore() should return true for *.log")
 	}
+
 	if gs.ShouldIgnore("main.go", false) {
 		t.Error("ShouldIgnore() should return false for *.go")
 	}

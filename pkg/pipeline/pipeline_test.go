@@ -9,6 +9,7 @@ import (
 
 func TestPipelineEmpty(t *testing.T) {
 	p := New()
+
 	var buf bytes.Buffer
 
 	err := p.Run(context.Background(), strings.NewReader("hello\n"), &buf)
@@ -23,9 +24,11 @@ func TestPipelineEmpty(t *testing.T) {
 
 func TestPipelineSingleStage(t *testing.T) {
 	p := New(&Grep{Pattern: "error"})
+
 	var buf bytes.Buffer
 
 	input := "error one\ninfo two\nerror three\n"
+
 	err := p.Run(context.Background(), strings.NewReader(input), &buf)
 	if err != nil {
 		t.Fatal(err)
@@ -215,6 +218,7 @@ func TestPipelineMultiStage(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			p := New(tt.stages...)
+
 			var buf bytes.Buffer
 
 			err := p.Run(context.Background(), strings.NewReader(tt.input), &buf)
@@ -243,6 +247,7 @@ func TestPipelineContextCancel(t *testing.T) {
 	cancel() // Cancel immediately
 
 	p := New(&Grep{Pattern: "x"})
+
 	var buf bytes.Buffer
 
 	err := p.Run(ctx, strings.NewReader("x\ny\nz\n"), &buf)
@@ -290,6 +295,7 @@ func TestHeadDrainsInput(t *testing.T) {
 	// Ensure head doesn't cause broken pipe errors upstream
 	input := strings.Repeat("line\n", 10000)
 	p := New(&Head{N: 5})
+
 	var buf bytes.Buffer
 
 	err := p.Run(context.Background(), strings.NewReader(input), &buf)
