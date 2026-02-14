@@ -2,12 +2,12 @@ package htmlfmt
 
 import (
 	"bufio"
-	"encoding/json"
 	"fmt"
 	"io"
 	"os"
 	"strings"
 
+	"github.com/inovacc/omni/internal/cli/output"
 	pkghtml "github.com/inovacc/omni/pkg/htmlfmt"
 )
 
@@ -20,7 +20,7 @@ type Options struct {
 
 // ValidateOptions configures HTML validation
 type ValidateOptions struct {
-	JSON bool // Output as JSON
+	OutputFormat output.Format // Output format
 }
 
 // ValidateResult is an alias for the pkg type
@@ -41,9 +41,11 @@ func Run(w io.Writer, r io.Reader, args []string, opts Options) error {
 		if opts.Indent != "" {
 			pkgOpts = append(pkgOpts, pkghtml.WithIndent(opts.Indent))
 		}
+
 		if opts.SortAttrs {
 			pkgOpts = append(pkgOpts, pkghtml.WithSortAttrs())
 		}
+
 		output, err = pkghtml.Format(input, pkgOpts...)
 	}
 
@@ -71,11 +73,9 @@ func RunValidate(w io.Writer, r io.Reader, args []string, opts ValidateOptions) 
 
 	result := pkghtml.Validate(input)
 
-	if opts.JSON {
-		enc := json.NewEncoder(w)
-		enc.SetIndent("", "  ")
-
-		return enc.Encode(result)
+	f := output.New(w, opts.OutputFormat)
+	if f.IsJSON() {
+		return f.Print(result)
 	}
 
 	if result.Valid {

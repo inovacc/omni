@@ -2,12 +2,12 @@ package sqlfmt
 
 import (
 	"bufio"
-	"encoding/json"
 	"fmt"
 	"io"
 	"os"
 	"strings"
 
+	"github.com/inovacc/omni/internal/cli/output"
 	pkgsql "github.com/inovacc/omni/pkg/sqlfmt"
 )
 
@@ -21,8 +21,8 @@ type Options struct {
 
 // ValidateOptions configures SQL validation
 type ValidateOptions struct {
-	JSON    bool   // Output as JSON
-	Dialect string // SQL dialect
+	OutputFormat output.Format // Output format
+	Dialect      string        // SQL dialect
 }
 
 // ValidateResult represents validation output
@@ -47,9 +47,11 @@ func Run(w io.Writer, r io.Reader, args []string, opts Options) error {
 		if opts.Indent != "" {
 			pkgOpts = append(pkgOpts, pkgsql.WithIndent(opts.Indent))
 		}
+
 		if opts.Uppercase {
 			pkgOpts = append(pkgOpts, pkgsql.WithUppercase())
 		}
+
 		output = pkgsql.Format(input, pkgOpts...)
 	}
 
@@ -79,11 +81,9 @@ func RunValidate(w io.Writer, r io.Reader, args []string, opts ValidateOptions) 
 		Message: pkgResult.Message,
 	}
 
-	if opts.JSON {
-		enc := json.NewEncoder(w)
-		enc.SetIndent("", "  ")
-
-		return enc.Encode(result)
+	f := output.New(w, opts.OutputFormat)
+	if f.IsJSON() {
+		return f.Print(result)
 	}
 
 	if result.Valid {

@@ -7,6 +7,8 @@ import (
 	"io"
 	"os"
 	"sort"
+
+	"github.com/inovacc/omni/internal/cli/output"
 )
 
 // Options configures the json format command behavior
@@ -16,7 +18,7 @@ type Options struct {
 	SortKeys   bool   // -s: sort object keys
 	Validate   bool   // -v: validate only, don't output
 	EscapeHTML bool   // -e: escape HTML characters
-	JSON       bool   // --json: output result as JSON (for validate mode)
+	OutputFormat output.Format // output format (for validate mode)
 	Tab        bool   // -t: use tabs for indentation
 }
 
@@ -38,8 +40,11 @@ func RunJSONFmt(w io.Writer, args []string, opts Options) error {
 		}
 	}
 
+	f := output.New(w, opts.OutputFormat)
+	jsonMode := f.IsJSON()
+
 	if len(args) == 0 {
-		return processReader(w, os.Stdin, "<stdin>", opts)
+		return processReader(w, os.Stdin, "<stdin>", opts, jsonMode, f)
 	}
 
 	for _, file := range args {
@@ -48,21 +53,21 @@ func RunJSONFmt(w io.Writer, args []string, opts Options) error {
 			r = os.Stdin
 			file = "<stdin>"
 		} else {
-			f, err := os.Open(file)
+			opened, err := os.Open(file)
 			if err != nil {
-				if opts.Validate && opts.JSON {
-					return json.NewEncoder(w).Encode(Result{Valid: false, Error: err.Error(), File: file})
+				if opts.Validate && jsonMode {
+					return f.Print(Result{Valid: false, Error: err.Error(), File: file})
 				}
 
 				return fmt.Errorf("json: %w", err)
 			}
 
-			defer func() { _ = f.Close() }()
+			defer func() { _ = opened.Close() }()
 
-			r = f
+			r = opened
 		}
 
-		if err := processReader(w, r, file, opts); err != nil {
+		if err := processReader(w, r, file, opts, jsonMode, f); err != nil {
 			return err
 		}
 	}
@@ -70,11 +75,11 @@ func RunJSONFmt(w io.Writer, args []string, opts Options) error {
 	return nil
 }
 
-func processReader(w io.Writer, r io.Reader, filename string, opts Options) error {
+func processReader(w io.Writer, r io.Reader, filename string, opts Options, jsonMode bool, f *output.Formatter) error {
 	data, err := io.ReadAll(r)
 	if err != nil {
-		if opts.Validate && opts.JSON {
-			return json.NewEncoder(w).Encode(Result{Valid: false, Error: err.Error(), File: filename})
+		if opts.Validate && jsonMode {
+			return f.Print(Result{Valid: false, Error: err.Error(), File: filename})
 		}
 
 		return fmt.Errorf("json: %w", err)
@@ -84,8 +89,8 @@ func processReader(w io.Writer, r io.Reader, filename string, opts Options) erro
 	var v any
 	if err := json.Unmarshal(data, &v); err != nil {
 		if opts.Validate {
-			if opts.JSON {
-				return json.NewEncoder(w).Encode(Result{Valid: false, Error: err.Error(), File: filename})
+			if jsonMode {
+				return f.Print(Result{Valid: false, Error: err.Error(), File: filename})
 			}
 
 			return fmt.Errorf("%s: invalid JSON: %w", filename, err)
@@ -96,8 +101,8 @@ func processReader(w io.Writer, r io.Reader, filename string, opts Options) erro
 
 	// Validate only mode
 	if opts.Validate {
-		if opts.JSON {
-			return json.NewEncoder(w).Encode(Result{Valid: true, File: filename})
+		if jsonMode {
+			return f.Print(Result{Valid: true, File: filename})
 		}
 
 		_, _ = fmt.Fprintf(w, "%s: valid JSON\n", filename)

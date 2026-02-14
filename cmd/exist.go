@@ -3,8 +3,8 @@ package cmd
 import (
 	"errors"
 	"io"
-	"os"
 
+	"github.com/inovacc/omni/internal/cli/cmderr"
 	"github.com/inovacc/omni/internal/cli/exist"
 	"github.com/spf13/cobra"
 )
@@ -101,7 +101,7 @@ func runExist(cmd *cobra.Command, args []string, fn existRunFunc) error {
 
 	err := fn(cmd.OutOrStdout(), args[0], opts)
 	if errors.Is(err, exist.ErrNotFound) {
-		os.Exit(1)
+		return cmderr.ErrNotFound
 	}
 
 	return err

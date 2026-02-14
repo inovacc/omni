@@ -1,27 +1,27 @@
 package hash
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"os"
 	"path/filepath"
 	"strings"
 
+	"github.com/inovacc/omni/internal/cli/output"
 	"github.com/inovacc/omni/pkg/hashutil"
 )
 
 // HashOptions configures the hash command behavior
 type HashOptions struct {
-	Algorithm string // md5, sha1, sha256, sha512
-	Check     bool   // -c: read checksums from FILE and check them
-	Binary    bool   // -b: read in binary mode
-	Text      bool   // -t: read in text mode (default)
-	Quiet     bool   // --quiet: don't print OK for each verified file
-	Status    bool   // --status: don't output anything, status code shows success
-	Warn      bool   // -w: warn about improperly formatted checksum lines
-	Recursive bool   // -r: hash files recursively in directories
-	JSON      bool   // --json: output as JSON
+	Algorithm    string        // md5, sha1, sha256, sha512
+	Check        bool          // -c: read checksums from FILE and check them
+	Binary       bool          // -b: read in binary mode
+	Text         bool          // -t: read in text mode (default)
+	Quiet        bool          // --quiet: don't print OK for each verified file
+	Status       bool          // --status: don't output anything, status code shows success
+	Warn         bool          // -w: warn about improperly formatted checksum lines
+	Recursive    bool          // -r: hash files recursively in directories
+	OutputFormat output.Format // output format (text, json, table)
 }
 
 // HashResult represents the result of hashing a file
@@ -53,6 +53,9 @@ func RunHash(w io.Writer, args []string, opts HashOptions) error {
 
 func computeHashes(w io.Writer, args []string, opts HashOptions) error {
 	algo := hashutil.Algorithm(opts.Algorithm)
+	f := output.New(w, opts.OutputFormat)
+	jsonMode := f.IsJSON()
+
 	var results []HashResult
 
 	if len(args) == 0 {
@@ -62,9 +65,9 @@ func computeHashes(w io.Writer, args []string, opts HashOptions) error {
 			return fmt.Errorf("hash: %w", err)
 		}
 
-		if opts.JSON {
+		if jsonMode {
 			results = append(results, HashResult{Path: "-", Hash: hashStr, Algorithm: opts.Algorithm})
-			return json.NewEncoder(w).Encode(HashesResult{Hashes: results, Count: len(results)})
+			return f.Print(HashesResult{Hashes: results, Count: len(results)})
 		}
 
 		_, _ = fmt.Fprintf(w, "%s  -\n", hashStr)
@@ -87,7 +90,7 @@ func computeHashes(w io.Writer, args []string, opts HashOptions) error {
 					}
 
 					if !d.IsDir() {
-						if opts.JSON {
+						if jsonMode {
 							result, hashErr := hashFileResult(p, opts)
 							if hashErr == nil {
 								results = append(results, result)
@@ -111,7 +114,7 @@ func computeHashes(w io.Writer, args []string, opts HashOptions) error {
 			continue
 		}
 
-		if opts.JSON {
+		if jsonMode {
 			result, hashErr := hashFileResult(path, opts)
 			if hashErr == nil {
 				results = append(results, result)
@@ -125,8 +128,8 @@ func computeHashes(w io.Writer, args []string, opts HashOptions) error {
 		}
 	}
 
-	if opts.JSON {
-		return json.NewEncoder(w).Encode(HashesResult{Hashes: results, Count: len(results)})
+	if jsonMode {
+		return f.Print(HashesResult{Hashes: results, Count: len(results)})
 	}
 
 	return nil
@@ -184,6 +187,7 @@ func verifyChecksums(w io.Writer, args []string, opts HashOptions) error {
 	}
 
 	algo := hashutil.Algorithm(opts.Algorithm)
+
 	var failed, notFound, malformed int
 
 	for _, checksumFile := range args {

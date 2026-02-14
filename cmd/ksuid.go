@@ -29,7 +29,7 @@ Examples:
 		opts := ksuid.Options{}
 
 		opts.Count, _ = cmd.Flags().GetInt("count")
-		opts.JSON, _ = cmd.Flags().GetBool("json")
+		opts.OutputFormat = getOutputOpts(cmd).GetFormat()
 
 		return ksuid.RunKSUID(cmd.OutOrStdout(), opts)
 	},
@@ -39,5 +39,4 @@ func init() {
 	rootCmd.AddCommand(ksuidCmd)
 
 	ksuidCmd.Flags().IntP("count", "n", 1, "generate N KSUIDs")
-	ksuidCmd.Flags().Bool("json", false, "output as JSON")
 }

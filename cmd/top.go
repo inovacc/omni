@@ -27,14 +27,13 @@ Examples:
 	RunE: func(cmd *cobra.Command, args []string) error {
 		n, _ := cmd.Flags().GetInt("num")
 		sortBy, _ := cmd.Flags().GetString("sort")
-		jsonOutput, _ := cmd.Flags().GetBool("json")
 		goOnly, _ := cmd.Flags().GetBool("go")
 
 		opts := ps.Options{
-			All:    true,
-			JSON:   jsonOutput,
-			GoOnly: goOnly,
-			Sort:   sortBy,
+			All:          true,
+			OutputFormat: getOutputOpts(cmd).GetFormat(),
+			GoOnly:       goOnly,
+			Sort:         sortBy,
 		}
 
 		if opts.Sort == "" {
@@ -50,6 +49,6 @@ func init() {
 
 	topCmd.Flags().IntP("num", "n", 10, "number of processes to show")
 	topCmd.Flags().String("sort", "cpu", "sort by column: cpu, mem, pid")
-	topCmd.Flags().BoolP("json", "j", false, "output as JSON")
+
 	topCmd.Flags().Bool("go", false, "show only Go processes")
 }

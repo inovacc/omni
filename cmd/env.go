@@ -17,7 +17,7 @@ If no NAME is specified, print all environment variables.`,
 		opts.NullTerminated, _ = cmd.Flags().GetBool("null")
 		opts.Unset, _ = cmd.Flags().GetString("unset")
 		opts.Ignore, _ = cmd.Flags().GetBool("ignore-environment")
-		opts.JSON, _ = cmd.Flags().GetBool("json")
+		opts.OutputFormat = getOutputOpts(cmd).GetFormat()
 
 		return env.RunEnv(cmd.OutOrStdout(), args, opts)
 	},
@@ -29,5 +29,5 @@ func init() {
 	envCmd.Flags().BoolP("null", "0", false, "end each output line with NUL, not newline")
 	envCmd.Flags().StringP("unset", "u", "", "remove variable from the environment")
 	envCmd.Flags().BoolP("ignore-environment", "i", false, "start with an empty environment")
-	envCmd.Flags().Bool("json", false, "output in JSON format")
+
 }

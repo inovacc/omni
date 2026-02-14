@@ -15,7 +15,7 @@ If specified, also remove a trailing SUFFIX.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		opts := basename.BasenameOptions{}
 		opts.Suffix, _ = cmd.Flags().GetString("suffix")
-		opts.JSON, _ = cmd.Flags().GetBool("json")
+		opts.OutputFormat = getOutputOpts(cmd).GetFormat()
 
 		// Handle suffix from positional argument (traditional usage)
 		names := args
@@ -32,5 +32,4 @@ func init() {
 	rootCmd.AddCommand(basenameCmd)
 
 	basenameCmd.Flags().StringP("suffix", "s", "", "remove a trailing SUFFIX")
-	basenameCmd.Flags().Bool("json", false, "output as JSON")
 }

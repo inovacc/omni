@@ -10,7 +10,6 @@ var (
 	fileMimeType  bool
 	fileNoDeref   bool
 	fileSeparator string
-	fileJSON      bool
 )
 
 var fileCmd = &cobra.Command{
@@ -31,11 +30,11 @@ Examples:
 	Args: cobra.MinimumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		opts := file.FileOptions{
-			Brief:     fileBrief,
-			MimeType:  fileMimeType,
-			NoDeref:   fileNoDeref,
-			Separator: fileSeparator,
-			JSON:      fileJSON,
+			Brief:        fileBrief,
+			MimeType:     fileMimeType,
+			NoDeref:      fileNoDeref,
+			Separator:    fileSeparator,
+			OutputFormat: getOutputOpts(cmd).GetFormat(),
 		}
 
 		return file.RunFile(cmd.OutOrStdout(), args, opts)
@@ -49,5 +48,4 @@ func init() {
 	fileCmd.Flags().BoolVarP(&fileMimeType, "mime", "i", false, "output MIME type")
 	fileCmd.Flags().BoolVarP(&fileNoDeref, "no-dereference", "L", false, "don't follow symlinks")
 	fileCmd.Flags().StringVarP(&fileSeparator, "separator", "F", ":", "use string as separator")
-	fileCmd.Flags().BoolVar(&fileJSON, "json", false, "output as JSON")
 }

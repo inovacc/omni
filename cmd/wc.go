@@ -25,7 +25,7 @@ the following order: newline, word, character, byte, maximum line length.`,
 		opts.Bytes, _ = cmd.Flags().GetBool("bytes")
 		opts.Chars, _ = cmd.Flags().GetBool("chars")
 		opts.MaxLineLen, _ = cmd.Flags().GetBool("max-line-length")
-		opts.JSON, _ = cmd.Flags().GetBool("json")
+		opts.OutputFormat = getOutputOpts(cmd).GetFormat()
 
 		return wc.RunWC(cmd.OutOrStdout(), cmd.InOrStdin(), args, opts)
 	},
@@ -39,5 +39,4 @@ func init() {
 	wcCmd.Flags().BoolP("bytes", "c", false, "print the byte counts")
 	wcCmd.Flags().BoolP("chars", "m", false, "print the character counts")
 	wcCmd.Flags().BoolP("max-line-length", "L", false, "print the maximum display width")
-	wcCmd.Flags().Bool("json", false, "output in JSON format")
 }

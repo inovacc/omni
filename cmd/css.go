@@ -91,7 +91,7 @@ Examples:
   omni css validate --json file.css`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		opts := cssfmt.ValidateOptions{}
-		opts.JSON, _ = cmd.Flags().GetBool("json")
+		opts.OutputFormat = getOutputOpts(cmd).GetFormat()
 
 		return cssfmt.RunValidate(cmd.OutOrStdout(), cmd.InOrStdin(), args, opts)
 	},
@@ -113,6 +113,5 @@ func init() {
 	cssFmtCmd.Flags().Bool("sort-props", false, "sort properties alphabetically")
 	cssFmtCmd.Flags().Bool("sort-rules", false, "sort selectors alphabetically")
 
-	// css validate flags
-	cssValidateCmd.Flags().Bool("json", false, "output as JSON")
+	// css validate flags (--json provided by root persistent flag)
 }

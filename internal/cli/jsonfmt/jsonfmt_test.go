@@ -6,6 +6,8 @@ import (
 	"slices"
 	"strings"
 	"testing"
+
+	"github.com/inovacc/omni/internal/cli/output"
 )
 
 func TestBeautify(t *testing.T) {
@@ -226,7 +228,7 @@ func TestRunJSONFmt(t *testing.T) {
 	// Create a temp file-like reader
 	opts := Options{SortKeys: true}
 
-	err := processReader(&buf, reader, "<test>", opts)
+	err := processReader(&buf, reader, "<test>", opts, false, output.NewText(&buf))
 	if err != nil {
 		t.Fatalf("processReader() error = %v", err)
 	}
@@ -247,7 +249,7 @@ func TestRunJSONFmtMinify(t *testing.T) {
 
 	opts := Options{Minify: true}
 
-	err := processReader(&buf, reader, "<test>", opts)
+	err := processReader(&buf, reader, "<test>", opts, false, output.NewText(&buf))
 	if err != nil {
 		t.Fatalf("processReader() error = %v", err)
 	}
@@ -266,7 +268,7 @@ func TestRunJSONFmtValidate(t *testing.T) {
 
 	opts := Options{Validate: true}
 
-	err := processReader(&buf, reader, "<test>", opts)
+	err := processReader(&buf, reader, "<test>", opts, false, output.NewText(&buf))
 	if err != nil {
 		t.Fatalf("processReader() error = %v", err)
 	}
@@ -285,7 +287,7 @@ func TestRunJSONFmtValidateInvalid(t *testing.T) {
 
 	opts := Options{Validate: true}
 
-	err := processReader(&buf, reader, "<test>", opts)
+	err := processReader(&buf, reader, "<test>", opts, false, output.NewText(&buf))
 	// Invalid JSON in validate mode should return an error (non-zero exit code)
 	if err == nil {
 		t.Fatalf("processReader() should return error for invalid JSON")
@@ -302,9 +304,9 @@ func TestRunJSONFmtValidateJSON(t *testing.T) {
 	input := `{"valid": true}`
 	reader := strings.NewReader(input)
 
-	opts := Options{Validate: true, JSON: true}
+	opts := Options{Validate: true, OutputFormat: output.FormatJSON}
 
-	err := processReader(&buf, reader, "<test>", opts)
+	err := processReader(&buf, reader, "<test>", opts, true, output.NewJSON(&buf))
 	if err != nil {
 		t.Fatalf("processReader() error = %v", err)
 	}

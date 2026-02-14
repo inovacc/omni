@@ -6,6 +6,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/inovacc/omni/internal/cli/output"
 )
 
 func TestRun(t *testing.T) {
@@ -130,7 +132,7 @@ func TestRun(t *testing.T) {
 	t.Run("JSON output", func(t *testing.T) {
 		var buf bytes.Buffer
 
-		err := Run(&buf, []string{tmpDir}, Options{JSON: true})
+		err := Run(&buf, []string{tmpDir}, Options{OutputFormat: output.FormatJSON})
 		if err != nil {
 			t.Fatalf("Run() error = %v", err)
 		}

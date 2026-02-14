@@ -1,13 +1,14 @@
 package testcheck
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"os"
 	"path/filepath"
 	"sort"
 	"strings"
+
+	"github.com/inovacc/omni/internal/cli/output"
 )
 
 // PackageStatus represents the test status of a package.
@@ -30,7 +31,7 @@ type Result struct {
 
 // Options configure the testcheck behavior.
 type Options struct {
-	JSON    bool // Output as JSON
+	OutputFormat output.Format // output format
 	ShowAll bool // Show all packages (default shows only missing)
 	Summary bool // Show only summary
 	Verbose bool // Show test file names
@@ -138,11 +139,9 @@ func Check(dir string) (*Result, error) {
 }
 
 func printResult(w io.Writer, result *Result, opts Options) error {
-	if opts.JSON {
-		enc := json.NewEncoder(w)
-		enc.SetIndent("", "  ")
-
-		return enc.Encode(result)
+	f := output.New(w, opts.OutputFormat)
+	if f.IsJSON() {
+		return f.Print(result)
 	}
 
 	if opts.Summary {

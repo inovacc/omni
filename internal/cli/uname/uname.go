@@ -1,12 +1,13 @@
 package uname
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"os"
 	"runtime"
 	"strings"
+
+	"github.com/inovacc/omni/internal/cli/output"
 )
 
 // UnameOptions configures the uname command behavior
@@ -20,7 +21,7 @@ type UnameOptions struct {
 	Processor        bool // -p: print the processor type
 	HardwarePlatform bool // -i: print the hardware platform
 	OperatingSystem  bool // -o: print the operating system
-	JSON             bool // --json: output as JSON
+	OutputFormat output.Format // output format (text/json/table)
 }
 
 // UnameInfo contains system information
@@ -91,8 +92,9 @@ func RunUname(w io.Writer, opts UnameOptions) error {
 		parts = append(parts, info.OperatingSystem)
 	}
 
-	if opts.JSON {
-		return json.NewEncoder(w).Encode(info)
+	f := output.New(w, opts.OutputFormat)
+	if f.IsJSON() {
+		return f.Print(info)
 	}
 
 	_, _ = fmt.Fprintln(w, strings.Join(parts, " "))

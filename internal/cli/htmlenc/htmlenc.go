@@ -2,17 +2,18 @@ package htmlenc
 
 import (
 	"bufio"
-	"encoding/json"
 	"fmt"
 	"html"
 	"io"
 	"os"
 	"strings"
+
+	"github.com/inovacc/omni/internal/cli/output"
 )
 
 // Options configures the html encode/decode command behavior
 type Options struct {
-	JSON bool // --json: output as JSON
+	OutputFormat output.Format // Output format
 }
 
 // Result represents the output for JSON mode
@@ -29,22 +30,18 @@ func RunEncode(w io.Writer, args []string, opts Options) error {
 		return err
 	}
 
-	output := html.EscapeString(input)
+	encOutput := html.EscapeString(input)
 
-	if opts.JSON {
-		result := Result{
+	f := output.New(w, opts.OutputFormat)
+	if f.IsJSON() {
+		return f.Print(Result{
 			Input:  input,
-			Output: output,
+			Output: encOutput,
 			Mode:   "encode",
-		}
-
-		enc := json.NewEncoder(w)
-		enc.SetIndent("", "  ")
-
-		return enc.Encode(result)
+		})
 	}
 
-	_, _ = fmt.Fprintln(w, output)
+	_, _ = fmt.Fprintln(w, encOutput)
 
 	return nil
 }
@@ -56,22 +53,18 @@ func RunDecode(w io.Writer, args []string, opts Options) error {
 		return err
 	}
 
-	output := html.UnescapeString(input)
+	decOutput := html.UnescapeString(input)
 
-	if opts.JSON {
-		result := Result{
+	f := output.New(w, opts.OutputFormat)
+	if f.IsJSON() {
+		return f.Print(Result{
 			Input:  input,
-			Output: output,
+			Output: decOutput,
 			Mode:   "decode",
-		}
-
-		enc := json.NewEncoder(w)
-		enc.SetIndent("", "  ")
-
-		return enc.Encode(result)
+		})
 	}
 
-	_, _ = fmt.Fprintln(w, output)
+	_, _ = fmt.Fprintln(w, decOutput)
 
 	return nil
 }

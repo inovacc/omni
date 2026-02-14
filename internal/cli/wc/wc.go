@@ -2,23 +2,23 @@ package wc
 
 import (
 	"bufio"
-	"encoding/json"
 	"fmt"
 	"io"
 	"os"
 	"unicode/utf8"
 
 	"github.com/inovacc/omni/internal/cli/input"
+	"github.com/inovacc/omni/internal/cli/output"
 )
 
 // WCOptions configures the wc command behavior
 type WCOptions struct {
-	Lines      bool // -l: print the newline counts
-	Words      bool // -w: print the word counts
-	Bytes      bool // -c: print the byte counts
-	Chars      bool // -m: print the character counts
-	MaxLineLen bool // -L: print the maximum display width
-	JSON       bool // --json: output in JSON format
+	Lines        bool          // -l: print the newline counts
+	Words        bool          // -w: print the word counts
+	Bytes        bool          // -c: print the byte counts
+	Chars        bool          // -m: print the character counts
+	MaxLineLen   bool          // -L: print the maximum display width
+	OutputFormat output.Format // output format (text, json, table)
 }
 
 // WCResult represents the result of a wc operation
@@ -48,6 +48,9 @@ func RunWC(w io.Writer, r io.Reader, args []string, opts WCOptions) error {
 	}
 	defer input.CloseAll(sources)
 
+	f := output.New(w, opts.OutputFormat)
+	jsonMode := f.IsJSON()
+
 	var (
 		totals  WCResult
 		results []WCResult
@@ -69,7 +72,7 @@ func RunWC(w io.Writer, r io.Reader, args []string, opts WCOptions) error {
 			result.Filename = src.Name
 		}
 
-		if opts.JSON {
+		if jsonMode {
 			results = append(results, result)
 		} else {
 			printWCResult(w, result, opts)
@@ -87,12 +90,12 @@ func RunWC(w io.Writer, r io.Reader, args []string, opts WCOptions) error {
 	}
 
 	// JSON output
-	if opts.JSON {
+	if jsonMode {
 		if len(sources) > 1 {
 			results = append(results, totals)
 		}
 
-		return json.NewEncoder(w).Encode(results)
+		return f.Print(results)
 	}
 
 	// Print totals if multiple files

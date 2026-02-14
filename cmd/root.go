@@ -1,6 +1,9 @@
 package cmd
 
 import (
+	"os"
+
+	"github.com/inovacc/omni/internal/cli/cmderr"
 	"github.com/inovacc/omni/internal/flags"
 	"github.com/inovacc/omni/internal/logger"
 	"github.com/spf13/cobra"
@@ -53,9 +56,13 @@ func Execute() {
 		_ = log.Close()
 	}
 
-	cobra.CheckErr(err)
+	if err != nil {
+		os.Exit(cmderr.ExitCodeFor(err))
+	}
 }
 
 func init() {
 	rootCmd.CompletionOptions.DisableDefaultCmd = true
+	rootCmd.PersistentFlags().Bool("json", false, "output as JSON")
+	rootCmd.PersistentFlags().Bool("table", false, "output as aligned table")
 }

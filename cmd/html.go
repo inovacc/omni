@@ -39,7 +39,7 @@ Examples:
   echo "<div>" | omni html encode`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		opts := htmlenc.Options{}
-		opts.JSON, _ = cmd.Flags().GetBool("json")
+		opts.OutputFormat = getOutputOpts(cmd).GetFormat()
 
 		return htmlenc.RunEncode(cmd.OutOrStdout(), args, opts)
 	},
@@ -58,7 +58,7 @@ Examples:
   echo "&lt;div&gt;" | omni html decode`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		opts := htmlenc.Options{}
-		opts.JSON, _ = cmd.Flags().GetBool("json")
+		opts.OutputFormat = getOutputOpts(cmd).GetFormat()
 
 		return htmlenc.RunDecode(cmd.OutOrStdout(), args, opts)
 	},
@@ -119,7 +119,7 @@ Examples:
   omni html validate --json file.html`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		opts := htmlfmt.ValidateOptions{}
-		opts.JSON, _ = cmd.Flags().GetBool("json")
+		opts.OutputFormat = getOutputOpts(cmd).GetFormat()
 
 		return htmlfmt.RunValidate(cmd.OutOrStdout(), cmd.InOrStdin(), args, opts)
 	},
@@ -133,13 +133,11 @@ func init() {
 	htmlCmd.AddCommand(htmlMinifyCmd)
 	htmlCmd.AddCommand(htmlValidateCmd)
 
-	htmlEncodeCmd.Flags().Bool("json", false, "output as JSON")
-	htmlDecodeCmd.Flags().Bool("json", false, "output as JSON")
+	// html encode/decode use --json from root persistent flag
 
 	// html fmt flags
 	htmlFmtCmd.Flags().StringP("indent", "i", "  ", "indentation string")
 	htmlFmtCmd.Flags().Bool("sort-attrs", false, "sort attributes alphabetically")
 
-	// html validate flags
-	htmlValidateCmd.Flags().Bool("json", false, "output as JSON")
+	// html validate flags (--json provided by root persistent flag)
 }

@@ -12,14 +12,11 @@ var realpathCmd = &cobra.Command{
 	Long:  `Print the resolved absolute file name; all components must exist.`,
 	Args:  cobra.MinimumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		opts := realpath.RealpathOptions{}
-		opts.JSON, _ = cmd.Flags().GetBool("json")
+		opts := realpath.RealpathOptions{OutputFormat: getOutputOpts(cmd).GetFormat()}
 		return realpath.RunRealpath(cmd.OutOrStdout(), args, opts)
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(realpathCmd)
-
-	realpathCmd.Flags().Bool("json", false, "output as JSON")
 }

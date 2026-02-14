@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"strings"
 	"testing"
+
+	"github.com/inovacc/omni/internal/cli/output"
 )
 
 func TestRunValidate(t *testing.T) {
@@ -73,7 +75,7 @@ func TestRunValidate(t *testing.T) {
 func TestRunValidateJSON(t *testing.T) {
 	var buf bytes.Buffer
 
-	opts := ValidateOptions{JSON: true}
+	opts := ValidateOptions{OutputFormat: output.FormatJSON}
 
 	err := RunValidate(&buf, []string{"name: test\nvalue: 123"}, opts)
 	if err != nil {
@@ -93,7 +95,7 @@ func TestRunValidateJSON(t *testing.T) {
 func TestRunValidateJSONInvalid(t *testing.T) {
 	var buf bytes.Buffer
 
-	opts := ValidateOptions{JSON: true}
+	opts := ValidateOptions{OutputFormat: output.FormatJSON}
 
 	_ = RunValidate(&buf, []string{"name: \"unclosed"}, opts)
 
@@ -211,6 +213,7 @@ func TestRunFormatPreservesData(t *testing.T) {
 
 func TestRunFormatSortKeys(t *testing.T) {
 	input := "zebra: 1\napple: 2\nmango: 3"
+
 	var buf bytes.Buffer
 
 	err := RunFormat(&buf, []string{input}, FormatOptions{Indent: 2, SortKeys: true})
@@ -230,6 +233,7 @@ func TestRunFormatSortKeys(t *testing.T) {
 
 func TestRunFormatRemoveEmpty(t *testing.T) {
 	input := "name: test\nempty_str: \"\"\nreal: value\nnull_val: null"
+
 	var buf bytes.Buffer
 
 	err := RunFormat(&buf, []string{input}, FormatOptions{Indent: 2, RemoveEmpty: true})
@@ -241,6 +245,7 @@ func TestRunFormatRemoveEmpty(t *testing.T) {
 	if !strings.Contains(output, "name:") {
 		t.Error("should keep non-empty 'name'")
 	}
+
 	if !strings.Contains(output, "real:") {
 		t.Error("should keep non-empty 'real'")
 	}
@@ -259,6 +264,7 @@ func TestRunValidate_BooleanVariations(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var buf bytes.Buffer
+
 			err := RunValidate(&buf, []string{tt.input}, ValidateOptions{})
 			if err != nil {
 				t.Errorf("RunValidate() error = %v", err)
@@ -318,6 +324,7 @@ func TestRunValidate_ComplexTypes(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var buf bytes.Buffer
+
 			err := RunValidate(&buf, []string{tt.input}, ValidateOptions{})
 			if (err != nil) != tt.wantErr {
 				t.Errorf("RunValidate() error = %v, wantErr %v", err, tt.wantErr)
@@ -328,6 +335,7 @@ func TestRunValidate_ComplexTypes(t *testing.T) {
 
 func TestRunK8sFormat(t *testing.T) {
 	input := "spec:\n  containers:\n    - name: web\nmetadata:\n  name: pod\napiVersion: v1\nkind: Pod"
+
 	var buf bytes.Buffer
 
 	err := RunK8sFormat(&buf, []string{input}, K8sFormatOptions{Indent: 2})
@@ -354,6 +362,7 @@ func TestRunK8sFormat(t *testing.T) {
 
 func TestRunK8sFormat_Invalid(t *testing.T) {
 	var buf bytes.Buffer
+
 	err := RunK8sFormat(&buf, []string{"name: \"unclosed"}, K8sFormatOptions{Indent: 2})
 	if err == nil {
 		t.Error("expected error for invalid YAML")
@@ -362,6 +371,7 @@ func TestRunK8sFormat_Invalid(t *testing.T) {
 
 func TestRunFormat_MultiDocument(t *testing.T) {
 	input := "---\nname: doc1\n---\nname: doc2"
+
 	var buf bytes.Buffer
 
 	err := RunFormat(&buf, []string{input}, FormatOptions{Indent: 2})
@@ -386,6 +396,7 @@ func TestRunValidate_StrictMode(t *testing.T) {
 
 func TestRunFormat_K8sOption(t *testing.T) {
 	input := "spec:\n  replicas: 3\napiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: test"
+
 	var buf bytes.Buffer
 
 	err := RunFormat(&buf, []string{input}, FormatOptions{Indent: 2, K8s: true})
@@ -401,6 +412,7 @@ func TestRunFormat_K8sOption(t *testing.T) {
 
 func TestRunFormatJSON_ComplexTypes(t *testing.T) {
 	input := "name: test\nlist:\n  - 1\n  - 2\nnested:\n  a: b"
+
 	var buf bytes.Buffer
 
 	err := RunFormat(&buf, []string{input}, FormatOptions{JSON: true, Indent: 2})
@@ -413,6 +425,7 @@ func TestRunFormatJSON_ComplexTypes(t *testing.T) {
 	if err := json.Unmarshal(buf.Bytes(), &parsed); err != nil {
 		t.Errorf("output is not valid JSON: %v", err)
 	}
+
 	if parsed["name"] != "test" {
 		t.Errorf("expected name=test, got %v", parsed["name"])
 	}

@@ -1,7 +1,6 @@
 package ss
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"net"
@@ -9,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/inovacc/omni/internal/cli/output"
 	gnet "github.com/shirou/gopsutil/v3/net"
 	"github.com/shirou/gopsutil/v3/process"
 )
@@ -27,7 +27,7 @@ type Options struct {
 	Summary   bool   // -s: print summary statistics
 	Extended  bool   // -e: show extended socket info
 	NoHeaders bool   // --no-header: don't print headers
-	JSON      bool   // -j: output as JSON
+	OutputFormat output.Format // output format (text/json/table)
 	State     string // state: filter by state (established, listen, etc.)
 }
 
@@ -95,8 +95,10 @@ func Run(w io.Writer, opts Options) error {
 		opts.UDP = true
 	}
 
+	f := output.New(w, opts.OutputFormat)
+
 	if opts.Summary {
-		return printSummary(w, opts)
+		return printSummary(w, opts, f)
 	}
 
 	sockets := getSockets(opts)
@@ -106,11 +108,8 @@ func Run(w io.Writer, opts Options) error {
 		enrichWithProcessInfo(sockets)
 	}
 
-	if opts.JSON {
-		encoder := json.NewEncoder(w)
-		encoder.SetIndent("", "  ")
-
-		return encoder.Encode(sockets)
+	if f.IsJSON() {
+		return f.Print(sockets)
 	}
 
 	return printSockets(w, sockets, opts)
@@ -372,7 +371,7 @@ func connStateString(status string) string {
 	}
 }
 
-func printSummary(w io.Writer, opts Options) error {
+func printSummary(w io.Writer, opts Options, f *output.Formatter) error {
 	var summary Summary
 
 	if opts.TCP || (!opts.UDP && !opts.Unix) {
@@ -416,11 +415,8 @@ func printSummary(w io.Writer, opts Options) error {
 
 	summary.Total = summary.TCP.Total + summary.UDP.Total + summary.Unix.Total
 
-	if opts.JSON {
-		encoder := json.NewEncoder(w)
-		encoder.SetIndent("", "  ")
-
-		return encoder.Encode(summary)
+	if f.IsJSON() {
+		return f.Print(summary)
 	}
 
 	_, _ = fmt.Fprintf(w, "Total: %d\n\n", summary.Total)

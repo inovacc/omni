@@ -1,7 +1,6 @@
 package pkill
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -10,6 +9,7 @@ import (
 	"strings"
 	"syscall"
 
+	"github.com/inovacc/omni/internal/cli/output"
 	"github.com/shirou/gopsutil/v3/process"
 )
 
@@ -26,7 +26,7 @@ type Options struct {
 	Parent     int    // -P: only match processes with given parent PID
 	Terminal   string // -t: only match processes on terminal
 	Verbose    bool   // -v: verbose output
-	JSON       bool   // -j: output as JSON
+	OutputFormat output.Format // output format (text/json/table)
 	IgnoreCase bool   // -i: case insensitive matching
 }
 
@@ -82,6 +82,9 @@ func Run(w io.Writer, pattern string, opts Options) error {
 	if err != nil {
 		return fmt.Errorf("pkill: invalid pattern: %w", err)
 	}
+
+	f := output.New(w, opts.OutputFormat)
+	jsonMode := f.IsJSON()
 
 	// Get signal
 	sig := syscall.SIGTERM
@@ -169,7 +172,7 @@ func Run(w io.Writer, pattern string, opts Options) error {
 	}
 
 	if len(matched) == 0 {
-		if opts.JSON {
+		if jsonMode {
 			_, _ = fmt.Fprintln(w, "[]")
 		}
 
@@ -201,7 +204,7 @@ func Run(w io.Writer, pattern string, opts Options) error {
 
 	// Count mode
 	if opts.Count {
-		if opts.JSON {
+		if jsonMode {
 			_, _ = fmt.Fprintf(w, `{"count": %d}`+"\n", len(matched))
 		} else {
 			_, _ = fmt.Fprintf(w, "%d\n", len(matched))
@@ -212,11 +215,8 @@ func Run(w io.Writer, pattern string, opts Options) error {
 
 	// List mode (pgrep behavior)
 	if opts.ListOnly {
-		if opts.JSON {
-			encoder := json.NewEncoder(w)
-			encoder.SetIndent("", "  ")
-
-			return encoder.Encode(matched)
+		if jsonMode {
+			return f.Print(matched)
 		}
 
 		for _, m := range matched {
@@ -256,11 +256,8 @@ func Run(w io.Writer, pattern string, opts Options) error {
 		results = append(results, m)
 	}
 
-	if opts.JSON {
-		encoder := json.NewEncoder(w)
-		encoder.SetIndent("", "  ")
-
-		return encoder.Encode(results)
+	if jsonMode {
+		return f.Print(results)
 	}
 
 	return nil

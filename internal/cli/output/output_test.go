@@ -288,6 +288,54 @@ func TestResult_Print(t *testing.T) {
 	}
 }
 
+func TestFormatter_WriteError(t *testing.T) {
+	tests := []struct {
+		name    string
+		format  Format
+		wantSub string
+	}{
+		{"text error", FormatText, "error: boom"},
+		{"json error", FormatJSON, `"error"`},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var buf bytes.Buffer
+
+			f := New(&buf, tt.format)
+
+			err := f.WriteError(errors.New("boom"))
+			if err != nil {
+				t.Fatalf("WriteError() error = %v", err)
+			}
+
+			if !strings.Contains(buf.String(), tt.wantSub) {
+				t.Errorf("WriteError() = %q, want to contain %q", buf.String(), tt.wantSub)
+			}
+		})
+	}
+}
+
+func TestFormatter_FormatName(t *testing.T) {
+	tests := []struct {
+		format Format
+		want   string
+	}{
+		{FormatText, "text"},
+		{FormatJSON, "json"},
+		{FormatTable, "table"},
+	}
+
+	for _, tt := range tests {
+		var buf bytes.Buffer
+
+		f := New(&buf, tt.format)
+		if got := f.FormatName(); got != tt.want {
+			t.Errorf("FormatName() = %q, want %q", got, tt.want)
+		}
+	}
+}
+
 func TestOptions_GetFormat(t *testing.T) {
 	tests := []struct {
 		name string
@@ -302,6 +350,16 @@ func TestOptions_GetFormat(t *testing.T) {
 		{
 			name: "json flag",
 			opts: Options{JSON: true},
+			want: FormatJSON,
+		},
+		{
+			name: "table flag",
+			opts: Options{Table: true},
+			want: FormatTable,
+		},
+		{
+			name: "json takes precedence over table",
+			opts: Options{JSON: true, Table: true},
 			want: FormatJSON,
 		},
 	}

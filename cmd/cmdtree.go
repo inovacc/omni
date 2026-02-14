@@ -8,6 +8,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/inovacc/omni/internal/cli/output"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 )
@@ -29,7 +30,6 @@ var (
 	cmdtreeVerbose bool
 	cmdtreeBrief   bool
 	cmdtreeCommand string
-	cmdtreeJSON    bool
 )
 
 // FlagDetail represents a single flag's information
@@ -56,7 +56,7 @@ var cmdtreeCmd = &cobra.Command{
 	Short: "Display command tree visualization",
 	Long:  "Display a tree visualization of all available commands with descriptions.",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		if cmdtreeJSON {
+		if getOutputOpts(cmd).GetFormat() == output.FormatJSON {
 			return printJSONTree(cmd, rootCmd)
 		}
 
@@ -85,7 +85,6 @@ func init() {
 	cmdtreeCmd.Flags().BoolVarP(&cmdtreeVerbose, "verbose", "v", true, "Show full details for all commands (default)")
 	cmdtreeCmd.Flags().BoolVarP(&cmdtreeBrief, "brief", "b", false, "Show compact tree with short descriptions only")
 	cmdtreeCmd.Flags().StringVarP(&cmdtreeCommand, "command", "c", "", "Show details for a specific command only")
-	cmdtreeCmd.Flags().BoolVar(&cmdtreeJSON, "json", false, "Output in JSON format")
 }
 
 func buildTree(root *cobra.Command) []byte {
@@ -267,7 +266,7 @@ func printSingleCommand(cobraCmd *cobra.Command, root *cobra.Command, cmdName st
 		return fmt.Errorf("command not found: %s", cmdName)
 	}
 
-	if cmdtreeJSON {
+	if getOutputOpts(cobraCmd).GetFormat() == output.FormatJSON {
 		detail := buildCommandDetail(target)
 		enc := json.NewEncoder(os.Stdout)
 		enc.SetIndent("", "  ")

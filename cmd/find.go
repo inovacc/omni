@@ -15,7 +15,6 @@ var knownFindFlags = map[string]bool{
 	"-mindepth": true, "-maxdepth": true, "-mtime": true, "-mmin": true,
 	"-atime": true, "-amin": true, "-empty": true, "-executable": true,
 	"-readable": true, "-writable": true, "-print0": true, "-not": true,
-	"-json": true,
 }
 
 var (
@@ -39,7 +38,6 @@ var (
 	findWritable   bool
 	findPrint0     bool
 	findNot        bool
-	findJSON       bool
 )
 
 var findCmd = &cobra.Command{
@@ -104,7 +102,7 @@ Examples:
 			Writable:   findWritable,
 			Print0:     findPrint0,
 			Not:        findNot,
-			JSON:       findJSON,
+			OutputFormat: getOutputOpts(cmd).GetFormat(),
 		}
 
 		return find.RunFind(cmd.OutOrStdout(), args, opts)
@@ -134,7 +132,6 @@ func init() {
 	findCmd.Flags().BoolVarP(&findWritable, "writable", "", false, "file is writable")
 	findCmd.Flags().BoolVarP(&findPrint0, "print0", "0", false, "print with null terminator")
 	findCmd.Flags().BoolVarP(&findNot, "not", "", false, "negate next test")
-	findCmd.Flags().BoolVarP(&findJSON, "json", "", false, "output in JSON format")
 
 	// Preprocess os.Args to convert -flag to --flag for find command
 	preprocessFindArgs()

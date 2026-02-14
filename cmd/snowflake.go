@@ -36,7 +36,7 @@ Examples:
 
 		opts.Count, _ = cmd.Flags().GetInt("count")
 		opts.WorkerID, _ = cmd.Flags().GetInt64("worker")
-		opts.JSON, _ = cmd.Flags().GetBool("json")
+		opts.OutputFormat = getOutputOpts(cmd).GetFormat()
 
 		return snowflake.RunSnowflake(cmd.OutOrStdout(), opts)
 	},
@@ -47,5 +47,4 @@ func init() {
 
 	snowflakeCmd.Flags().IntP("count", "n", 1, "generate N Snowflake IDs")
 	snowflakeCmd.Flags().Int64P("worker", "w", 0, "worker ID (0-1023)")
-	snowflakeCmd.Flags().Bool("json", false, "output as JSON")
 }

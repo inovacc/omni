@@ -92,7 +92,7 @@ Examples:
   omni sql validate --json file.sql`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		opts := sqlfmt.ValidateOptions{}
-		opts.JSON, _ = cmd.Flags().GetBool("json")
+		opts.OutputFormat = getOutputOpts(cmd).GetFormat()
 		opts.Dialect, _ = cmd.Flags().GetString("dialect")
 
 		return sqlfmt.RunValidate(cmd.OutOrStdout(), cmd.InOrStdin(), args, opts)
@@ -115,6 +115,5 @@ func init() {
 	sqlFmtCmd.Flags().StringP("dialect", "d", "generic", "SQL dialect (mysql, postgres, sqlite, generic)")
 
 	// sql validate flags
-	sqlValidateCmd.Flags().Bool("json", false, "output as JSON")
 	sqlValidateCmd.Flags().StringP("dialect", "d", "generic", "SQL dialect")
 }

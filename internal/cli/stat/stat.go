@@ -1,16 +1,17 @@
 package stat
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"os"
 	"time"
+
+	"github.com/inovacc/omni/internal/cli/output"
 )
 
 // StatOptions configures the stat command behavior
 type StatOptions struct {
-	JSON bool // output as JSON
+	OutputFormat output.Format // output format (text, json, table)
 }
 
 // TouchOptions configures the touch command behavior
@@ -56,6 +57,9 @@ func RunStat(w io.Writer, args []string, opts StatOptions) error {
 		return fmt.Errorf("stat: missing operand")
 	}
 
+	f := output.New(w, opts.OutputFormat)
+	jsonMode := f.IsJSON()
+
 	var results []StatInfo
 
 	for _, path := range args {
@@ -73,7 +77,7 @@ func RunStat(w io.Writer, args []string, opts StatOptions) error {
 		}
 		results = append(results, statInfo)
 
-		if !opts.JSON {
+		if !jsonMode {
 			_, _ = fmt.Fprintf(w, "  File: %s\n", statInfo.Name)
 			_, _ = fmt.Fprintf(w, "  Size: %d\tBlocks: %d\tIO Block: %d\t", statInfo.Size, 0, 0) // Simplified
 
@@ -92,8 +96,8 @@ func RunStat(w io.Writer, args []string, opts StatOptions) error {
 		}
 	}
 
-	if opts.JSON {
-		return json.NewEncoder(w).Encode(results)
+	if jsonMode {
+		return f.Print(results)
 	}
 
 	return nil

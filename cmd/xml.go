@@ -75,7 +75,7 @@ Examples:
   omni xml validate --json file.xml`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		opts := xmlfmt.ValidateOptions{}
-		opts.JSON, _ = cmd.Flags().GetBool("json")
+		opts.OutputFormat = getOutputOpts(cmd).GetFormat()
 
 		return xmlfmt.RunValidate(cmd.OutOrStdout(), args, opts)
 	},
@@ -146,8 +146,7 @@ func init() {
 	xmlFmtCmd.Flags().BoolP("minify", "m", false, "minify XML (remove whitespace)")
 	xmlFmtCmd.Flags().StringP("indent", "i", "  ", "indentation string")
 
-	// Flags for xml validate subcommand
-	xmlValidateCmd.Flags().Bool("json", false, "output as JSON")
+	// Flags for xml validate subcommand (--json provided by root persistent flag)
 
 	// Flags for xml tojson subcommand
 	xmlToJSONCmd.Flags().String("attr-prefix", "-", "prefix for attributes in JSON")

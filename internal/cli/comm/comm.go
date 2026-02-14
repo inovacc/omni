@@ -2,10 +2,11 @@ package comm
 
 import (
 	"bufio"
-	"encoding/json"
 	"fmt"
 	"io"
 	"os"
+
+	"github.com/inovacc/omni/internal/cli/output"
 )
 
 // CommOptions configures the comm command behavior
@@ -17,7 +18,7 @@ type CommOptions struct {
 	NoCheckOrder bool   // --nocheck-order: do not check input order
 	OutputDelim  string // --output-delimiter: use STR as output delimiter
 	ZeroTerm     bool   // -z: line delimiter is NUL
-	JSON         bool   // --json: output as JSON
+	OutputFormat output.Format // output format (text/json/table)
 }
 
 // CommResult represents the JSON output for comm
@@ -100,6 +101,9 @@ func RunComm(w io.Writer, args []string, opts CommOptions) error {
 		line2 = scanner2.Text()
 	}
 
+	f := output.New(w, opts.OutputFormat)
+	jsonMode := f.IsJSON()
+
 	var (
 		prevLine1, prevLine2 string
 		result               CommResult
@@ -119,7 +123,7 @@ func RunComm(w io.Writer, args []string, opts CommOptions) error {
 
 		if !has1 {
 			// Only file2 has lines
-			if opts.JSON {
+			if jsonMode {
 				result.UniqueToFile2 = append(result.UniqueToFile2, line2)
 			} else {
 				printCommLine(w, opts, delim, 2, line2)
@@ -133,7 +137,7 @@ func RunComm(w io.Writer, args []string, opts CommOptions) error {
 			}
 		} else if !has2 {
 			// Only file1 has lines
-			if opts.JSON {
+			if jsonMode {
 				result.UniqueToFile1 = append(result.UniqueToFile1, line1)
 			} else {
 				printCommLine(w, opts, delim, 1, line1)
@@ -147,7 +151,7 @@ func RunComm(w io.Writer, args []string, opts CommOptions) error {
 			}
 		} else if line1 < line2 {
 			// Line unique to file1
-			if opts.JSON {
+			if jsonMode {
 				result.UniqueToFile1 = append(result.UniqueToFile1, line1)
 			} else {
 				printCommLine(w, opts, delim, 1, line1)
@@ -161,7 +165,7 @@ func RunComm(w io.Writer, args []string, opts CommOptions) error {
 			}
 		} else if line1 > line2 {
 			// Line unique to file2
-			if opts.JSON {
+			if jsonMode {
 				result.UniqueToFile2 = append(result.UniqueToFile2, line2)
 			} else {
 				printCommLine(w, opts, delim, 2, line2)
@@ -175,7 +179,7 @@ func RunComm(w io.Writer, args []string, opts CommOptions) error {
 			}
 		} else {
 			// Lines are equal
-			if opts.JSON {
+			if jsonMode {
 				result.Common = append(result.Common, line1)
 			} else {
 				printCommLine(w, opts, delim, 3, line1)
@@ -204,8 +208,8 @@ func RunComm(w io.Writer, args []string, opts CommOptions) error {
 		return fmt.Errorf("comm: %w", err)
 	}
 
-	if opts.JSON {
-		return json.NewEncoder(w).Encode(result)
+	if jsonMode {
+		return f.Print(result)
 	}
 
 	return nil

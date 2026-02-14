@@ -18,6 +18,7 @@ Examples:
   omni echo -n "no newline" # outputs without trailing newline
   omni echo -e "tab\there"  # outputs with tab character`,
 	RunE: func(cmd *cobra.Command, args []string) error {
+		echoOpts.OutputFormat = getOutputOpts(cmd).GetFormat()
 		return echo.RunEcho(cmd.OutOrStdout(), args, echoOpts)
 	},
 }
@@ -28,5 +29,4 @@ func init() {
 	echoCmd.Flags().BoolVarP(&echoOpts.NoNewline, "no-newline", "n", false, "do not output the trailing newline")
 	echoCmd.Flags().BoolVarP(&echoOpts.EnableEscapes, "escape", "e", false, "enable interpretation of backslash escapes")
 	echoCmd.Flags().BoolVarP(&echoOpts.DisableEscapes, "no-escape", "E", false, "disable interpretation of backslash escapes (default)")
-	echoCmd.Flags().BoolVar(&echoOpts.JSON, "json", false, "output as JSON")
 }

@@ -27,7 +27,7 @@ Sort entries alphabetically if none of -tSU is specified.`,
 		opts.Directory, _ = cmd.Flags().GetBool("directory")
 		opts.Classify, _ = cmd.Flags().GetBool("classify")
 		opts.Inode, _ = cmd.Flags().GetBool("inode")
-		opts.JSON, _ = cmd.Flags().GetBool("json")
+		opts.OutputFormat = getOutputOpts(cmd).GetFormat()
 
 		return ls.Run(cmd.OutOrStdout(), args, opts)
 	},
@@ -49,5 +49,4 @@ func init() {
 	lsCmd.Flags().BoolP("directory", "d", false, "list directories themselves, not their contents")
 	lsCmd.Flags().BoolP("classify", "F", false, "append indicator (*/=>@|) to entries")
 	lsCmd.Flags().BoolP("inode", "i", false, "print the index number of each file")
-	lsCmd.Flags().Bool("json", false, "output in JSON format")
 }

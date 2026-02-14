@@ -1,24 +1,25 @@
 package readlink
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"os"
 	"path/filepath"
+
+	"github.com/inovacc/omni/internal/cli/output"
 )
 
 // ReadlinkOptions configures the readlink command behavior
 type ReadlinkOptions struct {
-	Canonicalize         bool // -f: canonicalize by following every symlink, all components must exist
-	CanonicalizeExisting bool // -e: like -f, but fail if any component doesn't exist
-	CanonicalizeMissing  bool // -m: like -f, but allow missing components
-	NoNewline            bool // -n: do not output trailing newline
-	Quiet                bool // -q: quiet mode
-	Silent               bool // -s: silent mode (same as -q)
-	Verbose              bool // -v: verbose mode
-	Zero                 bool // -z: end each output line with NUL, not newline
-	JSON                 bool // --json: output as JSON
+	Canonicalize         bool          // -f: canonicalize by following every symlink, all components must exist
+	CanonicalizeExisting bool          // -e: like -f, but fail if any component doesn't exist
+	CanonicalizeMissing  bool          // -m: like -f, but allow missing components
+	NoNewline            bool          // -n: do not output trailing newline
+	Quiet                bool          // -q: quiet mode
+	Silent               bool          // -s: silent mode (same as -q)
+	Verbose              bool          // -v: verbose mode
+	Zero                 bool          // -z: end each output line with NUL, not newline
+	OutputFormat         output.Format // output format (text, json, table)
 }
 
 // ReadlinkResult represents readlink output for JSON
@@ -47,6 +48,8 @@ func RunReadlink(w io.Writer, args []string, opts ReadlinkOptions) error {
 		terminator = ""
 	}
 
+	f := output.New(w, opts.OutputFormat)
+	jsonMode := f.IsJSON()
 	hasError := false
 
 	var jsonLinks []ReadlinkResult
@@ -74,15 +77,15 @@ func RunReadlink(w io.Writer, args []string, opts ReadlinkOptions) error {
 			continue
 		}
 
-		if opts.JSON {
+		if jsonMode {
 			jsonLinks = append(jsonLinks, ReadlinkResult{Original: path, Target: result})
 		} else {
 			_, _ = fmt.Fprint(w, result+terminator)
 		}
 	}
 
-	if opts.JSON {
-		return json.NewEncoder(w).Encode(ReadlinkOutput{Links: jsonLinks})
+	if jsonMode {
+		return f.Print(ReadlinkOutput{Links: jsonLinks})
 	}
 
 	if hasError {

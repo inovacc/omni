@@ -360,6 +360,24 @@ Concurrency, streaming, and flow control.
 | `more` | Simple pager | — | P3 |
 | `pipe` | Chain omni commands with variable substitution | `--var`, `--json`, `--sep`, `-v` | P0 ✅ |
 | `pipeline` | Internal streaming engine | — | P0 |
+| `exec` | Execute arbitrary scripts using OS features | `--shell`, `--timeout`, `--env` | P1 |
+
+### exec Design (External Process Runner)
+
+```bash
+# Execute scripts using the OS native shell
+omni exec my_script.sh          # Unix: sh, Windows: cmd
+omni exec my_script.ps1         # PowerShell (auto-detected on Windows)
+omni exec my_script.py          # Delegates to python3/python
+omni exec --shell bash script.sh  # Explicit shell override
+omni exec --timeout 30s long_task.sh  # With timeout
+omni exec --env KEY=VAL script.sh     # Inject env vars
+```
+
+> **Note:** This is an intentional exception to the "no exec" principle.
+> `exec` exists as an escape hatch for scripts that cannot be expressed
+> as pure-Go omni commands. It uses `os/exec` to spawn the appropriate
+> interpreter based on file extension or `--shell` flag.
 
 ### xargs Design (Safe)
 

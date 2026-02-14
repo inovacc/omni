@@ -1,15 +1,16 @@
 package dirname
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"path/filepath"
+
+	"github.com/inovacc/omni/internal/cli/output"
 )
 
 // DirnameOptions configures the dirname command behavior
 type DirnameOptions struct {
-	JSON bool // --json: output as JSON
+	OutputFormat output.Format // output format (text, json, table)
 }
 
 // DirnameResult represents dirname output for JSON
@@ -24,19 +25,22 @@ func RunDirname(w io.Writer, args []string, opts DirnameOptions) error {
 		return fmt.Errorf("dirname: missing operand")
 	}
 
+	f := output.New(w, opts.OutputFormat)
+	jsonMode := f.IsJSON()
+
 	var results []DirnameResult
 
 	for _, arg := range args {
 		dir := filepath.Dir(arg)
-		if opts.JSON {
+		if jsonMode {
 			results = append(results, DirnameResult{Original: arg, Dirname: dir})
 		} else {
 			_, _ = fmt.Fprintln(w, dir)
 		}
 	}
 
-	if opts.JSON {
-		return json.NewEncoder(w).Encode(results)
+	if jsonMode {
+		return f.Print(results)
 	}
 
 	return nil

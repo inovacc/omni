@@ -50,7 +50,7 @@ Examples:
 		opts.User, _ = cmd.Flags().GetString("user")
 		opts.Parent, _ = cmd.Flags().GetInt("parent")
 		opts.Verbose, _ = cmd.Flags().GetBool("verbose")
-		opts.JSON, _ = cmd.Flags().GetBool("json")
+		opts.OutputFormat = getOutputOpts(cmd).GetFormat()
 		opts.IgnoreCase, _ = cmd.Flags().GetBool("ignore-case")
 
 		return pkill.Run(cmd.OutOrStdout(), args[0], opts)
@@ -92,7 +92,7 @@ Examples:
 		opts.Count, _ = cmd.Flags().GetBool("count")
 		opts.User, _ = cmd.Flags().GetString("user")
 		opts.Parent, _ = cmd.Flags().GetInt("parent")
-		opts.JSON, _ = cmd.Flags().GetBool("json")
+		opts.OutputFormat = getOutputOpts(cmd).GetFormat()
 		opts.IgnoreCase, _ = cmd.Flags().GetBool("ignore-case")
 
 		return pkill.Run(cmd.OutOrStdout(), args[0], opts)
@@ -114,7 +114,6 @@ func init() {
 	pkillCmd.Flags().StringP("user", "u", "", "match only processes owned by user")
 	pkillCmd.Flags().IntP("parent", "P", 0, "match only processes with parent PID")
 	pkillCmd.Flags().BoolP("verbose", "v", false, "verbose output")
-	pkillCmd.Flags().BoolP("json", "j", false, "output as JSON")
 	pkillCmd.Flags().BoolP("ignore-case", "i", false, "case insensitive matching")
 
 	// pgrep flags (subset of pkill)
@@ -125,6 +124,5 @@ func init() {
 	pgrepCmd.Flags().BoolP("count", "c", false, "count matching processes")
 	pgrepCmd.Flags().StringP("user", "u", "", "match only processes owned by user")
 	pgrepCmd.Flags().IntP("parent", "P", 0, "match only processes with parent PID")
-	pgrepCmd.Flags().BoolP("json", "j", false, "output as JSON")
 	pgrepCmd.Flags().BoolP("ignore-case", "i", false, "case insensitive matching")
 }

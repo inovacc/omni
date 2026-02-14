@@ -7,6 +7,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/inovacc/omni/internal/cli/output"
 	"github.com/inovacc/omni/internal/cli/vault"
 	"github.com/spf13/cobra"
 )
@@ -33,7 +34,6 @@ var (
 	vaultAddr      string
 	vaultNamespace string
 	vaultTLSSkip   bool
-	vaultJSON      bool
 )
 
 func getVaultClient() (*vault.Client, error) {
@@ -63,7 +63,7 @@ Examples:
 			return fmt.Errorf("failed to get status: %w", err)
 		}
 
-		if vaultJSON {
+		if getOutputOpts(cmd).GetFormat() == output.FormatJSON {
 			return printJSON(status)
 		}
 
@@ -217,7 +217,7 @@ Examples:
 			return fmt.Errorf("failed to lookup token: %w", err)
 		}
 
-		if vaultJSON {
+		if getOutputOpts(cmd).GetFormat() == output.FormatJSON {
 			return printJSON(secret.Data)
 		}
 
@@ -257,7 +257,7 @@ Examples:
 			return fmt.Errorf("failed to renew token: %w", err)
 		}
 
-		if vaultJSON {
+		if getOutputOpts(cmd).GetFormat() == output.FormatJSON {
 			return printJSON(secret)
 		}
 
@@ -340,7 +340,7 @@ Examples:
 			return fmt.Errorf("field %q not found", field)
 		}
 
-		if vaultJSON {
+		if getOutputOpts(cmd).GetFormat() == output.FormatJSON {
 			return printJSON(secret.Data)
 		}
 
@@ -393,7 +393,7 @@ Examples:
 			return err
 		}
 
-		if vaultJSON && secret != nil {
+		if getOutputOpts(cmd).GetFormat() == output.FormatJSON && secret != nil {
 			return printJSON(secret.Data)
 		}
 
@@ -434,12 +434,12 @@ Examples:
 			return fmt.Errorf("no entries found at %s", path)
 		}
 
-		keys, ok := secret.Data["keys"].([]interface{})
+		keys, ok := secret.Data["keys"].([]any)
 		if !ok {
 			return fmt.Errorf("unexpected response format")
 		}
 
-		if vaultJSON {
+		if getOutputOpts(cmd).GetFormat() == output.FormatJSON {
 			return printJSON(keys)
 		}
 
@@ -543,7 +543,7 @@ Examples:
 			return fmt.Errorf("field %q not found", field)
 		}
 
-		if vaultJSON {
+		if getOutputOpts(cmd).GetFormat() == output.FormatJSON {
 			return printJSON(secret.Data)
 		}
 
@@ -609,7 +609,7 @@ Examples:
 			return err
 		}
 
-		if vaultJSON && secret != nil {
+		if getOutputOpts(cmd).GetFormat() == output.FormatJSON && secret != nil {
 			return printJSON(map[string]any{
 				"version":      secret.VersionMetadata.Version,
 				"created_time": secret.VersionMetadata.CreatedTime,
@@ -708,7 +708,7 @@ Examples:
 			return fmt.Errorf("no entries found")
 		}
 
-		if vaultJSON {
+		if getOutputOpts(cmd).GetFormat() == output.FormatJSON {
 			return printJSON(keys)
 		}
 
@@ -838,7 +838,7 @@ Examples:
 			return err
 		}
 
-		if vaultJSON {
+		if getOutputOpts(cmd).GetFormat() == output.FormatJSON {
 			return printJSON(metadata)
 		}
 
@@ -898,7 +898,7 @@ Examples:
 func parseVersions(s string) []int {
 	var versions []int
 
-	for _, v := range strings.Split(s, ",") {
+	for v := range strings.SplitSeq(s, ",") {
 		v = strings.TrimSpace(v)
 
 		var ver int
@@ -910,7 +910,7 @@ func parseVersions(s string) []int {
 	return versions
 }
 
-func printJSON(v interface{}) error {
+func printJSON(v any) error {
 	enc := json.NewEncoder(os.Stdout)
 	enc.SetIndent("", "  ")
 
@@ -924,7 +924,6 @@ func init() {
 	vaultCmd.PersistentFlags().StringVar(&vaultAddr, "address", "", "Vault server address")
 	vaultCmd.PersistentFlags().StringVar(&vaultNamespace, "namespace", "", "Vault namespace")
 	vaultCmd.PersistentFlags().BoolVar(&vaultTLSSkip, "tls-skip-verify", false, "Skip TLS verification")
-	vaultCmd.PersistentFlags().BoolVar(&vaultJSON, "json", false, "Output as JSON")
 
 	// status
 	vaultCmd.AddCommand(vaultStatusCmd)

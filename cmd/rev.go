@@ -15,7 +15,7 @@ Examples:
   omni rev file.txt           # reverse each line in file`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		opts := rev.RevOptions{}
-		opts.JSON, _ = cmd.Flags().GetBool("json")
+		opts.OutputFormat = getOutputOpts(cmd).GetFormat()
 		return rev.RunRev(cmd.OutOrStdout(), cmd.InOrStdin(), args, opts)
 	},
 }
@@ -23,5 +23,4 @@ Examples:
 func init() {
 	rootCmd.AddCommand(revCmd)
 
-	revCmd.Flags().Bool("json", false, "output as JSON")
 }

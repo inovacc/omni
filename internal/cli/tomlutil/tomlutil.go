@@ -2,18 +2,18 @@ package tomlutil
 
 import (
 	"bufio"
-	"encoding/json"
 	"fmt"
 	"io"
 	"os"
 	"strings"
 
 	"github.com/BurntSushi/toml"
+	"github.com/inovacc/omni/internal/cli/output"
 )
 
 // ValidateOptions configures the toml validate command behavior
 type ValidateOptions struct {
-	JSON bool // --json: output as JSON
+	OutputFormat output.Format // Output format
 }
 
 // ValidateResult represents the output for JSON mode
@@ -105,11 +105,9 @@ func validateReader(w io.Writer, r io.Reader, name string, opts ValidateOptions)
 }
 
 func outputResult(w io.Writer, result ValidateResult, opts ValidateOptions) error {
-	if opts.JSON {
-		enc := json.NewEncoder(w)
-		enc.SetIndent("", "  ")
-
-		return enc.Encode(result)
+	f := output.New(w, opts.OutputFormat)
+	if f.IsJSON() {
+		return f.Print(result)
 	}
 
 	if result.Valid {

@@ -27,7 +27,7 @@ Numeric shortcuts are supported: -80 is equivalent to -n 80.`,
 		opts.Bytes, _ = cmd.Flags().GetInt("bytes")
 		opts.Quiet, _ = cmd.Flags().GetBool("quiet")
 		opts.Verbose, _ = cmd.Flags().GetBool("verbose")
-		opts.JSON, _ = cmd.Flags().GetBool("json")
+		opts.OutputFormat = getOutputOpts(cmd).GetFormat()
 
 		return head.RunHead(cmd.OutOrStdout(), cmd.InOrStdin(), args, opts)
 	},
@@ -40,8 +40,6 @@ func init() {
 	headCmd.Flags().IntP("bytes", "c", 0, "print the first NUM bytes of each file")
 	headCmd.Flags().BoolP("quiet", "q", false, "never print headers giving file names")
 	headCmd.Flags().BoolP("verbose", "v", false, "always print headers giving file names")
-	headCmd.Flags().Bool("json", false, "output as JSON")
-
 	// Preprocess os.Args to convert -NUM to -n NUM for head command
 	preprocessHeadArgs()
 }
@@ -54,6 +52,7 @@ func preprocessHeadArgs() {
 
 	// Check if this is a head command
 	isHeadCmd := false
+
 	for i, arg := range os.Args {
 		if arg == "head" && i > 0 {
 			isHeadCmd = true

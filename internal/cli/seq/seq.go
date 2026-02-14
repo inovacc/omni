@@ -1,12 +1,13 @@
 package seq
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"math"
 	"strconv"
 	"strings"
+
+	"github.com/inovacc/omni/internal/cli/output"
 )
 
 // SeqOptions configures the seq command behavior
@@ -14,7 +15,7 @@ type SeqOptions struct {
 	Separator  string // -s: use STRING to separate numbers
 	Format     string // -f: use printf style FORMAT
 	EqualWidth bool   // -w: equalize width by padding with leading zeros
-	JSON       bool   // --json: output as JSON
+	OutputFormat output.Format // output format
 }
 
 // SeqResult represents seq output for JSON
@@ -84,13 +85,14 @@ func RunSeq(w io.Writer, args []string, opts SeqOptions) error {
 	}
 
 	// Generate sequence
-	if opts.JSON {
+	f := output.New(w, opts.OutputFormat)
+	if f.IsJSON() {
 		var numbers []float64
 		for i := first; (increment > 0 && i <= last) || (increment < 0 && i >= last); i += increment {
 			numbers = append(numbers, i)
 		}
 
-		return json.NewEncoder(w).Encode(SeqResult{Numbers: numbers, Count: len(numbers)})
+		return f.Print(SeqResult{Numbers: numbers, Count: len(numbers)})
 	}
 
 	isFirst := true

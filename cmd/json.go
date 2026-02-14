@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"os"
 
@@ -120,9 +121,9 @@ Examples:
 	RunE: func(cmd *cobra.Command, args []string) error {
 		opts := jsonfmt.Options{Validate: true}
 
-		opts.JSON, _ = cmd.Flags().GetBool("json")
+		opts.OutputFormat = getOutputOpts(cmd).GetFormat()
 
-		return jsonfmt.RunJSONFmt(os.Stdout, args, opts)
+		return jsonfmt.RunJSONFmt(cmd.OutOrStdout(), args, opts)
 	},
 }
 
@@ -166,22 +167,23 @@ Examples:
 			return err
 		}
 
-		jsonOutput, _ := cmd.Flags().GetBool("json")
-		if jsonOutput {
-			return json.NewEncoder(os.Stdout).Encode(stats)
+		f := getOutputOpts(cmd).NewFormatter(cmd.OutOrStdout())
+		if f.IsJSON() {
+			return f.Print(stats)
 		}
 
-		_, _ = os.Stdout.WriteString("File: " + filename + "\n")
-		_, _ = os.Stdout.WriteString("Type: " + stats.Type + "\n")
+		w := cmd.OutOrStdout()
+		_, _ = fmt.Fprintln(w, "File: "+filename)
+		_, _ = fmt.Fprintln(w, "Type: "+stats.Type)
 		if stats.Keys > 0 {
-			_, _ = os.Stdout.WriteString("Keys: " + itoa(stats.Keys) + "\n")
+			_, _ = fmt.Fprintln(w, "Keys: "+itoa(stats.Keys))
 		}
 		if stats.Elements > 0 {
-			_, _ = os.Stdout.WriteString("Elements: " + itoa(stats.Elements) + "\n")
+			_, _ = fmt.Fprintln(w, "Elements: "+itoa(stats.Elements))
 		}
-		_, _ = os.Stdout.WriteString("Depth: " + itoa(stats.Depth) + "\n")
-		_, _ = os.Stdout.WriteString("Size: " + itoa(stats.Size) + " bytes\n")
-		_, _ = os.Stdout.WriteString("Minified: " + itoa(stats.MinifiedLen) + " bytes\n")
+		_, _ = fmt.Fprintln(w, "Depth: "+itoa(stats.Depth))
+		_, _ = fmt.Fprintln(w, "Size: "+itoa(stats.Size)+" bytes")
+		_, _ = fmt.Fprintln(w, "Minified: "+itoa(stats.MinifiedLen)+" bytes")
 
 		return nil
 	},
@@ -215,13 +217,13 @@ Examples:
 			return err
 		}
 
-		jsonOutput, _ := cmd.Flags().GetBool("json")
-		if jsonOutput {
-			return json.NewEncoder(os.Stdout).Encode(keys)
+		f := getOutputOpts(cmd).NewFormatter(cmd.OutOrStdout())
+		if f.IsJSON() {
+			return f.Print(keys)
 		}
 
 		for _, key := range keys {
-			_, _ = os.Stdout.WriteString(key + "\n")
+			_, _ = fmt.Fprintln(cmd.OutOrStdout(), key)
 		}
 
 		return nil
@@ -557,14 +559,7 @@ func init() {
 	// minify flags
 	jsonMinifyCmd.Flags().BoolP("sort-keys", "s", false, "sort object keys")
 
-	// validate flags
-	jsonValidateCmd.Flags().Bool("json", false, "output result as JSON")
-
-	// stats flags
-	jsonStatsCmd.Flags().Bool("json", false, "output as JSON")
-
-	// keys flags
-	jsonKeysCmd.Flags().Bool("json", false, "output as JSON")
+	// validate/stats/keys use --json from root persistent flag
 
 	// fromyaml flags
 	jsonFromYAMLCmd.Flags().BoolP("minify", "m", false, "output minified JSON")

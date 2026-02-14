@@ -1,19 +1,19 @@
 package nanoid
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 
+	"github.com/inovacc/omni/internal/cli/output"
 	"github.com/inovacc/omni/pkg/idgen"
 )
 
 // Options configures the nanoid command behavior
 type Options struct {
-	Count    int    // -n: generate N NanoIDs
-	Length   int    // -l: length of NanoID (default 21)
-	Alphabet string // -a: custom alphabet
-	JSON     bool   // --json: output as JSON
+	Count        int           // -n: generate N NanoIDs
+	Length       int           // -l: length of NanoID (default 21)
+	Alphabet     string        // -a: custom alphabet
+	OutputFormat output.Format // output format (text, json, table)
 }
 
 // Result represents nanoid output for JSON
@@ -32,9 +32,12 @@ func RunNanoID(w io.Writer, opts Options) error {
 	if opts.Length > 0 {
 		genOpts = append(genOpts, idgen.WithNanoidLength(opts.Length))
 	}
+
 	if opts.Alphabet != "" {
 		genOpts = append(genOpts, idgen.WithNanoidAlphabet(opts.Alphabet))
 	}
+
+	f := output.New(w, opts.OutputFormat)
 
 	var nanoids []string
 
@@ -44,15 +47,15 @@ func RunNanoID(w io.Writer, opts Options) error {
 			return fmt.Errorf("nanoid: %w", err)
 		}
 
-		if opts.JSON {
+		if f.IsJSON() {
 			nanoids = append(nanoids, n)
 		} else {
 			_, _ = fmt.Fprintln(w, n)
 		}
 	}
 
-	if opts.JSON {
-		return json.NewEncoder(w).Encode(Result{NanoIDs: nanoids, Count: len(nanoids)})
+	if f.IsJSON() {
+		return f.Print(Result{NanoIDs: nanoids, Count: len(nanoids)})
 	}
 
 	return nil
@@ -64,9 +67,11 @@ func Generate(alphabet string, length int) (string, error) {
 	if alphabet != "" {
 		opts = append(opts, idgen.WithNanoidAlphabet(alphabet))
 	}
+
 	if length > 0 {
 		opts = append(opts, idgen.WithNanoidLength(length))
 	}
+
 	return idgen.GenerateNanoid(opts...)
 }
 
@@ -86,5 +91,6 @@ func MustNew() string {
 	if err != nil {
 		panic(fmt.Sprintf("nanoid: %v", err))
 	}
+
 	return n
 }

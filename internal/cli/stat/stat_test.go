@@ -8,6 +8,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/inovacc/omni/internal/cli/output"
 )
 
 func TestRunStat(t *testing.T) {
@@ -66,7 +68,7 @@ func TestRunStat(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := RunStat(&buf, []string{file}, StatOptions{JSON: true})
+		err := RunStat(&buf, []string{file}, StatOptions{OutputFormat: output.FormatJSON})
 		if err != nil {
 			t.Fatalf("RunStat() error = %v", err)
 		}

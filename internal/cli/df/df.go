@@ -1,11 +1,11 @@
 package df
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 
 	"github.com/inovacc/omni/internal/cli/du"
+	"github.com/inovacc/omni/internal/cli/output"
 )
 
 // DFOptions configures the df command behavior
@@ -18,7 +18,7 @@ type DFOptions struct {
 	ExcludeType   string // -x: exclude file systems of given TYPE
 	Local         bool   // -l: limit listing to local file systems
 	Portability   bool   // -P: use POSIX output format
-	JSON          bool   // --json: output as JSON
+	OutputFormat output.Format // output format (text/json/table)
 }
 
 // DFInfo represents disk free space information
@@ -52,9 +52,11 @@ func RunDF(w io.Writer, args []string, opts DFOptions) error {
 		paths = []string{"/"}
 	}
 
+	f := output.New(w, opts.OutputFormat)
+
 	var jsonResults []DFInfo
 
-	if opts.JSON {
+	if f.IsJSON() {
 		// Skip header for JSON output, collect results
 		for _, path := range paths {
 			info, err := getDiskInfo(path)
@@ -65,7 +67,7 @@ func RunDF(w io.Writer, args []string, opts DFOptions) error {
 			jsonResults = append(jsonResults, info)
 		}
 
-		return json.NewEncoder(w).Encode(jsonResults)
+		return f.Print(jsonResults)
 	}
 
 	// Print header

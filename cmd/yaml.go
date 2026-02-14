@@ -40,7 +40,7 @@ Examples:
   omni yaml validate --json config.yaml`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		opts := yamlutil.ValidateOptions{}
-		opts.JSON, _ = cmd.Flags().GetBool("json")
+		opts.OutputFormat = getOutputOpts(cmd).GetFormat()
 		opts.Strict, _ = cmd.Flags().GetBool("strict")
 
 		return yamlutil.RunValidate(cmd.OutOrStdout(), args, opts)
@@ -135,7 +135,6 @@ func init() {
 	yamlCmd.AddCommand(yamlK8sCmd)
 	yamlCmd.AddCommand(yamlToStructCmd)
 
-	yamlValidateCmd.Flags().Bool("json", false, "output as JSON")
 	yamlValidateCmd.Flags().Bool("strict", false, "fail on unknown fields")
 
 	// fmt flags

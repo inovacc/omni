@@ -30,7 +30,7 @@ Numeric shortcuts are supported: -80 is equivalent to -n 80.`,
 		opts.Quiet, _ = cmd.Flags().GetBool("quiet")
 		opts.Verbose, _ = cmd.Flags().GetBool("verbose")
 		opts.Sleep, _ = cmd.Flags().GetDuration("sleep-interval")
-		opts.JSON, _ = cmd.Flags().GetBool("json")
+		opts.OutputFormat = getOutputOpts(cmd).GetFormat()
 
 		return tail.RunTail(cmd.OutOrStdout(), cmd.InOrStdin(), args, opts)
 	},
@@ -45,8 +45,6 @@ func init() {
 	tailCmd.Flags().BoolP("quiet", "q", false, "never output headers giving file names")
 	tailCmd.Flags().BoolP("verbose", "v", false, "always output headers giving file names")
 	tailCmd.Flags().Duration("sleep-interval", time.Second, "with -f, sleep for approximately N seconds between iterations")
-	tailCmd.Flags().Bool("json", false, "output as JSON")
-
 	// Preprocess os.Args to convert -NUM to -n NUM for tail command
 	preprocessTailArgs()
 }
@@ -59,6 +57,7 @@ func preprocessTailArgs() {
 
 	// Check if this is a tail command
 	isTailCmd := false
+
 	for i, arg := range os.Args {
 		if arg == "tail" && i > 0 {
 			isTailCmd = true

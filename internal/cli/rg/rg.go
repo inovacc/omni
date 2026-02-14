@@ -12,6 +12,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/inovacc/omni/internal/cli/output"
 	pkgrg "github.com/inovacc/omni/pkg/search/rg"
 )
 
@@ -35,8 +36,8 @@ type Options struct {
 	MaxCount       int      // -m: max matches per file
 	MaxDepth       int      // --max-depth: max directory depth
 	FollowSymlinks bool     // -L: follow symlinks
-	JSON           bool     // --json: JSON output
-	JSONStream     bool     // --json-stream: streaming NDJSON output
+	OutputFormat output.Format // output format
+	JSONStream   bool          // --json-stream: streaming NDJSON output
 	NoHeading      bool     // --no-heading: no file name headings
 	OnlyMatching   bool     // -o: only show matching part
 	Quiet          bool     // -q: quiet mode, exit on first match
@@ -174,6 +175,8 @@ func Run(w io.Writer, pattern string, paths []string, opts Options) error {
 		literalPattern = strings.ToLower(pattern)
 	}
 
+	jsonMode := output.New(w, opts.OutputFormat).IsJSON()
+
 	result := &resultInternal{
 		Result: Result{
 			Files: make([]FileResult, 0),
@@ -254,7 +257,7 @@ func Run(w io.Writer, pattern string, paths []string, opts Options) error {
 		})
 
 		streamMu.Unlock()
-	} else if opts.JSON {
+	} else if jsonMode {
 		enc := json.NewEncoder(w)
 		enc.SetIndent("", "  ")
 
@@ -266,6 +269,8 @@ func Run(w io.Writer, pattern string, paths []string, opts Options) error {
 
 // searchDirParallel performs parallel directory traversal and search
 func searchDirParallel(w io.Writer, dir string, re *regexp.Regexp, pattern, literalPattern string, useLiteral bool, opts Options, gitignore *GitignoreSet, result *resultInternal, numWorkers int, streamEnc *json.Encoder, streamMu *sync.Mutex) error {
+	jsonMode := output.New(w, opts.OutputFormat).IsJSON()
+
 	// Collect all files to search
 	var files []string
 
@@ -319,7 +324,7 @@ func searchDirParallel(w io.Writer, dir string, re *regexp.Regexp, pattern, lite
 			result.mu.Unlock()
 
 			// Output results
-			if !opts.JSON && !opts.JSONStream {
+			if !jsonMode && !opts.JSONStream {
 				outputFileResult(w, fr, opts, re, pattern, useLiteral)
 			} else if opts.JSONStream && streamEnc != nil {
 				streamMu.Lock()
@@ -619,6 +624,8 @@ func searchDir(w io.Writer, dir string, re *regexp.Regexp, pattern, literalPatte
 }
 
 func searchFile(w io.Writer, path string, re *regexp.Regexp, pattern, literalPattern string, useLiteral bool, opts Options, result *resultInternal, streamEnc *json.Encoder, streamMu *sync.Mutex) error {
+	jsonMode := output.New(w, opts.OutputFormat).IsJSON()
+
 	file, err := os.Open(path)
 	if err != nil {
 		return err
@@ -760,7 +767,7 @@ func searchFile(w io.Writer, path string, re *regexp.Regexp, pattern, literalPat
 				}
 
 				// Print context before
-				if !opts.JSON && !opts.JSONStream && beforeContext > 0 && len(beforeLines) > 0 {
+				if !jsonMode && !opts.JSONStream && beforeContext > 0 && len(beforeLines) > 0 {
 					// Print separator if there's a gap
 					firstBeforeLine := beforeLines[0].lineNum
 					if needsContext && lastPrintedLine > 0 && firstBeforeLine > lastPrintedLine+1 {
@@ -776,11 +783,11 @@ func searchFile(w io.Writer, path string, re *regexp.Regexp, pattern, literalPat
 				}
 
 				// Print separator if there's a gap and no before context was printed
-				if !opts.JSON && !opts.JSONStream && needsContext && lastPrintedLine > 0 && lineNum > lastPrintedLine+1 {
+				if !jsonMode && !opts.JSONStream && needsContext && lastPrintedLine > 0 && lineNum > lastPrintedLine+1 {
 					printContextSeparator(w, opts)
 				}
 
-				if !opts.JSON && !opts.JSONStream {
+				if !jsonMode && !opts.JSONStream {
 					printLineWithColor(w, path, lineNum, matchStart+1, lineByteOffset, line, opts, false, re, pattern, useLiteral)
 					lastPrintedLine = lineNum
 				}
@@ -789,7 +796,7 @@ func searchFile(w io.Writer, path string, re *regexp.Regexp, pattern, literalPat
 			}
 		} else {
 			// Handle after context
-			if afterNeeded > 0 && !opts.JSON && !opts.JSONStream && !opts.Count && !opts.FilesWithMatch {
+			if afterNeeded > 0 && !jsonMode && !opts.JSONStream && !opts.Count && !opts.FilesWithMatch {
 				printLineWithColor(w, path, lineNum, 0, lineByteOffset, line, opts, true, re, pattern, useLiteral)
 				lastPrintedLine = lineNum
 
@@ -818,14 +825,14 @@ func searchFile(w io.Writer, path string, re *regexp.Regexp, pattern, literalPat
 		result.Files = append(result.Files, fileResult)
 		result.mu.Unlock()
 
-		if opts.FilesWithMatch && !opts.JSON && !opts.JSONStream {
+		if opts.FilesWithMatch && !jsonMode && !opts.JSONStream {
 			colorMode := ParseColorMode(opts.Color)
 			useColor := ShouldUseColor(colorMode)
 			scheme := DefaultScheme()
 			_, _ = fmt.Fprintln(w, FormatPath(path, scheme, useColor))
 		}
 
-		if opts.Count && !opts.JSON && !opts.JSONStream {
+		if opts.Count && !jsonMode && !opts.JSONStream {
 			colorMode := ParseColorMode(opts.Color)
 			useColor := ShouldUseColor(colorMode)
 			scheme := DefaultScheme()

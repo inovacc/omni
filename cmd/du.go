@@ -35,7 +35,7 @@ var duCmd = &cobra.Command{
 		opts.ApparentSize, _ = cmd.Flags().GetBool("apparent-size")
 		opts.NullTerminator, _ = cmd.Flags().GetBool("null")
 		opts.BlockSize, _ = cmd.Flags().GetInt64("block-size")
-		opts.JSON, _ = cmd.Flags().GetBool("json")
+		opts.OutputFormat = getOutputOpts(cmd).GetFormat()
 
 		return du.RunDU(cmd.OutOrStdout(), args, opts)
 	},
@@ -54,5 +54,5 @@ func init() {
 	duCmd.Flags().Bool("apparent-size", false, "print apparent sizes, rather than disk usage")
 	duCmd.Flags().BoolP("null", "0", false, "end each output line with NUL, not newline")
 	duCmd.Flags().Int64P("block-size", "B", 0, "scale sizes by SIZE before printing them")
-	duCmd.Flags().Bool("json", false, "output as JSON")
+
 }

@@ -1,13 +1,13 @@
 package ps
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"sort"
 	"strings"
 
 	"github.com/google/gops/goprocess"
+	"github.com/inovacc/omni/internal/cli/output"
 )
 
 // Options configure the ps command behavior
@@ -21,7 +21,7 @@ type Options struct {
 	NoHeaders bool   // --no-headers: don't print header line
 	Sort      string // --sort: sort by column (pid, cpu, mem, time)
 	Aux       bool   // aux: BSD-style all processes with user info
-	JSON      bool   // -j: output as JSON
+	OutputFormat output.Format // output format (text/json/table)
 	GoOnly    bool   // --go: show only Go processes
 }
 
@@ -66,8 +66,9 @@ func Run(w io.Writer, opts Options) error {
 	}
 
 	// JSON output
-	if opts.JSON {
-		return printJSON(w, processes)
+	f := output.New(w, opts.OutputFormat)
+	if f.IsJSON() {
+		return f.Print(processes)
 	}
 
 	// Print output
@@ -110,14 +111,6 @@ func filterGoProcesses(processes []Info) []Info {
 	}
 
 	return result
-}
-
-// printJSON outputs processes as JSON
-func printJSON(w io.Writer, processes []Info) error {
-	encoder := json.NewEncoder(w)
-	encoder.SetIndent("", "  ")
-
-	return encoder.Encode(processes)
 }
 
 func sortProcesses(procs []Info, sortBy string) {
@@ -224,8 +217,9 @@ func RunTop(w io.Writer, opts Options, n int) error {
 	}
 
 	// JSON output
-	if opts.JSON {
-		return printJSON(w, processes)
+	f := output.New(w, opts.OutputFormat)
+	if f.IsJSON() {
+		return f.Print(processes)
 	}
 
 	// Print top-style output

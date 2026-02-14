@@ -211,21 +211,52 @@ func (r *Result) Print(f *Formatter) error {
 	return nil
 }
 
+// WriteError writes an error as a formatted result
+func (f *Formatter) WriteError(err error) error {
+	if f.format == FormatJSON {
+		return f.printJSON(map[string]any{
+			"error":   err.Error(),
+			"success": false,
+		})
+	}
+
+	_, wErr := fmt.Fprintf(f.w, "error: %v\n", err)
+
+	return wErr
+}
+
+// FormatName returns the name of the current format (for debugging)
+func (f *Formatter) FormatName() string {
+	switch f.format {
+	case FormatJSON:
+		return "json"
+	case FormatTable:
+		return "table"
+	default:
+		return "text"
+	}
+}
+
 // Options that can be embedded in command options
 type Options struct {
-	JSON bool // --json flag
+	JSON  bool // --json flag
+	Table bool // --table flag
 }
 
 // GetFormat returns the format based on options
-func (o *Options) GetFormat() Format {
+func (o Options) GetFormat() Format {
 	if o.JSON {
 		return FormatJSON
+	}
+
+	if o.Table {
+		return FormatTable
 	}
 
 	return FormatText
 }
 
 // NewFormatter creates a formatter based on options
-func (o *Options) NewFormatter(w io.Writer) *Formatter {
+func (o Options) NewFormatter(w io.Writer) *Formatter {
 	return New(w, o.GetFormat())
 }
