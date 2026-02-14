@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"strings"
+	"sync/atomic"
 	"testing"
 )
 
@@ -202,9 +203,9 @@ func TestRunXargs(t *testing.T) {
 
 		input := strings.NewReader("a b c d")
 
-		callCount := 0
+		var callCount atomic.Int32
 		worker := func(args []string) error {
-			callCount++
+			callCount.Add(1)
 			return nil
 		}
 
@@ -213,8 +214,8 @@ func TestRunXargs(t *testing.T) {
 			t.Fatalf("RunXargs() error = %v", err)
 		}
 
-		if callCount != 4 {
-			t.Errorf("RunXargs() parallel called %d times, want 4", callCount)
+		if callCount.Load() != 4 {
+			t.Errorf("RunXargs() parallel called %d times, want 4", callCount.Load())
 		}
 	})
 }

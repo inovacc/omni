@@ -53,6 +53,11 @@ func RunChmod(w io.Writer, args []string, opts ChmodOptions) error {
 
 		newMode = fs.FileMode(mode)
 	default:
+		// All-digit strings that aren't valid octal (e.g., "999") are invalid
+		if isAllDigits(modeStr) {
+			return fmt.Errorf("chmod: invalid mode: '%s'", modeStr)
+		}
+
 		// Symbolic mode (e.g., u+x, go-w, a=rw)
 		isSymbolic = true
 
@@ -120,8 +125,17 @@ func chmodFile(w io.Writer, path string, newMode fs.FileMode, isSymbolic bool, s
 }
 
 func isOctalMode(s string) bool {
-	// Treat any all-digit string as an octal mode attempt
-	// so that invalid octals like "999" produce proper errors
+	for _, c := range s {
+		if c < '0' || c > '7' {
+			return false
+		}
+	}
+
+	return len(s) > 0
+}
+
+// isAllDigits returns true if the string contains only ASCII digits
+func isAllDigits(s string) bool {
 	for _, c := range s {
 		if c < '0' || c > '9' {
 			return false

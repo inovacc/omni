@@ -1294,13 +1294,17 @@ func TestCase(t *testing.T) {
 }
 
 func TestCmdtree(t *testing.T) {
-	out, err := runOmni(t, "cmdtree")
+	out, err := runOmni(t, "cmdtree", "--brief")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
 	if len(out) == 0 {
 		t.Error("expected non-empty output")
+	}
+
+	if !strings.Contains(out, "Command Tree") {
+		t.Errorf("expected output to contain 'Command Tree', got: %q", out[:min(100, len(out))])
 	}
 }
 
