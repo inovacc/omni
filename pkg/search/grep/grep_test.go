@@ -136,6 +136,61 @@ func TestSearchWithOptionsStruct(t *testing.T) {
 	})
 }
 
+func TestBREtoEREConversion(t *testing.T) {
+	tests := []struct {
+		name    string
+		pattern string
+		input   []string
+		want    int
+		opts    Options
+	}{
+		{
+			name:    "BRE alternation with backslash-pipe",
+			pattern: `cat\|dog`,
+			input:   []string{"cat", "dog", "bird"},
+			want:    2,
+			opts:    Options{},
+		},
+		{
+			name:    "BRE grouping with backslash-parens",
+			pattern: `\(foo\)\|bar`,
+			input:   []string{"foo", "bar", "baz"},
+			want:    2,
+			opts:    Options{},
+		},
+		{
+			name:    "ERE mode keeps literal backslash-pipe",
+			pattern: `cat|dog`,
+			input:   []string{"cat", "dog", "bird"},
+			want:    2,
+			opts:    Options{ExtendedRegexp: true},
+		},
+		{
+			name:    "BRE backslash-plus as one-or-more",
+			pattern: `ab\+c`,
+			input:   []string{"ac", "abc", "abbc"},
+			want:    2,
+			opts:    Options{},
+		},
+		{
+			name:    "BRE backslash-question as zero-or-one",
+			pattern: `ab\?c`,
+			input:   []string{"ac", "abc", "abbc"},
+			want:    2,
+			opts:    Options{},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := SearchWithOptionsStruct(tt.input, tt.pattern, tt.opts)
+			if len(result) != tt.want {
+				t.Errorf("got %d matches %v, want %d", len(result), result, tt.want)
+			}
+		})
+	}
+}
+
 func TestCompilePattern(t *testing.T) {
 	t.Run("simple pattern", func(t *testing.T) {
 		re, err := CompilePattern("hello", Options{})

@@ -153,11 +153,12 @@ func RunGrep(w io.Writer, r io.Reader, pattern string, args []string, opts GrepO
 
 func compilePattern(pattern string, opts GrepOptions) (*regexp.Regexp, error) {
 	pkgOpts := pkggrep.Options{
-		IgnoreCase:   opts.IgnoreCase,
-		InvertMatch:  false, // not used for pattern compilation
-		FixedStrings: opts.FixedStrings,
-		WordRegexp:   opts.WordRegexp,
-		LineRegexp:   opts.LineRegexp,
+		IgnoreCase:     opts.IgnoreCase,
+		InvertMatch:    false, // not used for pattern compilation
+		FixedStrings:   opts.FixedStrings,
+		WordRegexp:     opts.WordRegexp,
+		LineRegexp:     opts.LineRegexp,
+		ExtendedRegexp: opts.ExtendedRegexp,
 	}
 
 	return pkggrep.CompilePattern(pattern, pkgOpts)

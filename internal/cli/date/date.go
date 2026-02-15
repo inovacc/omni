@@ -1,18 +1,19 @@
 package date
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"time"
+
+	"github.com/inovacc/omni/internal/cli/output"
 )
 
 // DateOptions configures the date command behavior
 type DateOptions struct {
-	Format string // custom format string
-	UTC    bool   // -u: use UTC time
-	ISO    bool   // --iso-8601: output date/time in ISO 8601 format
-	JSON   bool   // --json: output as JSON
+	Format       string        // custom format string
+	UTC          bool          // -u: use UTC time
+	ISO          bool          // --iso-8601: output date/time in ISO 8601 format
+	OutputFormat output.Format // output format
 }
 
 // DateResult represents date output for JSON
@@ -45,7 +46,8 @@ func RunDate(w io.Writer, opts DateOptions) error {
 		format = "2006-01-02T15:04:05-07:00"
 	}
 
-	if opts.JSON {
+	f := output.New(w, opts.OutputFormat)
+	if f.IsJSON() {
 		zone, _ := now.Zone()
 		result := DateResult{
 			Formatted: now.Format(format),
@@ -62,7 +64,7 @@ func RunDate(w io.Writer, opts DateOptions) error {
 			UTC:       opts.UTC,
 		}
 
-		return json.NewEncoder(w).Encode(result)
+		return f.Print(result)
 	}
 
 	_, _ = fmt.Fprintln(w, now.Format(format))

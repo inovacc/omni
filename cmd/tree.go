@@ -42,6 +42,7 @@ Examples:
 		opts.Hash, _ = cmd.Flags().GetBool("hash")
 		opts.JSON, _ = cmd.Flags().GetBool("json")
 		opts.JSONStream, _ = cmd.Flags().GetBool("json-stream")
+		opts.OutputFormat = getOutputOpts(cmd).GetFormat()
 		opts.NoColor, _ = cmd.Flags().GetBool("no-color")
 		opts.Size, _ = cmd.Flags().GetBool("size")
 		opts.Date, _ = cmd.Flags().GetBool("date")

@@ -32,7 +32,7 @@ Examples:
 	RunE: func(cmd *cobra.Command, args []string) error {
 		opts := lint.LintOptions{}
 
-		opts.Format, _ = cmd.Flags().GetString("format")
+		opts.OutputFormat = getOutputOpts(cmd).GetFormat()
 		opts.Fix, _ = cmd.Flags().GetBool("fix")
 		opts.Strict, _ = cmd.Flags().GetBool("strict")
 		opts.Quiet, _ = cmd.Flags().GetBool("quiet")
@@ -44,7 +44,6 @@ Examples:
 func init() {
 	rootCmd.AddCommand(lintCmd)
 
-	lintCmd.Flags().StringP("format", "f", "text", "output format (text, json)")
 	lintCmd.Flags().Bool("fix", false, "auto-fix issues where possible")
 	lintCmd.Flags().Bool("strict", false, "enable strict mode (more warnings become errors)")
 	lintCmd.Flags().BoolP("quiet", "q", false, "only show errors, not warnings")

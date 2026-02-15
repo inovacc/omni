@@ -25,7 +25,7 @@ FORMAT controls the output. Interpreted sequences are:
 
 		opts.UTC, _ = cmd.Flags().GetBool("utc")
 		opts.ISO, _ = cmd.Flags().GetBool("iso-8601")
-		opts.JSON, _ = cmd.Flags().GetBool("json")
+		opts.OutputFormat = getOutputOpts(cmd).GetFormat()
 
 		// Check if format is provided as argument (like +%Y-%m-%d)
 		if len(args) > 0 && len(args[0]) > 0 && args[0][0] == '+' {
@@ -41,7 +41,6 @@ func init() {
 
 	dateCmd.Flags().BoolP("utc", "u", false, "print Coordinated Universal Time (UTC)")
 	dateCmd.Flags().Bool("iso-8601", false, "output date/time in ISO 8601 format")
-	dateCmd.Flags().Bool("json", false, "output as JSON")
 }
 
 // convertDateFormat converts strftime-style format to Go's time format

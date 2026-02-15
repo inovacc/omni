@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"strings"
 	"testing"
+
+	"github.com/inovacc/omni/internal/cli/output"
 )
 
 func TestParse(t *testing.T) {
@@ -168,7 +170,7 @@ func TestRun(t *testing.T) {
 func TestRunJSON(t *testing.T) {
 	var buf bytes.Buffer
 
-	err := Run(&buf, []string{"*/15 * * * *"}, Options{JSON: true})
+	err := Run(&buf, []string{"*/15 * * * *"}, Options{OutputFormat: output.FormatJSON})
 	if err != nil {
 		t.Fatalf("Run() error = %v", err)
 	}
@@ -199,7 +201,7 @@ func TestRunValidate(t *testing.T) {
 func TestRunValidateJSON(t *testing.T) {
 	var buf bytes.Buffer
 
-	err := Run(&buf, []string{"0 9 * * *"}, Options{Validate: true, JSON: true})
+	err := Run(&buf, []string{"0 9 * * *"}, Options{Validate: true, OutputFormat: output.FormatJSON})
 	if err != nil {
 		t.Fatalf("Run() error = %v", err)
 	}

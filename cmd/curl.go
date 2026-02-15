@@ -80,6 +80,8 @@ Examples:
 			}
 		}
 
+		opts.OutputFormat = getOutputOpts(cmd).GetFormat()
+
 		return curl.Run(cmd.OutOrStdout(), args, opts)
 	},
 }

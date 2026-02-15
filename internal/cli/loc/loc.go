@@ -2,7 +2,6 @@ package loc
 
 import (
 	"bufio"
-	"encoding/json"
 	"fmt"
 	"io"
 	"io/fs"
@@ -11,13 +10,15 @@ import (
 	"regexp"
 	"sort"
 	"strings"
+
+	"github.com/inovacc/omni/internal/cli/output"
 )
 
 // Options configures the loc command behavior
 type Options struct {
-	Exclude []string // directories to exclude
-	Hidden  bool     // include hidden files
-	JSON    bool     // output as JSON
+	Exclude      []string      // directories to exclude
+	Hidden       bool          // include hidden files
+	OutputFormat output.Format // output format
 }
 
 // Stats holds statistics for a single file
@@ -521,11 +522,9 @@ func RunLoc(w io.Writer, args []string, opts Options) error {
 		return result.Languages[i].Code > result.Languages[j].Code
 	})
 
-	if opts.JSON {
-		enc := json.NewEncoder(w)
-		enc.SetIndent("", "  ")
-
-		return enc.Encode(result)
+	f := output.New(w, opts.OutputFormat)
+	if f.IsJSON() {
+		return f.Print(result)
 	}
 
 	return printTable(w, result)

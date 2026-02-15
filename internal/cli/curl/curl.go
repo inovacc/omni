@@ -10,19 +10,22 @@ import (
 	"os"
 	"strings"
 	"time"
+
+	"github.com/inovacc/omni/internal/cli/output"
 )
 
 // Options configures the curl command behavior
 type Options struct {
-	Method      string            // HTTP method
-	Headers     map[string]string // Custom headers
-	Data        string            // Request body
-	Form        bool              // Send as form data
-	JSON        bool              // Raw JSON output (no formatting)
-	Verbose     bool              // Show request/response details
-	Timeout     time.Duration     // Request timeout
-	FollowRedir bool              // Follow redirects
-	Insecure    bool              // Skip TLS verification
+	Method       string            // HTTP method
+	Headers      map[string]string // Custom headers
+	Data         string            // Request body
+	Form         bool              // Send as form data
+	JSON         bool              // Raw JSON output (no formatting) — deprecated, use OutputFormat
+	Verbose      bool              // Show request/response details
+	Timeout      time.Duration     // Request timeout
+	FollowRedir  bool              // Follow redirects
+	Insecure     bool              // Skip TLS verification
+	OutputFormat output.Format     // global output format
 }
 
 // Response represents the HTTP response
@@ -141,8 +144,9 @@ func Run(w io.Writer, args []string, opts Options) error {
 	}
 
 	// Output response
-	if opts.JSON {
-		// Raw JSON output mode - return structured response
+	useJSON := opts.JSON || opts.OutputFormat == output.FormatJSON
+	if useJSON {
+		// Structured JSON output mode
 		response := Response{
 			Status:     resp.Status,
 			StatusCode: resp.StatusCode,

@@ -30,7 +30,7 @@ Examples:
 
 		opts.Exclude, _ = cmd.Flags().GetStringSlice("exclude")
 		opts.Hidden, _ = cmd.Flags().GetBool("hidden")
-		opts.JSON, _ = cmd.Flags().GetBool("json")
+		opts.OutputFormat = getOutputOpts(cmd).GetFormat()
 
 		return loc.RunLoc(cmd.OutOrStdout(), args, opts)
 	},
@@ -41,5 +41,4 @@ func init() {
 
 	locCmd.Flags().StringSliceP("exclude", "e", nil, "directories to exclude")
 	locCmd.Flags().Bool("hidden", false, "include hidden files")
-	locCmd.Flags().Bool("json", false, "output as JSON")
 }
