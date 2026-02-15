@@ -4,11 +4,14 @@ package xxd
 import (
 	"bufio"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"io"
 	"os"
 	"strings"
 	"unicode"
+
+	"github.com/inovacc/omni/internal/cli/cmderr"
 )
 
 // Options configures the xxd command behavior
@@ -43,6 +46,9 @@ func Run(w io.Writer, r io.Reader, args []string, opts Options) error {
 	if len(args) > 0 && args[0] != "-" {
 		f, err := os.Open(args[0])
 		if err != nil {
+			if errors.Is(err, os.ErrNotExist) {
+				return cmderr.Wrap(cmderr.ErrNotFound, fmt.Sprintf("xxd: %s", err))
+			}
 			return fmt.Errorf("xxd: %w", err)
 		}
 

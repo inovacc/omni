@@ -2,11 +2,13 @@ package tail
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"io"
 	"os"
 	"time"
 
+	"github.com/inovacc/omni/internal/cli/cmderr"
 	"github.com/inovacc/omni/internal/cli/input"
 	"github.com/inovacc/omni/internal/cli/output"
 )
@@ -44,6 +46,12 @@ func RunTail(w io.Writer, r io.Reader, args []string, opts TailOptions) error {
 
 	sources, err := input.Open(args, r)
 	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return cmderr.Wrap(cmderr.ErrNotFound, fmt.Sprintf("tail: %s", err))
+		}
+		if errors.Is(err, os.ErrPermission) {
+			return cmderr.Wrap(cmderr.ErrPermission, fmt.Sprintf("tail: %s", err))
+		}
 		return fmt.Errorf("tail: %w", err)
 	}
 	defer input.CloseAll(sources)

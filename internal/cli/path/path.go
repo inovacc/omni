@@ -5,6 +5,7 @@ import (
 	"io"
 	"path/filepath"
 
+	"github.com/inovacc/omni/internal/cli/cmderr"
 	"github.com/inovacc/omni/internal/cli/output"
 )
 
@@ -51,7 +52,7 @@ type CleanResult struct {
 // RunClean prints the cleaned path for each argument
 func RunClean(w io.Writer, args []string, opts CleanOptions) error {
 	if len(args) == 0 {
-		return fmt.Errorf("path clean: missing operand")
+		return cmderr.Wrap(cmderr.ErrInvalidInput, "path clean: missing operand")
 	}
 
 	f := output.New(w, opts.OutputFormat)
@@ -89,7 +90,7 @@ type AbsResult struct {
 // RunAbs prints the absolute path for each argument
 func RunAbs(w io.Writer, args []string, opts AbsOptions) error {
 	if len(args) == 0 {
-		return fmt.Errorf("path abs: missing operand")
+		return cmderr.Wrap(cmderr.ErrInvalidInput, "path abs: missing operand")
 	}
 
 	f := output.New(w, opts.OutputFormat)

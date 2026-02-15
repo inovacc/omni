@@ -1,12 +1,14 @@
 package hash
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"os"
 	"path/filepath"
 	"strings"
 
+	"github.com/inovacc/omni/internal/cli/cmderr"
 	"github.com/inovacc/omni/internal/cli/output"
 	"github.com/inovacc/omni/pkg/hashutil"
 )
@@ -183,7 +185,7 @@ func hashFile(w io.Writer, path string, opts HashOptions) error {
 
 func verifyChecksums(w io.Writer, args []string, opts HashOptions) error {
 	if len(args) == 0 {
-		return fmt.Errorf("hash: no checksum file specified")
+		return cmderr.Wrap(cmderr.ErrInvalidInput, "hash: no checksum file specified")
 	}
 
 	algo := hashutil.Algorithm(opts.Algorithm)
@@ -193,6 +195,9 @@ func verifyChecksums(w io.Writer, args []string, opts HashOptions) error {
 	for _, checksumFile := range args {
 		f, err := os.Open(checksumFile)
 		if err != nil {
+			if errors.Is(err, os.ErrNotExist) {
+				return cmderr.Wrap(cmderr.ErrNotFound, fmt.Sprintf("hash: %s", err))
+			}
 			return fmt.Errorf("hash: %w", err)
 		}
 
@@ -260,7 +265,7 @@ func verifyChecksums(w io.Writer, args []string, opts HashOptions) error {
 			}
 		}
 
-		return fmt.Errorf("verification failed")
+		return cmderr.Wrap(cmderr.ErrConflict, "hash: verification failed")
 	}
 
 	return nil

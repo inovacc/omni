@@ -2,11 +2,13 @@ package text
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"io"
 	"os"
 	"strings"
 
+	"github.com/inovacc/omni/internal/cli/cmderr"
 	"github.com/inovacc/omni/internal/cli/input"
 	"github.com/inovacc/omni/internal/cli/output"
 	"github.com/inovacc/omni/pkg/textutil"
@@ -65,6 +67,12 @@ type UniqLine struct {
 func RunSort(w io.Writer, r io.Reader, args []string, opts SortOptions) error {
 	sources, err := input.Open(args, r)
 	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return cmderr.Wrap(cmderr.ErrNotFound, fmt.Sprintf("sort: %s", err))
+		}
+		if errors.Is(err, os.ErrPermission) {
+			return cmderr.Wrap(cmderr.ErrPermission, fmt.Sprintf("sort: %s", err))
+		}
 		return fmt.Errorf("sort: %w", err)
 	}
 	defer input.CloseAll(sources)
@@ -88,7 +96,7 @@ func RunSort(w io.Writer, r io.Reader, args []string, opts SortOptions) error {
 
 		disorder := textutil.CheckSorted(lines, pkgOpts)
 		if disorder != "" {
-			return fmt.Errorf("sort: disorder: %s", disorder)
+			return cmderr.Wrap(cmderr.ErrConflict, fmt.Sprintf("sort: disorder: %s", disorder))
 		}
 
 		return nil
@@ -146,6 +154,12 @@ func toPkgSortOptions(opts SortOptions) textutil.SortOptions {
 func RunUniq(w io.Writer, r io.Reader, args []string, opts UniqOptions) error {
 	src, err := input.OpenOne(args, r)
 	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return cmderr.Wrap(cmderr.ErrNotFound, fmt.Sprintf("uniq: %s", err))
+		}
+		if errors.Is(err, os.ErrPermission) {
+			return cmderr.Wrap(cmderr.ErrPermission, fmt.Sprintf("uniq: %s", err))
+		}
 		return fmt.Errorf("uniq: %w", err)
 	}
 	defer input.MustClose(&src)
