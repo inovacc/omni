@@ -19,6 +19,22 @@ var (
 	ErrUnsupported  = errors.New("unsupported")
 )
 
+// SilentError is an error that should set an exit code without printing a message.
+// Cobra's SilenceErrors must be checked, or the root command must handle this type.
+type SilentError struct {
+	Code int
+}
+
+func (e *SilentError) Error() string {
+	return ""
+}
+
+// SilentExit returns a SilentError with the given exit code.
+// Use for commands like grep that exit non-zero on "no match" without printing errors.
+func SilentExit(code int) error {
+	return &SilentError{Code: code}
+}
+
 // ExitError wraps an error with a specific exit code.
 type ExitError struct {
 	Err  error
@@ -54,7 +70,13 @@ func ExitCodeFor(err error) int {
 		return 0
 	}
 
-	// Check for explicit exit code first.
+	// Check for silent exit first.
+	var silentErr *SilentError
+	if errors.As(err, &silentErr) {
+		return silentErr.Code
+	}
+
+	// Check for explicit exit code.
 	var exitErr *ExitError
 	if errors.As(err, &exitErr) {
 		return exitErr.Code

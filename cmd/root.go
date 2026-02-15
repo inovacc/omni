@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"errors"
+	"fmt"
 	"os"
 
 	"github.com/inovacc/omni/internal/cli/cmderr"
@@ -57,11 +59,19 @@ func Execute() {
 	}
 
 	if err != nil {
+		// Print error unless it's a silent exit (e.g. grep no-match)
+		var silent *cmderr.SilentError
+		if !errors.As(err, &silent) {
+			_, _ = fmt.Fprintf(os.Stderr, "Error: %s\n", err)
+		}
+
 		os.Exit(cmderr.ExitCodeFor(err))
 	}
 }
 
 func init() {
+	rootCmd.SilenceErrors = true
+	rootCmd.SilenceUsage = true
 	rootCmd.CompletionOptions.DisableDefaultCmd = true
 	rootCmd.PersistentFlags().Bool("json", false, "output as JSON")
 	rootCmd.PersistentFlags().Bool("table", false, "output as aligned table")
