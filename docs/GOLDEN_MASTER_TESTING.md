@@ -4,7 +4,7 @@ Golden master (snapshot) testing captures exact command outputs as baselines and
 
 ## Motivation
 
-omni has 148+ CLI commands. When command output changes, golden master tests detect whether the change was intentional or a regression, without writing individual assertions for each output format.
+omni has 155+ CLI commands. When command output changes, golden master tests detect whether the change was intentional or a regression, without writing individual assertions for each output format.
 
 ## How It Works
 
@@ -35,7 +35,8 @@ YAML Registry → Discovery → Execution → Normalization → Comparison → R
 | xxd | 3 | file + stdin |
 | strings | 1 | file |
 | case_conv | 4 | args |
-| **Total** | **81** | |
+| exist | 9 | args |
+| **Total** | **90** | |
 
 ## Quick Start
 

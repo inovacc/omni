@@ -6,7 +6,7 @@
 flowchart TB
     subgraph CLI["CLI Layer (cmd/)"]
         Root[rootCmd]
-        Cmds[148+ Cobra Commands]
+        Cmds[155+ Cobra Commands]
         Root --> Cmds
     end
 
@@ -21,6 +21,8 @@ flowchart TB
             Project[project/]
             More["... 70+ packages"]
         end
+        CmdErr[cmderr/ - Error Sentinels]
+        Command[command/ - Command Interface]
         Flags[flags/ - Feature Flags]
         Logger[logger/ - KSUID Logging]
     end
