@@ -1,10 +1,13 @@
 package fs
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"os"
 	"time"
+
+	"github.com/inovacc/omni/internal/cli/cmderr"
 )
 
 func Cd(path string) error {
@@ -44,11 +47,22 @@ func Touch(path string) error {
 }
 
 func Rm(path string, recursive bool) error {
+	var err error
 	if recursive {
-		return os.RemoveAll(path)
+		err = os.RemoveAll(path)
+	} else {
+		err = os.Remove(path)
 	}
-
-	return os.Remove(path)
+	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return cmderr.Wrap(cmderr.ErrNotFound, fmt.Sprintf("rm: %s", path))
+		}
+		if errors.Is(err, os.ErrPermission) {
+			return cmderr.Wrap(cmderr.ErrPermission, fmt.Sprintf("rm: %s", path))
+		}
+		return err
+	}
+	return nil
 }
 
 func IsNotExist(err error) bool {
@@ -58,6 +72,12 @@ func IsNotExist(err error) bool {
 func Copy(src, dst string) error {
 	sourceFileStat, err := os.Stat(src)
 	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return cmderr.Wrap(cmderr.ErrNotFound, fmt.Sprintf("cp: %s", src))
+		}
+		if errors.Is(err, os.ErrPermission) {
+			return cmderr.Wrap(cmderr.ErrPermission, fmt.Sprintf("cp: %s", src))
+		}
 		return err
 	}
 
@@ -67,6 +87,9 @@ func Copy(src, dst string) error {
 
 	source, err := os.Open(src)
 	if err != nil {
+		if errors.Is(err, os.ErrPermission) {
+			return cmderr.Wrap(cmderr.ErrPermission, fmt.Sprintf("cp: %s", src))
+		}
 		return err
 	}
 
@@ -76,6 +99,9 @@ func Copy(src, dst string) error {
 
 	destination, err := os.Create(dst)
 	if err != nil {
+		if errors.Is(err, os.ErrPermission) {
+			return cmderr.Wrap(cmderr.ErrPermission, fmt.Sprintf("cp: %s", dst))
+		}
 		return err
 	}
 
@@ -89,7 +115,16 @@ func Copy(src, dst string) error {
 }
 
 func Move(src, dst string) error {
-	return os.Rename(src, dst)
+	if err := os.Rename(src, dst); err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return cmderr.Wrap(cmderr.ErrNotFound, fmt.Sprintf("mv: %s", src))
+		}
+		if errors.Is(err, os.ErrPermission) {
+			return cmderr.Wrap(cmderr.ErrPermission, fmt.Sprintf("mv: %s", src))
+		}
+		return err
+	}
+	return nil
 }
 
 // Stat returns file information
