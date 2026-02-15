@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/inovacc/omni/internal/cli/cmderr"
 	"github.com/inovacc/omni/internal/cli/input"
 )
 
@@ -30,7 +31,7 @@ func RunSed(w io.Writer, r io.Reader, args []string, opts SedOptions) error {
 	}
 
 	if len(opts.Expression) == 0 {
-		return fmt.Errorf("sed: no expression specified")
+		return cmderr.Wrap(cmderr.ErrInvalidInput, "sed: no expression specified")
 	}
 
 	// Parse all expressions into commands
@@ -178,14 +179,14 @@ func parseSedExpression(expr string) (sedCommand, error) {
 		// Pattern address: /pattern/command
 		end := strings.Index(expr[1:], "/")
 		if end == -1 {
-			return nil, fmt.Errorf("unterminated address regex")
+			return nil, cmderr.Wrap(cmderr.ErrInvalidInput, "sed: unterminated address regex")
 		}
 
 		pattern := expr[1 : end+1]
 
 		re, err := regexp.Compile(pattern)
 		if err != nil {
-			return nil, fmt.Errorf("invalid regex: %w", err)
+			return nil, cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("sed: invalid regex: %s", err))
 		}
 
 		rest := strings.TrimSpace(expr[end+2:])
@@ -249,19 +250,19 @@ func parseSedExpression(expr string) (sedCommand, error) {
 		return &sedQuit{}, nil
 	}
 
-	return nil, fmt.Errorf("unknown command: %s", expr)
+	return nil, cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("sed: unknown command: %s", expr))
 }
 
 func parseSubstitute(expr string) (*sedSubstitute, error) {
 	if len(expr) < 4 || expr[0] != 's' {
-		return nil, fmt.Errorf("invalid substitution")
+		return nil, cmderr.Wrap(cmderr.ErrInvalidInput, "sed: invalid substitution")
 	}
 
 	delim := expr[1]
 
 	parts := strings.Split(expr[2:], string(delim))
 	if len(parts) < 2 {
-		return nil, fmt.Errorf("invalid substitution")
+		return nil, cmderr.Wrap(cmderr.ErrInvalidInput, "sed: invalid substitution")
 	}
 
 	pattern := parts[0]
@@ -274,7 +275,7 @@ func parseSubstitute(expr string) (*sedSubstitute, error) {
 
 	re, err := regexp.Compile(pattern)
 	if err != nil {
-		return nil, fmt.Errorf("invalid regex: %w", err)
+		return nil, cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("sed: invalid regex: %s", err))
 	}
 
 	sub := &sedSubstitute{

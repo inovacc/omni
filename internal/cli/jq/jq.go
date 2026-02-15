@@ -2,11 +2,13 @@ package jq
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"os"
 	"strings"
 
+	"github.com/inovacc/omni/internal/cli/cmderr"
 	"github.com/inovacc/omni/pkg/jsonutil"
 )
 
@@ -55,7 +57,7 @@ func RunJq(w io.Writer, r io.Reader, args []string, opts JqOptions) error {
 				if err := dec.Decode(&v); err == io.EOF {
 					break
 				} else if err != nil {
-					return fmt.Errorf("jq: parse error: %w", err)
+					return cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("jq: parse error: %s", err))
 				}
 
 				items = append(items, v)
@@ -65,7 +67,7 @@ func RunJq(w io.Writer, r io.Reader, args []string, opts JqOptions) error {
 		} else {
 			var v any
 			if err := json.Unmarshal(data, &v); err != nil {
-				return fmt.Errorf("jq: parse error: %w", err)
+				return cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("jq: parse error: %s", err))
 			}
 
 			inputs = []any{v}
@@ -84,12 +86,15 @@ func RunJq(w io.Writer, r io.Reader, args []string, opts JqOptions) error {
 			}
 
 			if err != nil {
+				if errors.Is(err, os.ErrNotExist) {
+					return cmderr.Wrap(cmderr.ErrNotFound, fmt.Sprintf("jq: %s", file))
+				}
 				return fmt.Errorf("jq: %w", err)
 			}
 
 			var v any
 			if err := json.Unmarshal(data, &v); err != nil {
-				return fmt.Errorf("jq: %s: parse error: %w", file, err)
+				return cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("jq: %s: parse error: %s", file, err))
 			}
 
 			inputs = append(inputs, v)

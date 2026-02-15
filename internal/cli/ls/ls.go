@@ -1,6 +1,7 @@
 package ls
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"io/fs"
@@ -10,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/inovacc/omni/internal/cli/cmderr"
 	"github.com/inovacc/omni/internal/cli/output"
 )
 
@@ -99,6 +101,12 @@ func Run(w io.Writer, args []string, opts Options) error {
 func listPath(path string, opts Options) ([]Entry, error) {
 	info, err := os.Lstat(path)
 	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return nil, cmderr.Wrap(cmderr.ErrNotFound, fmt.Sprintf("ls: %s", path))
+		}
+		if errors.Is(err, os.ErrPermission) {
+			return nil, cmderr.Wrap(cmderr.ErrPermission, fmt.Sprintf("ls: %s", path))
+		}
 		return nil, err
 	}
 
@@ -111,6 +119,12 @@ func listPath(path string, opts Options) ([]Entry, error) {
 	// Read directory contents
 	dirEntries, err := os.ReadDir(path)
 	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return nil, cmderr.Wrap(cmderr.ErrNotFound, fmt.Sprintf("ls: %s", path))
+		}
+		if errors.Is(err, os.ErrPermission) {
+			return nil, cmderr.Wrap(cmderr.ErrPermission, fmt.Sprintf("ls: %s", path))
+		}
 		return nil, err
 	}
 

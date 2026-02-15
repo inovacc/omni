@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/inovacc/omni/internal/cli/cmderr"
 	"github.com/inovacc/omni/internal/cli/output"
 )
 
@@ -73,42 +74,42 @@ func RunFind(w io.Writer, paths []string, opts FindOptions) error {
 	if opts.Name != "" {
 		namePattern, err = globToRegex(opts.Name, false)
 		if err != nil {
-			return fmt.Errorf("find: invalid name pattern: %w", err)
+			return cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("find: invalid name pattern: %s", err))
 		}
 	}
 
 	if opts.IName != "" {
 		namePattern, err = globToRegex(opts.IName, true)
 		if err != nil {
-			return fmt.Errorf("find: invalid iname pattern: %w", err)
+			return cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("find: invalid iname pattern: %s", err))
 		}
 	}
 
 	if opts.Path != "" {
 		pathPattern, err = globToRegex(opts.Path, false)
 		if err != nil {
-			return fmt.Errorf("find: invalid path pattern: %w", err)
+			return cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("find: invalid path pattern: %s", err))
 		}
 	}
 
 	if opts.IPath != "" {
 		pathPattern, err = globToRegex(opts.IPath, true)
 		if err != nil {
-			return fmt.Errorf("find: invalid ipath pattern: %w", err)
+			return cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("find: invalid ipath pattern: %s", err))
 		}
 	}
 
 	if opts.Regex != "" {
 		pathPattern, err = regexp.Compile(opts.Regex)
 		if err != nil {
-			return fmt.Errorf("find: invalid regex: %w", err)
+			return cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("find: invalid regex: %s", err))
 		}
 	}
 
 	if opts.IRegex != "" {
 		pathPattern, err = regexp.Compile("(?i)" + opts.IRegex)
 		if err != nil {
-			return fmt.Errorf("find: invalid iregex: %w", err)
+			return cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("find: invalid iregex: %s", err))
 		}
 	}
 
@@ -118,7 +119,7 @@ func RunFind(w io.Writer, paths []string, opts FindOptions) error {
 	if opts.Size != "" {
 		sizeFilter, err = parseSizeFilter(opts.Size)
 		if err != nil {
-			return fmt.Errorf("find: invalid size: %w", err)
+			return cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("find: invalid size: %s", err))
 		}
 	}
 
@@ -128,28 +129,28 @@ func RunFind(w io.Writer, paths []string, opts FindOptions) error {
 	if opts.MTime != "" {
 		mtimeFilter, err = parseTimeFilter(opts.MTime, 24*time.Hour)
 		if err != nil {
-			return fmt.Errorf("find: invalid mtime: %w", err)
+			return cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("find: invalid mtime: %s", err))
 		}
 	}
 
 	if opts.MMin != "" {
 		mtimeFilter, err = parseTimeFilter(opts.MMin, time.Minute)
 		if err != nil {
-			return fmt.Errorf("find: invalid mmin: %w", err)
+			return cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("find: invalid mmin: %s", err))
 		}
 	}
 
 	if opts.ATime != "" {
 		atimeFilter, err = parseTimeFilter(opts.ATime, 24*time.Hour)
 		if err != nil {
-			return fmt.Errorf("find: invalid atime: %w", err)
+			return cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("find: invalid atime: %s", err))
 		}
 	}
 
 	if opts.AMin != "" {
 		atimeFilter, err = parseTimeFilter(opts.AMin, time.Minute)
 		if err != nil {
-			return fmt.Errorf("find: invalid amin: %w", err)
+			return cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("find: invalid amin: %s", err))
 		}
 	}
 

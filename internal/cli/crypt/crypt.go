@@ -1,11 +1,13 @@
 package crypt
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"os"
 	"strings"
 
+	"github.com/inovacc/omni/internal/cli/cmderr"
 	"github.com/inovacc/omni/pkg/cryptutil"
 )
 
@@ -37,6 +39,9 @@ func RunEncrypt(w io.Writer, args []string, opts CryptOptions) error {
 	}
 
 	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return cmderr.Wrap(cmderr.ErrNotFound, fmt.Sprintf("encrypt: %s", args[0]))
+		}
 		return fmt.Errorf("encrypt: %w", err)
 	}
 
@@ -97,6 +102,9 @@ func RunDecrypt(w io.Writer, args []string, opts CryptOptions) error {
 	}
 
 	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return cmderr.Wrap(cmderr.ErrNotFound, fmt.Sprintf("decrypt: %s", args[0]))
+		}
 		return fmt.Errorf("decrypt: %w", err)
 	}
 
@@ -175,7 +183,7 @@ func getPassword(opts CryptOptions) (string, error) {
 		return envPass, nil
 	}
 
-	return "", fmt.Errorf("no password provided (use -p, -P, -k, or omni_PASSWORD)")
+	return "", cmderr.Wrap(cmderr.ErrInvalidInput, "no password provided (use -p, -P, -k, or omni_PASSWORD)")
 }
 
 // GenerateKey generates a random encryption key

@@ -3,10 +3,13 @@ package cat
 import (
 	"bufio"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
+	"os"
 	"strings"
 
+	"github.com/inovacc/omni/internal/cli/cmderr"
 	"github.com/inovacc/omni/internal/cli/input"
 )
 
@@ -32,6 +35,12 @@ type CatLine struct {
 func RunCat(w io.Writer, r io.Reader, args []string, opts CatOptions) error {
 	sources, err := input.Open(args, r)
 	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return cmderr.Wrap(cmderr.ErrNotFound, fmt.Sprintf("cat: %s", err))
+		}
+		if errors.Is(err, os.ErrPermission) {
+			return cmderr.Wrap(cmderr.ErrPermission, fmt.Sprintf("cat: %s", err))
+		}
 		return fmt.Errorf("cat: %w", err)
 	}
 	defer input.CloseAll(sources)

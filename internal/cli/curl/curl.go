@@ -3,14 +3,17 @@ package curl
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"net/url"
 	"os"
 	"strings"
 	"time"
 
+	"github.com/inovacc/omni/internal/cli/cmderr"
 	"github.com/inovacc/omni/internal/cli/output"
 )
 
@@ -40,7 +43,7 @@ type Response struct {
 // Run executes an HTTP request
 func Run(w io.Writer, args []string, opts Options) error {
 	if len(args) == 0 {
-		return fmt.Errorf("curl: URL required")
+		return cmderr.Wrap(cmderr.ErrInvalidInput, "curl: URL required")
 	}
 
 	// Parse URL and arguments
@@ -119,6 +122,10 @@ func Run(w io.Writer, args []string, opts Options) error {
 
 	resp, err := client.Do(req)
 	if err != nil {
+		var netErr net.Error
+		if errors.As(err, &netErr) && netErr.Timeout() {
+			return cmderr.Wrap(cmderr.ErrTimeout, fmt.Sprintf("curl: %s", err))
+		}
 		return fmt.Errorf("curl: %w", err)
 	}
 
@@ -247,14 +254,14 @@ func parseArgs(args []string, opts Options) (string, map[string]string, string, 
 	}
 
 	if urlStr == "" {
-		return "", nil, "", fmt.Errorf("curl: URL required")
+		return "", nil, "", cmderr.Wrap(cmderr.ErrInvalidInput, "curl: URL required")
 	}
 
 	// Add URL parameters
 	if len(params) > 0 {
 		parsedURL, err := url.Parse(urlStr)
 		if err != nil {
-			return "", nil, "", fmt.Errorf("curl: invalid URL: %w", err)
+			return "", nil, "", cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("curl: invalid URL: %s", err))
 		}
 
 		q := parsedURL.Query()

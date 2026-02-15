@@ -3,11 +3,13 @@ package diff
 import (
 	"bufio"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"os"
 	"strings"
 
+	"github.com/inovacc/omni/internal/cli/cmderr"
 	pkgdiff "github.com/inovacc/omni/pkg/textutil/diff"
 )
 
@@ -66,11 +68,17 @@ func RunDiff(w io.Writer, args []string, opts DiffOptions) error {
 	// Check if files are directories
 	info1, err := os.Stat(file1)
 	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return cmderr.Wrap(cmderr.ErrNotFound, fmt.Sprintf("diff: %s", file1))
+		}
 		return fmt.Errorf("diff: %s: %w", file1, err)
 	}
 
 	info2, err := os.Stat(file2)
 	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return cmderr.Wrap(cmderr.ErrNotFound, fmt.Sprintf("diff: %s", file2))
+		}
 		return fmt.Errorf("diff: %s: %w", file2, err)
 	}
 
@@ -128,6 +136,9 @@ func diffFiles(w io.Writer, file1, file2 string, opts DiffOptions) error {
 func readLines(filename string, opts DiffOptions) ([]string, error) {
 	file, err := os.Open(filename)
 	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return nil, cmderr.Wrap(cmderr.ErrNotFound, fmt.Sprintf("diff: %s", filename))
+		}
 		return nil, fmt.Errorf("diff: %w", err)
 	}
 
@@ -334,21 +345,27 @@ func fileType(e os.DirEntry) string {
 func diffJSON(w io.Writer, file1, file2 string, opts DiffOptions) error {
 	data1, err := os.ReadFile(file1)
 	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return cmderr.Wrap(cmderr.ErrNotFound, fmt.Sprintf("diff: %s", file1))
+		}
 		return fmt.Errorf("diff: %w", err)
 	}
 
 	data2, err := os.ReadFile(file2)
 	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return cmderr.Wrap(cmderr.ErrNotFound, fmt.Sprintf("diff: %s", file2))
+		}
 		return fmt.Errorf("diff: %w", err)
 	}
 
 	var json1, json2 any
 	if err := json.Unmarshal(data1, &json1); err != nil {
-		return fmt.Errorf("diff: %s: invalid JSON: %w", file1, err)
+		return cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("diff: %s: invalid JSON: %s", file1, err))
 	}
 
 	if err := json.Unmarshal(data2, &json2); err != nil {
-		return fmt.Errorf("diff: %s: invalid JSON: %w", file2, err)
+		return cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("diff: %s: invalid JSON: %s", file2, err))
 	}
 
 	differences := pkgdiff.CompareJSON(json1, json2)
