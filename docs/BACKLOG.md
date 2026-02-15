@@ -22,10 +22,12 @@ See CLAUDE.md for the full command inventory.
 ## High Priority (P0)
 
 ### Core Infrastructure
-- [ ] Unified `Command` interface contract
-- [ ] Consistent error model with exit codes
+- [x] Unified `Command` interface contract (`internal/cli/command/` — interface, Registry, adapters)
+- [~] Consistent error model with exit codes (`cmderr` adopted in 19/155+ commands; batches 1-2 done)
 - [x] Add `--json` flag to remaining commands that lack it
 - [x] Unified output formatter (text/json/table)
+- [ ] cmderr rollout batch 3: remaining ~130 commands (data, compress, system, flow, cloud)
+- [ ] Migrate `pipe` command to use `command.Registry` for dispatch
 
 ---
 
@@ -113,9 +115,10 @@ See CLAUDE.md for the full command inventory.
 ## Technical Debt
 
 - [ ] Standardize flag naming across commands
-- [ ] Add context.Context to all long-running operations
-- [ ] Improve error messages with actionable suggestions
+- [ ] Add context.Context to all long-running operations (Command interface provides this path)
+- [~] Improve error messages with actionable suggestions (cmderr sentinels provide structured exit codes)
 - [ ] Split large packages (archive.go ~500 lines)
+- [ ] Migrate remaining Run signatures to `command.Command` interface incrementally
 
 ---
 
@@ -125,7 +128,8 @@ See CLAUDE.md for the full command inventory.
 - **Total Test Cases:** ~700+ tests across all packages
 - **Overall Coverage:** 30.9% (includes vendored buf packages)
 - **Omni-owned pkg/ avg:** ~75% (16 of 31 packages above 80%)
-- **Packages without Tests:** twig/builder, twig/parser, video/root, video/cache, video/downloader, video/jsinterp, video/nethttp
+- **Packages without Tests:** twig/builder, twig/parser, video/jsinterp
+- **Packages with new tests (Feb 2026):** video/downloader (progress, fragment, selector), video/nethttp (cookies, SAPISID), video/extractor (helpers, M3U8), video/options
 
 ### Remaining
 - [ ] Tests for twig/builder and twig/parser

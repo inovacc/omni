@@ -50,10 +50,19 @@
 
 | Area | Issue | Priority |
 |------|-------|----------|
-| pkg/video (root, downloader, cache, nethttp, jsinterp) | No unit tests; relies on black-box integration tests | P1 |
+| pkg/video/jsinterp | No unit tests | P2 |
 | pkg/twig/builder, pkg/twig/parser | No tests | P2 |
-| pkg/video/extractor | Only 5.7% coverage | P1 |
 | Overall coverage 30.5% (51.6% omni-owned) | Heavily skewed by vendored buf packages | P1 |
+| cmderr adoption ~19/155+ commands | ~130 commands still return raw fmt.Errorf without exit code classification | P1 |
+
+### Recently Resolved
+
+| Area | Resolution |
+|------|------------|
+| pkg/video/downloader | Added progress, fragment, selector tests (Feb 2026) |
+| pkg/video/nethttp | Added cookies, SAPISID hash tests (Feb 2026) |
+| pkg/video/extractor | Added helpers, ParseM3U8Formats tests (Feb 2026) |
+| pkg/video/options | Added applyOptions, With* option tests (Feb 2026) |
 
 ---
 
