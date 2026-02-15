@@ -79,7 +79,6 @@ func (e InvalidEscape) Diagnose(d *report.Diagnostic) {
 			d.Apply(report.Snippetf(e.Span, "`\\%c` must be followed by at least one hex digit", c))
 			return
 		}
-
 		return
 	case 'u', 'U':
 		expected := 4
@@ -97,7 +96,6 @@ func (e InvalidEscape) Diagnose(d *report.Diagnostic) {
 			d.Apply(report.Snippetf(e.Span, "must be in the range U+0000 to U+10FFFF, except U+DC00 to U+DFFF"))
 			return
 		}
-
 		return
 	}
 

@@ -47,49 +47,36 @@ type FileSet interface {
 func NewFileSet(manifest Manifest, blobSet BlobSet) (FileSet, error) {
 	manifestDigestStringMap := make(map[string]struct{})
 	blobDigestStringMap := make(map[string]struct{})
-
 	for _, fileNode := range manifest.FileNodes() {
 		manifestDigestStringMap[fileNode.Digest().String()] = struct{}{}
 	}
-
 	for _, blob := range blobSet.Blobs() {
 		blobDigestStringMap[blob.Digest().String()] = struct{}{}
 	}
-
-	var (
-		onlyInManifest []string
-		onlyInBlobSet  []string
-	)
-
+	var onlyInManifest []string
+	var onlyInBlobSet []string
 	for manifestDigestString := range manifestDigestStringMap {
 		if _, ok := blobDigestStringMap[manifestDigestString]; !ok {
 			onlyInManifest = append(onlyInManifest, manifestDigestString)
 		}
 	}
-
 	for blobDigestString := range blobDigestStringMap {
 		if _, ok := manifestDigestStringMap[blobDigestString]; !ok {
 			onlyInBlobSet = append(onlyInBlobSet, blobDigestString)
 		}
 	}
-
 	if len(onlyInManifest) > 0 || len(onlyInBlobSet) > 0 {
 		sort.Strings(onlyInManifest)
 		sort.Strings(onlyInBlobSet)
-
 		return nil, fmt.Errorf("mismatched Manifest and BlobSet at FileSet construction, digests only in Manifest: [%v], digests only in BlobSet: [%v]", onlyInManifest, onlyInBlobSet)
 	}
-
 	return newFileSet(manifest, blobSet), nil
 }
 
 // NewFileSetForBucket returns a new FileSet for the given ReadBucket.
 func NewFileSetForBucket(ctx context.Context, bucket storage2.ReadBucket) (FileSet, error) {
-	var (
-		fileNodes []FileNode
-		blobs     []Blob
-	)
-
+	var fileNodes []FileNode
+	var blobs []Blob
 	if err := storage2.WalkReadObjects(
 		ctx,
 		bucket,
@@ -110,17 +97,14 @@ func NewFileSetForBucket(ctx context.Context, bucket storage2.ReadBucket) (FileS
 	); err != nil {
 		return nil, err
 	}
-
 	manifest, err := NewManifest(fileNodes)
 	if err != nil {
 		return nil, err
 	}
-
 	blobSet, err := NewBlobSet(blobs)
 	if err != nil {
 		return nil, err
 	}
-
 	return newFileSet(
 		manifest,
 		blobSet,
@@ -138,17 +122,14 @@ func PutFileSetToBucket(
 		if err != nil {
 			return err
 		}
-
 		blob := fileSet.BlobSet().GetBlob(fileNode.Digest())
 		if _, err := writeObjectCloser.Write(blob.Content()); err != nil {
 			return errors.Join(err, writeObjectCloser.Close())
 		}
-
 		if err := writeObjectCloser.Close(); err != nil {
 			return err
 		}
 	}
-
 	return nil
 }
 

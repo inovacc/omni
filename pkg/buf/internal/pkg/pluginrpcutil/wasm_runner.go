@@ -58,32 +58,25 @@ func (r *wasmRunner) Run(ctx context.Context, env pluginrpc.Env) (retErr error) 
 	if err != nil {
 		return err
 	}
-
 	if len(r.programArgs) > 0 {
 		env.Args = append(slices.Clone(r.programArgs), env.Args...)
 	}
-
 	return compiledModule.Run(ctx, env)
 }
 
 func (r *wasmRunner) loadCompiledModuleOnce(ctx context.Context) (wasm.CompiledModule, error) {
 	r.lock.RLock()
-
 	if r.called {
 		r.lock.RUnlock()
 		return r.compiledModule, r.compiledModuleErr
 	}
-
 	r.lock.RUnlock()
-
 	r.lock.Lock()
 	defer r.lock.Unlock()
-
 	if !r.called {
 		r.compiledModule, r.compiledModuleErr = r.loadCompiledModule(ctx)
 		r.called = true
 	}
-
 	return r.compiledModule, r.compiledModuleErr
 }
 
@@ -99,7 +92,6 @@ func (r *wasmRunner) loadCompiledModule(ctx context.Context) (wasm.CompiledModul
 	if err != nil {
 		return nil, err
 	}
-
 	return compiledModule, nil
 }
 
@@ -113,6 +105,5 @@ func unsafeLookPath(file string) (string, error) {
 	if errors.Is(err, exec.ErrDot) {
 		err = nil
 	}
-
 	return path, err
 }

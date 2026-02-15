@@ -38,7 +38,6 @@ import (
 
 func TestGitCloner(t *testing.T) {
 	t.Parallel()
-
 	ctx := context.Background()
 	container, err := app.NewContainerForOS()
 	require.NoError(t, err)
@@ -51,7 +50,6 @@ func TestGitCloner(t *testing.T) {
 		content, err := storage2.ReadPath(ctx, readBucket, "a.proto")
 		require.NoError(t, err)
 		assert.Equal(t, "// commit 2", string(content), "expected the commit on local-branch to be checked out")
-
 		_, err = readBucket.Stat(ctx, "nonexistent")
 		assert.True(t, errors.Is(err, fs.ErrNotExist))
 		_, err = storage2.ReadPath(ctx, readBucket, "submodule/sub.proto")
@@ -65,7 +63,6 @@ func TestGitCloner(t *testing.T) {
 		content, err := storage2.ReadPath(ctx, readBucket, "a.proto")
 		require.NoError(t, err)
 		assert.Equal(t, "// commit 2", string(content), "expected the commit on local-branch to be checked out")
-
 		_, err = readBucket.Stat(ctx, "nonexistent")
 		assert.True(t, errors.Is(err, fs.ErrNotExist))
 		content, err = storage2.ReadPath(ctx, readBucket, "submodule/sub.proto")
@@ -80,7 +77,6 @@ func TestGitCloner(t *testing.T) {
 		content, err := storage2.ReadPath(ctx, readBucket, "a.proto")
 		require.NoError(t, err)
 		assert.Equal(t, "// commit 1", string(content))
-
 		_, err = readBucket.Stat(ctx, "nonexistent")
 		assert.ErrorIs(t, err, fs.ErrNotExist)
 	})
@@ -91,7 +87,6 @@ func TestGitCloner(t *testing.T) {
 		content, err := storage2.ReadPath(ctx, readBucket, "a.proto")
 		require.NoError(t, err)
 		assert.Equal(t, "// commit 1", string(content))
-
 		_, err = readBucket.Stat(ctx, "nonexistent")
 		assert.ErrorIs(t, err, fs.ErrNotExist)
 	})
@@ -103,7 +98,6 @@ func TestGitCloner(t *testing.T) {
 		content, err := storage2.ReadPath(ctx, readBucket, "a.proto")
 		require.NoError(t, err)
 		assert.Equal(t, "// commit 3", string(content))
-
 		_, err = readBucket.Stat(ctx, "nonexistent")
 		assert.ErrorIs(t, err, fs.ErrNotExist)
 	})
@@ -114,7 +108,6 @@ func TestGitCloner(t *testing.T) {
 		content, err := storage2.ReadPath(ctx, readBucket, "a.proto")
 		require.NoError(t, err)
 		assert.Equal(t, "// commit 3", string(content))
-
 		_, err = readBucket.Stat(ctx, "nonexistent")
 		assert.ErrorIs(t, err, fs.ErrNotExist)
 	})
@@ -126,7 +119,6 @@ func TestGitCloner(t *testing.T) {
 		content, err := storage2.ReadPath(ctx, readBucket, "a.proto")
 		require.NoError(t, err)
 		assert.Equal(t, "// commit 4", string(content))
-
 		_, err = readBucket.Stat(ctx, "nonexistent")
 		assert.ErrorIs(t, err, fs.ErrNotExist)
 	})
@@ -138,7 +130,6 @@ func TestGitCloner(t *testing.T) {
 		content, err := storage2.ReadPath(ctx, readBucket, "a.proto")
 		require.NoError(t, err)
 		assert.Equal(t, "// commit 4", string(content))
-
 		_, err = readBucket.Stat(ctx, "nonexistent")
 		assert.ErrorIs(t, err, fs.ErrNotExist)
 	})
@@ -149,7 +140,6 @@ func TestGitCloner(t *testing.T) {
 		content, err := storage2.ReadPath(ctx, readBucket, "a.proto")
 		require.NoError(t, err)
 		assert.Equal(t, "// commit 4", string(content))
-
 		_, err = readBucket.Stat(ctx, "nonexistent")
 		assert.ErrorIs(t, err, fs.ErrNotExist)
 	})
@@ -160,7 +150,6 @@ func TestGitCloner(t *testing.T) {
 		content, err := storage2.ReadPath(ctx, readBucket, "a.proto")
 		require.NoError(t, err)
 		assert.Equal(t, "// commit 4", string(content))
-
 		_, err = readBucket.Stat(ctx, "nonexistent")
 		assert.ErrorIs(t, err, fs.ErrNotExist)
 	})
@@ -171,7 +160,6 @@ func TestGitCloner(t *testing.T) {
 		content, err := storage2.ReadPath(ctx, readBucket, "a.proto")
 		require.NoError(t, err)
 		assert.Equal(t, "// commit 4", string(content))
-
 		_, err = readBucket.Stat(ctx, "nonexistent")
 		assert.ErrorIs(t, err, fs.ErrNotExist)
 	})
@@ -183,7 +171,6 @@ func TestGitCloner(t *testing.T) {
 		content, err := storage2.ReadPath(ctx, readBucket, "a.proto")
 		require.NoError(t, err)
 		assert.Equal(t, "// commit 0", string(content))
-
 		_, err = readBucket.Stat(ctx, "nonexistent")
 		assert.ErrorIs(t, err, fs.ErrNotExist)
 	})
@@ -194,7 +181,6 @@ func TestGitCloner(t *testing.T) {
 		content, err := storage2.ReadPath(ctx, readBucket, "a.proto")
 		require.NoError(t, err)
 		assert.Equal(t, "// commit 0", string(content))
-
 		_, err = readBucket.Stat(ctx, "nonexistent")
 		assert.ErrorIs(t, err, fs.ErrNotExist)
 	})
@@ -206,7 +192,6 @@ func TestGitCloner(t *testing.T) {
 		content, err := storage2.ReadPath(ctx, readBucket, "a.proto")
 		require.NoError(t, err)
 		assert.Equal(t, "// commit 1", string(content))
-
 		_, err = readBucket.Stat(ctx, "nonexistent")
 		assert.ErrorIs(t, err, fs.ErrNotExist)
 	})
@@ -218,7 +203,6 @@ func TestGitCloner(t *testing.T) {
 		content, err := storage2.ReadPath(ctx, readBucket, "a.proto")
 		require.NoError(t, err)
 		assert.Equal(t, "// commit 2", string(content))
-
 		_, err = readBucket.Stat(ctx, "nonexistent")
 		assert.True(t, errors.Is(err, fs.ErrNotExist))
 	})
@@ -229,7 +213,6 @@ func TestGitCloner(t *testing.T) {
 		content, err := storage2.ReadPath(ctx, readBucket, "a.proto")
 		require.NoError(t, err)
 		assert.Equal(t, "// commit 1", string(content))
-
 		_, err = readBucket.Stat(ctx, "nonexistent")
 		assert.ErrorIs(t, err, fs.ErrNotExist)
 	})
@@ -240,7 +223,6 @@ func TestGitCloner(t *testing.T) {
 		content, err := storage2.ReadPath(ctx, readBucket, "a.proto")
 		require.NoError(t, err)
 		assert.Equal(t, "// commit 1", string(content))
-
 		_, err = readBucket.Stat(ctx, "nonexistent")
 		assert.ErrorIs(t, err, fs.ErrNotExist)
 	})
@@ -251,7 +233,6 @@ func TestGitCloner(t *testing.T) {
 		content, err := storage2.ReadPath(ctx, readBucket, "a.proto")
 		require.NoError(t, err)
 		assert.Equal(t, "// commit 1", string(content))
-
 		_, err = readBucket.Stat(ctx, "nonexistent")
 		assert.True(t, errors.Is(err, fs.ErrNotExist))
 	})
@@ -262,14 +243,12 @@ func TestGitCloner(t *testing.T) {
 		content, err := storage2.ReadPath(ctx, readBucket, "a.proto")
 		require.NoError(t, err)
 		assert.Equal(t, "// commit 1", string(content))
-
 		_, err = readBucket.Stat(ctx, "nonexistent")
 		assert.ErrorIs(t, err, fs.ErrNotExist)
 	})
 
 	t.Run("ref=<commit>", func(t *testing.T) {
 		t.Parallel()
-
 		revParseBytes, err := runStdout(ctx, container, "git", "-C", workDir, "rev-parse", "HEAD~")
 		require.NoError(t, err)
 		readBucket := readBucketForName(ctx, t, workDir, readBucketForNameOptions{depth: 2, name: NewRefName(strings.TrimSpace(string(revParseBytes)))})
@@ -277,30 +256,25 @@ func TestGitCloner(t *testing.T) {
 		content, err := storage2.ReadPath(ctx, readBucket, "a.proto")
 		require.NoError(t, err)
 		assert.Equal(t, "// commit 1", string(content))
-
 		_, err = readBucket.Stat(ctx, "nonexistent")
 		assert.ErrorIs(t, err, fs.ErrNotExist)
 	})
 	t.Run("ref=<partial-commit>", func(t *testing.T) {
 		t.Parallel()
-
 		revParseBytes, err := runStdout(ctx, container, "git", "-C", workDir, "rev-parse", "HEAD~")
 		require.NoError(t, err)
-
 		partialRef := NewRefName(strings.TrimSpace(string(revParseBytes))[:8])
 		readBucket := readBucketForName(ctx, t, workDir, readBucketForNameOptions{depth: 8, name: partialRef})
 
 		content, err := storage2.ReadPath(ctx, readBucket, "a.proto")
 		require.NoError(t, err)
 		assert.Equal(t, "// commit 1", string(content))
-
 		_, err = readBucket.Stat(ctx, "nonexistent")
 		assert.ErrorIs(t, err, fs.ErrNotExist)
 	})
 
 	t.Run("ref=<commit>,branch=origin/remote-branch", func(t *testing.T) {
 		t.Parallel()
-
 		revParseBytes, err := runStdout(ctx, container, "git", "-C", originDir, "rev-parse", "remote-branch~")
 		require.NoError(t, err)
 		readBucket := readBucketForName(ctx, t, workDir, readBucketForNameOptions{depth: 2, name: NewRefNameWithBranch(strings.TrimSpace(string(revParseBytes)), "origin/remote-branch")})
@@ -308,23 +282,19 @@ func TestGitCloner(t *testing.T) {
 		content, err := storage2.ReadPath(ctx, readBucket, "a.proto")
 		require.NoError(t, err)
 		assert.Equal(t, "// commit 3", string(content))
-
 		_, err = readBucket.Stat(ctx, "nonexistent")
 		assert.ErrorIs(t, err, fs.ErrNotExist)
 	})
 	t.Run("ref=<partial-commit>,branch=origin/remote-branch", func(t *testing.T) {
 		t.Parallel()
-
 		revParseBytes, err := runStdout(ctx, container, "git", "-C", originDir, "rev-parse", "remote-branch~")
 		require.NoError(t, err)
-
 		partialRef := strings.TrimSpace(string(revParseBytes))[:8]
 		readBucket := readBucketForName(ctx, t, workDir, readBucketForNameOptions{depth: 2, name: NewRefNameWithBranch(partialRef, "origin/remote-branch")})
 
 		content, err := storage2.ReadPath(ctx, readBucket, "a.proto")
 		require.NoError(t, err)
 		assert.Equal(t, "// commit 3", string(content))
-
 		_, err = readBucket.Stat(ctx, "nonexistent")
 		assert.ErrorIs(t, err, fs.ErrNotExist)
 	})
@@ -339,7 +309,6 @@ func TestGitCloner(t *testing.T) {
 		content, err := storage2.ReadPath(ctx, readBucket, "b/b.proto")
 		require.NoError(t, err)
 		assert.Equal(t, "// commit 0", string(content))
-
 		_, err = readBucket.Stat(ctx, "nonexistent")
 		assert.ErrorIs(t, err, fs.ErrNotExist)
 	})
@@ -354,7 +323,6 @@ func TestGitCloner(t *testing.T) {
 		content, err := storage2.ReadPath(ctx, readBucket, "b/b.proto")
 		require.NoError(t, err)
 		assert.Equal(t, "// commit 0", string(content))
-
 		_, err = readBucket.Stat(ctx, "nonexistent")
 		assert.ErrorIs(t, err, fs.ErrNotExist)
 	})
@@ -370,7 +338,6 @@ func TestGitCloner(t *testing.T) {
 		content, err := storage2.ReadPath(ctx, readBucket, "b/b.proto")
 		require.NoError(t, err)
 		assert.Equal(t, "// commit 0", string(content))
-
 		_, err = readBucket.Stat(ctx, "nonexistent")
 		assert.ErrorIs(t, err, fs.ErrNotExist)
 	})
@@ -386,7 +353,6 @@ type readBucketForNameOptions struct {
 
 func readBucketForName(ctx context.Context, t *testing.T, path string, options readBucketForNameOptions) storage2.ReadBucket {
 	t.Helper()
-
 	storageosProvider := storageos.NewProvider(storageos.ProviderWithSymlinks())
 	cloner := NewCloner(slogtestext.NewLogger(t), storageosProvider, ClonerOptions{})
 	envContainer, err := app.NewEnvContainerForOS()
@@ -413,7 +379,6 @@ func readBucketForName(ctx context.Context, t *testing.T, path string, options r
 		},
 	)
 	require.NoError(t, err)
-
 	return readWriteBucket
 }
 
@@ -436,7 +401,6 @@ func createGitDirs(
 
 	gitExecPathBytes, err := runStdout(ctx, container, "git", "--exec-path")
 	require.NoError(t, err)
-
 	gitExecPath := strings.TrimSpace(string(gitExecPathBytes))
 	// In Golang 1.22, the behavior of "os/exec" was changed so that LookPath is no longer called
 	// in some cases. This preserves the behavior.
@@ -449,7 +413,6 @@ func createGitDirs(
 	f, err := os.Create(filepath.Join(submodulePath, ".git", "git-daemon-export-ok"))
 	require.NoError(t, err)
 	require.NoError(t, f.Close())
-
 	server := httptest.NewServer(
 		&cgi.Handler{
 			Path: gitHTTPBackendPath,
@@ -504,7 +467,6 @@ func createGitDirs(
 	runCommand(ctx, t, container, "git", "-C", originPath, "tag", "-a", "remote-annotated-tag", "-m", "annotated tag")
 
 	runCommand(ctx, t, container, "git", "-C", workPath, "fetch", "origin")
-
 	return originPath, workPath
 }
 
@@ -516,18 +478,13 @@ func runCommand(
 	args ...string,
 ) {
 	t.Helper()
-
 	output, err := runStdout(ctx, container, name, args...)
 	if err != nil {
-		var (
-			exitErr *exec.ExitError
-			stdErr  []byte
-		)
-
+		var exitErr *exec.ExitError
+		var stdErr []byte
 		if errors.As(err, &exitErr) {
 			stdErr = exitErr.Stderr
 		}
-
 		assert.FailNow(t, err.Error(), "stdout: %s\nstderr: %s", output, stdErr)
 	}
 }

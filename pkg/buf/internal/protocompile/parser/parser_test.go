@@ -34,13 +34,11 @@ import (
 
 func TestEmptyParse(t *testing.T) {
 	t.Parallel()
-
 	errHandler := reporter.NewHandler(nil)
 	ast, err := Parse("foo.proto", bytes.NewReader(nil), errHandler)
 	require.NoError(t, err)
 	result, err := ResultFromAST(ast, true, errHandler)
 	require.NoError(t, err)
-
 	fd := result.FileDescriptorProto()
 	assert.Equal(t, "foo.proto", fd.GetName())
 	assert.Empty(t, fd.GetDependency())
@@ -68,7 +66,6 @@ func TestJunkParse(t *testing.T) {
 	for name, input := range inputs {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
-
 			errHandler := reporter.NewHandler(reporter.NewReporter(
 				// returning nil means this will keep trying to parse after any error
 				func(_ reporter.ErrorWithPos) error { return nil },
@@ -92,7 +89,6 @@ func runParseErrorTestCases(t *testing.T, testCases map[string]parseErrorTestCas
 	for name, testCase := range testCases {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
-
 			protoName := name + ".proto"
 			ast, err := Parse(protoName, strings.NewReader(testCase.NoError), reporter.NewHandler(nil))
 			require.NoError(t, err)
@@ -100,23 +96,18 @@ func runParseErrorTestCases(t *testing.T, testCases map[string]parseErrorTestCas
 			require.NoError(t, err)
 
 			producedError := false
-
 			var errs []error
-
 			errHandler := reporter.NewHandler(reporter.NewReporter(func(err reporter.ErrorWithPos) error {
 				errs = append(errs, err)
 				if strings.Contains(err.Error(), expected) {
 					producedError = true
 				}
-
 				return nil
 			}, nil))
-
 			file, err := Parse(protoName, strings.NewReader(testCase.Error), errHandler)
 			if err == nil {
 				_, _ = ResultFromAST(file, true, errHandler)
 			}
-
 			require.Truef(t, producedError, "expected error containing %q, got %v", expected, errs)
 		})
 	}
@@ -124,7 +115,6 @@ func runParseErrorTestCases(t *testing.T, testCases map[string]parseErrorTestCas
 
 func TestLenientParse_NoFieldID(t *testing.T) {
 	t.Parallel()
-
 	inputs := map[string]parseErrorTestCase{
 		"field": {
 			Error: `syntax = "proto3";
@@ -284,7 +274,6 @@ func TestLenientParse_NoFieldID(t *testing.T) {
 
 func TestLenientParse_SemicolonLess(t *testing.T) {
 	t.Parallel()
-
 	inputs := map[string]parseErrorTestCase{
 		"package": {
 			Error: `syntax = "proto3";
@@ -562,7 +551,6 @@ func TestLenientParse_SemicolonLess(t *testing.T) {
 
 func TestLenientParse_EmptyCompactOptions(t *testing.T) {
 	t.Parallel()
-
 	inputs := map[string]parseErrorTestCase{
 		"field-options": {
 			Error: `syntax = "proto2";
@@ -590,7 +578,6 @@ func TestLenientParse_EmptyCompactOptions(t *testing.T) {
 
 func TestLenientParse_EmptyCompactValue(t *testing.T) {
 	t.Parallel()
-
 	inputs := map[string]parseErrorTestCase{
 		"field-options": {
 			Error: `syntax = "proto2";
@@ -618,7 +605,6 @@ func TestLenientParse_EmptyCompactValue(t *testing.T) {
 
 func TestLenientParse_OptionsTrailingComma(t *testing.T) {
 	t.Parallel()
-
 	inputs := map[string]parseErrorTestCase{
 		"field-options": {
 			Error: `syntax = "proto2";
@@ -636,7 +622,6 @@ func TestLenientParse_OptionsTrailingComma(t *testing.T) {
 
 func TestLenientParse_OptionNameTrailingDot(t *testing.T) {
 	t.Parallel()
-
 	inputs := map[string]parseErrorTestCase{
 		"field-options": {
 			Error: `syntax = "proto2";
@@ -776,7 +761,6 @@ func TestLenientParse_OptionNameTrailingDot(t *testing.T) {
 
 func TestSimpleParse(t *testing.T) {
 	t.Parallel()
-
 	protos := map[string]Result{}
 
 	// Just verify that we can successfully parse the same files we use for
@@ -785,7 +769,6 @@ func TestSimpleParse(t *testing.T) {
 	// below, where we parse *and* link.)
 	res, err := parseFileForTest("../internal/testdata/desc_test1.proto")
 	require.NoError(t, err)
-
 	fd := res.FileDescriptorProto()
 	assert.Equal(t, "../internal/testdata/desc_test1.proto", fd.GetName())
 	assert.Equal(t, "testprotos", fd.GetPackage())
@@ -795,7 +778,6 @@ func TestSimpleParse(t *testing.T) {
 
 	res, err = parseFileForTest("../internal/testdata/desc_test2.proto")
 	require.NoError(t, err)
-
 	fd = res.FileDescriptorProto()
 	assert.Equal(t, "../internal/testdata/desc_test2.proto", fd.GetName())
 	assert.Equal(t, "testprotos", fd.GetPackage())
@@ -806,7 +788,6 @@ func TestSimpleParse(t *testing.T) {
 
 	res, err = parseFileForTest("../internal/testdata/desc_test_defaults.proto")
 	require.NoError(t, err)
-
 	fd = res.FileDescriptorProto()
 	assert.Equal(t, "../internal/testdata/desc_test_defaults.proto", fd.GetName())
 	assert.Equal(t, "testprotos", fd.GetPackage())
@@ -815,7 +796,6 @@ func TestSimpleParse(t *testing.T) {
 
 	res, err = parseFileForTest("../internal/testdata/desc_test_field_types.proto")
 	require.NoError(t, err)
-
 	fd = res.FileDescriptorProto()
 	assert.Equal(t, "../internal/testdata/desc_test_field_types.proto", fd.GetName())
 	assert.Equal(t, "testprotos", fd.GetPackage())
@@ -825,7 +805,6 @@ func TestSimpleParse(t *testing.T) {
 
 	res, err = parseFileForTest("../internal/testdata/desc_test_options.proto")
 	require.NoError(t, err)
-
 	fd = res.FileDescriptorProto()
 	assert.Equal(t, "../internal/testdata/desc_test_options.proto", fd.GetName())
 	assert.Equal(t, "testprotos", fd.GetPackage())
@@ -836,7 +815,6 @@ func TestSimpleParse(t *testing.T) {
 
 	res, err = parseFileForTest("../internal/testdata/desc_test_proto3.proto")
 	require.NoError(t, err)
-
 	fd = res.FileDescriptorProto()
 	assert.Equal(t, "../internal/testdata/desc_test_proto3.proto", fd.GetName())
 	assert.Equal(t, "testprotos", fd.GetPackage())
@@ -846,7 +824,6 @@ func TestSimpleParse(t *testing.T) {
 
 	res, err = parseFileForTest("../internal/testdata/desc_test_wellknowntypes.proto")
 	require.NoError(t, err)
-
 	fd = res.FileDescriptorProto()
 	assert.Equal(t, "../internal/testdata/desc_test_wellknowntypes.proto", fd.GetName())
 	assert.Equal(t, "testprotos", fd.GetPackage())
@@ -855,7 +832,6 @@ func TestSimpleParse(t *testing.T) {
 
 	res, err = parseFileForTest("../internal/testdata/nopkg/desc_test_nopkg.proto")
 	require.NoError(t, err)
-
 	fd = res.FileDescriptorProto()
 	assert.Equal(t, "../internal/testdata/nopkg/desc_test_nopkg.proto", fd.GetName())
 	assert.Equal(t, "", fd.GetPackage())
@@ -863,7 +839,6 @@ func TestSimpleParse(t *testing.T) {
 
 	res, err = parseFileForTest("../internal/testdata/nopkg/desc_test_nopkg_new.proto")
 	require.NoError(t, err)
-
 	fd = res.FileDescriptorProto()
 	assert.Equal(t, "../internal/testdata/nopkg/desc_test_nopkg_new.proto", fd.GetName())
 	assert.Equal(t, "", fd.GetPackage())
@@ -872,7 +847,6 @@ func TestSimpleParse(t *testing.T) {
 
 	res, err = parseFileForTest("../internal/testdata/pkg/desc_test_pkg.proto")
 	require.NoError(t, err)
-
 	fd = res.FileDescriptorProto()
 	assert.Equal(t, "../internal/testdata/pkg/desc_test_pkg.proto", fd.GetName())
 	assert.Equal(t, "bufbuild.protocompile.test", fd.GetPackage())
@@ -906,7 +880,6 @@ func TestExportLocalInIdentifiers(t *testing.T) {
 	require.NoError(t, err)
 	res, err := ResultFromAST(ast, true, reporter.NewHandler(nil))
 	require.NoError(t, err)
-
 	msgProto := res.FileDescriptorProto().GetMessageType()[0]
 	assert.Equal(t, "export", msgProto.GetField()[0].GetTypeName())
 	assert.Equal(t, "enum", msgProto.GetField()[0].GetName())
@@ -923,84 +896,74 @@ func parseFileForTest(filename string) (Result, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	defer func() {
 		_ = f.Close()
 	}()
-
 	errHandler := reporter.NewHandler(nil)
-
 	res, err := Parse(filename, f, errHandler)
 	if err != nil {
 		return nil, err
 	}
-
 	return ResultFromAST(res, true, errHandler)
 }
 
 func hasExtension(fd *descriptorpb.FileDescriptorProto, name string) bool {
-	for _, ext := range fd.GetExtension() {
+	for _, ext := range fd.Extension {
 		if ext.GetName() == name {
 			return true
 		}
 	}
-
 	return false
 }
 
 func hasMessage(fd *descriptorpb.FileDescriptorProto, name string) bool {
-	for _, md := range fd.GetMessageType() {
+	for _, md := range fd.MessageType {
 		if md.GetName() == name {
 			return true
 		}
 	}
-
 	return false
 }
 
 func hasEnum(fd *descriptorpb.FileDescriptorProto, name string) bool {
-	for _, ed := range fd.GetEnumType() {
+	for _, ed := range fd.EnumType {
 		if ed.GetName() == name {
 			return true
 		}
 	}
-
 	return false
 }
 
 func hasService(fd *descriptorpb.FileDescriptorProto, name string) bool {
-	for _, sd := range fd.GetService() {
+	for _, sd := range fd.Service {
 		if sd.GetName() == name {
 			return true
 		}
 	}
-
 	return false
 }
 
 func TestAggregateValueInUninterpretedOptions(t *testing.T) {
 	t.Parallel()
-
 	res, err := parseFileForTest("../internal/testdata/desc_test_complex.proto")
 	require.NoError(t, err)
-
 	fd := res.FileDescriptorProto()
 
 	// service TestTestService, method UserAuth; first option
-	aggregateValue1 := fd.GetService()[0].GetMethod()[0].GetOptions().GetUninterpretedOption()[0].GetAggregateValue()
+	aggregateValue1 := *fd.Service[0].Method[0].Options.UninterpretedOption[0].AggregateValue
 	assert.Equal(t, "authenticated : true permission : { action : LOGIN entity : \"client\" }", aggregateValue1)
 
 	// service TestTestService, method Get; first option
-	aggregateValue2 := fd.GetService()[0].GetMethod()[1].GetOptions().GetUninterpretedOption()[0].GetAggregateValue()
+	aggregateValue2 := *fd.Service[0].Method[1].Options.UninterpretedOption[0].AggregateValue
 	assert.Equal(t, "authenticated : true permission : { action : READ entity : \"user\" }", aggregateValue2)
 
 	// message Another; first option
-	aggregateValue3 := fd.GetMessageType()[4].GetOptions().GetUninterpretedOption()[0].GetAggregateValue()
+	aggregateValue3 := *fd.MessageType[4].Options.UninterpretedOption[0].AggregateValue
 	assert.Equal(t, "foo : \"abc\" s < name : \"foo\" , id : 123 > , array : [ 1 , 2 , 3 ] , r : [ < name : \"f\" > , { name : \"s\" } , { id : 456 } ] ,", aggregateValue3)
 
 	// message Test.Nested._NestedNested; second option (rept)
 	//  (Test.Nested is at index 1 instead of 0 because of implicit nested message from map field m)
-	aggregateValue4 := fd.GetMessageType()[1].GetNestedType()[1].GetNestedType()[0].GetOptions().GetUninterpretedOption()[1].GetAggregateValue()
+	aggregateValue4 := *fd.MessageType[1].NestedType[1].NestedType[0].Options.UninterpretedOption[1].AggregateValue
 	assert.Equal(t, "foo : \"goo\" [ foo . bar . Test . Nested . _NestedNested . _garblez ] : \"boo\"", aggregateValue4)
 }
 
@@ -1024,9 +987,9 @@ func BenchmarkBasicSuccess(b *testing.B) {
 	bs, err := io.ReadAll(r)
 	require.NoError(b, err)
 
-	for b.Loop() {
+	b.ResetTimer()
+	for range b.N {
 		b.ReportAllocs()
-
 		byteReader := bytes.NewReader(bs)
 		handler := reporter.NewHandler(nil)
 
@@ -1050,7 +1013,6 @@ func readerForTestdata(t testing.TB, filename string) io.Reader {
 
 func TestPathological(t *testing.T) {
 	t.Parallel()
-
 	if internal.IsRace {
 		// Note, the combo of race detector and coverage is the real death
 		// knell here. But since there's not an easy way to detect if coverage
@@ -1082,30 +1044,24 @@ func TestPathological(t *testing.T) {
 			allowedDuration := 2 * time.Second
 			start := time.Now()
 			ctx, cancel := context.WithTimeout(t.Context(), allowedDuration)
-
 			defer func() {
 				if ctx.Err() != nil {
 					t.Errorf("test took too long to execute (> %v)", allowedDuration)
 				}
-
 				t.Logf("test completed in %v", time.Since(start))
 				cancel()
 			}()
-
 			for range 3 {
 				if ctx.Err() != nil {
 					break
 				}
-
 				r := readerForTestdata(t, fileName)
 				handler := reporter.NewHandler(nil)
-
 				fileNode, err := Parse(fileName, r, handler)
 				if testCases[fileName] {
 					require.NoError(t, err)
 					_, err = ResultFromAST(fileNode, true, handler)
 				}
-
 				require.Error(t, err)
 			}
 		})
@@ -1116,7 +1072,6 @@ func TestExportLocalIdentifier(t *testing.T) {
 	t.Parallel()
 	t.Run("field_names", func(t *testing.T) {
 		t.Parallel()
-
 		proto3Content := `syntax = "proto3";
 						  message Test {
 						    string export = 1;
@@ -1144,7 +1099,6 @@ func TestExportLocalIdentifier(t *testing.T) {
 	})
 	t.Run("type_names", func(t *testing.T) {
 		t.Parallel()
-
 		proto2Content := `syntax = "proto2";
 						  message Test {
 						    optional export.Message field1 = 1;

@@ -114,13 +114,12 @@ func buildFile(
 
 	dedup := make(intern.Map[ast.DeclImport])
 	for _, imp := range imports {
-		if !mapsx.AddZero(dedup, imp.InternedPath()) {
+		if !mapsx.AddZero(dedup, imp.File.InternedPath()) {
 			continue
 		}
 
 		table.AddDirect(imp)
 	}
-
 	table.Recurse(dedup)
 	table.Insert(ir.Import{}, -1, false) // Dummy descriptor.proto.
 
@@ -134,12 +133,12 @@ type imp struct {
 
 func directs(f *ir.File) []imp {
 	return slices.Collect(seq.Map(ir.GetImports(f).Directs(), func(i ir.Import) imp {
-		return imp{i.Path(), i.Public, i.Weak}
+		return imp{i.File.Path(), i.Public, i.Weak}
 	}))
 }
 
 func transitive(f *ir.File) []imp {
 	return slices.Collect(seq.Map(ir.GetImports(f).Transitive(), func(i ir.Import) imp {
-		return imp{i.Path(), i.Public, i.Weak}
+		return imp{i.File.Path(), i.Public, i.Weak}
 	}))
 }

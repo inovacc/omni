@@ -38,7 +38,6 @@ func TestCursor(t *testing.T) {
 	x := s.Push(1, token.Ident)
 	close2 := s.Push(1, token.Keyword)
 	token.Fuse(open2, close2)
-
 	comma := s.Push(1, token.Keyword)
 	space := s.Push(1, token.Space)
 	ghi := s.Push(3, token.Ident)
@@ -48,7 +47,6 @@ func TestCursor(t *testing.T) {
 	// Cursor at root.
 	t.Run("root", func(t *testing.T) {
 		t.Parallel()
-
 		cursor := s.Cursor()
 		tokenEq(t, abc, cursor.PeekSkippable())
 		tokenEq(t, abc, cursor.Next())
@@ -66,7 +64,6 @@ func TestCursor(t *testing.T) {
 	// Cursor at inner definition.
 	t.Run("inner", func(t *testing.T) {
 		t.Parallel()
-
 		cursor := token.NewCursorAt(def)
 		tokenEq(t, def, cursor.Next())
 		tokenEq(t, def, cursor.Prev())
@@ -89,7 +86,6 @@ func TestCursor(t *testing.T) {
 	// Cursor escape.
 	t.Run("escape", func(t *testing.T) {
 		t.Parallel()
-
 		cursor := token.NewCursorAt(x)
 		tokenEq(t, x, cursor.Next())
 		tokenEq(t, token.Zero, cursor.Next())
@@ -109,7 +105,6 @@ func TestCursor(t *testing.T) {
 	// Test JustAfter EOF.
 	t.Run("eof", func(t *testing.T) {
 		t.Parallel()
-
 		cursor := token.NewCursorAt(abc)
 		tokenEq(t, abc, cursor.NextSkippable())
 		tokenEq(t, open, cursor.NextSkippable())
@@ -126,7 +121,6 @@ func TestCursor(t *testing.T) {
 	// Test setting the cursor at the open brace
 	t.Run("open", func(t *testing.T) {
 		t.Parallel()
-
 		cursor := token.NewCursorAt(open)
 		tokenEq(t, open, cursor.NextSkippable())
 		tokenEq(t, token.Zero, cursor.NextSkippable())
@@ -135,7 +129,6 @@ func TestCursor(t *testing.T) {
 	// Test setting the cursor at the close brace
 	t.Run("close", func(t *testing.T) {
 		t.Parallel()
-
 		cursor := token.NewCursorAt(close)
 		tokenEq(t, close, cursor.NextSkippable())
 		tokenEq(t, token.Zero, cursor.NextSkippable())

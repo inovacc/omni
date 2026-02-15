@@ -70,24 +70,20 @@ func reportDiagnosticToProtocolDiagnostic(
 			},
 		}
 	}
-
 	data := diagnosticData{
 		Notes: strings.Join(reportDiagnostic.Notes(), "\n"),
 		Help:  strings.Join(reportDiagnostic.Help(), "\n"),
 		Debug: strings.Join(reportDiagnostic.Debug(), "\n"),
 	}
-
 	bytes, err := json.Marshal(data)
 	if err != nil {
 		return protocol.Diagnostic{}, err
 	}
-
 	if bytes != nil {
 		// We serialize the bytes into a string before providing the structure to diagnostic.Data
 		// because diagnostic.Data is an interface{}, which is treated as a JSON "any", which
 		// will not cleanly deserialize.
 		diagnostic.Data = string(bytes)
 	}
-
 	return diagnostic, nil
 }

@@ -32,6 +32,5 @@ func (l *lockedWriter) Write(p []byte) (int, error) {
 	l.lock.Lock()
 	n, err := l.writer.Write(p)
 	l.lock.Unlock()
-
 	return n, err
 }

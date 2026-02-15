@@ -40,7 +40,6 @@ func (p *sdkInfoPrinter) PrintSDKInfo(
 	sdkInfo *registryv1alpha1.GetSDKInfoResponse,
 ) error {
 	output := newOutputSDKInfo(sdkInfo)
-
 	switch format {
 	case FormatText:
 		if _, err := fmt.Fprintf(
@@ -57,7 +56,6 @@ Commit: %s
 		); err != nil {
 			return err
 		}
-
 		if _, err := fmt.Fprintf(
 			p.writer,
 			`Plugin
@@ -74,9 +72,7 @@ Revision: %d
 		); err != nil {
 			return err
 		}
-
 		_, err := fmt.Fprintf(p.writer, "Version: %s\n", output.Version)
-
 		return err
 	case FormatJSON:
 		return json.NewEncoder(p.writer).Encode(output)

@@ -29,7 +29,6 @@ func FilterReadBucket(readBucket ReadBucket, matchers ...Matcher) ReadBucket {
 	if len(matchers) == 0 {
 		return readBucket
 	}
-
 	return newFilterReadBucketCloser(readBucket, nil, MatchAnd(matchers...))
 }
 
@@ -41,7 +40,6 @@ func FilterReadBucketCloser(readBucketCloser ReadBucketCloser, matchers ...Match
 	if len(matchers) == 0 {
 		return readBucketCloser
 	}
-
 	return newFilterReadBucketCloser(readBucketCloser, readBucketCloser.Close, MatchAnd(matchers...))
 }
 
@@ -68,11 +66,9 @@ func (r *filterReadBucketCloser) Get(ctx context.Context, path string) (ReadObje
 	if err != nil {
 		return nil, err
 	}
-
 	if !r.matcher.MatchPath(path) {
 		return nil, &fs.PathError{Op: "read", Path: path, Err: fs.ErrNotExist}
 	}
-
 	return r.delegate.Get(ctx, path)
 }
 
@@ -81,11 +77,9 @@ func (r *filterReadBucketCloser) Stat(ctx context.Context, path string) (ObjectI
 	if err != nil {
 		return nil, err
 	}
-
 	if !r.matcher.MatchPath(path) {
 		return nil, &fs.PathError{Op: "read", Path: path, Err: fs.ErrNotExist}
 	}
-
 	return r.delegate.Stat(ctx, path)
 }
 
@@ -94,7 +88,6 @@ func (r *filterReadBucketCloser) Walk(ctx context.Context, prefix string, f func
 	if err != nil {
 		return err
 	}
-
 	return r.delegate.Walk(
 		ctx,
 		prefix,
@@ -102,7 +95,6 @@ func (r *filterReadBucketCloser) Walk(ctx context.Context, prefix string, f func
 			if !r.matcher.MatchPath(objectInfo.Path()) {
 				return nil
 			}
-
 			return f(objectInfo)
 		},
 	)
@@ -112,6 +104,5 @@ func (r *filterReadBucketCloser) Close() error {
 	if r.closeFunc != nil {
 		return r.closeFunc()
 	}
-
 	return nil
 }

@@ -57,7 +57,7 @@ lint:
 
 	testReadWriteBufYAMLFileRoundTrip(
 		t,
-		// input
+		//input
 		`version: v1
 build:
   excludes:
@@ -73,7 +73,7 @@ build:
 
 	testReadWriteBufYAMLFileRoundTrip(
 		t,
-		// input
+		//input
 		strings.Join(
 			[]string{
 				fmt.Sprintf(docsLinkComment, "v1"),
@@ -520,7 +520,6 @@ modules:
 	)
 	moduleConfig0 := bufYAMLFile.ModuleConfigs()[0]
 	moduleConfig1 := bufYAMLFile.ModuleConfigs()[1]
-
 	require.Equal(t, moduleConfig0.DirPath(), "proto")
 	require.Equal(t, moduleConfig1.DirPath(), "vendor")
 	require.False(t, moduleConfig0.LintConfig().Disabled())
@@ -539,7 +538,6 @@ lint:
 	)
 	moduleConfig0 = bufYAMLFile.ModuleConfigs()[0]
 	moduleConfig1 = bufYAMLFile.ModuleConfigs()[1]
-
 	require.Equal(t, moduleConfig0.DirPath(), "proto")
 	require.Equal(t, moduleConfig1.DirPath(), "vendor")
 	require.False(t, moduleConfig0.LintConfig().Disabled())
@@ -558,7 +556,6 @@ modules:
 	)
 	moduleConfig0 = bufYAMLFile.ModuleConfigs()[0]
 	moduleConfig1 = bufYAMLFile.ModuleConfigs()[1]
-
 	require.Equal(t, moduleConfig0.DirPath(), "proto")
 	require.Equal(t, moduleConfig1.DirPath(), "vendor")
 	require.False(t, moduleConfig0.LintConfig().Disabled())
@@ -578,7 +575,6 @@ modules:
 	)
 	moduleConfig0 := bufYAMLFile.ModuleConfigs()[0]
 	moduleConfig1 := bufYAMLFile.ModuleConfigs()[1]
-
 	require.Equal(t, moduleConfig0.DirPath(), "proto")
 	require.Equal(t, moduleConfig1.DirPath(), "vendor")
 	require.False(t, moduleConfig0.BreakingConfig().Disabled())
@@ -597,7 +593,6 @@ breaking:
 	)
 	moduleConfig0 = bufYAMLFile.ModuleConfigs()[0]
 	moduleConfig1 = bufYAMLFile.ModuleConfigs()[1]
-
 	require.Equal(t, moduleConfig0.DirPath(), "proto")
 	require.Equal(t, moduleConfig1.DirPath(), "vendor")
 	require.False(t, moduleConfig0.BreakingConfig().Disabled())
@@ -616,7 +611,6 @@ modules:
 	)
 	moduleConfig0 = bufYAMLFile.ModuleConfigs()[0]
 	moduleConfig1 = bufYAMLFile.ModuleConfigs()[1]
-
 	require.Equal(t, moduleConfig0.DirPath(), "proto")
 	require.Equal(t, moduleConfig1.DirPath(), "vendor")
 	require.False(t, moduleConfig0.BreakingConfig().Disabled())
@@ -728,7 +722,6 @@ func testReadWriteBufYAMLFileRoundTrip(
 	buffer := bytes.NewBuffer(nil)
 	err := WriteBufYAMLFile(buffer, bufYAMLFile)
 	require.NoError(t, err)
-
 	outputBufYAMLData := testCleanYAMLData(buffer.String())
 	assert.Equal(t, testCleanYAMLData(expectedOutputBufYAMLFileData), outputBufYAMLData, "output:\n%s", outputBufYAMLData)
 }
@@ -742,7 +735,6 @@ func testReadBufYAMLFile(
 		DefaultBufYAMLFileName,
 	)
 	require.NoError(t, err)
-
 	return bufYAMLFile
 }
 

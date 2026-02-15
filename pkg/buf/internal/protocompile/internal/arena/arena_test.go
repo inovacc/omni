@@ -35,7 +35,6 @@ func TestPointers(t *testing.T) {
 	for i := range 16 {
 		a.New(i + 5)
 	}
-
 	assert.Equal(19, *a.Deref(16))
 	assert.Equal(20, *a.Deref(17))
 	assert.Same(a.Deref(p1), p2)
@@ -43,7 +42,6 @@ func TestPointers(t *testing.T) {
 	for i := range 32 {
 		a.New(i + 21)
 	}
-
 	assert.Equal(51, *a.Deref(48))
 	assert.Equal(52, *a.Deref(49))
 	assert.Same(a.Deref(p1), p2)
@@ -67,7 +65,6 @@ func TestCompress(t *testing.T) {
 	for i := range 16 {
 		a.New(i + 5)
 	}
-
 	x = a.NewCompressed(5)
 	y = a.Deref(x)
 	assert.Equal(x, a.Compress(y))

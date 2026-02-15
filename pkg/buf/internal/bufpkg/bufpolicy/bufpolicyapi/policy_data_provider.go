@@ -18,11 +18,11 @@ import (
 	"context"
 	"log/slog"
 
-	"connectrpc.com/connect"
 	"github.com/google/uuid"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufparse"
 	bufpolicy2 "github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufpolicy"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufregistryapi/bufregistryapipolicy"
+	"connectrpc.com/connect"
 	policyv1beta1 "github.com/inovacc/omni/pkg/buf/internal/gen/bufbuild/registry/protocolbuffers/go/buf/registry/policy/v1beta1"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/syserror"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/uuidutil"
@@ -69,16 +69,13 @@ func (p *policyDataProvider) GetPolicyDatasForPolicyKeys(
 	if len(policyKeys) == 0 {
 		return nil, nil
 	}
-
 	digestType, err := bufpolicy2.UniqueDigestTypeForPolicyKeys(policyKeys)
 	if err != nil {
 		return nil, err
 	}
-
 	if digestType != bufpolicy2.DigestTypeO1 {
 		return nil, syserror.Newf("unsupported digest type: %v", digestType)
 	}
-
 	if _, err := bufparse.FullNameStringToUniqueValue(policyKeys); err != nil {
 		return nil, err
 	}
@@ -90,7 +87,6 @@ func (p *policyDataProvider) GetPolicyDatasForPolicyKeys(
 		},
 	)
 	indexedPolicyDatas := make([]xslices.Indexed[bufpolicy2.PolicyData], 0, len(policyKeys))
-
 	for registry, indexedPolicyKeys := range registryToIndexedPolicyKeys {
 		indexedRegistryPolicyDatas, err := p.getIndexedPolicyDatasForRegistryAndIndexedPolicyKeys(
 			ctx,
@@ -100,10 +96,8 @@ func (p *policyDataProvider) GetPolicyDatasForPolicyKeys(
 		if err != nil {
 			return nil, err
 		}
-
 		indexedPolicyDatas = append(indexedPolicyDatas, indexedRegistryPolicyDatas...)
 	}
-
 	return xslices.IndexedToSortedValues(indexedPolicyDatas), nil
 }
 
@@ -131,8 +125,7 @@ func (p *policyDataProvider) getIndexedPolicyDatasForRegistryAndIndexedPolicyKey
 	if err != nil {
 		return nil, err
 	}
-
-	policyContents := policyResponse.Msg.GetContents()
+	policyContents := policyResponse.Msg.Contents
 	if len(policyContents) != len(indexedPolicyKeys) {
 		return nil, syserror.New("did not get the expected number of policy datas")
 	}
@@ -148,27 +141,22 @@ func (p *policyDataProvider) getIndexedPolicyDatasForRegistryAndIndexedPolicyKey
 	}
 
 	indexedPolicyDatas := make([]xslices.Indexed[bufpolicy2.PolicyData], 0, len(indexedPolicyKeys))
-
 	for _, policyContent := range policyContents {
-		commitID, err := uuid.Parse(policyContent.GetCommit().GetId())
+		commitID, err := uuid.Parse(policyContent.Commit.Id)
 		if err != nil {
 			return nil, err
 		}
-
 		indexedPolicyKey, ok := commitIDToIndexedPolicyKeys[commitID]
 		if !ok {
 			return nil, syserror.Newf("did not get policy key from store with commitID %q", commitID)
 		}
-
 		getContent := func() (bufpolicy2.PolicyConfig, error) {
 			return V1Beta1ProtoToPolicyConfig(registry, policyContent.GetConfig())
 		}
-
 		policyData, err := bufpolicy2.NewPolicyData(ctx, indexedPolicyKey.Value, getContent)
 		if err != nil {
 			return nil, err
 		}
-
 		indexedPolicyDatas = append(
 			indexedPolicyDatas,
 			xslices.Indexed[bufpolicy2.PolicyData]{
@@ -177,6 +165,5 @@ func (p *policyDataProvider) getIndexedPolicyDatasForRegistryAndIndexedPolicyKey
 			},
 		)
 	}
-
 	return indexedPolicyDatas, nil
 }

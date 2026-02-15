@@ -64,7 +64,6 @@ func FileDescriptorProtoForFileDescriptor(fileDescriptor FileDescriptor) *descri
 	if fileDescriptorProto, ok := fileDescriptor.(*descriptorpb.FileDescriptorProto); ok {
 		return fileDescriptorProto
 	}
-
 	fileDescriptorProto := &descriptorpb.FileDescriptorProto{
 		Dependency:       fileDescriptor.GetDependency(),
 		PublicDependency: fileDescriptor.GetPublicDependency(),
@@ -81,21 +80,16 @@ func FileDescriptorProtoForFileDescriptor(fileDescriptor FileDescriptor) *descri
 	if name := fileDescriptor.GetName(); name != "" {
 		fileDescriptorProto.Name = proto.String(name)
 	}
-
 	if pkg := fileDescriptor.GetPackage(); pkg != "" {
 		fileDescriptorProto.Package = proto.String(pkg)
 	}
-
 	if syntax := fileDescriptor.GetSyntax(); syntax != "" {
 		fileDescriptorProto.Syntax = proto.String(syntax)
 	}
-
 	if edition := fileDescriptor.GetEdition(); edition != descriptorpb.Edition_EDITION_UNKNOWN {
 		fileDescriptorProto.Edition = &edition
 	}
-
 	fileDescriptorProto.ProtoReflect().SetUnknown(fileDescriptor.ProtoReflect().GetUnknown())
-
 	return fileDescriptorProto
 }
 
@@ -115,7 +109,6 @@ func FileDescriptorProtosForFileDescriptors[F FileDescriptor](fileDescriptors ..
 	for i, fileDescriptor := range fileDescriptors {
 		fileDescriptorProtos[i] = FileDescriptorProtoForFileDescriptor(fileDescriptor)
 	}
-
 	return fileDescriptorProtos
 }
 
@@ -138,15 +131,12 @@ func ValidateFileDescriptor(fileDescriptor FileDescriptor) error {
 	if fileDescriptor == nil {
 		return errors.New("nil FileDescriptor")
 	}
-
 	if err := ValidateProtoPath("FileDescriptor.Name", fileDescriptor.GetName()); err != nil {
 		return err
 	}
-
 	if err := ValidateProtoPaths("FileDescriptor.Dependency", fileDescriptor.GetDependency()); err != nil {
 		return err
 	}
-
 	if fileDescriptor.GetSyntax() == "editions" {
 		edition := fileDescriptor.GetEdition()
 		// protocompile should support the same editions as buf (or possibly a superset at
@@ -159,7 +149,6 @@ func ValidateFileDescriptor(fileDescriptor FileDescriptor) error {
 				fileDescriptor.GetName(), edition)
 		}
 	}
-
 	return nil
 }
 
@@ -170,20 +159,16 @@ func ValidateProtoPath(name string, path string) error {
 	if path == "" {
 		return fmt.Errorf("%s is empty", name)
 	}
-
 	normalized, err := normalpath2.NormalizeAndValidate(path)
 	if err != nil {
 		return fmt.Errorf("%s had normalization error: %w", name, err)
 	}
-
 	if path != normalized {
 		return fmt.Errorf("%s %s was not normalized to %s", name, path, normalized)
 	}
-
 	if normalpath2.Ext(path) != ".proto" {
 		return fmt.Errorf("%s %s does not have a .proto extension", name, path)
 	}
-
 	return nil
 }
 
@@ -196,7 +181,6 @@ func ValidateProtoPaths(name string, paths []string) error {
 			return err
 		}
 	}
-
 	return nil
 }
 

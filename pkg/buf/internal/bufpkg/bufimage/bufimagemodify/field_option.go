@@ -43,7 +43,6 @@ func modifyJsType(
 	for _, option := range options {
 		option(modifyOptions)
 	}
-
 	overrideRules := xslices.Filter(
 		config.Overrides(),
 		func(override bufconfig2.ManagedOverrideRule) bool {
@@ -55,7 +54,6 @@ func modifyJsType(
 	if len(overrideRules) == 0 {
 		return nil
 	}
-
 	disableRules := xslices.Filter(
 		config.Disables(),
 		func(disable bufconfig2.ManagedDisableRule) bool {
@@ -71,11 +69,9 @@ func modifyJsType(
 			return nil
 		}
 	}
-
 	if datawkt.Exists(imageFile.Path()) {
 		return nil
 	}
-
 	return walk.DescriptorProtosWithPath(
 		imageFile.FileDescriptorProto(),
 		func(
@@ -93,49 +89,38 @@ func modifyJsType(
 					return nil
 				}
 			}
-
 			var jsType *descriptorpb.FieldOptions_JSType
-
 			for _, override := range overrideRules {
 				if override.FieldName() == "" || override.FieldName() == string(fullName) {
 					jsTypeValue, ok := override.Value().(descriptorpb.FieldOptions_JSType)
 					if !ok {
 						return fmt.Errorf("invalid js_type override value of type %T", override.Value())
 					}
-
 					jsType = &jsTypeValue
 				}
 			}
-
 			if jsType == nil {
 				return nil
 			}
-
-			if modifyOptions.preserveExisting && fieldDescriptor.GetOptions() != nil && fieldDescriptor.Options.Jstype != nil {
+			if modifyOptions.preserveExisting && fieldDescriptor.Options != nil && fieldDescriptor.Options.Jstype != nil {
 				return nil
 			}
-
-			if fieldDescriptor.Type == nil || !isJsTypePermittedForType(fieldDescriptor.GetType()) {
+			if fieldDescriptor.Type == nil || !isJsTypePermittedForType(*fieldDescriptor.Type) {
 				return nil
 			}
-
-			if options := fieldDescriptor.GetOptions(); options != nil {
+			if options := fieldDescriptor.Options; options != nil {
 				if existingJSTYpe := options.Jstype; existingJSTYpe != nil && *existingJSTYpe == *jsType {
 					return nil
 				}
 			}
-
-			if fieldDescriptor.GetOptions() == nil {
+			if fieldDescriptor.Options == nil {
 				fieldDescriptor.Options = &descriptorpb.FieldOptions{}
 			}
-
 			fieldDescriptor.Options.Jstype = jsType
-
 			if len(path) > 0 {
 				jsTypeOptionPath := append(path, jsTypeSubPath...)
 				sweeper.Mark(imageFile, jsTypeOptionPath)
 			}
-
 			return nil
 		},
 	)

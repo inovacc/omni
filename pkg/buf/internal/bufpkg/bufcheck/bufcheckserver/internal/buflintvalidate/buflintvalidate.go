@@ -31,16 +31,13 @@ func CheckMessage(
 	if err != nil {
 		return err
 	}
-
 	messageRules, err := protovalidate.ResolveMessageRules(messageDescriptor)
 	if err != nil {
 		return err
 	}
-
 	if messageRules == nil {
 		return nil
 	}
-
 	return checkCELForMessage(
 		addAnnotationFunc,
 		messageRules,

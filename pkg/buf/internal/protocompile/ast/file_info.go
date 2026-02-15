@@ -79,7 +79,6 @@ func (f *FileInfo) AddLine(offset int) {
 	if offset < 0 {
 		panic(fmt.Sprintf("invalid offset: %d must not be negative", offset))
 	}
-
 	if offset > len(f.data) {
 		panic(fmt.Sprintf("invalid offset: %d is greater than file size %d", offset, len(f.data)))
 	}
@@ -100,11 +99,9 @@ func (f *FileInfo) AddToken(offset, length int) Token {
 	if offset < 0 {
 		panic(fmt.Sprintf("invalid offset: %d must not be negative", offset))
 	}
-
 	if length < 0 {
 		panic(fmt.Sprintf("invalid length: %d must not be negative", length))
 	}
-
 	if offset+length > len(f.data) {
 		panic(fmt.Sprintf("invalid offset+length: %d is greater than file size %d", offset+length, len(f.data)))
 	}
@@ -112,7 +109,6 @@ func (f *FileInfo) AddToken(offset, length int) Token {
 	tokenID := len(f.items)
 	if len(f.items) > 0 {
 		lastToken := f.items[tokenID-1]
-
 		lastEnd := lastToken.offset + lastToken.length - 1
 		if offset <= lastEnd {
 			panic(fmt.Sprintf("invalid offset: %d is not greater than previously observed token end %d", offset, lastEnd))
@@ -120,7 +116,6 @@ func (f *FileInfo) AddToken(offset, length int) Token {
 	}
 
 	f.items = append(f.items, itemSpan{offset: offset, length: length})
-
 	return Token(tokenID)
 }
 
@@ -136,14 +131,12 @@ func (f *FileInfo) AddComment(comment, attributedTo Token) Comment {
 		if int(comment) <= lastComment.index {
 			panic(fmt.Sprintf("invalid index: %d is not greater than previously observed comment index %d", comment, lastComment.index))
 		}
-
 		if int(attributedTo) < lastComment.attributedToIndex {
 			panic(fmt.Sprintf("invalid attribution: %d is not greater than previously observed comment attribution index %d", attributedTo, lastComment.attributedToIndex))
 		}
 	}
 
 	f.comments = append(f.comments, commentInfo{index: int(comment), attributedToIndex: int(attributedTo)})
-
 	return Comment{
 		fileInfo: f,
 		index:    len(f.comments) - 1,
@@ -172,11 +165,9 @@ func (f *FileInfo) nodeInfo(start, end int) NodeInfo {
 	if start < 0 || start >= len(f.items) {
 		return NodeInfo{fileInfo: f}
 	}
-
 	if end < 0 || end >= len(f.items) {
 		return NodeInfo{fileInfo: f}
 	}
-
 	return NodeInfo{fileInfo: f, startIndex: start, endIndex: end}
 }
 
@@ -190,11 +181,9 @@ func (f *FileInfo) ItemInfo(i Item) ItemInfo {
 	if tok != TokenError {
 		return f.TokenInfo(tok)
 	}
-
 	if cmt.IsValid() {
 		return cmt
 	}
-
 	return nil
 }
 
@@ -210,7 +199,6 @@ func (f *FileInfo) GetItem(i Item) (Token, Comment) {
 	if i < 0 || int(i) >= len(f.items) {
 		return TokenError, Comment{}
 	}
-
 	if !f.isComment(i) {
 		return Token(i), Comment{}
 	}
@@ -268,7 +256,6 @@ func (i items) First() (Item, bool) {
 	if len(i.fileInfo.items) == 0 {
 		return 0, false
 	}
-
 	return 0, true
 }
 
@@ -276,7 +263,6 @@ func (i items) Next(item Item) (Item, bool) {
 	if item < 0 || int(item) >= len(i.fileInfo.items)-1 {
 		return 0, false
 	}
-
 	return i.fileInfo.itemForward(item+1, true)
 }
 
@@ -284,7 +270,6 @@ func (i items) Last() (Item, bool) {
 	if len(i.fileInfo.items) == 0 {
 		return 0, false
 	}
-
 	return Item(len(i.fileInfo.items) - 1), true
 }
 
@@ -292,7 +277,6 @@ func (i items) Previous(item Item) (Item, bool) {
 	if item <= 0 || int(item) >= len(i.fileInfo.items) {
 		return 0, false
 	}
-
 	return i.fileInfo.itemBackward(item-1, true)
 }
 
@@ -309,9 +293,7 @@ func (t tokens) Next(tok Token) (Token, bool) {
 	if tok < 0 || int(tok) >= len(t.fileInfo.items)-1 {
 		return 0, false
 	}
-
 	i, ok := t.fileInfo.itemForward(Item(tok+1), false)
-
 	return Token(i), ok
 }
 
@@ -324,9 +306,7 @@ func (t tokens) Previous(tok Token) (Token, bool) {
 	if tok <= 0 || int(tok) >= len(t.fileInfo.items) {
 		return 0, false
 	}
-
 	i, ok := t.fileInfo.itemBackward(Item(tok-1), false)
-
 	return Token(i), ok
 }
 
@@ -336,10 +316,8 @@ func (f *FileInfo) itemForward(i Item, allowComment bool) (Item, bool) {
 		if allowComment || !f.isComment(i) {
 			return i, true
 		}
-
 		i++
 	}
-
 	return 0, false
 }
 
@@ -348,10 +326,8 @@ func (f *FileInfo) itemBackward(i Item, allowComment bool) (Item, bool) {
 		if allowComment || !f.isComment(i) {
 			return i, true
 		}
-
 		i--
 	}
-
 	return 0, false
 }
 
@@ -366,9 +342,7 @@ func (f *FileInfo) isComment(i Item) bool {
 	if f.data[item.offset] != '/' {
 		return false
 	}
-
 	c := f.data[item.offset+1]
-
 	return c == '/' || c == '*'
 }
 
@@ -384,7 +358,6 @@ func (f *FileInfo) SourcePos(offset int) SourcePos {
 	// computed line+column information, which would triple the size of
 	// f's items slice...
 	col := 0
-
 	for i := f.lines[lineNumber-1]; i < offset; i++ {
 		if f.data[i] == '\t' {
 			nextTabStop := 8 - (col % 8)
@@ -457,7 +430,6 @@ func (n NodeInfo) Start() SourcePos {
 	}
 
 	tok := n.fileInfo.items[n.startIndex]
-
 	return n.fileInfo.SourcePos(tok.offset)
 }
 
@@ -477,14 +449,12 @@ func (n NodeInfo) End() SourcePos {
 	if tok.length > 0 {
 		offset += tok.length - 1
 	}
-
 	pos := n.fileInfo.SourcePos(offset)
 	if tok.length > 0 {
 		// We return "open range", so end is the position *after* the
 		// last character in the span. So we adjust
 		pos.Col++
 	}
-
 	return pos
 }
 
@@ -499,14 +469,11 @@ func (n NodeInfo) LeadingWhitespace() string {
 	}
 
 	tok := n.fileInfo.items[n.startIndex]
-
 	var prevEnd int
-
 	if n.startIndex > 0 {
 		prevTok := n.fileInfo.items[n.startIndex-1]
 		prevEnd = prevTok.offset + prevTok.length
 	}
-
 	return string(n.fileInfo.data[prevEnd:tok.offset])
 }
 
@@ -528,7 +495,6 @@ func (n NodeInfo) LeadingComments() Comments {
 	}
 
 	numComments := 0
-
 	for i := start; i < len(n.fileInfo.comments); i++ {
 		comment := n.fileInfo.comments[i]
 		if comment.attributedToIndex == n.startIndex &&
@@ -575,7 +541,6 @@ func (n NodeInfo) TrailingComments() Comments {
 
 	start := sort.Search(len(n.fileInfo.comments), func(i int) bool {
 		comment := n.fileInfo.comments[i]
-
 		return comment.attributedToIndex >= n.endIndex &&
 			comment.index > n.endIndex
 	})
@@ -586,7 +551,6 @@ func (n NodeInfo) TrailingComments() Comments {
 	}
 
 	numComments := 0
-
 	for i := start; i < len(n.fileInfo.comments); i++ {
 		comment := n.fileInfo.comments[i]
 		if comment.attributedToIndex == n.endIndex {
@@ -610,7 +574,6 @@ func (n NodeInfo) TrailingComments() Comments {
 func (n NodeInfo) RawText() string {
 	startTok := n.fileInfo.items[n.startIndex]
 	endTok := n.fileInfo.items[n.endIndex]
-
 	return string(n.fileInfo.data[startTok.offset : endTok.offset+endTok.length])
 }
 
@@ -631,7 +594,6 @@ func (pos SourcePos) String() string {
 	if pos.Line <= 0 || pos.Col <= 0 {
 		return pos.Filename
 	}
-
 	return fmt.Sprintf("%s:%d:%d", pos.Filename, pos.Line, pos.Col)
 }
 
@@ -680,7 +642,6 @@ func (c Comments) Index(i int) Comment {
 	if i < 0 || i >= c.num {
 		panic(fmt.Sprintf("index %d out of range (len = %d)", i, c.num))
 	}
-
 	return Comment{
 		fileInfo: c.fileInfo,
 		index:    c.first + i,
@@ -726,14 +687,11 @@ func (c Comment) End() SourcePos {
 func (c Comment) LeadingWhitespace() string {
 	item := c.AsItem()
 	span := c.fileInfo.items[item]
-
 	var prevEnd int
-
 	if item > 0 {
 		prevItem := c.fileInfo.items[item-1]
 		prevEnd = prevItem.offset + prevItem.length
 	}
-
 	return string(c.fileInfo.data[prevEnd:span.offset])
 }
 

@@ -29,6 +29,5 @@ func (mp *mustProgress) check() {
 		// call to HandleICE for us.
 		panic("lexer failed to make progress; this is a bug in protocompile")
 	}
-
 	mp.prev = mp.l.cursor
 }

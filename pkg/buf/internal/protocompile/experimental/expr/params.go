@@ -92,7 +92,6 @@ func (p Params) Len() int {
 // At implements [seq.Indexer].
 func (p Params) At(n int) Param {
 	v := p.Raw().params[n]
-
 	return Param{
 		Name:  id.WrapDyn(p.Context(), id.NewDyn(v.nameKind, v.name)),
 		Colon: id.Wrap(p.Context().Stream(), v.colon),

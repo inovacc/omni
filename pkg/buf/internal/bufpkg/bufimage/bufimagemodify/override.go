@@ -147,24 +147,19 @@ func stringOverrideFromConfig(
 	) {
 		return stringOverrideOptions{}, nil
 	}
-
 	overrideOptions := defaultOverrideOptions
 	ignorePrefix := prefixFileOption == bufconfig2.FileOptionUnspecified || isFileOptionDisabledForFile(imageFile, prefixFileOption, config)
 	ignoreSuffix := suffixFileOption == bufconfig2.FileOptionUnspecified || isFileOptionDisabledForFile(imageFile, suffixFileOption, config)
-
 	if ignorePrefix {
 		overrideOptions.prefix = ""
 	}
-
 	if ignoreSuffix {
 		overrideOptions.suffix = ""
 	}
-
 	for _, overrideRule := range config.Overrides() {
 		if !fileMatchConfig(imageFile, overrideRule.Path(), overrideRule.FullName()) {
 			continue
 		}
-
 		switch overrideRule.FileOption() {
 		case valueFileOption:
 			valueString, ok := overrideRule.Value().(string)
@@ -178,7 +173,6 @@ func stringOverrideFromConfig(
 			if ignorePrefix {
 				continue
 			}
-
 			prefix, ok := overrideRule.Value().(string)
 			if !ok {
 				// This should never happen, since the override rule has been validated.
@@ -193,7 +187,6 @@ func stringOverrideFromConfig(
 			if ignoreSuffix {
 				continue
 			}
-
 			suffix, ok := overrideRule.Value().(string)
 			if !ok {
 				// This should never happen, since the override rule has been validated.
@@ -206,7 +199,6 @@ func stringOverrideFromConfig(
 			}
 		}
 	}
-
 	return overrideOptions, nil
 }
 
@@ -217,25 +209,20 @@ func overrideFromConfig[T bool | descriptorpb.FileOptions_OptimizeMode](
 	fileOption bufconfig2.FileOption,
 ) (*T, error) {
 	var override *T
-
 	for _, overrideRule := range config.Overrides() {
 		if !fileMatchConfig(imageFile, overrideRule.Path(), overrideRule.FullName()) {
 			continue
 		}
-
 		if overrideRule.FileOption() != fileOption {
 			continue
 		}
-
 		value, ok := overrideRule.Value().(T)
 		if !ok {
 			// This should never happen, since the override rule has been validated.
 			return nil, fmt.Errorf("invalid value type for %v override: %T", fileOption, overrideRule.Value())
 		}
-
 		override = &value
 	}
-
 	return override, nil
 }
 
@@ -248,18 +235,14 @@ func isFileOptionDisabledForFile(
 		if disableRule.FileOption() != bufconfig2.FileOptionUnspecified && disableRule.FileOption() != fileOption {
 			continue
 		}
-
 		if disableRule.FieldOption() != bufconfig2.FieldOptionUnspecified {
 			continue // FieldOption specified, not a matching rule.
 		}
-
 		if !fileMatchConfig(imageFile, disableRule.Path(), disableRule.FullName()) {
 			continue
 		}
-
 		return true
 	}
-
 	return false
 }
 
@@ -271,11 +254,9 @@ func fileMatchConfig(
 	if requiredPath != "" && !normalpath2.EqualsOrContainsPath(requiredPath, imageFile.Path(), normalpath2.Relative) {
 		return false
 	}
-
 	if requiredFullName != "" && (imageFile.FullName() == nil || imageFile.FullName().String() != requiredFullName) {
 		return false
 	}
-
 	return true
 }
 
@@ -285,14 +266,11 @@ func getJavaPackageValue(imageFile bufimage.ImageFile, stringOverrideOptions str
 		if stringOverrideOptions.prefix != "" {
 			pkg = stringOverrideOptions.prefix + "." + pkg
 		}
-
 		if stringOverrideOptions.suffix != "" {
 			pkg = pkg + "." + stringOverrideOptions.suffix
 		}
-
 		return pkg
 	}
-
 	return ""
 }
 
@@ -301,11 +279,9 @@ func getCsharpNamespaceValue(imageFile bufimage.ImageFile, prefix string) string
 	if namespace == "" {
 		return ""
 	}
-
 	if prefix == "" {
 		return namespace
 	}
-
 	return prefix + "." + namespace
 }
 
@@ -314,11 +290,9 @@ func getPhpMetadataNamespaceValue(imageFile bufimage.ImageFile, suffix string) s
 	if namespace == "" {
 		return ""
 	}
-
 	if suffix == "" {
 		return namespace
 	}
-
 	return namespace + `\` + suffix
 }
 
@@ -327,11 +301,9 @@ func getRubyPackageValue(imageFile bufimage.ImageFile, suffix string) string {
 	if rubyPackage == "" {
 		return ""
 	}
-
 	if suffix == "" {
 		return rubyPackage
 	}
-
 	return rubyPackage + "::" + suffix
 }
 
@@ -344,12 +316,10 @@ func csharpNamespaceValue(imageFile bufimage.ImageFile) string {
 	if pkg == "" {
 		return ""
 	}
-
 	packageParts := strings.Split(pkg, ".")
 	for i, part := range packageParts {
 		packageParts[i] = xstrings.ToPascalCase(part)
 	}
-
 	return strings.Join(packageParts, ".")
 }
 
@@ -362,7 +332,6 @@ func csharpNamespaceValue(imageFile bufimage.ImageFile) string {
 // in the `go_package` declaration so that the generated package is named as such.
 func goPackageImportPathForFile(imageFile bufimage.ImageFile, importPathPrefix string) string {
 	goPackageImportPath := path.Join(importPathPrefix, path.Dir(imageFile.Path()))
-
 	packageName := imageFile.FileDescriptorProto().GetPackage()
 	if _, ok := protoversion.NewPackageVersionForPackage(packageName); ok {
 		parts := strings.Split(packageName, ".")
@@ -370,7 +339,6 @@ func goPackageImportPathForFile(imageFile bufimage.ImageFile, importPathPrefix s
 			goPackageImportPath += ";" + parts[len(parts)-2] + parts[len(parts)-1]
 		}
 	}
-
 	return goPackageImportPath
 }
 
@@ -386,12 +354,9 @@ func objcClassPrefixValue(imageFile bufimage.ImageFile) string {
 	if pkg == "" {
 		return ""
 	}
-
 	_, hasPackageVersion := protoversion.NewPackageVersionForPackage(pkg)
 	packageParts := strings.Split(pkg, ".")
-
 	var prefixParts []rune
-
 	for i, part := range packageParts {
 		// Check if last part is a version before appending.
 		if i == len(packageParts)-1 && hasPackageVersion {
@@ -402,16 +367,13 @@ func objcClassPrefixValue(imageFile bufimage.ImageFile) string {
 		runeSlice := []rune(part)
 		prefixParts = append(prefixParts, unicode.ToUpper(runeSlice[0]))
 	}
-
 	for len(prefixParts) < 3 {
 		prefixParts = append(prefixParts, 'X')
 	}
-
 	prefix := string(prefixParts)
 	if prefix == "GPB" {
 		prefix = "GPX"
 	}
-
 	return prefix
 }
 
@@ -423,7 +385,6 @@ func phpMetadataNamespaceValue(imageFile bufimage.ImageFile) string {
 	if phpNamespace == "" {
 		return ""
 	}
-
 	return phpNamespace + `\GPBMetadata`
 }
 
@@ -435,7 +396,6 @@ func phpNamespaceValue(imageFile bufimage.ImageFile) string {
 	if pkg == "" {
 		return ""
 	}
-
 	packageParts := strings.Split(pkg, ".")
 	for i, part := range packageParts {
 		packagePart := xstrings.ToPascalCase(part)
@@ -443,10 +403,8 @@ func phpNamespaceValue(imageFile bufimage.ImageFile) string {
 			// Append _ to the package part if it is a reserved keyword.
 			packagePart += "_"
 		}
-
 		packageParts[i] = packagePart
 	}
-
 	return strings.Join(packageParts, `\`)
 }
 
@@ -458,11 +416,9 @@ func rubyPackageValue(imageFile bufimage.ImageFile) string {
 	if pkg == "" {
 		return ""
 	}
-
 	packageParts := strings.Split(pkg, ".")
 	for i, part := range packageParts {
 		packageParts[i] = xstrings.ToPascalCase(part)
 	}
-
 	return strings.Join(packageParts, "::")
 }

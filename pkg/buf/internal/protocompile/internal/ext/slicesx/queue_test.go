@@ -30,7 +30,6 @@ func TestQueue(t *testing.T) {
 		v  int
 		ok bool
 	}
-
 	pack := func(v int, ok bool) p { return p{v, ok} }
 
 	var q slicesx.Queue[int]
@@ -39,7 +38,6 @@ func TestQueue(t *testing.T) {
 	x, ok := q.PopFront()
 	assert.True(t, ok)
 	assert.Equal(t, 1, x)
-
 	_, ok = q.PopFront()
 	assert.False(t, ok)
 
@@ -64,7 +62,6 @@ func TestQueue(t *testing.T) {
 	x, ok = q.PopFront()
 	assert.True(t, ok)
 	assert.Equal(t, -1, x)
-
 	_, ok = q.PopFront()
 	assert.False(t, ok)
 }
@@ -199,7 +196,6 @@ func TestQueueLargeSequence(t *testing.T) {
 	for i := range 1000 {
 		expected[i] = 500 + i
 	}
-
 	assert.Equal(t, expected, slices.Collect(q.Values()))
 
 	for i := 500; i < 1500; i++ {
@@ -307,10 +303,8 @@ func TestQueuePushFrontWithWrapping(t *testing.T) {
 func TestQueueStressTest(t *testing.T) {
 	t.Parallel()
 
-	var (
-		q        slicesx.Queue[int]
-		expected []int
-	)
+	var q slicesx.Queue[int]
+	var expected []int
 
 	for i := range 100 {
 		switch i % 7 {
@@ -356,7 +350,6 @@ func TestQueueResizeWithGap(t *testing.T) {
 
 	v1, _ := q.PopFront()
 	v2, _ := q.PopFront()
-
 	assert.Equal(t, 10, v1)
 	assert.Equal(t, 20, v2)
 

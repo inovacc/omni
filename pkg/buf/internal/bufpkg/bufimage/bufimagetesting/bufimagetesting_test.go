@@ -53,11 +53,10 @@ func BenchmarkNewImageWithOnlyPathsAllowNotExistFileOnly(b *testing.B) {
 			),
 		)
 	}
-
 	image, err := bufimage.NewImage(imageFiles)
 	require.NoError(b, err)
-
-	for b.Loop() {
+	b.ResetTimer()
+	for n := 0; n < b.N; n++ {
 		newImage, err := bufimage.ImageWithOnlyPathsAllowNotExist(image, []string{"a1.proto/a1.proto"}, nil)
 		// this does increase the time but we're just looking for order of magnitude
 		// between this and the below benchmark function
@@ -87,11 +86,10 @@ func BenchmarkNewImageWithOnlyPathsAllowNotExistDirOnly(b *testing.B) {
 			),
 		)
 	}
-
 	image, err := bufimage.NewImage(imageFiles)
 	require.NoError(b, err)
-
-	for b.Loop() {
+	b.ResetTimer()
+	for n := 0; n < b.N; n++ {
 		newImage, err := bufimage.ImageWithOnlyPathsAllowNotExist(image, []string{"a1.proto"}, nil)
 		require.NoError(b, err)
 		require.Equal(b, 1, len(newImage.Files()))
@@ -366,7 +364,6 @@ func TestBasic(t *testing.T) {
 		},
 		newImage.Files(),
 	)
-
 	_, err = bufimage.ImageWithOnlyPaths(
 		image,
 		[]string{
@@ -472,10 +469,8 @@ func TestBasic(t *testing.T) {
 	)
 	newProtoImage, err := bufimage.ImageToProtoImage(newImage)
 	require.NoError(t, err)
-
 	diff := cmp.Diff(protoImage, newProtoImage, protocmp.Transform())
 	require.Empty(t, diff)
-
 	fileDescriptorSet := &descriptorpb.FileDescriptorSet{
 		File: []*descriptorpb.FileDescriptorProto{
 			testProtoImageFileToFileDescriptorProto(protoImageFileAA),
@@ -489,7 +484,6 @@ func TestBasic(t *testing.T) {
 	}
 	diff = cmp.Diff(fileDescriptorSet, bufimage.ImageToFileDescriptorSet(image), protocmp.Transform())
 	require.Empty(t, diff)
-
 	codeGeneratorRequest := &pluginpb.CodeGeneratorRequest{
 		ProtoFile: []*descriptorpb.FileDescriptorProto{
 			testProtoImageFileToFileDescriptorProto(protoImageFileAA),
@@ -518,7 +512,6 @@ func TestBasic(t *testing.T) {
 	}
 	actualRequest, err := bufimage.ImageToCodeGeneratorRequest(image, "foo", nil, false, false)
 	require.NoError(t, err)
-
 	diff = cmp.Diff(
 		codeGeneratorRequest,
 		actualRequest,
@@ -529,7 +522,6 @@ func TestBasic(t *testing.T) {
 	// verify that includeWellKnownTypes is a no-op if includeImports is false
 	actualRequest, err = bufimage.ImageToCodeGeneratorRequest(image, "foo", nil, false, true)
 	require.NoError(t, err)
-
 	diff = cmp.Diff(
 		codeGeneratorRequest,
 		actualRequest,
@@ -568,14 +560,12 @@ func TestBasic(t *testing.T) {
 	}
 	actualRequest, err = bufimage.ImageToCodeGeneratorRequest(image, "foo", nil, true, false)
 	require.NoError(t, err)
-
 	diff = cmp.Diff(
 		codeGeneratorRequestIncludeImports,
 		actualRequest,
 		protocmp.Transform(),
 	)
 	require.Empty(t, diff)
-
 	newImage, err = bufimage.NewImageForCodeGeneratorRequest(codeGeneratorRequest)
 	require.NoError(t, err)
 	AssertImageFilesEqual(
@@ -623,7 +613,6 @@ func TestBasic(t *testing.T) {
 	}
 	actualRequest, err = bufimage.ImageToCodeGeneratorRequest(image, "foo", nil, true, true)
 	require.NoError(t, err)
-
 	diff = cmp.Diff(
 		codeGeneratorRequestIncludeImportsAndWellKnownTypes,
 		actualRequest,
@@ -718,12 +707,10 @@ func TestBasic(t *testing.T) {
 	requestsFromImages, err := bufimage.ImagesToCodeGeneratorRequests(imagesByDir, "foo", nil, false, false)
 	require.NoError(t, err)
 	require.Equal(t, len(codeGeneratorRequests), len(requestsFromImages))
-
 	for i := range codeGeneratorRequests {
 		diff = cmp.Diff(codeGeneratorRequests[i], requestsFromImages[i], protocmp.Transform())
 		require.Empty(t, diff)
 	}
-
 	codeGeneratorRequestsIncludeImports := []*pluginpb.CodeGeneratorRequest{
 		{
 			ProtoFile: []*descriptorpb.FileDescriptorProto{
@@ -780,7 +767,6 @@ func TestBasic(t *testing.T) {
 	requestsFromImages, err = bufimage.ImagesToCodeGeneratorRequests(imagesByDir, "foo", nil, true, false)
 	require.NoError(t, err)
 	require.Equal(t, len(codeGeneratorRequestsIncludeImports), len(requestsFromImages))
-
 	for i := range codeGeneratorRequestsIncludeImports {
 		diff = cmp.Diff(codeGeneratorRequestsIncludeImports[i], requestsFromImages[i], protocmp.Transform())
 		require.Empty(t, diff)
@@ -798,7 +784,7 @@ func TestImageFileInfosWithOnlyTargetsAndTargetImports(t *testing.T) {
 		t,
 		"d.proto",
 	)
-	// protoImageFileTimestamp := NewProtoImageFileIsImport(
+	//protoImageFileTimestamp := NewProtoImageFileIsImport(
 	//t,
 	//"google/protobuf/timestamp.proto",
 	//)
@@ -836,7 +822,7 @@ func TestImageFileInfosWithOnlyTargetsAndTargetImports(t *testing.T) {
 		false,
 		nil,
 	)
-	// fileTimestamp := NewImageFile(
+	//fileTimestamp := NewImageFile(
 	//t,
 	//protoImageFileTimestamp,
 	//nil,
@@ -874,7 +860,7 @@ func TestImageFileInfosWithOnlyTargetsAndTargetImports(t *testing.T) {
 		fileC,
 		fileD,
 		fileA,
-		// fileTimestamp,
+		//fileTimestamp,
 		fileB,
 	}
 	resultImageFileInfos, err := bufimage.ImageFileInfosWithOnlyTargetsAndTargetImports(

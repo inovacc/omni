@@ -40,7 +40,6 @@ func newPluginIdentity(
 	if err := ValidatePluginIdentity(pluginIdentity); err != nil {
 		return nil, err
 	}
-
 	return pluginIdentity, nil
 }
 
@@ -67,19 +66,15 @@ func ValidatePluginIdentity(pluginIdentity PluginIdentity) error {
 	if pluginIdentity == nil {
 		return errors.New("plugin identity is required")
 	}
-
 	if err := ValidateRemote(pluginIdentity.Remote()); err != nil {
 		return err
 	}
-
 	if pluginIdentity.Owner() == "" {
 		return errors.New("owner name is required")
 	}
-
 	if pluginIdentity.Plugin() == "" {
 		return errors.New("plugin name is required")
 	}
-
 	return nil
 }
 
@@ -88,10 +83,8 @@ func ValidateRemote(remote string) error {
 	if remote == "" {
 		return errors.New("remote name is required")
 	}
-
 	if _, err := netext.ValidateHostname(remote); err != nil {
 		return fmt.Errorf("invalid remote %q: %w", remote, err)
 	}
-
 	return nil
 }

@@ -28,7 +28,6 @@ import (
 
 func TestCountUnrecognized(t *testing.T) {
 	t.Parallel()
-
 	descriptors, err := (&protocompile.Compiler{
 		Resolver: &protocompile.SourceResolver{
 			ImportPaths: []string{"./testdata"},
@@ -37,7 +36,6 @@ func TestCountUnrecognized(t *testing.T) {
 	require.NoError(t, err)
 	msgType, err := descriptors.AsResolver().FindMessageByName("foo.bar.Message")
 	require.NoError(t, err)
-
 	msg := msgType.New()
 	msgData, err := os.ReadFile("./testdata/testdata.txt")
 	require.NoError(t, err)
@@ -50,30 +48,23 @@ func TestCountUnrecognized(t *testing.T) {
 	expectedUnrecognized := len(unknownBytes)
 
 	msg.Get(msgType.Descriptor().Fields().ByName("msg")).Message().SetUnknown(unknownBytes[:10])
-
 	expectedUnrecognized += 10
-
 	msg.Get(msgType.Descriptor().Fields().ByName("grp")).Message().SetUnknown(unknownBytes[:6])
-
 	expectedUnrecognized += 6
 
 	slice := msg.Get(msgType.Descriptor().Fields().ByName("rmsg")).List()
 	slice.Get(0).Message().SetUnknown(unknownBytes[:10])
 	slice.Get(1).Message().SetUnknown(unknownBytes[:5])
-
 	expectedUnrecognized += 15
 	slice = msg.Get(msgType.Descriptor().Fields().ByName("rgrp")).List()
 	slice.Get(0).Message().SetUnknown(unknownBytes[:3])
 	slice.Get(1).Message().SetUnknown(unknownBytes[:8])
-
 	expectedUnrecognized += 11
 
 	mapVal := msg.Get(msgType.Descriptor().Fields().ByName("mvmsg")).Map()
 	mapVal.Range(func(_ protoreflect.MapKey, v protoreflect.Value) bool {
 		v.Message().SetUnknown(unknownBytes[:6])
-
 		expectedUnrecognized += 6
-
 		return true
 	})
 

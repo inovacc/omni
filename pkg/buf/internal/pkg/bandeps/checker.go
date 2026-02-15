@@ -42,13 +42,11 @@ func (c *checker) Check(
 	if err := c.populateState(ctx, state, externalConfig); err != nil {
 		return nil, err
 	}
-
 	for _, externalBanConfig := range externalConfig.Bans {
 		if err := c.checkBan(ctx, state, externalBanConfig); err != nil {
 			return nil, err
 		}
 	}
-
 	return state.Violations(), nil
 }
 
@@ -61,7 +59,6 @@ func (c *checker) checkBan(
 	if err != nil {
 		return err
 	}
-
 	banPackages, err := c.getPackages(ctx, state, externalBanConfig.Deps)
 	if err != nil {
 		return err
@@ -72,7 +69,6 @@ func (c *checker) checkBan(
 		if err != nil {
 			return err
 		}
-
 		for dep := range deps {
 			if _, ok := banPackages[dep]; ok {
 				state.AddViolation(
@@ -98,23 +94,17 @@ func (c *checker) getPackages(
 	if err != nil {
 		return nil, err
 	}
-
 	exceptPackages, err := state.PackagesForPackageExpressions(ctx, externalPackageConfig.Except...)
 	if err != nil {
 		return nil, err
 	}
-
 	subtractMaps(usePackages, exceptPackages)
-
 	return usePackages, nil
 }
 
 func (c *checker) populateState(ctx context.Context, state *state, externalConfig ExternalConfig) error {
-	var (
-		depPackageExpressions []string
-		packageExpressions    []string
-	)
-
+	var depPackageExpressions []string
+	var packageExpressions []string
 	for _, externalBanConfig := range externalConfig.Bans {
 		depPackageExpressions = append(depPackageExpressions, externalBanConfig.Packages.Use...)
 		depPackageExpressions = append(depPackageExpressions, externalBanConfig.Packages.Except...)
@@ -123,12 +113,8 @@ func (c *checker) populateState(ctx context.Context, state *state, externalConfi
 	}
 
 	depPackages := make(map[string]struct{})
-
-	var (
-		lock sync.Mutex
-		jobs []func(context.Context) error
-	)
-
+	var lock sync.Mutex
+	var jobs []func(context.Context) error
 	for _, packageExpression := range depPackageExpressions {
 		jobs = append(
 			jobs,
@@ -137,16 +123,13 @@ func (c *checker) populateState(ctx context.Context, state *state, externalConfi
 				if err != nil {
 					return err
 				}
-
 				lock.Lock()
 				addMaps(depPackages, pkgs)
 				lock.Unlock()
-
 				return nil
 			},
 		)
 	}
-
 	for _, packageExpression := range packageExpressions {
 		jobs = append(
 			jobs,
@@ -156,7 +139,6 @@ func (c *checker) populateState(ctx context.Context, state *state, externalConfi
 			},
 		)
 	}
-
 	if err := thread.Parallelize(ctx, jobs, thread.ParallelizeWithCancelOnFailure()); err != nil {
 		return err
 	}
@@ -171,6 +153,5 @@ func (c *checker) populateState(ctx context.Context, state *state, externalConfi
 			},
 		)
 	}
-
 	return thread.Parallelize(ctx, jobs, thread.ParallelizeWithCancelOnFailure())
 }

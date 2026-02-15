@@ -24,22 +24,18 @@ func parseFullNameComponents(path string) (registry string, owner string, name s
 	if len(slashSplit) != 3 {
 		return "", "", "", newInvalidFullNameStringError(path)
 	}
-
 	registry = strings.TrimSpace(slashSplit[0])
 	if registry == "" {
 		return "", "", "", newInvalidFullNameStringError(path)
 	}
-
 	owner = strings.TrimSpace(slashSplit[1])
 	if owner == "" {
 		return "", "", "", newInvalidFullNameStringError(path)
 	}
-
 	name = strings.TrimSpace(slashSplit[2])
 	if name == "" {
 		return "", "", "", newInvalidFullNameStringError(path)
 	}
-
 	return registry, owner, name, nil
 }
 
@@ -49,7 +45,6 @@ func parseRefComponents(path string) (registry string, owner string, name string
 	if len(slashSplit) != 2 {
 		return "", "", "", "", newInvalidRefStringError(path)
 	}
-
 	registry, rest := slashSplit[0], slashSplit[1]
 	// split the remaining part by ":" to separate the reference
 	colonSplit := strings.Split(rest, ":")
@@ -64,12 +59,10 @@ func parseRefComponents(path string) (registry string, owner string, name string
 	default:
 		return "", "", "", "", newInvalidRefStringError(path)
 	}
-
 	registry, owner, name, err = parseFullNameComponents(registry + "/" + colonSplit[0])
 	if err != nil {
 		return "", "", "", "", newInvalidRefStringError(path)
 	}
-
 	return registry, owner, name, ref, nil
 }
 

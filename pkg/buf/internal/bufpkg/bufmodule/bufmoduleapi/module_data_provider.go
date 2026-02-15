@@ -81,12 +81,10 @@ func (a *moduleDataProvider) GetModuleDatasForModuleKeys(
 	if len(moduleKeys) == 0 {
 		return nil, nil
 	}
-
 	digestType, err := bufmodule2.UniqueDigestTypeForModuleKeys(moduleKeys)
 	if err != nil {
 		return nil, err
 	}
-
 	if _, err := bufparse.FullNameStringToUniqueValue(moduleKeys); err != nil {
 		return nil, err
 	}
@@ -102,7 +100,6 @@ func (a *moduleDataProvider) GetModuleDatasForModuleKeys(
 		},
 	)
 	indexedModuleDatas := make([]xslices.Indexed[bufmodule2.ModuleData], 0, len(moduleKeys))
-
 	for registry, indexedModuleKeys := range registryToIndexedModuleKeys {
 		// registryModuleDatas are in the same order as indexedModuleKeys.
 		indexedRegistryModuleDatas, err := a.getIndexedModuleDatasForRegistryAndIndexedModuleKeys(
@@ -115,10 +112,8 @@ func (a *moduleDataProvider) GetModuleDatasForModuleKeys(
 		if err != nil {
 			return nil, err
 		}
-
 		indexedModuleDatas = append(indexedModuleDatas, indexedRegistryModuleDatas...)
 	}
-
 	return xslices.IndexedToSortedValues(indexedModuleDatas), nil
 }
 
@@ -134,7 +129,6 @@ func (a *moduleDataProvider) getIndexedModuleDatasForRegistryAndIndexedModuleKey
 	if err != nil {
 		return nil, err
 	}
-
 	commitIDToIndexedModuleKey, err := xslices.ToUniqueValuesMapError(
 		indexedModuleKeys,
 		func(indexedModuleKey xslices.Indexed[bufmodule2.ModuleKey]) (uuid.UUID, error) {
@@ -144,7 +138,6 @@ func (a *moduleDataProvider) getIndexedModuleDatasForRegistryAndIndexedModuleKey
 	if err != nil {
 		return nil, err
 	}
-
 	commitIDToUniversalProtoContent, err := a.getCommitIDToUniversalProtoContentForRegistryAndIndexedModuleKeys(
 		ctx,
 		v1ProtoModuleProvider,
@@ -155,7 +148,6 @@ func (a *moduleDataProvider) getIndexedModuleDatasForRegistryAndIndexedModuleKey
 	if err != nil {
 		return nil, err
 	}
-
 	indexedModuleDatas := make([]xslices.Indexed[bufmodule2.ModuleData], 0, len(indexedModuleKeys))
 	for _, indexedModuleKey := range indexedModuleKeys {
 		moduleKey := indexedModuleKey.Value
@@ -177,7 +169,6 @@ func (a *moduleDataProvider) getIndexedModuleDatasForRegistryAndIndexedModuleKey
 		if !ok {
 			return nil, syserror.Newf("could not find universalProtoContent for commit ID %q", moduleKey.CommitID())
 		}
-
 		indexedModuleData := xslices.Indexed[bufmodule2.ModuleData]{
 			Value: bufmodule2.NewModuleData(
 				ctx,
@@ -197,7 +188,6 @@ func (a *moduleDataProvider) getIndexedModuleDatasForRegistryAndIndexedModuleKey
 		}
 		indexedModuleDatas = append(indexedModuleDatas, indexedModuleData)
 	}
-
 	return indexedModuleDatas, nil
 }
 
@@ -209,7 +199,6 @@ func (a *moduleDataProvider) getCommitIDToUniversalProtoContentForRegistryAndInd
 	digestType bufmodule2.DigestType,
 ) (map[uuid.UUID]*universalProtoContent, error) {
 	commitIDs := xslices.MapKeysToSlice(commitIDToIndexedModuleKey)
-
 	universalProtoContents, err := getUniversalProtoContentsForRegistryAndCommitIDs(
 		ctx,
 		a.moduleClientProvider,
@@ -220,7 +209,6 @@ func (a *moduleDataProvider) getCommitIDToUniversalProtoContentForRegistryAndInd
 	if err != nil {
 		return nil, err
 	}
-
 	commitIDToUniversalProtoContent, err := xslices.ToUniqueValuesMapError(
 		universalProtoContents,
 		func(universalProtoContent *universalProtoContent) (uuid.UUID, error) {
@@ -230,13 +218,11 @@ func (a *moduleDataProvider) getCommitIDToUniversalProtoContentForRegistryAndInd
 	if err != nil {
 		return nil, err
 	}
-
 	for commitID, indexedModuleKey := range commitIDToIndexedModuleKey {
 		universalProtoContent, ok := commitIDToUniversalProtoContent[commitID]
 		if !ok {
 			return nil, fmt.Errorf("no content returned for commit ID %s", commitID)
 		}
-
 		if err := a.warnIfDeprecated(
 			ctx,
 			v1ProtoModuleProvider,
@@ -247,7 +233,6 @@ func (a *moduleDataProvider) getCommitIDToUniversalProtoContentForRegistryAndInd
 			return nil, err
 		}
 	}
-
 	return commitIDToUniversalProtoContent, nil
 }
 
@@ -273,10 +258,8 @@ func (a *moduleDataProvider) warnIfDeprecated(
 	if err != nil {
 		return err
 	}
-
-	if v1ProtoModule.GetState() == modulev1.ModuleState_MODULE_STATE_DEPRECATED {
+	if v1ProtoModule.State == modulev1.ModuleState_MODULE_STATE_DEPRECATED {
 		a.logger.Warn(fmt.Sprintf("%s is deprecated", moduleKey.FullName().String()))
 	}
-
 	return nil
 }

@@ -33,11 +33,9 @@ func newAppError(exitCode int, err error) *appError {
 		)
 		exitCode = 1
 	}
-
 	if err == nil {
 		err = errors.New("got nil error when constructing appError")
 	}
-
 	return &appError{
 		exitCode: exitCode,
 		err:      err,
@@ -48,11 +46,9 @@ func (e *appError) Error() string {
 	if e == nil {
 		return ""
 	}
-
 	if e.err == nil {
 		return ""
 	}
-
 	return e.err.Error()
 }
 
@@ -60,7 +56,6 @@ func (e *appError) Unwrap() error {
 	if e == nil {
 		return nil
 	}
-
 	return e.err
 }
 

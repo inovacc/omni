@@ -78,13 +78,11 @@ func handleLintCommentField(
 		// Don't handle synthetic fields for map entries. They have no comments.
 		return nil
 	}
-
 	if value.Type() == descriptorpb.FieldDescriptorProto_TYPE_GROUP {
 		// Group fields also have no comments: comments in source get
 		// attributed to the nested message, not the field.
 		return nil
 	}
-
 	return handleLintCommentNamedDescriptor(responseWriter, request, value, "Field")
 }
 
@@ -97,7 +95,6 @@ func handleLintCommentMessage(
 		// Don't handle synthetic map entries. They have no comments.
 		return nil
 	}
-
 	return handleLintCommentNamedDescriptor(responseWriter, request, value, "Message")
 }
 
@@ -111,7 +108,6 @@ func handleLintCommentOneof(
 		// Don't handle synthetic oneofs (for proto3-optional fields). They have no comments.
 		return nil
 	}
-
 	return handleLintCommentNamedDescriptor(responseWriter, request, value, "Oneof")
 }
 
@@ -152,7 +148,6 @@ func handleLintCommentNamedDescriptor(
 	if err != nil {
 		return err
 	}
-
 	if !validLeadingComment(commentExcludes, location.LeadingComments()) {
 		responseWriter.AddProtosourceAnnotationf(
 			location,
@@ -163,7 +158,6 @@ func handleLintCommentNamedDescriptor(
 			namedDescriptor.Name(),
 		)
 	}
-
 	return nil
 }
 
@@ -181,13 +175,10 @@ func handleLintDirectorySamePackage(
 		// works for no package set as this will result in "" which is a valid map key
 		pkgMap[file.Package()] = struct{}{}
 	}
-
 	if len(pkgMap) > 1 {
 		var messagePrefix string
-
 		if _, ok := pkgMap[""]; ok {
 			delete(pkgMap, "")
-
 			if len(pkgMap) > 1 {
 				messagePrefix = fmt.Sprintf("Multiple packages %q and file with no package", strings.Join(xslices.MapKeysToSortedSlice(pkgMap), ","))
 			} else {
@@ -197,7 +188,6 @@ func handleLintDirectorySamePackage(
 		} else {
 			messagePrefix = fmt.Sprintf("Multiple packages %q", strings.Join(xslices.MapKeysToSortedSlice(pkgMap), ","))
 		}
-
 		for _, file := range dirFiles {
 			responseWriter.AddProtosourceAnnotationf(
 				file.PackageLocation(),
@@ -209,7 +199,6 @@ func handleLintDirectorySamePackage(
 			)
 		}
 	}
-
 	return nil
 }
 
@@ -230,7 +219,6 @@ func handleLintEnumNoAllowAlias(
 			enum.Name(),
 		)
 	}
-
 	return nil
 }
 
@@ -243,7 +231,6 @@ func handleLintEnumPascalCase(
 	enum bufprotosource.Enum,
 ) error {
 	name := enum.Name()
-
 	expectedName := xstrings.ToPascalCase(name)
 	if name != expectedName {
 		responseWriter.AddProtosourceAnnotationf(
@@ -255,7 +242,6 @@ func handleLintEnumPascalCase(
 			expectedName,
 		)
 	}
-
 	return nil
 }
 
@@ -279,7 +265,6 @@ func handleLintEnumFirstValueZero(
 			)
 		}
 	}
-
 	return nil
 }
 
@@ -292,7 +277,6 @@ func handleLintEnumValuePrefix(
 	enumValue bufprotosource.EnumValue,
 ) error {
 	name := enumValue.Name()
-
 	expectedPrefix := fieldToUpperSnakeCase(enumValue.Enum().Name()) + "_"
 	if !strings.HasPrefix(name, expectedPrefix) {
 		responseWriter.AddProtosourceAnnotationf(
@@ -304,7 +288,6 @@ func handleLintEnumValuePrefix(
 			expectedPrefix,
 		)
 	}
-
 	return nil
 }
 
@@ -317,7 +300,6 @@ func handleLintEnumValueUpperSnakeCase(
 	enumValue bufprotosource.EnumValue,
 ) error {
 	name := enumValue.Name()
-
 	expectedName := fieldToUpperSnakeCase(name)
 	if name != expectedName {
 		responseWriter.AddProtosourceAnnotationf(
@@ -329,7 +311,6 @@ func handleLintEnumValueUpperSnakeCase(
 			expectedName,
 		)
 	}
-
 	return nil
 }
 
@@ -345,13 +326,10 @@ func handleLintEnumZeroValueSuffix(
 	if err != nil {
 		return err
 	}
-
 	request.Options()
-
 	if enumValue.Number() != 0 {
 		return nil
 	}
-
 	name := enumValue.Name()
 	if !strings.HasSuffix(name, suffix) {
 		responseWriter.AddProtosourceAnnotationf(
@@ -363,7 +341,6 @@ func handleLintEnumZeroValueSuffix(
 			suffix,
 		)
 	}
-
 	return nil
 }
 
@@ -380,9 +357,7 @@ func handleLintFieldLowerSnakeCase(
 		// this check should always pass anyways but just in case
 		return nil
 	}
-
 	name := field.Name()
-
 	expectedName := fieldToLowerSnakeCase(name)
 	if name != expectedName {
 		responseWriter.AddProtosourceAnnotationf(
@@ -394,7 +369,6 @@ func handleLintFieldLowerSnakeCase(
 			expectedName,
 		)
 	}
-
 	return nil
 }
 
@@ -416,7 +390,6 @@ func handleLintFieldNoDescriptor(
 			name,
 		)
 	}
-
 	return nil
 }
 
@@ -444,7 +417,6 @@ func handleLintFieldNotRequired(
 			field.Name(),
 		)
 	}
-
 	return nil
 }
 
@@ -460,7 +432,6 @@ func handleLintFileLowerSnakeCase(
 	base := normalpath.Base(filename)
 	ext := normalpath.Ext(filename)
 	baseWithoutExt := strings.TrimSuffix(base, ext)
-
 	expectedBaseWithoutExt := xstrings.ToLowerSnakeCase(baseWithoutExt)
 	if baseWithoutExt != expectedBaseWithoutExt {
 		responseWriter.AddProtosourceAnnotationf(
@@ -474,7 +445,6 @@ func handleLintFileLowerSnakeCase(
 			ext,
 		)
 	}
-
 	return nil
 }
 
@@ -495,7 +465,6 @@ func handleLintImportNoPublic(
 			fileImport.Import(),
 		)
 	}
-
 	return nil
 }
 
@@ -516,7 +485,6 @@ func handleLintImportUsed(
 			fileImport.Import(),
 		)
 	}
-
 	return nil
 }
 
@@ -532,9 +500,7 @@ func handleLintMessagePascalCase(
 		// map entries should always be pascal case but we don't want to check them anyways
 		return nil
 	}
-
 	name := message.Name()
-
 	expectedName := xstrings.ToPascalCase(name)
 	if name != expectedName {
 		responseWriter.AddProtosourceAnnotationf(
@@ -546,7 +512,6 @@ func handleLintMessagePascalCase(
 			expectedName,
 		)
 	}
-
 	return nil
 }
 
@@ -559,7 +524,6 @@ func handleLintOneofLowerSnakeCase(
 	oneof bufprotosource.Oneof,
 ) error {
 	name := oneof.Name()
-
 	expectedName := fieldToLowerSnakeCase(name)
 	if name != expectedName {
 		// if this is an implicit oneof for a proto3 optional field, do not error
@@ -569,7 +533,6 @@ func handleLintOneofLowerSnakeCase(
 				return nil
 			}
 		}
-
 		responseWriter.AddProtosourceAnnotationf(
 			oneof.NameLocation(),
 			nil,
@@ -579,7 +542,6 @@ func handleLintOneofLowerSnakeCase(
 			expectedName,
 		)
 	}
-
 	return nil
 }
 
@@ -597,7 +559,6 @@ func handleLintPackageDefined(
 			check.WithMessage("Files must have a package defined."),
 		)
 	}
-
 	return nil
 }
 
@@ -613,7 +574,6 @@ func handleLintPackageDirectoryMatch(
 	if pkg == "" {
 		return nil
 	}
-
 	expectedDirPath := strings.ReplaceAll(pkg, ".", "/")
 	dirPath := normalpath.Dir(file.Path())
 	// need to check case where in root relative directory and no package defined
@@ -629,7 +589,6 @@ func handleLintPackageDirectoryMatch(
 			normalpath.Unnormalize(dirPath),
 		)
 	}
-
 	return nil
 }
 
@@ -645,12 +604,10 @@ func handleLintPackageLowerSnakeCase(
 	if pkg == "" {
 		return nil
 	}
-
 	split := strings.Split(pkg, ".")
 	for i, elem := range split {
 		split[i] = xstrings.ToLowerSnakeCase(elem)
 	}
-
 	expectedPkg := strings.Join(split, ".")
 	if pkg != expectedPkg {
 		responseWriter.AddProtosourceAnnotationf(
@@ -662,7 +619,6 @@ func handleLintPackageLowerSnakeCase(
 			expectedPkg,
 		)
 	}
-
 	return nil
 }
 
@@ -679,7 +635,6 @@ func handleLintPackageNoImportCycle(
 	request bufcheckserverutil2.Request,
 ) error {
 	files := request.ProtosourceFiles()
-
 	packageToDirectlyImportedPackageToFileImports, err := bufprotosource.PackageToDirectlyImportedPackageToFileImports(files...)
 	if err != nil {
 		return err
@@ -688,7 +643,7 @@ func handleLintPackageNoImportCycle(
 	//
 	// We're doing a DFS starting at each package. What we should do is start from any package,
 	// do the DFS and keep track of the packages hit, and then don't ever do DFS from a given
-	// package twice. The problem is that with the current janky package -> direct -> file imports
+	// package twice. The problem is is that with the current janky package -> direct -> file imports
 	// setup, we would then end up with error messages like "import cycle: a -> b -> c -> b", and
 	// attach the error message to a file with package a, and we want to just print "b -> c -> b".
 	// So to get this to market, we just do a DFS from each package.
@@ -709,7 +664,6 @@ func handleLintPackageNoImportCycle(
 			if directlyImportedPackage == "" {
 				continue
 			}
-
 			if importCycle := getImportCycleIfExists(
 				directlyImportedPackage,
 				packageToDirectlyImportedPackageToFileImports,
@@ -726,7 +680,6 @@ func handleLintPackageNoImportCycle(
 					if fileImport.File().IsImport() {
 						continue
 					}
-
 					responseWriter.AddProtosourceAnnotationf(
 						fileImport.Location(),
 						nil,
@@ -738,7 +691,6 @@ func handleLintPackageNoImportCycle(
 			}
 		}
 	}
-
 	return nil
 }
 
@@ -755,7 +707,6 @@ func handleLintPackageSameDirectory(
 	for _, file := range pkgFiles {
 		dirMap[normalpath.Dir(file.Path())] = struct{}{}
 	}
-
 	if len(dirMap) > 1 {
 		dirs := xslices.MapKeysToSortedSlice(dirMap)
 		for _, file := range pkgFiles {
@@ -769,7 +720,6 @@ func handleLintPackageSameDirectory(
 			)
 		}
 	}
-
 	return nil
 }
 
@@ -837,7 +787,6 @@ func handleLintPackageSameJavaMultipleFiles(
 			if fileOptions := file.FileDescriptor().GetOptions(); fileOptions == nil || fileOptions.JavaMultipleFiles == nil {
 				return ""
 			}
-
 			return strconv.FormatBool(file.JavaMultipleFiles())
 		},
 		bufprotosource.File.JavaMultipleFilesLocation,
@@ -921,12 +870,10 @@ func handleLintPackageSameOptionValue(
 	for _, file := range pkgFiles {
 		optionValueMap[getFileOptionValue(file)] = struct{}{}
 	}
-
 	if len(optionValueMap) > 1 {
 		_, noOptionValue := optionValueMap[""]
 		delete(optionValueMap, "")
 		optionValues := xslices.MapKeysToSortedSlice(optionValueMap)
-
 		for _, file := range pkgFiles {
 			var message string
 			if noOptionValue {
@@ -944,7 +891,6 @@ func handleLintPackageSameOptionValue(
 					name,
 				)
 			}
-
 			responseWriter.AddProtosourceAnnotationf(
 				getFileOptionLocation(file),
 				nil,
@@ -953,7 +899,6 @@ func handleLintPackageSameOptionValue(
 			)
 		}
 	}
-
 	return nil
 }
 
@@ -969,7 +914,6 @@ func handleLintPackageVersionSuffix(
 	if pkg == "" {
 		return nil
 	}
-
 	if _, ok := protoversion.NewPackageVersionForPackage(pkg); !ok {
 		responseWriter.AddProtosourceAnnotationf(
 			file.PackageLocation(),
@@ -980,7 +924,6 @@ func handleLintPackageVersionSuffix(
 			pkg+".v1",
 		)
 	}
-
 	return nil
 }
 
@@ -1041,7 +984,6 @@ func handleLintProtovalidate(
 	).Handle(ctx, nil, request); err != nil {
 		return err
 	}
-
 	return bufcheckserverutil2.NewLintFieldRuleHandler(
 		func(
 			_ bufcheckserverutil2.ResponseWriter,
@@ -1051,7 +993,6 @@ func handleLintProtovalidate(
 			if err := buflintvalidate.CheckPredefinedRuleExtension(addAnnotationFunc, field, extensionResolver); err != nil {
 				return err
 			}
-
 			return buflintvalidate.CheckField(addAnnotationFunc, field, extensionResolver)
 		},
 		// The responseWriter is being passed in through the shared addAnnotationFunc, so we
@@ -1076,7 +1017,6 @@ func handleLintRPCNoClientStreaming(
 			method.Name(),
 		)
 	}
-
 	return nil
 }
 
@@ -1097,7 +1037,6 @@ func handleLintRPCNoServerStreaming(
 			method.Name(),
 		)
 	}
-
 	return nil
 }
 
@@ -1110,7 +1049,6 @@ func handleLintRPCPascalCase(
 	method bufprotosource.Method,
 ) error {
 	name := method.Name()
-
 	expectedName := xstrings.ToPascalCase(name)
 	if name != expectedName {
 		responseWriter.AddProtosourceAnnotationf(
@@ -1122,7 +1060,6 @@ func handleLintRPCPascalCase(
 			expectedName,
 		)
 	}
-
 	return nil
 }
 
@@ -1138,17 +1075,14 @@ func handleLintRPCRequestResponseUnique(
 	if err != nil {
 		return err
 	}
-
 	allowGoogleProtobufEmptyRequests, err := bufcheckopt.GetRPCAllowGoogleProtobufEmptyRequests(request.Options())
 	if err != nil {
 		return err
 	}
-
 	allowGoogleProtobufEmptyResponses, err := bufcheckopt.GetRPCAllowGoogleProtobufEmptyResponses(request.Options())
 	if err != nil {
 		return err
 	}
-
 	allFullNameToMethod, err := bufprotosource.FullNameToMethod(files...)
 	if err != nil {
 		return err
@@ -1160,7 +1094,7 @@ func handleLintRPCRequestResponseUnique(
 		for _, method := range allFullNameToMethod {
 			if method.InputTypeName() == method.OutputTypeName() {
 				// if we allow both empty requests and responses, we do not want to add a FileAnnotation
-				if method.InputTypeName() != "google.protobuf.Empty" || !allowGoogleProtobufEmptyRequests || !allowGoogleProtobufEmptyResponses {
+				if !(method.InputTypeName() == "google.protobuf.Empty" && allowGoogleProtobufEmptyRequests && allowGoogleProtobufEmptyResponses) {
 					responseWriter.AddProtosourceAnnotationf(
 						method.Location(),
 						nil,
@@ -1176,7 +1110,6 @@ func handleLintRPCRequestResponseUnique(
 	// we have now added errors for the same request and response type if applicable
 	// we can now check methods for unique usage of a given type
 	requestResponseTypeToFullNameToMethod := make(map[string]map[string]bufprotosource.Method)
-
 	for fullName, method := range allFullNameToMethod {
 		for _, requestResponseType := range []string{method.InputTypeName(), method.OutputTypeName()} {
 			fullNameToMethod, ok := requestResponseTypeToFullNameToMethod[requestResponseType]
@@ -1184,11 +1117,9 @@ func handleLintRPCRequestResponseUnique(
 				fullNameToMethod = make(map[string]bufprotosource.Method)
 				requestResponseTypeToFullNameToMethod[requestResponseType] = fullNameToMethod
 			}
-
 			fullNameToMethod[fullName] = method
 		}
 	}
-
 	for requestResponseType, fullNameToMethod := range requestResponseTypeToFullNameToMethod {
 		// only this method uses this request or response type, no issue
 		if len(fullNameToMethod) == 1 {
@@ -1199,23 +1130,18 @@ func handleLintRPCRequestResponseUnique(
 		if requestResponseType == "google.protobuf.Empty" && (allowGoogleProtobufEmptyRequests || allowGoogleProtobufEmptyResponses) {
 			// if both requests and responses can be google.protobuf.Empty, then do not add any error
 			// else, we check
-			if !allowGoogleProtobufEmptyRequests || !allowGoogleProtobufEmptyResponses {
+			if !(allowGoogleProtobufEmptyRequests && allowGoogleProtobufEmptyResponses) {
 				// inside this if statement, one of allowGoogleProtobufEmptyRequests or allowGoogleProtobufEmptyResponses is true
-				var (
-					requestMethods  []bufprotosource.Method
-					responseMethods []bufprotosource.Method
-				)
-
+				var requestMethods []bufprotosource.Method
+				var responseMethods []bufprotosource.Method
 				for _, method := range fullNameToMethod {
 					if method.InputTypeName() == "google.protobuf.Empty" {
 						requestMethods = append(requestMethods, method)
 					}
-
 					if method.OutputTypeName() == "google.protobuf.Empty" {
 						responseMethods = append(responseMethods, method)
 					}
 				}
-
 				if !allowGoogleProtobufEmptyRequests && len(requestMethods) > 1 {
 					for _, method := range requestMethods {
 						responseWriter.AddProtosourceAnnotationf(
@@ -1227,7 +1153,6 @@ func handleLintRPCRequestResponseUnique(
 						)
 					}
 				}
-
 				if !allowGoogleProtobufEmptyResponses && len(responseMethods) > 1 {
 					for _, method := range responseMethods {
 						responseWriter.AddProtosourceAnnotationf(
@@ -1253,7 +1178,6 @@ func handleLintRPCRequestResponseUnique(
 			}
 		}
 	}
-
 	return nil
 }
 
@@ -1269,24 +1193,19 @@ func handleLintRPCRequestStandardName(
 	if err != nil {
 		return err
 	}
-
 	service := method.Service()
 	if service == nil {
 		return errors.New("method.Service() is nil")
 	}
-
 	name := method.InputTypeName()
 	if allowGoogleProtobufEmptyRequests && name == "google.protobuf.Empty" {
 		return nil
 	}
-
 	if strings.Contains(name, ".") {
 		split := strings.Split(name, ".")
 		name = split[len(split)-1]
 	}
-
 	expectedName1 := xstrings.ToPascalCase(method.Name()) + "Request"
-
 	expectedName2 := xstrings.ToPascalCase(service.Name()) + expectedName1
 	if name != expectedName1 && name != expectedName2 {
 		responseWriter.AddProtosourceAnnotationf(
@@ -1315,24 +1234,19 @@ func handleLintRPCResponseStandardName(
 	if err != nil {
 		return err
 	}
-
 	service := method.Service()
 	if service == nil {
 		return errors.New("method.Service() is nil")
 	}
-
 	name := method.OutputTypeName()
 	if allowGoogleProtobufEmptyResponses && name == "google.protobuf.Empty" {
 		return nil
 	}
-
 	if strings.Contains(name, ".") {
 		split := strings.Split(name, ".")
 		name = split[len(split)-1]
 	}
-
 	expectedName1 := xstrings.ToPascalCase(method.Name()) + "Response"
-
 	expectedName2 := xstrings.ToPascalCase(service.Name()) + expectedName1
 	if name != expectedName1 && name != expectedName2 {
 		responseWriter.AddProtosourceAnnotationf(
@@ -1345,7 +1259,6 @@ func handleLintRPCResponseStandardName(
 			expectedName2,
 		)
 	}
-
 	return nil
 }
 
@@ -1358,7 +1271,6 @@ func handleLintServicePascalCase(
 	service bufprotosource.Service,
 ) error {
 	name := service.Name()
-
 	expectedName := xstrings.ToPascalCase(name)
 	if name != expectedName {
 		responseWriter.AddProtosourceAnnotationf(
@@ -1370,7 +1282,6 @@ func handleLintServicePascalCase(
 			expectedName,
 		)
 	}
-
 	return nil
 }
 
@@ -1386,7 +1297,6 @@ func handleLintServiceSuffix(
 	if err != nil {
 		return err
 	}
-
 	name := service.Name()
 	if !strings.HasSuffix(name, suffix) {
 		responseWriter.AddProtosourceAnnotationf(
@@ -1398,7 +1308,6 @@ func handleLintServiceSuffix(
 			suffix,
 		)
 	}
-
 	return nil
 }
 
@@ -1414,14 +1323,12 @@ func handleLintStablePackageNoImportUnstable(
 	if err != nil {
 		return err
 	}
-
 	for _, file := range files {
 		packageVersion, ok := protoversion.NewPackageVersionForPackage(file.Package())
 		if !ok {
 			// No package, or no version on package - unstable to determine if stable.
 			continue
 		}
-
 		if packageVersion.StabilityLevel() != protoversion.StabilityLevelStable {
 			// If package is not stable, no failure.
 			continue
@@ -1433,7 +1340,6 @@ func handleLintStablePackageNoImportUnstable(
 				if !ok {
 					continue
 				}
-
 				if importedFilePackageVersion.StabilityLevel() != protoversion.StabilityLevelStable {
 					responseWriter.AddProtosourceAnnotationf(
 						fileImport.Location(),
@@ -1448,7 +1354,6 @@ func handleLintStablePackageNoImportUnstable(
 			}
 		}
 	}
-
 	return nil
 }
 
@@ -1466,6 +1371,5 @@ func handleLintSyntaxSpecified(
 			check.WithMessage(`Files must have a syntax explicitly specified. If no syntax is specified, the file defaults to "proto2".`),
 		)
 	}
-
 	return nil
 }

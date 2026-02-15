@@ -58,7 +58,6 @@ func (g *Graph[Key, Value]) AddNode(value Value) {
 	if err := g.checkInit(); err != nil {
 		return
 	}
-
 	g.getOrAddNode(value)
 }
 
@@ -67,7 +66,6 @@ func (g *Graph[Key, Value]) AddEdge(from Value, to Value) {
 	if err := g.checkInit(); err != nil {
 		return
 	}
-
 	fromNode := g.getOrAddNode(from)
 	toNode := g.getOrAddNode(to)
 	fromNode.addOutboundEdge(g.getKeyForValue(to))
@@ -79,9 +77,7 @@ func (g *Graph[Key, Value]) ContainsNode(key Key) bool {
 	if err := g.checkInit(); err != nil {
 		return false
 	}
-
 	_, ok := g.keyToNode[key]
-
 	return ok
 }
 
@@ -90,7 +86,6 @@ func (g *Graph[Key, Value]) NumNodes() int {
 	if err := g.checkInit(); err != nil {
 		return 0
 	}
-
 	return len(g.keys)
 }
 
@@ -99,12 +94,10 @@ func (g *Graph[Key, Value]) NumEdges() int {
 	if err := g.checkInit(); err != nil {
 		return 0
 	}
-
 	var numEdges int
 	for _, node := range g.keyToNode {
 		numEdges += len(node.outboundEdges)
 	}
-
 	return numEdges
 }
 
@@ -115,12 +108,10 @@ func (g *Graph[Key, Value]) InboundNodes(key Key) ([]Value, error) {
 	if err := g.checkInit(); err != nil {
 		return nil, err
 	}
-
 	node, ok := g.keyToNode[key]
 	if !ok {
 		return nil, fmt.Errorf("key not present: %v", key)
 	}
-
 	return g.getValuesForKeys(node.inboundEdges)
 }
 
@@ -131,12 +122,10 @@ func (g *Graph[Key, Value]) OutboundNodes(key Key) ([]Value, error) {
 	if err := g.checkInit(); err != nil {
 		return nil, err
 	}
-
 	node, ok := g.keyToNode[key]
 	if !ok {
 		return nil, fmt.Errorf("key not present: %v", key)
 	}
-
 	return g.getValuesForKeys(node.outboundEdges)
 }
 
@@ -149,33 +138,27 @@ func (g *Graph[Key, Value]) WalkNodes(f func(Value, []Value, []Value) error) err
 	if err := g.checkInit(); err != nil {
 		return err
 	}
-
 	for _, key := range g.keys {
 		node, ok := g.keyToNode[key]
 		if !ok {
 			return fmt.Errorf("key not present: %v", key)
 		}
-
 		value, err := g.getValueForKey(key)
 		if err != nil {
 			return err
 		}
-
 		inboundValues, err := g.getValuesForKeys(node.inboundEdges)
 		if err != nil {
 			return err
 		}
-
 		outboundValues, err := g.getValuesForKeys(node.outboundEdges)
 		if err != nil {
 			return err
 		}
-
 		if err := f(value, inboundValues, outboundValues); err != nil {
 			return err
 		}
 	}
-
 	return nil
 }
 
@@ -189,22 +172,19 @@ func (g *Graph[Key, Value]) WalkEdges(f func(Value, Value) error) error {
 	if err := g.checkInit(); err != nil {
 		return err
 	}
-
 	if g.NumEdges() == 0 {
 		// No edges, do not walk.
 		return nil
 	}
-
 	sourceKeys, err := g.getSourceKeys()
 	if err != nil {
 		return err
 	}
-
 	switch len(sourceKeys) {
 	case 0:
 		// If we have no source nodes, we have a cycle in the graph. To print the cycle,
 		// we walk starting at all keys We will hit a cycle in this process, however just to check our
-		// assumptions, we also verify the walk returns a CycleError, and if not,
+		// assumptions, we also verify the the walk returns a CycleError, and if not,
 		// return a system error.
 		allVisited := make(map[Key]struct{})
 		for _, key := range g.keys {
@@ -217,7 +197,6 @@ func (g *Graph[Key, Value]) WalkEdges(f func(Value, Value) error) error {
 				return err
 			}
 		}
-
 		return errors.New("graph had cycle based on source node count being zero, but this was not detected during edge walking")
 	case 1:
 		return g.edgeVisit(
@@ -238,7 +217,6 @@ func (g *Graph[Key, Value]) WalkEdges(f func(Value, Value) error) error {
 				return err
 			}
 		}
-
 		return nil
 	}
 }
@@ -250,12 +228,10 @@ func (g *Graph[Key, Value]) TopoSort(start Key) ([]Value, error) {
 	if err := g.checkInit(); err != nil {
 		return nil, err
 	}
-
 	results := newOrderedSet[Key]()
 	if err := g.topoVisit(start, results, newOrderedSet[Key]()); err != nil {
 		return nil, err
 	}
-
 	return g.getValuesForKeys(results.keys)
 }
 
@@ -268,11 +244,8 @@ func (g *Graph[Key, Value]) DOTString(valueToString func(Value) string) (string,
 	if err := g.checkInit(); err != nil {
 		return "", err
 	}
-
 	var edgeStrings []string
-
 	seenKeys := make(map[Key]struct{})
-
 	if err := g.WalkEdges(
 		func(from Value, to Value) error {
 			seenKeys[g.getKeyForValue(from)] = struct{}{}
@@ -318,22 +291,17 @@ func (g *Graph[Key, Value]) DOTString(valueToString func(Value) string) (string,
 	); err != nil {
 		return "", err
 	}
-
 	if len(edgeStrings) == 0 {
 		return "digraph {}", nil
 	}
-
 	buffer := bytes.NewBuffer(nil)
-
 	_, _ = buffer.WriteString("digraph {\n\n")
 	for _, edgeString := range edgeStrings {
 		_, _ = buffer.WriteString("  ")
 		_, _ = buffer.WriteString(edgeString)
 		_, _ = buffer.WriteString("\n")
 	}
-
 	_, _ = buffer.WriteString("\n}")
-
 	return buffer.String(), nil
 }
 
@@ -352,7 +320,6 @@ func (g *Graph[Key, Value]) checkInit() error {
 	if g.getKeyForValue == nil || g.keyToValue == nil || g.keyToNode == nil {
 		return errors.New("graphs must be constructed with dag.NewGraph or dag.NewComparableGraph")
 	}
-
 	return nil
 }
 
@@ -366,13 +333,11 @@ func (g *Graph[Key, Value]) getValueForKey(key Key) (Value, error) {
 		// This should never happen.
 		return value, fmt.Errorf("key not present: %v", key)
 	}
-
 	return value, nil
 }
 
 func (g *Graph[Key, Value]) getOrAddNode(value Value) *node[Key] {
 	key := g.getKeyForValue(value)
-
 	node, ok := g.keyToNode[key]
 	if !ok {
 		node = newNode[Key]()
@@ -380,7 +345,6 @@ func (g *Graph[Key, Value]) getOrAddNode(value Value) *node[Key] {
 		g.keyToNode[key] = node
 		g.keys = append(g.keys, key)
 	}
-
 	return node
 }
 
@@ -392,12 +356,10 @@ func (g *Graph[Key, Value]) getSourceKeys() ([]Key, error) {
 		if !ok {
 			return nil, fmt.Errorf("key not present: %v", key)
 		}
-
 		if len(node.inboundEdgeMap) == 0 {
 			sourceKeys = append(sourceKeys, key)
 		}
 	}
-
 	return sourceKeys, nil
 }
 
@@ -412,7 +374,6 @@ func (g *Graph[Key, Value]) edgeVisit(
 	if !thisSourceVisited.add(from) {
 		index := thisSourceVisited.index(from)
 		cycle := append(thisSourceVisited.keys[index:], from)
-
 		return &CycleError[Key]{Keys: cycle}
 	}
 	// If we visited this from all edge visiting from other
@@ -429,22 +390,18 @@ func (g *Graph[Key, Value]) edgeVisit(
 	if !ok {
 		return fmt.Errorf("key not present: %v", from)
 	}
-
 	fromValue, err := g.getValueForKey(from)
 	if err != nil {
 		return err
 	}
-
 	for _, to := range fromNode.outboundEdges {
 		toValue, err := g.getValueForKey(to)
 		if err != nil {
 			return err
 		}
-
 		if err := f(fromValue, toValue); err != nil {
 			return err
 		}
-
 		if err := g.edgeVisit(to, f, thisSourceVisited.copy(), allSourcesVisited); err != nil {
 			return err
 		}
@@ -461,7 +418,6 @@ func (g *Graph[Key, Value]) topoVisit(
 	if !visited.add(from) {
 		index := visited.index(from)
 		cycle := append(visited.keys[index:], from)
-
 		return &CycleError[Key]{Keys: cycle}
 	}
 
@@ -469,7 +425,6 @@ func (g *Graph[Key, Value]) topoVisit(
 	if !ok {
 		return fmt.Errorf("key not present: %v", from)
 	}
-
 	for _, to := range fromNode.outboundEdges {
 		if err := g.topoVisit(to, results, visited.copy()); err != nil {
 			return err
@@ -477,7 +432,6 @@ func (g *Graph[Key, Value]) topoVisit(
 	}
 
 	results.add(from)
-
 	return nil
 }
 
@@ -529,10 +483,8 @@ func (s *orderedSet[Key]) add(key Key) bool {
 		s.keyToIndex[key] = s.length
 		s.keys = append(s.keys, key)
 		s.length++
-
 		return true
 	}
-
 	return false
 }
 
@@ -541,7 +493,6 @@ func (s *orderedSet[Key]) copy() *orderedSet[Key] {
 	for _, item := range s.keys {
 		clone.add(item)
 	}
-
 	return clone
 }
 
@@ -550,7 +501,6 @@ func (s *orderedSet[Key]) index(item Key) int {
 	if ok {
 		return index
 	}
-
 	return -1
 }
 
@@ -559,6 +509,5 @@ func xmlEscape(s string) (string, error) {
 	if err := xml.EscapeText(buffer, []byte(s)); err != nil {
 		return "", err
 	}
-
 	return buffer.String(), nil
 }

@@ -68,6 +68,5 @@ func (c Cyclic) Execute(t *incremental.Task) (int, error) {
 	// Report() after a cyclic error would incorrectly treat the cycle point
 	// as having been completed.
 	t.Report().Remarkf("squaring: %d", next[0].Value)
-
 	return next[0].Value * next[0].Value, next[0].Fatal
 }

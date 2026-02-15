@@ -60,17 +60,14 @@ func getPrimaryRegistryAndLegacyFederationAllowed[T hasFullName](
 	if len(s) == 0 {
 		return "", false, syserror.New("must have at least one value in getPrimarySecondaryRegistry")
 	}
-
 	registries, err := getRegistries(s)
 	if err != nil {
 		return "", false, err
 	}
-
 	legacyFederationAllowed, err := isLegacyFederationAllowed(registries, additionalLegacyFederationRegistry)
 	if err != nil {
 		return "", false, err
 	}
-
 	switch len(registries) {
 	case 0:
 		return "", false, syserror.New("no registries detected in getPrimarySecondaryRegistry")
@@ -81,14 +78,11 @@ func getPrimaryRegistryAndLegacyFederationAllowed[T hasFullName](
 			if registries[0] != publicRegistry && registries[1] != publicRegistry {
 				return "", legacyFederationAllowed, fmt.Errorf("cannot use federation between two non-public registries: %s, %s", registries[0], registries[1])
 			}
-
 			if registries[0] == publicRegistry {
 				return registries[1], legacyFederationAllowed, nil
 			}
-
 			return registries[0], legacyFederationAllowed, nil
 		}
-
 		fallthrough
 	default:
 		return "", false, fmt.Errorf("dependencies across multiple registries are not allowed: %s", strings.Join(registries, ", "))
@@ -101,7 +95,6 @@ func isLegacyFederationAllowed(registries []string, additionalLegacyFederationRe
 		if err != nil {
 			return false, err
 		}
-
 		if exists {
 			return true, nil
 		}
@@ -111,7 +104,6 @@ func isLegacyFederationAllowed(registries []string, additionalLegacyFederationRe
 			return true, nil
 		}
 	}
-
 	return false, nil
 }
 
@@ -123,19 +115,16 @@ func getRegistries[T hasFullName](s []T) ([]string, error) {
 			if moduleFullName == nil {
 				return "", syserror.Newf("no FullName for %v", e)
 			}
-
 			registry := moduleFullName.Registry()
 			if registry == "" {
 				return "", syserror.Newf("no registry for %v", e)
 			}
-
 			return registry, nil
 		},
 	)
 	if err != nil {
 		return nil, err
 	}
-
 	return xslices.MapKeysToSortedSlice(registryMap), nil
 }
 
@@ -146,15 +135,12 @@ func getSingleRegistryForContentModules(contentModules []bufmodule.Module) (stri
 	if len(contentModules) == 0 {
 		return "", syserror.New("requires at least one module to resolve registry")
 	}
-
 	var registry string
-
 	for _, module := range contentModules {
 		moduleFullName := module.FullName()
 		if moduleFullName == nil {
 			return "", syserror.Newf("expected module name for %s", module.Description())
 		}
-
 		moduleRegistry := moduleFullName.Registry()
 		if registry != "" && moduleRegistry != registry {
 			// We don't allow the upload of content across multiple registries, but in the legacy federation
@@ -165,10 +151,8 @@ func getSingleRegistryForContentModules(contentModules []bufmodule.Module) (stri
 				moduleRegistry,
 			)
 		}
-
 		registry = moduleRegistry
 	}
-
 	return registry, nil
 }
 
@@ -181,13 +165,11 @@ func validateDepRegistries(primaryRegistry string, depRegistries []string, publi
 			if depRegistry != publicRegistry && depRegistry != primaryRegistry {
 				return fmt.Errorf("dependency must be on either %s or %s but was on %s", publicRegistry, primaryRegistry, depRegistry)
 			}
-
 			if primaryRegistry == publicRegistry && depRegistry != publicRegistry {
 				// Public to private was never allowed.
 				return fmt.Errorf("cannot have dependencies on %s modules from %s modules", primaryRegistry, depRegistry)
 			}
 		}
-
 		return nil
 	default:
 		return fmt.Errorf("dependencies across multiple registries are not allowed: %s", strings.Join(depRegistries, ", "))

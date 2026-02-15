@@ -45,7 +45,6 @@ func TestDocumentHighlight(t *testing.T) {
 		endCharacter   uint32
 		kind           protocol.DocumentHighlightKind
 	}
-
 	tests := []struct {
 		name               string
 		targetURI          protocol.URI
@@ -329,7 +328,6 @@ func TestDocumentHighlight(t *testing.T) {
 			t.Parallel()
 
 			var highlights []protocol.DocumentHighlight
-
 			_, highlightErr := clientJSONConn.Call(ctx, protocol.MethodTextDocumentDocumentHighlight, protocol.DocumentHighlightParams{
 				TextDocumentPositionParams: protocol.TextDocumentPositionParams{
 					TextDocument: protocol.TextDocumentIdentifier{

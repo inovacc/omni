@@ -21,11 +21,11 @@ import (
 	"io/fs"
 	"path/filepath"
 
+	"github.com/inovacc/omni/pkg/buf/internal/protoplugin"
 	"github.com/inovacc/omni/pkg/buf/internal/app"
 	"github.com/inovacc/omni/pkg/buf/internal/app/appext"
 	bufconfig2 "github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufconfig"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/slogapp"
-	"github.com/inovacc/omni/pkg/buf/internal/protoplugin"
 )
 
 // GetModuleConfigAndPluginConfigsForProtocPlugin gets the [bufmodule.ModuleConfig] and
@@ -56,23 +56,18 @@ func GetModuleConfigAndPluginConfigsForProtocPlugin(
 			// There are no plugin configs by default.
 			return bufconfig2.DefaultModuleConfigV2, nil, []bufconfig2.CheckConfig{bufconfig2.DefaultLintConfigV2, bufconfig2.DefaultBreakingConfigV2}, nil
 		}
-
 		return nil, nil, nil, err
 	}
-
 	if module == "" {
 		module = "."
 	}
-
 	pluginConfigs, err := getPluginConfigsForPluginPathOverrides(bufYAMLFile.PluginConfigs(), pluginPathOverrides)
 	if err != nil {
 		return nil, nil, nil, err
 	}
-
 	var allCheckConfigs []bufconfig2.CheckConfig
 	// Multiple modules in a v2 workspace may have the same moduleDirPath.
 	moduleConfigsFound := []bufconfig2.ModuleConfig{}
-
 	for _, moduleConfig := range bufYAMLFile.ModuleConfigs() {
 		allCheckConfigs = append(allCheckConfigs, moduleConfig.LintConfig(), moduleConfig.BreakingConfig())
 		// If we have a v1beta1 or v1 buf.yaml, dirPath will be ".". Using the ModuleConfig from
@@ -84,12 +79,10 @@ func GetModuleConfigAndPluginConfigsForProtocPlugin(
 			moduleConfigsFound = append(moduleConfigsFound, moduleConfig)
 			continue
 		}
-
 		if dirPath := moduleConfig.DirPath(); dirPath == module {
 			moduleConfigsFound = append(moduleConfigsFound, moduleConfig)
 		}
 	}
-
 	switch len(moduleConfigsFound) {
 	case 0:
 		return nil, nil, nil, fmt.Errorf("no module found for %q", module)
@@ -113,27 +106,22 @@ func NewAppextContainerForPluginEnv(
 	if err != nil {
 		return nil, err
 	}
-
 	logFormat, err := appext.ParseLogFormat(logFormatString)
 	if err != nil {
 		return nil, err
 	}
-
 	logger, err := slogapp.NewLogger(pluginEnv.Stderr, logLevel, logFormat)
 	if err != nil {
 		return nil, err
 	}
-
 	appContainer, err := newAppContainerForPluginEnv(pluginEnv)
 	if err != nil {
 		return nil, err
 	}
-
 	nameContainer, err := appext.NewNameContainer(appContainer, appName)
 	if err != nil {
 		return nil, err
 	}
-
 	return appext.NewContainer(
 		nameContainer,
 		logger,
@@ -153,7 +141,6 @@ func newAppContainerForPluginEnv(pluginEnv protoplugin.PluginEnv) (*appContainer
 	if err != nil {
 		return nil, err
 	}
-
 	return &appContainer{
 		EnvContainer:    envContainer,
 		StderrContainer: app.NewStderrContainer(pluginEnv.Stderr),
@@ -181,12 +168,9 @@ func getPluginConfigsForPluginPathOverrides(
 	overridePluginConfigs := make([]bufconfig2.PluginConfig, len(pluginConfigs))
 	for i, pluginConfig := range pluginConfigs {
 		if overridePath, ok := pluginPathOverrides[pluginConfig.Name()]; ok {
-			var (
-				overridePluginConfig bufconfig2.PluginConfig
-				err                  error
-			)
+			var overridePluginConfig bufconfig2.PluginConfig
+			var err error
 			// Check if the override path is a WASM path, if so, treat as a local WASM plugin
-
 			if filepath.Ext(overridePath) == ".wasm" {
 				overridePluginConfig, err = bufconfig2.NewLocalWasmPluginConfig(
 					overridePath,
@@ -207,18 +191,13 @@ func getPluginConfigsForPluginPathOverrides(
 					return nil, err
 				}
 			}
-
 			overridePluginConfigs[i] = overridePluginConfig
-
 			continue
 		}
-
 		if pluginConfig.Type() == bufconfig2.PluginConfigTypeRemoteWasm {
 			return nil, fmt.Errorf("remote plugin %s cannot be run with protoc plugin", pluginConfig.Name())
 		}
-
 		overridePluginConfigs[i] = pluginConfig
 	}
-
 	return overridePluginConfigs, nil
 }

@@ -60,16 +60,13 @@ func (s *state) PackagesForPackageExpressions(
 	packageExpressions ...string,
 ) (map[string]struct{}, error) {
 	packages := make(map[string]struct{})
-
 	for _, packageExpression := range packageExpressions {
 		iPackages, err := s.packagesForPackageExpression(ctx, packageExpression)
 		if err != nil {
 			return nil, err
 		}
-
 		addMaps(packages, iPackages)
 	}
-
 	return packages, nil
 }
 
@@ -78,42 +75,33 @@ func (s *state) DepsForPackages(
 	pkgs ...string,
 ) (map[string]struct{}, error) {
 	deps := make(map[string]struct{})
-
 	for _, pkg := range pkgs {
 		iDeps, err := s.depsForPackage(ctx, pkg)
 		if err != nil {
 			return nil, err
 		}
-
 		addMaps(deps, iDeps)
 	}
-
 	return deps, nil
 }
 
 func (s *state) AddViolation(violation Violation) {
 	violationKey := violation.key()
-
 	s.lock.Lock()
-
 	if _, ok := s.violationMap[violationKey]; !ok {
 		s.violationMap[violationKey] = violation
 	}
-
 	s.lock.Unlock()
 }
 
 func (s *state) Violations() []Violation {
 	s.lock.RLock()
-
 	violations := make([]Violation, 0, len(s.violationMap))
 	for _, violation := range s.violationMap {
 		violations = append(violations, violation)
 	}
-
 	s.lock.RUnlock()
 	sortViolations(violations)
-
 	return violations
 }
 
@@ -131,13 +119,11 @@ func (s *state) packagesForPackageExpression(
 	packageResult, ok := s.packageExpressionToPackages[packageExpression]
 	s.lock.RUnlock()
 	s.packageExpressionToPackagesLock.RUnlock(packageExpression)
-
 	if ok {
 		s.lock.Lock()
 		s.calls++
 		s.cacheHits++
 		s.lock.Unlock()
-
 		return packageResult.Packages, packageResult.Err
 	}
 
@@ -147,23 +133,19 @@ func (s *state) packagesForPackageExpression(
 	s.lock.RLock()
 	packageResult, ok = s.packageExpressionToPackages[packageExpression]
 	s.lock.RUnlock()
-
 	if ok {
 		s.lock.Lock()
 		s.calls++
 		s.cacheHits++
 		s.lock.Unlock()
-
 		return packageResult.Packages, packageResult.Err
 	}
-
 	packages, err := s.packagesForPackageExpressionUncached(ctx, packageExpression)
 	// we always hold key lock and then this lock so lock ordering is ok
 	s.lock.Lock()
 	s.packageExpressionToPackages[packageExpression] = newPackagesResult(packages, err)
 	s.calls++
 	s.lock.Unlock()
-
 	return packages, err
 }
 
@@ -175,7 +157,6 @@ func (s *state) packagesForPackageExpressionUncached(
 	if err != nil {
 		return nil, err
 	}
-
 	return xslices.ToStructMap(getNonEmptyLines(string(data))), nil
 }
 
@@ -193,13 +174,11 @@ func (s *state) depsForPackage(
 	depResult, ok := s.packageToDeps[pkg]
 	s.lock.RUnlock()
 	s.packageToDepsLock.RUnlock(pkg)
-
 	if ok {
 		s.lock.Lock()
 		s.calls++
 		s.cacheHits++
 		s.lock.Unlock()
-
 		return depResult.Deps, depResult.Err
 	}
 
@@ -209,23 +188,19 @@ func (s *state) depsForPackage(
 	s.lock.RLock()
 	depResult, ok = s.packageToDeps[pkg]
 	s.lock.RUnlock()
-
 	if ok {
 		s.lock.Lock()
 		s.calls++
 		s.cacheHits++
 		s.lock.Unlock()
-
 		return depResult.Deps, depResult.Err
 	}
-
 	deps, err := s.depsForPackageUncached(ctx, pkg)
 	// we always hold key lock and then this lock so lock ordering is ok
 	s.lock.Lock()
 	s.packageToDeps[pkg] = newDepsResult(deps, err)
 	s.calls++
 	s.lock.Unlock()
-
 	return deps, err
 }
 
@@ -237,7 +212,6 @@ func (s *state) depsForPackageUncached(
 	if err != nil {
 		return nil, err
 	}
-
 	return xslices.ToStructMap(getNonEmptyLines(string(data))), nil
 }
 
@@ -254,7 +228,6 @@ func (s *state) runStdout(ctx context.Context, name string, args ...string) ([]b
 	); err != nil {
 		return nil, err
 	}
-
 	return buffer.Bytes(), nil
 }
 

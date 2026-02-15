@@ -29,7 +29,6 @@ func ErrorHasFilename(err error, filename string) error {
 	if strings.Contains(err.Error(), filename) {
 		return err
 	}
-
 	return fmt.Errorf("%s: %w", filename, err)
 }
 
@@ -53,7 +52,6 @@ func (r *lineReader) ReadLine() (string, error) {
 	if r.err != nil {
 		return "", r.err
 	}
-
 	str, err := r.r.ReadString('\n')
 	// Instead of returning data AND error, like bufio.Reader.ReadString,
 	// only return one or the other since that is easier for the caller.
@@ -62,12 +60,10 @@ func (r *lineReader) ReadLine() (string, error) {
 			r.err = err // save for next call
 			return str, nil
 		}
-
 		return "", err
 	}
 	// If bufio.Reader.ReadString returns nil err, then the string ends
 	// with the delimiter. Remove it.
 	str = strings.TrimSuffix(str, "\n")
-
 	return str, nil
 }

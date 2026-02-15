@@ -41,7 +41,6 @@ func getDefault(descriptor protoreflect.FieldDescriptor) fieldDefault {
 		printable := strings.Join(
 			xslices.Map(data, func(b byte) string { return fmt.Sprintf("0x%X", b) }),
 			",")
-
 		return fieldDefault{
 			// cannot compare slices, so we convert []byte to string
 			comparable: string(data),
@@ -57,7 +56,6 @@ func getDefault(descriptor protoreflect.FieldDescriptor) fieldDefault {
 		// nil when the default is not explicitly set :(
 		enumVal := descriptor.Default().Enum()
 		enumDescriptor := descriptor.Enum()
-
 		var printable string
 		if enumValDescriptor := enumDescriptor.Values().ByNumber(enumVal); enumValDescriptor != nil {
 			printable = fmt.Sprintf("%s.%s", enumDescriptor.Name(), enumValDescriptor.Name())
@@ -65,7 +63,6 @@ func getDefault(descriptor protoreflect.FieldDescriptor) fieldDefault {
 			// should not be possible
 			printable = fmt.Sprintf("%s.%d(?)", enumDescriptor.Name(), enumVal)
 		}
-
 		return fieldDefault{
 			comparable: int32(enumVal),
 			printable:  printable,
@@ -88,7 +85,6 @@ func defaultsEqual(previous, current fieldDefault) bool {
 	// types (including bool and enum). But changing a field from string to
 	// number (or vice versa) will trigger an issue about default value change.
 	_, previousIsString := previous.comparable.(string)
-
 	_, currentIsString := current.comparable.(string)
 	if previousIsString || currentIsString {
 		return previous.comparable == current.comparable
@@ -118,19 +114,16 @@ func defaultsEqual(previous, current fieldDefault) bool {
 	// We use *big.Float since it can represent the full range of values
 	// for float64, int64, or uint64 without any loss of precision.
 	previousVal, previousNaN := asBigFloat(previous.comparable)
-
 	currentVal, currentNaN := asBigFloat(current.comparable)
 	if previousNaN && currentNaN {
 		return true
 	} else if previousNaN != currentNaN {
 		return false
 	}
-
 	if previousVal == nil || currentVal == nil {
 		// should not be possible; but just in case, don't panic
 		return previous.comparable == current.comparable
 	}
-
 	return previousVal.Cmp(currentVal) == 0
 }
 
@@ -140,39 +133,32 @@ func asBigFloat(val any) (result *big.Float, isNaN bool) {
 		if val {
 			return big.NewFloat(1), false
 		}
-
 		return big.NewFloat(0), false
 	case int32:
 		var float big.Float
 		float.SetInt64(int64(val))
-
 		return &float, false
 	case int64:
 		var float big.Float
 		float.SetInt64(val)
-
 		return &float, false
 	case uint32:
 		var float big.Float
 		float.SetUint64(uint64(val))
-
 		return &float, false
 	case uint64:
 		var float big.Float
 		float.SetUint64(val)
-
 		return &float, false
 	case float32:
 		if math.IsNaN(float64(val)) {
 			return nil, true
 		}
-
 		return big.NewFloat(float64(val)), false
 	case float64:
 		if math.IsNaN(val) {
 			return nil, true
 		}
-
 		return big.NewFloat(val), false
 	default:
 		// should never happen...

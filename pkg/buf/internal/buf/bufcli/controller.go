@@ -37,42 +37,34 @@ func NewController(
 			bufctl2.WithCopyToInMemory(),
 		)
 	}
-
 	clientConfig, err := NewConnectClientConfig(container)
 	if err != nil {
 		return nil, err
 	}
-
 	moduleClientProvider := bufregistryapimodule.NewClientProvider(clientConfig)
 	ownerClientProvider := bufregistryapiowner.NewClientProvider(clientConfig)
 	pluginClientProvider := bufregistryapiplugin.NewClientProvider(clientConfig)
 	policyClientProvider := bufregistryapipolicy.NewClientProvider(clientConfig)
-
 	moduleDataProvider, err := newModuleDataProvider(container, moduleClientProvider, ownerClientProvider)
 	if err != nil {
 		return nil, err
 	}
-
 	commitProvider, err := newCommitProvider(container, moduleClientProvider, ownerClientProvider)
 	if err != nil {
 		return nil, err
 	}
-
 	pluginDataProvider, err := newPluginDataProvider(container, pluginClientProvider)
 	if err != nil {
 		return nil, err
 	}
-
 	policyDataProvider, err := newPolicyDataProvider(container, policyClientProvider)
 	if err != nil {
 		return nil, err
 	}
-
 	wktStore, err := NewWKTStore(container)
 	if err != nil {
 		return nil, err
 	}
-
 	return bufctl2.NewController(
 		container.Logger(),
 		container,

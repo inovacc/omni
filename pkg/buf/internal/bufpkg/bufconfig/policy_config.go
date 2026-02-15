@@ -77,7 +77,6 @@ func newPolicyConfigForExternalV2(
 	externalConfig externalBufYAMLFilePolicyV2,
 ) (*policyConfig, error) {
 	var policyRef bufparse.Ref
-
 	name := externalConfig.Policy
 	if ref, err := bufparse.ParseRef(name); err == nil {
 		// Check if the local filepath exists, if it does presume its
@@ -87,7 +86,6 @@ func newPolicyConfigForExternalV2(
 			policyRef = ref
 		}
 	}
-
 	return newPolicyConfig(
 		name,
 		externalConfig.Ignore,
@@ -105,28 +103,21 @@ func newPolicyConfig(
 	if name == "" {
 		return nil, errors.New("must specify a name to the policy")
 	}
-
 	ignore = xslices.ToUniqueSorted(ignore)
-
 	ignore, err := normalizeAndCheckPaths(ignore, "ignore")
 	if err != nil {
 		return nil, err
 	}
-
 	newIgnoreOnly := make(map[string][]string, len(ignoreOnly))
 	for k, v := range ignoreOnly {
 		v = xslices.ToUniqueSorted(v)
-
 		v, err := normalizeAndCheckPaths(v, "ignore_only path")
 		if err != nil {
 			return nil, err
 		}
-
 		newIgnoreOnly[k] = v
 	}
-
 	ignoreOnly = newIgnoreOnly
-
 	return &policyConfig{
 		name:       name,
 		ignore:     ignore,
@@ -160,7 +151,6 @@ func newExternalV2ForPolicyConfig(
 	if !ok {
 		return externalBufYAMLFilePolicyV2{}, syserror.Newf("unknown implementation of PolicyConfig: %T", pluginConfig)
 	}
-
 	return externalBufYAMLFilePolicyV2{
 		Policy:     pluginConfig.Name(),
 		Ignore:     slices.Clone(pluginConfig.IgnorePaths()),

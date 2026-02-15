@@ -37,7 +37,6 @@ func evaluateFieldNumbers(file *File, r *report.Report) {
 		scope := ty.FullName()
 
 		var kind memberNumber
-
 		switch {
 		case ty.IsEnum():
 			kind = enumNumber
@@ -74,7 +73,6 @@ func evaluateFieldNumbers(file *File, r *report.Report) {
 						report.Snippet(tags.AST()),
 						report.Notef("range syntax requires that start <= end"),
 					)
-
 					continue
 				}
 
@@ -107,7 +105,6 @@ func evaluateFieldNumbers(file *File, r *report.Report) {
 
 	for extn := range seq.Values(file.AllExtensions()) {
 		var kind memberNumber
-
 		switch {
 		case extn.Container().IsMessageSet():
 			kind = messageSetNumber
@@ -175,7 +172,6 @@ func buildFieldNumberRanges(file *File, r *report.Report) {
 	// First, dump all of the ranges into the intersection set.
 	for ty := range seq.Values(file.AllTypes()) {
 		var totalOverlaps int
-
 		for tagRange := range iterx.Chain(
 			seq.Values(ty.ReservedRanges()),
 			seq.Values(ty.ExtensionRanges()),
@@ -184,7 +180,6 @@ func buildFieldNumberRanges(file *File, r *report.Report) {
 			if !tagRange.Raw().rangeOk {
 				continue // Diagnosed already.
 			}
-
 			disjoint := ty.Raw().rangesByNumber.Insert(lo, hi, rawTagRange{
 				ptr: arena.Untyped(file.arenas.ranges.Compress(tagRange.Raw())),
 			})
@@ -206,7 +201,6 @@ func buildFieldNumberRanges(file *File, r *report.Report) {
 			if !member.Raw().numberOk {
 				continue // Diagnosed already.
 			}
-
 			ty.Raw().rangesByNumber.Insert(n, n, rawTagRange{
 				isMember: true,
 				ptr:      arena.Untyped(file.arenas.members.Compress(member.Raw())),
@@ -285,7 +279,6 @@ extensions:
 				report.Snippet(extn.AST().Value()),
 			)
 		}
-
 		d.Apply(report.Helpf(
 			"the parent message `%s` must have reserved this number with an %s, e.g. `extensions %v;`",
 			ty.FullName(), taxa.Extensions, extn.Number(),
@@ -341,7 +334,6 @@ again:
 		)
 
 		lo1 = max(lo1, lo2)
-
 		hil = min(hil, hi2)
 		if lo1 == hil {
 			d.Apply(report.Helpf("they overlap at `%v`", lo1))

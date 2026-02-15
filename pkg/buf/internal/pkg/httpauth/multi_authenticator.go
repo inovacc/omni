@@ -42,12 +42,10 @@ func (a *multiAuthenticator) SetAuth(envContainer app.EnvContainer, request *htt
 			if err != nil {
 				return false, err
 			}
-
 			if ok {
 				return true, nil
 			}
 		}
-
 		return false, nil
 	}
 }

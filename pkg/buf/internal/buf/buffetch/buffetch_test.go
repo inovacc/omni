@@ -136,7 +136,6 @@ func testRoundTripLocalFile(
 
 func testNewFetchReader(logger *slog.Logger) internal.Reader {
 	storageosProvider := storageos.NewProvider(storageos.ProviderWithSymlinks())
-
 	return internal.NewReader(
 		logger,
 		storageosProvider,

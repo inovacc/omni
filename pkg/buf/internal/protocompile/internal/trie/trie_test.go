@@ -53,7 +53,6 @@ func TestTrie(t *testing.T) {
 			for i, s := range test.data {
 				trie.Insert(s, i)
 			}
-
 			t.Log(trie.Dump())
 
 			for i, key := range test.keys {
@@ -71,7 +70,6 @@ func TestHammerTrie(t *testing.T) {
 	for i := range 1000 {
 		trie.Insert(strings.Repeat("a", i), i+1)
 	}
-
 	t.Log(trie.Dump())
 
 	for i := range 1000 {

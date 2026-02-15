@@ -18,10 +18,10 @@ import (
 	"context"
 	"fmt"
 
-	"connectrpc.com/connect"
 	"github.com/google/uuid"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufmodule"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufregistryapi/bufregistryapimodule"
+	"connectrpc.com/connect"
 	modulev1 "github.com/inovacc/omni/pkg/buf/internal/gen/bufbuild/registry/protocolbuffers/go/buf/registry/module/v1"
 	modulev1beta1 "github.com/inovacc/omni/pkg/buf/internal/gen/bufbuild/registry/protocolbuffers/go/buf/registry/module/v1beta1"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/syserror"
@@ -40,9 +40,9 @@ type universalProtoContent struct {
 
 func newUniversalProtoContentForV1(v1ProtoContent *modulev1.DownloadResponse_Content) *universalProtoContent {
 	return &universalProtoContent{
-		CommitID: v1ProtoContent.GetCommit().GetId(),
-		ModuleID: v1ProtoContent.GetCommit().GetModuleId(),
-		Files:    xslices.Map(v1ProtoContent.GetFiles(), newUniversalProtoFileForV1),
+		CommitID: v1ProtoContent.Commit.Id,
+		ModuleID: v1ProtoContent.Commit.ModuleId,
+		Files:    xslices.Map(v1ProtoContent.Files, newUniversalProtoFileForV1),
 	}
 }
 
@@ -51,18 +51,16 @@ func newUniversalProtoContentForV1Beta1(v1beta1ProtoContent *modulev1beta1.Downl
 		v1BufYAMLFile *universalProtoFile
 		v1BufLockFile *universalProtoFile
 	)
-	if v1beta1ProtoContent.GetV1BufYamlFile() != nil {
-		v1BufYAMLFile = newUniversalProtoFileForV1Beta1(v1beta1ProtoContent.GetV1BufYamlFile())
+	if v1beta1ProtoContent.V1BufYamlFile != nil {
+		v1BufYAMLFile = newUniversalProtoFileForV1Beta1(v1beta1ProtoContent.V1BufYamlFile)
 	}
-
-	if v1beta1ProtoContent.GetV1BufLockFile() != nil {
-		v1BufLockFile = newUniversalProtoFileForV1Beta1(v1beta1ProtoContent.GetV1BufLockFile())
+	if v1beta1ProtoContent.V1BufLockFile != nil {
+		v1BufLockFile = newUniversalProtoFileForV1Beta1(v1beta1ProtoContent.V1BufLockFile)
 	}
-
 	return &universalProtoContent{
-		CommitID:      v1beta1ProtoContent.GetCommit().GetId(),
-		ModuleID:      v1beta1ProtoContent.GetCommit().GetModuleId(),
-		Files:         xslices.Map(v1beta1ProtoContent.GetFiles(), newUniversalProtoFileForV1Beta1),
+		CommitID:      v1beta1ProtoContent.Commit.Id,
+		ModuleID:      v1beta1ProtoContent.Commit.ModuleId,
+		Files:         xslices.Map(v1beta1ProtoContent.Files, newUniversalProtoFileForV1Beta1),
 		V1BufYAMLFile: v1BufYAMLFile,
 		V1BufLockFile: v1BufLockFile,
 	}
@@ -81,21 +79,17 @@ func getUniversalProtoContentsForRegistryAndCommitIDs(
 	switch digestType {
 	case bufmodule.DigestTypeB4:
 		v1beta1ProtoResourceRefs := commitIDsToV1Beta1ProtoResourceRefs(commitIDs)
-
 		v1beta1ProtoContents, err := getV1Beta1ProtoContentsForRegistryAndResourceRefs(ctx, moduleClientProvider, registry, v1beta1ProtoResourceRefs, digestType)
 		if err != nil {
 			return nil, err
 		}
-
 		return xslices.Map(v1beta1ProtoContents, newUniversalProtoContentForV1Beta1), nil
 	case bufmodule.DigestTypeB5:
 		v1ProtoResourceRefs := commitIDsToV1ProtoResourceRefs(commitIDs)
-
 		v1ProtoContents, err := getV1ProtoContentsForRegistryAndResourceRefs(ctx, moduleClientProvider, registry, v1ProtoResourceRefs)
 		if err != nil {
 			return nil, err
 		}
-
 		return xslices.Map(v1ProtoContents, newUniversalProtoContentForV1), nil
 	default:
 		return nil, syserror.Newf("unknown DigestType: %v", digestType)
@@ -127,12 +121,10 @@ func getV1ProtoContentsForRegistryAndResourceRefs(
 	if err != nil {
 		return nil, maybeNewNotFoundError(err)
 	}
-
-	if len(response.Msg.GetContents()) != len(v1ProtoResourceRefs) {
-		return nil, fmt.Errorf("expected %d Contents, got %d", len(v1ProtoResourceRefs), len(response.Msg.GetContents()))
+	if len(response.Msg.Contents) != len(v1ProtoResourceRefs) {
+		return nil, fmt.Errorf("expected %d Contents, got %d", len(v1ProtoResourceRefs), len(response.Msg.Contents))
 	}
-
-	return response.Msg.GetContents(), nil
+	return response.Msg.Contents, nil
 }
 
 func getV1Beta1ProtoContentsForRegistryAndResourceRefs(
@@ -146,7 +138,6 @@ func getV1Beta1ProtoContentsForRegistryAndResourceRefs(
 	if err != nil {
 		return nil, err
 	}
-
 	response, err := moduleClientProvider.V1Beta1DownloadServiceClient(registry).Download(
 		ctx,
 		connect.NewRequest(
@@ -167,10 +158,8 @@ func getV1Beta1ProtoContentsForRegistryAndResourceRefs(
 	if err != nil {
 		return nil, maybeNewNotFoundError(err)
 	}
-
-	if len(response.Msg.GetContents()) != len(v1beta1ProtoResourceRefs) {
-		return nil, fmt.Errorf("expected %d Contents, got %d", len(v1beta1ProtoResourceRefs), len(response.Msg.GetContents()))
+	if len(response.Msg.Contents) != len(v1beta1ProtoResourceRefs) {
+		return nil, fmt.Errorf("expected %d Contents, got %d", len(v1beta1ProtoResourceRefs), len(response.Msg.Contents))
 	}
-
-	return response.Msg.GetContents(), nil
+	return response.Msg.Contents, nil
 }

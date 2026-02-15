@@ -44,16 +44,13 @@ type locationPathDFAState func(int32) (locationPathDFAState, pathType)
 // empty, messages, message, fields, field, field options and field option.
 func getPathType(path []int32) pathType {
 	pathType := pathTypeNotFieldOption
-
 	currentState := start
 	for _, element := range path {
 		if currentState == nil {
 			break
 		}
-
 		currentState, pathType = currentState(element)
 	}
-
 	return pathType
 }
 
@@ -80,7 +77,6 @@ func message(input int32) (locationPathDFAState, pathType) {
 	case fieldTagInMessage, extensionTagInMessage:
 		return fields, pathTypeNotFieldOption
 	}
-
 	return nil, pathTypeNotFieldOption
 }
 

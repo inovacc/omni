@@ -71,10 +71,10 @@ const (
 type evaluator struct {
 	*File
 	*report.Report
-
 	scope FullName
 }
 
+//nolint:govet // vet complains about 8 wasted padding bytes.
 type evalArgs struct {
 	expr ast.ExprAny // The expression to evaluate.
 
@@ -112,7 +112,6 @@ func (ea evalArgs) Type() Type {
 		msg := ea.target.Elements().At(0).AsMessage()
 		return msg.Type()
 	}
-
 	return ea.field.Element()
 }
 
@@ -227,7 +226,6 @@ func (e *evaluator) eval(args evalArgs) Value {
 				} else {
 					n++
 				}
-
 				raw.elemIndices = append(raw.elemIndices, n)
 			}
 		}
@@ -285,7 +283,6 @@ func (e *evaluator) evalBits(args evalArgs) (rawValueBits, bool) {
 		if args.memberNumber == 0 {
 			break // Legalized in the parser.
 		}
-
 		e.Error(args.mismatch(taxa.Range))
 
 	case ast.ExprKindField:
@@ -345,14 +342,10 @@ func (e *evaluator) evalKey(args evalArgs, expr ast.ExprField) Member {
 		mapFieldHelp(d)
 	}
 
-	var (
-		member                                  Member
-		path                                    string
-		hasBrackets, isPath, isNumber, isString bool
-	)
-
+	var member Member
+	var path string
+	var hasBrackets, isPath, isNumber, isString bool
 	key := expr.Key()
-
 again:
 	switch key.Kind() {
 	case ast.ExprKindPath:
@@ -370,7 +363,6 @@ again:
 				report.Notef("%s may only appear in a `google.protobuf.Any`-typed %s", taxa.Dict),
 			)
 			mapFieldHelp(d)
-
 			return Member{}
 		}
 
@@ -382,11 +374,9 @@ again:
 			// Diagnosed in the parser.
 			return Member{}
 		}
-
 		hasBrackets = true
 
 		key = array.Elements().At(0)
-
 		goto again
 
 	case ast.ExprKindLiteral:
@@ -400,9 +390,7 @@ again:
 					goto validate
 				}
 			}
-
 			cannotResolveKey()
-
 			return Member{}
 		}
 
@@ -418,7 +406,6 @@ again:
 	if !hasBrackets {
 		member = ty.MemberByName(path)
 	}
-
 	if member.IsZero() {
 		if isPath && !hasBrackets && strings.HasPrefix(path, "(") {
 			// This was already diagnosed in legalize_option.go.
@@ -446,7 +433,6 @@ again:
 			}
 
 			cannotResolveKey()
-
 			return Member{}
 		} else if !sym.Kind().IsMessageField() {
 			d := e.Error(errTypeCheck{
@@ -456,7 +442,6 @@ again:
 				annotation: args.annotation,
 			})
 			mapFieldHelp(d)
-
 			return Member{}
 		}
 		// NOTE: Absolute paths in this position are diagnosed in the parser.
@@ -474,7 +459,6 @@ validate:
 			annotation: args.annotation,
 		})
 		mapFieldHelp(d)
-
 		return Member{}
 	}
 
@@ -514,12 +498,10 @@ validate:
 			if isNumber {
 				d.Apply(report.Notef("due to a parser quirk, `.protoc` rejects numbers here, even though textproto does not"))
 			}
-
 			if isString {
 				d.Apply(report.Notef("due to a parser quirk, `.protoc` rejects quoted strings here, even though textproto does not"))
 			}
 		}
-
 		mapFieldHelp(d)
 	}
 
@@ -533,7 +515,6 @@ func (e *evaluator) evalMessage(args evalArgs, expr ast.ExprDict) Value {
 	}
 
 	var message MessageValue
-
 	switch {
 	case args.isConcreteAny:
 		message = args.target.Elements().At(0).AsMessage()
@@ -548,18 +529,14 @@ func (e *evaluator) evalMessage(args evalArgs, expr ast.ExprDict) Value {
 		// Check if this is a valid concrete Any. There should be exactly
 		// one [host/path] key in the dictionary. If there is *at least one*,
 		// we choose the first one, and diagnose all other keys as invalid.
-		var (
-			url     string
-			urlExpr ast.ExprField
-			key     ast.ExprAny
-		)
 
+		var url string
+		var urlExpr ast.ExprField
+		var key ast.ExprAny
 	urlSearch:
 		for expr := range seq.Values(expr.Elements()) {
 			key = expr.Key()
-
 			var hasBrackets bool
-
 		again:
 			switch key.Kind() {
 			case ast.ExprKindPath:
@@ -567,7 +544,6 @@ func (e *evaluator) evalMessage(args evalArgs, expr ast.ExprDict) Value {
 				if strings.Contains(path, "/") {
 					url = path
 					urlExpr = expr
-
 					break urlSearch
 				}
 
@@ -577,11 +553,9 @@ func (e *evaluator) evalMessage(args evalArgs, expr ast.ExprDict) Value {
 					// Diagnosed in the parser.
 					continue
 				}
-
 				hasBrackets = true
 
 				key = array.Elements().At(0)
-
 				goto again
 			}
 		}
@@ -589,7 +563,6 @@ func (e *evaluator) evalMessage(args evalArgs, expr ast.ExprDict) Value {
 		if url != "" {
 			// First, scold all the other fields.
 			first := true
-
 			for expr := range seq.Values(expr.Elements()) {
 				if expr == urlExpr {
 					continue
@@ -599,10 +572,8 @@ func (e *evaluator) evalMessage(args evalArgs, expr ast.ExprDict) Value {
 					report.Snippet(expr.Key()),
 					report.Notef("the %s must be the only field", taxa.TypeURL),
 				)
-
 				if first {
 					first = false
-
 					d.Apply(report.Snippetf(urlExpr.Key(), "expected this to be the only field"))
 				}
 			}
@@ -617,7 +588,6 @@ func (e *evaluator) evalMessage(args evalArgs, expr ast.ExprDict) Value {
 				hostSpan.End = pc.Span().Start
 
 				before, after = pc.SplitBefore()
-
 				return before, after.ToRelative()
 			}
 
@@ -687,7 +657,6 @@ func (e *evaluator) evalMessage(args evalArgs, expr ast.ExprDict) Value {
 			args.annotation = urlExpr.Key()
 			args.isConcreteAny = true
 			_ = e.eval(args)
-
 			return abstract // Want to return the outer any here!
 		}
 	}
@@ -707,7 +676,6 @@ func (e *evaluator) evalMessage(args evalArgs, expr ast.ExprDict) Value {
 		copied.rawField = Ref[Member]{}
 
 		var exprCount int
-
 		slot := message.slot(field)
 		if slot.IsZero() {
 			copied.target = Value{}
@@ -726,7 +694,6 @@ func (e *evaluator) evalMessage(args evalArgs, expr ast.ExprDict) Value {
 					first:  value.KeyAST(),
 					second: expr.Key(),
 				})
-
 				copied.target = Value{}
 
 			case field.Element().IsMessage():
@@ -739,7 +706,6 @@ func (e *evaluator) evalMessage(args evalArgs, expr ast.ExprDict) Value {
 					first:  value.KeyAST(),
 					second: expr.Key(),
 				})
-
 				copied.target = Value{}
 			}
 		}
@@ -795,7 +761,6 @@ func (e *evaluator) evalLiteral(args evalArgs, expr ast.ExprLiteral, neg ast.Exp
 			if !neg.IsZero() {
 				n = -n
 			}
-
 			if scalar == predeclared.Float32 {
 				// This will, among other things, snap n to Infinity or zero
 				// if it is in-range for float64 but not float32.
@@ -869,12 +834,10 @@ func (e *evaluator) evalLiteral(args evalArgs, expr ast.ExprLiteral, neg ast.Exp
 				e.Error(args.mismatch(taxa.Int))
 				return 0, false
 			}
-
 			return e.checkIntBounds(args, scalar.IsSigned(), scalar.Bits(), !neg.IsZero(), n)
 		}
 
 		e.Error(args.mismatch(taxa.Float))
-
 		return 0, false
 
 	case token.String:
@@ -893,7 +856,6 @@ func (e *evaluator) evalLiteral(args evalArgs, expr ast.ExprLiteral, neg ast.Exp
 		}
 
 		data := expr.AsString().Text()
-
 		return newScalarBits(e.File, data), true
 	}
 
@@ -918,11 +880,8 @@ func (e *evaluator) checkIntBounds(args evalArgs, signed bool, bits int, neg boo
 		})
 	}
 
-	var (
-		tooLarge bool
-		v        uint64
-	)
-
+	var tooLarge bool
+	var v uint64
 	switch n := got.(type) {
 	case uint64:
 		v = n
@@ -940,7 +899,6 @@ func (e *evaluator) checkIntBounds(args evalArgs, signed bool, bits int, neg boo
 		if neg {
 			v = -v
 		}
-
 		v := int64(v)
 
 		// If bits == 64, we may be in a situation where - overflows. For
@@ -954,7 +912,6 @@ func (e *evaluator) checkIntBounds(args evalArgs, signed bool, bits int, neg boo
 			err()
 			return rawValueBits(lo), false
 		}
-
 		if (!neg && tooLarge) || (!neg && v < 0) || v > hi {
 			err()
 			return rawValueBits(hi), false
@@ -1049,7 +1006,6 @@ func (e *evaluator) evalPath(args evalArgs, expr ast.Path, neg ast.ExprPrefixed)
 				report.Notef(
 					"the special `max` expression can only be used at the end of a range"),
 			)
-
 			return 0, false
 		}
 
@@ -1078,12 +1034,10 @@ func (e *evaluator) evalPath(args evalArgs, expr ast.Path, neg ast.ExprPrefixed)
 		if scalar.IsSigned() {
 			n >>= 1
 		}
-
 		n--
 		if !neg.IsZero() {
 			n = -n
 		}
-
 		return rawValueBits(n), ok
 
 	case predeclared.True, predeclared.False:
@@ -1115,14 +1069,12 @@ func (e *evaluator) evalPath(args evalArgs, expr ast.Path, neg ast.ExprPrefixed)
 		}
 
 		var v float64
-
 		switch name {
 		case predeclared.Inf:
 			v = math.Inf(0)
 		case predeclared.NAN:
 			v = math.Float64frombits(nanBits)
 		}
-
 		if !neg.IsZero() {
 			v = -v
 		}
@@ -1134,12 +1086,10 @@ func (e *evaluator) evalPath(args evalArgs, expr ast.Path, neg ast.ExprPrefixed)
 	// sure to warn when users do it in text mode, and error when outside of
 	// it.
 	text := expr.Span().Text()
-
 	switch scalar {
 	case predeclared.Bool:
 		if slicesx.Among(text, "False", "f", "True", "t") {
 			value := slicesx.Among(text, "True", "t")
-
 			var d *report.Diagnostic
 			if args.textFormat {
 				d = e.Warnf("non-canonical `bool` literal")
@@ -1168,15 +1118,12 @@ func (e *evaluator) evalPath(args evalArgs, expr ast.Path, neg ast.ExprPrefixed)
 			if value {
 				return 1, args.textFormat
 			}
-
 			return 0, args.textFormat
 		}
 
 	case predeclared.Float32, predeclared.Float64:
-		var (
-			v         float64
-			canonical string
-		)
+		var v float64
+		var canonical string
 
 		switch {
 		case strings.EqualFold(text, "inf"), strings.EqualFold(text, "infinity"):
@@ -1187,7 +1134,6 @@ func (e *evaluator) evalPath(args evalArgs, expr ast.Path, neg ast.ExprPrefixed)
 			canonical = "nan"
 			v = math.Float64frombits(nanBits)
 		}
-
 		if !neg.IsZero() {
 			v = -v
 		}
@@ -1236,7 +1182,6 @@ func (e *evaluator) evalPath(args evalArgs, expr ast.Path, neg ast.ExprPrefixed)
 				}),
 				report.Notef("Protobuf requires single identifiers when referencing to the names of enum values"),
 			)
-
 			return newScalarBits(e.File, ev.Number()), false
 		}
 
@@ -1244,7 +1189,6 @@ func (e *evaluator) evalPath(args evalArgs, expr ast.Path, neg ast.ExprPrefixed)
 	} else if !sym.IsZero() {
 		e.Error(args.mismatch(sym))
 	}
-
 	return 0, false
 }
 
@@ -1271,14 +1215,11 @@ func (e errTypeCheck) Diagnose(d *report.Diagnostic) {
 			if repeated {
 				r = "repeated "
 			}
-
 			name = fmt.Sprintf("`%s%s`", r, sym.FullName())
-
 			return name, sym.noun().String() + " " + name
 		}
 
 		name = fmt.Sprint(v)
-
 		return name, name
 	}
 
@@ -1290,7 +1231,6 @@ func (e errTypeCheck) Diagnose(d *report.Diagnostic) {
 		report.Snippetf(e.expr, "expected %s, found %s", wantName, gotName),
 		report.Notef("expected: %s\n   found: %s", wantWhat, gotWhat),
 	)
-
 	if e.annotation != nil {
 		d.Apply(report.Snippetf(e.annotation, "expected due to this"))
 	}
@@ -1316,7 +1256,6 @@ func (e errTypeConstraint) Diagnose(d *report.Diagnostic) {
 // ranges.
 type errLiteralRange struct {
 	errTypeCheck
-
 	got    any
 	signed bool
 	bits   int
@@ -1328,11 +1267,8 @@ func (e errLiteralRange) Diagnose(d *report.Diagnostic) {
 		name = "`" + string(sym.FullName()) + "`"
 	}
 
-	var (
-		lo, hi uint64
-		sign   string
-	)
-
+	var lo, hi uint64
+	var sign string
 	if e.signed {
 		sign = "-"
 		lo = uint64(1) << (e.bits - 1)
@@ -1344,11 +1280,8 @@ func (e errLiteralRange) Diagnose(d *report.Diagnostic) {
 		}
 	}
 
-	var (
-		base   int
-		prefix string
-	)
-
+	var base int
+	var prefix string
 	text := e.expr.Span().Text()
 	text = text[strings.IndexAny(text, "0123456789xXoObB"):]
 

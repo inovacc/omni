@@ -59,14 +59,11 @@ func (c *Client) RegisterDevice(
 	if err != nil {
 		return nil, err
 	}
-
 	body := bytes.NewReader(input)
-
 	request, err := http.NewRequestWithContext(ctx, http.MethodPost, c.baseURL+DeviceRegistrationPath, body)
 	if err != nil {
 		return nil, err
 	}
-
 	request.Header.Set("Content-Type", "application/json")
 	request.Header.Set("Accept", "application/json")
 
@@ -74,7 +71,6 @@ func (c *Client) RegisterDevice(
 	if err != nil {
 		return nil, err
 	}
-
 	defer func() {
 		retErr = errors.Join(retErr, response.Body.Close())
 	}()
@@ -86,15 +82,12 @@ func (c *Client) RegisterDevice(
 	if err := parseJSONResponse(response, payload); err != nil {
 		return nil, err
 	}
-
 	if payload.ErrorCode != "" {
 		return nil, &payload.Error
 	}
-
 	if code := response.StatusCode; code != http.StatusOK {
 		return nil, fmt.Errorf("oauth2: invalid status: %v", code)
 	}
-
 	return &payload.DeviceRegistrationResponse, nil
 }
 
@@ -105,12 +98,10 @@ func (c *Client) AuthorizeDevice(
 	deviceAuthorizationRequest *DeviceAuthorizationRequest,
 ) (_ *DeviceAuthorizationResponse, retErr error) {
 	body := strings.NewReader(deviceAuthorizationRequest.ToValues().Encode())
-
 	request, err := http.NewRequestWithContext(ctx, http.MethodPost, c.baseURL+DeviceAuthorizationPath, body)
 	if err != nil {
 		return nil, err
 	}
-
 	request.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	request.Header.Set("Accept", "application/json")
 
@@ -118,7 +109,6 @@ func (c *Client) AuthorizeDevice(
 	if err != nil {
 		return nil, err
 	}
-
 	defer func() {
 		retErr = errors.Join(retErr, response.Body.Close())
 	}()
@@ -130,19 +120,15 @@ func (c *Client) AuthorizeDevice(
 	if err := parseJSONResponse(response, payload); err != nil {
 		return nil, err
 	}
-
 	if payload.ErrorCode != "" {
 		return nil, &payload.Error
 	}
-
 	if code := response.StatusCode; code != http.StatusOK {
 		return nil, fmt.Errorf("oauth2: invalid status: %v", code)
 	}
-
 	if err := validateDeviceAuthorizationResponse(payload.DeviceAuthorizationResponse); err != nil {
 		return nil, err
 	}
-
 	return &payload.DeviceAuthorizationResponse, nil
 }
 
@@ -157,7 +143,6 @@ func (c *Client) AccessDeviceToken(
 	for _, option := range options {
 		option(accessOptions)
 	}
-
 	pollingInterval := accessOptions.pollingInterval
 	if pollingInterval == 0 {
 		pollingInterval = defaultPollingInterval
@@ -166,24 +151,19 @@ func (c *Client) AccessDeviceToken(
 	} else if pollingInterval > maxPollingInterval {
 		return nil, fmt.Errorf("oauth2: polling interval must be less than or equal to %v", maxPollingInterval)
 	}
-
 	encodedValues := deviceAccessTokenRequest.ToValues().Encode()
-
 	timer := time.NewTimer(pollingInterval)
 	defer timer.Stop()
-
 	for {
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		case <-timer.C:
 			body := strings.NewReader(encodedValues)
-
 			request, err := http.NewRequestWithContext(ctx, http.MethodPost, c.baseURL+DeviceTokenPath, body)
 			if err != nil {
 				return nil, err
 			}
-
 			request.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 			request.Header.Set("Accept", "application/json")
 
@@ -191,7 +171,6 @@ func (c *Client) AccessDeviceToken(
 			if err != nil {
 				return nil, err
 			}
-
 			payload := &struct {
 				Error
 				DeviceAccessTokenResponse
@@ -200,18 +179,14 @@ func (c *Client) AccessDeviceToken(
 				if closeErr := response.Body.Close(); closeErr != nil {
 					err = errors.Join(err, closeErr)
 				}
-
 				return nil, err
 			}
-
 			if err := response.Body.Close(); err != nil {
 				return nil, fmt.Errorf("oauth2: failed to close response body: %w", err)
 			}
-
 			if response.StatusCode == http.StatusOK && payload.ErrorCode == "" {
 				return &payload.DeviceAccessTokenResponse, nil
 			}
-
 			switch payload.ErrorCode {
 			case ErrorCodeSlowDown:
 				// If the server is rate limiting the client, increase the polling interval.
@@ -224,7 +199,6 @@ func (c *Client) AccessDeviceToken(
 			default:
 				return nil, &payload.Error
 			}
-
 			timer.Reset(pollingInterval)
 		}
 	}
@@ -259,15 +233,12 @@ func parseJSONResponse(response *http.Response, payload any) error {
 	if err != nil {
 		return fmt.Errorf("oauth2: failed to read response body: %w", err)
 	}
-
 	if contentType, _, _ := mime.ParseMediaType(response.Header.Get("Content-Type")); contentType != "application/json" {
 		return fmt.Errorf("oauth2: %w: %d %s", errors.ErrUnsupported, response.StatusCode, body)
 	}
-
 	if err := json.Unmarshal(body, &payload); err != nil {
 		return fmt.Errorf("oauth2: failed to unmarshal response: %w: %s", err, body)
 	}
-
 	return nil
 }
 
@@ -277,7 +248,6 @@ func validateDeviceAuthorizationResponse(deviceAuthorizationResponse DeviceAutho
 	if err := validateURIScheme(deviceAuthorizationResponse.VerificationURI); err != nil {
 		return err
 	}
-
 	return validateURIScheme(deviceAuthorizationResponse.VerificationURIComplete)
 }
 
@@ -286,10 +256,8 @@ func validateURIScheme(rawURI string) error {
 	if err != nil {
 		return fmt.Errorf("oauth2: invalid verification URI, %s: %w", rawURI, err)
 	}
-
 	if parsed.Scheme != "https" && parsed.Scheme != "http" {
 		return fmt.Errorf("oauth2: invalid verification URI scheme, %q, received: %s", parsed.Scheme, parsed)
 	}
-
 	return nil
 }

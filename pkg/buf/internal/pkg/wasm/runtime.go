@@ -41,7 +41,6 @@ func newRuntime(ctx context.Context, options ...RuntimeOption) (*runtime, error)
 	for _, option := range options {
 		option(runtimeOptions)
 	}
-
 	if runtimeOptions.maxMemoryBytes == 0 {
 		return nil, fmt.Errorf("Wasm max memory bytes must be greater than 0")
 	}
@@ -49,7 +48,7 @@ func newRuntime(ctx context.Context, options ...RuntimeOption) (*runtime, error)
 	// size (64 KiB) are truncated. memoryLimitPages is guaranteed to be
 	// below 2^16 as the maximum uint32 value is 2^32 - 1.
 	// NOTE: The option represented as a uint32 restricts the max number of
-	// pages to 2^16-1, one less the actual max value of 2^16. But this
+	// pages to 2^16-1, one less the the actual max value of 2^16. But this
 	// is a nicer API then specifying the max number of pages directly.
 	memoryLimitPages := runtimeOptions.maxMemoryBytes / wasmPageSize
 	if memoryLimitPages == 0 {
@@ -67,20 +66,15 @@ func newRuntime(ctx context.Context, options ...RuntimeOption) (*runtime, error)
 		WithCoreFeatures(api.CoreFeaturesV2).
 		WithCloseOnContextDone(true).
 		WithMemoryLimitPages(memoryLimitPages)
-
 	var wazeroCompilationCache wazero.CompilationCache
-
 	if runtimeOptions.cacheDir != "" {
 		var err error
-
 		wazeroCompilationCache, err = wazero.NewCompilationCacheWithDir(runtimeOptions.cacheDir)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create compilation cache: %w", err)
 		}
-
 		wazeroRuntimeConfig = wazeroRuntimeConfig.WithCompilationCache(wazeroCompilationCache)
 	}
-
 	wazeroRuntime := wazero.NewRuntimeWithConfig(ctx, wazeroRuntimeConfig)
 
 	// Init WASI preview1 APIs. This is required to support the pluginrpc
@@ -89,7 +83,6 @@ func newRuntime(ctx context.Context, options ...RuntimeOption) (*runtime, error)
 	if _, err := wasi_snapshot_preview1.Instantiate(ctx, wazeroRuntime); err != nil {
 		return nil, fmt.Errorf("failed to instantiate WASI snapshot preview1: %w", err)
 	}
-
 	return &runtime{
 		runtime:          wazeroRuntime,
 		compilationCache: wazeroCompilationCache,
@@ -111,7 +104,6 @@ func (r *runtime) Compile(ctx context.Context, moduleName string, moduleWasm []b
 	if err != nil {
 		return nil, err
 	}
-
 	return &compiledModule{
 		moduleName:     moduleName,
 		runtime:        r.runtime,
@@ -124,7 +116,6 @@ func (r *runtime) Close(ctx context.Context) error {
 	if r.compilationCache != nil {
 		err = errors.Join(err, r.compilationCache.Close(ctx))
 	}
-
 	return err
 }
 

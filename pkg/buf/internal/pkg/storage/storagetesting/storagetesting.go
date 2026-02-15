@@ -77,7 +77,6 @@ func AssertObjectInfo(
 	if externalPathShouldEqualLocalPath {
 		localPath = externalPath
 	}
-
 	objectInfo, err := readBucket.Stat(context.Background(), path)
 	require.NoError(t, err)
 	AssertObjectInfoEqual(
@@ -109,7 +108,6 @@ func AssertPathToContent(
 	expectedPathToContent map[string]string,
 ) {
 	var paths []string
-
 	require.NoError(t, readBucket.Walk(
 		context.Background(),
 		walkPrefix,
@@ -120,7 +118,6 @@ func AssertPathToContent(
 	))
 	require.Equal(t, len(paths), len(xslices.ToUniqueSorted(paths)))
 	assert.Equal(t, len(expectedPathToContent), len(paths), paths)
-
 	for _, path := range paths {
 		expectedContent, ok := expectedPathToContent[path]
 		assert.True(t, ok, path)
@@ -143,7 +140,6 @@ func AssertPaths(
 	expectedPaths ...string,
 ) {
 	var paths []string
-
 	require.NoError(t, readBucket.Walk(
 		context.Background(),
 		walkPrefix,
@@ -974,7 +970,6 @@ func RunTestSuite(
 				AssertPathToContent(t, readBucket, testCase.prefix, testCase.expectedPathToContent)
 			})
 		}
-
 		t.Run(fmt.Sprintf("tar-mapper-write-%s", testCase.name), func(t *testing.T) {
 			t.Parallel()
 			readBucket := testCase.newReadBucketFunc(t)
@@ -1028,7 +1023,6 @@ func RunTestSuite(
 
 	t.Run("diff", func(t *testing.T) {
 		t.Parallel()
-
 		diffDirPathA := filepath.Join(storagetestingDirPath, "testdata", "diff", "a")
 		diffDirPathB := filepath.Join(storagetestingDirPath, "testdata", "diff", "b")
 		readBucketA, getExternalPathFuncA := newReadBucket(t, diffDirPathA, defaultProvider)
@@ -1182,7 +1176,6 @@ func RunTestSuite(
 		if runtime.GOOS == "windows" {
 			absolutePath = "C:\\Fake\\Absolute\\Path"
 		}
-
 		expectErr := fmt.Sprintf("%s: expected to be relative", absolutePath)
 
 		readBucket, _ := newReadBucket(t, oneDirPath, defaultProvider)
@@ -1201,7 +1194,6 @@ func RunTestSuite(
 		if runtime.GOOS == "windows" {
 			absolutePath = "C:\\Fake\\Absolute\\Path"
 		}
-
 		expectErr := fmt.Sprintf("%s: expected to be relative", absolutePath)
 
 		writeBucket := newWriteBucket(t, defaultProvider)
@@ -1233,7 +1225,6 @@ func RunTestSuite(
 		_, err = writeObjectCloser.Write([]byte("abcd"))
 		require.NoError(t, err)
 		require.NoError(t, writeObjectCloser.Close())
-
 		err = writeBucket.Delete(context.Background(), "hello")
 		require.NoError(t, err)
 		err = writeBucket.Delete(context.Background(), "hello")
@@ -1246,7 +1237,6 @@ func RunTestSuite(
 		_, err = writeObjectCloser.Write([]byte("abcd"))
 		require.NoError(t, err)
 		require.NoError(t, writeObjectCloser.Close())
-
 		err = writeBucket.Delete(context.Background(), "hello")
 		require.NoError(t, err)
 		err = writeBucket.Delete(context.Background(), "hello")
@@ -1255,7 +1245,6 @@ func RunTestSuite(
 
 	t.Run("write-bucket-put-delete-all", func(t *testing.T) {
 		t.Parallel()
-
 		ctx := context.Background()
 		writeBucket := newWriteBucket(t, defaultProvider)
 		// this test starts with this data in the bucket, and then
@@ -1273,7 +1262,6 @@ func RunTestSuite(
 			err := storage2.PutPath(ctx, writeBucket, path, []byte(data))
 			require.NoError(t, err)
 		}
-
 		AssertPathToContent(
 			t,
 			writeBucketToReadBucket(t, writeBucket),
@@ -1376,7 +1364,6 @@ func RunTestSuite(
 		if runtime.GOOS == "windows" {
 			t.Skip("Skipped on Windows: symlinks require admin privileges")
 		}
-
 		t.Parallel()
 		readBucket, _ := newReadBucket(t, symlinkSuccessDirPath, defaultProvider)
 		AssertPathToContent(
@@ -1392,7 +1379,6 @@ func RunTestSuite(
 		if runtime.GOOS == "windows" {
 			t.Skip("Skipped on Windows: symlinks require admin privileges")
 		}
-
 		t.Parallel()
 		readBucket, _ := newReadBucket(
 			t,
@@ -1423,7 +1409,6 @@ func RunTestSuite(
 		if runtime.GOOS == "windows" {
 			t.Skip("Skipped on Windows: symlinks require admin privileges")
 		}
-
 		t.Parallel()
 		readBucket, _ := newReadBucket(t, symlinkLoopDirPath, defaultProvider)
 		AssertPathToContent(
@@ -1439,7 +1424,6 @@ func RunTestSuite(
 		if runtime.GOOS == "windows" {
 			t.Skip("Skipped on Windows: symlinks require admin privileges")
 		}
-
 		t.Parallel()
 		readBucket, _ := newReadBucket(
 			t,
@@ -1459,7 +1443,6 @@ func RunTestSuite(
 	})
 	t.Run("is_empty", func(t *testing.T) {
 		t.Parallel()
-
 		ctx := context.Background()
 
 		readBucket, _ := newReadBucket(t, oneDirPath, defaultProvider)
@@ -1476,7 +1459,6 @@ func RunTestSuite(
 		isEmpty, err = storage2.IsEmpty(ctx, readBucket, "")
 		require.NoError(t, err)
 		require.True(t, isEmpty)
-
 		err = os.WriteFile(filepath.Join(tmpDir.Path(), "foo.txt"), []byte("foo"), 0600)
 		require.NoError(t, err)
 		// need to make a new readBucket since the old one won't necessarily have the foo.txt
@@ -1498,11 +1480,8 @@ func RunTestSuite(
 		t.Parallel()
 		writeBucket := newWriteBucket(t, defaultProvider)
 		readBucket := writeBucketToReadBucket(t, writeBucket)
-
 		const limit = 2048
-
 		limitedWriteBucket := storage2.LimitWriteBucket(writeBucket, limit)
-
 		var (
 			wg           sync.WaitGroup
 			writtenBytes atomic.Int64
@@ -1510,28 +1489,22 @@ func RunTestSuite(
 		)
 		for i := range 10 {
 			wg.Add(1)
-
 			go func(i int) {
 				defer wg.Done()
-
 				data := bytes.Repeat([]byte("b"), i*100)
 				path := strconv.Itoa(i)
-
 				triedBytes.Add(int64(len(data)))
-
 				err := storage2.PutPath(context.Background(), limitedWriteBucket, path, data)
 				if err != nil {
 					assert.True(t, storage2.IsWriteLimitReached(err))
 					return
 				}
-
 				readData, err := storage2.ReadPath(context.Background(), readBucket, path)
 				assert.NoError(t, err)
 				assert.Equal(t, readData, data)
 				writtenBytes.Add(int64(len(data)))
 			}(i)
 		}
-
 		wg.Wait()
 		require.Greater(t, triedBytes.Load(), int64(limit))
 		assert.LessOrEqual(t, writtenBytes.Load(), int64(limit))
@@ -1539,9 +1512,7 @@ func RunTestSuite(
 	t.Run("limit-untar-file-size", func(t *testing.T) {
 		t.Parallel()
 		writeBucket := newWriteBucket(t, defaultProvider)
-
 		const limit = 2048
-
 		files := map[string][]byte{
 			"within":     bytes.Repeat([]byte{0}, limit-1),
 			"at":         bytes.Repeat([]byte{0}, limit),
@@ -1552,9 +1523,7 @@ func RunTestSuite(
 			err := storage2.PutPath(context.Background(), writeBucket, path, data)
 			require.NoError(t, err)
 		}
-
 		var buffer bytes.Buffer
-
 		err := storagearchive.Tar(context.Background(), writeBucketToReadBucket(t, writeBucket), &buffer)
 		require.NoError(t, err)
 		writeBucket = newWriteBucket(t, defaultProvider)

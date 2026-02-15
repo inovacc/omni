@@ -36,16 +36,13 @@ func newLocker(rootDirPath string, options ...LockerOption) (*locker, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	if !fileInfo.IsDir() {
 		return nil, fmt.Errorf("%q is not a directory", rootDirPath)
 	}
-
 	lockerOptions := newLockerOptions()
 	for _, option := range options {
 		option(lockerOptions)
 	}
-
 	return &locker{
 		// do not validate - allow anything including absolute paths and jumping context
 		rootDirPath:    normalpath2.Normalize(rootDirPath),
@@ -58,7 +55,6 @@ func (l *locker) Lock(ctx context.Context, path string, options ...LockOption) (
 	if err := validatePath(path); err != nil {
 		return nil, err
 	}
-
 	options = slices.Concat(
 		[]LockOption{
 			LockWithTimeout(l.lockTimeout),
@@ -66,7 +62,6 @@ func (l *locker) Lock(ctx context.Context, path string, options ...LockOption) (
 		},
 		options, // Any additional options set will be applied last
 	)
-
 	return lock(
 		ctx,
 		normalpath2.Unnormalize(normalpath2.Join(l.rootDirPath, path)),
@@ -78,7 +73,6 @@ func (l *locker) RLock(ctx context.Context, path string, options ...LockOption) 
 	if err := validatePath(path); err != nil {
 		return nil, err
 	}
-
 	options = slices.Concat(
 		[]LockOption{
 			LockWithTimeout(l.lockTimeout),
@@ -86,7 +80,6 @@ func (l *locker) RLock(ctx context.Context, path string, options ...LockOption) 
 		},
 		options, // Any additional options set will be applied last
 	)
-
 	return rlock(
 		ctx,
 		normalpath2.Unnormalize(normalpath2.Join(l.rootDirPath, path)),
@@ -99,12 +92,10 @@ func validatePath(path string) error {
 	if err != nil {
 		return err
 	}
-
 	if path != normalPath {
 		// just extra safety
 		return fmt.Errorf("expected file lock path %q to be equal to normalized path %q", path, normalPath)
 	}
-
 	return nil
 }
 

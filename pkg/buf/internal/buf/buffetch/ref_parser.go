@@ -94,7 +94,6 @@ func newMessageRefParser(logger *slog.Logger, options ...MessageRefParserOption)
 	for _, option := range options {
 		option(messageRefParserOptions)
 	}
-
 	return &refParser{
 		logger: logger,
 		fetchRefParser: internal.NewRefParser(
@@ -228,14 +227,12 @@ func (a *refParser) GetRef(
 	if err != nil {
 		return nil, err
 	}
-
 	switch t := parsedRef.(type) {
 	case internal.ParsedSingleRef:
 		messageEncoding, err := parseMessageEncoding(t.Format())
 		if err != nil {
 			return nil, err
 		}
-
 		return newMessageRef(t, messageEncoding)
 	case internal.ParsedArchiveRef:
 		return newSourceRef(t), nil
@@ -260,14 +257,12 @@ func (a *refParser) GetRefForInputConfig(
 	if err != nil {
 		return nil, err
 	}
-
 	switch t := parsedRef.(type) {
 	case internal.ParsedSingleRef:
 		messageEncoding, err := parseMessageEncoding(t.Format())
 		if err != nil {
 			return nil, err
 		}
-
 		return newMessageRef(t, messageEncoding)
 	case internal.ParsedArchiveRef:
 		return newSourceRef(t), nil
@@ -292,7 +287,6 @@ func (a *refParser) GetSourceOrModuleRef(
 	if err != nil {
 		return nil, err
 	}
-
 	switch t := parsedRef.(type) {
 	case internal.ParsedSingleRef:
 		return nil, fmt.Errorf("invalid ParsedRef type for source or module: %T", parsedRef)
@@ -319,7 +313,6 @@ func (a *refParser) GetSourceOrModuleRefForInputConfig(
 	if err != nil {
 		return nil, err
 	}
-
 	switch t := parsedRef.(type) {
 	case internal.ParsedSingleRef:
 		return nil, fmt.Errorf("invalid ParsedRef type for source or module: %T", parsedRef)
@@ -346,17 +339,14 @@ func (a *refParser) GetMessageRef(
 	if err != nil {
 		return nil, err
 	}
-
 	parsedSingleRef, ok := parsedRef.(internal.ParsedSingleRef)
 	if !ok {
 		return nil, fmt.Errorf("invalid ParsedRef type for message: %T", parsedRef)
 	}
-
 	messageEncoding, err := parseMessageEncoding(parsedSingleRef.Format())
 	if err != nil {
 		return nil, err
 	}
-
 	return newMessageRef(parsedSingleRef, messageEncoding)
 }
 
@@ -368,17 +358,14 @@ func (a *refParser) GetMessageRefForInputConfig(
 	if err != nil {
 		return nil, err
 	}
-
 	parsedSingleRef, ok := parsedRef.(internal.ParsedSingleRef)
 	if !ok {
 		return nil, fmt.Errorf("invalid ParsedRef type for message: %T", parsedRef)
 	}
-
 	messageEncoding, err := parseMessageEncoding(parsedSingleRef.Format())
 	if err != nil {
 		return nil, err
 	}
-
 	return newMessageRef(parsedSingleRef, messageEncoding)
 }
 
@@ -390,13 +377,11 @@ func (a *refParser) GetSourceRef(
 	if err != nil {
 		return nil, err
 	}
-
 	parsedBucketRef, ok := parsedRef.(internal.ParsedBucketRef)
 	if !ok {
 		// this should never happen
 		return nil, fmt.Errorf("invalid ParsedRef type for source: %T", parsedRef)
 	}
-
 	return newSourceRef(parsedBucketRef), nil
 }
 
@@ -408,13 +393,11 @@ func (a *refParser) GetSourceRefForInputConfig(
 	if err != nil {
 		return nil, err
 	}
-
 	parsedBucketRef, ok := parsedRef.(internal.ParsedBucketRef)
 	if !ok {
 		// this should never happen
 		return nil, fmt.Errorf("invalid ParsedRef type for source: %T", parsedRef)
 	}
-
 	return newSourceRef(parsedBucketRef), nil
 }
 
@@ -426,13 +409,11 @@ func (a *refParser) GetDirRef(
 	if err != nil {
 		return nil, err
 	}
-
 	parsedDirRef, ok := parsedRef.(internal.ParsedDirRef)
 	if !ok {
 		// this should never happen
 		return nil, fmt.Errorf("invalid ParsedRef type for source: %T", parsedRef)
 	}
-
 	return newDirRef(parsedDirRef), nil
 }
 
@@ -444,13 +425,11 @@ func (a *refParser) GetDirRefForInputConfig(
 	if err != nil {
 		return nil, err
 	}
-
 	parsedDirRef, ok := parsedRef.(internal.ParsedDirRef)
 	if !ok {
 		// this should never happen
 		return nil, fmt.Errorf("invalid ParsedRef type for source: %T", parsedRef)
 	}
-
 	return newDirRef(parsedDirRef), nil
 }
 
@@ -462,7 +441,6 @@ func (a *refParser) GetDirOrProtoFileRef(
 	if err != nil {
 		return nil, err
 	}
-
 	switch t := parsedRef.(type) {
 	case internal.ParsedDirRef:
 		return newDirRef(t), nil
@@ -481,7 +459,6 @@ func (a *refParser) GetDirOrProtoFileRefForInputConfig(
 	if err != nil {
 		return nil, err
 	}
-
 	switch t := parsedRef.(type) {
 	case internal.ParsedDirRef:
 		return newDirRef(t), nil
@@ -500,13 +477,11 @@ func (a *refParser) GetModuleRef(
 	if err != nil {
 		return nil, err
 	}
-
 	parsedModuleRef, ok := parsedRef.(internal.ParsedModuleRef)
 	if !ok {
 		// this should never happen
 		return nil, fmt.Errorf("invalid ParsedRef type for source: %T", parsedRef)
 	}
-
 	return newModuleRef(parsedModuleRef), nil
 }
 
@@ -518,13 +493,11 @@ func (a *refParser) GetModuleRefForInputConfig(
 	if err != nil {
 		return nil, err
 	}
-
 	parsedModuleRef, ok := parsedRef.(internal.ParsedModuleRef)
 	if !ok {
 		// this should never happen
 		return nil, fmt.Errorf("invalid ParsedRef type for source: %T", parsedRef)
 	}
-
 	return newModuleRef(parsedModuleRef), nil
 }
 
@@ -542,9 +515,7 @@ func (a *refParser) getParsedRef(
 	if err != nil {
 		return nil, err
 	}
-
 	a.checkDeprecated(parsedRef)
-
 	return parsedRef, nil
 }
 
@@ -561,9 +532,7 @@ func (a *refParser) getParsedRefForInputConfig(
 	if err != nil {
 		return nil, err
 	}
-
 	a.checkDeprecated(parsedRef)
-
 	return parsedRef, nil
 }
 
@@ -580,11 +549,8 @@ func (a *refParser) checkDeprecated(parsedRef internal.ParsedRef) {
 
 func processRawRef(rawRef *internal.RawRef) error {
 	// if format option is not set and path is "-", default to bin
-	var (
-		format          string
-		compressionType internal.CompressionType
-	)
-
+	var format string
+	var compressionType internal.CompressionType
 	if rawRef.Path == "-" || app.IsDevPath(rawRef.Path) {
 		format = formatBinpb
 	} else {
@@ -603,7 +569,6 @@ func processRawRef(rawRef *internal.RawRef) error {
 			format = formatZip
 		case ".gz":
 			compressionType = internal.CompressionTypeGzip
-
 			switch filepath.Ext(strings.TrimSuffix(rawRef.Path, filepath.Ext(rawRef.Path))) {
 			case ".bin", ".binpb":
 				format = formatBinpb
@@ -620,7 +585,6 @@ func processRawRef(rawRef *internal.RawRef) error {
 			}
 		case ".zst":
 			compressionType = internal.CompressionTypeZstd
-
 			switch filepath.Ext(strings.TrimSuffix(rawRef.Path, filepath.Ext(rawRef.Path))) {
 			case ".bin", ".binpb":
 				format = formatBinpb
@@ -649,26 +613,20 @@ func processRawRef(rawRef *internal.RawRef) error {
 			}
 		default:
 			var err error
-
 			format, err = assumeModuleOrDir(rawRef.Path)
 			if err != nil {
 				return err
 			}
 		}
 	}
-
 	rawRef.Format = format
 	rawRef.CompressionType = compressionType
-
 	return nil
 }
 
 func processRawRefSource(rawRef *internal.RawRef) error {
-	var (
-		format          string
-		compressionType internal.CompressionType
-	)
-
+	var format string
+	var compressionType internal.CompressionType
 	switch filepath.Ext(rawRef.Path) {
 	case ".tar":
 		format = formatTar
@@ -676,7 +634,6 @@ func processRawRefSource(rawRef *internal.RawRef) error {
 		format = formatZip
 	case ".gz":
 		compressionType = internal.CompressionTypeGzip
-
 		switch filepath.Ext(strings.TrimSuffix(rawRef.Path, filepath.Ext(rawRef.Path))) {
 		case ".tar":
 			format = formatTar
@@ -685,7 +642,6 @@ func processRawRefSource(rawRef *internal.RawRef) error {
 		}
 	case ".zst":
 		compressionType = internal.CompressionTypeZstd
-
 		switch filepath.Ext(strings.TrimSuffix(rawRef.Path, filepath.Ext(rawRef.Path))) {
 		case ".tar":
 			format = formatTar
@@ -707,10 +663,8 @@ func processRawRefSource(rawRef *internal.RawRef) error {
 	default:
 		format = formatDir
 	}
-
 	rawRef.Format = format
 	rawRef.CompressionType = compressionType
-
 	return nil
 }
 
@@ -734,29 +688,22 @@ func processRawRefDirOrProtoFile(rawRef *internal.RawRef) error {
 			}
 		default:
 			var err error
-
 			format, err = assumeModuleOrDir(rawRef.Path)
 			if err != nil {
 				return err
 			}
-
 			if format == formatMod {
 				return ErrModuleFormatDetectedForDirOrProtoFileRef
 			}
 		}
 	}
-
 	rawRef.Format = format
-
 	return nil
 }
 
 func processRawRefSourceOrModule(rawRef *internal.RawRef) error {
-	var (
-		format          string
-		compressionType internal.CompressionType
-	)
-
+	var format string
+	var compressionType internal.CompressionType
 	switch filepath.Ext(rawRef.Path) {
 	case ".tar":
 		format = formatTar
@@ -764,7 +711,6 @@ func processRawRefSourceOrModule(rawRef *internal.RawRef) error {
 		format = formatZip
 	case ".gz":
 		compressionType = internal.CompressionTypeGzip
-
 		switch filepath.Ext(strings.TrimSuffix(rawRef.Path, filepath.Ext(rawRef.Path))) {
 		case ".tar":
 			format = formatTar
@@ -773,7 +719,6 @@ func processRawRefSourceOrModule(rawRef *internal.RawRef) error {
 		}
 	case ".zst":
 		compressionType = internal.CompressionTypeZstd
-
 		switch filepath.Ext(strings.TrimSuffix(rawRef.Path, filepath.Ext(rawRef.Path))) {
 		case ".tar":
 			format = formatTar
@@ -790,24 +735,19 @@ func processRawRefSourceOrModule(rawRef *internal.RawRef) error {
 		if err != nil && !os.IsNotExist(err) {
 			return fmt.Errorf("path provided is not a valid proto file: %s, %w", rawRef.Path, err)
 		}
-
 		if fileInfo != nil && fileInfo.IsDir() {
 			return fmt.Errorf("path provided is not a valid proto file: a directory named %s already exists", rawRef.Path)
 		}
-
 		format = formatProtoFile
 	default:
 		var err error
-
 		format, err = assumeModuleOrDir(rawRef.Path)
 		if err != nil {
 			return err
 		}
 	}
-
 	rawRef.Format = format
 	rawRef.CompressionType = compressionType
-
 	return nil
 }
 
@@ -819,11 +759,8 @@ func newProcessRawRefMessage(defaultMessageEncoding MessageEncoding) func(*inter
 			return syserror.Newf("unknown MessageEncoding: %v", defaultMessageEncoding)
 		}
 		// if format option is not set and path is "-", default to bin
-		var (
-			format          string
-			compressionType internal.CompressionType
-		)
-
+		var format string
+		var compressionType internal.CompressionType
 		if rawRef.Path == "-" || app.IsDevNull(rawRef.Path) || app.IsDevStdin(rawRef.Path) || app.IsDevStdout(rawRef.Path) {
 			format = defaultFormat
 		} else {
@@ -838,7 +775,6 @@ func newProcessRawRefMessage(defaultMessageEncoding MessageEncoding) func(*inter
 				format = formatYAML
 			case ".gz":
 				compressionType = internal.CompressionTypeGzip
-
 				switch filepath.Ext(strings.TrimSuffix(rawRef.Path, filepath.Ext(rawRef.Path))) {
 				case ".bin", ".binpb":
 					format = formatBinpb
@@ -853,7 +789,6 @@ func newProcessRawRefMessage(defaultMessageEncoding MessageEncoding) func(*inter
 				}
 			case ".zst":
 				compressionType = internal.CompressionTypeZstd
-
 				switch filepath.Ext(strings.TrimSuffix(rawRef.Path, filepath.Ext(rawRef.Path))) {
 				case ".bin", ".binpb":
 					format = formatBinpb
@@ -870,10 +805,8 @@ func newProcessRawRefMessage(defaultMessageEncoding MessageEncoding) func(*inter
 				format = defaultFormat
 			}
 		}
-
 		rawRef.Format = format
 		rawRef.CompressionType = compressionType
-
 		return nil
 	}
 }
@@ -904,7 +837,6 @@ func assumeModuleOrDir(path string) (string, error) {
 	if path == "" {
 		return "", errors.New("assumeModuleOrDir: no path given")
 	}
-
 	if _, err := bufparse.ParseRef(path); err == nil {
 		// this is possible to be a module, check if it is a directory though
 		// OK to use os.Stat instead of os.Lstat here

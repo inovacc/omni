@@ -49,11 +49,9 @@ func rulesConfigForCheckConfig(
 
 func logRulesConfig(logger *slog.Logger, configName string, rulesConfig *rulesConfig, hasPolicyConfigs bool) {
 	logger.Debug("rulesConfig", slog.Any("ruleIDs", rulesConfig.RuleIDs))
-
 	if len(rulesConfig.RuleIDs) == 0 && !hasPolicyConfigs {
 		logger.Warn("No " + rulesConfig.RuleType.String() + " rules are configured in " + configName + ".")
 	}
-
 	warnReferencedDeprecatedIDs(logger, configName, rulesConfig)
 	warnUnusedPlugins(logger, configName, rulesConfig)
 }
@@ -94,7 +92,7 @@ type rulesConfig struct {
 	// This can be used for warning messages.
 	ReferencedDeprecatedCategoryIDToReplacementIDs map[string]map[string]struct{}
 	// UnusedPluginNameToRuleIDs contains a map from unused plugin name to the Rule IDs that
-	// plugin has.
+	// that plugin has.
 	//
 	// A plugin is unused if no rules from the plugin are configured.
 	//
@@ -171,7 +169,6 @@ func newRulesConfig(
 	// Gather all the referenced deprecated IDs into maps for the rulesConfig.
 	referencedDeprecatedRuleIDToReplacementIDs := make(map[string]map[string]struct{})
 	referencedDeprecatedCategoryIDToReplacementIDs := make(map[string]map[string]struct{})
-
 	for _, ids := range [][]string{
 		useRuleIDsAndCategoryIDs,
 		exceptRuleIDsAndCategoryIDs,
@@ -185,12 +182,10 @@ func newRulesConfig(
 					referencedIDMap = make(map[string]struct{})
 					referencedDeprecatedRuleIDToReplacementIDs[id] = referencedIDMap
 				}
-
 				for _, replacementRuleID := range replacementRuleIDs {
 					referencedIDMap[replacementRuleID] = struct{}{}
 				}
 			}
-
 			replacementCategoryIDs, ok := deprecatedCategoryIDToReplacementCategoryIDs[id]
 			if ok {
 				referencedIDMap, ok2 := referencedDeprecatedCategoryIDToReplacementIDs[id]
@@ -198,7 +193,6 @@ func newRulesConfig(
 					referencedIDMap = make(map[string]struct{})
 					referencedDeprecatedCategoryIDToReplacementIDs[id] = referencedIDMap
 				}
-
 				for _, replacementCategoryID := range replacementCategoryIDs {
 					referencedIDMap[replacementCategoryID] = struct{}{}
 				}
@@ -211,7 +205,6 @@ func newRulesConfig(
 	if len(useRuleIDsAndCategoryIDs) == 0 {
 		useRuleIDsAndCategoryIDs = xslices.Map(xslices.Filter(allRulesForType, func(rule Rule) bool { return rule.Default() }), Rule.ID)
 	}
-
 	exceptRuleIDsAndCategoryIDs = xstrings.SliceToUniqueSortedSliceFilterEmptyStrings(exceptRuleIDsAndCategoryIDs)
 	if len(useRuleIDsAndCategoryIDs) == 0 && len(exceptRuleIDsAndCategoryIDs) == 0 {
 		return nil, syserror.New("use and except should always be non-empty at this point")
@@ -222,9 +215,7 @@ func newRulesConfig(
 	if err != nil {
 		return nil, err
 	}
-
 	categoryIDToRuleIDs := getCategoryIDToRuleIDs(ruleIDToCategoryIDs)
-
 	useRuleIDs, err := transformRuleOrCategoryIDsToRuleIDs(
 		useRuleIDsAndCategoryIDs,
 		ruleIDToCategoryIDs,
@@ -233,7 +224,6 @@ func newRulesConfig(
 	if err != nil {
 		return nil, err
 	}
-
 	exceptRuleIDs, err := transformRuleOrCategoryIDsToRuleIDs(
 		exceptRuleIDsAndCategoryIDs,
 		ruleIDToCategoryIDs,
@@ -242,7 +232,6 @@ func newRulesConfig(
 	if err != nil {
 		return nil, err
 	}
-
 	ignoreRuleIDToRootPathMap, err := transformRuleOrCategoryIDToIgnoreRootPathsToRuleIDs(
 		ignoreRuleIDOrCategoryIDToRootPathMap,
 		ruleIDToCategoryIDs,
@@ -268,29 +257,23 @@ func newRulesConfig(
 
 	// Figure out result rules.
 	resultRuleIDToRule := make(map[string]Rule)
-
 	for _, ruleID := range useRuleIDs {
 		rule, ok := ruleIDToRule[ruleID]
 		if !ok {
 			return nil, fmt.Errorf("%q is not a known rule ID after verification", ruleID)
 		}
-
 		resultRuleIDToRule[rule.ID()] = rule
 	}
-
 	for _, ruleID := range exceptRuleIDs {
 		if _, ok := ruleIDToRule[ruleID]; !ok {
 			return nil, fmt.Errorf("%q is not a known rule ID after verification", ruleID)
 		}
-
 		delete(resultRuleIDToRule, ruleID)
 	}
-
 	resultRules := xslices.MapValuesToSlice(resultRuleIDToRule)
 	if len(resultRules) == 0 {
 		return nil, syserror.New("resultRules was empty")
 	}
-
 	sort.Slice(
 		resultRules,
 		func(i int, j int) bool {
@@ -303,7 +286,6 @@ func newRulesConfig(
 	if err != nil {
 		return nil, err
 	}
-
 	ignoreRuleIDToRootPathMap, err = normalizeKeyToIgnoreRootPathMap(ignoreRuleIDToRootPathMap)
 	if err != nil {
 		return nil, err
@@ -314,7 +296,6 @@ func newRulesConfig(
 	//
 	// Note this will only contain RuleIDs for the given RuleType.
 	unusedPluginNameToRuleIDs := getPluginNameToRuleOrCategoryIDs(allRulesForType)
-
 	for _, rule := range resultRules {
 		// If the rule is not from a builtin rule (i.e. PluginName() is not empty),
 		// delete the plugin name from the map.
@@ -328,12 +309,10 @@ func newRulesConfig(
 	if err != nil {
 		return nil, err
 	}
-
 	allRuleIDToCategoryIDs, err := getRuleIDToCategoryIDs(allRules)
 	if err != nil {
 		return nil, err
 	}
-
 	allCategoryIDToRuleIDs := getCategoryIDToRuleIDs(allRuleIDToCategoryIDs)
 	for _, checkConfig := range relatedCheckConfigs {
 		checkConfigUseRuleIDs, err := transformRuleOrCategoryIDsToRuleIDs(
@@ -344,7 +323,6 @@ func newRulesConfig(
 		if err != nil {
 			return nil, err
 		}
-
 		for _, checkConfigRuleID := range checkConfigUseRuleIDs {
 			// If a rule from a non-builtin plugin is found, then we remove it from the unused plugins.
 			if rule, ok := allRuleIDToRule[checkConfigRuleID]; rule.PluginName() != "" && ok {
@@ -387,11 +365,8 @@ func warnUnusedPlugins(logger *slog.Logger, configName string, rulesConfig *rule
 	if len(rulesConfig.UnusedPluginNameToRuleIDs) == 0 {
 		return
 	}
-
 	unusedPluginNames := xslices.MapKeysToSortedSlice(rulesConfig.UnusedPluginNameToRuleIDs)
-
 	var sb strings.Builder
-
 	_, _ = sb.WriteString("Your " + configName + " has plugins added which have no rules configured:\n\n")
 	for _, unusedPluginName := range unusedPluginNames {
 		_, _ = sb.WriteString("\t  - ")
@@ -400,11 +375,9 @@ func warnUnusedPlugins(logger *slog.Logger, configName string, rulesConfig *rule
 		_, _ = sb.WriteString(strings.Join(rulesConfig.UnusedPluginNameToRuleIDs[unusedPluginName], ","))
 		_, _ = sb.WriteString(")\n")
 	}
-
 	_, _ = sb.WriteString("\n\tThis is usually a configuration error. You must specify the rules or categories you want to use from this plugin.\n")
 	_, _ = sb.WriteString("\tFor example (selecting one rule from each plugin):\n\n\t")
 	_, _ = sb.WriteString(rulesConfig.RuleType.String())
-
 	_, _ = sb.WriteString("\n\t  use:\n")
 	for _, unusedPluginName := range unusedPluginNames {
 		_, _ = sb.WriteString("\t    - ")
@@ -413,7 +386,6 @@ func warnUnusedPlugins(logger *slog.Logger, configName string, rulesConfig *rule
 		_, _ = sb.WriteString(rulesConfig.UnusedPluginNameToRuleIDs[unusedPluginName][0])
 		_, _ = sb.WriteString("\n")
 	}
-
 	_, _ = sb.WriteString("\n\tIf you do not want to use these plugins, we recommend removing them from your configuration.")
 	logger.Warn(sb.String())
 }
@@ -427,9 +399,7 @@ func warnReferencedDeprecatedIDsForIDType(
 ) {
 	for _, deprecatedID := range xslices.MapKeysToSortedSlice(referencedDeprecatedIDToReplacementIDs) {
 		replacementIDs := xslices.MapKeysToSortedSlice(referencedDeprecatedIDToReplacementIDs[deprecatedID])
-
 		var replaceString string
-
 		switch len(replacementIDs) {
 		case 0:
 		case 1:
@@ -437,7 +407,6 @@ func warnReferencedDeprecatedIDsForIDType(
 		default:
 			replaceString = fmt.Sprintf(" It has been replaced by %s %s.", pluralIDType, strings.Join(replacementIDs, ", "))
 		}
-
 		var specialCallout string
 		if deprecatedID == "DEFAULT" {
 			specialCallout = fmt.Sprintf(`
@@ -449,7 +418,6 @@ func warnReferencedDeprecatedIDsForIDType(
 	are also default rules, the name has become overloaded.
 `, configName)
 		}
-
 		logger.Warn(
 			fmt.Sprintf(
 				"%s %s referenced in your %s is deprecated.%s%s\n\tAs with all buf changes, this change is backwards-compatible: %s will continue to work.\n\tWe recommend replacing %s in your %s, but no action is immediately necessary.",
@@ -472,26 +440,21 @@ func getIDToRuleOrCategory[R RuleOrCategory](ruleOrCategories []R) (map[string]R
 		if _, ok := m[ruleOrCategory.ID()]; ok {
 			return nil, syserror.Newf("duplicate rule or category ID: %q", ruleOrCategory.ID())
 		}
-
 		m[ruleOrCategory.ID()] = ruleOrCategory
 	}
-
 	return m, nil
 }
 
 func getPluginNameToRuleOrCategoryIDs[R RuleOrCategory](ruleOrCategories []R) map[string][]string {
 	m := make(map[string][]string)
-
 	for _, ruleOrCategory := range ruleOrCategories {
 		if pluginName := ruleOrCategory.PluginName(); pluginName != "" {
 			m[pluginName] = append(m[pluginName], ruleOrCategory.ID())
 		}
 	}
-
 	for _, ruleOrCategoryIDs := range m {
 		sort.Strings(ruleOrCategoryIDs)
 	}
-
 	return m
 }
 
@@ -501,23 +464,19 @@ func getRuleIDToCategoryIDs(rules []Rule) (map[string][]string, error) {
 		if _, ok := m[rule.ID()]; ok {
 			return nil, syserror.Newf("duplicate rule ID: %q", rule.ID())
 		}
-
 		m[rule.ID()] = xslices.Map(rule.Categories(), check.Category.ID)
 	}
-
 	return m, nil
 }
 
 func getCategoryIDToRuleIDs(ruleIDToCategoryIDs map[string][]string) map[string][]string {
 	categoryIDToRuleIDs := make(map[string][]string)
-
 	for id, categoryIDs := range ruleIDToCategoryIDs {
 		for _, categoryID := range categoryIDs {
 			// handles empty category as well
 			categoryIDToRuleIDs[categoryID] = append(categoryIDToRuleIDs[categoryID], id)
 		}
 	}
-
 	return categoryIDToRuleIDs
 }
 
@@ -529,13 +488,11 @@ func transformRuleOrCategoryIDsToRuleIDs(
 	if len(ruleOrCategoryIDs) == 0 {
 		return nil, nil
 	}
-
 	ruleIDMap := make(map[string]struct{}, len(ruleOrCategoryIDs))
 	for _, ruleOrCategoryID := range ruleOrCategoryIDs {
 		if ruleOrCategoryID == "" {
 			continue
 		}
-
 		if _, ok := ruleIDToCategoryIDs[ruleOrCategoryID]; ok {
 			ruleIDMap[ruleOrCategoryID] = struct{}{}
 		} else if ruleIDs, ok := categoryIDToRuleIDs[ruleOrCategoryID]; ok {
@@ -546,7 +503,6 @@ func transformRuleOrCategoryIDsToRuleIDs(
 			return nil, fmt.Errorf("%q is not a known rule or category ID", ruleOrCategoryID)
 		}
 	}
-
 	return xslices.MapKeysToSortedSlice(ruleIDMap), nil
 }
 
@@ -558,19 +514,16 @@ func transformRuleOrCategoryIDToIgnoreRootPathsToRuleIDs(
 	if len(ruleOrCategoryIDToIgnoreRootPaths) == 0 {
 		return nil, nil
 	}
-
 	ruleIDToIgnoreRootPaths := make(
 		map[string]map[string]struct{},
 		len(ruleOrCategoryIDToIgnoreRootPaths),
 	)
-
 	addRootPaths := func(ruleID string, rootPaths map[string]struct{}) {
 		ignoreRootPathMap, ok := ruleIDToIgnoreRootPaths[ruleID]
 		if !ok {
 			ignoreRootPathMap = make(map[string]struct{})
 			ruleIDToIgnoreRootPaths[ruleID] = ignoreRootPathMap
 		}
-
 		for rootPath := range rootPaths {
 			ignoreRootPathMap[rootPath] = struct{}{}
 		}
@@ -579,7 +532,6 @@ func transformRuleOrCategoryIDToIgnoreRootPathsToRuleIDs(
 		if ruleOrCategoryID == "" {
 			continue
 		}
-
 		if _, ok := ruleIDToCategoryIDs[ruleOrCategoryID]; ok {
 			addRootPaths(ruleOrCategoryID, rootPaths)
 		} else if ruleIDs, ok := categoryIDToRuleIDs[ruleOrCategoryID]; ok {
@@ -590,7 +542,6 @@ func transformRuleOrCategoryIDToIgnoreRootPathsToRuleIDs(
 			return nil, fmt.Errorf("%q is not a known rule or category ID", ruleOrCategoryID)
 		}
 	}
-
 	return ruleIDToIgnoreRootPaths, nil
 }
 
@@ -610,7 +561,6 @@ func transformRuleIDsToUndeprecated(
 			undeprecatedRuleIDMap[ruleID] = struct{}{}
 		}
 	}
-
 	return xslices.MapKeysToSortedSlice(undeprecatedRuleIDMap)
 }
 
@@ -622,14 +572,12 @@ func transformRuleIDToIgnoreRootPathsToUndeprecated(
 		map[string]map[string]struct{},
 		len(ruleIDToIgnoreRootPaths),
 	)
-
 	addRootPaths := func(ruleID string, rootPaths map[string]struct{}) {
 		ignoreRootPathMap, ok := undeprecatedRuleIDToIgnoreRootPaths[ruleID]
 		if !ok {
 			ignoreRootPathMap = make(map[string]struct{})
 			undeprecatedRuleIDToIgnoreRootPaths[ruleID] = ignoreRootPathMap
 		}
-
 		for rootPath := range rootPaths {
 			ignoreRootPathMap[rootPath] = struct{}{}
 		}
@@ -645,7 +593,6 @@ func transformRuleIDToIgnoreRootPathsToUndeprecated(
 			addRootPaths(ruleID, rootPaths)
 		}
 	}
-
 	return undeprecatedRuleIDToIgnoreRootPaths
 }
 
@@ -655,19 +602,15 @@ func normalizeIgnoreRootPaths(rootPaths []string) ([]string, error) {
 		if rootPath == "" {
 			continue
 		}
-
 		rootPath, err := normalpath.NormalizeAndValidate(rootPath)
 		if err != nil {
 			return nil, err
 		}
-
 		if rootPath == "." {
 			return nil, fmt.Errorf("cannot specify %q as an ignore path", rootPath)
 		}
-
 		rootPathMap[rootPath] = struct{}{}
 	}
-
 	return xslices.MapKeysToSortedSlice(rootPathMap), nil
 }
 
@@ -680,9 +623,7 @@ func normalizeKeyToIgnoreRootPathMap[K comparable](
 		if err != nil {
 			return nil, err
 		}
-
 		keyToNormalizedRootPathMap[key] = xslices.ToStructMap(rootPaths)
 	}
-
 	return keyToNormalizedRootPathMap, nil
 }

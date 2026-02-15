@@ -44,19 +44,15 @@ func checkTagRanges[R bufprotosource2.TagRange](
 	if len(previousRanges) == 0 {
 		return nil // nothing to check
 	}
-
 	collapsedRanges := collapseRanges(ranges)
-
 	for _, previousRange := range previousRanges {
 		start, end := previousRange.Start(), previousRange.End()
-
 		missingRanges := findMissing(start, end, collapsedRanges)
 		if len(missingRanges) > 0 {
 			elementKind, maxTag, err := classifyElementRange(element)
 			if err != nil {
 				return err
 			}
-
 			previousString := bufprotosource2.TagRangeString(previousRange)
 			removedString := missingRangesString(maxTag, missingRanges)
 			responseWriter.AddProtosourceAnnotationf(
@@ -72,7 +68,6 @@ func checkTagRanges[R bufprotosource2.TagRange](
 			)
 		}
 	}
-
 	return nil
 }
 
@@ -80,21 +75,17 @@ func collapseRanges[R tagRange](ranges []R) []simpleTagRange {
 	if len(ranges) == 0 {
 		return nil
 	}
-
 	sortedRanges := make([]simpleTagRange, len(ranges))
 	for i, curRange := range ranges {
 		start, end := curRange.Start(), curRange.End()
 		sortedRanges[i] = simpleTagRange{start, end}
 	}
-
 	sort.Slice(sortedRanges, func(i, j int) bool {
 		if sortedRanges[i].Start() == sortedRanges[j].Start() {
 			return sortedRanges[i].End() < sortedRanges[j].End()
 		}
-
 		return sortedRanges[i].Start() < sortedRanges[j].Start()
 	})
-
 	var j int
 	for i := 1; i < len(sortedRanges); i++ {
 		if sortedRanges[i].Start() <= sortedRanges[j].End()+1 {
@@ -102,16 +93,13 @@ func collapseRanges[R tagRange](ranges []R) []simpleTagRange {
 			if sortedRanges[i].End() > sortedRanges[j].End() {
 				sortedRanges[j][1] = sortedRanges[i].End()
 			}
-
 			continue
 		}
-
 		j++
 		if i != j {
 			sortedRanges[j] = sortedRanges[i]
 		}
 	}
-
 	return sortedRanges[:j+1]
 }
 
@@ -119,19 +107,15 @@ func findMissing(start, end int, collapsedRanges []simpleTagRange) []simpleTagRa
 	index := sort.Search(len(collapsedRanges), func(i int) bool {
 		return collapsedRanges[i].End() >= start
 	})
-
 	var entryStart, entryEnd int
 	if index < len(collapsedRanges) {
 		entryStart, entryEnd = collapsedRanges[index].Start(), collapsedRanges[index].End()
 	}
-
 	var missingRanges []simpleTagRange
-
 	if index >= len(collapsedRanges) || entryStart > end {
 		// No overlapping ranges; entire span is missing
 		return []simpleTagRange{{start, end}}
 	}
-
 	for {
 		if start < entryStart {
 			if end < entryStart {
@@ -140,22 +124,17 @@ func findMissing(start, end int, collapsedRanges []simpleTagRange) []simpleTagRa
 				missingRanges = append(missingRanges, simpleTagRange{start, entryStart - 1})
 			}
 		}
-
 		start = entryEnd + 1
-
 		index++
 		if index >= len(collapsedRanges) || entryEnd >= end {
 			// no further to go or no need to go further
 			break
 		}
-
 		entryStart, entryEnd = collapsedRanges[index].Start(), collapsedRanges[index].End()
 	}
-
 	if end > entryEnd {
 		missingRanges = append(missingRanges, simpleTagRange{entryEnd + 1, end})
 	}
-
 	return missingRanges
 }
 
@@ -165,7 +144,6 @@ func classifyElementRange(element bufprotosource2.Descriptor) (elementKind strin
 		if element.MessageSetWireFormat() {
 			return "message", bufprotosource2.MessageSetRangeInclusiveMax, nil
 		}
-
 		return "message", bufprotosource2.MessageRangeInclusiveMax, nil
 	case bufprotosource2.Enum:
 		return "enum", bufprotosource2.EnumRangeInclusiveMax, nil
@@ -178,7 +156,6 @@ func missingRangesString(maxTag int, missingRanges []simpleTagRange) string {
 	removedStrings := make([]string, len(missingRanges))
 	for i, missingRange := range missingRanges {
 		start := missingRange.Start()
-
 		end := missingRange.End()
 		switch {
 		case start == end:
@@ -189,6 +166,5 @@ func missingRangesString(maxTag int, missingRanges []simpleTagRange) string {
 			removedStrings[i] = fmt.Sprintf("[%d,%d]", start, end)
 		}
 	}
-
 	return strings.Join(removedStrings, ", ")
 }

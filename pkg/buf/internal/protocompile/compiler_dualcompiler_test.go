@@ -33,7 +33,6 @@ func TestDualCompiler_ParseFilesMessageComments(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		t.Skip("Skipped on Windows: test data files have different line endings")
 	}
-
 	t.Parallel()
 
 	skip := dualcompiler.SkipConfig{
@@ -60,22 +59,18 @@ func TestDualCompiler_ParseFilesMessageComments(t *testing.T) {
 
 			comments := ""
 			expected := " Comment for TestMessage\n"
-
 			for _, compiledFile := range result.Files() {
 				file, err := compiledFile.FileDescriptor()
 				require.NoError(t, err)
-
 				msg := file.Messages().ByName("TestMessage")
 				if msg != nil {
 					si := file.SourceLocations().ByDescriptor(msg)
 					if si.Path != nil {
 						comments = si.LeadingComments
 					}
-
 					break
 				}
 			}
-
 			assert.Equal(t, expected, comments)
 		},
 	)
@@ -105,7 +100,6 @@ func TestDualCompiler_ParseFilesWithImportsNoImportPath(t *testing.T) {
 		opts,
 		func(t *testing.T, oldCompiler, newCompiler dualcompiler.CompilerInterface) (oldResult, newResult dualcompiler.CompilationResult) {
 			var err error
-
 			oldResult, err = oldCompiler.Compile(t.Context(), relFilePaths...)
 			require.NoError(t, err)
 
@@ -157,7 +151,6 @@ message Foo {
 
 			file, err := result.Files()[0].FileDescriptor()
 			require.NoError(t, err)
-
 			field := file.Messages().Get(0).Fields().Get(0)
 			comment := file.SourceLocations().ByDescriptor(field).LeadingComments
 			assert.Equal(t, " leading comments\n", comment)

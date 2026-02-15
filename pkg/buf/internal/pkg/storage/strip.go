@@ -44,7 +44,6 @@ func (r *stripReadBucket) Get(ctx context.Context, path string) (ReadObjectClose
 	if err != nil {
 		return nil, err
 	}
-
 	return stripReadObjectCloserExternalPath(readObjectCloser), nil
 }
 
@@ -53,7 +52,6 @@ func (r *stripReadBucket) Stat(ctx context.Context, path string) (ObjectInfo, er
 	if err != nil {
 		return nil, err
 	}
-
 	return stripObjectInfoExternalPath(objectInfo), nil
 }
 
@@ -72,7 +70,6 @@ func stripObjectInfoExternalPath(objectInfo ObjectInfo) ObjectInfo {
 	if path == objectInfo.ExternalPath() {
 		return objectInfo
 	}
-
 	return storageutil.NewObjectInfo(path, path, objectInfo.LocalPath())
 }
 
@@ -80,6 +77,5 @@ func stripReadObjectCloserExternalPath(readObjectCloser ReadObjectCloser) ReadOb
 	if readObjectCloser.Path() == readObjectCloser.ExternalPath() {
 		return readObjectCloser
 	}
-
 	return compositeReadObjectCloser{stripObjectInfoExternalPath(readObjectCloser), readObjectCloser}
 }

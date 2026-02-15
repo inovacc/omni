@@ -37,20 +37,16 @@ func Before(
 	if err != nil {
 		return nil, nil, err
 	}
-
 	againstProtosourceFiles, err := protosourceFilesForFileDescriptors(ctx, request.AgainstFileDescriptors())
 	if err != nil {
 		return nil, nil, err
 	}
-
 	if len(protosourceFiles) > 0 {
 		ctx = context.WithValue(ctx, protosourceFilesContextKey{}, protosourceFiles)
 	}
-
 	if len(againstProtosourceFiles) > 0 {
 		ctx = context.WithValue(ctx, againstProtosourceFilesContextKey{}, againstProtosourceFiles)
 	}
-
 	return ctx, request, nil
 }
 
@@ -70,7 +66,6 @@ func NewRuleHandler(
 		) error {
 			protosourceFiles, _ := ctx.Value(protosourceFilesContextKey{}).([]bufprotosource.File)
 			againstProtosourceFiles, _ := ctx.Value(againstProtosourceFilesContextKey{}).([]bufprotosource.File)
-
 			return f(
 				ctx,
 				newResponseWriter(responseWriter),
@@ -97,7 +92,6 @@ func (h multiRuleHandler) Handle(ctx context.Context, responseWriter check.Respo
 			return err
 		}
 	}
-
 	return nil
 }
 
@@ -105,7 +99,6 @@ func protosourceFilesForFileDescriptors(ctx context.Context, fileDescriptors []d
 	if len(fileDescriptors) == 0 {
 		return nil, nil
 	}
-
 	resolver, err := protodesc.NewFiles(
 		&descriptorpb.FileDescriptorSet{
 			File: xslices.Map(fileDescriptors, descriptor.FileDescriptor.FileDescriptorProto),
@@ -114,6 +107,5 @@ func protosourceFilesForFileDescriptors(ctx context.Context, fileDescriptors []d
 	if err != nil {
 		return nil, err
 	}
-
 	return bufprotosource.NewFiles(ctx, xslices.Map(fileDescriptors, newInputFile), resolver)
 }

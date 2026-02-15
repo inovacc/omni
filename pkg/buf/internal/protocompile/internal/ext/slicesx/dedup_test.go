@@ -28,7 +28,6 @@ func TestDedup(t *testing.T) {
 	t.Parallel()
 
 	type V [2]int
-
 	first := func(x V) int { return x[0] }
 	second := func(x V) int { return x[1] }
 	tests := []struct {

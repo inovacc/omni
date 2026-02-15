@@ -371,13 +371,11 @@ func testVisitors(methodCalled *string) (*SimpleVisitor, []*SimpleVisitor) {
 			DoVisitMessageFieldNode: v.DoVisitMessageFieldNode,
 		},
 	}
-
 	return v, others
 }
 
 func TestVisitorAll(t *testing.T) {
 	t.Parallel()
-
 	testCases := map[Node][]string{
 		(*EnumNode)(nil): {
 			"*EnumNode", "CompositeNode", "Node",
@@ -499,25 +497,18 @@ func TestVisitorAll(t *testing.T) {
 		expectedCalls := testCases[n]
 		t.Run(fmt.Sprintf("%T", n), func(t *testing.T) {
 			t.Parallel()
-
 			var call string
-
 			v, all := testVisitors(&call)
 			_ = Visit(n, v)
-
 			assert.Equal(t, expectedCalls[0], call)
-
 			var allCalls []string
-
 			for _, v := range all {
 				call = ""
 				_ = Visit(n, v)
-
 				if call != "" {
 					allCalls = append(allCalls, call)
 				}
 			}
-
 			sort.Strings(allCalls)
 			sort.Strings(expectedCalls)
 			assert.Equal(t, expectedCalls, allCalls)
@@ -532,162 +523,128 @@ func TestVisitorPriorityOrder(t *testing.T) {
 
 	t.Run("StringLiteralNode", func(t *testing.T) {
 		t.Parallel()
-
 		var call string
-
 		v, _ := testVisitors(&call)
 		n := (*StringLiteralNode)(nil)
 
 		v.DoVisitStringLiteralNode = nil
 		_ = Visit(n, v)
-
 		assert.Equal(t, "StringValueNode", call)
 		call = ""
 		v.DoVisitStringValueNode = nil
 		_ = Visit(n, v)
-
 		assert.Equal(t, "ValueNode", call)
 		call = ""
 		v.DoVisitValueNode = nil
 		_ = Visit(n, v)
-
 		assert.Equal(t, "TerminalNode", call)
 		call = ""
 		v.DoVisitTerminalNode = nil
 		_ = Visit(n, v)
-
 		assert.Equal(t, "Node", call)
 		call = ""
 		v.DoVisitNode = nil
 		_ = Visit(n, v)
-
 		assert.Equal(t, "", call)
 	})
 	t.Run("CompoundStringLiteralNode", func(t *testing.T) {
 		t.Parallel()
-
 		var call string
-
 		v, _ := testVisitors(&call)
 		n := (*CompoundStringLiteralNode)(nil)
 
 		v.DoVisitCompoundStringLiteralNode = nil
 		_ = Visit(n, v)
-
 		assert.Equal(t, "StringValueNode", call)
 		call = ""
 		v.DoVisitStringValueNode = nil
 		_ = Visit(n, v)
-
 		assert.Equal(t, "ValueNode", call)
 		call = ""
 		v.DoVisitValueNode = nil
 		_ = Visit(n, v)
-
 		assert.Equal(t, "CompositeNode", call)
 		call = ""
 		v.DoVisitCompositeNode = nil
 		_ = Visit(n, v)
-
 		assert.Equal(t, "Node", call)
 		call = ""
 		v.DoVisitNode = nil
 		_ = Visit(n, v)
-
 		assert.Equal(t, "", call)
 	})
 	t.Run("UintLiteralNode", func(t *testing.T) {
 		t.Parallel()
-
 		var call string
-
 		v, _ := testVisitors(&call)
 		n := (*UintLiteralNode)(nil)
 
 		v.DoVisitUintLiteralNode = nil
 		_ = Visit(n, v)
-
 		assert.Equal(t, "IntValueNode", call)
 		call = ""
 		v.DoVisitIntValueNode = nil
 		_ = Visit(n, v)
-
 		assert.Equal(t, "FloatValueNode", call)
 		call = ""
 		v.DoVisitFloatValueNode = nil
 		_ = Visit(n, v)
-
 		assert.Equal(t, "ValueNode", call)
 		call = ""
 		v.DoVisitValueNode = nil
 		_ = Visit(n, v)
-
 		assert.Equal(t, "TerminalNode", call)
 		call = ""
 		v.DoVisitTerminalNode = nil
 		_ = Visit(n, v)
-
 		assert.Equal(t, "Node", call)
 		call = ""
 		v.DoVisitNode = nil
 		_ = Visit(n, v)
-
 		assert.Equal(t, "", call)
 	})
 	t.Run("GroupNode", func(t *testing.T) {
 		t.Parallel()
-
 		var call string
-
 		v, _ := testVisitors(&call)
 		n := (*GroupNode)(nil)
 
 		v.DoVisitGroupNode = nil
 		_ = Visit(n, v)
-
 		assert.Equal(t, "FieldDeclNode", call)
 		call = ""
 		v.DoVisitFieldDeclNode = nil
 		_ = Visit(n, v)
-
 		assert.Equal(t, "CompositeNode", call)
 		call = ""
 		v.DoVisitCompositeNode = nil
 		_ = Visit(n, v)
-
 		assert.Equal(t, "Node", call)
 		call = ""
 		v.DoVisitNode = nil
 		_ = Visit(n, v)
-
 		assert.Equal(t, "", call)
 	})
 	t.Run("MapFieldNode", func(t *testing.T) {
 		t.Parallel()
-
 		var call string
-
 		v, _ := testVisitors(&call)
 		n := (*MapFieldNode)(nil)
 
 		v.DoVisitMapFieldNode = nil
 		_ = Visit(n, v)
-
 		assert.Equal(t, "FieldDeclNode", call)
 		call = ""
 		v.DoVisitFieldDeclNode = nil
 		_ = Visit(n, v)
-
 		assert.Equal(t, "CompositeNode", call)
 		call = ""
 		v.DoVisitCompositeNode = nil
 		_ = Visit(n, v)
-
 		assert.Equal(t, "Node", call)
 		call = ""
 		v.DoVisitNode = nil
 		_ = Visit(n, v)
-
 		assert.Equal(t, "", call)
 	})
 }
@@ -770,15 +727,12 @@ FloatValueNode
 *MessageFieldNode
 `
 	strs := strings.Split(types, "\n")
-
 	fmt.Println(`func testVisitors(methodCalled *string) (*Visitor, []*Visitor) {`)
 	fmt.Println(`	v := &SimpleVisitor{`)
-
 	for _, str := range strs {
 		if str == "" {
 			continue
 		}
-
 		name := strings.TrimPrefix(str, "*")
 		fmt.Printf(`		DoVisit%s: func(%s) error {`, name, str)
 		fmt.Println()
@@ -787,23 +741,18 @@ FloatValueNode
 		fmt.Println(`			return nil`)
 		fmt.Println(`		},`)
 	}
-
 	fmt.Println(`	}`)
 	fmt.Println(`	others := []*SimpleVisitor{`)
-
 	for _, str := range strs {
 		if str == "" {
 			continue
 		}
-
 		name := strings.TrimPrefix(str, "*")
-
 		fmt.Println(`		{`)
 		fmt.Printf(`			DoVisit%s: v.DoVisit%s,`, name, name)
 		fmt.Println()
 		fmt.Println(`		},`)
 	}
-
 	fmt.Println(`	}`)
 	fmt.Println(`}`)
 }

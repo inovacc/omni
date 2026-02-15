@@ -28,7 +28,6 @@ import (
 func TestDotnetTargetPlatformMapping(t *testing.T) {
 	t.Parallel()
 	assert.Len(t, stringToDotnetTargetFramework, len(registryv1alpha1.DotnetTargetFramework_name)-1)
-
 	for value := range registryv1alpha1.DotnetTargetFramework_name {
 		targetFramework := registryv1alpha1.DotnetTargetFramework(value)
 		if targetFramework == registryv1alpha1.DotnetTargetFramework_DOTNET_TARGET_FRAMEWORK_UNSPECIFIED {
@@ -47,9 +46,7 @@ func TestDotnetTargetPlatformExternalConfigMapping(t *testing.T) {
 	// We validate the string values for target frameworks in bufremoteconfig.
 	// This test will fail if we add a new target framework to the proto and didn't update the validation.
 	t.Parallel()
-
 	ctx := context.Background()
-
 	for targetFrameworkStr := range stringToDotnetTargetFramework {
 		externalCfg := fmt.Sprintf(
 			`version: v1

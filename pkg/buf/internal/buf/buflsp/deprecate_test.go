@@ -386,22 +386,18 @@ func testCodeActionDeprecate(
 	expectedEdits []protocol.TextEdit,
 ) {
 	t.Helper()
-
 	name := filename
 	if expectedTitle != "" {
 		name = expectedTitle
 	}
-
 	t.Run(name, func(t *testing.T) {
 		t.Parallel()
-
 		testProtoPath, err := filepath.Abs(filename)
 		require.NoError(t, err)
 
 		clientJSONConn, testURI := setupLSPServer(t, testProtoPath)
 
 		var codeActions []protocol.CodeAction
-
 		_, err = clientJSONConn.Call(t.Context(), protocol.MethodTextDocumentCodeAction, protocol.CodeActionParams{
 			TextDocument: protocol.TextDocumentIdentifier{
 				URI: testURI,
@@ -420,7 +416,6 @@ func testCodeActionDeprecate(
 
 		// Find the deprecate code action
 		var deprecateAction *protocol.CodeAction
-
 		for _, codeAction := range codeActions {
 			if codeAction.Kind == protocol.RefactorRewrite {
 				deprecateAction = &codeAction
@@ -463,14 +458,12 @@ func testCodeActionDeprecateNoEdit(
 	t.Helper()
 	t.Run(filename, func(t *testing.T) {
 		t.Parallel()
-
 		testProtoPath, err := filepath.Abs(filename)
 		require.NoError(t, err)
 
 		clientJSONConn, testURI := setupLSPServer(t, testProtoPath)
 
 		var codeActions []protocol.CodeAction
-
 		_, err = clientJSONConn.Call(t.Context(), protocol.MethodTextDocumentCodeAction, protocol.CodeActionParams{
 			TextDocument: protocol.TextDocumentIdentifier{
 				URI: testURI,
@@ -489,7 +482,6 @@ func testCodeActionDeprecateNoEdit(
 
 		// Find the deprecate code action
 		var deprecateAction *protocol.CodeAction
-
 		for _, codeAction := range codeActions {
 			if codeAction.Kind == protocol.RefactorRewrite {
 				deprecateAction = &codeAction

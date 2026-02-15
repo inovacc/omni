@@ -94,7 +94,6 @@ func TestCollapseRanges(t *testing.T) {
 
 func TestFindMissing(t *testing.T) {
 	t.Parallel()
-
 	ranges := []simpleTagRange{
 		{10, 100},
 		{200, 200},
@@ -129,7 +128,6 @@ func TestFindMissing(t *testing.T) {
 
 func doCollapseRanges(t *testing.T, input, expected []simpleTagRange) {
 	t.Helper()
-
 	collapsed := collapseRanges(input)
 	assert.Equal(t, expected, collapsed)
 	// Try some random permutations of the inputs and make sure

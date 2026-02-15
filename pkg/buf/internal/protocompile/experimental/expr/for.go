@@ -52,7 +52,6 @@ func (e For) AsAny() Expr {
 	if e.IsZero() {
 		return Expr{}
 	}
-
 	return id.WrapDyn(e.Context(), id.NewDyn(KindFor, id.ID[Expr](e.ID())))
 }
 
@@ -61,7 +60,6 @@ func (e For) ForToken() token.Token {
 	if e.IsZero() {
 		return token.Zero
 	}
-
 	return id.Wrap(e.Context().Stream(), e.Raw().forT)
 }
 
@@ -70,7 +68,6 @@ func (e For) InToken() token.Token {
 	if e.IsZero() {
 		return token.Zero
 	}
-
 	return id.Wrap(e.Context().Stream(), e.Raw().inT)
 }
 
@@ -79,7 +76,6 @@ func (e For) Vars() Params {
 	if e.IsZero() {
 		return Params{}
 	}
-
 	return id.Wrap(e.Context(), e.Raw().vars)
 }
 
@@ -88,7 +84,6 @@ func (e For) Iterator() Expr {
 	if e.IsZero() {
 		return Expr{}
 	}
-
 	return id.WrapDyn(e.Context(), e.Raw().iter)
 }
 
@@ -97,7 +92,6 @@ func (e For) Block() Block {
 	if e.IsZero() {
 		return Block{}
 	}
-
 	return id.Wrap(e.Context(), e.Raw().block)
 }
 

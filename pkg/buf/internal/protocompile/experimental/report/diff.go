@@ -60,11 +60,8 @@ func (h hunk) bold(ss *styleSheet) string {
 // hunkDiff computes edit hunks for a diff.
 func hunkDiff(span source.Span, edits []Edit) (source.Span, []hunk) {
 	out := make([]hunk, 0, len(edits)*3+1)
-
 	var prev int
-
 	span, edits = offsetsForDiffing(span, edits)
-
 	src := span.Text()
 	for _, edit := range edits {
 		out = append(out,
@@ -74,7 +71,6 @@ func hunkDiff(span source.Span, edits []Edit) (source.Span, []hunk) {
 		)
 		prev = edit.End
 	}
-
 	return span, append(out, hunk{hunkUnchanged, src[prev:]})
 }
 
@@ -86,7 +82,6 @@ func unifiedDiff(span source.Span, edits []Edit) (source.Span, []hunk) {
 	// Sort the edits such that they are ordered by starting offset.
 	span, edits = offsetsForDiffing(span, edits)
 	src := span.Text()
-
 	sort.Slice(edits, func(i, j int) bool {
 		return edits[i].Start < edits[j].End
 	})
@@ -95,15 +90,12 @@ func unifiedDiff(span source.Span, edits []Edit) (source.Span, []hunk) {
 	// all edit spans whose end and start are not separated by a newline.
 	parts := slicesx.SplitAfterFunc(edits, func(i int, edit Edit) bool {
 		next, ok := slicesx.Get(edits, i+1)
-
 		return ok && edit.End < next.Start && // Go treats str[x:y] for x > y as an error.
 			strings.Contains(src[edit.End:next.Start], "\n")
 	})
 
-	var out []hunk
-
+	var out []hunk //nolint:prealloc // False positive.
 	var prevHunk int
-
 	for edits := range parts {
 		if len(edits) == 0 {
 			continue
@@ -123,19 +115,16 @@ func unifiedDiff(span source.Span, edits []Edit) (source.Span, []hunk) {
 
 		// Now, apply the edits to original to produce the modified result.
 		var buf strings.Builder
-
 		prev := 0
 		for _, edit := range edits {
 			buf.WriteString(original[prev:max(prev, edit.Start-start)])
 			buf.WriteString(edit.Replace)
 			prev = edit.End - start
 		}
-
 		buf.WriteString(original[prev:])
 
 		unchanged := src[prevHunk:start]
 		deleted := src[start:end]
-
 		added := buf.String()
 		if stripped, ok := strings.CutPrefix(added, deleted); ok &&
 			strings.HasPrefix(stripped, "\n") {
@@ -149,7 +138,6 @@ func unifiedDiff(span source.Span, edits []Edit) (source.Span, []hunk) {
 		trim := func(s string) string {
 			s = strings.TrimPrefix(s, "\n")
 			s = strings.TrimSuffix(s, "\n")
-
 			return s
 		}
 
@@ -162,7 +150,6 @@ func unifiedDiff(span source.Span, edits []Edit) (source.Span, []hunk) {
 
 		prevHunk = end
 	}
-
 	return span, append(out, hunk{hunkUnchanged, src[prevHunk:]})
 }
 
@@ -171,13 +158,10 @@ func unifiedDiff(span source.Span, edits []Edit) (source.Span, []hunk) {
 // span.
 func offsetsForDiffing(span source.Span, edits []Edit) (source.Span, []Edit) {
 	edits = slices.Clone(edits)
-
 	var start, end int
-
 	for i := range edits {
 		e := &edits[i]
 		e.Start += span.Start
-
 		e.End += span.Start
 		if i == 0 {
 			start, end = e.Start, e.End

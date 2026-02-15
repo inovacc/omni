@@ -19,11 +19,11 @@ import (
 	"fmt"
 	"time"
 
-	"connectrpc.com/connect"
 	"github.com/google/uuid"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufmodule"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufparse"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufregistryapi/bufregistryapimodule"
+	"connectrpc.com/connect"
 	modulev1 "github.com/inovacc/omni/pkg/buf/internal/gen/bufbuild/registry/protocolbuffers/go/buf/registry/module/v1"
 	modulev1beta1 "github.com/inovacc/omni/pkg/buf/internal/gen/bufbuild/registry/protocolbuffers/go/buf/registry/module/v1beta1"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/syserror"
@@ -42,31 +42,29 @@ type universalProtoCommit struct {
 }
 
 func newUniversalProtoCommitForV1(v1ProtoCommit *modulev1.Commit) (*universalProtoCommit, error) {
-	digest, err := V1ProtoToDigest(v1ProtoCommit.GetDigest())
+	digest, err := V1ProtoToDigest(v1ProtoCommit.Digest)
 	if err != nil {
 		return nil, err
 	}
-
 	return &universalProtoCommit{
-		ID:         v1ProtoCommit.GetId(),
-		OwnerID:    v1ProtoCommit.GetOwnerId(),
-		ModuleID:   v1ProtoCommit.GetModuleId(),
-		CreateTime: v1ProtoCommit.GetCreateTime().AsTime(),
+		ID:         v1ProtoCommit.Id,
+		OwnerID:    v1ProtoCommit.OwnerId,
+		ModuleID:   v1ProtoCommit.ModuleId,
+		CreateTime: v1ProtoCommit.CreateTime.AsTime(),
 		Digest:     digest,
 	}, nil
 }
 
 func newUniversalProtoCommitForV1Beta1(v1beta1ProtoCommit *modulev1beta1.Commit) (*universalProtoCommit, error) {
-	digest, err := V1Beta1ProtoToDigest(v1beta1ProtoCommit.GetDigest())
+	digest, err := V1Beta1ProtoToDigest(v1beta1ProtoCommit.Digest)
 	if err != nil {
 		return nil, err
 	}
-
 	return &universalProtoCommit{
-		ID:         v1beta1ProtoCommit.GetId(),
-		OwnerID:    v1beta1ProtoCommit.GetOwnerId(),
-		ModuleID:   v1beta1ProtoCommit.GetModuleId(),
-		CreateTime: v1beta1ProtoCommit.GetCreateTime().AsTime(),
+		ID:         v1beta1ProtoCommit.Id,
+		OwnerID:    v1beta1ProtoCommit.OwnerId,
+		ModuleID:   v1beta1ProtoCommit.ModuleId,
+		CreateTime: v1beta1ProtoCommit.CreateTime.AsTime(),
 		Digest:     digest,
 	}, nil
 }
@@ -102,21 +100,17 @@ func getUniversalProtoCommitsForRegistryAndCommitIDs(
 	switch digestType {
 	case bufmodule.DigestTypeB4:
 		v1beta1ProtoResourceRefs := commitIDsToV1Beta1ProtoResourceRefs(commitIDs)
-
 		v1beta1ProtoCommits, err := getV1Beta1ProtoCommitsForRegistryAndResourceRefs(ctx, moduleClientProvider, registry, v1beta1ProtoResourceRefs, digestType)
 		if err != nil {
 			return nil, err
 		}
-
 		return xslices.MapError(v1beta1ProtoCommits, newUniversalProtoCommitForV1Beta1)
 	case bufmodule.DigestTypeB5:
 		v1ProtoResourceRefs := commitIDsToV1ProtoResourceRefs(commitIDs)
-
 		v1ProtoCommits, err := getV1ProtoCommitsForRegistryAndResourceRefs(ctx, moduleClientProvider, registry, v1ProtoResourceRefs)
 		if err != nil {
 			return nil, err
 		}
-
 		return xslices.MapError(v1ProtoCommits, newUniversalProtoCommitForV1)
 	default:
 		return nil, syserror.Newf("unknown DigestType: %v", digestType)
@@ -136,21 +130,17 @@ func getUniversalProtoCommitsForRegistryAndModuleRefs(
 	switch digestType {
 	case bufmodule.DigestTypeB4:
 		v1beta1ProtoResourceRefs := moduleRefsToV1Beta1ProtoResourceRefs(moduleRefs)
-
 		v1beta1ProtoCommits, err := getV1Beta1ProtoCommitsForRegistryAndResourceRefs(ctx, moduleClientProvider, registry, v1beta1ProtoResourceRefs, digestType)
 		if err != nil {
 			return nil, err
 		}
-
 		return xslices.MapError(v1beta1ProtoCommits, newUniversalProtoCommitForV1Beta1)
 	case bufmodule.DigestTypeB5:
 		v1ProtoResourceRefs := moduleRefsToV1ProtoResourceRefs(moduleRefs)
-
 		v1ProtoCommits, err := getV1ProtoCommitsForRegistryAndResourceRefs(ctx, moduleClientProvider, registry, v1ProtoResourceRefs)
 		if err != nil {
 			return nil, err
 		}
-
 		return xslices.MapError(v1ProtoCommits, newUniversalProtoCommitForV1)
 	default:
 		return nil, syserror.Newf("unknown DigestType: %v", digestType)
@@ -175,12 +165,10 @@ func getV1ProtoCommitsForRegistryAndResourceRefs(
 	if err != nil {
 		return nil, maybeNewNotFoundError(err)
 	}
-
-	if len(response.Msg.GetCommits()) != len(v1ProtoResourceRefs) {
-		return nil, fmt.Errorf("expected %d Commits, got %d", len(v1ProtoResourceRefs), len(response.Msg.GetCommits()))
+	if len(response.Msg.Commits) != len(v1ProtoResourceRefs) {
+		return nil, fmt.Errorf("expected %d Commits, got %d", len(v1ProtoResourceRefs), len(response.Msg.Commits))
 	}
-
-	return response.Msg.GetCommits(), nil
+	return response.Msg.Commits, nil
 }
 
 func getV1Beta1ProtoCommitsForRegistryAndResourceRefs(
@@ -194,7 +182,6 @@ func getV1Beta1ProtoCommitsForRegistryAndResourceRefs(
 	if err != nil {
 		return nil, err
 	}
-
 	response, err := moduleClientProvider.V1Beta1CommitServiceClient(registry).GetCommits(
 		ctx,
 		connect.NewRequest(
@@ -208,10 +195,8 @@ func getV1Beta1ProtoCommitsForRegistryAndResourceRefs(
 	if err != nil {
 		return nil, maybeNewNotFoundError(err)
 	}
-
-	if len(response.Msg.GetCommits()) != len(v1beta1ProtoResourceRefs) {
-		return nil, fmt.Errorf("expected %d Commits, got %d", len(v1beta1ProtoResourceRefs), len(response.Msg.GetCommits()))
+	if len(response.Msg.Commits) != len(v1beta1ProtoResourceRefs) {
+		return nil, fmt.Errorf("expected %d Commits, got %d", len(v1beta1ProtoResourceRefs), len(response.Msg.Commits))
 	}
-
-	return response.Msg.GetCommits(), nil
+	return response.Msg.Commits, nil
 }

@@ -74,24 +74,19 @@ func (p *pluginDataStore) GetPluginDatasForPluginKeys(
 	ctx context.Context,
 	pluginKeys []bufplugin2.PluginKey,
 ) ([]bufplugin2.PluginData, []bufplugin2.PluginKey, error) {
-	var (
-		foundPluginDatas   []bufplugin2.PluginData
-		notFoundPluginKeys []bufplugin2.PluginKey
-	)
-
+	var foundPluginDatas []bufplugin2.PluginData
+	var notFoundPluginKeys []bufplugin2.PluginKey
 	for _, pluginKey := range pluginKeys {
 		pluginData, err := p.getPluginDataForPluginKey(ctx, pluginKey)
 		if err != nil {
 			if !errors.Is(err, fs.ErrNotExist) {
 				return nil, nil, err
 			}
-
 			notFoundPluginKeys = append(notFoundPluginKeys, pluginKey)
 		} else {
 			foundPluginDatas = append(foundPluginDatas, pluginData)
 		}
 	}
-
 	return foundPluginDatas, notFoundPluginKeys, nil
 }
 
@@ -104,7 +99,6 @@ func (p *pluginDataStore) PutPluginDatas(
 			return err
 		}
 	}
-
 	return nil
 }
 
@@ -117,13 +111,11 @@ func (p *pluginDataStore) getPluginDataForPluginKey(
 	if err != nil {
 		return nil, err
 	}
-
 	if exists, err := storage2.Exists(ctx, p.bucket, pluginDataStorePath); err != nil {
 		return nil, err
 	} else if !exists {
 		return nil, fs.ErrNotExist
 	}
-
 	return bufplugin2.NewPluginData(
 		ctx,
 		pluginKey,
@@ -140,12 +132,10 @@ func (p *pluginDataStore) putPluginData(
 	pluginData bufplugin2.PluginData,
 ) error {
 	pluginKey := pluginData.PluginKey()
-
 	pluginDataStorePath, err := getPluginDataStorePath(pluginKey)
 	if err != nil {
 		return err
 	}
-
 	data, err := pluginData.Data()
 	if err != nil {
 		return err
@@ -164,9 +154,7 @@ func getPluginDataStorePath(pluginKey bufplugin2.PluginKey) (string, error) {
 	if err != nil {
 		return "", err
 	}
-
 	fullName := pluginKey.FullName()
-
 	return normalpath.Join(
 		digest.Type().String(),
 		fullName.Registry(),

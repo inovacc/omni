@@ -33,12 +33,10 @@ func NewMessage(
 	if err := ValidateTypeName(typeName); err != nil {
 		return nil, err
 	}
-
 	messageType, err := image.Resolver().FindMessageByName(protoreflect.FullName(typeName))
 	if err != nil {
 		return nil, err
 	}
-
 	return messageType.New().Interface(), nil
 }
 
@@ -48,6 +46,5 @@ func ValidateTypeName(typeName string) error {
 	if fullName := protoreflect.FullName(typeName); !fullName.IsValid() {
 		return fmt.Errorf("%q is not a valid fully qualified type name", fullName)
 	}
-
 	return nil
 }

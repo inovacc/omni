@@ -40,7 +40,6 @@ func NewHandler(
 	if privateNetwork {
 		corsHandlerOptions.AllowPrivateNetwork = true
 	}
-
 	corsHandler := cors.New(corsHandlerOptions)
 	plainHandler := corsHandler.Handler(newPlainPostHandler(logger, disallowedHeaders, forwardHeaders, tlsClientConfig))
 	mux := http.NewServeMux()
@@ -64,6 +63,5 @@ func NewHandler(
 			return
 		}
 	})
-
 	return mux
 }

@@ -33,7 +33,6 @@ func NewModuleUploader(container appext.Container) (bufmodule.Uploader, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	return newModuleUploader(container, bufregistryapimodule.NewClientProvider(clientConfig)), nil
 }
 
@@ -43,7 +42,6 @@ func NewPluginUploader(container appext.Container) (bufplugin.Uploader, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	return newPluginUploader(container, bufregistryapiplugin.NewClientProvider(clientConfig)), nil
 }
 
@@ -53,7 +51,6 @@ func NewPolicyUploader(container appext.Container) (bufpolicy.Uploader, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	return newPolicyUploader(container, bufregistryapipolicy.NewClientProvider(clientConfig)), nil
 }
 

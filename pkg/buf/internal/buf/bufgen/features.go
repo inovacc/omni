@@ -59,7 +59,6 @@ type featureChecker func(options *descriptorpb.FileDescriptorProto) bool
 // responses are checked to make sure any required features were supported.
 func computeRequiredFeatures(image bufimage.Image) *requiredFeatures {
 	features := newRequiredFeatures()
-
 	for _, imageFile := range image.Files() {
 		if imageFile.IsImport() {
 			// we only want to check the sources in the module, not their dependencies
@@ -75,19 +74,15 @@ func computeRequiredFeatures(image bufimage.Image) *requiredFeatures {
 		if !fileHasEditions(imageFile.FileDescriptorProto()) {
 			continue
 		}
-
 		edition := imageFile.FileDescriptorProto().GetEdition()
-
 		features.editionToFilenames[edition] = append(features.editionToFilenames[edition], imageFile.Path())
 		if features.minEdition == 0 || edition < features.minEdition {
 			features.minEdition = edition
 		}
-
 		if edition > features.maxEdition {
 			features.maxEdition = edition
 		}
 	}
-
 	return features
 }
 
@@ -98,7 +93,6 @@ func checkRequiredFeatures(
 	configs []bufconfig.GeneratePluginConfig,
 ) error {
 	var errs []error
-
 	for responseIndex, response := range responses {
 		if response == nil || response.GetError() != "" {
 			// plugin failed, nothing to check
@@ -106,14 +100,9 @@ func checkRequiredFeatures(
 		}
 
 		failed := newRequiredFeatures()
-
-		var (
-			failedFeatures []pluginpb.CodeGeneratorResponse_Feature
-			failedEditions []descriptorpb.Edition
-		)
-
+		var failedFeatures []pluginpb.CodeGeneratorResponse_Feature
+		var failedEditions []descriptorpb.Edition
 		supported := response.GetSupportedFeatures() // bit mask of features the plugin supports
-
 		for feature, files := range required.featureToFilenames {
 			featureMask := uint64(feature)
 			if supported&featureMask != featureMask {
@@ -122,9 +111,7 @@ func checkRequiredFeatures(
 				failedFeatures = append(failedFeatures, feature)
 			}
 		}
-
 		pluginName := configs[responseIndex].Name()
-
 		if supported&uint64(pluginpb.CodeGeneratorResponse_FEATURE_SUPPORTS_EDITIONS) != 0 && len(required.editionToFilenames) > 0 {
 			// Plugin supports editions, and files include editions.
 			// First, let's make sure that the plugin set the min/max edition fields correctly.
@@ -134,14 +121,12 @@ func checkRequiredFeatures(
 					pluginName,
 				)
 			}
-
 			if response.MaximumEdition == nil {
 				return fmt.Errorf(
 					"plugin %q advertises that it supports editions but did not indicate a maximum supported edition",
 					pluginName,
 				)
 			}
-
 			if response.GetMaximumEdition() < response.GetMinimumEdition() {
 				return fmt.Errorf(
 					"plugin %q indicates a maximum supported edition (%v) that is less than its minimum supported edition (%v)",
@@ -156,9 +141,7 @@ func checkRequiredFeatures(
 			for edition := range required.editionToFilenames {
 				requiredEditions = append(requiredEditions, edition)
 			}
-
 			slices.Sort(requiredEditions)
-
 			for _, requiredEdition := range requiredEditions {
 				if int32(requiredEdition) < response.GetMinimumEdition() ||
 					int32(requiredEdition) > response.GetMaximumEdition() {
@@ -170,7 +153,6 @@ func checkRequiredFeatures(
 
 		if len(failedFeatures) > 0 {
 			slices.Sort(failedFeatures)
-
 			for _, feature := range failedFeatures {
 				// For CLI versions pre-1.32.0, we logged unsupported features. However, this is an
 				// unsafe behavior for editions. So, in keeping with pre-1.32.0 CLI versions, we
@@ -185,10 +167,8 @@ func checkRequiredFeatures(
 					)
 					warningMessage = fmt.Sprintln(warningMessage, fmt.Sprintf("   %s", strings.Join(files, ",")))
 					logger.Warn(strings.TrimSpace(warningMessage))
-
 					continue
 				}
-
 				featureErrs := xslices.Map(
 					failed.featureToFilenames[feature],
 					func(fileName string) error {
@@ -198,10 +178,8 @@ func checkRequiredFeatures(
 				errs = append(errs, featureErrs...)
 			}
 		}
-
 		if len(failedEditions) > 0 {
 			slices.Sort(failedEditions)
-
 			for _, edition := range failedEditions {
 				for _, file := range failed.editionToFilenames[edition] {
 					errs = append(errs, fmt.Errorf("plugin %q does not support edition %q which is required by %q",
@@ -210,7 +188,6 @@ func checkRequiredFeatures(
 			}
 		}
 	}
-
 	return errors.Join(errs...)
 }
 
@@ -243,18 +220,16 @@ func fileHasProto3Optional(fileDescriptorProto *descriptorpb.FileDescriptorProto
 		// can't have proto3 optional unless syntax is proto3
 		return false
 	}
-
-	return slices.ContainsFunc(fileDescriptorProto.GetMessageType(), messageHasProto3Optional)
+	return slices.ContainsFunc(fileDescriptorProto.MessageType, messageHasProto3Optional)
 }
 
 func messageHasProto3Optional(descriptorProto *descriptorpb.DescriptorProto) bool {
-	for _, fld := range descriptorProto.GetField() {
+	for _, fld := range descriptorProto.Field {
 		if fld.GetProto3Optional() {
 			return true
 		}
 	}
-
-	return slices.ContainsFunc(descriptorProto.GetNestedType(), messageHasProto3Optional)
+	return slices.ContainsFunc(descriptorProto.NestedType, messageHasProto3Optional)
 }
 
 func fileHasEditions(fileDescriptorProto *descriptorpb.FileDescriptorProto) bool {

@@ -72,7 +72,6 @@ var _ StringValueNode = (*CompoundStringLiteralNode)(nil)
 //	"proto2"
 type StringLiteralNode struct {
 	terminalNode
-
 	// Val is the actual string value that the literal indicates.
 	Val string
 }
@@ -99,7 +98,6 @@ func (n *StringLiteralNode) AsString() string {
 //	"this "  "is"   " all one "   "string"
 type CompoundStringLiteralNode struct {
 	compositeNode
-
 	Val string
 }
 
@@ -110,16 +108,12 @@ func NewCompoundLiteralStringNode(components ...*StringLiteralNode) *CompoundStr
 	if len(components) == 0 {
 		panic("must have at least one component")
 	}
-
 	children := make([]Node, len(components))
-
 	var b strings.Builder
-
 	for i, comp := range components {
 		children[i] = comp
 		b.WriteString(comp.Val)
 	}
-
 	return &CompoundStringLiteralNode{
 		compositeNode: compositeNode{
 			children: children,
@@ -152,11 +146,9 @@ func AsInt32(n IntValueNode, minVal, maxVal int32) (int32, bool) {
 	if !ok {
 		return 0, false
 	}
-
 	if i < int64(minVal) || i > int64(maxVal) {
 		return 0, false
 	}
-
 	return int32(i), true
 }
 
@@ -166,7 +158,6 @@ var _ IntValueNode = (*NegativeIntLiteralNode)(nil)
 // UintLiteralNode represents a simple integer literal with no sign character.
 type UintLiteralNode struct {
 	terminalNode
-
 	// Val is the numeric value indicated by the literal
 	Val uint64
 }
@@ -187,7 +178,6 @@ func (n *UintLiteralNode) AsInt64() (int64, bool) {
 	if n.Val > math.MaxInt64 {
 		return 0, false
 	}
-
 	return int64(n.Val), true
 }
 
@@ -202,7 +192,6 @@ func (n *UintLiteralNode) AsFloat() float64 {
 // NegativeIntLiteralNode represents an integer literal with a negative (-) sign.
 type NegativeIntLiteralNode struct {
 	compositeNode
-
 	Minus *RuneNode
 	Uint  *UintLiteralNode
 	Val   int64
@@ -214,13 +203,10 @@ func NewNegativeIntLiteralNode(sign *RuneNode, i *UintLiteralNode) *NegativeIntL
 	if sign == nil {
 		panic("sign is nil")
 	}
-
 	if i == nil {
 		panic("i is nil")
 	}
-
 	children := []Node{sign, i}
-
 	return &NegativeIntLiteralNode{
 		compositeNode: compositeNode{
 			children: children,
@@ -243,7 +229,6 @@ func (n *NegativeIntLiteralNode) AsUint64() (uint64, bool) {
 	if n.Val < 0 {
 		return 0, false
 	}
-
 	return uint64(n.Val), true
 }
 
@@ -262,7 +247,6 @@ var _ FloatValueNode = (*UintLiteralNode)(nil)
 // FloatLiteralNode represents a floating point numeric literal.
 type FloatLiteralNode struct {
 	terminalNode
-
 	// Val is the numeric value indicated by the literal
 	Val float64
 }
@@ -287,7 +271,6 @@ func (n *FloatLiteralNode) AsFloat() float64 {
 // for "inf" and "nan" values.
 type SpecialFloatLiteralNode struct {
 	*KeywordNode
-
 	Val float64
 }
 
@@ -296,14 +279,12 @@ type SpecialFloatLiteralNode struct {
 // in any case.
 func NewSpecialFloatLiteralNode(name *KeywordNode) *SpecialFloatLiteralNode {
 	var f float64
-
 	switch strings.ToLower(name.Val) {
 	case "inf", "infinity":
 		f = math.Inf(1)
 	default:
 		f = math.NaN()
 	}
-
 	return &SpecialFloatLiteralNode{
 		KeywordNode: name,
 		Val:         f,
@@ -321,7 +302,6 @@ func (n *SpecialFloatLiteralNode) AsFloat() float64 {
 // SignedFloatLiteralNode represents a signed floating point number.
 type SignedFloatLiteralNode struct {
 	compositeNode
-
 	Sign  *RuneNode
 	Float FloatValueNode
 	Val   float64
@@ -333,18 +313,14 @@ func NewSignedFloatLiteralNode(sign *RuneNode, f FloatValueNode) *SignedFloatLit
 	if sign == nil {
 		panic("sign is nil")
 	}
-
 	if f == nil {
 		panic("f is nil")
 	}
-
 	children := []Node{sign, f}
-
 	val := f.AsFloat()
 	if sign.Rune == '-' {
 		val = -val
 	}
-
 	return &SignedFloatLiteralNode{
 		compositeNode: compositeNode{
 			children: children,
@@ -369,7 +345,6 @@ func (n *SignedFloatLiteralNode) AsFloat() float64 {
 //	["foo", "bar", "baz"]
 type ArrayLiteralNode struct {
 	compositeNode
-
 	OpenBracket *RuneNode
 	Elements    []ValueNode
 	// Commas represent the separating ',' characters between elements. The
@@ -389,38 +364,29 @@ func NewArrayLiteralNode(openBracket *RuneNode, vals []ValueNode, commas []*Rune
 	if openBracket == nil {
 		panic("openBracket is nil")
 	}
-
 	if closeBracket == nil {
 		panic("closeBracket is nil")
 	}
-
 	if len(vals) == 0 && len(commas) != 0 {
 		panic("vals is empty but commas is not")
 	}
-
 	if len(vals) > 0 && len(commas) != len(vals)-1 {
 		panic(fmt.Sprintf("%d vals requires %d commas, not %d", len(vals), len(vals)-1, len(commas)))
 	}
-
 	children := make([]Node, 0, len(vals)*2+1)
 	children = append(children, openBracket)
-
 	for i, val := range vals {
 		if i > 0 {
 			if commas[i-1] == nil {
 				panic(fmt.Sprintf("commas[%d] is nil", i-1))
 			}
-
 			children = append(children, commas[i-1])
 		}
-
 		if val == nil {
 			panic(fmt.Sprintf("vals[%d] is nil", i))
 		}
-
 		children = append(children, val)
 	}
-
 	children = append(children, closeBracket)
 
 	return &ArrayLiteralNode{
@@ -445,7 +411,6 @@ func (n *ArrayLiteralNode) Value() any {
 //	{ foo:1 foo:2 foo:3 bar:<name:"abc" id:123> }
 type MessageLiteralNode struct {
 	compositeNode
-
 	Open     *RuneNode // should be '{' or '<'
 	Elements []*MessageFieldNode
 	// Separator characters between elements, which can be either ','
@@ -468,37 +433,29 @@ func NewMessageLiteralNode(openSym *RuneNode, vals []*MessageFieldNode, seps []*
 	if openSym == nil {
 		panic("openSym is nil")
 	}
-
 	if closeSym == nil {
 		panic("closeSym is nil")
 	}
-
 	if len(seps) != len(vals) {
 		panic(fmt.Sprintf("%d vals requires %d commas, not %d", len(vals), len(vals), len(seps)))
 	}
-
 	numChildren := len(vals) + 2
-
 	for _, sep := range seps {
 		if sep != nil {
 			numChildren++
 		}
 	}
-
 	children := make([]Node, 0, numChildren)
 	children = append(children, openSym)
-
 	for i, val := range vals {
 		if val == nil {
 			panic(fmt.Sprintf("vals[%d] is nil", i))
 		}
-
 		children = append(children, val)
 		if seps[i] != nil {
 			children = append(children, seps[i])
 		}
 	}
-
 	children = append(children, closeSym)
 
 	return &MessageLiteralNode{
@@ -522,7 +479,6 @@ func (n *MessageLiteralNode) Value() any {
 //	foo:"bar"
 type MessageFieldNode struct {
 	compositeNode
-
 	Name *FieldReferenceNode
 	// Sep represents the ':' separator between the name and value. If
 	// the value is a message or list literal (and thus starts with '<',
@@ -538,23 +494,18 @@ func NewMessageFieldNode(name *FieldReferenceNode, sep *RuneNode, val ValueNode)
 	if name == nil {
 		panic("name is nil")
 	}
-
 	if val == nil {
 		panic("val is nil")
 	}
-
 	numChildren := 2
 	if sep != nil {
 		numChildren++
 	}
-
 	children := make([]Node, 0, numChildren)
-
 	children = append(children, name)
 	if sep != nil {
 		children = append(children, sep)
 	}
-
 	children = append(children, val)
 
 	return &MessageFieldNode{

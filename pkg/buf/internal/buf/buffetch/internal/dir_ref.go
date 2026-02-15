@@ -38,24 +38,19 @@ func newDirRef(
 	if path == "" {
 		return nil, NewNoPathError()
 	}
-
 	if app.IsDevStderr(path) {
 		return nil, NewInvalidPathError(format, path)
 	}
-
 	if path == "-" || app.IsDevNull(path) || app.IsDevStdin(path) || app.IsDevStdout(path) {
 		return nil, NewInvalidPathError(format, path)
 	}
-
 	if strings.Contains(path, "://") {
 		return nil, NewInvalidPathError(format, path)
 	}
-
 	path, err := xfilepath.RealClean(path)
 	if err != nil {
 		return nil, NewRealCleanPathError(path)
 	}
-
 	return newDirectDirRef(
 		format,
 		normalpath.Normalize(path),

@@ -109,16 +109,13 @@ func getV1Beta1OrV1ObjectDataForPrefix(
 	if len(fileNames) == 0 {
 		return nil, syserror.New("expected at least one file name for getV1Beta1OrV1ObjectDataForPrefix")
 	}
-
 	for _, fileName := range fileNames {
 		path := normalpath.Join(prefix, fileName)
-
 		data, err := storage2.ReadPath(ctx, bucket, path)
 		if err != nil {
 			if errors.Is(err, fs.ErrNotExist) {
 				continue
 			}
-
 			return nil, err
 		}
 		// As soon as we find a file with the correct name, we have to roll with that. We don't
@@ -127,21 +124,18 @@ func getV1Beta1OrV1ObjectDataForPrefix(
 		if len(data) == 0 {
 			return nil, nil
 		}
-
 		var externalFileVersion externalFileVersion
 		if err := encoding.UnmarshalYAMLNonStrict(data, &externalFileVersion); err != nil {
 			// This could be a source of bugs in the future - we likely just took a buf.yaml/buf.lock
 			// as-is for digest calculations pre-refactor, and didn't require a version.
 			return nil, newDecodeError(path, err)
 		}
-
 		fileVersion, err := parseFileVersion(externalFileVersion.Version, fileName, false, fileNameToSupportedFileVersions, FileVersionV1Beta1, FileVersionV1Beta1)
 		if err != nil {
 			// This could be a source of bugs in the future - we likely just took a buf.yaml/buf.lock
 			// as-is for digest calculations pre-refactor, and didn't require a version.
 			return nil, newDecodeError(path, err)
 		}
-
 		switch fileVersion {
 		case FileVersionV1Beta1, FileVersionV1:
 			return newObjectData(fileName, data), nil
@@ -151,6 +145,5 @@ func getV1Beta1OrV1ObjectDataForPrefix(
 			return nil, syserror.Newf("unknown FileVersion: %v", fileVersion)
 		}
 	}
-
 	return nil, &fs.PathError{Op: "read", Path: normalpath.Join(prefix, fileNames[0]), Err: fs.ErrNotExist}
 }

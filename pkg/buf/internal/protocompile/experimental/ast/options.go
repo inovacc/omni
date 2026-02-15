@@ -65,11 +65,9 @@ func (o CompactOptions) Brackets() token.Token {
 // Entries returns the sequence of options in this CompactOptions.
 func (o CompactOptions) Entries() Commas[Option] {
 	type slice = commas[Option, rawOption]
-
 	if o.IsZero() {
 		return slice{}
 	}
-
 	return slice{
 		file: o.Context(),
 		SliceInserter: seq.NewSliceInserter(
@@ -79,7 +77,6 @@ func (o CompactOptions) Entries() Commas[Option] {
 			},
 			func(_ int, v Option) withComma[rawOption] {
 				o.Context().Nodes().panicIfNotOurs(v.Path, v.Equals, v.Value)
-
 				return withComma[rawOption]{Value: rawOption{
 					path:   v.Path.ID(),
 					equals: v.Equals.ID(),
@@ -103,7 +100,6 @@ func (o *rawOption) With(f *File) Option {
 	if o == nil {
 		return Option{}
 	}
-
 	return Option{
 		Path:   o.path.In(f),
 		Equals: id.Wrap(f.Stream(), o.equals),

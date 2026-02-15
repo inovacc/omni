@@ -65,16 +65,13 @@ type staticPolicyPluginKeyProvider struct {
 
 func newStaticPolicyPluginKeyProvider(policyNameToPluginKeys map[string][]bufplugin2.PluginKey) (*staticPolicyPluginKeyProvider, error) {
 	policyNameToPluginKeyProvider := make(map[string]bufplugin2.PluginKeyProvider)
-
 	for policyName, pluginKeys := range policyNameToPluginKeys {
 		pluginKeyProvider, err := bufplugin2.NewStaticPluginKeyProvider(pluginKeys)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create PluginKeyProvider for policy %q: %w", policyName, err)
 		}
-
 		policyNameToPluginKeyProvider[policyName] = pluginKeyProvider
 	}
-
 	return &staticPolicyPluginKeyProvider{
 		policyNameToPluginKeyProvider: policyNameToPluginKeyProvider,
 	}, nil
@@ -91,7 +88,6 @@ func (s staticPolicyPluginKeyProvider) GetPluginKeyProviderForPolicy(policyName 
 			return pluginKeyProvider
 		}
 	}
-
 	return newNopPluginKeyProviderForPolicy(policyName)
 }
 

@@ -25,7 +25,6 @@ import (
 
 func TestResolveCppFeatures(t *testing.T) {
 	t.Parallel()
-
 	field := (*descriptorpb.FileDescriptorProto)(nil).ProtoReflect().Descriptor().Fields().ByName("package")
 	val, err := ResolveCppFeature(field, "string_type", protoreflect.EnumKind)
 	require.NoError(t, err)
@@ -35,7 +34,6 @@ func TestResolveCppFeatures(t *testing.T) {
 
 func TestResolveJavaFeatures(t *testing.T) {
 	t.Parallel()
-
 	field := (*descriptorpb.FileDescriptorProto)(nil).ProtoReflect().Descriptor().Fields().ByName("package")
 	val, err := ResolveJavaFeature(field, "utf8_validation", protoreflect.EnumKind)
 	require.NoError(t, err)

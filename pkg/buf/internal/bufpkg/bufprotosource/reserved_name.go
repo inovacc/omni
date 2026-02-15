@@ -29,7 +29,6 @@ func newReservedName(
 	if value == "" {
 		return nil, fmt.Errorf("no value for reserved name in %q", locationDescriptor.File().Path())
 	}
-
 	return &reservedName{
 		locationDescriptor: locationDescriptor,
 		value:              value,

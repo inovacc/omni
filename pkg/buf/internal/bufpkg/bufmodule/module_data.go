@@ -124,14 +124,11 @@ func newModuleData(
 			if err != nil {
 				return err
 			}
-
 			expectedDigest, err := moduleKey.Digest()
 			if err != nil {
 				return err
 			}
-
 			var actualDigest Digest
-
 			switch expectedDigest.Type() {
 			case DigestTypeB4:
 				// Call unexported func instead of exported method to avoid deadlocking on checking the digest again.
@@ -144,7 +141,6 @@ func newModuleData(
 				if err != nil {
 					return err
 				}
-
 				actualDigest, err = getB4Digest(ctx, bucket, v1BufYAMLObjectData, v1BufLockObjectData)
 				if err != nil {
 					return err
@@ -163,7 +159,6 @@ func newModuleData(
 					return err
 				}
 			}
-
 			if !DigestEqual(expectedDigest, actualDigest) {
 				return &DigestMismatchError{
 					FullName:       moduleKey.FullName(),
@@ -172,11 +167,9 @@ func newModuleData(
 					ActualDigest:   actualDigest,
 				}
 			}
-
 			return nil
 		},
 	)
-
 	return moduleData
 }
 
@@ -188,7 +181,6 @@ func (m *moduleData) Bucket() (storage.ReadBucket, error) {
 	if err := m.checkDigest(); err != nil {
 		return nil, err
 	}
-
 	return m.getBucket()
 }
 
@@ -202,7 +194,6 @@ func (m *moduleData) DepModuleKeys() ([]ModuleKey, error) {
 	if err := m.checkDigest(); err != nil {
 		return nil, err
 	}
-
 	return m.getDepModuleKeys()
 }
 
@@ -210,7 +201,6 @@ func (m *moduleData) V1Beta1OrV1BufYAMLObjectData() (ObjectData, error) {
 	if err := m.checkDigest(); err != nil {
 		return nil, err
 	}
-
 	return m.getV1BufYAMLObjectData()
 }
 
@@ -218,7 +208,6 @@ func (m *moduleData) V1Beta1OrV1BufLockObjectData() (ObjectData, error) {
 	if err := m.checkDigest(); err != nil {
 		return nil, err
 	}
-
 	return m.getV1BufLockObjectData()
 }
 

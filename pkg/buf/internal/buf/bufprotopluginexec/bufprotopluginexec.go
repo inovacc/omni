@@ -181,7 +181,6 @@ func NewBinaryHandler(logger *slog.Logger, pluginPath string, pluginArgs []strin
 	if err != nil {
 		return nil, err
 	}
-
 	return newBinaryHandler(logger, pluginPath, pluginArgs), nil
 }
 
@@ -204,7 +203,6 @@ func unsafeLookPath(file string) (string, error) {
 	if errors.Is(err, exec.ErrDot) {
 		err = nil
 	}
-
 	return path, err
 }
 
@@ -218,6 +216,5 @@ func newVersion(major, minor, patch int32, suffix string) *pluginpb.Version {
 	if suffix != "" {
 		version.Suffix = &suffix
 	}
-
 	return version
 }

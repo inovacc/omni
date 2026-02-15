@@ -124,15 +124,13 @@ func NewPluginResponse(
 // ValidatePluginResponses validates that each file is only defined by a single *PluginResponse.
 func ValidatePluginResponses(pluginResponses []*PluginResponse) error {
 	seen := make(map[string]string)
-
 	for _, pluginResponse := range pluginResponses {
-		for _, file := range pluginResponse.Response.GetFile() {
+		for _, file := range pluginResponse.Response.File {
 			if file.GetInsertionPoint() != "" {
 				// We expect insertion points to write
 				// to files that already exist.
 				continue
 			}
-
 			fileName := filepath.Join(pluginResponse.PluginOut, file.GetName())
 			if pluginName, ok := seen[fileName]; ok {
 				return fmt.Errorf(
@@ -142,7 +140,6 @@ func ValidatePluginResponses(pluginResponses []*PluginResponse) error {
 					pluginResponse.PluginName,
 				)
 			}
-
 			seen[fileName] = pluginResponse.PluginName
 		}
 		// Note: we used to verify that the plugin set min/max edition correctly if it set the
@@ -150,6 +147,5 @@ func ValidatePluginResponses(pluginResponses []*PluginResponse) error {
 		// were still experimental, advertise SUPPORTS_EDITIONS but did not set those fields. So
 		// we defer the check and only complain if/when the input actually contains Editions files.
 	}
-
 	return nil
 }

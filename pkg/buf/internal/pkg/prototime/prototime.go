@@ -27,6 +27,5 @@ func NewTimestamp(t time.Time) (*timestamppb.Timestamp, error) {
 	if err := timestamp.CheckValid(); err != nil {
 		return nil, err
 	}
-
 	return timestamp, nil
 }

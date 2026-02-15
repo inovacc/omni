@@ -57,14 +57,12 @@ func TestDefaultsEqual(t *testing.T) {
 	for name, vals := range values {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
-
 			for _, val := range vals {
 				for other, otherVals := range values {
 					for _, otherVal := range otherVals {
 						default1 := fieldDefault{
 							comparable: val, printable: val,
 						}
-
 						default2 := fieldDefault{
 							comparable: otherVal, printable: otherVal,
 						}
@@ -86,8 +84,34 @@ func TestDefaultsEqual(t *testing.T) {
 
 func TestGetDefault(t *testing.T) {
 	t.Parallel()
-
-	testFile := "\n\t\tsyntax = \"proto2\";\n\t\tmessage A {\n\t\t\toptional int32 = 1 [default=123];\n\t\t\toptional sint32 = 2 [default=123];\n\t\t\toptional uint32 = 3 [default=123];\n\t\t\toptional fixed32 = 4 [default=123];\n\t\t\toptional sfixed32 = 5 [default=123];\n\t\t\toptional int64 = 6 [default=123];\n\t\t\toptional sint64 = 7 [default=123];\n\t\t\toptional uint64 = 8 [default=123];\n\t\t\toptional fixed64 = 9 [default=123];\n\t\t\toptional sfixed64 = 10 [default=123];\n\t\t\toptional float = 11 [default=123.123];\n\t\t\toptional double = 12 [default=123.123];\n\t\t\toptional bool = 13 [default=true];\n\t\t\toptional string = 14 [default=\"xyz\"];\n\t\t\toptional bytes = 15 [default=\"xyz\"];\n\t\t\toptional Enum enum = 16 [default=V123];\n\t\t\toptional A message = 17;\n\t\t\trepeated int32 repeated = 18;\n\t\t\tmap<int32, int32> map = 19;\n\t\t}\n\t\tenum Enum {\n\t\t\tV0 = 0;\n\t\t\tV1 = 1;\n\t\t\tV123 = 123;"
+	testFile := `
+		syntax = "proto2";
+		message A {
+			optional int32 int32 = 1 [default=123];
+			optional sint32 sint32 = 2 [default=123];
+			optional uint32 uint32 = 3 [default=123];
+			optional fixed32 fixed32 = 4 [default=123];
+			optional sfixed32 sfixed32 = 5 [default=123];
+			optional int64 int64 = 6 [default=123];
+			optional sint64 sint64 = 7 [default=123];
+			optional uint64 uint64 = 8 [default=123];
+			optional fixed64 fixed64 = 9 [default=123];
+			optional sfixed64 sfixed64 = 10 [default=123];
+			optional float float = 11 [default=123.123];
+			optional double double = 12 [default=123.123];
+			optional bool bool = 13 [default=true];
+			optional string string = 14 [default="xyz"];
+			optional bytes bytes = 15 [default="xyz"];
+			optional Enum enum = 16 [default=V123];
+			optional A message = 17;
+			repeated int32 repeated = 18;
+			map<int32, int32> map = 19;
+		}
+		enum Enum {
+			V0 = 0;
+			V1 = 1;
+			V123 = 123;
+		}`
 	compiler := &protocompile.Compiler{
 		Resolver: &protocompile.SourceResolver{
 			Accessor: protocompile.SourceAccessorFromMap(map[string]string{
@@ -97,7 +121,6 @@ func TestGetDefault(t *testing.T) {
 	}
 	results, err := compiler.Compile(context.Background(), "test.proto")
 	require.NoError(t, err)
-
 	msg := results[0].Messages().ByName("A")
 
 	assert.Equal(t,
@@ -205,7 +228,6 @@ func TestGetDefault(t *testing.T) {
 		"repeated": {},
 		"map":      {},
 	}
-
 	for i := range msg.Fields().Len() {
 		field := msg.Fields().Get(i)
 		if _, nope := cannotHaveDefault[string(field.Name())]; nope {

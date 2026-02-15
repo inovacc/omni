@@ -54,7 +54,6 @@ func (e Func) AsAny() Expr {
 	if e.IsZero() {
 		return Expr{}
 	}
-
 	return id.WrapDyn(e.Context(), id.NewDyn(KindFunc, id.ID[Expr](e.ID())))
 }
 
@@ -63,7 +62,6 @@ func (e Func) FuncToken() token.Token {
 	if e.IsZero() {
 		return token.Zero
 	}
-
 	return id.Wrap(e.Context().Stream(), e.Raw().funcT)
 }
 
@@ -72,7 +70,6 @@ func (e Func) Name() token.Token {
 	if e.IsZero() {
 		return token.Zero
 	}
-
 	return id.Wrap(e.Context().Stream(), e.Raw().name)
 }
 
@@ -81,7 +78,6 @@ func (e Func) Params() Params {
 	if e.IsZero() {
 		return Params{}
 	}
-
 	return id.Wrap(e.Context(), e.Raw().params)
 }
 
@@ -90,7 +86,6 @@ func (e Func) Arrow() token.Token {
 	if e.IsZero() {
 		return token.Zero
 	}
-
 	return id.Wrap(e.Context().Stream(), e.Raw().arrow)
 }
 
@@ -99,7 +94,6 @@ func (e Func) Return() Expr {
 	if e.IsZero() {
 		return Expr{}
 	}
-
 	return id.WrapDyn(e.Context(), e.Raw().ret)
 }
 
@@ -108,7 +102,6 @@ func (e Func) Body() Expr {
 	if e.IsZero() {
 		return Expr{}
 	}
-
 	return id.WrapDyn(e.Context(), e.Raw().body)
 }
 

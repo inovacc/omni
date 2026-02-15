@@ -56,7 +56,6 @@ func (b *bufferCodec) Unmarshal(src []byte, dst any) error {
 	case *bytes.Buffer:
 		destination.Reset()
 		_, err := io.Copy(destination, bytes.NewReader(src))
-
 		return err
 	case proto.Message:
 		// When the codec is named "proto", connect will assume that it

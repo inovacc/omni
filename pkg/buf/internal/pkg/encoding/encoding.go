@@ -33,10 +33,8 @@ func UnmarshalJSONStrict(data []byte, v any) error {
 	if len(data) == 0 {
 		return nil
 	}
-
 	jsonDecoder := json.NewDecoder(bytes.NewReader(data))
 	jsonDecoder.DisallowUnknownFields()
-
 	return jsonDecoder.Decode(v)
 }
 
@@ -47,9 +45,7 @@ func UnmarshalYAMLStrict(data []byte, v any) error {
 	if len(data) == 0 {
 		return nil
 	}
-
 	yamlDecoder := NewYAMLDecoderStrict(bytes.NewReader(data))
-
 	return updateYAMLTypeError(yamlDecoder.Decode(v))
 }
 
@@ -61,13 +57,11 @@ func UnmarshalJSONOrYAMLStrict(data []byte, v any) error {
 	if len(data) == 0 {
 		return nil
 	}
-
 	if jsonErr := UnmarshalJSONStrict(data, v); jsonErr != nil {
 		if yamlErr := UnmarshalYAMLStrict(data, v); yamlErr != nil {
 			return errors.New(jsonErr.Error() + "\n" + yamlErr.Error())
 		}
 	}
-
 	return nil
 }
 
@@ -78,9 +72,7 @@ func UnmarshalJSONNonStrict(data []byte, v any) error {
 	if len(data) == 0 {
 		return nil
 	}
-
 	jsonDecoder := json.NewDecoder(bytes.NewReader(data))
-
 	return jsonDecoder.Decode(v)
 }
 
@@ -91,9 +83,7 @@ func UnmarshalYAMLNonStrict(data []byte, v any) error {
 	if len(data) == 0 {
 		return nil
 	}
-
 	yamlDecoder := NewYAMLDecoderNonStrict(bytes.NewReader(data))
-
 	return updateYAMLTypeError(yamlDecoder.Decode(v))
 }
 
@@ -105,13 +95,11 @@ func UnmarshalJSONOrYAMLNonStrict(data []byte, v any) error {
 	if len(data) == 0 {
 		return nil
 	}
-
 	if jsonErr := UnmarshalJSONNonStrict(data, v); jsonErr != nil {
 		if yamlErr := UnmarshalYAMLNonStrict(data, v); yamlErr != nil {
 			return errors.Join(jsonErr, yamlErr)
 		}
 	}
-
 	return nil
 }
 
@@ -123,12 +111,10 @@ func GetJSONStringOrStringValue(rawMessage json.RawMessage) string {
 	if len(rawMessage) == 0 {
 		return ""
 	}
-
 	var s string
 	if err := json.Unmarshal(rawMessage, &s); err == nil {
 		return s
 	}
-
 	return string(rawMessage)
 }
 
@@ -136,15 +122,12 @@ func GetJSONStringOrStringValue(rawMessage json.RawMessage) string {
 func MarshalYAML(v any) (_ []byte, retErr error) {
 	buffer := bytes.NewBuffer(nil)
 	yamlEncoder := NewYAMLEncoder(buffer)
-
 	defer func() {
 		retErr = errors.Join(retErr, yamlEncoder.Close())
 	}()
-
 	if err := yamlEncoder.Encode(v); err != nil {
 		return nil, err
 	}
-
 	return buffer.Bytes(), nil
 }
 
@@ -153,7 +136,6 @@ func MarshalYAML(v any) (_ []byte, retErr error) {
 func NewYAMLEncoder(writer io.Writer) *yaml.Encoder {
 	yamlEncoder := yaml.NewEncoder(writer)
 	yamlEncoder.SetIndent(2)
-
 	return yamlEncoder
 }
 
@@ -161,7 +143,6 @@ func NewYAMLEncoder(writer io.Writer) *yaml.Encoder {
 func NewYAMLDecoderStrict(reader io.Reader) *yaml.Decoder {
 	yamlDecoder := yaml.NewDecoder(reader)
 	yamlDecoder.KnownFields(true)
-
 	return yamlDecoder
 }
 
@@ -179,7 +160,6 @@ func InterfaceSliceOrStringToCommaSepString(in any) (string, error) {
 	if err != nil {
 		return "", err
 	}
-
 	return strings.Join(values, ","), nil
 }
 
@@ -188,7 +168,6 @@ func InterfaceSliceOrStringToStringSlice(in any) ([]string, error) {
 	if in == nil {
 		return nil, nil
 	}
-
 	switch t := in.(type) {
 	case string:
 		return []string{t}, nil
@@ -196,17 +175,14 @@ func InterfaceSliceOrStringToStringSlice(in any) ([]string, error) {
 		if len(t) == 0 {
 			return nil, nil
 		}
-
 		res := make([]string, len(t))
 		for i, elem := range t {
 			s, ok := elem.(string)
 			if !ok {
 				return nil, fmt.Errorf("could not convert element %T to a string", elem)
 			}
-
 			res[i] = s
 		}
-
 		return res, nil
 	default:
 		return nil, fmt.Errorf("could not interpret %T as string or string slice", in)
@@ -219,7 +195,6 @@ func updateYAMLTypeError(err error) error {
 	if err == nil {
 		return nil
 	}
-
 	var yamlTypeError *yaml.TypeError
 	if errors.As(err, &yamlTypeError) {
 		for i, errString := range yamlTypeError.Errors {
@@ -233,17 +208,14 @@ func updateYAMLTypeError(err error) error {
 				"not found",
 			)
 		}
-
 		return yamlTypeError
 	}
-
 	return err
 }
 
 func replaceAfter(s string, substitute string, replace string) string {
-	if before, _, ok := strings.Cut(s, substitute); ok {
-		return before + replace
+	if index := strings.Index(s, substitute); index != -1 {
+		return s[:index] + replace
 	}
-
 	return s
 }

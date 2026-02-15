@@ -257,7 +257,7 @@ type MessageRefParserOption func(*messageRefParserOptions)
 
 // MessageRefParserWithDefaultMessageEncoding says to use the default MessageEncoding.
 //
-// The default is MessageEncodingBinpb.
+// The default default is MessageEncodingBinpb.
 func MessageRefParserWithDefaultMessageEncoding(defaultMessageEncoding MessageEncoding) MessageRefParserOption {
 	return func(messageRefParserOptions *messageRefParserOptions) {
 		messageRefParserOptions.defaultMessageEncoding = defaultMessageEncoding
@@ -546,7 +546,6 @@ func GetInputConfigForString(
 	if err != nil {
 		return nil, err
 	}
-
 	switch t := ref.(type) {
 	case MessageRef:
 		switch t.MessageEncoding() {
@@ -574,7 +573,6 @@ func GetInputConfigForString(
 			return nil, fmt.Errorf("unknown encoding: %v", t.MessageEncoding())
 		}
 	}
-
 	return internal.GetInputConfigForRef(ref.internalRef(), value)
 }
 

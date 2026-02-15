@@ -114,12 +114,10 @@ func newFileAnnotation(
 	for _, option := range options {
 		option(fileAnnotationOptions)
 	}
-
 	var fileInfo bufanalysis.FileInfo
 	if path != "" {
 		fileInfo = newFileInfo(path)
 	}
-
 	return bufanalysis.NewFileAnnotation(
 		fileInfo,
 		startLine,
@@ -146,7 +144,6 @@ func AssertFileAnnotationsEqual(
 	actual []bufanalysis.FileAnnotation,
 ) {
 	expected = normalizeFileAnnotations(t, expected)
-
 	actual = normalizeFileAnnotations(t, actual)
 	if !assert.Equal(
 		t,
@@ -154,13 +151,11 @@ func AssertFileAnnotationsEqual(
 		actual,
 	) {
 		t.Log("If actuals are correct, change expectations to the following:")
-
 		for _, annotation := range actual {
 			var path string
 			if fileInfo := annotation.FileInfo(); fileInfo != nil {
 				path = fileInfo.Path()
 			}
-
 			if annotation.StartLine() == 0 && annotation.StartColumn() == 0 &&
 				annotation.EndLine() == 0 && annotation.EndColumn() == 0 {
 				if path == "" {
@@ -196,14 +191,12 @@ func normalizeFileAnnotations(
 	if fileAnnotations == nil {
 		return nil
 	}
-
 	normalizedFileAnnotations := make([]bufanalysis.FileAnnotation, len(fileAnnotations))
 	for i, a := range fileAnnotations {
 		fileInfo := a.FileInfo()
 		if fileInfo != nil {
 			fileInfo = newFileInfo(fileInfo.Path())
 		}
-
 		normalizedFileAnnotations[i] = bufanalysis.NewFileAnnotation(
 			fileInfo,
 			a.StartLine(),
@@ -216,7 +209,6 @@ func normalizeFileAnnotations(
 			a.PolicyName(),
 		)
 	}
-
 	return normalizedFileAnnotations
 }
 

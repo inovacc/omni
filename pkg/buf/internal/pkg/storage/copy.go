@@ -37,7 +37,6 @@ func Copy(
 	for _, option := range options {
 		option(copyOptions)
 	}
-
 	return copyPaths(
 		ctx,
 		from,
@@ -58,7 +57,6 @@ func CopyReadObject(
 	for _, option := range options {
 		option(copyOptions)
 	}
-
 	return copyReadObject(
 		ctx,
 		readObject,
@@ -80,13 +78,10 @@ func CopyReader(
 	if err != nil {
 		return err
 	}
-
 	defer func() {
 		retErr = errors.Join(retErr, writeObjectCloser.Close())
 	}()
-
 	_, err = io.Copy(writeObjectCloser, reader)
-
 	return err
 }
 
@@ -103,7 +98,6 @@ func CopyPath(
 	for _, option := range options {
 		option(copyOptions)
 	}
-
 	return copyPath(
 		ctx,
 		from,
@@ -147,24 +141,18 @@ func copyPaths(
 	if err != nil {
 		return 0, err
 	}
-
 	var count atomic.Int64
-
 	jobs := make([]func(context.Context) error, len(paths))
 	for i, path := range paths {
 		jobs[i] = func(ctx context.Context) error {
 			if err := copyPath(ctx, from, path, to, path, copyExternalAndLocalPaths, atomicOpt); err != nil {
 				return err
 			}
-
 			count.Add(1)
-
 			return nil
 		}
 	}
-
 	err = thread.Parallelize(ctx, jobs)
-
 	return int(count.Load()), err
 }
 
@@ -184,11 +172,9 @@ func copyPath(
 	if err != nil {
 		return err
 	}
-
 	defer func() {
 		retErr = errors.Join(err, readObjectCloser.Close())
 	}()
-
 	return copyReadObject(ctx, readObjectCloser, to, toPath, copyExternalAndLocalPaths, atomic)
 }
 
@@ -204,28 +190,22 @@ func copyReadObject(
 	if atomic {
 		putOptions = append(putOptions, PutWithAtomic())
 	}
-
 	writeObjectCloser, err := to.Put(ctx, toPath, putOptions...)
 	if err != nil {
 		return err
 	}
-
 	defer func() {
 		retErr = errors.Join(retErr, writeObjectCloser.Close())
 	}()
-
 	if copyExternalAndLocalPaths {
 		if err := writeObjectCloser.SetExternalPath(readObject.ExternalPath()); err != nil {
 			return err
 		}
-
 		if err := writeObjectCloser.SetLocalPath(readObject.LocalPath()); err != nil {
 			return err
 		}
 	}
-
 	_, err = io.Copy(writeObjectCloser, readObject)
-
 	return err
 }
 

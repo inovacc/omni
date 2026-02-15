@@ -20,9 +20,9 @@ import (
 	"log/slog"
 	"time"
 
-	"connectrpc.com/connect"
 	bufplugin2 "github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufplugin"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufregistryapi/bufregistryapiplugin"
+	"connectrpc.com/connect"
 	ownerv1 "github.com/inovacc/omni/pkg/buf/internal/gen/bufbuild/registry/protocolbuffers/go/buf/registry/owner/v1"
 	pluginv1beta1 "github.com/inovacc/omni/pkg/buf/internal/gen/bufbuild/registry/protocolbuffers/go/buf/registry/plugin/v1beta1"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/syserror"
@@ -71,7 +71,6 @@ func newUploader(
 	for _, option := range options {
 		option(uploader)
 	}
-
 	return uploader
 }
 
@@ -84,7 +83,6 @@ func (u *uploader) Upload(
 	if err != nil {
 		return nil, err
 	}
-
 	registryToIndexedPluginKeys := xslices.ToIndexedValuesMap(
 		plugins,
 		func(plugin bufplugin2.Plugin) string {
@@ -92,7 +90,6 @@ func (u *uploader) Upload(
 		},
 	)
 	indexedCommits := make([]xslices.Indexed[bufplugin2.Commit], 0, len(plugins))
-
 	for registry, indexedPluginKeys := range registryToIndexedPluginKeys {
 		indexedRegistryPluginDatas, err := u.uploadIndexedPluginsForRegistry(
 			ctx,
@@ -103,10 +100,8 @@ func (u *uploader) Upload(
 		if err != nil {
 			return nil, err
 		}
-
 		indexedCommits = append(indexedCommits, indexedRegistryPluginDatas...)
 	}
-
 	return xslices.IndexedToSortedValues(indexedCommits), nil
 }
 
@@ -133,27 +128,22 @@ func (u *uploader) uploadIndexedPluginsForRegistry(
 			}
 		}
 	}
-
 	contents, err := xslices.MapError(indexedPlugins, func(indexedPlugin xslices.Indexed[bufplugin2.Plugin]) (*pluginv1beta1.UploadRequest_Content, error) {
 		plugin := indexedPlugin.Value
 		if !plugin.IsLocal() {
 			return nil, syserror.New("expected local Plugin in uploadIndexedPluginsForRegistry")
 		}
-
 		if plugin.FullName() == nil {
 			return nil, syserror.Newf("expected Plugin name for local Plugin: %s", plugin.Description())
 		}
-
 		data, err := plugin.Data()
 		if err != nil {
 			return nil, err
 		}
-
 		compressedWasmBinary, err := zstdCompress(data)
 		if err != nil {
 			return nil, fmt.Errorf("could not compress Plugin data %q: %w", plugin.OpaqueID(), err)
 		}
-
 		return &pluginv1beta1.UploadRequest_Content{
 			PluginRef: &pluginv1beta1.PluginRef{
 				Value: &pluginv1beta1.PluginRef_Name_{
@@ -187,8 +177,7 @@ func (u *uploader) uploadIndexedPluginsForRegistry(
 	if err != nil {
 		return nil, err
 	}
-
-	pluginCommits := uploadResponse.Msg.GetCommits()
+	pluginCommits := uploadResponse.Msg.Commits
 	if len(pluginCommits) != len(indexedPlugins) {
 		return nil, syserror.Newf("expected %d Commits, found %d", len(indexedPlugins), len(pluginCommits))
 	}
@@ -196,27 +185,24 @@ func (u *uploader) uploadIndexedPluginsForRegistry(
 	indexedCommits := make([]xslices.Indexed[bufplugin2.Commit], 0, len(indexedPlugins))
 	for i, pluginCommit := range pluginCommits {
 		pluginFullName := indexedPlugins[i].Value.FullName()
-
-		commitID, err := uuidutil.FromDashless(pluginCommit.GetId())
+		commitID, err := uuidutil.FromDashless(pluginCommit.Id)
 		if err != nil {
 			return nil, err
 		}
-
 		pluginKey, err := bufplugin2.NewPluginKey(
 			pluginFullName,
 			commitID,
 			func() (bufplugin2.Digest, error) {
-				return V1Beta1ProtoToDigest(pluginCommit.GetDigest())
+				return V1Beta1ProtoToDigest(pluginCommit.Digest)
 			},
 		)
 		if err != nil {
 			return nil, err
 		}
-
 		commit := bufplugin2.NewCommit(
 			pluginKey,
 			func() (time.Time, error) {
-				return pluginCommit.GetCreateTime().AsTime(), nil
+				return pluginCommit.CreateTime.AsTime(), nil
 			},
 		)
 		indexedCommits = append(
@@ -227,7 +213,6 @@ func (u *uploader) uploadIndexedPluginsForRegistry(
 			},
 		)
 	}
-
 	return indexedCommits, nil
 }
 
@@ -242,12 +227,10 @@ func (u *uploader) createPluginIfNotExist(
 	if err != nil {
 		return nil, err
 	}
-
 	v1Beta1ProtoCreatePluginType, err := pluginTypeToV1Beta1Proto(createPluginType)
 	if err != nil {
 		return nil, err
 	}
-
 	response, err := u.pluginClientProvider.V1Beta1PluginServiceClient(primaryRegistry).CreatePlugins(
 		ctx,
 		connect.NewRequest(
@@ -274,22 +257,18 @@ func (u *uploader) createPluginIfNotExist(
 			if err != nil {
 				return nil, err
 			}
-
 			if len(plugins) != 1 {
 				return nil, syserror.Newf("expected 1 Plugin, found %d", len(plugins))
 			}
-
 			return plugins[0], nil
 		}
-
 		return nil, err
 	}
-
-	if len(response.Msg.GetPlugins()) != 1 {
-		return nil, syserror.Newf("expected 1 Plugin, found %d", len(response.Msg.GetPlugins()))
+	if len(response.Msg.Plugins) != 1 {
+		return nil, syserror.Newf("expected 1 Plugin, found %d", len(response.Msg.Plugins))
 	}
 	// Otherwise we return the plugin we created.
-	return response.Msg.GetPlugins()[0], nil
+	return response.Msg.Plugins[0], nil
 }
 
 func (u *uploader) validatePluginsExist(
@@ -320,8 +299,7 @@ func (u *uploader) validatePluginsExist(
 	if err != nil {
 		return nil, err
 	}
-
-	return response.Msg.GetPlugins(), nil
+	return response.Msg.Plugins, nil
 }
 
 func zstdCompress(data []byte) ([]byte, error) {
@@ -330,6 +308,5 @@ func zstdCompress(data []byte) ([]byte, error) {
 		return nil, err
 	}
 	defer encoder.Close()
-
 	return encoder.EncodeAll(data, nil), nil
 }

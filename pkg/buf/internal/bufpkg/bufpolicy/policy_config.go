@@ -21,9 +21,9 @@ import (
 	"sort"
 	"strings"
 
-	pluginoptionv1 "buf.build/gen/go/bufbuild/bufplugin/protocolbuffers/go/buf/plugin/option/v1"
 	"buf.build/go/bufplugin/option"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufparse"
+	pluginoptionv1 "buf.build/gen/go/bufbuild/bufplugin/protocolbuffers/go/buf/plugin/option/v1"
 	policyv1beta1 "github.com/inovacc/omni/pkg/buf/internal/gen/bufbuild/registry/protocolbuffers/go/buf/registry/policy/v1beta1"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/protoencoding"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/syserror"
@@ -217,24 +217,19 @@ func newPolicyConfig(
 	sort.Slice(pluginConfigs, func(i, j int) bool {
 		return pluginConfigs[i].Name() < pluginConfigs[j].Name()
 	})
-
 	var registry string
-
 	for _, pluginConfig := range pluginConfigs {
 		ref := pluginConfig.Ref()
 		if ref == nil {
 			continue // Local plugin, no need to validate.
 		}
-
 		if ref.FullName().Registry() == "" {
 			return nil, syserror.Newf("plugin config %q must have a non-empty registry", pluginConfig.Name())
 		}
-
 		if registry != "" && ref.FullName().Registry() != registry {
 			return nil, fmt.Errorf("all plugin configs must have the same registry, got %q and %q", registry, ref.FullName().Registry())
 		}
 	}
-
 	return &policyConfig{
 		lintConfig:     lintConfig,
 		breakingConfig: breakingConfig,
@@ -270,10 +265,8 @@ func newLintConfig(
 ) (*lintConfig, error) {
 	use = slices.Clone(use)
 	sort.Strings(use)
-
 	except = slices.Clone(except)
 	sort.Strings(except)
-
 	return &lintConfig{
 		use:                                  use,
 		except:                               except,
@@ -315,10 +308,8 @@ func newBreakingConfig(
 ) (*breakingConfig, error) {
 	use = slices.Clone(use)
 	sort.Strings(use)
-
 	except = slices.Clone(except)
 	sort.Strings(except)
-
 	return &breakingConfig{
 		use:                    use,
 		except:                 except,
@@ -374,7 +365,6 @@ func marshalPolicyConfigAsJSON(policyConfig PolicyConfig) ([]byte, error) {
 			DisableBuiltin:                       lintConfig.DisableBuiltin(),
 		}
 	}
-
 	var breakingConfigV1Beta1 *policyV1Beta1PolicyConfig_BreakingConfig
 	if breakingConfig := policyConfig.BreakingConfig(); breakingConfig != nil {
 		breakingConfigV1Beta1 = &policyV1Beta1PolicyConfig_BreakingConfig{
@@ -384,18 +374,15 @@ func marshalPolicyConfigAsJSON(policyConfig PolicyConfig) ([]byte, error) {
 			DisableBuiltin:         breakingConfig.DisableBuiltin(),
 		}
 	}
-
 	pluginConfigs, err := xslices.MapError(policyConfig.PluginConfigs(), func(pluginConfig PluginConfig) (*policyV1Beta1PolicyConfig_PluginConfig, error) {
 		ref := pluginConfig.Ref()
 		if ref == nil {
 			return nil, fmt.Errorf("PluginConfig must have a non-nil Ref")
 		}
-
 		optionsConfig, err := optionsToOptionConfig(pluginConfig.Options())
 		if err != nil {
 			return nil, err
 		}
-
 		return &policyV1Beta1PolicyConfig_PluginConfig{
 			Name: policyV1Beta1PolicyConfig_PluginConfig_Name{
 				Owner:  ref.FullName().Owner(),
@@ -409,7 +396,6 @@ func marshalPolicyConfigAsJSON(policyConfig PolicyConfig) ([]byte, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to convert plugin configs: %w", err)
 	}
-
 	slices.SortFunc(pluginConfigs, func(a, b *policyV1Beta1PolicyConfig_PluginConfig) int {
 		// Sort by owner, plugin, and ref.
 		return strings.Compare(
@@ -422,7 +408,6 @@ func marshalPolicyConfigAsJSON(policyConfig PolicyConfig) ([]byte, error) {
 		Breaking: breakingConfigV1Beta1,
 		Plugins:  pluginConfigs,
 	}
-
 	data, err := json.Marshal(config)
 	if err != nil {
 		return nil, syserror.Newf("failed to marshal PolicyConfig as JSON: %w", err)
@@ -433,7 +418,6 @@ func marshalPolicyConfigAsJSON(policyConfig PolicyConfig) ([]byte, error) {
 	if err := protoencoding.NewJSONUnmarshaler(nil, protoencoding.JSONUnmarshalerWithDisallowUnknown()).Unmarshal(data, &policyConfigProto); err != nil {
 		return nil, syserror.Newf("not a valid JSON representation of type buf.registry.policy.v1beta1.PolicyConfig: %w", err)
 	}
-
 	return data, nil
 }
 
@@ -442,9 +426,7 @@ func unmarshalJSONPolicyConfig(registry string, data []byte) (PolicyConfig, erro
 	if err := protoencoding.NewJSONUnmarshaler(nil, protoencoding.JSONUnmarshalerWithDisallowUnknown()).Unmarshal(data, &policyConfigV1Beta1); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal JSON as PolicyConfig: %w", err)
 	}
-
 	lintConfigV1Beta1 := policyConfigV1Beta1.GetLint()
-
 	lintConfig, err := newLintConfig(
 		lintConfigV1Beta1.GetUse(),
 		lintConfigV1Beta1.GetExcept(),
@@ -458,9 +440,7 @@ func unmarshalJSONPolicyConfig(registry string, data []byte) (PolicyConfig, erro
 	if err != nil {
 		return nil, err
 	}
-
 	breakingConfigV1Beta1 := policyConfigV1Beta1.GetBreaking()
-
 	breakingConfig, err := newBreakingConfig(
 		breakingConfigV1Beta1.GetUse(),
 		breakingConfigV1Beta1.GetExcept(),
@@ -470,12 +450,10 @@ func unmarshalJSONPolicyConfig(registry string, data []byte) (PolicyConfig, erro
 	if err != nil {
 		return nil, err
 	}
-
 	pluginConfigs, err := xslices.MapError(
 		policyConfigV1Beta1.GetPlugins(),
 		func(pluginConfigV1Beta1 *policyv1beta1.PolicyConfig_CheckPluginConfig) (PluginConfig, error) {
 			nameV1Beta1 := pluginConfigV1Beta1.GetName()
-
 			pluginRef, err := bufparse.NewRef(
 				registry,
 				nameV1Beta1.GetOwner(),
@@ -485,12 +463,10 @@ func unmarshalJSONPolicyConfig(registry string, data []byte) (PolicyConfig, erro
 			if err != nil {
 				return nil, err
 			}
-
 			pluginOptions, err := option.OptionsForProtoOptions(pluginConfigV1Beta1.GetOptions())
 			if err != nil {
 				return nil, err
 			}
-
 			return newPluginConfig(
 				nameV1Beta1.String(),
 				pluginRef,
@@ -502,7 +478,6 @@ func unmarshalJSONPolicyConfig(registry string, data []byte) (PolicyConfig, erro
 	if err != nil {
 		return nil, err
 	}
-
 	return newPolicyConfig(
 		lintConfig,
 		breakingConfig,
@@ -580,22 +555,19 @@ func optionsToOptionConfig(options option.Options) ([]*optionV1Option, error) {
 	}
 	// Sort the options by key to ensure a stable order.
 	slices.SortFunc(optionsProto, func(a, b *pluginoptionv1.Option) int {
-		return strings.Compare(a.GetKey(), b.GetKey())
+		return strings.Compare(a.Key, b.Key)
 	})
-
 	optionsV1Options := make([]*optionV1Option, len(optionsProto))
 	for i, optionProto := range optionsProto {
-		optionValue, err := optionV1ValueProtoToOptionValue(optionProto.GetValue())
+		optionValue, err := optionV1ValueProtoToOptionValue(optionProto.Value)
 		if err != nil {
 			return nil, fmt.Errorf("failed to convert option value: %w", err)
 		}
-
 		optionsV1Options[i] = &optionV1Option{
-			Key:   optionProto.GetKey(),
+			Key:   optionProto.Key,
 			Value: optionValue,
 		}
 	}
-
 	return optionsV1Options, nil
 }
 
@@ -603,8 +575,7 @@ func optionV1ValueProtoToOptionValue(optionValue *pluginoptionv1.Value) (*option
 	if optionValue == nil {
 		return nil, nil
 	}
-
-	switch optionValue.GetType().(type) {
+	switch optionValue.Type.(type) {
 	case *pluginoptionv1.Value_BoolValue:
 		return &optionV1Value{BoolValue: optionValue.GetBoolValue()}, nil
 	case *pluginoptionv1.Value_Int64Value:
@@ -620,10 +591,9 @@ func optionV1ValueProtoToOptionValue(optionValue *pluginoptionv1.Value) (*option
 		if err != nil {
 			return nil, err
 		}
-
 		return &optionV1Value{ListValue: listValue}, nil
 	default:
-		return nil, fmt.Errorf("unknown option value type: %T", optionValue.GetType())
+		return nil, fmt.Errorf("unknown option value type: %T", optionValue.Type)
 	}
 }
 
@@ -631,16 +601,13 @@ func optionV1ListValueProtoToOptionListValue(listValue *pluginoptionv1.ListValue
 	if listValue == nil {
 		return nil, nil
 	}
-
-	values := make([]*optionV1Value, len(listValue.GetValues()))
-	for i, value := range listValue.GetValues() {
+	values := make([]*optionV1Value, len(listValue.Values))
+	for i, value := range listValue.Values {
 		optionValue, err := optionV1ValueProtoToOptionValue(value)
 		if err != nil {
 			return nil, fmt.Errorf("failed to convert option value: %w", err)
 		}
-
 		values[i] = optionValue
 	}
-
 	return &optionV1ListValue{Values: values}, nil
 }

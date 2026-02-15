@@ -22,7 +22,6 @@ import (
 
 type wellKnownTypeImageFileInfo struct {
 	storage.ObjectInfo
-
 	imports  []string
 	isImport bool
 }

@@ -34,12 +34,10 @@ func configForLintConfig(
 	if err != nil {
 		return nil, err
 	}
-
 	optionsConfig, err := optionsConfigForLintConfig(lintConfig)
 	if err != nil {
 		return nil, err
 	}
-
 	return &config{
 		rulesConfig:   rulesConfig,
 		optionsConfig: optionsConfig,
@@ -57,12 +55,10 @@ func configForBreakingConfig(
 	if err != nil {
 		return nil, err
 	}
-
 	optionsConfig, err := optionsConfigForBreakingConfig(breakingConfig, excludeImports)
 	if err != nil {
 		return nil, err
 	}
-
 	return &config{
 		rulesConfig:   rulesConfig,
 		optionsConfig: optionsConfig,

@@ -375,7 +375,6 @@ func TestNumEdges(t *testing.T) {
 
 func TestInboundNodes(t *testing.T) {
 	t.Parallel()
-
 	setupGraph := func(graph *dag2.ComparableGraph[string]) {
 		graph.AddEdge("a", "b")
 		graph.AddEdge("a", "d")
@@ -392,7 +391,6 @@ func TestInboundNodes(t *testing.T) {
 
 func TestOutboundodes(t *testing.T) {
 	t.Parallel()
-
 	setupGraph := func(graph *dag2.ComparableGraph[string]) {
 		graph.AddEdge("a", "b")
 		graph.AddEdge("a", "d")
@@ -470,9 +468,7 @@ func testWalkEdgesSuccess(
 ) {
 	graph := dag2.NewComparableGraph[string]()
 	setupGraph(graph)
-
 	var results []stringEdge
-
 	err := graph.WalkEdges(
 		func(from string, to string) error {
 			results = append(
@@ -482,7 +478,6 @@ func testWalkEdgesSuccess(
 					To:   to,
 				},
 			)
-
 			return nil
 		},
 	)
@@ -514,9 +509,7 @@ func testWalkNodesSuccess(
 ) {
 	graph := dag2.NewComparableGraph[string]()
 	setupGraph(graph)
-
 	var results []stringNode
-
 	err := graph.WalkNodes(
 		func(key string, inbound []string, outbound []string) error {
 			results = append(
@@ -527,7 +520,6 @@ func testWalkNodesSuccess(
 					Outbound: outbound,
 				},
 			)
-
 			return nil
 		},
 	)

@@ -43,20 +43,16 @@ func (rr *runeReader) readRune() (r rune, size int, err error) {
 	if rr.err != nil {
 		return 0, 0, rr.err
 	}
-
 	if rr.pos == len(rr.data) {
 		rr.err = io.EOF
 		return 0, 0, rr.err
 	}
-
 	r, sz := utf8.DecodeRune(rr.data[rr.pos:])
 	if rr.utf8Strict && r == utf8.RuneError {
 		rr.err = fmt.Errorf("invalid UTF8 at offset %d: %x", rr.pos, rr.data[rr.pos])
 		return 0, 0, rr.err
 	}
-
 	rr.pos += sz
-
 	return r, sz, nil
 }
 
@@ -69,7 +65,6 @@ func (rr *runeReader) unreadRune(sz int) {
 	if newPos < rr.mark {
 		panic("unread past mark")
 	}
-
 	rr.pos = newPos
 }
 
@@ -117,7 +112,6 @@ func newLexer(in io.Reader, filename string, handler *reporter.Handler) (*protoL
 	if err != nil {
 		return nil, err
 	}
-
 	return &protoLex{
 		input:   &runeReader{data: contents},
 		info:    ast.NewFileInfo(filename, contents),
@@ -176,7 +170,6 @@ var keywords = map[string]int{
 func (l *protoLex) maybeNewLine(r rune) {
 	if r == '\n' {
 		l.info.AddLine(l.input.offset())
-
 		l.curLine++
 		if len(l.comments) > 0 && l.comments[0].isBlock && l.maybeDonateComment > 0 {
 			// Newline after trailing block comment? Increment the signal that
@@ -203,7 +196,6 @@ func (l *protoLex) Lex(lval *protoSymType) int {
 		l.input.setMark()
 
 		l.prevOffset = l.input.offset()
-
 		c, _, err := l.input.readRune()
 		if err == io.EOF {
 			// we're not actually returning a rune, but this will associate
@@ -211,10 +203,8 @@ func (l *protoLex) Lex(lval *protoSymType) int {
 			// (if appropriate)
 			l.setRune(lval, 0)
 			l.eof = lval.b.Token()
-
 			return 0
 		}
-
 		if err != nil {
 			l.setError(lval, err)
 			return _ERROR
@@ -233,47 +223,37 @@ func (l *protoLex) Lex(lval *protoSymType) int {
 				l.setRune(lval, c)
 				return int(c)
 			}
-
 			if cn >= '0' && cn <= '9' {
 				l.readNumber()
 				token := l.input.getMark()
-
 				f, err := parseFloat(token)
 				if err != nil {
 					l.setError(lval, numError(err, "float", token))
 					return _ERROR
 				}
-
 				l.setFloat(lval, f)
-
 				return _FLOAT_LIT
 			}
-
 			l.input.unreadRune(szn)
 			l.setRune(lval, c)
-
 			return int(c)
 		}
 
 		if c == '_' || (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') {
 			// identifier
 			l.readIdentifier()
-
 			str := l.input.getMark()
 			if t, ok := keywords[str]; ok {
 				l.setIdent(lval, str)
 				return t
 			}
-
 			l.setIdent(lval, str)
-
 			return _NAME
 		}
 
 		if c >= '0' && c <= '9' {
 			// integer or float literal
 			l.readNumber()
-
 			token := l.input.getMark()
 			if strings.HasPrefix(token, "0x") || strings.HasPrefix(token, "0X") {
 				// hexadecimal
@@ -282,12 +262,9 @@ func (l *protoLex) Lex(lval *protoSymType) int {
 					l.setError(lval, numError(err, "hexadecimal integer", token[2:]))
 					return _ERROR
 				}
-
 				l.setInt(lval, ui)
-
 				return _INT_LIT
 			}
-
 			if strings.ContainsAny(token, ".eE") {
 				// floating point!
 				f, err := parseFloat(token)
@@ -295,9 +272,7 @@ func (l *protoLex) Lex(lval *protoSymType) int {
 					l.setError(lval, numError(err, "float", token))
 					return _ERROR
 				}
-
 				l.setFloat(lval, f)
-
 				return _FLOAT_LIT
 			}
 			// integer! (decimal or octal)
@@ -305,7 +280,6 @@ func (l *protoLex) Lex(lval *protoSymType) int {
 			if token[0] == '0' {
 				base = 8
 			}
-
 			ui, err := strconv.ParseUint(token, base, 64)
 			if err != nil {
 				kind := "integer"
@@ -314,23 +288,17 @@ func (l *protoLex) Lex(lval *protoSymType) int {
 				} else if numErr, ok := err.(*strconv.NumError); ok && numErr.Err == strconv.ErrRange {
 					// if it's too big to be an int, parse it as a float
 					var f float64
-
 					kind = "float"
-
 					f, err = parseFloat(token)
 					if err == nil {
 						l.setFloat(lval, f)
 						return _FLOAT_LIT
 					}
 				}
-
 				l.setError(lval, numError(err, kind, token))
-
 				return _ERROR
 			}
-
 			l.setInt(lval, ui)
-
 			return _INT_LIT
 		}
 
@@ -341,9 +309,7 @@ func (l *protoLex) Lex(lval *protoSymType) int {
 				l.setError(lval, err)
 				return _ERROR
 			}
-
 			l.setString(lval, str)
-
 			return _STRING_LIT
 		}
 
@@ -354,36 +320,27 @@ func (l *protoLex) Lex(lval *protoSymType) int {
 				l.setRune(lval, '/')
 				return int(c)
 			}
-
 			if cn == '/' {
 				startLine := l.curLine
 				if hasErr := l.skipToEndOfLineComment(lval); hasErr {
 					return _ERROR
 				}
-
 				l.addComment(false, startLine)
-
 				continue
 			}
-
 			if cn == '*' {
 				startLine := l.curLine
-
 				ok, hasErr := l.skipToEndOfBlockComment(lval)
 				if hasErr {
 					return _ERROR
 				}
-
 				if !ok {
 					l.setError(lval, errors.New("block comment never terminates, unexpected EOF"))
 					return _ERROR
 				}
-
 				l.addComment(true, startLine)
-
 				continue
 			}
-
 			l.input.unreadRune(szn)
 		}
 
@@ -391,14 +348,11 @@ func (l *protoLex) Lex(lval *protoSymType) int {
 			l.setError(lval, errors.New("invalid control character"))
 			return _ERROR
 		}
-
 		if !strings.ContainsRune(";,.:=-+(){}[]<>/", c) {
 			l.setError(lval, errors.New("invalid character"))
 			return _ERROR
 		}
-
 		l.setRune(lval, c)
-
 		return int(c)
 	}
 }
@@ -412,25 +366,21 @@ func parseFloat(token string) (float64, error) {
 			Err:  strconv.ErrSyntax,
 		}
 	}
-
 	f, err := strconv.ParseFloat(token, 64)
 	if err == nil {
 		return f, nil
 	}
-
 	if numErr, ok := err.(*strconv.NumError); ok && numErr.Err == strconv.ErrRange && math.IsInf(f, 1) {
 		// protoc doesn't complain about float overflow and instead just uses "infinity"
 		// so we mirror that behavior by just returning infinity and ignoring the error
 		return f, nil
 	}
-
 	return f, err
 }
 
 func (l *protoLex) newToken() ast.Token {
 	offset := l.input.mark
 	length := l.input.pos - l.input.mark
-
 	return l.info.AddToken(offset, length)
 }
 
@@ -438,16 +388,13 @@ func (l *protoLex) addComment(isBlock bool, startLine int) {
 	if len(l.comments) == 0 && startLine == l.prevLine {
 		l.maybeDonateComment++
 	}
-
 	l.comments = append(l.comments, comment{l.newToken(), isBlock})
 }
 
 func (l *protoLex) setPrevAndAddComments(n ast.TerminalNode) {
 	comments, maybeDonateComment := l.comments, l.maybeDonateComment
 	l.comments, l.maybeDonateComment = nil, 0
-
 	var prevTrailingComments []comment
-
 	if l.prevSym != nil && len(comments) > 0 {
 		cur := l.curLine
 		if cur == l.prevLine {
@@ -458,7 +405,6 @@ func (l *protoLex) setPrevAndAddComments(n ast.TerminalNode) {
 				cur++
 			}
 		}
-
 		if cur > l.prevLine && maybeDonateComment > 0 {
 			// Comment starts right after the previous token. If it's a
 			// line comment, we record that as a trailing comment.
@@ -481,7 +427,6 @@ func (l *protoLex) setPrevAndAddComments(n ast.TerminalNode) {
 	for _, c := range prevTrailingComments {
 		l.info.AddComment(c.tok, l.prevSym.Token())
 	}
-
 	for _, c := range comments {
 		l.info.AddComment(c.tok, n.Token())
 	}
@@ -521,20 +466,16 @@ func (l *protoLex) setError(lval *protoSymType, err error) {
 
 func (l *protoLex) readNumber() {
 	allowExpSign := false
-
 	for {
 		c, sz, err := l.input.readRune()
 		if err != nil {
 			break
 		}
-
 		if (c == '-' || c == '+') && !allowExpSign {
 			l.input.unreadRune(sz)
 			break
 		}
-
 		allowExpSign = false
-
 		if c != '.' && c != '_' && (c < '0' || c > '9') &&
 			(c < 'a' || c > 'z') && (c < 'A' || c > 'Z') &&
 			c != '-' && c != '+' {
@@ -542,7 +483,6 @@ func (l *protoLex) readNumber() {
 			l.input.unreadRune(sz)
 			break
 		}
-
 		if c == 'e' || c == 'E' {
 			// scientific notation char can be followed by
 			// an exponent sign
@@ -556,7 +496,6 @@ func numError(err error, kind, s string) error {
 	if !ok {
 		return err
 	}
-
 	if ne.Err == strconv.ErrRange {
 		return fmt.Errorf("value out of range for %s: %s", kind, s)
 	}
@@ -570,7 +509,6 @@ func (l *protoLex) readIdentifier() {
 		if err != nil {
 			break
 		}
-
 		if c != '_' && (c < 'a' || c > 'z') && (c < 'A' || c > 'Z') && (c < '0' || c > '9') {
 			l.input.unreadRune(sz)
 			break
@@ -579,17 +517,13 @@ func (l *protoLex) readIdentifier() {
 }
 
 func (l *protoLex) readStringLiteral(quote rune) (string, error) {
-	var (
-		buf          bytes.Buffer
-		escapeError  reporter.ErrorWithPos
-		noMoreErrors bool
-	)
-
+	var buf bytes.Buffer
+	var escapeError reporter.ErrorWithPos
+	var noMoreErrors bool
 	reportErr := func(msg, badEscape string) {
 		if noMoreErrors {
 			return
 		}
-
 		if escapeError != nil {
 			// report previous one
 			_, ok := l.addSourceError(escapeError)
@@ -597,7 +531,6 @@ func (l *protoLex) readStringLiteral(quote rune) (string, error) {
 				noMoreErrors = true
 			}
 		}
-
 		var err error
 		if strings.HasSuffix(msg, "%s") {
 			err = fmt.Errorf(msg, badEscape)
@@ -608,37 +541,30 @@ func (l *protoLex) readStringLiteral(quote rune) (string, error) {
 		// to back up to the beginning of the escape to report the correct position
 		escapeError = l.errWithCurrentPos(err, -len(badEscape))
 	}
-
 	for {
 		c, _, err := l.input.readRune()
 		if err != nil {
 			if err == io.EOF {
 				err = io.ErrUnexpectedEOF
 			}
-
 			return "", err
 		}
-
 		if c == '\n' {
 			return "", errors.New("encountered end-of-line before end of string literal")
 		}
-
 		if c == quote {
 			break
 		}
-
 		if c == 0 {
 			reportErr("null character ('\\0') not allowed in string literal", string(rune(0)))
 			continue
 		}
-
 		if c == '\\' {
 			// escape sequence
 			c, _, err = l.input.readRune()
 			if err != nil {
 				return "", err
 			}
-
 			switch {
 			case c == 'x' || c == 'X':
 				// hex escape
@@ -646,35 +572,27 @@ func (l *protoLex) readStringLiteral(quote rune) (string, error) {
 				if err != nil {
 					return "", err
 				}
-
 				if c1 == quote || c1 == '\\' {
 					l.input.unreadRune(sz1)
 					reportErr("invalid hex escape: %s", "\\"+string(c))
-
 					continue
 				}
-
 				c2, sz2, err := l.input.readRune()
 				if err != nil {
 					return "", err
 				}
-
 				var hex string
-
 				if (c2 < '0' || c2 > '9') && (c2 < 'a' || c2 > 'f') && (c2 < 'A' || c2 > 'F') {
 					l.input.unreadRune(sz2)
-
 					hex = string(c1)
 				} else {
 					hex = string([]rune{c1, c2})
 				}
-
 				i, err := strconv.ParseInt(hex, 16, 32)
 				if err != nil {
 					reportErr("invalid hex escape: %s", "\\"+string(c)+hex)
 					continue
 				}
-
 				buf.WriteByte(byte(i))
 			case c >= '0' && c <= '7':
 				// octal escape
@@ -682,39 +600,31 @@ func (l *protoLex) readStringLiteral(quote rune) (string, error) {
 				if err != nil {
 					return "", err
 				}
-
 				var octal string
-
 				if c2 < '0' || c2 > '7' {
 					l.input.unreadRune(sz2)
-
 					octal = string(c)
 				} else {
 					c3, sz3, err := l.input.readRune()
 					if err != nil {
 						return "", err
 					}
-
 					if c3 < '0' || c3 > '7' {
 						l.input.unreadRune(sz3)
-
 						octal = string([]rune{c, c2})
 					} else {
 						octal = string([]rune{c, c2, c3})
 					}
 				}
-
 				i, err := strconv.ParseInt(octal, 8, 32)
 				if err != nil {
 					reportErr("invalid octal escape: %s", "\\"+octal)
 					continue
 				}
-
 				if i > 0xff {
 					reportErr("octal escape is out range, must be between 0 and 377: %s", "\\"+octal)
 					continue
 				}
-
 				buf.WriteByte(byte(i))
 			case c == 'u':
 				// short unicode escape
@@ -724,30 +634,23 @@ func (l *protoLex) readStringLiteral(quote rune) (string, error) {
 					if err != nil {
 						return "", err
 					}
-
 					if c2 == quote || c2 == '\\' {
 						l.input.unreadRune(sz2)
-
 						u = u[:i]
-
 						break
 					}
-
 					u[i] = c2
 				}
-
 				codepointStr := string(u)
 				if len(u) < 4 {
 					reportErr("invalid unicode escape: %s", "\\u"+codepointStr)
 					continue
 				}
-
 				i, err := strconv.ParseInt(codepointStr, 16, 32)
 				if err != nil {
 					reportErr("invalid unicode escape: %s", "\\u"+codepointStr)
 					continue
 				}
-
 				buf.WriteRune(rune(i))
 			case c == 'U':
 				// long unicode escape
@@ -757,35 +660,27 @@ func (l *protoLex) readStringLiteral(quote rune) (string, error) {
 					if err != nil {
 						return "", err
 					}
-
 					if c2 == quote || c2 == '\\' {
 						l.input.unreadRune(sz2)
-
 						u = u[:i]
-
 						break
 					}
-
 					u[i] = c2
 				}
-
 				codepointStr := string(u)
 				if len(u) < 8 {
 					reportErr("invalid unicode escape: %s", "\\U"+codepointStr)
 					continue
 				}
-
 				i, err := strconv.ParseInt(string(u), 16, 32)
 				if err != nil {
 					reportErr("invalid unicode escape: %s", "\\U"+codepointStr)
 					continue
 				}
-
 				if i > 0x10ffff || i < 0 {
 					reportErr("unicode escape is out of range, must be between 0 and 0x10ffff: %s", "\\U"+codepointStr)
 					continue
 				}
-
 				buf.WriteRune(rune(i))
 			case c == 'a':
 				buf.WriteByte('\a')
@@ -817,11 +712,9 @@ func (l *protoLex) readStringLiteral(quote rune) (string, error) {
 			buf.WriteRune(c)
 		}
 	}
-
 	if escapeError != nil {
 		return "", escapeError
 	}
-
 	return buf.String(), nil
 }
 
@@ -832,7 +725,6 @@ func (l *protoLex) skipToEndOfLineComment(lval *protoSymType) (hasErr bool) {
 			// eof
 			return false
 		}
-
 		switch c {
 		case '\n':
 			// don't include newline in the comment
@@ -851,24 +743,19 @@ func (l *protoLex) skipToEndOfBlockComment(lval *protoSymType) (ok, hasErr bool)
 		if err != nil {
 			return false, false
 		}
-
 		if c == 0 {
 			l.setError(lval, errors.New("invalid control character"))
 			return false, true
 		}
-
 		l.maybeNewLine(c)
-
 		if c == '*' {
 			c, sz, err := l.input.readRune()
 			if err != nil {
 				return false, false
 			}
-
 			if c == '/' {
 				return true, false
 			}
-
 			l.input.unreadRune(sz)
 		}
 	}
@@ -880,9 +767,7 @@ func (l *protoLex) addSourceError(err error) (reporter.ErrorWithPos, bool) {
 		// TODO: Store the previous span instead of just the position.
 		ewp = reporter.Error(ast.NewSourceSpan(l.prev(), l.prev()), err)
 	}
-
 	handlerErr := l.handler.HandleError(ewp)
-
 	return ewp, handlerErr == nil
 }
 
@@ -895,9 +780,7 @@ func (l *protoLex) errWithCurrentPos(err error, offset int) reporter.ErrorWithPo
 	if ewp, ok := err.(reporter.ErrorWithPos); ok {
 		return ewp
 	}
-
 	pos := l.info.SourcePos(l.input.offset() + offset)
-
 	return reporter.Error(ast.NewSourceSpan(pos, pos), err)
 }
 
@@ -906,6 +789,5 @@ func (l *protoLex) requireSemicolon(semicolons []*ast.RuneNode) (*ast.RuneNode, 
 		l.Error("syntax error: expecting ';'")
 		return nil, nil
 	}
-
 	return semicolons[0], semicolons[1:]
 }

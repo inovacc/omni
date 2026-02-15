@@ -89,11 +89,9 @@ func (e *Error) Error() string {
 	if e.Err != nil {
 		errString = e.Err.Error()
 	}
-
 	if errString == "" {
 		errString = "error"
 	}
-
 	return e.Path + ": " + errString
 }
 
@@ -102,7 +100,6 @@ func (e *Error) Unwrap() error {
 	if e == nil {
 		return nil
 	}
-
 	return e.Err
 }
 
@@ -120,7 +117,6 @@ func NormalizeAndAbsolute(path string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-
 	return Normalize(absPath), nil
 }
 
@@ -177,12 +173,10 @@ func Join(paths ...string) string {
 	for i, path := range paths {
 		unnormalized[i] = Unnormalize(path)
 	}
-
 	value := filepath.Join(unnormalized...)
 	if value == "" {
 		return ""
 	}
-
 	return Normalize(value)
 }
 
@@ -196,7 +190,6 @@ func Rel(basepath string, targpath string) (string, error) {
 	if path == "" {
 		return "", err
 	}
-
 	return Normalize(path), err
 }
 
@@ -207,17 +200,14 @@ func Rel(basepath string, targpath string) (string, error) {
 // The path is expected to be normalized.
 func ByDir(paths ...string) map[string][]string {
 	m := make(map[string][]string)
-
 	for _, path := range paths {
 		path = Normalize(path)
 		dir := filepath.Dir(path)
 		m[dir] = append(m[dir], path)
 	}
-
 	for _, dirPaths := range m {
 		sort.Strings(dirPaths)
 	}
-
 	return m
 }
 
@@ -232,7 +222,6 @@ func ChunkByDir(paths []string, suggestedChunkSize int) [][]string {
 	if len(paths) == 0 {
 		return chunks
 	}
-
 	if suggestedChunkSize <= 0 {
 		return [][]string{paths}
 	}
@@ -243,7 +232,6 @@ func ChunkByDir(paths []string, suggestedChunkSize int) [][]string {
 	for dir := range dirToPaths {
 		dirs = append(dirs, dir)
 	}
-
 	sort.Strings(dirs)
 	// Create a slice of the per-directory path slices
 	pathsByDir := make([][]string, 0, len(dirToPaths))
@@ -298,7 +286,6 @@ func ContainsPath(dirPath string, path string, pathType PathType) bool {
 	if dirPath == path {
 		return false
 	}
-
 	return EqualsOrContainsPath(dirPath, Dir(path), pathType)
 }
 
@@ -312,7 +299,6 @@ func MapAllEqualOrContainingPaths(m map[string]struct{}, path string, pathType P
 	if len(m) == 0 {
 		return nil
 	}
-
 	return xslices.MapKeysToSortedSlice(MapAllEqualOrContainingPathMap(m, path, pathType))
 }
 
@@ -325,12 +311,10 @@ func StripComponents(path string, countUint32 uint32) (string, bool) {
 	if count == 0 {
 		return path, true
 	}
-
 	components := Components(path)
 	if len(components) <= count {
 		return "", false
 	}
-
 	return Join(components[count:]...), true
 }
 
@@ -340,15 +324,12 @@ func ValidatePathComponent(component string) error {
 	if component == "" {
 		return errors.New("path component must not be empty")
 	}
-
 	if strings.ContainsRune(component, '/') {
 		return errors.New(`path component must not contain "/" `)
 	}
-
 	if strings.Contains(component, "..") {
 		return errors.New(`path component must not contain ".."`)
 	}
-
 	if url.PathEscape(component) != component {
 		return fmt.Errorf(
 			"path component must match its URL escaped version: %q did not match %q",
@@ -356,7 +337,6 @@ func ValidatePathComponent(component string) error {
 			url.PathEscape(component),
 		)
 	}
-
 	return nil
 }
 
@@ -368,7 +348,6 @@ func ValidatePathComponents(components ...string) error {
 			return err
 		}
 	}
-
 	return nil
 }
 
@@ -380,22 +359,17 @@ func ValidatePathsNormalizedValidatedUnique(paths []string) error {
 		if path == "" {
 			return errors.New("path is empty")
 		}
-
 		normalized, err := NormalizeAndValidate(path)
 		if err != nil {
 			return fmt.Errorf("path had normalization error: %w", err)
 		}
-
 		if path != normalized {
 			return fmt.Errorf("path %s was not normalized to %s", path, normalized)
 		}
-
 		if _, ok := pathMap[path]; ok {
 			return fmt.Errorf("duplicate path: %s", path)
 		}
-
 		pathMap[path] = struct{}{}
 	}
-
 	return nil
 }

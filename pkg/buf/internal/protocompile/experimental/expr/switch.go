@@ -71,7 +71,6 @@ func (e Switch) AsAny() Expr {
 	if e.IsZero() {
 		return Expr{}
 	}
-
 	return id.WrapDyn(e.Context(), id.NewDyn(KindSwitch, id.ID[Expr](e.ID())))
 }
 
@@ -80,7 +79,6 @@ func (e Switch) SwitchToken() token.Token {
 	if e.IsZero() {
 		return token.Zero
 	}
-
 	return id.Wrap(e.Context().Stream(), e.Raw().kw)
 }
 
@@ -89,7 +87,6 @@ func (e Switch) Arg() Expr {
 	if e.IsZero() {
 		return Expr{}
 	}
-
 	return id.WrapDyn(e.Context(), e.Raw().arg)
 }
 
@@ -98,7 +95,6 @@ func (e Switch) Braces() token.Token {
 	if e.IsZero() {
 		return token.Zero
 	}
-
 	return id.Wrap(e.Context().Stream(), e.Raw().braces)
 }
 
@@ -108,7 +104,6 @@ func (e Switch) Cases() seq.Inserter[Case] {
 	if !e.IsZero() {
 		cases = &e.Raw().cases
 	}
-
 	return cases.Inserter(e.Context())
 }
 
@@ -127,7 +122,6 @@ func (e Case) KeywordToken() token.Token {
 	if e.IsZero() {
 		return token.Zero
 	}
-
 	return id.Wrap(e.Context().Stream(), e.Raw().kw)
 }
 
@@ -136,7 +130,6 @@ func (e Case) Colon() token.Token {
 	if e.IsZero() {
 		return token.Zero
 	}
-
 	return id.Wrap(e.Context().Stream(), e.Raw().colon)
 }
 
@@ -145,7 +138,6 @@ func (e Case) Alts() Params {
 	if e.IsZero() {
 		return Params{}
 	}
-
 	return id.Wrap(e.Context(), e.Raw().alts)
 }
 
@@ -154,7 +146,6 @@ func (e Case) Block() Block {
 	if e.IsZero() {
 		return Block{}
 	}
-
 	return id.Wrap(e.Context(), e.Raw().block)
 }
 

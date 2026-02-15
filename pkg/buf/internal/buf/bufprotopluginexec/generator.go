@@ -50,12 +50,10 @@ func (g *generator) Generate(
 	for _, option := range options {
 		option(generateOptions)
 	}
-
 	handlerOptions := []HandlerOption{
 		HandlerWithPluginPath(generateOptions.pluginPath...),
 		HandlerWithProtocPath(generateOptions.protocPath...),
 	}
-
 	handler, err := NewHandler(
 		g.logger,
 		g.storageosProvider,
@@ -65,7 +63,6 @@ func (g *generator) Generate(
 	if err != nil {
 		return nil, err
 	}
-
 	return bufprotoplugin.NewGenerator(
 		g.logger,
 		handler,

@@ -36,7 +36,6 @@ func newNamedDescriptor(
 	if name == "" {
 		return namedDescriptor{}, fmt.Errorf("no name in %q", locationDescriptor.File().Path())
 	}
-
 	return namedDescriptor{
 		locationDescriptor: locationDescriptor,
 		name:               name,
@@ -49,7 +48,6 @@ func (n *namedDescriptor) FullName() string {
 	if n.File().Package() != "" {
 		return n.File().Package() + "." + n.NestedName()
 	}
-
 	return n.NestedName()
 }
 
@@ -57,7 +55,6 @@ func (n *namedDescriptor) NestedName() string {
 	if len(n.nestedNames) == 0 {
 		return n.Name()
 	}
-
 	return strings.Join(n.nestedNames, ".") + "." + n.Name()
 }
 
@@ -67,15 +64,12 @@ func (n *namedDescriptor) Name() string {
 
 func (n *namedDescriptor) NameLocation() Location {
 	nameLocation := n.getLocation(n.namePath)
-
 	location := n.getLocation(n.path)
 	if nameLocation != nil {
 		if location != nil {
 			return newMergeCommentLocation(nameLocation, location)
 		}
-
 		return nameLocation
 	}
-
 	return location
 }

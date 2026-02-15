@@ -96,7 +96,6 @@ func (m *message) ReservedTagRanges() []TagRange {
 	for i, reservedMessageRange := range m.reservedMessageRanges {
 		tagRanges[i] = reservedMessageRange
 	}
-
 	return tagRanges
 }
 
@@ -113,7 +112,6 @@ func (m *message) ExtensionMessageRanges() []MessageRange {
 	for i, extensionRange := range m.extensionRanges {
 		extMsgRanges[i] = extensionRange
 	}
-
 	return extMsgRanges
 }
 
@@ -154,7 +152,6 @@ func (m *message) Location() Location {
 	if loc == nil {
 		return m.maybeMapEntryLocation()
 	}
-
 	return loc
 }
 
@@ -163,7 +160,6 @@ func (m *message) NameLocation() Location {
 	if loc == nil {
 		return m.maybeMapEntryLocation()
 	}
-
 	return loc
 }
 
@@ -178,7 +174,6 @@ func (m *message) maybeMapEntryLocation() Location {
 	if field := parent.findMapField(m.FullName()); field != nil {
 		return field.TypeNameLocation()
 	}
-
 	return nil
 }
 
@@ -190,7 +185,6 @@ func (m *message) findMapField(entryName string) Field {
 			return field
 		}
 	}
-
 	return nil
 }
 

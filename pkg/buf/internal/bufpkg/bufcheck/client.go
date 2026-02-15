@@ -74,12 +74,10 @@ func newClient(
 	if err != nil {
 		return nil, syserror.Wrap(err)
 	}
-
 	v1DefaultCheckClient, err := check.NewClientForSpec(bufcheckserver.V1Spec, check.ClientWithCaching())
 	if err != nil {
 		return nil, syserror.Wrap(err)
 	}
-
 	v2DefaultCheckClient, err := check.NewClientForSpec(bufcheckserver.V2Spec, check.ClientWithCaching())
 	if err != nil {
 		return nil, syserror.Wrap(err)
@@ -119,7 +117,6 @@ func (c *client) Lint(
 	}
 	// Run lint checks.
 	var annotations []*annotation
-
 	lintAnnotations, err := c.lint(
 		ctx,
 		image,
@@ -132,27 +129,22 @@ func (c *client) Lint(
 	if err != nil {
 		return err
 	}
-
 	annotations = append(annotations, lintAnnotations...)
 	// Run lint policy checks.
 	policies, err := c.getPolicies(ctx, lintOptions.policyConfigs)
 	if err != nil {
 		return err
 	}
-
 	for index, policy := range policies {
 		policyConfig := lintOptions.policyConfigs[index]
-
 		policyLintConfig, err := policyToBufConfigLintConfig(policy, policyConfig)
 		if err != nil {
 			return err
 		}
-
 		pluginConfigs, err := policyToBufConfigPluginConfigs(policy)
 		if err != nil {
 			return err
 		}
-
 		policyAnnotations, err := c.lint(
 			ctx,
 			image,
@@ -165,14 +157,11 @@ func (c *client) Lint(
 		if err != nil {
 			return err
 		}
-
 		annotations = append(annotations, policyAnnotations...)
 	}
-
 	if len(annotations) == 0 {
 		return nil
 	}
-
 	return bufanalysis.NewFileAnnotationSet(
 		annotationsToFileAnnotations(
 			imageToPathToExternalPath(
@@ -195,7 +184,6 @@ func (c *client) lint(
 	if lintConfig.Disabled() {
 		return nil, nil
 	}
-
 	allRules, allCategories, err := c.allRulesAndCategories(
 		ctx,
 		lintConfig.FileVersion(),
@@ -206,25 +194,20 @@ func (c *client) lint(
 	if err != nil {
 		return nil, err
 	}
-
 	config, err := configForLintConfig(lintConfig, allRules, allCategories, relatedCheckConfigs)
 	if err != nil {
 		return nil, err
 	}
-
 	configName := bufconfig2.DefaultBufYAMLFileName
 	if policyConfig != nil {
 		configName = policyConfig.Name()
 	}
-
 	logRulesConfig(c.logger, configName, config.rulesConfig, hasPolicyConfigs)
-
 	files, err := descriptor.FileDescriptorsForProtoFileDescriptors(imageToProtoFileDescriptors(image))
 	if err != nil {
 		// An Image may be invalid if it does not contain all of the required dependencies.
 		return nil, fmt.Errorf("input image: %w", err)
 	}
-
 	request, err := check.NewRequest(
 		files,
 		check.WithRuleIDs(config.RuleIDs...),
@@ -233,7 +216,6 @@ func (c *client) lint(
 	if err != nil {
 		return nil, err
 	}
-
 	multiClient, err := c.getMultiClient(
 		ctx,
 		lintConfig.FileVersion(),
@@ -245,16 +227,13 @@ func (c *client) lint(
 	if err != nil {
 		return nil, err
 	}
-
 	annotations, err := multiClient.Check(ctx, request)
 	if err != nil {
 		return nil, err
 	}
-
 	if len(annotations) == 0 {
 		return nil, nil
 	}
-
 	return filterAnnotations(config, annotations)
 }
 
@@ -273,7 +252,6 @@ func (c *client) Breaking(
 	}
 	// Run breaking checks.
 	var annotations []*annotation
-
 	breakingAnnotations, err := c.breaking(
 		ctx,
 		image,
@@ -288,27 +266,22 @@ func (c *client) Breaking(
 	if err != nil {
 		return err
 	}
-
 	annotations = append(annotations, breakingAnnotations...)
 	// Run breaking policy checks.
 	policies, err := c.getPolicies(ctx, breakingOptions.policyConfigs)
 	if err != nil {
 		return err
 	}
-
 	for index, policy := range policies {
 		policyConfig := breakingOptions.policyConfigs[index]
-
 		policyBreakingConfig, err := policyToBufConfigBreakingConfig(policy, policyConfig)
 		if err != nil {
 			return err
 		}
-
 		pluginConfigs, err := policyToBufConfigPluginConfigs(policy)
 		if err != nil {
 			return err
 		}
-
 		policyAnnotations, err := c.breaking(
 			ctx,
 			image,
@@ -323,14 +296,11 @@ func (c *client) Breaking(
 		if err != nil {
 			return err
 		}
-
 		annotations = append(annotations, policyAnnotations...)
 	}
-
 	if len(annotations) == 0 {
 		return nil
 	}
-
 	return bufanalysis.NewFileAnnotationSet(
 		annotationsToFileAnnotations(
 			imageToPathToExternalPath(
@@ -355,7 +325,6 @@ func (c *client) breaking(
 	if breakingConfig.Disabled() {
 		return nil, nil
 	}
-
 	allRules, allCategories, err := c.allRulesAndCategories(
 		ctx,
 		breakingConfig.FileVersion(),
@@ -366,7 +335,6 @@ func (c *client) breaking(
 	if err != nil {
 		return nil, err
 	}
-
 	config, err := configForBreakingConfig(
 		breakingConfig,
 		allRules,
@@ -377,26 +345,21 @@ func (c *client) breaking(
 	if err != nil {
 		return nil, err
 	}
-
 	configName := bufconfig2.DefaultBufYAMLFileName
 	if policyConfig != nil {
 		configName = policyConfig.Name()
 	}
-
 	logRulesConfig(c.logger, configName, config.rulesConfig, hasPolicyConfigs)
-
 	fileDescriptors, err := descriptor.FileDescriptorsForProtoFileDescriptors(imageToProtoFileDescriptors(image))
 	if err != nil {
 		// An Image may be invalid if it does not contain all of the required dependencies.
 		return nil, fmt.Errorf("input image: %w", err)
 	}
-
 	againstFileDescriptors, err := descriptor.FileDescriptorsForProtoFileDescriptors(imageToProtoFileDescriptors(againstImage))
 	if err != nil {
 		// An Image may be invalid if it does not contain all of the required dependencies.
 		return nil, fmt.Errorf("against image: %w", err)
 	}
-
 	request, err := check.NewRequest(
 		fileDescriptors,
 		check.WithRuleIDs(config.RuleIDs...),
@@ -406,7 +369,6 @@ func (c *client) breaking(
 	if err != nil {
 		return nil, err
 	}
-
 	multiClient, err := c.getMultiClient(
 		ctx,
 		breakingConfig.FileVersion(),
@@ -418,16 +380,13 @@ func (c *client) breaking(
 	if err != nil {
 		return nil, err
 	}
-
 	annotations, err := multiClient.Check(ctx, request)
 	if err != nil {
 		return nil, err
 	}
-
 	if len(annotations) == 0 {
 		return nil, nil
 	}
-
 	return filterAnnotations(config, annotations)
 }
 
@@ -443,7 +402,6 @@ func (c *client) ConfiguredRules(
 	for _, option := range options {
 		option.applyToConfiguredRules(configuredRulesOptions)
 	}
-
 	rules, categories, err := c.allRulesAndCategories(
 		ctx,
 		checkConfig.FileVersion(),
@@ -454,30 +412,24 @@ func (c *client) ConfiguredRules(
 	if err != nil {
 		return nil, err
 	}
-
 	rulesConfig, err := rulesConfigForCheckConfig(checkConfig, rules, categories, ruleType, configuredRulesOptions.relatedCheckConfigs)
 	if err != nil {
 		return nil, err
 	}
-
 	logRulesConfig(c.logger, "", rulesConfig, len(configuredRulesOptions.policyConfigs) > 0)
 	allRules := rulesForRuleIDs(rules, rulesConfig.RuleIDs)
-
 	policies, err := c.getPolicies(ctx, configuredRulesOptions.policyConfigs)
 	if err != nil {
 		return nil, err
 	}
-
 	for index, policy := range policies {
 		policyConfig := configuredRulesOptions.policyConfigs[index]
-
 		pluginConfigs, err := policyToBufConfigPluginConfigs(policy)
 		if err != nil {
 			return nil, err
 		}
 		// Load the check config for the rule type.
 		var policyCheckConfig bufconfig2.CheckConfig
-
 		switch ruleType {
 		case check.RuleTypeLint:
 			policyCheckConfig, err = policyToBufConfigLintConfig(policy, policyConfig)
@@ -486,24 +438,19 @@ func (c *client) ConfiguredRules(
 		default:
 			return nil, fmt.Errorf("unknown check.RuleType: %v", ruleType)
 		}
-
 		if err != nil {
 			return nil, err
 		}
-
 		policyRules, policyCategories, err := c.allRulesAndCategories(ctx, policyCheckConfig.FileVersion(), pluginConfigs, policyConfig, false)
 		if err != nil {
 			return nil, err
 		}
-
 		policyRulesConfig, err := rulesConfigForCheckConfig(policyCheckConfig, policyRules, policyCategories, ruleType, nil)
 		if err != nil {
 			return nil, err
 		}
-
 		allRules = append(allRules, rulesForRuleIDs(policyRules, policyRulesConfig.RuleIDs)...)
 	}
-
 	return allRules, nil
 }
 
@@ -519,33 +466,26 @@ func (c *client) AllRules(
 	for _, option := range options {
 		option.applyToAllRules(allRulesOptions)
 	}
-
 	rules, _, err := c.allRulesAndCategories(ctx, fileVersion, allRulesOptions.pluginConfigs, nil, false)
 	if err != nil {
 		return nil, err
 	}
-
 	policies, err := c.getPolicies(ctx, allRulesOptions.policyConfigs)
 	if err != nil {
 		return nil, err
 	}
-
 	for index, policy := range policies {
 		policyConfig := allRulesOptions.policyConfigs[index]
-
 		pluginConfigs, err := policyToBufConfigPluginConfigs(policy)
 		if err != nil {
 			return nil, err
 		}
-
 		policyRules, _, err := c.allRulesAndCategories(ctx, fileVersion, pluginConfigs, policyConfig, false)
 		if err != nil {
 			return nil, err
 		}
-
 		rules = append(rules, policyRules...)
 	}
-
 	return rulesForType(rules, ruleType), nil
 }
 
@@ -560,9 +500,7 @@ func (c *client) AllCategories(
 	for _, option := range options {
 		option.applyToAllCategories(allCategoriesOptions)
 	}
-
 	_, categories, err := c.allRulesAndCategories(ctx, fileVersion, allCategoriesOptions.pluginConfigs, nil, false)
-
 	return categories, err
 }
 
@@ -580,7 +518,6 @@ func (c *client) allRulesAndCategories(
 	if err != nil {
 		return nil, nil, err
 	}
-
 	return multiClient.ListRulesAndCategories(ctx)
 }
 
@@ -596,42 +533,34 @@ func (c *client) getMultiClient(
 	if policyConfig != nil {
 		policyConfigName = policyConfig.Name()
 	}
-
 	var checkClientSpecs []*checkClientSpec
-
 	if !disableBuiltin {
 		defaultCheckClient, ok := c.fileVersionToDefaultCheckClient[fileVersion]
 		if !ok {
 			return nil, fmt.Errorf("unknown FileVersion: %v", fileVersion)
 		}
-
 		checkClientSpecs = append(
 			checkClientSpecs,
 			// We do not set PluginName for default check.Clients.
 			newCheckClientSpec("", policyConfigName, defaultCheckClient, defaultOptions),
 		)
 	}
-
 	plugins, err := c.getPlugins(ctx, pluginConfigs, policyConfig)
 	if err != nil {
 		return nil, err
 	}
-
 	for index, pluginConfig := range pluginConfigs {
 		options, err := option.NewOptions(pluginConfig.Options())
 		if err != nil {
 			return nil, fmt.Errorf("could not parse options for plugin %q: %w", pluginConfig.Name(), err)
 		}
-
 		if c.runnerProvider == nil {
 			return nil, fmt.Errorf("must set a RunnerProvider to use plugins")
 		}
-
 		runner, err := c.runnerProvider.NewRunner(plugins[index])
 		if err != nil {
 			return nil, fmt.Errorf("could not create runner for plugin %q: %w", pluginConfig.Name(), err)
 		}
-
 		checkClient := check.NewClient(
 			pluginrpc.NewClient(
 				runner,
@@ -650,7 +579,6 @@ func (c *client) getMultiClient(
 			newCheckClientSpec(pluginConfig.Name(), policyConfigName, checkClient, options),
 		)
 	}
-
 	return newMultiClient(c.logger, checkClientSpecs), nil
 }
 
@@ -658,11 +586,9 @@ func (c *client) getPlugins(ctx context.Context, pluginConfigs []bufconfig2.Plug
 	if len(pluginConfigs) == 0 {
 		return nil, nil
 	}
-
 	plugins := make([]bufplugin2.Plugin, len(pluginConfigs))
 
 	var indexedPluginRefs []xslices.Indexed[bufparse2.Ref]
-
 	for index, pluginConfig := range pluginConfigs {
 		switch pluginConfig.Type() {
 		case bufconfig2.PluginConfigTypeLocal:
@@ -673,19 +599,16 @@ func (c *client) getPlugins(ctx context.Context, pluginConfigs []bufconfig2.Plug
 			if err != nil {
 				return nil, fmt.Errorf("could not create local Plugin %q: %w", pluginConfig.Name(), err)
 			}
-
 			plugins[index] = plugin
 		case bufconfig2.PluginConfigTypeLocalWasm:
 			if c.pluginReadFile == nil {
 				// Local Wasm plugins are not supported without a pluginReadFile.
 				return nil, fmt.Errorf("unable to read local Wasm Plugin %q", pluginConfig.Name())
 			}
-
 			var pluginFullName bufparse2.FullName
 			if ref := pluginConfig.Ref(); ref != nil {
 				pluginFullName = ref.FullName()
 			}
-
 			plugin, err := bufplugin2.NewLocalWasmPlugin(
 				pluginFullName,
 				pluginConfig.Name(),
@@ -697,14 +620,12 @@ func (c *client) getPlugins(ctx context.Context, pluginConfigs []bufconfig2.Plug
 			if err != nil {
 				return nil, err
 			}
-
 			plugins[index] = plugin
 		case bufconfig2.PluginConfigTypeRemoteWasm:
 			pluginRef := pluginConfig.Ref()
 			if pluginRef == nil {
 				return nil, syserror.Newf("missing Ref for remote PluginConfig %q", pluginConfig.Name())
 			}
-
 			indexedPluginRefs = append(indexedPluginRefs, xslices.Indexed[bufparse2.Ref]{
 				Value: pluginRef,
 				Index: index,
@@ -716,44 +637,35 @@ func (c *client) getPlugins(ctx context.Context, pluginConfigs []bufconfig2.Plug
 	// Load the remote plugin data for each plugin ref.
 	if len(indexedPluginRefs) > 0 {
 		pluginKeyProvider := c.pluginKeyProvider
-
 		pluginDataProvider := c.pluginDataProvider
 		if policyConfig != nil {
 			// Resolve the Plugin providers for the policy config.
 			pluginKeyProvider = c.policyPluginKeyProvider.GetPluginKeyProviderForPolicy(policyConfig.Name())
 			pluginDataProvider = c.policyPluginDataProvider.GetPluginDataProviderForPolicy(policyConfig.Name())
 		}
-
 		pluginRefs := xslices.IndexedToValues(indexedPluginRefs)
-
 		pluginKeys, err := pluginKeyProvider.GetPluginKeysForPluginRefs(ctx, pluginRefs, bufplugin2.DigestTypeP1)
 		if err != nil {
 			if errors.Is(err, fs.ErrNotExist) {
 				if policyConfig != nil {
 					return nil, fmt.Errorf("unable to resolve plugins for policy %q: %w", policyConfig.Name(), err)
 				}
-
 				return nil, fmt.Errorf("unable to resolve plugins: %w", err)
 			}
-
 			return nil, err
 		}
-
 		pluginDatas, err := pluginDataProvider.GetPluginDatasForPluginKeys(ctx, pluginKeys)
 		if err != nil {
 			return nil, err
 		}
-
 		if len(pluginDatas) != len(pluginRefs) {
 			return nil, syserror.Newf("expected %d PluginData, got %d", len(pluginRefs), len(pluginDatas))
 		}
-
 		for dataIndex, indexedPluginRef := range indexedPluginRefs {
 			pluginData := pluginDatas[dataIndex]
 			pluginRef := indexedPluginRef.Value
 			index := indexedPluginRef.Index
 			pluginConfig := pluginConfigs[index]
-
 			plugin, err := bufplugin2.NewRemoteWasmPlugin(
 				pluginRef.FullName(),
 				pluginConfig.Args(),
@@ -763,11 +675,9 @@ func (c *client) getPlugins(ctx context.Context, pluginConfigs []bufconfig2.Plug
 			if err != nil {
 				return nil, fmt.Errorf("could not create remote Plugin %q: %w", pluginRef.String(), err)
 			}
-
 			plugins[index] = plugin
 		}
 	}
-
 	return plugins, nil
 }
 
@@ -775,18 +685,15 @@ func (c *client) getPolicies(ctx context.Context, policyConfigs []bufconfig2.Pol
 	if len(policyConfigs) == 0 {
 		return nil, nil
 	}
-
 	policies := make([]bufpolicy2.Policy, len(policyConfigs))
 
 	var indexedPolicyRefs []xslices.Indexed[bufparse2.Ref]
-
 	for index, policyConfig := range policyConfigs {
 		if ref := policyConfig.Ref(); ref != nil {
 			indexedPolicyRefs = append(indexedPolicyRefs, xslices.Indexed[bufparse2.Ref]{
 				Value: ref,
 				Index: index,
 			})
-
 			continue
 		}
 		// Local policy config.
@@ -794,60 +701,48 @@ func (c *client) getPolicies(ctx context.Context, policyConfigs []bufconfig2.Pol
 			// Local policy configs are not supported without a policyReadFile.
 			return nil, fmt.Errorf("unable to read local Policy %q", policyConfig.Name())
 		}
-
 		policyData, err := c.policyReadFile(policyConfig.Name())
 		if err != nil {
 			return nil, fmt.Errorf("could not read local policy config %q: %w", policyConfig.Name(), err)
 		}
-
 		reader := bytes.NewReader(policyData)
-
 		policyFile, err := bufpolicyconfig.ReadBufPolicyYAMLFile(reader, policyConfig.Name())
 		if err != nil {
 			return nil, fmt.Errorf("could not read policy file %q: %w", policyConfig.Name(), err)
 		}
-
 		policy, err := bufpolicy2.NewPolicy("", nil, policyConfig.Name(), uuid.Nil, policyFile.PolicyConfig)
 		if err != nil {
 			return nil, err
 		}
-
 		policies[index] = policy
 	}
 	// Load the remote policy data for each policy ref.
 	if len(indexedPolicyRefs) > 0 {
 		policyRefs := xslices.IndexedToValues(indexedPolicyRefs)
-
 		policyKeys, err := c.policyKeyProvider.GetPolicyKeysForPolicyRefs(ctx, policyRefs, bufpolicy2.DigestTypeO1)
 		if err != nil {
 			return nil, fmt.Errorf("could not get PolicyKeys for PolicyRefs: %w", err)
 		}
-
 		policyDatas, err := c.policyDataProvider.GetPolicyDatasForPolicyKeys(ctx, policyKeys)
 		if err != nil {
 			return nil, fmt.Errorf("could not get PolicyDatas for PolicyKeys: %w", err)
 		}
-
 		if len(policyDatas) != len(policyRefs) {
 			return nil, syserror.Newf("expected %d PolicyData, got %d", len(policyRefs), len(policyDatas))
 		}
-
 		for dataIndex, indexedPolicyRef := range indexedPolicyRefs {
 			policyData := policyDatas[dataIndex]
 			policyKey := policyData.PolicyKey()
 			index := indexedPolicyRef.Index
-
 			policy, err := bufpolicy2.NewPolicy("", policyKey.FullName(), policyKey.FullName().String(), policyKey.CommitID(), func() (bufpolicy2.PolicyConfig, error) {
 				return policyData.Config()
 			})
 			if err != nil {
 				return nil, err
 			}
-
 			policies[index] = policy
 		}
 	}
-
 	return policies, nil
 }
 
@@ -862,7 +757,6 @@ func filterAnnotations(
 			if err != nil {
 				return false, err
 			}
-
 			return !ignore, nil
 		},
 	)
@@ -877,16 +771,13 @@ func ignoreAnnotation(
 		if err != nil {
 			return false, err
 		}
-
 		if ignore {
 			return true, nil
 		}
 	}
-
 	if againstFileLocation := annotation.AgainstFileLocation(); againstFileLocation != nil {
 		return ignoreFileLocation(config, annotation.RuleID(), againstFileLocation)
 	}
-
 	return false, nil
 }
 
@@ -901,7 +792,6 @@ func ignoreFileLocation(
 	}
 
 	protoreflectFileDescriptor := fileDescriptor.ProtoreflectFileDescriptor()
-
 	path := protoreflectFileDescriptor.Path()
 	if normalpath2.MapHasEqualOrContainingPath(config.IgnoreRootPaths, path, normalpath2.Relative) {
 		return true, nil
@@ -927,12 +817,10 @@ func ignoreFileLocation(
 		if len(sourcePath) == 0 {
 			return false, nil
 		}
-
 		associatedSourcePaths, err := protosourcepath.GetAssociatedSourcePaths(sourcePath)
 		if err != nil {
 			return false, err
 		}
-
 		sourceLocations := protoreflectFileDescriptor.SourceLocations()
 		for _, associatedSourcePath := range associatedSourcePaths {
 			sourceLocation := sourceLocations.ByPath(associatedSourcePath)
@@ -945,7 +833,6 @@ func ignoreFileLocation(
 			}
 		}
 	}
-
 	return false, nil
 }
 

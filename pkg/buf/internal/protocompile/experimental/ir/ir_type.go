@@ -37,7 +37,6 @@ import (
 // This can represent either a [Member] or a [ReservedRange].
 type TagRange struct {
 	withContext
-
 	raw rawTagRange
 }
 
@@ -47,7 +46,6 @@ func (r TagRange) AsMember() Member {
 	if r.IsZero() || !r.raw.isMember {
 		return Member{}
 	}
-
 	return id.Wrap(r.Context(), id.ID[Member](r.raw.ptr))
 }
 
@@ -57,7 +55,6 @@ func (r TagRange) AsReserved() ReservedRange {
 	if r.IsZero() || r.raw.isMember {
 		return ReservedRange{}
 	}
-
 	return id.Wrap(r.Context(), id.ID[ReservedRange](r.raw.ptr))
 }
 
@@ -136,7 +133,6 @@ func PredeclaredType(n predeclared.Name) Type {
 	if !n.IsScalar() {
 		return Type{}
 	}
-
 	return id.Wrap(primitiveCtx, id.ID[Type](n))
 }
 
@@ -148,7 +144,6 @@ func (t Type) AST() ast.DeclDef {
 	if t.IsZero() {
 		return ast.DeclDef{}
 	}
-
 	return id.Wrap(t.Context().AST(), t.Raw().def)
 }
 
@@ -187,7 +182,6 @@ func (t Type) IsClosedEnum() bool {
 
 	builtins := t.Context().builtins()
 	n, _ := t.FeatureSet().Lookup(builtins.FeatureEnum).Value().AsInt()
-
 	return n == 2 // FeatureSet.CLOSED
 }
 
@@ -274,11 +268,9 @@ func (t Type) FullName() FullName {
 	if t.IsZero() {
 		return ""
 	}
-
 	if p := t.Predeclared(); p != predeclared.Unknown {
 		return FullName(p.String())
 	}
-
 	return FullName(t.Context().session.intern.Value(t.Raw().fqn))
 }
 
@@ -287,7 +279,6 @@ func (t Type) Scope() FullName {
 	if t.IsZero() {
 		return ""
 	}
-
 	return FullName(t.Context().session.intern.Value(t.InternedScope()))
 }
 
@@ -298,7 +289,6 @@ func (t Type) InternedName() intern.ID {
 	if t.IsZero() {
 		return 0
 	}
-
 	return t.Raw().name
 }
 
@@ -309,7 +299,6 @@ func (t Type) InternedFullName() intern.ID {
 	if t.IsZero() {
 		return 0
 	}
-
 	return t.Raw().fqn
 }
 
@@ -320,11 +309,9 @@ func (t Type) InternedScope() intern.ID {
 	if t.IsZero() {
 		return 0
 	}
-
 	if parent := t.Parent(); !parent.IsZero() {
 		return parent.InternedFullName()
 	}
-
 	return t.Context().InternedPackage()
 }
 
@@ -334,7 +321,6 @@ func (t Type) Parent() Type {
 	if t.IsZero() {
 		return Type{}
 	}
-
 	return id.Wrap(t.Context(), t.Raw().parent)
 }
 
@@ -346,7 +332,6 @@ func (t Type) Nested() seq.Indexer[Type] {
 	if !t.IsZero() {
 		slice = t.Raw().nested
 	}
-
 	return seq.NewFixedSlice(
 		slice,
 		func(_ int, p id.ID[Type]) Type {
@@ -360,7 +345,6 @@ func (t Type) MapField() Member {
 	if t.IsZero() {
 		return Member{}
 	}
-
 	return id.Wrap(t.Context(), t.Raw().mapEntryOf)
 }
 
@@ -381,7 +365,6 @@ func (t Type) Members() seq.Indexer[Member] {
 	if !t.IsZero() {
 		slice = t.Raw().members[:t.Raw().extnsStart]
 	}
-
 	return seq.NewFixedSlice(
 		slice,
 		func(_ int, p id.ID[Member]) Member {
@@ -397,12 +380,10 @@ func (t Type) MemberByName(name string) Member {
 	if t.IsZero() {
 		return Member{}
 	}
-
 	id, ok := t.Context().session.intern.Query(name)
 	if !ok {
 		return Member{}
 	}
-
 	return t.MemberByInternedName(id)
 }
 
@@ -411,7 +392,6 @@ func (t Type) MemberByInternedName(name intern.ID) Member {
 	if t.IsZero() {
 		return Member{}
 	}
-
 	return id.Wrap(t.Context(), t.Raw().memberByName()[name])
 }
 
@@ -442,7 +422,6 @@ func (t Type) MemberByNumber(number int32) Member {
 	_, member := iterx.Find(t.Ranges(number), func(r TagRange) bool {
 		return !r.AsMember().IsZero()
 	})
-
 	return member.AsMember()
 }
 
@@ -454,7 +433,6 @@ func (t Type) makeMembersByName() intern.Map[id.ID[Member]] {
 		field := id.Wrap(t.Context(), p)
 		table[field.InternedName()] = p
 	}
-
 	return table
 }
 
@@ -464,7 +442,6 @@ func (t Type) Extensions() seq.Indexer[Member] {
 	if !t.IsZero() {
 		slice = t.Raw().members[t.Raw().extnsStart:]
 	}
-
 	return seq.NewFixedSlice(
 		slice,
 		func(_ int, p id.ID[Member]) Member {
@@ -481,7 +458,6 @@ func (t Type) AllRanges() seq.Indexer[ReservedRange] {
 	if !t.IsZero() {
 		slice = t.Raw().ranges
 	}
-
 	return seq.NewFixedSlice(slice, func(_ int, p id.ID[ReservedRange]) ReservedRange {
 		return id.Wrap(t.Context(), p)
 	})
@@ -495,7 +471,6 @@ func (t Type) ReservedRanges() seq.Indexer[ReservedRange] {
 	if !t.IsZero() {
 		slice = t.Raw().ranges[:t.Raw().rangesExtnStart]
 	}
-
 	return seq.NewFixedSlice(slice, func(_ int, p id.ID[ReservedRange]) ReservedRange {
 		return id.Wrap(t.Context(), p)
 	})
@@ -507,7 +482,6 @@ func (t Type) ExtensionRanges() seq.Indexer[ReservedRange] {
 	if !t.IsZero() {
 		slice = t.Raw().ranges[t.Raw().rangesExtnStart:]
 	}
-
 	return seq.NewFixedSlice(slice, func(_ int, p id.ID[ReservedRange]) ReservedRange {
 		return id.Wrap(t.Context(), p)
 	})
@@ -519,7 +493,6 @@ func (t Type) ReservedNames() seq.Indexer[ReservedName] {
 	if !t.IsZero() {
 		slice = t.Raw().reservedNames
 	}
-
 	return seq.NewFixedSlice(
 		slice,
 		func(i int, _ rawReservedName) ReservedName {
@@ -536,7 +509,6 @@ func (t Type) AbsoluteRange() (start, end int32) {
 	if t.IsZero() {
 		return 0, 0
 	}
-
 	switch {
 	case t.IsEnum():
 		return math.MinInt32, math.MaxInt32
@@ -572,7 +544,6 @@ func (t Type) Oneofs() seq.Indexer[Oneof] {
 	if !t.IsZero() {
 		oneofs = t.Raw().oneofs
 	}
-
 	return seq.NewFixedSlice(
 		oneofs,
 		func(_ int, p id.ID[Oneof]) Oneof {
@@ -587,7 +558,6 @@ func (t Type) Extends() seq.Indexer[Extend] {
 	if !t.IsZero() {
 		extends = t.Raw().extends
 	}
-
 	return seq.NewFixedSlice(
 		extends,
 		func(_ int, p id.ID[Extend]) Extend {
@@ -601,7 +571,6 @@ func (t Type) Options() MessageValue {
 	if t.IsZero() {
 		return MessageValue{}
 	}
-
 	return id.Wrap(t.Context(), t.Raw().options).AsMessage()
 }
 
@@ -610,7 +579,6 @@ func (t Type) FeatureSet() FeatureSet {
 	if t.IsZero() {
 		return FeatureSet{}
 	}
-
 	return id.Wrap(t.Context(), t.Raw().features)
 }
 
@@ -620,19 +588,15 @@ func (t Type) Deprecated() Value {
 	if t.IsZero() || t.IsPredeclared() {
 		return Value{}
 	}
-
 	builtins := t.Context().builtins()
-
 	field := builtins.MessageDeprecated
 	if t.IsEnum() {
 		field = builtins.EnumDeprecated
 	}
-
 	d := t.Options().Field(field)
 	if b, _ := d.AsBool(); b {
 		return d
 	}
-
 	return Value{}
 }
 

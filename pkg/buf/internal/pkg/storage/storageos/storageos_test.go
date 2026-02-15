@@ -36,7 +36,6 @@ func init() {
 	if !ok {
 		panic("cannot get current file path")
 	}
-
 	storagetestingDirPath = filepath.Join(filepath.Dir(filename), "..", "storagetesting")
 }
 
@@ -53,7 +52,6 @@ func TestOS(t *testing.T) {
 
 	t.Run("get_non_existent_file", func(t *testing.T) {
 		t.Parallel()
-
 		ctx := context.Background()
 		// Create a bucket at an absolute path.
 		tempDir := t.TempDir()
@@ -85,9 +83,7 @@ func TestOS(t *testing.T) {
 		if runtime.GOOS == "windows" {
 			t.Skip("Skipped on Windows: symlinks require admin privileges")
 		}
-
 		t.Parallel()
-
 		ctx := context.Background()
 		// Create a bucket at an absolute path.
 		actualTempDir := t.TempDir()
@@ -99,10 +95,8 @@ func TestOS(t *testing.T) {
 		tempDir := t.TempDir()
 		tempDir, err = filepath.Abs(tempDir)
 		require.NoError(t, err)
-
 		tempDir = filepath.Join(tempDir, "sym")
 		require.NoError(t, os.Symlink(actualTempDir, tempDir))
-
 		provider := storageos.NewProvider(storageos.ProviderWithSymlinks())
 		bucket, err := provider.NewReadWriteBucket(tempDir, storageos.ReadWriteBucketWithSymlinksIfSupported())
 		require.NoError(t, err)
@@ -129,7 +123,6 @@ func testNewReadBucket(t *testing.T, dirPath string, storageosProvider storageos
 		storageos.ReadWriteBucketWithSymlinksIfSupported(),
 	)
 	require.NoError(t, err)
-
 	return osBucket, func(t *testing.T, rootPath string, path string) string {
 		// Join calls Clean
 		return normalpath.Unnormalize(normalpath.Join(rootPath, path))
@@ -143,7 +136,6 @@ func testNewWriteBucket(t *testing.T, storageosProvider storageos.Provider) stor
 		storageos.ReadWriteBucketWithSymlinksIfSupported(),
 	)
 	require.NoError(t, err)
-
 	return osBucket
 }
 
@@ -151,6 +143,5 @@ func testWriteBucketToReadBucket(t *testing.T, writeBucket storage.WriteBucket) 
 	// hacky
 	readWriteBucket, ok := writeBucket.(storage.ReadWriteBucket)
 	require.True(t, ok)
-
 	return readWriteBucket
 }

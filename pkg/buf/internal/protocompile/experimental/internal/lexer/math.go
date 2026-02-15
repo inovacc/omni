@@ -40,7 +40,6 @@ type parseIntResult struct {
 // This function ignores any thousands separator underscores in digits.
 func parseInt(digits string, base byte) (result parseIntResult, ok bool) {
 	var bigBase, bigDigit *big.Float
-
 	for _, r := range digits {
 		if r == '_' {
 			result.hasThousands = true
@@ -55,7 +54,6 @@ func parseInt(digits string, base byte) (result parseIntResult, ok bool) {
 		if result.big == nil {
 			// Perform arithmetic while checking for overflow.
 			extra, shift := bits.Mul64(result.small, uint64(base))
-
 			sum, carry := bits.Add64(shift, uint64(digit), 0)
 			if extra == 0 && carry == 0 {
 				result.small = sum

@@ -18,8 +18,8 @@ import (
 	"errors"
 	"fmt"
 
-	"connectrpc.com/connect"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufparse"
+	"connectrpc.com/connect"
 )
 
 var (
@@ -115,11 +115,9 @@ func NewPolicyNotFoundError(name string) error {
 // NewInvalidRemoteError informs the user that the given remote is invalid.
 func NewInvalidRemoteError(err error, remote string, moduleFullName string) error {
 	var connectErr *connect.Error
-
 	ok := errors.As(err, &connectErr)
 	if ok {
 		err = connectErr.Unwrap()
 	}
-
 	return fmt.Errorf("%w. Are you sure %q (derived from module name %q) is a Buf Schema Registry?", err, remote, moduleFullName)
 }

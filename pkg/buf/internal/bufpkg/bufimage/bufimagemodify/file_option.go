@@ -74,7 +74,6 @@ func modifyJavaOuterClass(
 	for _, option := range options {
 		option(modifyOptions)
 	}
-
 	return modifyStringOption(
 		sweeper,
 		imageFile,
@@ -112,7 +111,6 @@ func modifyJavaPackage(
 	for _, option := range options {
 		option(modifyOptions)
 	}
-
 	return modifyStringOption(
 		sweeper,
 		imageFile,
@@ -148,7 +146,6 @@ func modifyGoPackage(
 	for _, option := range options {
 		option(modifyOptions)
 	}
-
 	return modifyStringOption(
 		sweeper,
 		imageFile,
@@ -164,7 +161,6 @@ func modifyGoPackage(
 			if stringOverrideOptions.prefix == "" {
 				return ""
 			}
-
 			return goPackageImportPathForFile(imageFile, stringOverrideOptions.prefix)
 		},
 		func(options *descriptorpb.FileOptions) string {
@@ -190,7 +186,6 @@ func modifyObjcClassPrefix(
 	for _, option := range options {
 		option(modifyOptions)
 	}
-
 	return modifyStringOption(
 		sweeper,
 		imageFile,
@@ -228,7 +223,6 @@ func modifyCsharpNamespace(
 	for _, option := range options {
 		option(modifyOptions)
 	}
-
 	return modifyStringOption(
 		sweeper,
 		imageFile,
@@ -266,7 +260,6 @@ func modifyPhpNamespace(
 	for _, option := range options {
 		option(modifyOptions)
 	}
-
 	return modifyStringOption(
 		sweeper,
 		imageFile,
@@ -304,7 +297,6 @@ func modifyPhpMetadataNamespace(
 	for _, option := range options {
 		option(modifyOptions)
 	}
-
 	return modifyStringOption(
 		sweeper,
 		imageFile,
@@ -342,7 +334,6 @@ func modifyRubyPackage(
 	for _, option := range options {
 		option(modifyOptions)
 	}
-
 	return modifyStringOption(
 		sweeper,
 		imageFile,
@@ -380,7 +371,6 @@ func modifySwiftPrefix(
 	for _, option := range options {
 		option(modifyOptions)
 	}
-
 	return modifyStringOption(
 		sweeper,
 		imageFile,
@@ -418,7 +408,6 @@ func modifyCcEnableArenas(
 	for _, option := range options {
 		option(modifyOptions)
 	}
-
 	return modifyFileOption(
 		sweeper,
 		imageFile,
@@ -449,7 +438,6 @@ func modifyJavaMultipleFiles(
 	for _, option := range options {
 		option(modifyOptions)
 	}
-
 	return modifyFileOption(
 		sweeper,
 		imageFile,
@@ -480,7 +468,6 @@ func modifyJavaStringCheckUtf8(
 	for _, option := range options {
 		option(modifyOptions)
 	}
-
 	return modifyFileOption(
 		sweeper,
 		imageFile,
@@ -511,7 +498,6 @@ func modifyOptimizeFor(
 	for _, option := range options {
 		option(modifyOptions)
 	}
-
 	return modifyFileOption(
 		sweeper,
 		imageFile,
@@ -548,12 +534,10 @@ func modifyFileOption[T bool | descriptorpb.FileOptions_OptimizeMode](
 	sourceLocationPath []int32,
 ) error {
 	descriptor := imageFile.FileDescriptorProto()
-	if preserveExisting && checkOptionSetFunc(descriptor.GetOptions()) {
+	if preserveExisting && checkOptionSetFunc(descriptor.Options) {
 		return nil
 	}
-
 	value := defaultValue
-
 	if isFileOptionDisabledForFile(
 		imageFile,
 		fileOption,
@@ -561,7 +545,6 @@ func modifyFileOption[T bool | descriptorpb.FileOptions_OptimizeMode](
 	) {
 		return nil
 	}
-
 	override, err := overrideFromConfig[T](
 		imageFile,
 		config,
@@ -570,23 +553,18 @@ func modifyFileOption[T bool | descriptorpb.FileOptions_OptimizeMode](
 	if err != nil {
 		return err
 	}
-
 	if override != nil {
 		value = *override
 	}
-
-	if getOptionFunc(descriptor.GetOptions()) == value {
+	if getOptionFunc(descriptor.Options) == value {
 		// The option is already set to the same value, don't modify or mark it.
 		return nil
 	}
-
-	if descriptor.GetOptions() == nil {
+	if descriptor.Options == nil {
 		descriptor.Options = &descriptorpb.FileOptions{}
 	}
-
-	setOptionFunc(descriptor.GetOptions(), value)
+	setOptionFunc(descriptor.Options, value)
 	sweeper.Mark(imageFile, sourceLocationPath)
-
 	return nil
 }
 
@@ -606,10 +584,9 @@ func modifyStringOption(
 	sourceLocationPath []int32,
 ) error {
 	descriptor := imageFile.FileDescriptorProto()
-	if preserveExisting && checkOptionSetFunc(descriptor.GetOptions()) {
+	if preserveExisting && checkOptionSetFunc(descriptor.Options) {
 		return nil
 	}
-
 	overrideOptions, err := stringOverrideFromConfig(
 		imageFile,
 		config,
@@ -621,7 +598,6 @@ func modifyStringOption(
 	if err != nil {
 		return err
 	}
-
 	var emptyOverrideOptions stringOverrideOptions
 	// This means the options are all disabled.
 	if overrideOptions == emptyOverrideOptions {
@@ -633,22 +609,17 @@ func modifyStringOption(
 		// TODO FUTURE: pass in prefix and suffix, instead of just override options
 		value = valueFunc(imageFile, overrideOptions)
 	}
-
 	if value == "" {
 		return nil
 	}
-
-	if getOptionFunc(descriptor.GetOptions()) == value {
+	if getOptionFunc(descriptor.Options) == value {
 		// The option is already set to the same value, don't modify or mark it.
 		return nil
 	}
-
-	if descriptor.GetOptions() == nil {
+	if descriptor.Options == nil {
 		descriptor.Options = &descriptorpb.FileOptions{}
 	}
-
-	setOptionFunc(descriptor.GetOptions(), value)
+	setOptionFunc(descriptor.Options, value)
 	sweeper.Mark(imageFile, sourceLocationPath)
-
 	return nil
 }

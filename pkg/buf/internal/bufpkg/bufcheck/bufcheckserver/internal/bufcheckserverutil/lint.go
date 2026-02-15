@@ -38,14 +38,12 @@ func NewLintFilesRuleHandler(
 			request Request,
 		) error {
 			files := request.ProtosourceFiles()
-
 			filesWithoutImports := make([]bufprotosource.File, 0, len(files))
 			for _, file := range files {
 				if !file.IsImport() {
 					filesWithoutImports = append(filesWithoutImports, file)
 				}
 			}
-
 			return f(responseWriter, request, filesWithoutImports)
 		},
 	)
@@ -73,13 +71,11 @@ func NewLintPackageToFilesRuleHandler(
 			if err != nil {
 				return err
 			}
-
 			for pkg, pkgFiles := range pkgToFiles {
 				if err := f(responseWriter, request, pkg, pkgFiles); err != nil {
 					return err
 				}
 			}
-
 			return nil
 		},
 	)
@@ -107,13 +103,11 @@ func NewLintDirPathToFilesRuleHandler(
 			if err != nil {
 				return err
 			}
-
 			for dirPath, dirFiles := range dirPathToFiles {
 				if err := f(responseWriter, request, dirPath, dirFiles); err != nil {
 					return err
 				}
 			}
-
 			return nil
 		},
 	)
@@ -142,7 +136,6 @@ func NewLintFileRuleHandler(
 					return err
 				}
 			}
-
 			return nil
 		},
 	)
@@ -171,7 +164,6 @@ func NewLintFileImportRuleHandler(
 					return err
 				}
 			}
-
 			return nil
 		},
 	)
@@ -228,7 +220,6 @@ func NewLintEnumValueRuleHandler(
 					return err
 				}
 			}
-
 			return nil
 		},
 	)
@@ -298,13 +289,11 @@ func NewLintFieldRuleHandler(
 			); err != nil {
 				return err
 			}
-
 			for _, field := range file.Extensions() {
 				if err := f(responseWriter, request, field); err != nil {
 					return err
 				}
 			}
-
 			return nil
 		},
 	)
@@ -333,7 +322,6 @@ func NewLintOneofRuleHandler(
 					return err
 				}
 			}
-
 			return nil
 		},
 	)
@@ -362,7 +350,6 @@ func NewLintServiceRuleHandler(
 					return err
 				}
 			}
-
 			return nil
 		},
 	)
@@ -391,7 +378,6 @@ func NewLintMethodRuleHandler(
 					return err
 				}
 			}
-
 			return nil
 		},
 	)

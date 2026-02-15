@@ -141,7 +141,6 @@ func NewModuleDataProvider(container appext.Container) (bufmodule2.ModuleDataPro
 	if err != nil {
 		return nil, err
 	}
-
 	return newModuleDataProvider(
 		container,
 		bufregistryapimodule.NewClientProvider(
@@ -160,7 +159,6 @@ func NewCommitProvider(container appext.Container) (bufmodule2.CommitProvider, e
 	if err != nil {
 		return nil, err
 	}
-
 	return newCommitProvider(
 		container,
 		bufregistryapimodule.NewClientProvider(
@@ -179,7 +177,6 @@ func NewPluginDataProvider(container appext.Container) (bufplugin.PluginDataProv
 	if err != nil {
 		return nil, err
 	}
-
 	return newPluginDataProvider(
 		container,
 		bufregistryapiplugin.NewClientProvider(
@@ -195,7 +192,6 @@ func NewPolicyDataProvider(container appext.Container) (bufpolicy.PolicyDataProv
 	if err != nil {
 		return nil, err
 	}
-
 	return newPolicyDataProvider(
 		container,
 		bufregistryapipolicy.NewClientProvider(
@@ -213,14 +209,11 @@ func NewWasmRuntime(ctx context.Context, container appext.Container) (wasm.Runti
 	if err := createCacheDir(container.CacheDirPath(), v3CacheWasmRuntimeRelDirPath); err != nil {
 		return nil, err
 	}
-
 	fullCacheDirPath := normalpath.Join(container.CacheDirPath(), v3CacheWasmRuntimeRelDirPath)
-
 	wasmRuntime, err := wasm.NewRuntime(ctx, wasm.WithLocalCacheDir(fullCacheDirPath))
 	if err != nil {
 		return nil, err
 	}
-
 	return wasmRuntime, nil
 }
 
@@ -229,16 +222,13 @@ func NewWKTStore(container appext.Container) (bufwktstore.Store, error) {
 	if err := createCacheDir(container.CacheDirPath(), v3CacheWKTRelDirPath); err != nil {
 		return nil, err
 	}
-
 	fullCacheDirPath := normalpath.Join(container.CacheDirPath(), v3CacheWKTRelDirPath)
 	// No symlinks.
 	storageosProvider := storageos.NewProvider()
-
 	cacheBucket, err := storageosProvider.NewReadWriteBucket(fullCacheDirPath)
 	if err != nil {
 		return nil, err
 	}
-
 	return bufwktstore.NewStore(
 		container.Logger(),
 		cacheBucket,
@@ -253,7 +243,6 @@ func newModuleDataProvider(
 	if err := createCacheDir(container.CacheDirPath(), v3CacheModuleRelDirPath); err != nil {
 		return nil, err
 	}
-
 	fullCacheDirPath := normalpath.Join(container.CacheDirPath(), v3CacheModuleRelDirPath)
 	delegateModuleDataProvider := bufmoduleapi2.NewModuleDataProvider(
 		container.Logger(),
@@ -262,21 +251,17 @@ func newModuleDataProvider(
 	)
 	// No symlinks.
 	storageosProvider := storageos.NewProvider()
-
 	cacheBucket, err := storageosProvider.NewReadWriteBucket(fullCacheDirPath)
 	if err != nil {
 		return nil, err
 	}
-
 	if err := createCacheDir(container.CacheDirPath(), v3CacheModuleLockRelDirPath); err != nil {
 		return nil, err
 	}
-
 	filelocker, err := filelock.NewLocker(normalpath.Join(container.CacheDirPath(), v3CacheModuleLockRelDirPath))
 	if err != nil {
 		return nil, err
 	}
-
 	return bufmodulecache2.NewModuleDataProvider(
 		container.Logger(),
 		delegateModuleDataProvider,
@@ -296,17 +281,14 @@ func newCommitProvider(
 	if err := createCacheDir(container.CacheDirPath(), v3CacheCommitsRelDirPath); err != nil {
 		return nil, err
 	}
-
 	fullCacheDirPath := normalpath.Join(container.CacheDirPath(), v3CacheCommitsRelDirPath)
 	delegateReader := bufmoduleapi2.NewCommitProvider(container.Logger(), moduleClientProvider, ownerClientProvider)
 	// No symlinks.
 	storageosProvider := storageos.NewProvider()
-
 	cacheBucket, err := storageosProvider.NewReadWriteBucket(fullCacheDirPath)
 	if err != nil {
 		return nil, err
 	}
-
 	return bufmodulecache2.NewCommitProvider(
 		container.Logger(),
 		delegateReader,
@@ -324,20 +306,16 @@ func newPluginDataProvider(
 	if err := createCacheDir(container.CacheDirPath(), v3CachePluginRelDirPath); err != nil {
 		return nil, err
 	}
-
 	fullCacheDirPath := normalpath.Join(container.CacheDirPath(), v3CachePluginRelDirPath)
 	storageosProvider := storageos.NewProvider() // No symlinks.
-
 	cacheBucket, err := storageosProvider.NewReadWriteBucket(fullCacheDirPath)
 	if err != nil {
 		return nil, err
 	}
-
 	delegateModuleDataProvider := bufpluginapi.NewPluginDataProvider(
 		container.Logger(),
 		pluginClientProvider,
 	)
-
 	return bufplugincache.NewPluginDataProvider(
 		container.Logger(),
 		delegateModuleDataProvider,
@@ -355,20 +333,16 @@ func newPolicyDataProvider(
 	if err := createCacheDir(container.CacheDirPath(), v3CachePolicyRelDirPath); err != nil {
 		return nil, err
 	}
-
 	fullCacheDirPath := normalpath.Join(container.CacheDirPath(), v3CachePolicyRelDirPath)
 	storageosProvider := storageos.NewProvider() // No symlinks.
-
 	cacheBucket, err := storageosProvider.NewReadWriteBucket(fullCacheDirPath)
 	if err != nil {
 		return nil, err
 	}
-
 	delegateModuleDataProvider := bufpolicyapi.NewPolicyDataProvider(
 		container.Logger(),
 		policyClientProvider,
 	)
-
 	return bufpolicycache.NewPolicyDataProvider(
 		container.Logger(),
 		delegateModuleDataProvider,
@@ -389,10 +363,8 @@ func createCacheDir(baseCacheDirPath string, relDirPath string) error {
 		if errors.Is(err, fs.ErrNotExist) {
 			return os.MkdirAll(fullDirPath, 0755)
 		}
-
 		return err
 	}
-
 	if !fileInfo.IsDir() {
 		return fmt.Errorf(
 			"Expected %q to be a directory. This is used for buf's cache. "+
@@ -401,7 +373,6 @@ func createCacheDir(baseCacheDirPath string, relDirPath string) error {
 			baseCacheDirPath,
 		)
 	}
-
 	if fileInfo.Mode().Perm()&0700 != 0700 {
 		return fmt.Errorf(
 			"Expected %q to be a writeable directory. This is used for buf's cache. "+
@@ -410,6 +381,5 @@ func createCacheDir(baseCacheDirPath string, relDirPath string) error {
 			baseCacheDirPath,
 		)
 	}
-
 	return nil
 }

@@ -51,7 +51,6 @@ func (d DeclRange) AsAny() DeclAny {
 	if d.IsZero() {
 		return DeclAny{}
 	}
-
 	return id.WrapDyn(d.Context(), id.NewDyn(DeclKindRange, id.ID[DeclAny](d.ID())))
 }
 
@@ -83,11 +82,9 @@ func (d DeclRange) IsReserved() bool {
 // range declaration.
 func (d DeclRange) Ranges() Commas[ExprAny] {
 	type slice = commas[ExprAny, id.Dyn[ExprAny, ExprKind]]
-
 	if d.IsZero() {
 		return slice{}
 	}
-
 	return slice{
 		file: d.Context(),
 		SliceInserter: seq.NewSliceInserter(

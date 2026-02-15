@@ -25,34 +25,26 @@ func ReparseExtensions(resolver Resolver, reflectMessage protoreflect.Message) e
 	if resolver == nil {
 		return nil
 	}
-
 	reparseBytes := reflectMessage.GetUnknown()
 
 	if reflectMessage.Descriptor().ExtensionRanges().Len() > 0 {
 		// Collect extensions into separate message so we can serialize
 		// *just* the extensions and then re-parse them below.
 		var msgExts protoreflect.Message
-
 		reflectMessage.Range(func(field protoreflect.FieldDescriptor, value protoreflect.Value) bool {
 			if !field.IsExtension() {
 				return true
 			}
-
 			if msgExts == nil {
 				msgExts = reflectMessage.Type().New()
 			}
-
 			msgExts.Set(field, value)
 			reflectMessage.Clear(field)
-
 			return true
 		})
-
 		if msgExts != nil {
 			options := proto.MarshalOptions{AllowPartial: true}
-
 			var err error
-
 			reparseBytes, err = options.MarshalAppend(reparseBytes, msgExts.Interface())
 			if err != nil {
 				return err
@@ -62,7 +54,6 @@ func ReparseExtensions(resolver Resolver, reflectMessage protoreflect.Message) e
 
 	if len(reparseBytes) > 0 {
 		reflectMessage.SetUnknown(nil)
-
 		options := proto.UnmarshalOptions{
 			Resolver: resolver,
 			Merge:    true,
@@ -71,14 +62,11 @@ func ReparseExtensions(resolver Resolver, reflectMessage protoreflect.Message) e
 			return err
 		}
 	}
-
 	var err error
-
 	reflectMessage.Range(func(fieldDescriptor protoreflect.FieldDescriptor, value protoreflect.Value) bool {
 		err = reparseInField(resolver, fieldDescriptor, value)
 		return err == nil
 	})
-
 	return err
 }
 
@@ -93,22 +81,17 @@ func reparseInField(
 			// nothing to reparse
 			return nil
 		}
-
 		var err error
-
 		value.Map().Range(func(k protoreflect.MapKey, v protoreflect.Value) bool {
 			err = ReparseExtensions(resolver, v.Message())
 			return err == nil
 		})
-
 		return err
 	}
-
 	if fieldDescriptor.Kind() != protoreflect.MessageKind && fieldDescriptor.Kind() != protoreflect.GroupKind {
 		// nothing to reparse
 		return nil
 	}
-
 	if fieldDescriptor.IsList() {
 		list := value.List()
 		for i := range list.Len() {
@@ -116,9 +99,7 @@ func reparseInField(
 				return err
 			}
 		}
-
 		return nil
 	}
-
 	return ReparseExtensions(resolver, value.Message())
 }

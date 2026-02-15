@@ -57,15 +57,12 @@ type SyntaxError []reporter.ErrorWithPos
 // details of the syntax error issues.
 func (e SyntaxError) Error() string {
 	var buf bytes.Buffer
-
 	for i := range e {
 		if i > 0 {
 			buf.WriteByte('\n')
 		}
-
 		buf.WriteString(e[i].Error())
 	}
-
 	return buf.String()
 }
 
@@ -76,7 +73,6 @@ func (e SyntaxError) Unwrap() []error {
 	for i := range e {
 		slice[i] = e[i]
 	}
-
 	return slice
 }
 
@@ -84,7 +80,6 @@ func newSyntaxError(errs []reporter.ErrorWithPos) error {
 	if len(errs) == 0 {
 		return nil
 	}
-
 	return SyntaxError(errs)
 }
 
@@ -101,18 +96,14 @@ func newSyntaxError(errs []reporter.ErrorWithPos) error {
 func Scan(filename string, r io.Reader) (Result, error) {
 	var res Result
 
-	var currentImport []string // if non-nil, parsing an import statement
-
-	var isPublic, isWeak bool // if public or weak keyword observed in current import statement
-
+	var currentImport []string     // if non-nil, parsing an import statement
+	var isPublic, isWeak bool      // if public or weak keyword observed in current import statement
 	var packageComponents []string // if non-nil, parsing a package statement
-
 	var syntaxErrs []reporter.ErrorWithPos
 
 	// current stack of open blocks -- those starting with {, [, (, or < for
 	// which we haven't yet encountered the closing }, ], ), or >
 	var contextStack []tokenType
-
 	declarationStart := true
 
 	lexer := newLexer(r)
@@ -120,14 +111,12 @@ func Scan(filename string, r io.Reader) (Result, error) {
 	if filename == "" {
 		filename = "<input>"
 	}
-
 	getSpan := func(line, col int) ast.SourceSpan {
 		pos := ast.SourcePos{
 			Filename: filename,
 			Line:     line,
 			Col:      col,
 		}
-
 		return ast.NewSourceSpan(pos, pos)
 	}
 	getLatestSpan := func() ast.SourceSpan {
@@ -135,13 +124,11 @@ func Scan(filename string, r io.Reader) (Result, error) {
 	}
 
 	var prevLine, prevCol int
-
 	for {
 		token, text, err := lexer.Lex()
 		if err != nil {
 			return res, err
 		}
-
 		if token == eofToken {
 			return res, newSyntaxError(syntaxErrs)
 		}
@@ -149,16 +136,14 @@ func Scan(filename string, r io.Reader) (Result, error) {
 		if currentImport != nil {
 			switch token {
 			case stringToken:
-				currentImport = append(currentImport, text.(string))
+				currentImport = append(currentImport, text.(string)) //nolint:errcheck
 			case identifierToken:
-				ident := text.(string)
+				ident := text.(string) //nolint:errcheck
 				if len(currentImport) == 0 && (ident == "public" || ident == "weak") {
 					isPublic = ident == "public"
 					isWeak = ident == "weak"
-
 					break
 				}
-
 				fallthrough
 			default:
 				if len(currentImport) > 0 {
@@ -168,7 +153,6 @@ func Scan(filename string, r io.Reader) (Result, error) {
 								"unexpected %s; expecting semicolon", token.describe()),
 						)
 					}
-
 					res.Imports = append(res.Imports, Import{
 						Path:     strings.Join(currentImport, ""),
 						IsPublic: isPublic,
@@ -180,7 +164,6 @@ func Scan(filename string, r io.Reader) (Result, error) {
 							"unexpected %s; expecting import path string", token.describe()),
 					)
 				}
-
 				currentImport = nil
 			}
 		}
@@ -194,8 +177,7 @@ func Scan(filename string, r io.Reader) (Result, error) {
 							"package name should have a period between name components"),
 					)
 				}
-
-				packageComponents = append(packageComponents, text.(string))
+				packageComponents = append(packageComponents, text.(string)) //nolint:errcheck
 			case periodToken:
 				if len(packageComponents) == 0 {
 					syntaxErrs = append(syntaxErrs,
@@ -208,7 +190,6 @@ func Scan(filename string, r io.Reader) (Result, error) {
 							"package name should not have two periods in a row"),
 					)
 				}
-
 				packageComponents = append(packageComponents, ".")
 			default:
 				if len(packageComponents) > 0 {
@@ -218,14 +199,12 @@ func Scan(filename string, r io.Reader) (Result, error) {
 								"unexpected %s; expecting semicolon", token.describe()),
 						)
 					}
-
 					if packageComponents[len(packageComponents)-1] == "." {
 						syntaxErrs = append(syntaxErrs,
 							reporter.Errorf(getSpan(prevLine+1, prevCol+1),
 								"package name should not end with a period"),
 						)
 					}
-
 					res.PackageName = strings.Join(packageComponents, "")
 				} else {
 					syntaxErrs = append(syntaxErrs,
@@ -233,7 +212,6 @@ func Scan(filename string, r io.Reader) (Result, error) {
 							"unexpected %s; expecting package name", token.describe()),
 					)
 				}
-
 				packageComponents = nil
 			}
 		}
@@ -247,11 +225,10 @@ func Scan(filename string, r io.Reader) (Result, error) {
 			}
 		case identifierToken:
 			if declarationStart && len(contextStack) == 0 {
-				switch text {
-				case "import":
+				if text == "import" {
 					currentImport = []string{}
 					isPublic, isWeak = false, false
-				case "package":
+				} else if text == "package" {
 					packageComponents = []string{}
 				}
 			}

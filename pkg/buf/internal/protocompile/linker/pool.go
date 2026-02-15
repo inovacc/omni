@@ -51,91 +51,81 @@ func newAllocPool(file *descriptorpb.FileDescriptorProto) *allocPool {
 	pool.extensions = make([]extTypeDescriptor, pool.numExtensions)
 	pool.services = make([]svcDescriptor, pool.numServices)
 	pool.methods = make([]mtdDescriptor, pool.numMethods)
-
 	return &pool
 }
 
 func (p *allocPool) getMessages(count int) []msgDescriptor {
 	allocated := p.messages[:count]
 	p.messages = p.messages[count:]
-
 	return allocated
 }
 
 func (p *allocPool) getFields(count int) []fldDescriptor {
 	allocated := p.fields[:count]
 	p.fields = p.fields[count:]
-
 	return allocated
 }
 
 func (p *allocPool) getOneofs(count int) []oneofDescriptor {
 	allocated := p.oneofs[:count]
 	p.oneofs = p.oneofs[count:]
-
 	return allocated
 }
 
 func (p *allocPool) getEnums(count int) []enumDescriptor {
 	allocated := p.enums[:count]
 	p.enums = p.enums[count:]
-
 	return allocated
 }
 
 func (p *allocPool) getEnumValues(count int) []enValDescriptor {
 	allocated := p.enumVals[:count]
 	p.enumVals = p.enumVals[count:]
-
 	return allocated
 }
 
 func (p *allocPool) getExtensions(count int) []extTypeDescriptor {
 	allocated := p.extensions[:count]
 	p.extensions = p.extensions[count:]
-
 	return allocated
 }
 
 func (p *allocPool) getServices(count int) []svcDescriptor {
 	allocated := p.services[:count]
 	p.services = p.services[count:]
-
 	return allocated
 }
 
 func (p *allocPool) getMethods(count int) []mtdDescriptor {
 	allocated := p.methods[:count]
 	p.methods = p.methods[count:]
-
 	return allocated
 }
 
 func (p *allocPool) countElements(file *descriptorpb.FileDescriptorProto) {
-	p.countElementsInMessages(file.GetMessageType())
-	p.countElementsInEnums(file.GetEnumType())
-	p.numExtensions += len(file.GetExtension())
-
-	p.numServices += len(file.GetService())
-	for _, svc := range file.GetService() {
-		p.numMethods += len(svc.GetMethod())
+	p.countElementsInMessages(file.MessageType)
+	p.countElementsInEnums(file.EnumType)
+	p.numExtensions += len(file.Extension)
+	p.numServices += len(file.Service)
+	for _, svc := range file.Service {
+		p.numMethods += len(svc.Method)
 	}
 }
 
 func (p *allocPool) countElementsInMessages(msgs []*descriptorpb.DescriptorProto) {
 	p.numMessages += len(msgs)
 	for _, msg := range msgs {
-		p.numFields += len(msg.GetField())
-		p.numOneofs += len(msg.GetOneofDecl())
-		p.countElementsInMessages(msg.GetNestedType())
-		p.countElementsInEnums(msg.GetEnumType())
-		p.numExtensions += len(msg.GetExtension())
+		p.numFields += len(msg.Field)
+		p.numOneofs += len(msg.OneofDecl)
+		p.countElementsInMessages(msg.NestedType)
+		p.countElementsInEnums(msg.EnumType)
+		p.numExtensions += len(msg.Extension)
 	}
 }
 
 func (p *allocPool) countElementsInEnums(enums []*descriptorpb.EnumDescriptorProto) {
 	p.numEnums += len(enums)
 	for _, enum := range enums {
-		p.numEnumValues += len(enum.GetValue())
+		p.numEnumValues += len(enum.Value)
 	}
 }

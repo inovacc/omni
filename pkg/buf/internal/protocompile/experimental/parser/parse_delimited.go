@@ -74,7 +74,6 @@ func (d delimited[T]) iter(yield func(value T, delim token.Token) bool) {
 	}
 
 	var delim token.Token
-
 	var latest int // The index of the most recently seen delimiter.
 
 	next := d.c.Peek()
@@ -94,32 +93,25 @@ func (d delimited[T]) iter(yield func(value T, delim token.Token) bool) {
 		))
 	}
 
-	var (
-		needDelim bool
-		mark      token.CursorMark
-	)
-
+	var needDelim bool
+	var mark token.CursorMark
 	for !d.c.Done() {
 		ensureProgress(d.c, &mark)
 
 		// Set if we should not diagnose a missing comma, because there was
 		// garbage in front of the call to parse().
 		var badPrefix bool
-
 		if !d.start(d.c.Peek()) {
 			if d.stop != nil && d.stop(d.c.Peek()) {
 				break
 			}
 
 			first := d.c.Next()
-
 			var last token.Token
-
 			for !d.c.Done() && !d.start(d.c.Peek()) {
 				if d.stop != nil && d.stop(d.c.Peek()) {
 					break
 				}
-
 				last = d.c.Next()
 			}
 
@@ -134,7 +126,6 @@ func (d delimited[T]) iter(yield func(value T, delim token.Token) bool) {
 			}
 
 			badPrefix = true
-
 			d.p.Error(errtoken.Unexpected{
 				What:  what,
 				Where: d.in.In(),
@@ -165,18 +156,15 @@ func (d delimited[T]) iter(yield func(value T, delim token.Token) bool) {
 				),
 			)
 		}
-
 		needDelim = d.required
 
 		// Pop as many delimiters as we can.
 		delim = token.Zero
-
 		for {
 			which := slices.Index(d.delims, d.c.Peek().Keyword())
 			if which < 0 {
 				break
 			}
-
 			latest = which
 
 			next := d.c.Next()
@@ -241,6 +229,5 @@ func (d delimited[T]) delimNouns() taxa.Set {
 	for _, delim := range d.delims {
 		set = set.With(taxa.Noun(delim))
 	}
-
 	return set
 }

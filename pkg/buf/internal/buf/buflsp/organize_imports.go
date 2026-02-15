@@ -81,7 +81,6 @@ func (s *server) getOrganizeImportsCodeAction(ctx context.Context, file *file) *
 
 	// Find imports needed for each unresolved type
 	importsToAdd := make(map[string]bool)
-
 	for typeFullName := range unresolvedRefs {
 		// Search for this type in all workspace files
 		for _, workspaceFile := range file.workspace.PathToFile() {
@@ -89,11 +88,9 @@ func (s *server) getOrganizeImportsCodeAction(ctx context.Context, file *file) *
 			if workspaceFile.file.Path() == file.file.Path() {
 				continue
 			}
-
 			if symbolInFile(typeFullName, workspaceFile) {
 				importPath := workspaceFile.objectInfo.Path()
 				importsToAdd[importPath] = true
-
 				break
 			}
 		}
@@ -117,7 +114,6 @@ func (s *server) getOrganizeImportsCodeAction(ctx context.Context, file *file) *
 		if importPathExpr.IsZero() {
 			continue
 		}
-
 		importPath := strings.Trim(importPathExpr.Span().Text(), "\"")
 		importWithCommentsSpan := captureImportSpan(importDecl)
 		edits = append(edits, protocol.TextEdit{
@@ -129,7 +125,6 @@ func (s *server) getOrganizeImportsCodeAction(ctx context.Context, file *file) *
 			dirty = true
 			continue
 		}
-
 		if !resolvedImports[importPath] {
 			dirty = true
 			continue
@@ -153,17 +148,14 @@ func (s *server) getOrganizeImportsCodeAction(ctx context.Context, file *file) *
 		})
 		dirty = true
 	}
-
 	slices.SortFunc(imports, func(a, b importInfo) int {
 		if compare := strings.Compare(a.path, b.path); compare != 0 {
 			return compare
 		}
-
 		return len(b.text) - len(a.text) // Prefer commented imports
 	})
 	// Remove duplicates by text content (compare with previous)
 	deduped := imports[:0]
-
 	var prev string
 	for _, info := range imports {
 		if info.text != prev {
@@ -171,7 +163,6 @@ func (s *server) getOrganizeImportsCodeAction(ctx context.Context, file *file) *
 			prev = info.text
 		}
 	}
-
 	imports = deduped
 
 	// Build the new import text
@@ -179,14 +170,12 @@ func (s *server) getOrganizeImportsCodeAction(ctx context.Context, file *file) *
 	if len(imports) > 0 {
 		importText.WriteString("\n")
 	}
-
 	for _, info := range imports {
 		importText.WriteString(info.text + "\n")
 	}
 
 	// Find the insert position after the package or syntax declaration
 	var insertLine int
-
 	switch {
 	case !file.ir.AST().Package().IsZero():
 		insertLine = file.ir.AST().Package().Span().EndLoc().Line + 1
@@ -211,7 +200,6 @@ func (s *server) getOrganizeImportsCodeAction(ctx context.Context, file *file) *
 			NewText: importText.String(),
 		})
 	}
-
 	return &protocol.CodeAction{
 		Title: "Organize imports",
 		Kind:  protocol.SourceOrganizeImports,
@@ -230,13 +218,11 @@ func symbolInFile(fullName ir.FullName, file *file) bool {
 			return true
 		}
 	}
-
 	for typ := range file.ir.AllMembers() {
 		if typ.FullName() == fullName {
 			return true
 		}
 	}
-
 	return false
 }
 
@@ -248,22 +234,18 @@ func captureImportSpan(decl ast.DeclImport) source.Span {
 	if decl.IsZero() {
 		return span
 	}
-
 	stream := decl.Context().Stream()
 
 	// Capture up until the newline expanding upwards for all comments directly
 	// above this declaration.
 	tok, prev := stream.Around(decl.Span().Start)
-
 	cursor := token.NewCursorAt(tok)
 	for isTokenSpace(tok) {
 		tok, prev = cursor.PrevSkippable(), tok
 	}
-
 	span.Start = tok.Span().Start
 	for isTokenNewline(tok) {
 		span.Start = prev.Span().Start // Capture the previous, up until this newline.
-
 		tok, prev = cursor.PrevSkippable(), tok
 		if tok.Kind() != token.Comment {
 			break
@@ -277,26 +259,20 @@ func captureImportSpan(decl ast.DeclImport) source.Span {
 	// Extract trailing comment (same line after semicolon)
 	tok, _ = stream.Around(decl.Span().End)
 	cursor = token.NewCursorAt(tok)
-
 	tok = cursor.NextSkippable()
 	for isTokenSpace(tok) || tok.Kind() == token.Keyword && tok.Keyword() == keyword.Semi {
 		tok = cursor.NextSkippable()
 	}
-
 	for isTokenSpace(tok) || tok.Kind() == token.Comment {
 		tok = cursor.NextSkippable()
 	}
-
 	if tok.Kind() != token.Space {
 		return span // unknown
 	}
-
 	for next := cursor.NextSkippable(); next.Kind() == token.Space; {
 		tok = next // Capture anywhitespace
 		next = cursor.NextSkippable()
 	}
-
 	span.End = tok.Span().End
-
 	return span
 }

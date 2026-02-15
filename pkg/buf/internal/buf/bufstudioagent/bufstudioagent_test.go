@@ -46,7 +46,6 @@ const (
 func TestPlainPostHandlerTLS(t *testing.T) {
 	upstreamServerTLS := newTestConnectServer(t, true)
 	defer upstreamServerTLS.Close()
-
 	testPlainPostHandler(t, upstreamServerTLS)
 	testPlainPostHandlerErrors(t, upstreamServerTLS)
 }
@@ -54,7 +53,6 @@ func TestPlainPostHandlerTLS(t *testing.T) {
 func TestPlainPostHandlerH2C(t *testing.T) {
 	upstreamServerH2C := newTestConnectServer(t, false)
 	defer upstreamServerH2C.Close()
-
 	testPlainPostHandler(t, upstreamServerH2C)
 	testPlainPostHandlerErrors(t, upstreamServerH2C)
 }
@@ -88,21 +86,18 @@ func testPlainPostHandler(t *testing.T, upstreamServer *httptest.Server) {
 		request.Header.Set("Foo", "foo-value")
 		response, err := agentServer.Client().Do(request)
 		require.NoError(t, err)
-
 		defer response.Body.Close()
 
 		assert.Equal(t, http.StatusOK, response.StatusCode)
 		assert.Equal(t, "https://example.buf.build", response.Header.Get("Access-Control-Allow-Origin"))
 		responseBytes, err := io.ReadAll(response.Body)
 		assert.NoError(t, err)
-
 		invokeResponse := &studiov1alpha1.InvokeResponse{}
 		protoUnmarshalBase64(t, responseBytes, invokeResponse)
-
 		upstreamResponseHeaders := make(http.Header)
 		addProtoHeadersToGoHeader(invokeResponse.GetHeaders(), upstreamResponseHeaders)
 		addProtoHeadersToGoHeader(invokeResponse.GetTrailers(), upstreamResponseHeaders)
-		assert.Equal(t, "0", upstreamResponseHeaders.Get("Grpc-Status"))
+		assert.Equal(t, "0", upstreamResponseHeaders.Get("grpc-status"))
 		assert.Equal(t, []byte("echo: echothis"), invokeResponse.GetBody())
 		assert.Equal(t, "foo-value", upstreamResponseHeaders.Get("Echo-Bar"))
 	})
@@ -123,21 +118,18 @@ func testPlainPostHandler(t *testing.T, upstreamServer *httptest.Server) {
 		request.Header.Set("Foo", "foo-value")
 		response, err := agentServer.Client().Do(request)
 		require.NoError(t, err)
-
 		defer response.Body.Close()
 
 		assert.Equal(t, http.StatusOK, response.StatusCode)
 		assert.Equal(t, "https://example.buf.build", response.Header.Get("Access-Control-Allow-Origin"))
 		responseBytes, err := io.ReadAll(response.Body)
 		assert.NoError(t, err)
-
 		invokeResponse := &studiov1alpha1.InvokeResponse{}
 		protoUnmarshalBase64(t, responseBytes, invokeResponse)
-
 		upstreamResponseHeaders := make(http.Header)
 		addProtoHeadersToGoHeader(invokeResponse.GetHeaders(), upstreamResponseHeaders)
 		addProtoHeadersToGoHeader(invokeResponse.GetTrailers(), upstreamResponseHeaders)
-		assert.Equal(t, "", upstreamResponseHeaders.Get("Grpc-Status"))
+		assert.Equal(t, "", upstreamResponseHeaders.Get("grpc-status"))
 		assert.Equal(t, []byte("echo: echothis"), invokeResponse.GetBody())
 		assert.Equal(t, "foo-value", upstreamResponseHeaders.Get("Echo-Bar"))
 	})
@@ -169,9 +161,7 @@ func testPlainPostHandlerErrors(t *testing.T, upstreamServer *httptest.Server) {
 		request.Header.Set("Content-Type", "text/plain")
 		response, err := agentServer.Client().Do(request)
 		require.NoError(t, err)
-
 		defer response.Body.Close()
-
 		assert.Equal(t, http.StatusBadRequest, response.StatusCode)
 	})
 
@@ -189,21 +179,17 @@ func testPlainPostHandlerErrors(t *testing.T, upstreamServer *httptest.Server) {
 		request.Header.Set("Content-Type", "text/plain")
 		response, err := agentServer.Client().Do(request)
 		require.NoError(t, err)
-
 		defer response.Body.Close()
-
 		assert.Equal(t, http.StatusOK, response.StatusCode)
 		responseBytes, err := io.ReadAll(response.Body)
 		assert.NoError(t, err)
-
 		invokeResponse := &studiov1alpha1.InvokeResponse{}
 		protoUnmarshalBase64(t, responseBytes, invokeResponse)
-
 		upstreamResponseHeaders := make(http.Header)
 		addProtoHeadersToGoHeader(invokeResponse.GetHeaders(), upstreamResponseHeaders)
 		addProtoHeadersToGoHeader(invokeResponse.GetTrailers(), upstreamResponseHeaders)
-		assert.Equal(t, strconv.Itoa(int(connect.CodeFailedPrecondition)), upstreamResponseHeaders.Get("Grpc-Status"))
-		assert.Equal(t, "something", upstreamResponseHeaders.Get("Grpc-Message"))
+		assert.Equal(t, strconv.Itoa(int(connect.CodeFailedPrecondition)), upstreamResponseHeaders.Get("grpc-status"))
+		assert.Equal(t, "something", upstreamResponseHeaders.Get("grpc-message"))
 	})
 
 	t.Run("invalid_upstream", func(t *testing.T) {
@@ -211,13 +197,10 @@ func testPlainPostHandlerErrors(t *testing.T, upstreamServer *httptest.Server) {
 		require.NoError(t, err)
 		listener, err := net.ListenTCP("tcp", tcpAddr)
 		require.NoError(t, err)
-
 		done := make(chan struct{})
-
 		t.Cleanup(func() {
 			done <- struct{}{}
 		})
-
 		go func() {
 			for {
 				select {
@@ -231,16 +214,13 @@ func testPlainPostHandlerErrors(t *testing.T, upstreamServer *httptest.Server) {
 						t.Error(err)
 						continue
 					}
-
 					conn, err := listener.Accept()
 					if err != nil {
 						if err, ok := err.(net.Error); !ok || !err.Timeout() {
 							t.Error(err)
 						}
-
 						continue
 					}
-
 					if err := conn.Close(); err != nil {
 						t.Error(err)
 						continue
@@ -281,7 +261,6 @@ func newTestConnectServer(t *testing.T, tls bool) *httptest.Server {
 					response.Header().Add("Echo-"+header, value)
 				}
 			}
-
 			return response, nil
 		},
 		connect.WithCodec(&bufferCodec{name: "proto"}),
@@ -294,12 +273,9 @@ func newTestConnectServer(t *testing.T, tls bool) *httptest.Server {
 		},
 		connect.WithCodec(&bufferCodec{name: "proto"}),
 	))
-
 	protocols := new(http.Protocols)
 	protocols.SetHTTP1(true)
-
 	server := httptest.NewUnstartedServer(mux)
-
 	server.Config.Protocols = protocols
 	if tls {
 		protocols.SetHTTP2(true)
@@ -315,17 +291,14 @@ func newTestConnectServer(t *testing.T, tls bool) *httptest.Server {
 		protocols.SetUnencryptedHTTP2(true)
 		server.Start()
 	}
-
 	return server
 }
 
 func protoMarshalBase64(t *testing.T, message proto.Message) []byte {
 	protoBytes, err := protoencoding.NewWireMarshaler().Marshal(message)
 	require.NoError(t, err)
-
 	base64Bytes := make([]byte, base64.StdEncoding.EncodedLen(len(protoBytes)))
 	base64.StdEncoding.Encode(base64Bytes, protoBytes)
-
 	return base64Bytes
 }
 
@@ -333,7 +306,6 @@ func protoUnmarshalBase64(t *testing.T, base64Bytes []byte, message proto.Messag
 	protoBytes := make([]byte, base64.StdEncoding.DecodedLen(len(base64Bytes)))
 	actualLen, err := base64.StdEncoding.Decode(protoBytes, base64Bytes)
 	require.NoError(t, err)
-
 	protoBytes = protoBytes[:actualLen]
 	require.NoError(t, protoencoding.NewWireUnmarshaler(nil).Unmarshal(protoBytes, message))
 }

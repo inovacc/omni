@@ -23,14 +23,12 @@ import (
 
 func TestStringPointerFlagSet(t *testing.T) {
 	t.Parallel()
-
 	expected := "foo"
 	testParseStringPointer(t, "test-flag-name", &expected, "--test-flag-name", "foo")
 }
 
 func TestStringPointerFlagSetEmpty(t *testing.T) {
 	t.Parallel()
-
 	expected := ""
 	testParseStringPointer(t, "test-flag-name", &expected, "--test-flag-name", "")
 }
@@ -42,7 +40,6 @@ func TestStringPointerFlagNotSet(t *testing.T) {
 
 func testParseStringPointer(t *testing.T, flagName string, expectedResult *string, args ...string) {
 	var stringPointer *string
-
 	flagSet := pflag.NewFlagSet("test flag set", pflag.ContinueOnError)
 	BindStringPointer(flagSet, flagName, &stringPointer, "test usage")
 	err := flagSet.Parse(args)

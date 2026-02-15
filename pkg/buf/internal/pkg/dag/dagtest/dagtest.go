@@ -63,7 +63,6 @@ func RequireGraphEqual[Key cmp.Ordered, Value any](
 					Outbound: xslices.Map(outbound, toKey),
 				},
 			)
-
 			return nil
 		},
 	)
@@ -75,7 +74,6 @@ func normalizeExpectedNodes[Key cmp.Ordered](expectedNodes []ExpectedNode[Key]) 
 	if expectedNodes == nil {
 		return []ExpectedNode[Key]{}
 	}
-
 	c := slices.Clone(expectedNodes)
 	sort.Slice(
 		c,
@@ -83,12 +81,10 @@ func normalizeExpectedNodes[Key cmp.Ordered](expectedNodes []ExpectedNode[Key]) 
 			return c[i].Key < c[j].Key
 		},
 	)
-
 	for i, e := range c {
 		e.Outbound = normalizeKeys(e.Outbound)
 		c[i] = e
 	}
-
 	return c
 }
 
@@ -96,9 +92,7 @@ func normalizeKeys[Key cmp.Ordered](keys []Key) []Key {
 	if keys == nil {
 		return []Key{}
 	}
-
 	keys = slices.Clone(keys)
 	slices.Sort(keys)
-
 	return keys
 }

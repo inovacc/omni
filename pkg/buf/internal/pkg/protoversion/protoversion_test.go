@@ -164,7 +164,6 @@ func TestNewPackageVersionForComponent(t *testing.T) {
 func testNewPackageVersionForPackage(t *testing.T, expectedPackageVersion PackageVersion, expectedOK bool, pkg string, options ...PackageVersionOption) {
 	packageVersion, ok := NewPackageVersionForPackage(pkg, options...)
 	assert.Equal(t, expectedOK, ok, pkg)
-
 	if expectedOK {
 		require.NotNil(t, packageVersion)
 		assert.Equal(t, expectedPackageVersion, packageVersion, pkg)
@@ -178,7 +177,6 @@ func testNewPackageVersionForPackage(t *testing.T, expectedPackageVersion Packag
 func testNewPackageVersionForComponent(t *testing.T, expectedPackageVersion PackageVersion, expectedOK bool, component string, options ...PackageVersionOption) {
 	packageVersion, ok := NewPackageVersionForComponent(component, options...)
 	assert.Equal(t, expectedOK, ok, component)
-
 	if expectedOK {
 		assert.Equal(t, expectedPackageVersion, packageVersion, component)
 		assert.Equal(t, component, packageVersion.String(), component)

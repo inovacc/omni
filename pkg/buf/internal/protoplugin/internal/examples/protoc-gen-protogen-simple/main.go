@@ -44,16 +44,13 @@ func handle(
 	if err != nil {
 		return err
 	}
-
 	if err := handleProtogenPlugin(plugin); err != nil {
 		plugin.Error(err)
 	}
-
 	response := plugin.Response()
 	responseWriter.AddCodeGeneratorResponseFiles(response.GetFile()...)
 	responseWriter.AddError(response.GetError())
 	responseWriter.SetFeatureProto3Optional()
-
 	return nil
 }
 

@@ -55,7 +55,6 @@ func (n *noResolveMessageSetWireFormatImage) FindDescriptorByName(name protorefl
 	if err != nil {
 		return nil, err
 	}
-
 	switch descriptor := descriptor.(type) {
 	case protoreflect.MessageDescriptor:
 		if err := checkNoMessageSetWireFormat(descriptor, n.Image, nil); err != nil {
@@ -68,7 +67,6 @@ func (n *noResolveMessageSetWireFormatImage) FindDescriptorByName(name protorefl
 			}
 		}
 	}
-
 	return descriptor, nil
 }
 
@@ -77,13 +75,11 @@ func (n *noResolveMessageSetWireFormatImage) FindExtensionByName(field protorefl
 	if err != nil {
 		return nil, err
 	}
-
 	if msgDescriptor := extension.TypeDescriptor().Message(); msgDescriptor != nil {
 		if err := checkNoMessageSetWireFormat(msgDescriptor, n.Image, nil); err != nil {
 			return nil, err
 		}
 	}
-
 	return extension, nil
 }
 
@@ -92,13 +88,11 @@ func (n *noResolveMessageSetWireFormatImage) FindExtensionByNumber(message proto
 	if err != nil {
 		return nil, err
 	}
-
 	if msgDescriptor := extension.TypeDescriptor().Message(); msgDescriptor != nil {
 		if err := checkNoMessageSetWireFormat(msgDescriptor, n.Image, nil); err != nil {
 			return nil, err
 		}
 	}
-
 	return extension, nil
 }
 
@@ -107,13 +101,11 @@ func (n *noResolveMessageSetWireFormatImage) FindMessageByName(message protorefl
 	if err != nil {
 		return nil, err
 	}
-
 	if msgDescriptor := messageType.Descriptor(); msgDescriptor != nil {
 		if err := checkNoMessageSetWireFormat(msgDescriptor, n.Image, nil); err != nil {
 			return nil, err
 		}
 	}
-
 	return messageType, nil
 }
 
@@ -122,13 +114,11 @@ func (n *noResolveMessageSetWireFormatImage) FindMessageByURL(url string) (proto
 	if err != nil {
 		return nil, err
 	}
-
 	if msgDescriptor := messageType.Descriptor(); msgDescriptor != nil {
 		if err := checkNoMessageSetWireFormat(msgDescriptor, n.Image, nil); err != nil {
 			return nil, err
 		}
 	}
-
 	return messageType, nil
 }
 
@@ -152,23 +142,19 @@ func checkNoMessageSetWireFormat(descriptor protoreflect.MessageDescriptor, imag
 	if slices.Contains(checked, name) {
 		return nil
 	}
-
 	checked = append(checked, name)
 
 	path := descriptor.ParentFile().Path()
-
 	imageFile := image.GetFile(path)
 	if imageFile == nil {
 		// shouldn't actually be possible
 		return fmt.Errorf("message type %q should be in file %q but that file was not found", name, path)
 	}
-
 	descriptorProto := findMessageInFile(name, imageFile.FileDescriptorProto())
 	if descriptorProto == nil {
 		// shouldn't actually be possible
 		return fmt.Errorf("message type %q should be in file %q but it was not found", name, path)
 	}
-
 	if descriptorProto.GetOptions().GetMessageSetWireFormat() {
 		return &messageSetNotSupportedError{name}
 	}
@@ -179,12 +165,10 @@ func checkNoMessageSetWireFormat(descriptor protoreflect.MessageDescriptor, imag
 		if field.Message() == nil {
 			continue
 		}
-
 		if err := checkNoMessageSetWireFormat(field.Message(), image, checked); err != nil {
 			return err
 		}
 	}
-
 	return nil
 }
 
@@ -196,7 +180,6 @@ func findMessageInFile(name protoreflect.FullName, file *descriptorpb.FileDescri
 			return nil
 		}
 	}
-
 	return findMessageInFileRec(name, file)
 }
 
@@ -206,12 +189,11 @@ func findMessageInFileRec(name protoreflect.FullName, file *descriptorpb.FileDes
 
 	if parentName == protoreflect.FullName(file.GetPackage()) {
 		// This is a top-level message
-		for _, descriptor := range file.GetMessageType() {
+		for _, descriptor := range file.MessageType {
 			if descriptor.GetName() == simpleName {
 				return descriptor
 			}
 		}
-
 		return nil
 	}
 
@@ -220,12 +202,10 @@ func findMessageInFileRec(name protoreflect.FullName, file *descriptorpb.FileDes
 	if parentMessage == nil {
 		return nil
 	}
-
-	for _, descriptor := range parentMessage.GetNestedType() {
+	for _, descriptor := range parentMessage.NestedType {
 		if descriptor.GetName() == simpleName {
 			return descriptor
 		}
 	}
-
 	return nil
 }

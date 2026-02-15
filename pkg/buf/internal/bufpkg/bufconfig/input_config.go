@@ -56,7 +56,6 @@ func (i InputConfigType) String() string {
 	if !ok {
 		return strconv.Itoa(int(i))
 	}
-
 	return s
 }
 
@@ -186,7 +185,6 @@ func NewGitRepoInputConfig(
 	if location == "" {
 		return nil, errors.New("empty location for git repository")
 	}
-
 	return &inputConfig{
 		inputConfigType:   InputConfigTypeGitRepo,
 		location:          location,
@@ -206,7 +204,6 @@ func NewModuleInputConfig(
 	if location == "" {
 		return nil, errors.New("empty location for module")
 	}
-
 	return &inputConfig{
 		inputConfigType: InputConfigTypeModule,
 		location:        location,
@@ -220,7 +217,6 @@ func NewDirectoryInputConfig(
 	if location == "" {
 		return nil, errors.New("empty location for directory")
 	}
-
 	return &inputConfig{
 		inputConfigType: InputConfigTypeDirectory,
 		location:        location,
@@ -235,7 +231,6 @@ func NewProtoFileInputConfig(
 	if location == "" {
 		return nil, errors.New("empty location for proto file")
 	}
-
 	return &inputConfig{
 		inputConfigType:     InputConfigTypeProtoFile,
 		location:            location,
@@ -253,7 +248,6 @@ func NewTarballInputConfig(
 	if location == "" {
 		return nil, errors.New("empty location for tarball")
 	}
-
 	return &inputConfig{
 		inputConfigType: InputConfigTypeTarball,
 		location:        location,
@@ -272,7 +266,6 @@ func NewZipArchiveInputConfig(
 	if location == "" {
 		return nil, errors.New("empty location for zip archive")
 	}
-
 	return &inputConfig{
 		inputConfigType: InputConfigTypeZipArchive,
 		location:        location,
@@ -289,7 +282,6 @@ func NewBinaryImageInputConfig(
 	if location == "" {
 		return nil, errors.New("empty location for binary image")
 	}
-
 	return &inputConfig{
 		inputConfigType: InputConfigTypeBinaryImage,
 		location:        location,
@@ -305,7 +297,6 @@ func NewJSONImageInputConfig(
 	if location == "" {
 		return nil, errors.New("empty location for JSON image")
 	}
-
 	return &inputConfig{
 		inputConfigType: InputConfigTypeJSONImage,
 		location:        location,
@@ -321,7 +312,6 @@ func NewTextImageInputConfig(
 	if location == "" {
 		return nil, errors.New("empty location for text image")
 	}
-
 	return &inputConfig{
 		inputConfigType: InputConfigTypeTextImage,
 		location:        location,
@@ -337,7 +327,6 @@ func NewYAMLImageInputConfig(
 	if location == "" {
 		return nil, errors.New("empty location for yaml image")
 	}
-
 	return &inputConfig{
 		inputConfigType: InputConfigTypeYAMLImage,
 		location:        location,
@@ -368,66 +357,53 @@ type inputConfig struct {
 func newInputConfigFromExternalV2(externalConfig externalInputConfigV2) (InputConfig, error) {
 	// We only allow one of these to be set.
 	inputConfig := &inputConfig{}
-
 	var inputConfigTypes []InputConfigType
 	if externalConfig.Module != nil {
 		inputConfigTypes = append(inputConfigTypes, InputConfigTypeModule)
 		inputConfig.location = *externalConfig.Module
 	}
-
 	if externalConfig.Directory != nil {
 		inputConfigTypes = append(inputConfigTypes, InputConfigTypeDirectory)
 		inputConfig.location = *externalConfig.Directory
 	}
-
 	if externalConfig.ProtoFile != nil {
 		inputConfigTypes = append(inputConfigTypes, InputConfigTypeProtoFile)
 		inputConfig.location = *externalConfig.ProtoFile
 	}
-
 	if externalConfig.BinaryImage != nil {
 		inputConfigTypes = append(inputConfigTypes, InputConfigTypeBinaryImage)
 		inputConfig.location = *externalConfig.BinaryImage
 	}
-
 	if externalConfig.Tarball != nil {
 		inputConfigTypes = append(inputConfigTypes, InputConfigTypeTarball)
 		inputConfig.location = *externalConfig.Tarball
 	}
-
 	if externalConfig.ZipArchive != nil {
 		inputConfigTypes = append(inputConfigTypes, InputConfigTypeZipArchive)
 		inputConfig.location = *externalConfig.ZipArchive
 	}
-
 	if externalConfig.JSONImage != nil {
 		inputConfigTypes = append(inputConfigTypes, InputConfigTypeJSONImage)
 		inputConfig.location = *externalConfig.JSONImage
 	}
-
 	if externalConfig.TextImage != nil {
 		inputConfigTypes = append(inputConfigTypes, InputConfigTypeTextImage)
 		inputConfig.location = *externalConfig.TextImage
 	}
-
 	if externalConfig.YAMLImage != nil {
 		inputConfigTypes = append(inputConfigTypes, InputConfigTypeYAMLImage)
 		inputConfig.location = *externalConfig.YAMLImage
 	}
-
 	if externalConfig.GitRepo != nil {
 		inputConfigTypes = append(inputConfigTypes, InputConfigTypeGitRepo)
 		inputConfig.location = *externalConfig.GitRepo
 	}
-
 	if len(inputConfigTypes) == 0 {
 		return nil, fmt.Errorf("must specify one of %s", allInputConfigTypeString)
 	}
-
 	if len(inputConfigTypes) > 1 {
 		return nil, fmt.Errorf("exactly one of %s must be specified", allInputConfigTypeString)
 	}
-
 	inputConfigType := inputConfigTypes[0]
 	inputConfig.inputConfigType = inputConfigType
 	// Types, TargetPaths, and ExcludePaths.
@@ -441,67 +417,54 @@ func newInputConfigFromExternalV2(externalConfig externalInputConfigV2) (InputCo
 		options = append(options, compressionKey)
 		inputConfig.compression = *externalConfig.Compression
 	}
-
 	if externalConfig.StripComponents != nil {
 		options = append(options, stripComponentsKey)
 		inputConfig.stripComponents = *externalConfig.StripComponents
 	}
-
 	if externalConfig.Subdir != nil {
 		options = append(options, subDirKey)
 		inputConfig.subDir = *externalConfig.Subdir
 	}
-
 	if externalConfig.Branch != nil {
 		options = append(options, branchKey)
 		inputConfig.branch = *externalConfig.Branch
 	}
-
 	if externalConfig.Commit != nil && externalConfig.Tag != nil {
 		return nil, fmt.Errorf("commit and tag options cannot be used at the same time; use one or the other")
 	}
-
 	if externalConfig.Commit != nil {
 		options = append(options, commitKey)
 		inputConfig.commitOrTag = *externalConfig.Commit
 	}
-
 	if externalConfig.Tag != nil {
 		options = append(options, tagKey)
 		inputConfig.commitOrTag = *externalConfig.Tag
 	}
-
 	if externalConfig.Ref != nil {
 		options = append(options, refKey)
 		inputConfig.ref = *externalConfig.Ref
 	}
-
 	if externalConfig.Depth != nil {
 		options = append(options, depthKey)
 		inputConfig.depth = externalConfig.Depth
 	}
-
 	if externalConfig.RecurseSubmodules != nil {
 		options = append(options, recurseSubmodulesKey)
 		inputConfig.recurseSubmodules = *externalConfig.RecurseSubmodules
 	}
-
 	if externalConfig.IncludePackageFiles != nil {
 		options = append(options, includePackageFilesKey)
 		inputConfig.includePackageFiles = *externalConfig.IncludePackageFiles
 	}
-
 	allowedOptions, ok := allowedOptionsForInputConfigType[inputConfigType]
 	if !ok {
 		return nil, syserror.Newf("unable to find allowed options for InputConfigType %v", inputConfigType)
 	}
-
 	for _, option := range options {
 		if _, ok := allowedOptions[option]; !ok {
 			return nil, fmt.Errorf("option %s is not allowed for InputConfigType %v", option, inputConfigType)
 		}
 	}
-
 	return inputConfig, nil
 }
 
@@ -571,7 +534,6 @@ func newExternalInputConfigV2FromInputConfig(
 	inputConfig InputConfig,
 ) (externalInputConfigV2, error) {
 	externalInputConfigV2 := externalInputConfigV2{}
-
 	switch inputConfig.Type() {
 	case InputConfigTypeGitRepo:
 		externalInputConfigV2.GitRepo = toPointer(inputConfig.Location())
@@ -596,43 +558,33 @@ func newExternalInputConfigV2FromInputConfig(
 	default:
 		return externalInputConfigV2, syserror.Newf("unknown input config type: %v", inputConfig.Type())
 	}
-
 	if inputConfig.Branch() != "" {
 		externalInputConfigV2.Branch = toPointer(inputConfig.Branch())
 	}
-
 	if inputConfig.Ref() != "" {
 		externalInputConfigV2.Ref = toPointer(inputConfig.Ref())
 	}
-
 	if inputConfig.CommitOrTag() != "" {
 		externalInputConfigV2.Commit = toPointer(inputConfig.CommitOrTag())
 	}
-
 	externalInputConfigV2.Depth = inputConfig.Depth()
 	if inputConfig.RecurseSubmodules() {
 		externalInputConfigV2.RecurseSubmodules = toPointer(inputConfig.RecurseSubmodules())
 	}
-
 	if inputConfig.Compression() != "" {
 		externalInputConfigV2.Compression = toPointer(inputConfig.Compression())
 	}
-
 	if inputConfig.StripComponents() != 0 {
 		externalInputConfigV2.StripComponents = toPointer(inputConfig.StripComponents())
 	}
-
 	if inputConfig.SubDir() != "" {
 		externalInputConfigV2.Subdir = toPointer(inputConfig.SubDir())
 	}
-
 	if inputConfig.IncludePackageFiles() {
 		externalInputConfigV2.IncludePackageFiles = toPointer(inputConfig.IncludePackageFiles())
 	}
-
 	externalInputConfigV2.TargetPaths = inputConfig.TargetPaths()
 	externalInputConfigV2.ExcludePaths = inputConfig.ExcludePaths()
 	externalInputConfigV2.Types = inputConfig.IncludeTypes()
-
 	return externalInputConfigV2, nil
 }

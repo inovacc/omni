@@ -51,13 +51,11 @@ func enumValues(
 			childAssociatedPath(fullSourcePath, index, enumValueNumberTypeTag),
 		)
 	}
-
 	if len(fullSourcePath) == index+1 {
 		// This does not extend beyond the enum value declaration, return associated paths and
 		// terminate here.
 		return nil, associatedPaths, nil
 	}
-
 	return enumValue, associatedPaths, nil
 }
 
@@ -68,13 +66,11 @@ func enumValue(token int32, sourcePath protoreflect.SourcePath, i int, _ bool) (
 		// Encountered a terminal enum value path, terminate here.
 		return nil, nil, nil
 	}
-
 	switch token {
 	case enumValueOptionTypeTag:
 		// For options, we add the full path and then return the options state to validate
 		// the path.
 		return options, []protoreflect.SourcePath{slices.Clone(sourcePath)}, nil
 	}
-
 	return nil, nil, newInvalidSourcePathError(sourcePath, "invalid enum value path")
 }

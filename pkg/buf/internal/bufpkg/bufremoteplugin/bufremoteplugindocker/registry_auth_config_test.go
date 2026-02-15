@@ -24,7 +24,6 @@ import (
 
 func TestRegistryAuthMarshalJSON(t *testing.T) {
 	t.Parallel()
-
 	auth := RegistryAuthConfig{
 		Username:      "someuser",
 		Password:      "somepass",
@@ -33,9 +32,7 @@ func TestRegistryAuthMarshalJSON(t *testing.T) {
 	}
 	encoded, err := json.Marshal(auth)
 	require.NoError(t, err)
-
 	var decoded RegistryAuthConfig
-
 	err = json.Unmarshal(encoded, &decoded)
 	require.NoError(t, err)
 	assert.Equal(t, auth, decoded)
@@ -43,7 +40,6 @@ func TestRegistryAuthMarshalJSON(t *testing.T) {
 
 func TestRegistryAuthToFromHeader(t *testing.T) {
 	t.Parallel()
-
 	auth := RegistryAuthConfig{
 		Username:      "someuser",
 		Password:      "somepass",
@@ -52,9 +48,7 @@ func TestRegistryAuthToFromHeader(t *testing.T) {
 	}
 	encoded, err := auth.ToHeader()
 	require.NoError(t, err)
-
 	var decoded RegistryAuthConfig
-
 	err = decoded.fromHeader(encoded)
 	require.NoError(t, err)
 	assert.Equal(t, auth, decoded)

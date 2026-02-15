@@ -25,7 +25,6 @@ import (
 
 func TestO1Digest(t *testing.T) {
 	t.Parallel()
-
 	lintConfig, err := newLintConfig(
 		[]string{"LINT_ID_1", "LINT_ID_2"},
 		[]string{},
@@ -62,7 +61,6 @@ func TestO1Digest(t *testing.T) {
 		"e": []string{"a", "b", "c"},
 	})
 	require.NoError(t, err)
-
 	args := []string{"arg1", "arg2"}
 	remotePluginRef, err := bufparse.NewRef("buf.build", "acme", "my-plugin", "v1.0.0")
 	require.NoError(t, err)
@@ -94,7 +92,6 @@ func TestO1Digest(t *testing.T) {
 
 	// We should get the same digest regardless of the order of the remote plugins.
 	const multiPluginDigest = "o1:d2c302094a3884a7e6afef19e774ce814308dcc0c52e3ad8f5e0ff6b5b7ec412cc61a93a39063db7418d6f7965ac7800bb41cc4f7d6eca6ac7dd5a0ee786fc70"
-
 	policyConfig2, err := newPolicyConfig(lintConfig, breakingConfig, []PluginConfig{pluginConfig2, pluginConfig1})
 	require.NoError(t, err)
 	policyConfig3, err := newPolicyConfig(lintConfig, breakingConfig, []PluginConfig{pluginConfig1, pluginConfig2})
@@ -124,22 +121,18 @@ func TestO1Digest(t *testing.T) {
 	// The digest should change if we disable builtins, for lint.
 	policyConfigLintDisableBuiltin, err := newPolicyConfig(lintConfigDisableBuiltin, breakingConfig, nil)
 	require.NoError(t, err)
-
 	const lintDisableBuiltinDigest = "o1:35ecbf9c4da28e11314d548096722d6fccb41a8f0e7e05c8624d7b137cf55a6113070ad74b82b6d9abf59a6850b18aeb6dacee07d309ba36b4092f6c17720ac1"
 	assert.NotEqual(t, lintDisableBuiltinDigest, policyConfigDigest)
 	testPolicyConfigO1Digest(t, policyConfigLintDisableBuiltin, lintDisableBuiltinDigest)
 	// And disable for breaking.
 	policyConfigBreakingDisableBuiltin, err := newPolicyConfig(lintConfig, breakingConfigDisableBuiltin, nil)
 	require.NoError(t, err)
-
 	const breakingDisableBuiltinDigest = "o1:b2ab151374efa2df978583cbc8615f0fc601ed12998a3dcf1acb389712869adea57fdb7776c72e2ed0b03742913be80c14dde68b42fece8b6cf5484ed6c42338"
-
 	assert.NotEqual(t, lintDisableBuiltinDigest, policyConfigDigest)
 	testPolicyConfigO1Digest(t, policyConfigBreakingDisableBuiltin, breakingDisableBuiltinDigest)
 	// And disable both.
 	policyConfigBothDisableBuiltin, err := newPolicyConfig(lintConfigDisableBuiltin, breakingConfigDisableBuiltin, nil)
 	require.NoError(t, err)
-
 	const bothDisableBuiltinDigest = "o1:8588a08057e59f9b446efe60b7b782397acd37d87fa13734793b5d05c414b7e8569459b993217895e34f7985ad8ed2283fa03900b6d4a7b86789521408d13715"
 	assert.NotEqual(t, bothDisableBuiltinDigest, lintDisableBuiltinDigest)
 	assert.NotEqual(t, bothDisableBuiltinDigest, breakingDisableBuiltinDigest)

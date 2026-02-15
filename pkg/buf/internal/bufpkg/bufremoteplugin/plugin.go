@@ -45,7 +45,6 @@ func newPlugin(
 	if version == "" {
 		return nil, errors.New("plugin version is required")
 	}
-
 	if !semver.IsValid(version) {
 		// This will probably already be validated in other call-sites
 		// (e.g. when we construct a *bufremotepluginconfig.Config or when we
@@ -53,11 +52,9 @@ func newPlugin(
 		// include it at the lowest common denominator, too.
 		return nil, fmt.Errorf("plugin version %q must be a valid semantic version", version)
 	}
-
 	if containerImageDigest == "" {
 		return nil, errors.New("plugin image digest is required")
 	}
-
 	return &plugin{
 		version:              version,
 		dependencies:         dependencies,

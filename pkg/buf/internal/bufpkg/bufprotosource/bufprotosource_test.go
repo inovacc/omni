@@ -27,7 +27,6 @@ import (
 
 func TestNewFiles(t *testing.T) {
 	t.Parallel()
-
 	moduleSet, err := bufmoduletesting.NewModuleSetForDirPath("testdata/nested")
 	require.NoError(t, err)
 	image, err := bufimage.BuildImage(
@@ -39,7 +38,6 @@ func TestNewFiles(t *testing.T) {
 	files, err := NewFiles(context.Background(), image.Files(), image.Resolver())
 	require.NoError(t, err)
 	require.Len(t, files, 1)
-
 	file := files[0]
 	for _, message := range file.Messages() {
 		testMessageName(
@@ -65,10 +63,8 @@ func testMessageName(t *testing.T, nameToExpectedNestedName map[string]string, m
 	expectedName, ok := nameToExpectedNestedName[message.Name()]
 	require.True(t, ok)
 	require.Equal(t, expectedName, message.NestedName())
-
 	for _, nestedMessage := range message.Messages() {
 		testMessageName(t, nameToExpectedNestedName, nestedMessage)
-
 		_, err := message.AsDescriptor()
 		require.NoError(t, err)
 	}

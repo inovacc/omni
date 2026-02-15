@@ -79,24 +79,19 @@ func (p *policyDataStore) GetPolicyDatasForPolicyKeys(
 	ctx context.Context,
 	policyKeys []bufpolicy2.PolicyKey,
 ) ([]bufpolicy2.PolicyData, []bufpolicy2.PolicyKey, error) {
-	var (
-		foundPolicyDatas   []bufpolicy2.PolicyData
-		notFoundPolicyKeys []bufpolicy2.PolicyKey
-	)
-
+	var foundPolicyDatas []bufpolicy2.PolicyData
+	var notFoundPolicyKeys []bufpolicy2.PolicyKey
 	for _, policyKey := range policyKeys {
 		policyData, err := p.getPolicyDataForPolicyKey(ctx, policyKey)
 		if err != nil {
 			if !errors.Is(err, fs.ErrNotExist) {
 				return nil, nil, err
 			}
-
 			notFoundPolicyKeys = append(notFoundPolicyKeys, policyKey)
 		} else {
 			foundPolicyDatas = append(foundPolicyDatas, policyData)
 		}
 	}
-
 	return foundPolicyDatas, notFoundPolicyKeys, nil
 }
 
@@ -109,7 +104,6 @@ func (p *policyDataStore) PutPolicyDatas(
 			return err
 		}
 	}
-
 	return nil
 }
 
@@ -122,13 +116,11 @@ func (p *policyDataStore) getPolicyDataForPolicyKey(
 	if err != nil {
 		return nil, err
 	}
-
 	if exists, err := storage2.Exists(ctx, p.bucket, policyDataStorePath); err != nil {
 		return nil, err
 	} else if !exists {
 		return nil, fs.ErrNotExist
 	}
-
 	getConfig := func() (bufpolicy2.PolicyConfig, error) {
 		data, err := storage2.ReadPath(ctx, p.bucket, policyDataStorePath)
 		if err != nil {
@@ -139,17 +131,14 @@ func (p *policyDataStore) getPolicyDataForPolicyKey(
 		if err != nil {
 			return nil, err
 		}
-
 		expectedDigest, err := policyKey.Digest()
 		if err != nil {
 			return nil, err
 		}
-
 		actualDigest, err := bufpolicy2.NewDigest(expectedDigest.Type(), bufcasDigest)
 		if err != nil {
 			return nil, err
 		}
-
 		if !bufpolicy2.DigestEqual(actualDigest, expectedDigest) {
 			return nil, &bufpolicy2.DigestMismatchError{
 				FullName:       policyKey.FullName(),
@@ -163,10 +152,8 @@ func (p *policyDataStore) getPolicyDataForPolicyKey(
 		if err := protoencoding.NewJSONUnmarshaler(nil).Unmarshal(data, &configProto); err != nil {
 			return nil, err
 		}
-
 		return bufpolicyapi.V1Beta1ProtoToPolicyConfig(policyKey.FullName().Registry(), &configProto)
 	}
-
 	return bufpolicy2.NewPolicyData(
 		ctx,
 		policyKey,
@@ -180,17 +167,14 @@ func (p *policyDataStore) putPolicyData(
 	policyData bufpolicy2.PolicyData,
 ) error {
 	policyKey := policyData.PolicyKey()
-
 	policyDataStorePath, err := getPolicyDataStorePath(policyKey)
 	if err != nil {
 		return err
 	}
-
 	config, err := policyData.Config()
 	if err != nil {
 		return err
 	}
-
 	data, err := bufpolicy2.MarshalPolicyConfigAsJSON(config)
 	if err != nil {
 		return err
@@ -209,9 +193,7 @@ func getPolicyDataStorePath(policyKey bufpolicy2.PolicyKey) (string, error) {
 	if err != nil {
 		return "", err
 	}
-
 	fullName := policyKey.FullName()
-
 	return normalpath.Join(
 		digest.Type().String(),
 		fullName.Registry(),

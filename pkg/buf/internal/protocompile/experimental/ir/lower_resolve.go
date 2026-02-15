@@ -62,11 +62,8 @@ func resolveNames(file *File, r *report.Report) {
 // resolveFieldType fully resolves the type of a field (extension or otherwise).
 func resolveFieldType(field Member, r *report.Report) {
 	ty := field.TypeAST()
-
 	var path ast.Path
-
 	kind := presence.Explicit
-
 	switch ty.Kind() {
 	case ast.TypeKindPath:
 		if field.Context().Syntax() == syntax.Proto3 {
@@ -196,7 +193,6 @@ func resolveMethodTypes(m Method, r *report.Report) {
 				if prefixed.Prefix() == keyword.Stream {
 					stream = true
 				}
-
 				ty = prefixed.Type()
 			default:
 				// This is already diagnosed in the parser for us.
@@ -230,7 +226,6 @@ func resolveMethodTypes(m Method, r *report.Report) {
 	if signature.Inputs().Len() > 0 {
 		m.Raw().input, m.Raw().inputStream = resolve(m.AST().Signature().Inputs().At(0))
 	}
-
 	if signature.Outputs().Len() > 0 {
 		m.Raw().output, m.Raw().outputStream = resolve(m.AST().Signature().Outputs().At(0))
 	}
@@ -265,7 +260,6 @@ func (r symbolRef) resolve() Symbol {
 	)
 
 	var fullResolve bool
-
 	switch {
 	case r.name.Absolute():
 		if id, ok := r.session.intern.Query(string(r.name.ToRelative())); ok {
@@ -280,6 +274,7 @@ func (r symbolRef) resolve() Symbol {
 		//
 		// 2. Diagnosing only the first might be a false positive, which would
 		//    make this warning user-hostile.
+
 		prim := predeclared.Lookup(string(r.name))
 		if prim.IsScalar() {
 			sym := GetRef(r.File, Ref[Symbol]{
@@ -287,7 +282,6 @@ func (r symbolRef) resolve() Symbol {
 				id:   id.ID[Symbol](prim),
 			})
 			r.diagnoseLookup(sym, expected)
-
 			return sym
 		}
 
@@ -343,15 +337,12 @@ func (r symbolRef) diagnoseLookup(sym Symbol, expectedName FullName) *report.Dia
 	case !sym.Visible(r.File, r.allowOption):
 		if !r.allowOption && sym.Visible(r.File, true) {
 			decl := sym.Import(r.File).Decl
-
 			var option token.Token
-
 			for m := range seq.Values(decl.ModifierTokens()) {
 				if m.Keyword() == keyword.Option {
 					option = m
 				}
 			}
-
 			span := source.Join(decl.KeywordToken(), option)
 
 			// This symbol is only visible in option position.
@@ -375,7 +366,6 @@ func (r symbolRef) diagnoseLookup(sym Symbol, expectedName FullName) *report.Dia
 
 				// First, see if local was set explicitly.
 				var local token.Token
-
 				for prefix := range ty.AST().Type().Prefixes() {
 					if prefix.Prefix() == keyword.Local {
 						local = prefix.PrefixToken()
@@ -399,7 +389,6 @@ func (r symbolRef) diagnoseLookup(sym Symbol, expectedName FullName) *report.Dia
 
 					d.Apply(report.Snippetf(span, "this implies `local`"))
 				}
-
 				return d
 			}
 		}

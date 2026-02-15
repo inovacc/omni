@@ -75,7 +75,6 @@ func newReader(
 	for _, option := range options {
 		option(reader)
 	}
-
 	return reader
 }
 
@@ -89,7 +88,6 @@ func (r *reader) GetFile(
 	for _, option := range options {
 		option(getFileOptions)
 	}
-
 	switch t := fileRef.(type) {
 	case SingleRef:
 		return r.getSingle(
@@ -120,7 +118,6 @@ func (r *reader) GetReadBucketCloser(
 	for _, option := range options {
 		option(getReadBucketCloserOptions)
 	}
-
 	if getReadBucketCloserOptions.copyToInMemory {
 		defer func() {
 			if retReadBucketCloser != nil {
@@ -130,18 +127,14 @@ func (r *reader) GetReadBucketCloser(
 						retErr,
 						syserror.Newf("expected *readBucketCloser but got %T", retReadBucketCloser),
 					)
-
 					return
 				}
-
 				var err error
-
 				retReadBucketCloser, err = castReadBucketCloser.copyToInMemory(ctx)
 				retErr = errors.Join(retErr, err)
 			}
 		}()
 	}
-
 	switch t := bucketRef.(type) {
 	case ArchiveRef:
 		return r.getArchiveBucket(
@@ -164,7 +157,6 @@ func (r *reader) GetReadBucketCloser(
 		if err != nil {
 			return nil, nil, err
 		}
-
 		return newReadBucketCloserForReadWriteBucket(readWriteBucket), bucketTargeting, nil
 	case GitRef:
 		return r.getGitBucket(
@@ -197,7 +189,6 @@ func (r *reader) GetReadWriteBucket(
 	for _, option := range options {
 		option(getReadWriteBucketOptions)
 	}
-
 	return r.getDirBucket(
 		ctx,
 		container,
@@ -258,9 +249,7 @@ func (r *reader) getArchiveBucket(
 	if err != nil {
 		return nil, nil, err
 	}
-
 	readWriteBucket := storagemem.NewReadWriteBucket()
-
 	switch archiveType := archiveRef.ArchiveType(); archiveType {
 	case ArchiveTypeTar:
 		if err := storagearchive.Untar(
@@ -275,13 +264,11 @@ func (r *reader) getArchiveBucket(
 		}
 	case ArchiveTypeZip:
 		var readerAt io.ReaderAt
-
 		if size < 0 {
 			data, err := io.ReadAll(readCloser)
 			if err != nil {
 				return nil, nil, err
 			}
-
 			readerAt = bytes.NewReader(data)
 			size = int64(len(data))
 		} else {
@@ -290,7 +277,6 @@ func (r *reader) getArchiveBucket(
 				return nil, nil, err
 			}
 		}
-
 		if err := storagearchive.Unzip(
 			ctx,
 			readerAt,
@@ -305,7 +291,6 @@ func (r *reader) getArchiveBucket(
 	default:
 		return nil, nil, fmt.Errorf("unknown ArchiveType: %v", archiveType)
 	}
-
 	return getReadBucketCloserForBucket(
 		ctx,
 		r.logger,
@@ -328,7 +313,6 @@ func (r *reader) getDirBucket(
 	if !r.localEnabled {
 		return nil, nil, NewReadLocalDisabledError()
 	}
-
 	return getReadWriteBucketForOS(
 		ctx,
 		r.logger,
@@ -349,7 +333,6 @@ func (r *reader) getProtoFileBucket(
 	if !r.localEnabled {
 		return nil, nil, NewReadLocalDisabledError()
 	}
-
 	return getReadBucketCloserForOSProtoFile(
 		ctx,
 		r.logger,
@@ -370,16 +353,13 @@ func (r *reader) getGitBucket(
 	if !r.gitEnabled {
 		return nil, nil, NewReadGitDisabledError()
 	}
-
 	if r.gitCloner == nil {
 		return nil, nil, errors.New("git cloner is nil")
 	}
-
 	gitURL, err := getGitURL(gitRef)
 	if err != nil {
 		return nil, nil, err
 	}
-
 	readWriteBucket := storagemem.NewReadWriteBucket()
 	if err := r.gitCloner.CloneToBucket(
 		ctx,
@@ -396,7 +376,6 @@ func (r *reader) getGitBucket(
 	); err != nil {
 		return nil, nil, fmt.Errorf("could not clone %s: %v", gitURL, err)
 	}
-
 	return getReadBucketCloserForBucket(
 		ctx,
 		r.logger,
@@ -416,11 +395,9 @@ func (r *reader) getModuleKey(
 	if !r.moduleEnabled {
 		return nil, NewReadModuleDisabledError()
 	}
-
 	if r.moduleKeyProvider == nil {
 		return nil, errors.New("module key provider is nil")
 	}
-
 	moduleKeys, err := r.moduleKeyProvider.GetModuleKeysForModuleRefs(
 		ctx,
 		[]bufparse.Ref{moduleRef.ModuleRef()},
@@ -429,11 +406,9 @@ func (r *reader) getModuleKey(
 	if err != nil {
 		return nil, err
 	}
-
 	if len(moduleKeys) != 1 {
 		return nil, fmt.Errorf("expected 1 ModuleKey, got %d", len(moduleKeys))
 	}
-
 	return moduleKeys[0], nil
 }
 
@@ -447,17 +422,14 @@ func (r *reader) getFileReadCloserAndSize(
 	if err != nil {
 		return nil, -1, err
 	}
-
 	defer func() {
 		if retErr != nil {
 			retErr = errors.Join(retErr, readCloser.Close())
 		}
 	}()
-
 	if keepFileCompression {
 		return readCloser, size, nil
 	}
-
 	switch compressionType := fileRef.CompressionType(); compressionType {
 	case CompressionTypeNone:
 		return readCloser, size, nil
@@ -466,7 +438,6 @@ func (r *reader) getFileReadCloserAndSize(
 		if err != nil {
 			return nil, -1, err
 		}
-
 		return xio.CompositeReadCloser(
 			gzipReadCloser,
 			xio.ChainCloser(
@@ -479,9 +450,7 @@ func (r *reader) getFileReadCloserAndSize(
 		if err != nil {
 			return nil, -1, err
 		}
-
 		zstdReadCloser := zstdDecoder.IOReadCloser()
-
 		return xio.CompositeReadCloser(
 			zstdReadCloser,
 			xio.ChainCloser(
@@ -505,35 +474,29 @@ func (r *reader) getFileReadCloserAndSizePotentiallyCompressed(
 		if !r.httpEnabled {
 			return nil, -1, NewReadHTTPDisabledError()
 		}
-
 		return r.getFileReadCloserAndSizePotentiallyCompressedHTTP(ctx, container, "http://"+fileRef.Path())
 	case FileSchemeHTTPS:
 		if !r.httpEnabled {
 			return nil, -1, NewReadHTTPDisabledError()
 		}
-
 		return r.getFileReadCloserAndSizePotentiallyCompressedHTTP(ctx, container, "https://"+fileRef.Path())
 	case FileSchemeLocal:
 		if !r.localEnabled {
 			return nil, -1, NewReadLocalDisabledError()
 		}
-
 		file, err := os.Open(fileRef.Path())
 		if err != nil {
 			return nil, -1, err
 		}
-
 		fileInfo, err := file.Stat()
 		if err != nil {
 			return nil, -1, err
 		}
-
 		return file, fileInfo.Size(), nil
 	case FileSchemeStdio, FileSchemeStdin:
 		if !r.stdioEnabled {
 			return nil, -1, NewReadStdioDisabledError()
 		}
-
 		return io.NopCloser(container.Stdin()), -1, nil
 	case FileSchemeStdout:
 		return nil, -1, errors.New("cannot read from stdout")
@@ -553,31 +516,25 @@ func (r *reader) getFileReadCloserAndSizePotentiallyCompressedHTTP(
 	if r.httpClient == nil {
 		return nil, 0, errors.New("http client is nil")
 	}
-
 	if r.httpAuthenticator == nil {
 		return nil, 0, errors.New("http authenticator is nil")
 	}
-
-	request, err := http.NewRequestWithContext(ctx, http.MethodGet, httpPath, nil)
+	request, err := http.NewRequestWithContext(ctx, "GET", httpPath, nil)
 	if err != nil {
 		return nil, -1, err
 	}
-
 	if _, err := r.httpAuthenticator.SetAuth(container, request); err != nil {
 		return nil, -1, err
 	}
-
 	response, err := r.httpClient.Do(request)
 	if err != nil {
 		return nil, -1, err
 	}
-
 	if response.StatusCode != http.StatusOK {
 		err := fmt.Errorf("got HTTP status code %d", response.StatusCode)
 		if response.Body != nil {
 			return nil, -1, errors.Join(err, response.Body.Close())
 		}
-
 		return nil, -1, err
 	}
 	// ContentLength is -1 if unknown, which is what we want
@@ -599,7 +556,6 @@ func getGitURL(gitRef GitRef) (string, error) {
 		if err != nil {
 			return "", err
 		}
-
 		return "file://" + absPath, nil
 	default:
 		return "", fmt.Errorf("unknown GitScheme: %v", gitScheme)
@@ -628,7 +584,6 @@ func getReadBucketCloserForBucket(
 		targetPaths,
 		targetExcludePaths,
 	)
-
 	bucketTargeting, err := buftarget2.NewBucketTargeting(
 		ctx,
 		logger,
@@ -657,7 +612,6 @@ func getReadBucketCloserForBucket(
 			storage2.MapOnPrefix(bucketPath),
 		)
 	}
-
 	logger.DebugContext(
 		ctx,
 		"buffetch creating new bucket",
@@ -665,7 +619,6 @@ func getReadBucketCloserForBucket(
 		slog.Any("targetPaths", bucketTargeting.TargetPaths()),
 	)
 	readBucketCloser := newReadBucketCloser(inputBucket, bucketTargeting)
-
 	return readBucketCloser, bucketTargeting, nil
 }
 
@@ -683,27 +636,22 @@ func getReadWriteBucketForOS(
 	if err != nil {
 		return nil, nil, err
 	}
-
 	fsRootTargetPaths := make([]string, len(targetPaths))
 	for i, targetPath := range targetPaths {
 		_, fsRootTargetPath, err := fsRootAndFSRelPathForPath(targetPath)
 		if err != nil {
 			return nil, nil, err
 		}
-
 		fsRootTargetPaths[i] = fsRootTargetPath
 	}
-
 	fsRootTargetExcludePaths := make([]string, len(targetExcludePaths))
 	for i, targetExcludePath := range targetExcludePaths {
 		_, fsRootTargetExcludePath, err := fsRootAndFSRelPathForPath(targetExcludePath)
 		if err != nil {
 			return nil, nil, err
 		}
-
 		fsRootTargetExcludePaths[i] = fsRootTargetExcludePath
 	}
-
 	osRootBucket, err := storageosProvider.NewReadWriteBucket(
 		fsRoot,
 		storageos.ReadWriteBucketWithSymlinksIfSupported(),
@@ -711,7 +659,6 @@ func getReadWriteBucketForOS(
 	if err != nil {
 		return nil, nil, err
 	}
-
 	osRootBucketTargeting, err := buftarget2.NewBucketTargeting(
 		ctx,
 		logger,
@@ -769,13 +716,9 @@ func getReadWriteBucketForOS(
 	//
 	// For all cases where no controlling workspace was found, we need to remap the input
 	// path, target paths, and target exclude paths to the root of the new bucket.
-	var (
-		bucketPath string
-		inputDir   string
-	)
-
+	var bucketPath string
+	var inputDir string
 	bucketTargetPaths := make([]string, len(osRootBucketTargeting.TargetPaths()))
-
 	bucketTargetExcludePaths := make([]string, len(osRootBucketTargeting.TargetExcludePaths()))
 	if controllingWorkspace := osRootBucketTargeting.ControllingWorkspace(); controllingWorkspace != nil {
 		if filepath.IsAbs(normalpath2.Unnormalize(inputDirPath)) {
@@ -786,13 +729,11 @@ func getReadWriteBucketForOS(
 			if err != nil {
 				return nil, nil, err
 			}
-
 			bucketPath, err = normalpath2.Rel(pwdFSRelPath, osRootBucketTargeting.ControllingWorkspace().Path())
 			if err != nil {
 				return nil, nil, err
 			}
 		}
-
 		inputDir = osRootBucketTargeting.SubDirPath()
 		bucketTargetPaths = osRootBucketTargeting.TargetPaths()
 		bucketTargetExcludePaths = osRootBucketTargeting.TargetExcludePaths()
@@ -806,7 +747,6 @@ func getReadWriteBucketForOS(
 			if err != nil {
 				return nil, nil, err
 			}
-
 			if filepath.IsLocal(normalpath2.Unnormalize(inputDirPath)) {
 				// Use current working directory
 				bucketPath = "."
@@ -823,19 +763,16 @@ func getReadWriteBucketForOS(
 		if err != nil {
 			return nil, nil, err
 		}
-
 		inputDir, err = normalpath2.Rel(bucketPathFSRelPath, osRootBucketTargeting.SubDirPath())
 		if err != nil {
 			return nil, nil, err
 		}
-
 		for i, targetPath := range osRootBucketTargeting.TargetPaths() {
 			bucketTargetPaths[i], err = normalpath2.Rel(bucketPathFSRelPath, targetPath)
 			if err != nil {
 				return nil, nil, err
 			}
 		}
-
 		for i, targetExcludePath := range osRootBucketTargeting.TargetExcludePaths() {
 			bucketTargetExcludePaths[i], err = normalpath2.Rel(bucketPathFSRelPath, targetExcludePath)
 			if err != nil {
@@ -843,7 +780,6 @@ func getReadWriteBucketForOS(
 			}
 		}
 	}
-
 	bucket, err := storageosProvider.NewReadWriteBucket(
 		bucketPath,
 		storageos.ReadWriteBucketWithSymlinksIfSupported(),
@@ -851,7 +787,6 @@ func getReadWriteBucketForOS(
 	if err != nil {
 		return nil, nil, err
 	}
-
 	bucketTargeting, err := buftarget2.NewBucketTargeting(
 		ctx,
 		logger,
@@ -864,9 +799,7 @@ func getReadWriteBucketForOS(
 	if err != nil {
 		return nil, nil, err
 	}
-
 	readWriteBucket := newReadWriteBucket(bucket, bucketPath, bucketTargeting)
-
 	return readWriteBucket, bucketTargeting, nil
 }
 
@@ -883,7 +816,6 @@ func getReadBucketCloserForOSProtoFile(
 	// No other target paths and target exclude paths are supported with
 	// proto file refs.
 	protoFileDir := normalpath2.Dir(protoFilePath)
-
 	readWriteBucket, bucketTargeting, err := getReadWriteBucketForOS(
 		ctx,
 		logger,
@@ -896,7 +828,6 @@ func getReadBucketCloserForOSProtoFile(
 	if err != nil {
 		return nil, nil, err
 	}
-
 	return newReadBucketCloserForReadWriteBucket(readWriteBucket), bucketTargeting, nil
 }
 
@@ -907,12 +838,10 @@ func getPWDFSRelPath() (string, error) {
 	if err != nil {
 		return "", err
 	}
-
 	_, pwdFSRelPath, err := fsRootAndFSRelPathForPath(pwd)
 	if err != nil {
 		return "", err
 	}
-
 	return pwdFSRelPath, nil
 }
 
@@ -926,12 +855,10 @@ func fsRootAndFSRelPathForPath(path string) (string, string, error) {
 	// Split the absolute path into components to get the FS root
 	absPathComponents := normalpath2.Components(absPath)
 	fsRoot := absPathComponents[0]
-
 	fsRelPath, err := normalpath2.Rel(fsRoot, absPath)
 	if err != nil {
 		return "", "", err
 	}
-
 	return fsRoot, fsRelPath, nil
 }
 
@@ -949,7 +876,6 @@ func attemptToFixOSRootBucketPathErrors(fsRoot string, err error) error {
 		if err != nil {
 			return err
 		}
-
 		pwd = normalpath2.Normalize(pwd)
 		if normalpath2.EqualsOrContainsPath(pwd, normalpath2.Join(fsRoot, pathError.Path), normalpath2.Absolute) {
 			relPath, err := normalpath2.Rel(pwd, normalpath2.Join(fsRoot, pathError.Path))
@@ -964,7 +890,6 @@ func attemptToFixOSRootBucketPathErrors(fsRoot string, err error) error {
 			}
 		}
 	}
-
 	return err
 }
 
@@ -976,21 +901,18 @@ func validatePaths(
 	if _, err := normalpath2.NormalizeAndValidate(inputSubDirPath); err != nil {
 		return err
 	}
-
 	if _, err := xslices.MapError(
 		targetPaths,
 		normalpath2.NormalizeAndValidate,
 	); err != nil {
 		return err
 	}
-
 	if _, err := xslices.MapError(
 		targetPaths,
 		normalpath2.NormalizeAndValidate,
 	); err != nil {
 		return err
 	}
-
 	return nil
 }
 
@@ -1003,7 +925,6 @@ func mapTargetPathsAndTargetExcludePathsForArchiveAndGitRefs(
 	if inputSubDirPath == "." {
 		return targetPaths, targetExcludePaths
 	}
-
 	return xslices.Map(
 			targetPaths,
 			func(targetPath string) string {

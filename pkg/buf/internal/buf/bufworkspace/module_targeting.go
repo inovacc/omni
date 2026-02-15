@@ -59,13 +59,10 @@ func newModuleTargeting(
 	// to consider this module a target.
 	isTargetModule := len(bucketTargeting.TargetPaths()) == 0 && config.protoFileTargetPath == ""
 
-	var (
-		moduleTargetPaths         []string
-		moduleTargetExcludePaths  []string
-		moduleProtoFileTargetPath string
-		includePackageFiles       bool
-	)
-
+	var moduleTargetPaths []string
+	var moduleTargetExcludePaths []string
+	var moduleProtoFileTargetPath string
+	var includePackageFiles bool
 	if config.protoFileTargetPath != "" {
 		var err error
 		// We are currently returning the mapped proto file path as a target path in bucketTargeting.
@@ -74,21 +71,17 @@ func newModuleTargeting(
 		if len(bucketTargeting.TargetPaths()) != 1 {
 			return nil, syserror.New("ProtoFileTargetPath not properly returned with bucketTargeting")
 		}
-
 		protoFileTargetPath := bucketTargeting.TargetPaths()[0]
 		if normalpath.ContainsPath(moduleDirPath, protoFileTargetPath, normalpath.Relative) {
 			isTargetModule = true
-
 			moduleProtoFileTargetPath, err = normalpath.Rel(moduleDirPath, protoFileTargetPath)
 			if err != nil {
 				return nil, err
 			}
-
 			moduleProtoFileTargetPath, err = applyRootsToTargetPath(roots, moduleProtoFileTargetPath, normalpath.Relative)
 			if err != nil {
 				return nil, err
 			}
-
 			includePackageFiles = config.includePackageFiles
 		}
 	} else {
@@ -102,15 +95,12 @@ func newModuleTargeting(
 				// if we were really clever, we'd go back and just add this as a module path.
 				return nil, fmt.Errorf("module %q was specified with --path, specify this module path directly as an input", targetPath)
 			}
-
 			if normalpath.ContainsPath(moduleDirPath, targetPath, normalpath.Relative) {
 				isTargetModule = true
-
 				moduleTargetPath, err := normalpath.Rel(moduleDirPath, targetPath)
 				if err != nil {
 					return nil, err
 				}
-
 				moduleTargetPaths = append(moduleTargetPaths, moduleTargetPath)
 			}
 		}
@@ -134,18 +124,15 @@ func newModuleTargeting(
 					// This really should be allowed - how else do you exclude from a workspace?
 					return nil, fmt.Errorf("module %q was specified with --exclude-path, this flag cannot be used to specify module directories", targetExcludePath)
 				}
-
 				if normalpath.ContainsPath(moduleDirPath, targetExcludePath, normalpath.Relative) {
 					moduleTargetExcludePath, err := normalpath.Rel(moduleDirPath, targetExcludePath)
 					if err != nil {
 						return nil, err
 					}
-
 					moduleTargetExcludePaths = append(moduleTargetExcludePaths, moduleTargetExcludePath)
 				}
 			}
 		}
-
 		moduleTargetPaths, err = xslices.MapError(
 			moduleTargetPaths,
 			func(moduleTargetPath string) (string, error) {
@@ -155,7 +142,6 @@ func newModuleTargeting(
 		if err != nil {
 			return nil, err
 		}
-
 		moduleTargetExcludePaths, err = xslices.MapError(
 			moduleTargetExcludePaths,
 			func(moduleTargetExcludePath string) (string, error) {
@@ -166,7 +152,6 @@ func newModuleTargeting(
 			return nil, err
 		}
 	}
-
 	return &moduleTargeting{
 		moduleDirPath:             moduleDirPath,
 		isTargetModule:            isTargetModule,
@@ -179,13 +164,11 @@ func newModuleTargeting(
 
 func applyRootsToTargetPath(roots []string, path string, pathType normalpath.PathType) (string, error) {
 	var matchingRoots []string
-
 	for _, root := range roots {
 		if normalpath.ContainsPath(root, path, pathType) {
 			matchingRoots = append(matchingRoots, root)
 		}
 	}
-
 	switch len(matchingRoots) {
 	case 0:
 		// this is a user error and will likely happen often

@@ -55,7 +55,6 @@ func ParseModuleOwner(moduleOwnerString string) (ModuleOwner, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	return NewModuleOwner(registry, owner)
 }
 
@@ -73,19 +72,15 @@ func newModuleOwner(
 	if registry == "" {
 		return nil, errors.New("registry is empty")
 	}
-
 	if _, err := netext.ValidateHostname(registry); err != nil {
 		return nil, fmt.Errorf("registry %q is not a valid hostname: %w", registry, err)
 	}
-
 	if owner == "" {
 		return nil, errors.New("owner is empty")
 	}
-
 	if strings.Contains(owner, "/") {
 		return nil, fmt.Errorf("owner %q cannot contain slashes", owner)
 	}
-
 	return &moduleOwner{
 		registry: registry,
 		owner:    owner,
@@ -111,17 +106,14 @@ func parseModuleOwnerComponents(path string) (registry string, owner string, err
 	if len(slashSplit) != 2 {
 		return "", "", newInvalidModuleOwnerStringError(path)
 	}
-
 	registry = strings.TrimSpace(slashSplit[0])
 	if registry == "" {
 		return "", "", newInvalidModuleOwnerStringError(path)
 	}
-
 	owner = strings.TrimSpace(slashSplit[1])
 	if owner == "" {
 		return "", "", newInvalidModuleOwnerStringError(path)
 	}
-
 	return registry, owner, nil
 }
 

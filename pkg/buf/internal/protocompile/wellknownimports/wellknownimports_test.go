@@ -29,7 +29,6 @@ import (
 
 func TestWithStandardImports(t *testing.T) {
 	t.Parallel()
-
 	wellKnownImports := []string{
 		"google/protobuf/any.proto",
 		"google/protobuf/api.proto",
@@ -56,17 +55,14 @@ func TestWithStandardImports(t *testing.T) {
 		}),
 		RetainASTs: true,
 	}
-
 	ctx := t.Context()
 	for _, name := range wellKnownImports {
 		t.Log(name)
-
 		fds, err := c.Compile(ctx, name)
 		if err != nil {
 			t.Errorf("failed to compile %q: %v", name, err)
 			continue
 		}
-
 		if len(fds) != 1 {
 			t.Errorf("Compile returned wrong number of descriptors: expecting 1, got %d", len(fds))
 			continue
@@ -82,16 +78,12 @@ func TestWithStandardImports(t *testing.T) {
 			require.NotNil(t, d)
 			md, ok := d.(protoreflect.MessageDescriptor)
 			require.True(t, ok)
-
 			var extRangeCount int
-
 			for i := range md.ExtensionRanges().Len() {
 				opts, ok := md.ExtensionRangeOptions(i).(*descriptorpb.ExtensionRangeOptions)
 				require.True(t, ok)
-
 				extRangeCount += len(opts.GetDeclaration())
 			}
-
 			require.Positive(t, extRangeCount, "no declarations found for FeatureSet for %q", name)
 		}
 	}
@@ -99,7 +91,6 @@ func TestWithStandardImports(t *testing.T) {
 
 func TestCantRedefineWellKnownCustomFeature(t *testing.T) {
 	t.Parallel()
-
 	c := protocompile.Compiler{
 		Resolver: WithStandardImports(&protocompile.SourceResolver{
 			Accessor: protocompile.SourceAccessorFromMap(map[string]string{

@@ -115,20 +115,16 @@ func (d *dockerAPIClient) Load(ctx context.Context, image io.Reader) (_ *LoadRes
 	if err := d.negotiateVersion(ctx); err != nil {
 		return nil, err
 	}
-
 	response, err := d.cli.ImageLoad(ctx, image, client.ImageLoadWithQuiet(true))
 	if err != nil {
 		return nil, err
 	}
-
 	defer func() {
 		if err := response.Body.Close(); err != nil {
 			retErr = errors.Join(retErr, fmt.Errorf("docker load response body close error: %w", err))
 		}
 	}()
-
 	imageID := ""
-
 	responseScanner := bufio.NewScanner(response.Body)
 	for responseScanner.Scan() {
 		var jsonMessage jsonmessage.JSONMessage
@@ -137,24 +133,19 @@ func (d *dockerAPIClient) Load(ctx context.Context, image io.Reader) (_ *LoadRes
 			if !found {
 				continue
 			}
-
 			if !strings.HasPrefix(loadedImageID, "sha256:") {
 				d.logger.Warn("Unsupported image digest", slog.String("imageID", loadedImageID))
 				continue
 			}
-
 			imageID = loadedImageID
 		}
 	}
-
 	if err := responseScanner.Err(); err != nil {
 		return nil, err
 	}
-
 	if imageID == "" {
 		return nil, fmt.Errorf("failed to determine image ID of loaded image")
 	}
-
 	return &LoadResponse{ImageID: imageID}, nil
 }
 
@@ -162,14 +153,11 @@ func (d *dockerAPIClient) Tag(ctx context.Context, image string, config *bufremo
 	if err := d.negotiateVersion(ctx); err != nil {
 		return nil, err
 	}
-
 	buildID := stringid.GenerateRandomID()
-
 	imageName := config.Name.IdentityString() + ":" + buildID
 	if err := d.cli.ImageTag(ctx, image, imageName); err != nil {
 		return nil, err
 	}
-
 	return &TagResponse{Image: imageName}, nil
 }
 
@@ -177,49 +165,38 @@ func (d *dockerAPIClient) Push(ctx context.Context, image string, auth *Registry
 	if err := d.negotiateVersion(ctx); err != nil {
 		return nil, err
 	}
-
 	registryAuth, err := auth.ToHeader()
 	if err != nil {
 		return nil, err
 	}
-
 	pushReader, err := d.cli.ImagePush(ctx, image, imagetypes.PushOptions{
 		RegistryAuth: registryAuth,
 	})
 	if err != nil {
 		return nil, err
 	}
-
 	defer func() {
 		retErr = errors.Join(retErr, pushReader.Close())
 	}()
-
 	var imageDigest string
-
 	pushScanner := bufio.NewScanner(pushReader)
 	for pushScanner.Scan() {
 		d.logger.DebugContext(ctx, pushScanner.Text())
-
 		var message jsonmessage.JSONMessage
 		if err := json.Unmarshal([]byte(pushScanner.Text()), &message); err == nil {
 			if message.Error != nil {
 				return nil, message.Error
 			}
-
 			imageDigest = getImageDigestFromMessage(message)
 		}
 	}
-
 	if err := pushScanner.Err(); err != nil {
 		return nil, err
 	}
-
 	if len(imageDigest) == 0 {
 		return nil, fmt.Errorf("failed to determine image digest after push")
 	}
-
 	d.logger.DebugContext(ctx, "docker image digest", slog.String("imageDigest", imageDigest))
-
 	return &PushResponse{Digest: imageDigest}, nil
 }
 
@@ -236,7 +213,6 @@ func getImageDigestFromMessage(message jsonmessage.JSONMessage) string {
 			return match[1]
 		}
 	}
-
 	return ""
 }
 
@@ -244,12 +220,10 @@ func (d *dockerAPIClient) Delete(ctx context.Context, image string) (*DeleteResp
 	if err := d.negotiateVersion(ctx); err != nil {
 		return nil, err
 	}
-
 	_, err := d.cli.ImageRemove(ctx, image, imagetypes.RemoveOptions{})
 	if err != nil {
 		return nil, err
 	}
-
 	return &DeleteResponse{}, nil
 }
 
@@ -257,12 +231,10 @@ func (d *dockerAPIClient) Inspect(ctx context.Context, image string) (*InspectRe
 	if err := d.negotiateVersion(ctx); err != nil {
 		return nil, err
 	}
-
 	inspect, err := d.cli.ImageInspect(ctx, image)
 	if err != nil {
 		return nil, err
 	}
-
 	return &InspectResponse{ImageID: inspect.ID}, nil
 }
 
@@ -274,36 +246,28 @@ func (d *dockerAPIClient) negotiateVersion(ctx context.Context) error {
 	d.lock.RLock()
 	negotiated := d.negotiated
 	d.lock.RUnlock()
-
 	if negotiated {
 		return nil
 	}
-
 	d.lock.Lock()
 	defer d.lock.Unlock()
-
 	if d.negotiated {
 		return nil
 	}
-
 	deadline := time.Now().Add(5 * time.Second)
 	if existingDeadline, ok := ctx.Deadline(); ok {
 		if existingDeadline.Before(deadline) {
 			deadline = existingDeadline
 		}
 	}
-
 	ctx, cancel := context.WithDeadline(context.Background(), deadline)
 	defer cancel()
-
 	ping, err := d.cli.Ping(ctx)
 	if err != nil {
 		return err
 	}
-
 	d.cli.NegotiateAPIVersionPing(ping)
 	d.negotiated = true
-
 	return nil
 }
 
@@ -312,12 +276,10 @@ func NewClient(logger *slog.Logger, cliVersion string, options ...ClientOption) 
 	if logger == nil {
 		return nil, errors.New("logger required")
 	}
-
 	opts := &clientOptions{}
 	for _, option := range options {
 		option(opts)
 	}
-
 	dockerClientOpts := []client.Opt{
 		client.FromEnv,
 		client.WithHTTPHeaders(map[string]string{
@@ -327,16 +289,13 @@ func NewClient(logger *slog.Logger, cliVersion string, options ...ClientOption) 
 	if len(opts.host) > 0 {
 		dockerClientOpts = append(dockerClientOpts, client.WithHost(opts.host))
 	}
-
 	if len(opts.version) > 0 {
 		dockerClientOpts = append(dockerClientOpts, client.WithVersion(opts.version))
 	}
-
 	cli, err := client.NewClientWithOpts(dockerClientOpts...)
 	if err != nil {
 		return nil, err
 	}
-
 	return &dockerAPIClient{
 		cli:    cli,
 		logger: logger,

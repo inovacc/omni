@@ -100,7 +100,6 @@ func MigrateAll(
 	if err != nil {
 		return err
 	}
-
 	return migrator.Migrate(ctx, bucket, workspaceDirPaths, moduleDirPaths, bufGenYAMLFilePaths)
 }
 
@@ -119,7 +118,6 @@ func DiffAll(
 	if err != nil {
 		return err
 	}
-
 	return migrator.Diff(ctx, bucket, writer, workspaceDirPaths, moduleDirPaths, bufGenYAMLFilePaths)
 }
 
@@ -136,10 +134,8 @@ func getWorkspaceModuleBufGenYAMLPaths(
 		if err != nil {
 			return nil, nil, nil, err
 		}
-
 		ignoreDirPathMap[ignoreDirPath] = struct{}{}
 	}
-
 	var dirPath string
 	if err := bufconfig2.WalkFileInfos(
 		ctx,
@@ -196,6 +192,5 @@ func getWorkspaceModuleBufGenYAMLPaths(
 	); err != nil {
 		return nil, nil, nil, fmt.Errorf("unable to parse %q: %w", dirPath, err)
 	}
-
 	return workspaceDirPaths, moduleDirPaths, bufGenYAMLFilePaths, nil
 }

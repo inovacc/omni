@@ -45,7 +45,6 @@ func DotnetTargetFrameworkFromString(framework string) (registryv1alpha1.DotnetT
 	if !ok {
 		return 0, fmt.Errorf("unknown target framework %q", framework)
 	}
-
 	return frameworkEnum, nil
 }
 
@@ -58,6 +57,5 @@ func DotnetTargetFrameworkToString(framework registryv1alpha1.DotnetTargetFramew
 			return frameworkStr, nil
 		}
 	}
-
 	return "", fmt.Errorf("unknown target framework %v", framework)
 }

@@ -390,7 +390,6 @@ func testGetAssociatedSourcePaths(
 		sourceLocation := sourceLocations.Get(i)
 		associatedSourcePaths, err := getAssociatedSourcePaths(sourceLocation.Path, excludeChildAssociatedPaths)
 		require.NoError(t, err)
-
 		expectedAssociatedPaths, ok := sourcePathToExpectedAssociatedPaths[sourceLocation.Path.String()]
 		require.True(t, ok, sourceLocation.Path)
 		require.Equal(t, expectedAssociatedPaths, associatedSourcePaths, i)

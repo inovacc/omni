@@ -43,27 +43,21 @@ func buildLocalSymbols(file *File) {
 
 	for ty := range seq.Values(file.AllTypes()) {
 		newTypeSymbol(ty)
-
 		for f := range seq.Values(ty.Members()) {
 			newFieldSymbol(f)
 		}
-
 		for f := range seq.Values(ty.Extensions()) {
 			newFieldSymbol(f)
 		}
-
 		for o := range seq.Values(ty.Oneofs()) {
 			newOneofSymbol(o)
 		}
 	}
-
 	for f := range seq.Values(file.Extensions()) {
 		newFieldSymbol(f)
 	}
-
 	for s := range seq.Values(file.Services()) {
 		newServiceSymbol(s)
-
 		for m := range seq.Values(s.Methods()) {
 			newMethodSymbol(m)
 		}
@@ -74,12 +68,10 @@ func buildLocalSymbols(file *File) {
 
 func newTypeSymbol(ty Type) {
 	c := ty.Context()
-
 	kind := SymbolKindMessage
 	if ty.IsEnum() {
 		kind = SymbolKindEnum
 	}
-
 	sym := c.arenas.symbols.NewCompressed(rawSymbol{
 		kind: kind,
 		fqn:  ty.InternedFullName(),
@@ -90,14 +82,12 @@ func newTypeSymbol(ty Type) {
 
 func newFieldSymbol(f Member) {
 	c := f.Context()
-
 	kind := SymbolKindField
 	if !f.Extend().IsZero() {
 		kind = SymbolKindExtension
 	} else if f.AST().Classify() == ast.DefKindEnumValue {
 		kind = SymbolKindEnumValue
 	}
-
 	sym := c.arenas.symbols.NewCompressed(rawSymbol{
 		kind: kind,
 		fqn:  f.InternedFullName(),
@@ -144,7 +134,6 @@ func mergeImportedSymbolTables(file *File, r *report.Report) {
 	imports := file.Imports()
 
 	var havePublic bool
-
 	for sym := range seq.Values(imports) {
 		if sym.Public {
 			havePublic = true
@@ -165,7 +154,6 @@ func mergeImportedSymbolTables(file *File, r *report.Report) {
 						// context mapping can still be an array index.
 						return symtab{}
 					}
-
 					return i.exported
 				}),
 			),
@@ -173,7 +161,6 @@ func mergeImportedSymbolTables(file *File, r *report.Report) {
 				if i == 0 {
 					return file
 				}
-
 				return file.imports.files[i-1].file
 			},
 		)
@@ -190,7 +177,6 @@ func mergeImportedSymbolTables(file *File, r *report.Report) {
 					// Already processed in the loop above.
 					return symtab{}
 				}
-
 				return i.exported
 			}),
 		),
@@ -198,7 +184,6 @@ func mergeImportedSymbolTables(file *File, r *report.Report) {
 			if i == 0 {
 				return file
 			}
-
 			return file.imports.files[i-1].file
 		},
 	)
@@ -237,7 +222,6 @@ func dedupSymbols(file *File, symbols *symtab, r *report.Report) {
 			types := mapsx.CollectSet(iterx.FilterMap(slices.Values(refs), func(r Ref[Symbol]) (ast.DeclDef, bool) {
 				s := GetRef(file, r)
 				ty := s.AsType()
-
 				return ty.AST(), !ty.IsZero()
 			}))
 			isFirst := true
@@ -249,14 +233,12 @@ func dedupSymbols(file *File, symbols *symtab, r *report.Report) {
 					// collide, so diagnosing them just creates a mess.
 					return true
 				}
-
 				if !isFirst && s.AsMember().IsGroup() && mapsx.Contains(types, s.AsMember().AST()) {
 					// If a group field collides with its own message type, remove it;
 					// groups with names that might collide with their fields are already
 					// diagnosed in the parser.
 					return true
 				}
-
 				if !isFirst && s.Kind() == SymbolKindPackage {
 					// Ignore all refs that are packages except for the first one. This
 					// is because a package can be defined in multiple files.
@@ -264,7 +246,6 @@ func dedupSymbols(file *File, symbols *symtab, r *report.Report) {
 				}
 
 				isFirst = false
-
 				return false
 			})
 
@@ -282,7 +263,6 @@ func dedupSymbols(file *File, symbols *symtab, r *report.Report) {
 // errDuplicates diagnoses duplicate symbols.
 type errDuplicates struct {
 	*File
-
 	refs []Ref[Symbol]
 }
 
@@ -292,7 +272,6 @@ func (e errDuplicates) symbol(n int) Symbol {
 
 func (e errDuplicates) Diagnose(d *report.Diagnostic) {
 	var havePkg bool
-
 	for i := range e.refs {
 		if e.symbol(i).Kind() == SymbolKindPackage {
 			havePkg = true
@@ -320,7 +299,6 @@ func (e errDuplicates) Diagnose(d *report.Diagnostic) {
 		if n.String()[0] == 'e' {
 			return "an"
 		}
-
 		return "a"
 	}
 
@@ -342,7 +320,6 @@ func (e errDuplicates) Diagnose(d *report.Diagnostic) {
 	}
 
 	spans := make(map[source.Span]struct{})
-
 	for i := range e.refs[2:] {
 		s := e.symbol(i + 2)
 		next := s.Kind().noun()
@@ -376,7 +353,6 @@ func (e errDuplicates) Diagnose(d *report.Diagnostic) {
 			s.Context().Path(),
 			first.FullName(),
 		))
-
 		break
 	}
 
@@ -384,7 +360,6 @@ func (e errDuplicates) Diagnose(d *report.Diagnostic) {
 	// bug with enum scoping.
 	for i := range e.refs {
 		s := e.symbol(i)
-
 		v := s.AsMember()
 		if !v.Container().IsEnum() {
 			continue
@@ -419,7 +394,6 @@ func (e errDuplicates) Diagnose(d *report.Diagnostic) {
 					mf.Name(), ty.Name(),
 				),
 			)
-
 			break
 		}
 	}

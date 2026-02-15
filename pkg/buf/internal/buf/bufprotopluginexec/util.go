@@ -29,7 +29,6 @@ func handlePotentialTooManyFilesError(err error) error {
 	if isTooManyFilesError(err) {
 		return fmt.Errorf("%w: %s", err, tooManyFilesHelpMessage)
 	}
-
 	return err
 }
 
@@ -43,6 +42,5 @@ func isTooManyFilesError(err error) bool {
 		// we don't match on this as this could be particularly prone to being platform-specific.
 		return syscallError.Err != nil && syscallError.Err.Error() == "too many open files"
 	}
-
 	return false
 }

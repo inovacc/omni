@@ -50,7 +50,6 @@ var _ FieldDeclNode = (*NoSourceNode)(nil)
 //	optional string foo = 1;
 type FieldNode struct {
 	compositeNode
-
 	Label     FieldLabel
 	FldType   IdentValueNode
 	Name      *IdentNode
@@ -82,50 +81,39 @@ func NewFieldNode(label *KeywordNode, fieldType IdentValueNode, name *IdentNode,
 	if fieldType == nil {
 		panic("fieldType is nil")
 	}
-
 	if name == nil {
 		panic("name is nil")
 	}
-
 	numChildren := 2
 	if equals != nil {
 		numChildren++
 	}
-
 	if tag != nil {
 		numChildren++
 	}
-
 	if semicolon != nil {
 		numChildren++
 	}
-
 	if label != nil {
 		numChildren++
 	}
-
 	if opts != nil {
 		numChildren++
 	}
-
 	children := make([]Node, 0, numChildren)
 	if label != nil {
 		children = append(children, label)
 	}
-
 	children = append(children, fieldType, name)
 	if equals != nil {
 		children = append(children, equals)
 	}
-
 	if tag != nil {
 		children = append(children, tag)
 	}
-
 	if opts != nil {
 		children = append(children, opts)
 	}
-
 	if semicolon != nil {
 		children = append(children, semicolon)
 	}
@@ -151,7 +139,6 @@ func (n *FieldNode) FieldLabel() Node {
 	if n.Label.KeywordNode == nil {
 		return nil
 	}
-
 	return n.Label.KeywordNode
 }
 
@@ -167,7 +154,6 @@ func (n *FieldNode) FieldTag() Node {
 	if n.Tag == nil {
 		return n
 	}
-
 	return n.Tag
 }
 
@@ -175,7 +161,6 @@ func (n *FieldNode) FieldExtendee() Node {
 	if n.Extendee != nil {
 		return n.Extendee.Extendee
 	}
-
 	return nil
 }
 
@@ -199,7 +184,6 @@ func (n *FieldNode) RangeOptions(fn func(*OptionNode) bool) {
 // (i.e. whether it is optional, required, or repeated).
 type FieldLabel struct {
 	*KeywordNode
-
 	Repeated bool
 	Required bool
 }
@@ -210,7 +194,6 @@ func newFieldLabel(lbl *KeywordNode) FieldLabel {
 		repeated = lbl.Val == "repeated"
 		required = lbl.Val == "required"
 	}
-
 	return FieldLabel{
 		KeywordNode: lbl,
 		Repeated:    repeated,
@@ -268,59 +251,46 @@ func NewGroupNode(label *KeywordNode, keyword *KeywordNode, name *IdentNode, equ
 	if keyword == nil {
 		panic("fieldType is nil")
 	}
-
 	if name == nil {
 		panic("name is nil")
 	}
-
 	if openBrace == nil {
 		panic("openBrace is nil")
 	}
-
 	if closeBrace == nil {
 		panic("closeBrace is nil")
 	}
-
 	numChildren := 4 + len(decls)
 	if label != nil {
 		numChildren++
 	}
-
 	if equals != nil {
 		numChildren++
 	}
-
 	if tag != nil {
 		numChildren++
 	}
-
 	if opts != nil {
 		numChildren++
 	}
-
 	children := make([]Node, 0, numChildren)
 	if label != nil {
 		children = append(children, label)
 	}
-
 	children = append(children, keyword, name)
 	if equals != nil {
 		children = append(children, equals)
 	}
-
 	if tag != nil {
 		children = append(children, tag)
 	}
-
 	if opts != nil {
 		children = append(children, opts)
 	}
-
 	children = append(children, openBrace)
 	for _, decl := range decls {
 		children = append(children, decl)
 	}
-
 	children = append(children, closeBrace)
 
 	ret := &GroupNode{
@@ -335,7 +305,6 @@ func NewGroupNode(label *KeywordNode, keyword *KeywordNode, name *IdentNode, equ
 		Options: opts,
 	}
 	populateMessageBody(&ret.MessageBody, openBrace, decls, closeBrace)
-
 	return ret
 }
 
@@ -344,7 +313,6 @@ func (n *GroupNode) FieldLabel() Node {
 		// return nil interface to indicate absence, not a typed nil
 		return nil
 	}
-
 	return n.Label.KeywordNode
 }
 
@@ -360,7 +328,6 @@ func (n *GroupNode) FieldTag() Node {
 	if n.Tag == nil {
 		return n
 	}
-
 	return n.Tag
 }
 
@@ -368,7 +335,6 @@ func (n *GroupNode) FieldExtendee() Node {
 	if n.Extendee != nil {
 		return n.Extendee.Extendee
 	}
-
 	return nil
 }
 
@@ -440,7 +406,6 @@ var _ OneofDeclNode = (*NoSourceNode)(nil)
 //	}
 type OneofNode struct {
 	compositeNode
-
 	Keyword    *KeywordNode
 	Name       *IdentNode
 	OpenBrace  *RuneNode
@@ -462,26 +427,20 @@ func NewOneofNode(keyword *KeywordNode, name *IdentNode, openBrace *RuneNode, de
 	if keyword == nil {
 		panic("keyword is nil")
 	}
-
 	if name == nil {
 		panic("name is nil")
 	}
-
 	if openBrace == nil {
 		panic("openBrace is nil")
 	}
-
 	if closeBrace == nil {
 		panic("closeBrace is nil")
 	}
-
 	children := make([]Node, 0, 4+len(decls))
-
 	children = append(children, keyword, name, openBrace)
 	for _, decl := range decls {
 		children = append(children, decl)
 	}
-
 	children = append(children, closeBrace)
 
 	for _, decl := range decls {
@@ -577,7 +536,6 @@ func (n *SyntheticOneof) RangeOptions(_ func(*OptionNode) bool) {
 //	map<string, Values>
 type MapTypeNode struct {
 	compositeNode
-
 	Keyword    *KeywordNode
 	OpenAngle  *RuneNode
 	KeyType    *IdentNode
@@ -597,29 +555,22 @@ func NewMapTypeNode(keyword *KeywordNode, openAngle *RuneNode, keyType *IdentNod
 	if keyword == nil {
 		panic("keyword is nil")
 	}
-
 	if openAngle == nil {
 		panic("openAngle is nil")
 	}
-
 	if keyType == nil {
 		panic("keyType is nil")
 	}
-
 	if comma == nil {
 		panic("comma is nil")
 	}
-
 	if valType == nil {
 		panic("valType is nil")
 	}
-
 	if closeAngle == nil {
 		panic("closeAngle is nil")
 	}
-
 	children := []Node{keyword, openAngle, keyType, comma, valType, closeAngle}
-
 	return &MapTypeNode{
 		compositeNode: compositeNode{
 			children: children,
@@ -638,7 +589,6 @@ func NewMapTypeNode(keyword *KeywordNode, openAngle *RuneNode, keyType *IdentNod
 //	map<string,string> replacements = 3 [deprecated = true];
 type MapFieldNode struct {
 	compositeNode
-
 	MapType   *MapTypeNode
 	Name      *IdentNode
 	Equals    *RuneNode
@@ -661,43 +611,33 @@ func NewMapFieldNode(mapType *MapTypeNode, name *IdentNode, equals *RuneNode, ta
 	if mapType == nil {
 		panic("mapType is nil")
 	}
-
 	if name == nil {
 		panic("name is nil")
 	}
-
 	numChildren := 2
 	if equals != nil {
 		numChildren++
 	}
-
 	if tag != nil {
 		numChildren++
 	}
-
 	if opts != nil {
 		numChildren++
 	}
-
 	if semicolon != nil {
 		numChildren++
 	}
-
 	children := make([]Node, 0, numChildren)
-
 	children = append(children, mapType, name)
 	if equals != nil {
 		children = append(children, equals)
 	}
-
 	if tag != nil {
 		children = append(children, tag)
 	}
-
 	if opts != nil {
 		children = append(children, opts)
 	}
-
 	if semicolon != nil {
 		children = append(children, semicolon)
 	}
@@ -731,7 +671,6 @@ func (n *MapFieldNode) FieldTag() Node {
 	if n.Tag == nil {
 		return n
 	}
-
 	return n.Tag
 }
 
@@ -802,7 +741,6 @@ func NewSyntheticMapField(ident IdentValueNode, tagNum uint64) *SyntheticMapFiel
 		terminalNode: ident.Start().asTerminalNode(),
 		Val:          tagNum,
 	}
-
 	return &SyntheticMapField{Ident: ident, Tag: tag}
 }
 
@@ -838,7 +776,6 @@ func (n *SyntheticMapField) FieldTag() Node {
 	if n.Tag == nil {
 		return n
 	}
-
 	return n.Tag
 }
 

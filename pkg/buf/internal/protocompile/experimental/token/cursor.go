@@ -54,7 +54,6 @@ func NewCursorAt(tok Token) *Cursor {
 	if tok.IsZero() {
 		panic(fmt.Sprintf("protocompile/token: passed zero token to NewCursorAt: %v", tok))
 	}
-
 	if tok.IsSynthetic() {
 		panic(fmt.Sprintf("protocompile/token: passed synthetic token to NewCursorAt: %v", tok))
 	}
@@ -114,7 +113,6 @@ func (c *Cursor) Rewind(mark CursorMark) {
 	if c != mark.owner {
 		panic("protocompile/ast: rewound cursor using the wrong cursor's mark")
 	}
-
 	c.idx = mark.idx
 	c.isBackwards = mark.isBackwards
 }
@@ -127,23 +125,18 @@ func (c *Cursor) PeekSkippable() Token {
 	if c == nil {
 		return Zero
 	}
-
 	if c.IsSynthetic() {
 		tokenID, ok := slicesx.Get(c.stream, c.idx)
 		if !ok {
 			return Zero
 		}
-
 		return id.Wrap(c.Context(), tokenID)
 	}
-
 	stream := c.Context()
-
 	impl, ok := slicesx.Get(stream.nats, c.idx)
 	if !ok || (!c.isBackwards && impl.IsClose()) {
 		return Zero // Reached the end.
 	}
-
 	return id.Wrap(c.Context(), ID(c.idx+1))
 }
 
@@ -155,18 +148,14 @@ func (c *Cursor) PeekPrevSkippable() Token {
 	if c == nil {
 		return Zero
 	}
-
 	if c.IsSynthetic() {
 		tokenID, ok := slicesx.Get(c.stream, c.idx-1)
 		if !ok {
 			return Zero
 		}
-
 		return id.Wrap(c.Context(), tokenID)
 	}
-
 	stream := c.Context()
-
 	idx := c.idx - 1
 	if c.isBackwards {
 		impl, ok := slicesx.Get(stream.nats, c.idx)
@@ -174,12 +163,10 @@ func (c *Cursor) PeekPrevSkippable() Token {
 			idx += impl.Offset()
 		}
 	}
-
 	impl, ok := slicesx.Get(stream.nats, idx)
 	if !ok || impl.IsOpen() {
 		return Zero // Reached the start.
 	}
-
 	return id.Wrap(c.Context(), ID(idx+1))
 }
 
@@ -198,10 +185,8 @@ func (c *Cursor) NextSkippable() Token {
 		if impl.IsOpen() {
 			c.idx += impl.Offset()
 		}
-
 		c.idx++
 	}
-
 	return tok
 }
 
@@ -218,7 +203,6 @@ func (c *Cursor) PrevSkippable() Token {
 	} else {
 		c.idx = naturalIndex(tok.ID())
 	}
-
 	return tok
 }
 
@@ -230,9 +214,7 @@ func (c *Cursor) Peek() Token {
 	if c == nil {
 		return Zero
 	}
-
 	cursor := *c
-
 	return cursor.Next()
 }
 
@@ -244,9 +226,7 @@ func (c *Cursor) PeekPrev() Token {
 	if c == nil {
 		return Zero
 	}
-
 	cursor := *c
-
 	return cursor.Prev()
 }
 
@@ -283,7 +263,6 @@ func (c *Cursor) Rest() iter.Seq[Token] {
 			if tok.IsZero() || !yield(tok) {
 				break
 			}
-
 			_ = c.Next()
 		}
 	}
@@ -302,7 +281,6 @@ func (c *Cursor) RestSkippable() iter.Seq[Token] {
 			if tok.IsZero() || !yield(tok) {
 				break
 			}
-
 			_ = c.NextSkippable()
 		}
 	}
@@ -332,6 +310,5 @@ func (c *Cursor) SeekToEnd() (Token, source.Span) {
 	}
 	// Otherwise, return end.
 	tok := id.Wrap(c.Context(), ID(c.idx+1))
-
 	return tok, stream.Span(tok.offsets())
 }

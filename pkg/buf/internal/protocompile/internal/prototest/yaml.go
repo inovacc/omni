@@ -103,22 +103,18 @@ func (y ToYAMLOptions) value(v protoreflect.Value, f protoreflect.FieldDescripto
 		for i := range v.Len() {
 			d.push(nil, y.value(v.Get(i), f))
 		}
-
 		return d
 
 	case protoreflect.Map:
 		d := new(doc)
 		d.needsSort = true
-
 		v.Range(func(k protoreflect.MapKey, v protoreflect.Value) bool {
 			d.push(
 				y.value(k.Value(), f.MapKey()),
 				y.value(v, f.MapValue()),
 			)
-
 			return true
 		})
-
 		return d
 
 	case protoreflect.EnumNumber:
@@ -126,7 +122,6 @@ func (y ToYAMLOptions) value(v protoreflect.Value, f protoreflect.FieldDescripto
 		if value := enum.Values().ByNumber(v); value != nil {
 			return value.Name()
 		}
-
 		return int32(v)
 
 	case []byte:
@@ -159,7 +154,6 @@ func (d *doc) prepare() {
 			}
 
 			outer, ok1 := pair[0].(protoreflect.Name)
-
 			inner, ok2 := v.pairs[0][0].(protoreflect.Name)
 			if !ok1 || !ok2 {
 				break
@@ -250,7 +244,6 @@ func (d *doc) render(args renderArgs, push dom.Sink) {
 									args.inList = true
 									value(args, pair[1], push)
 								}
-
 								push(dom.TextIf(dom.Broken, "\n"))
 							}))
 					}

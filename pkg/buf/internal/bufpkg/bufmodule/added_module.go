@@ -91,7 +91,6 @@ func (a *addedModule) OpaqueID() string {
 	if a.remoteModuleKey != nil {
 		return a.remoteModuleKey.FullName().String()
 	}
-
 	return a.localModule.OpaqueID()
 }
 
@@ -118,16 +117,13 @@ func (a *addedModule) ToModule(
 			if err != nil {
 				return nil, fmt.Errorf("could not get module data for remote module %q: %w", a.remoteModuleKey.FullName().String(), err)
 			}
-
 			if len(moduleDatas) != 1 {
 				return nil, syserror.Newf("expected 1 ModuleData, got %d", len(moduleDatas))
 			}
-
 			moduleData := moduleDatas[0]
 			if moduleData.ModuleKey().FullName() == nil {
 				return nil, syserror.New("got nil FullName for a ModuleKey returned from a ModuleDataProvider")
 			}
-
 			if a.remoteModuleKey.FullName().String() != moduleData.ModuleKey().FullName().String() {
 				return nil, syserror.Newf(
 					"mismatched FullName from ModuleDataProvider: input %q, output %q",
@@ -135,7 +131,6 @@ func (a *addedModule) ToModule(
 					moduleData.ModuleKey().FullName().String(),
 				)
 			}
-
 			return moduleData, nil
 		},
 	)
@@ -157,7 +152,6 @@ func (a *addedModule) ToModule(
 		if err != nil {
 			return nil, err
 		}
-
 		return moduleData.V1Beta1OrV1BufYAMLObjectData()
 	}
 	getV1BufLockObjectData := func() (ObjectData, error) {
@@ -165,7 +159,6 @@ func (a *addedModule) ToModule(
 		if err != nil {
 			return nil, err
 		}
-
 		return moduleData.V1Beta1OrV1BufLockObjectData()
 	}
 	// getDepModuleKeysB5 gets the dependencies for the specific Module.
@@ -211,31 +204,25 @@ func (a *addedModule) ToModule(
 		if err != nil {
 			return nil, err
 		}
-
 		depModuleKeys, err := moduleData.DepModuleKeys()
 		if err != nil {
 			return nil, err
 		}
-
 		if len(depModuleKeys) == 0 {
 			return nil, nil
 		}
-
 		var digestType DigestType
-
 		for i, moduleKey := range depModuleKeys {
 			digest, err := moduleKey.Digest()
 			if err != nil {
 				return nil, err
 			}
-
 			if i == 0 {
 				digestType = digest.Type()
 			} else if digestType != digest.Type() {
 				return nil, syserror.Newf("multiple digest types found in DepModuleKeys: %v, %v", digestType, digest.Type())
 			}
 		}
-
 		switch digestType {
 		case DigestTypeB4:
 			// The ModuleKey dependencies for a commit may be stored in v1 buf.lock file,
@@ -248,19 +235,15 @@ func (a *addedModule) ToModule(
 				if err != nil {
 					return nil, err
 				}
-
 				commitKeysToFetch[i] = commitKey
 			}
-
 			commits, err := commitProvider.GetCommitsForCommitKeys(ctx, commitKeysToFetch)
 			if err != nil {
 				return nil, err
 			}
-
 			if len(commits) != len(commitKeysToFetch) {
 				return nil, syserror.Newf("expected %d commit(s), got %d", commitKeysToFetch, len(commits))
 			}
-
 			return xslices.Map(commits, func(commit Commit) ModuleKey {
 				return commit.ModuleKey()
 			}), nil
@@ -271,7 +254,6 @@ func (a *addedModule) ToModule(
 			return nil, syserror.Newf("unsupported digest type: %v", digestType)
 		}
 	}
-
 	return newModule(
 		ctx,
 		getBucket,
@@ -313,24 +295,20 @@ func getUniqueSortedAddedModulesByOpaqueID(
 	addedModules []*addedModule,
 ) ([]*addedModule, error) {
 	opaqueIDToAddedModules := xslices.ToValuesMap(addedModules, (*addedModule).OpaqueID)
-
 	resultAddedModules := make([]*addedModule, 0, len(opaqueIDToAddedModules))
 	for _, addedModulesForOpaqueID := range opaqueIDToAddedModules {
 		resultAddedModule, err := selectAddedModuleForOpaqueID(ctx, commitProvider, addedModulesForOpaqueID)
 		if err != nil {
 			return nil, err
 		}
-
 		resultAddedModules = append(resultAddedModules, resultAddedModule)
 	}
-
 	sort.Slice(
 		resultAddedModules,
 		func(i int, j int) bool {
 			return resultAddedModules[i].OpaqueID() < resultAddedModules[j].OpaqueID()
 		},
 	)
-
 	return resultAddedModules, nil
 }
 
@@ -409,18 +387,15 @@ func selectRemoteAddedModuleForOpaqueIDIgnoreTargeting(
 	if len(addedModules) == 0 {
 		return nil, syserror.New("expected at least one remote addedModule in selectRemoteAddedModuleForOpaqueIDIgnoreTargeting")
 	}
-
 	for _, addedModule := range addedModules {
 		// Just a sanity check.
 		if addedModule.remoteModuleKey == nil {
 			return nil, syserror.Newf("got nil remoteModuleKey in selectRemoteAddedModuleForOpaqueIDIgnoreTargeting for addedModule %q", addedModule.OpaqueID())
 		}
 	}
-
 	if len(addedModules) == 1 {
 		return addedModules[0], nil
 	}
-
 	if moduleFullNameStrings := xslices.ToUniqueSorted(
 		xslices.Map(
 			addedModules,
@@ -438,12 +413,10 @@ func selectRemoteAddedModuleForOpaqueIDIgnoreTargeting(
 		addedModules,
 		func(addedModule *addedModule) uuid.UUID { return addedModule.remoteModuleKey.CommitID() },
 	)
-
 	uniqueAddedModules := make([]*addedModule, 0, len(commitIDToAddedModules))
 	for _, addedModules := range commitIDToAddedModules {
 		uniqueAddedModules = append(uniqueAddedModules, addedModules[0])
 	}
-
 	if len(uniqueAddedModules) == 1 {
 		return uniqueAddedModules[0], nil
 	}
@@ -461,12 +434,10 @@ func selectRemoteAddedModuleForOpaqueIDIgnoreTargeting(
 	if err != nil {
 		return nil, fmt.Errorf("could not resolve modules from buf.lock: %w", err)
 	}
-
 	createTime, err := commits[0].CreateTime()
 	if err != nil {
 		return nil, err
 	}
-
 	uniqueAddedModule := uniqueAddedModules[0]
 	// i+1 is index inside moduleKeys and addedModules.
 	//
@@ -476,12 +447,10 @@ func selectRemoteAddedModuleForOpaqueIDIgnoreTargeting(
 		if err != nil {
 			return nil, err
 		}
-
 		if iCreateTime.After(createTime) {
 			uniqueAddedModule = uniqueAddedModules[i+1]
 			createTime = iCreateTime
 		}
 	}
-
 	return uniqueAddedModule, nil
 }

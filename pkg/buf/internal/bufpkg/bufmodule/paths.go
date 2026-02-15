@@ -53,7 +53,6 @@ func getDocFilePathForStorageReadBucket(ctx context.Context, bucket storage2.Rea
 			return docFilePath
 		}
 	}
-
 	return ""
 }
 
@@ -63,7 +62,6 @@ func getDocFilePathForModuleReadBucket(ctx context.Context, bucket ModuleReadBuc
 			return docFilePath
 		}
 	}
-
 	return ""
 }
 
@@ -92,7 +90,6 @@ func getSyncOnceValuesGetBucketWithStorageMatcherApplied(
 			if err != nil {
 				return nil, err
 			}
-
 			return storage2.FilterReadBucket(bucket, getStorageMatcher(ctx, bucket)), nil
 		},
 	)

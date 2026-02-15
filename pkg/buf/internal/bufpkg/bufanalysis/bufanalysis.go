@@ -96,7 +96,6 @@ func (f Format) String() string {
 	if !ok {
 		return strconv.Itoa(int(f))
 	}
-
 	return s
 }
 
@@ -108,12 +107,10 @@ func ParseFormat(s string) (Format, error) {
 	if s == "" {
 		return FormatText, nil
 	}
-
 	f, ok := stringToFormat[s]
 	if ok {
 		return f, nil
 	}
-
 	return 0, fmt.Errorf("unknown format: %q", s)
 }
 

@@ -166,12 +166,10 @@ func stringEq[T any](t *testing.T, tokens []T, expected []T) {
 	for i, t := range tokens {
 		a[i] = fmt.Sprint(t)
 	}
-
 	b := make([]string, len(expected))
 	for i, t := range expected {
 		b[i] = fmt.Sprint(t)
 	}
-
 	assert.Equal(t, b, a)
 }
 
@@ -180,9 +178,7 @@ func nth[T any](seq iter.Seq[T], n int) (x T) {
 		if n == 0 {
 			return v
 		}
-
 		n--
 	}
-
 	return x
 }

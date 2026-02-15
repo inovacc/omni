@@ -67,12 +67,10 @@ func newPlainPostHandler(
 	for k := range disallowedHeaders {
 		canonicalDisallowedHeaders[textproto.CanonicalMIMEHeaderKey(k)] = struct{}{}
 	}
-
 	canonicalForwardHeaders := make(map[string]string, len(forwardHeaders))
 	for k, v := range forwardHeaders {
 		canonicalForwardHeaders[textproto.CanonicalMIMEHeaderKey(k)] = v
 	}
-
 	protocols := new(http.Protocols)
 	protocols.SetHTTP1(true)
 	protocols.SetHTTP2(true)
@@ -81,7 +79,6 @@ func newPlainPostHandler(
 		TLSClientConfig: tlsClientConfig,
 		Protocols:       protocols,
 	}
-
 	return &plainPostHandler{
 		B64Encoding:       base64.StdEncoding,
 		DisallowedHeaders: canonicalDisallowedHeaders,
@@ -99,12 +96,10 @@ func (i *plainPostHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "", http.StatusMethodNotAllowed)
 		return
 	}
-
-	if r.Header.Get("Content-Type") != "text/plain" {
+	if r.Header.Get("content-type") != "text/plain" {
 		http.Error(w, "", http.StatusUnsupportedMediaType)
 		return
 	}
-
 	bodyBytes, err := io.ReadAll(
 		base64.NewDecoder(
 			i.B64Encoding,
@@ -116,49 +111,39 @@ func (i *plainPostHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-
 		http.Error(w, err.Error(), http.StatusRequestEntityTooLarge)
-
 		return
 	}
-
 	envelopeRequest := &studiov1alpha1.InvokeRequest{}
 	if err := protoencoding.NewWireUnmarshaler(nil).Unmarshal(bodyBytes, envelopeRequest); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-
 	request := connect.NewRequest(bytes.NewBuffer(envelopeRequest.GetBody()))
 	for _, header := range envelopeRequest.GetHeaders() {
 		if _, ok := i.DisallowedHeaders[textproto.CanonicalMIMEHeaderKey(header.GetKey())]; ok {
 			http.Error(w, fmt.Sprintf("header %q disallowed by agent", header.GetKey()), http.StatusBadRequest)
 			return
 		}
-
 		for _, value := range header.GetValue() {
 			request.Header().Add(header.GetKey(), value)
 		}
 	}
-
 	for fromHeader, toHeader := range i.ForwardHeaders {
 		headerValues := r.Header.Values(fromHeader)
 		if len(headerValues) > 0 {
 			request.Header().Del(toHeader)
-
 			for _, headerValue := range headerValues {
 				request.Header().Add(toHeader, headerValue)
 			}
 		}
 	}
-
 	targetURL, err := url.Parse(envelopeRequest.GetTarget())
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-
 	var httpClient *http.Client
-
 	switch targetURL.Scheme {
 	case "http", "https":
 		httpClient = i.Client
@@ -166,13 +151,11 @@ func (i *plainPostHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, fmt.Sprintf("must specify http or https url scheme, got %q", targetURL.Scheme), http.StatusBadRequest)
 		return
 	}
-
 	clientOptions, err := connectClientOptionsFromContentType(request.Header().Get("Content-Type"))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-
 	client := connect.NewClient[bytes.Buffer, bytes.Buffer](
 		httpClient,
 		targetURL.String(),
@@ -203,25 +186,20 @@ func (i *plainPostHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				http.Error(w, err.Error(), http.StatusBadGateway)
 				return
 			}
-
 			i.writeProtoMessage(w, studiov1alpha1.InvokeResponse_builder{
 				// connectErr.Meta contains the trailers for the
 				// caller to find out the error details.
 				Headers: goHeadersToProtoHeaders(connectErr.Meta()),
 			}.Build())
-
 			return
 		}
-
 		i.Logger.Warn(
 			"non_connect_unary_error",
 			xslog.ErrorAttr(err),
 		)
 		http.Error(w, err.Error(), http.StatusBadGateway)
-
 		return
 	}
-
 	i.writeProtoMessage(w, studiov1alpha1.InvokeResponse_builder{
 		Headers:  goHeadersToProtoHeaders(response.Header()),
 		Body:     response.Msg.Bytes(),
@@ -260,11 +238,9 @@ func (i *plainPostHandler) writeProtoMessage(w http.ResponseWriter, message prot
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-
 	responseB64Bytes := make([]byte, i.B64Encoding.EncodedLen(len(responseProtoBytes)))
 	i.B64Encoding.Encode(responseB64Bytes, responseProtoBytes)
 	w.Header().Set("Content-Type", "text/plain")
-
 	if n, err := w.Write(responseB64Bytes); n != len(responseB64Bytes) && err != nil {
 		i.Logger.Error(
 			"write_error",
@@ -283,6 +259,5 @@ func goHeadersToProtoHeaders(in http.Header) []*studiov1alpha1.Headers {
 			Value: v,
 		}.Build())
 	}
-
 	return out
 }

@@ -34,7 +34,6 @@ func NewLogger(writer io.Writer, logLevel appext.LogLevel, logFormat appext.LogF
 	if err != nil {
 		return nil, err
 	}
-
 	return slog.New(handler), nil
 }
 
@@ -58,7 +57,6 @@ func getHandler(writer io.Writer, logLevel appext.LogLevel, logFormat appext.Log
 	if err != nil {
 		return nil, err
 	}
-
 	switch logFormat {
 	case appext.LogFormatJSON:
 		return slog.NewJSONHandler(writer, &slog.HandlerOptions{
@@ -83,6 +81,5 @@ func defaultReplaceAttr(groups []string, a slog.Attr) slog.Attr {
 	if a.Value.Kind() == slog.KindDuration {
 		a.Value = slog.StringValue(a.Value.Duration().String())
 	}
-
 	return a
 }

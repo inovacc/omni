@@ -41,15 +41,12 @@ func TestNewBlobSetDuplicatesValid(t *testing.T) {
 
 func testNewBlobs(t *testing.T, size int) []Blob {
 	var blobs []Blob
-
 	for i := range size {
 		content := fmt.Sprintf("some file content %d", i)
 		blob, err := NewBlobForContent(strings.NewReader(content))
 		require.NoError(t, err)
-
 		blobs = append(blobs, blob)
 	}
-
 	return blobs
 }
 
@@ -60,11 +57,9 @@ func testAssertBlobsEqual(t *testing.T, expectedBlobs []Blob, actualBlobs []Blob
 	for _, expectedBlob := range expectedBlobs {
 		expectedDigests[expectedBlob.Digest().String()] = struct{}{}
 	}
-
 	actualDigests := make(map[string]struct{}, len(actualBlobs))
 	for _, actualBlob := range actualBlobs {
 		actualDigests[actualBlob.Digest().String()] = struct{}{}
 	}
-
 	assert.Equal(t, expectedDigests, actualDigests)
 }

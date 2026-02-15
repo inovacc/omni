@@ -279,20 +279,17 @@ func modifyImage(
 	if !config.Enabled() {
 		return nil
 	}
-
 	sweeper := internal.NewMarkSweeper(image)
 	for _, imageFile := range image.Files() {
 		if datawkt.Exists(imageFile.Path()) {
 			continue
 		}
-
 		for _, modifyFunc := range modifyFuncs {
 			if err := modifyFunc(sweeper, imageFile, config, options...); err != nil {
 				return err
 			}
 		}
 	}
-
 	return sweeper.Sweep()
 }
 

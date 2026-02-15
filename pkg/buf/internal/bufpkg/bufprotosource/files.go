@@ -46,19 +46,14 @@ func newFiles[F InputFile](
 			if err != nil {
 				return nil, err
 			}
-
 			files = append(files, file)
 		}
-
 		return files, nil
 	}
-
 	chunks := xslices.ToChunks(indexedInputFiles, chunkSize)
 	indexedFiles := make([]xslices.Indexed[File], 0, len(indexedInputFiles))
 	jobs := make([]func(context.Context) error, len(chunks))
-
 	var lock sync.Mutex
-
 	for i, indexedInputFileChunk := range chunks {
 		jobs[i] = func(ctx context.Context) error {
 			iIndexedFiles := make([]xslices.Indexed[File], 0, len(indexedInputFileChunk))
@@ -67,23 +62,16 @@ func newFiles[F InputFile](
 				if err != nil {
 					return err
 				}
-
 				iIndexedFiles = append(iIndexedFiles, xslices.Indexed[File]{Value: file, Index: indexedInputFile.Index})
 			}
-
 			lock.Lock()
-
 			indexedFiles = append(indexedFiles, iIndexedFiles...)
-
 			lock.Unlock()
-
 			return nil
 		}
 	}
-
 	if err := thread.Parallelize(ctx, jobs); err != nil {
 		return nil, err
 	}
-
 	return xslices.IndexedToSortedValues(indexedFiles), nil
 }

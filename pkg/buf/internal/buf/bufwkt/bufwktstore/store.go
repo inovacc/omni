@@ -44,7 +44,6 @@ func (s *store) GetBucket(ctx context.Context) (storage2.ReadBucket, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	if isEmpty {
 		if err := copyToBucket(ctx, wktBucket); err != nil {
 			return nil, err
@@ -54,12 +53,10 @@ func (s *store) GetBucket(ctx context.Context) (storage2.ReadBucket, error) {
 		if err != nil {
 			return nil, err
 		}
-
 		if len(diff) > 0 {
 			if err := deleteBucket(ctx, wktBucket); err != nil {
 				return nil, err
 			}
-
 			if err := copyToBucket(ctx, wktBucket); err != nil {
 				return nil, err
 			}

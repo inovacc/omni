@@ -217,7 +217,6 @@ func ModuleDirectModuleDeps(module Module) ([]ModuleDep, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	return xslices.Filter(
 		moduleDeps,
 		func(moduleDep ModuleDep) bool { return moduleDep.IsDirect() },
@@ -272,19 +271,15 @@ func newModule(
 	if protoFileTargetPath != "" && (len(targetPaths) > 0 || len(targetExcludePaths) > 0) {
 		return nil, syserror.Newf("cannot set both protoFileTargetPath %q and either targetPaths %v or targetExcludePaths %v", protoFileTargetPath, targetPaths, targetExcludePaths)
 	}
-
 	if protoFileTargetPath != "" && normalpath2.Ext(protoFileTargetPath) != ".proto" {
 		return nil, syserror.Newf("protoFileTargetPath %q is not a .proto file", protoFileTargetPath)
 	}
-
 	if bucketID == "" && moduleFullName == nil {
 		return nil, syserror.New("bucketID was empty and moduleFullName was nil when constructing a Module, one of these must be set")
 	}
-
 	if !isLocal && moduleFullName == nil {
 		return nil, syserror.New("moduleFullName not present when constructing a remote Module")
 	}
-
 	if moduleFullName == nil && commitID != uuid.Nil {
 		return nil, syserror.New("moduleFullName not present and commitID present when constructing a remote Module")
 	}
@@ -293,20 +288,16 @@ func newModule(
 		if path == "" {
 			return path, nil
 		}
-
 		return normalpath2.NormalizeAndValidate(path)
 	}
-
 	targetPaths, err := xslices.MapError(targetPaths, normalizeAndValidateIfNotEmpty)
 	if err != nil {
 		return nil, syserror.Wrap(err)
 	}
-
 	targetExcludePaths, err = xslices.MapError(targetExcludePaths, normalizeAndValidateIfNotEmpty)
 	if err != nil {
 		return nil, syserror.Wrap(err)
 	}
-
 	protoFileTargetPath, err = normalizeAndValidateIfNotEmpty(protoFileTargetPath)
 	if err != nil {
 		return nil, syserror.Wrap(err)
@@ -325,7 +316,6 @@ func newModule(
 		getV1BufLockObjectData: sync.OnceValues(getV1BufLockObjectData),
 		getDepModuleKeysB5:     sync.OnceValues(getDepModuleKeysB5),
 	}
-
 	moduleReadBucket, err := newModuleReadBucketForModule(
 		ctx,
 		syncOnceValuesGetBucketWithStorageMatcherApplied,
@@ -338,11 +328,9 @@ func newModule(
 	if err != nil {
 		return nil, err
 	}
-
 	module.ModuleReadBucket = moduleReadBucket
 	module.digestTypeToGetDigest = newSyncOnceValueDigestTypeToGetDigestFuncForModule(module)
 	module.getModuleDeps = sync.OnceValues(newGetModuleDepsFuncForModule(module))
-
 	return module, nil
 }
 
@@ -353,7 +341,6 @@ func (m *module) OpaqueID() string {
 	if m.moduleFullName != nil {
 		return m.moduleFullName.String()
 	}
-
 	return m.bucketID
 }
 
@@ -373,7 +360,6 @@ func (m *module) Description() string {
 	if m.description != "" {
 		return m.description
 	}
-
 	return m.OpaqueID()
 }
 
@@ -382,7 +368,6 @@ func (m *module) Digest(digestType DigestType) (Digest, error) {
 	if !ok {
 		return nil, syserror.Newf("DigestType %v was not in module.digestTypeToGetDigest", digestType)
 	}
-
 	return getDigest()
 }
 
@@ -425,16 +410,13 @@ func (m *module) withIsTarget(isTarget bool) (Module, error) {
 		getV1BufLockObjectData: m.getV1BufLockObjectData,
 		getDepModuleKeysB5:     m.getDepModuleKeysB5,
 	}
-
 	moduleReadBucket, ok := m.ModuleReadBucket.(*moduleReadBucket)
 	if !ok {
 		return nil, syserror.Newf("expected ModuleReadBucket to be a *moduleReadBucket but was a %T", m.ModuleReadBucket)
 	}
-
 	newModule.ModuleReadBucket = moduleReadBucket.withModule(newModule)
 	newModule.digestTypeToGetDigest = newSyncOnceValueDigestTypeToGetDigestFuncForModule(newModule)
 	newModule.getModuleDeps = sync.OnceValues(newGetModuleDepsFuncForModule(newModule))
-
 	return newModule, nil
 }
 
@@ -449,7 +431,6 @@ func newSyncOnceValueDigestTypeToGetDigestFuncForModule(module *module) map[Dige
 	for digestType := range digestTypeToString {
 		m[digestType] = sync.OnceValues(newGetDigestFuncForModuleAndDigestType(module, digestType))
 	}
-
 	return m
 }
 
@@ -459,19 +440,16 @@ func newGetDigestFuncForModuleAndDigestType(module *module, digestType DigestTyp
 		if err != nil {
 			return nil, err
 		}
-
 		switch digestType {
 		case DigestTypeB4:
 			v1BufYAMLObjectData, err := module.getV1BufYAMLObjectData()
 			if err != nil {
 				return nil, err
 			}
-
 			v1BufLockObjectData, err := module.getV1BufLockObjectData()
 			if err != nil {
 				return nil, err
 			}
-
 			return getB4Digest(module.ctx, bucket, v1BufYAMLObjectData, v1BufLockObjectData)
 		case DigestTypeB5:
 			// B5 digests are calculated from the Module's content and its dependencies.
@@ -491,7 +469,6 @@ func newGetDigestFuncForModuleAndDigestType(module *module, digestType DigestTyp
 				if err != nil {
 					return nil, err
 				}
-
 				return getB5DigestForBucketAndDepModuleKeys(module.ctx, bucket, depModuleKeys)
 			}
 			// ModuleDeps returns the dependent Modules resolved for the target Module in the ModuleSet.
@@ -501,7 +478,6 @@ func newGetDigestFuncForModuleAndDigestType(module *module, digestType DigestTyp
 			if err != nil {
 				return nil, err
 			}
-
 			return getB5DigestForBucketAndModuleDeps(module.ctx, bucket, moduleDeps)
 		default:
 			return nil, syserror.Newf("unknown DigestType: %v", digestType)

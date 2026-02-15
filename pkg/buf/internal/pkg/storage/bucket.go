@@ -248,7 +248,6 @@ func NewPutOptions(options []PutOption) PutOptions {
 	for _, option := range options {
 		option(putOptions)
 	}
-
 	return putOptions
 }
 
@@ -269,7 +268,6 @@ func PutWithSuggestedChunkSize(suggestedChunkSize int) PutOption {
 		if suggestedChunkSize < 0 {
 			return
 		}
-
 		putOptions.suggestedChunkSize = &suggestedChunkSize
 	}
 }
@@ -333,7 +331,6 @@ func (p *putOptions) SuggestedChunkSize() int {
 	if p.suggestedChunkSize == nil {
 		return 0
 	}
-
 	return *p.suggestedChunkSize
 }
 

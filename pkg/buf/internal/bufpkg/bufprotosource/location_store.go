@@ -32,7 +32,6 @@ func newLocationStore(fileDescriptorProto *descriptorpb.FileDescriptorProto) *lo
 		sourceCodeInfoLocations: fileDescriptorProto.GetSourceCodeInfo().GetLocation(),
 	}
 	locationStore.getPathToLocation = sync.OnceValue(locationStore.getPathToLocationUncached)
-
 	return locationStore
 }
 
@@ -56,26 +55,21 @@ func (l *locationStore) getBestMatchOptionExtensionLocation(path []int32, extens
 	// preferring the longest matching ancestor path (i.e. as many extraPath elements
 	// as can be found). If we find a *sub*path (a descendant path, that points INTO
 	// the path we are trying to find), use the first such one encountered.
-	var (
-		bestMatch        *descriptorpb.SourceCodeInfo_Location
-		bestMatchPathLen int
-	)
-
+	var bestMatch *descriptorpb.SourceCodeInfo_Location
+	var bestMatchPathLen int
 	for _, loc := range l.sourceCodeInfoLocations {
-		if len(loc.GetPath()) >= extensionPathLen &&
-			isDescendantPath(path, loc.GetPath()) &&
-			len(loc.GetPath()) > bestMatchPathLen {
+		if len(loc.Path) >= extensionPathLen &&
+			isDescendantPath(path, loc.Path) &&
+			len(loc.Path) > bestMatchPathLen {
 			bestMatch = loc
-			bestMatchPathLen = len(loc.GetPath())
-		} else if isDescendantPath(loc.GetPath(), path) {
+			bestMatchPathLen = len(loc.Path)
+		} else if isDescendantPath(loc.Path, path) {
 			return newLocation(l.filePath, loc)
 		}
 	}
-
 	if bestMatch != nil {
 		return newLocation(l.filePath, bestMatch)
 	}
-
 	return nil
 }
 
@@ -83,7 +77,7 @@ func (l *locationStore) getBestMatchOptionExtensionLocation(path []int32, extens
 func (l *locationStore) getPathToLocationUncached() map[string]Location {
 	pathToLocation := make(map[string]Location, len(l.sourceCodeInfoLocations))
 	for _, sourceCodeInfoLocation := range l.sourceCodeInfoLocations {
-		pathKey := getPathKey(sourceCodeInfoLocation.GetPath())
+		pathKey := getPathKey(sourceCodeInfoLocation.Path)
 		// - Multiple locations may have the same path.  This happens when a single
 		//   logical declaration is spread out across multiple places.  The most
 		//   obvious example is the "extend" block again -- there may be multiple
@@ -92,13 +86,11 @@ func (l *locationStore) getPathToLocationUncached() map[string]Location {
 			pathToLocation[pathKey] = newLocation(l.filePath, sourceCodeInfoLocation)
 		}
 	}
-
 	return pathToLocation
 }
 
 func getPathKey(path []int32) string {
 	key := make([]byte, len(path)*4)
-
 	j := 0
 	for _, elem := range path {
 		key[j] = byte(elem)
@@ -107,7 +99,6 @@ func getPathKey(path []int32) string {
 		key[j+3] = byte(elem >> 24)
 		j += 4
 	}
-
 	return string(key)
 }
 
@@ -115,12 +106,10 @@ func isDescendantPath(descendant, ancestor []int32) bool {
 	if len(descendant) < len(ancestor) {
 		return false
 	}
-
 	for i := range ancestor {
 		if descendant[i] != ancestor[i] {
 			return false
 		}
 	}
-
 	return true
 }

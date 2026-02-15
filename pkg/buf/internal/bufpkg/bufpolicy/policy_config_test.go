@@ -17,10 +17,10 @@ package bufpolicy_test
 import (
 	"testing"
 
-	optionv1 "buf.build/gen/go/bufbuild/bufplugin/protocolbuffers/go/buf/plugin/option/v1"
 	"github.com/google/go-cmp/cmp"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufpolicy"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufpolicy/bufpolicyapi"
+	optionv1 "buf.build/gen/go/bufbuild/bufplugin/protocolbuffers/go/buf/plugin/option/v1"
 	policyv1beta1 "github.com/inovacc/omni/pkg/buf/internal/gen/bufbuild/registry/protocolbuffers/go/buf/registry/policy/v1beta1"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/protoencoding"
 	"github.com/stretchr/testify/require"
@@ -142,13 +142,11 @@ func TestMarshalPolicyConfigAsJSON(t *testing.T) {
 
 func testRoundTripPolicyConfigAsJSON(t *testing.T, policyConfigV1Beta1 *policyv1beta1.PolicyConfig) {
 	const registry = "bufbuild.test"
-
 	policyConfig, err := bufpolicyapi.V1Beta1ProtoToPolicyConfig(registry, policyConfigV1Beta1)
 	require.NoError(t, err)
 	data, err := bufpolicy.MarshalPolicyConfigAsJSON(policyConfig)
 	require.NoError(t, err)
 	require.NotEmpty(t, data)
-
 	var policyConfigV1Beta1Copy policyv1beta1.PolicyConfig
 	require.NoError(t, protoencoding.NewJSONUnmarshaler(nil, protoencoding.JSONUnmarshalerWithDisallowUnknown()).Unmarshal(data, &policyConfigV1Beta1Copy))
 	diff := cmp.Diff(policyConfigV1Beta1, &policyConfigV1Beta1Copy, protocmp.Transform())

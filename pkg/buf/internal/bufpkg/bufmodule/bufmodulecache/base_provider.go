@@ -63,12 +63,10 @@ func (p *baseProvider[K, V]) getValuesForKeys(ctx context.Context, keys []K) ([]
 	if err != nil {
 		return nil, err
 	}
-
 	foundValues, notFoundKeys, err := p.storeGetValuesForKeys(ctx, keys)
 	if err != nil {
 		return nil, err
 	}
-
 	delegateValues, err := p.delegateGetValuesForKeys(
 		ctx,
 		notFoundKeys,
@@ -76,7 +74,6 @@ func (p *baseProvider[K, V]) getValuesForKeys(ctx context.Context, keys []K) ([]
 	if err != nil {
 		return nil, err
 	}
-
 	if err := p.storePutValues(
 		ctx,
 		delegateValues,
@@ -89,7 +86,6 @@ func (p *baseProvider[K, V]) getValuesForKeys(ctx context.Context, keys []K) ([]
 	// to return a ModuleDataProvider that will always have local paths for returned storage.Buckets,
 	// if the cache is an on-disk cache.
 	var delegateNotFoundKeys []K
-
 	delegateValues, delegateNotFoundKeys, err = p.storeGetValuesForKeys(ctx, notFoundKeys)
 	if err != nil {
 		return nil, err
@@ -110,12 +106,10 @@ func (p *baseProvider[K, V]) getValuesForKeys(ctx context.Context, keys []K) ([]
 		append(foundValues, delegateValues...),
 		func(value V) (xslices.Indexed[V], error) {
 			commitID := p.valueToCommitID(value)
-
 			indexedKey, ok := commitIDToIndexedKey[commitID]
 			if !ok {
 				return xslices.Indexed[V]{}, syserror.Newf("did not get value from store with commitID %q", uuidutil.ToDashless(commitID))
 			}
-
 			return xslices.Indexed[V]{
 				Value: value,
 				Index: indexedKey.Index,
@@ -125,7 +119,6 @@ func (p *baseProvider[K, V]) getValuesForKeys(ctx context.Context, keys []K) ([]
 	if err != nil {
 		return nil, err
 	}
-
 	return xslices.IndexedToSortedValues(indexedValues), nil
 }
 

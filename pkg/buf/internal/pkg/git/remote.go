@@ -130,7 +130,6 @@ func getRemote(
 	if err := validateRemoteExists(ctx, envContainer, dir, name); err != nil {
 		return nil, err
 	}
-
 	hostname, repositoryPath, err := getRemoteURLMetadata(
 		ctx,
 		envContainer,
@@ -140,12 +139,10 @@ func getRemote(
 	if err != nil {
 		return nil, fmt.Errorf("failed to get remote URL metadata: %w", err)
 	}
-
 	headBranch, err := getRemoteHEADBranch(ctx, envContainer, dir, name)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get remote HEAD branch: %w", err)
 	}
-
 	return newRemote(
 		name,
 		getRemoteKindFromHostname(hostname),
@@ -162,7 +159,6 @@ func validateRemoteExists(
 	name string,
 ) error {
 	stdout := bytes.NewBuffer(nil)
-
 	stderr := bytes.NewBuffer(nil)
 	if err := xexec.Run(
 		ctx,
@@ -175,14 +171,12 @@ func validateRemoteExists(
 	); err != nil {
 		var exitErr *exec.ExitError
 		if errors.As(err, &exitErr) {
-			if exitErr.ExitCode() == 128 {
+			if exitErr.ProcessState.ExitCode() == 128 {
 				return fmt.Errorf("remote %s: %w", name, ErrRemoteNotFound)
 			}
 		}
-
 		return err
 	}
-
 	return nil
 }
 
@@ -193,7 +187,6 @@ func getRemoteURLMetadata(
 	remote string,
 ) (string, string, error) {
 	stdout := bytes.NewBuffer(nil)
-
 	stderr := bytes.NewBuffer(nil)
 	if err := xexec.Run(
 		ctx,
@@ -208,9 +201,7 @@ func getRemoteURLMetadata(
 	); err != nil {
 		return "", "", err
 	}
-
 	hostname, repositoryPath := parseRawRemoteURL(strings.TrimSpace(stdout.String()))
-
 	return hostname, repositoryPath, nil
 }
 
@@ -225,7 +216,6 @@ func parseRawRemoteURL(rawURL string) (string, string) {
 	if parsed == nil {
 		return "", ""
 	}
-
 	return parsed.Hostname(), strings.TrimSuffix(parsed.Path, gitSuffix)
 }
 
@@ -244,7 +234,6 @@ func parseSCPLikeURL(rawURL string) *url.URL {
 			Path: "/" + match[3], // scp-like URLs do not have the leading slash
 		}
 	}
-
 	return nil
 }
 
@@ -258,7 +247,6 @@ func getRemoteHEADBranch(
 	remote string,
 ) (string, error) {
 	stdout := bytes.NewBuffer(nil)
-
 	stderr := bytes.NewBuffer(nil)
 	if err := xexec.Run(
 		ctx,
@@ -271,7 +259,6 @@ func getRemoteHEADBranch(
 	); err != nil {
 		return "", err
 	}
-
 	scanner := bufio.NewScanner(stdout)
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
@@ -279,7 +266,6 @@ func getRemoteHEADBranch(
 			return strings.TrimSpace(branch), nil
 		}
 	}
-
 	return "", errors.New("no HEAD branch information found")
 }
 
@@ -287,14 +273,11 @@ func getRemoteKindFromHostname(hostname string) remoteKind {
 	if strings.Contains(hostname, bitBucketHostname) {
 		return remoteKindBitBucket
 	}
-
 	if strings.Contains(hostname, githubHostname) {
 		return remoteKindGitHub
 	}
-
 	if strings.Contains(hostname, gitlabHostname) {
 		return remoteKindGitLab
 	}
-
 	return remoteKindUnknown
 }

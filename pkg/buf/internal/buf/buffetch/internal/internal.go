@@ -60,7 +60,7 @@ const (
 	GitSchemeLocal
 	// GitSchemeSSH is the ssh git scheme.
 	GitSchemeSSH
-	// GitSchemeGit is the git scheme.
+	// GitSchemeGit is the git git scheme.
 	GitSchemeGit
 
 	// ArchiveTypeTar is a tar archive.
@@ -600,12 +600,10 @@ func WithSingleFormat(format string, options ...SingleFormatOption) RefParserOpt
 		if format == "" {
 			return
 		}
-
 		singleFormatInfo := newSingleFormatInfo()
 		for _, option := range options {
 			option(singleFormatInfo)
 		}
-
 		refParser.singleFormatToInfo[format] = singleFormatInfo
 	}
 }
@@ -619,12 +617,10 @@ func WithArchiveFormat(format string, archiveType ArchiveType, options ...Archiv
 		if format == "" {
 			return
 		}
-
 		archiveFormatInfo := newArchiveFormatInfo(archiveType)
 		for _, option := range options {
 			option(archiveFormatInfo)
 		}
-
 		refParser.archiveFormatToInfo[format] = archiveFormatInfo
 	}
 }
@@ -638,12 +634,10 @@ func WithDirFormat(format string, options ...DirFormatOption) RefParserOption {
 		if format == "" {
 			return
 		}
-
 		dirFormatInfo := newDirFormatInfo()
 		for _, option := range options {
 			option(dirFormatInfo)
 		}
-
 		refParser.dirFormatToInfo[format] = dirFormatInfo
 	}
 }
@@ -657,12 +651,10 @@ func WithGitFormat(format string, options ...GitFormatOption) RefParserOption {
 		if format == "" {
 			return
 		}
-
 		gitFormatInfo := newGitFormatInfo()
 		for _, option := range options {
 			option(gitFormatInfo)
 		}
-
 		refParser.gitFormatToInfo[format] = gitFormatInfo
 	}
 }
@@ -676,12 +668,10 @@ func WithModuleFormat(format string, options ...ModuleFormatOption) RefParserOpt
 		if format == "" {
 			return
 		}
-
 		moduleFormatInfo := newModuleFormatInfo()
 		for _, option := range options {
 			option(moduleFormatInfo)
 		}
-
 		refParser.moduleFormatToInfo[format] = moduleFormatInfo
 	}
 }
@@ -695,12 +685,10 @@ func WithProtoFileFormat(format string, options ...ProtoFileFormatOption) RefPar
 		if format == "" {
 			return
 		}
-
 		protoFileFormatInfo := newProtoFileFormatInfo()
 		for _, option := range options {
 			option(protoFileFormatInfo)
 		}
-
 		refParser.protoFileFormatToInfo[format] = protoFileFormatInfo
 	}
 }
@@ -918,7 +906,6 @@ func GetInputConfigForRef(ref Ref, value string) (bufconfig.InputConfig, error) 
 	if err != nil {
 		return nil, err
 	}
-
 	switch t := ref.(type) {
 	case ArchiveRef:
 		switch t.ArchiveType() {

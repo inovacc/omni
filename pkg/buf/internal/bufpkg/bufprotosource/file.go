@@ -274,49 +274,38 @@ func newFile(inputFile InputFile, resolver protodesc.Resolver) (*file, error) {
 		if err != nil {
 			return nil, err
 		}
-
 		f.fileImports = append(f.fileImports, fileImport)
 	}
-
 	for _, dependencyIndex := range f.fileDescriptor.GetPublicDependency() {
 		if int(dependencyIndex) < 0 || len(f.fileImports) <= int(dependencyIndex) {
 			return nil, fmt.Errorf("got dependency index of %d but length of imports is %d", dependencyIndex, len(f.fileImports))
 		}
-
 		fileImport, ok := f.fileImports[dependencyIndex].(*fileImport)
 		if !ok {
 			return nil, fmt.Errorf("could not cast %T to a *fileImport", f.fileImports[dependencyIndex])
 		}
-
 		fileImport.setIsPublic()
 	}
-
 	for _, dependencyIndex := range f.fileDescriptor.GetWeakDependency() {
 		if int(dependencyIndex) < 0 || len(f.fileImports) <= int(dependencyIndex) {
 			return nil, fmt.Errorf("got dependency index of %d but length of imports is %d", dependencyIndex, len(f.fileImports))
 		}
-
 		fileImport, ok := f.fileImports[dependencyIndex].(*fileImport)
 		if !ok {
 			return nil, fmt.Errorf("could not cast %T to a *fileImport", f.fileImports[dependencyIndex])
 		}
-
 		fileImport.setIsWeak()
 	}
-
 	for _, dependencyIndex := range inputFile.UnusedDependencyIndexes() {
 		if int(dependencyIndex) < 0 || len(f.fileImports) <= int(dependencyIndex) {
 			return nil, fmt.Errorf("got dependency index of %d but length of imports is %d", dependencyIndex, len(f.fileImports))
 		}
-
 		fileImport, ok := f.fileImports[dependencyIndex].(*fileImport)
 		if !ok {
 			return nil, fmt.Errorf("could not cast %T to a *fileImport", f.fileImports[dependencyIndex])
 		}
-
 		fileImport.setIsUnused()
 	}
-
 	for enumIndex, enumDescriptorProto := range f.fileDescriptor.GetEnumType() {
 		enum, err := f.populateEnum(
 			enumDescriptorProto,
@@ -328,10 +317,8 @@ func newFile(inputFile InputFile, resolver protodesc.Resolver) (*file, error) {
 		if err != nil {
 			return nil, err
 		}
-
 		f.enums = append(f.enums, enum)
 	}
-
 	for messageIndex, descriptorProto := range f.fileDescriptor.GetMessageType() {
 		message, err := f.populateMessage(
 			descriptorProto,
@@ -343,10 +330,8 @@ func newFile(inputFile InputFile, resolver protodesc.Resolver) (*file, error) {
 		if err != nil {
 			return nil, err
 		}
-
 		f.messages = append(f.messages, message)
 	}
-
 	for serviceIndex, serviceDescriptorProto := range f.fileDescriptor.GetService() {
 		service, err := f.populateService(
 			serviceDescriptorProto,
@@ -355,10 +340,8 @@ func newFile(inputFile InputFile, resolver protodesc.Resolver) (*file, error) {
 		if err != nil {
 			return nil, err
 		}
-
 		f.services = append(f.services, service)
 	}
-
 	for extensionIndex, extensionDescriptorProto := range f.fileDescriptor.GetExtension() {
 		extension, err := f.populateExtension(
 			extensionDescriptorProto,
@@ -367,12 +350,9 @@ func newFile(inputFile InputFile, resolver protodesc.Resolver) (*file, error) {
 		if err != nil {
 			return nil, err
 		}
-
 		f.extensions = append(f.extensions, extension)
 	}
-
 	f.optimizeMode = f.fileDescriptor.GetOptions().GetOptimizeFor()
-
 	return f, nil
 }
 
@@ -397,7 +377,6 @@ func (f *file) populateEnum(
 	if err != nil {
 		return nil, err
 	}
-
 	enum := newEnum(
 		enumNamedDescriptor,
 		newOptionExtensionDescriptor(
@@ -426,7 +405,6 @@ func (f *file) populateEnum(
 		if err != nil {
 			return nil, err
 		}
-
 		enumValue := newEnumValue(
 			enumValueNamedDescriptor,
 			newOptionExtensionDescriptor(
@@ -456,13 +434,11 @@ func (f *file) populateEnum(
 		)
 		enum.addReservedEnumRange(reservedEnumRange)
 	}
-
 	for reservedNameIndex, reservedNameValue := range enumDescriptorProto.GetReservedName() {
 		reservedNameLocationDescriptor := newLocationDescriptor(
 			f.descriptor,
 			getEnumReservedNamePath(enumIndex, reservedNameIndex, nestedMessageIndexes...),
 		)
-
 		reservedName, err := newReservedName(
 			reservedNameLocationDescriptor,
 			reservedNameValue,
@@ -470,10 +446,8 @@ func (f *file) populateEnum(
 		if err != nil {
 			return nil, err
 		}
-
 		enum.addReservedName(reservedName)
 	}
-
 	return enum, nil
 }
 
@@ -499,7 +473,6 @@ func (f *file) populateMessage(
 	if err != nil {
 		return nil, err
 	}
-
 	message := newMessage(
 		messageNamedDescriptor,
 		newOptionExtensionDescriptor(
@@ -518,7 +491,6 @@ func (f *file) populateMessage(
 		getMessageNoStandardDescriptorAccessorPath(topLevelMessageIndex, nestedMessageIndexes...),
 	)
 	oneofIndexToOneof := make(map[int]*oneof)
-
 	for oneofIndex, oneofDescriptorProto := range descriptorProto.GetOneofDecl() {
 		oneofNamedDescriptor, err := newNamedDescriptor(
 			newLocationDescriptor(
@@ -532,7 +504,6 @@ func (f *file) populateMessage(
 		if err != nil {
 			return nil, err
 		}
-
 		oneof := newOneof(
 			oneofNamedDescriptor,
 			newOptionExtensionDescriptor(
@@ -546,7 +517,6 @@ func (f *file) populateMessage(
 		message.addOneof(oneof)
 		oneofIndexToOneof[oneofIndex] = oneof
 	}
-
 	for fieldIndex, fieldDescriptorProto := range descriptorProto.GetField() {
 		// TODO: not working for map entries
 		fieldNamedDescriptor, err := newNamedDescriptor(
@@ -561,26 +531,19 @@ func (f *file) populateMessage(
 		if err != nil {
 			return nil, err
 		}
-
 		var packed *bool
-		if fieldDescriptorProto.GetOptions() != nil {
+		if fieldDescriptorProto.Options != nil {
 			packed = fieldDescriptorProto.GetOptions().Packed
 		}
-
-		var (
-			oneof *oneof
-			ok    bool
-		)
-
+		var oneof *oneof
+		var ok bool
 		if fieldDescriptorProto.OneofIndex != nil {
-			oneofIndex := int(fieldDescriptorProto.GetOneofIndex())
-
+			oneofIndex := int(*fieldDescriptorProto.OneofIndex)
 			oneof, ok = oneofIndexToOneof[oneofIndex]
 			if !ok {
 				return nil, fmt.Errorf("no oneof for index %d", oneofIndex)
 			}
 		}
-
 		field := newField(
 			fieldNamedDescriptor,
 			newOptionExtensionDescriptor(
@@ -617,12 +580,10 @@ func (f *file) populateMessage(
 			getMessageFieldExtendeePath(fieldIndex, topLevelMessageIndex, nestedMessageIndexes...),
 		)
 		message.addField(field)
-
 		if oneof != nil {
 			oneof.addField(field)
 		}
 	}
-
 	for fieldIndex, fieldDescriptorProto := range descriptorProto.GetExtension() {
 		fieldNamedDescriptor, err := newNamedDescriptor(
 			newLocationDescriptor(
@@ -636,26 +597,19 @@ func (f *file) populateMessage(
 		if err != nil {
 			return nil, err
 		}
-
 		var packed *bool
-		if fieldDescriptorProto.GetOptions() != nil {
+		if fieldDescriptorProto.Options != nil {
 			packed = fieldDescriptorProto.GetOptions().Packed
 		}
-
-		var (
-			oneof *oneof
-			ok    bool
-		)
-
+		var oneof *oneof
+		var ok bool
 		if fieldDescriptorProto.OneofIndex != nil {
-			oneofIndex := int(fieldDescriptorProto.GetOneofIndex())
-
+			oneofIndex := int(*fieldDescriptorProto.OneofIndex)
 			oneof, ok = oneofIndexToOneof[oneofIndex]
 			if !ok {
 				return nil, fmt.Errorf("no oneof for index %d", oneofIndex)
 			}
 		}
-
 		field := newField(
 			fieldNamedDescriptor,
 			newOptionExtensionDescriptor(
@@ -692,12 +646,10 @@ func (f *file) populateMessage(
 			getMessageExtensionExtendeePath(fieldIndex, topLevelMessageIndex, nestedMessageIndexes...),
 		)
 		message.addExtension(field)
-
 		if oneof != nil {
 			oneof.addField(field)
 		}
 	}
-
 	for reservedRangeIndex, reservedRangeDescriptorProto := range descriptorProto.GetReservedRange() {
 		reservedRangeLocationDescriptor := newLocationDescriptor(
 			f.descriptor,
@@ -711,13 +663,11 @@ func (f *file) populateMessage(
 		)
 		message.addReservedMessageRange(reservedMessageRange)
 	}
-
 	for reservedNameIndex, reservedNameValue := range descriptorProto.GetReservedName() {
 		reservedNameLocationDescriptor := newLocationDescriptor(
 			f.descriptor,
 			getMessageReservedNamePath(reservedNameIndex, topLevelMessageIndex, nestedMessageIndexes...),
 		)
-
 		reservedName, err := newReservedName(
 			reservedNameLocationDescriptor,
 			reservedNameValue,
@@ -725,10 +675,8 @@ func (f *file) populateMessage(
 		if err != nil {
 			return nil, err
 		}
-
 		message.addReservedName(reservedName)
 	}
-
 	for extensionRangeIndex, extensionRangeDescriptorProto := range descriptorProto.GetExtensionRange() {
 		extensionRangeLocationDescriptor := newLocationDescriptor(
 			f.descriptor,
@@ -748,7 +696,6 @@ func (f *file) populateMessage(
 		)
 		message.addExtensionRange(extensionMessageRange)
 	}
-
 	for enumIndex, enumDescriptorProto := range descriptorProto.GetEnumType() {
 		nestedEnum, err := f.populateEnum(
 			enumDescriptorProto,
@@ -762,10 +709,8 @@ func (f *file) populateMessage(
 		if err != nil {
 			return nil, err
 		}
-
 		message.addNestedEnum(nestedEnum)
 	}
-
 	for nestedMessageIndex, nestedMessageDescriptorProto := range descriptorProto.GetNestedType() {
 		nestedMessage, err := f.populateMessage(
 			nestedMessageDescriptorProto,
@@ -777,10 +722,8 @@ func (f *file) populateMessage(
 		if err != nil {
 			return nil, err
 		}
-
 		message.addNestedMessage(nestedMessage)
 	}
-
 	return message, nil
 }
 
@@ -800,7 +743,6 @@ func (f *file) populateService(
 	if err != nil {
 		return nil, err
 	}
-
 	service := newService(
 		serviceNamedDescriptor,
 		newOptionExtensionDescriptor(
@@ -824,7 +766,6 @@ func (f *file) populateService(
 		if err != nil {
 			return nil, err
 		}
-
 		method, err := newMethod(
 			methodNamedDescriptor,
 			newOptionExtensionDescriptor(
@@ -847,10 +788,8 @@ func (f *file) populateService(
 		if err != nil {
 			return nil, err
 		}
-
 		service.addMethod(method)
 	}
-
 	return service, nil
 }
 
@@ -870,12 +809,10 @@ func (f *file) populateExtension(
 	if err != nil {
 		return nil, err
 	}
-
 	var packed *bool
-	if fieldDescriptorProto.GetOptions() != nil {
+	if fieldDescriptorProto.Options != nil {
 		packed = fieldDescriptorProto.GetOptions().Packed
 	}
-
 	return newField(
 		fieldNamedDescriptor,
 		newOptionExtensionDescriptor(

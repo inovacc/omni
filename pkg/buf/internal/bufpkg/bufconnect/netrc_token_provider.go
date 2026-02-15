@@ -35,11 +35,9 @@ func (nt *netrcTokenProvider) RemoteToken(address string) string {
 	if err != nil {
 		return ""
 	}
-
 	if machine != nil {
 		return machine.Password()
 	}
-
 	return ""
 }
 

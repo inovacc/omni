@@ -50,38 +50,30 @@ func NewFile(f protoreflect.FileDescriptor, deps Files) (File, error) {
 	if asFile, ok := f.(File); ok {
 		return asFile, nil
 	}
-
 	checkedDeps := make(Files, f.Imports().Len())
 	for i := range f.Imports().Len() {
 		imprt := f.Imports().Get(i)
-
 		dep := deps.FindFileByPath(imprt.Path())
 		if dep == nil {
 			return nil, fmt.Errorf("cannot create File for %q: missing dependency for %q", f.Path(), imprt.Path())
 		}
-
 		checkedDeps[i] = dep
 	}
-
 	return newFile(f, checkedDeps)
 }
 
 func newFile(f protoreflect.FileDescriptor, deps Files) (File, error) {
 	descs := map[protoreflect.FullName]protoreflect.Descriptor{}
-
 	err := walk.Descriptors(f, func(d protoreflect.Descriptor) error {
 		if _, ok := descs[d.FullName()]; ok {
 			return fmt.Errorf("file %q contains multiple elements with the name %s", f.Path(), d.FullName())
 		}
-
 		descs[d.FullName()] = d
-
 		return nil
 	})
 	if err != nil {
 		return nil, err
 	}
-
 	return &file{
 		FileDescriptor: f,
 		descs:          descs,
@@ -98,7 +90,6 @@ func NewFileRecursive(f protoreflect.FileDescriptor) (File, error) {
 	if asFile, ok := f.(File); ok {
 		return asFile, nil
 	}
-
 	return newFileRecursive(f, map[protoreflect.FileDescriptor]File{})
 }
 
@@ -107,7 +98,6 @@ func newFileRecursive(fd protoreflect.FileDescriptor, seen map[protoreflect.File
 		if res == nil {
 			return nil, fmt.Errorf("import cycle encountered: file %s transitively imports itself", fd.Path())
 		}
-
 		return res, nil
 	}
 
@@ -117,16 +107,13 @@ func newFileRecursive(fd protoreflect.FileDescriptor, seen map[protoreflect.File
 	}
 
 	seen[fd] = nil
-
 	deps := make([]File, fd.Imports().Len())
 	for i := range fd.Imports().Len() {
 		imprt := fd.Imports().Get(i)
-
 		dep, err := newFileRecursive(imprt, seen)
 		if err != nil {
 			return nil, err
 		}
-
 		deps[i] = dep
 	}
 
@@ -134,15 +121,12 @@ func newFileRecursive(fd protoreflect.FileDescriptor, seen map[protoreflect.File
 	if err != nil {
 		return nil, err
 	}
-
 	seen[fd] = f
-
 	return f, nil
 }
 
 type file struct {
 	protoreflect.FileDescriptor
-
 	descs map[protoreflect.FullName]protoreflect.Descriptor
 	deps  Files
 }
@@ -177,7 +161,6 @@ func (f Files) FindFileByPath(path string) File {
 			return file
 		}
 	}
-
 	return nil
 }
 
@@ -222,7 +205,6 @@ func (r fileResolver) FindFileByPath(path string) (protoreflect.FileDescriptor, 
 		if f.Path() == path {
 			return f, nil
 		}
-
 		return nil, protoregistry.NotFound
 	})
 }
@@ -232,7 +214,6 @@ func (r fileResolver) FindDescriptorByName(name protoreflect.FullName) (protoref
 		if d := f.FindDescriptorByName(name); d != nil {
 			return d, nil
 		}
-
 		return nil, protoregistry.NotFound
 	})
 }
@@ -245,10 +226,8 @@ func (r fileResolver) FindMessageByName(message protoreflect.FullName) (protoref
 			if !ok {
 				return nil, fmt.Errorf("%q is %s, not a message", message, descriptorTypeWithArticle(d))
 			}
-
 			return dynamicpb.NewMessageType(md), nil
 		}
-
 		return nil, protoregistry.NotFound
 	})
 }
@@ -271,14 +250,11 @@ func (r fileResolver) FindExtensionByName(field protoreflect.FullName) (protoref
 			if !ok || !fld.IsExtension() {
 				return nil, fmt.Errorf("%q is %s, not an extension", field, descriptorTypeWithArticle(d))
 			}
-
 			if extd, ok := fld.(protoreflect.ExtensionTypeDescriptor); ok {
 				return extd.Type(), nil
 			}
-
 			return dynamicpb.NewExtensionType(fld), nil
 		}
-
 		return nil, protoregistry.NotFound
 	})
 }
@@ -289,7 +265,6 @@ func (r fileResolver) FindExtensionByNumber(message protoreflect.FullName, field
 		if ext != nil {
 			return ext.Type(), nil
 		}
-
 		return nil, protoregistry.NotFound
 	})
 }
@@ -302,7 +277,6 @@ func (r filesResolver) FindFileByPath(path string) (protoreflect.FileDescriptor,
 			return f, nil
 		}
 	}
-
 	return nil, protoregistry.NotFound
 }
 
@@ -313,7 +287,6 @@ func (r filesResolver) FindDescriptorByName(name protoreflect.FullName) (protore
 			return result, nil
 		}
 	}
-
 	return nil, protoregistry.NotFound
 }
 
@@ -324,11 +297,9 @@ func (r filesResolver) FindMessageByName(message protoreflect.FullName) (protore
 			if md, ok := d.(protoreflect.MessageDescriptor); ok {
 				return dynamicpb.NewMessageType(md), nil
 			}
-
 			return nil, protoregistry.NotFound
 		}
 	}
-
 	return nil, protoregistry.NotFound
 }
 
@@ -344,15 +315,12 @@ func (r filesResolver) FindExtensionByName(field protoreflect.FullName) (protore
 			if extd, ok := d.(protoreflect.ExtensionTypeDescriptor); ok {
 				return extd.Type(), nil
 			}
-
 			if fld, ok := d.(protoreflect.FieldDescriptor); ok && fld.IsExtension() {
 				return dynamicpb.NewExtensionType(fld), nil
 			}
-
 			return nil, protoregistry.NotFound
 		}
 	}
-
 	return nil, protoregistry.NotFound
 }
 
@@ -363,7 +331,6 @@ func (r filesResolver) FindExtensionByNumber(message protoreflect.FullName, fiel
 			return ext.Type(), nil
 		}
 	}
-
 	return nil, protoregistry.NotFound
 }
 
@@ -392,10 +359,8 @@ func isExtensionMatch(ext protoreflect.ExtensionDescriptor, message protoreflect
 	if ext.Number() != field || ext.ContainingMessage().FullName() != message {
 		return nil
 	}
-
 	if extType, ok := ext.(protoreflect.ExtensionTypeDescriptor); ok {
 		return extType
 	}
-
 	return dynamicpb.NewExtensionType(ext).TypeDescriptor()
 }

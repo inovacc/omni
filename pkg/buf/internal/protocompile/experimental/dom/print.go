@@ -88,7 +88,6 @@ func (p *printer) print(cond Cond, cursor cursor) {
 			if tag.broken {
 				ourCond = Broken
 			}
-
 			p.print(ourCond, cursor)
 
 		case kindIndent:
@@ -159,7 +158,6 @@ func (p *printer) html(cursor cursor) {
 			p.withIndent("    ", func(p *printer) { p.html(cursor) })
 			fmt.Fprintf(&p.out, "</unindent>")
 		}
-
 		p.newlines++
 	}
 }
@@ -172,7 +170,6 @@ func (p *printer) write(data string) {
 		for range p.newlines {
 			p.out.WriteByte('\n')
 		}
-
 		p.newlines = 0
 		p.spaces = 0
 
@@ -182,7 +179,6 @@ func (p *printer) write(data string) {
 	for range p.spaces {
 		p.out.WriteByte(' ')
 	}
-
 	p.spaces = 0
 
 	p.out.WriteString(data)
@@ -207,14 +203,12 @@ func (p *printer) withIndent(by string, body func(*printer)) {
 	p.indent = append(p.indent, by...)
 	p.indents = append(p.indents, by)
 	body(p)
-
 	if slicesx.PointerEqual(prev, p.indent) {
 		// Retain any capacity added by downstream indent calls.
 		p.indent = p.indent[:len(prev)]
 	} else {
 		p.indent = prev
 	}
-
 	slicesx.Pop(&p.indents)
 }
 

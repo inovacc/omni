@@ -24,7 +24,6 @@ import (
 
 func TestFullNameAbsolute(t *testing.T) {
 	t.Parallel()
-
 	tests := []struct {
 		fqn, abs ir.FullName
 	}{
@@ -47,7 +46,6 @@ func TestFullNameAbsolute(t *testing.T) {
 
 func TestFullNameParts(t *testing.T) {
 	t.Parallel()
-
 	tests := []struct {
 		fqn, parent ir.FullName
 		name        string
@@ -72,7 +70,6 @@ func TestFullNameParts(t *testing.T) {
 
 func TestFullNameAppend(t *testing.T) {
 	t.Parallel()
-
 	tests := []struct {
 		fqn, got ir.FullName
 		names    []string

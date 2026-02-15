@@ -75,7 +75,6 @@ func (l *layout) layoutFlat(cursor cursor) (total int, broken bool) {
 			broken = broken || tag.broken
 		}
 	}
-
 	return total, broken
 }
 
@@ -96,7 +95,6 @@ func (l *layout) layoutBroken(cursor cursor) {
 					if !l.prevText.broken {
 						l.column -= l.prevText.width
 					}
-
 					l.prevText = nil
 				} else if !next {
 					continue
@@ -111,7 +109,6 @@ func (l *layout) layoutBroken(cursor cursor) {
 			if len(last) < len(tag.text) {
 				l.column = 0
 			}
-
 			l.column = stringWidth(l.Options, l.column, last)
 
 		case kindGroup:
@@ -141,7 +138,6 @@ func (l *layout) layoutBroken(cursor cursor) {
 		case kindUnindent:
 			prev, ok := slicesx.Pop(&l.indent)
 			l.layoutBroken(cursor)
-
 			if ok {
 				l.indent = append(l.indent, prev)
 			}
@@ -167,10 +163,8 @@ func stringWidth(options Options, column int, text string) int {
 			if !maxWidth {
 				tab -= (column % options.TabstopWidth)
 			}
-
 			column += tab
 		}
-
 		column += uniseg.StringWidth(next)
 	}
 

@@ -113,7 +113,6 @@ func (m Member) IsPacked() bool {
 	}
 
 	builtins := m.Context().builtins()
-
 	option := m.Options().Field(builtins.Packed)
 	if packed, ok := option.AsBool(); ok {
 		return packed
@@ -121,7 +120,6 @@ func (m Member) IsPacked() bool {
 
 	feature := m.FeatureSet().Lookup(builtins.FeaturePacked).Value()
 	value, _ := feature.AsInt()
-
 	return value == 1 // google.protobuf.FeatureSet.PACKED
 }
 
@@ -134,7 +132,6 @@ func (m Member) IsUnicode() bool {
 
 	builtins := m.Context().builtins()
 	utf8Feature, _ := m.FeatureSet().Lookup(builtins.FeatureUTF8).Value().AsInt()
-
 	return utf8Feature == 2 // FeatureSet.VERIFY
 }
 
@@ -143,7 +140,6 @@ func (m Member) AsTagRange() TagRange {
 	if m.IsZero() {
 		return TagRange{}
 	}
-
 	return TagRange{
 		id.WrapContext(m.Context()),
 		rawTagRange{
@@ -158,7 +154,6 @@ func (m Member) AST() ast.DeclDef {
 	if m.IsZero() {
 		return ast.DeclDef{}
 	}
-
 	return id.Wrap(m.Context().AST(), m.Raw().def)
 }
 
@@ -169,14 +164,12 @@ func (m Member) TypeAST() ast.TypeAny {
 		if m.IsGroup() {
 			return ast.TypePath{Path: decl.Name()}.AsAny()
 		}
-
 		return decl.Type()
 	}
 
 	ty := m.Container()
 	if !ty.MapField().IsZero() {
 		k, v := ty.AST().Type().RemovePrefixes().AsGeneric().AsMap()
-
 		switch m.Number() {
 		case 1:
 			return k
@@ -193,7 +186,6 @@ func (m Member) Name() string {
 	if m.IsZero() {
 		return ""
 	}
-
 	return m.Context().session.intern.Value(m.Raw().name)
 }
 
@@ -202,7 +194,6 @@ func (m Member) FullName() FullName {
 	if m.IsZero() {
 		return ""
 	}
-
 	return FullName(m.Context().session.intern.Value(m.Raw().fqn))
 }
 
@@ -212,7 +203,6 @@ func (m Member) JSONName() string {
 	if m.IsZero() {
 		return ""
 	}
-
 	return m.Context().session.intern.Value(m.Raw().jsonName)
 }
 
@@ -221,7 +211,6 @@ func (m Member) Scope() FullName {
 	if m.IsZero() {
 		return ""
 	}
-
 	return FullName(m.Context().session.intern.Value(m.InternedScope()))
 }
 
@@ -230,7 +219,6 @@ func (m Member) InternedName() intern.ID {
 	if m.IsZero() {
 		return 0
 	}
-
 	return m.Raw().name
 }
 
@@ -239,7 +227,6 @@ func (m Member) InternedFullName() intern.ID {
 	if m.IsZero() {
 		return 0
 	}
-
 	return m.Raw().fqn
 }
 
@@ -248,11 +235,9 @@ func (m Member) InternedScope() intern.ID {
 	if m.IsZero() {
 		return 0
 	}
-
 	if parent := m.Parent(); !parent.IsZero() {
 		return parent.InternedFullName()
 	}
-
 	return m.Context().InternedPackage()
 }
 
@@ -261,7 +246,6 @@ func (m Member) InternedJSONName() intern.ID {
 	if m.IsZero() {
 		return 0
 	}
-
 	return m.Raw().jsonName
 }
 
@@ -272,7 +256,6 @@ func (m Member) Number() int32 {
 	if m.IsZero() {
 		return 0
 	}
-
 	return m.Raw().number
 }
 
@@ -283,15 +266,12 @@ func (m Member) Presence() presence.Kind {
 	if m.IsZero() {
 		return presence.Unknown
 	}
-
 	if m.Raw().oneof >= 0 {
 		if m.Parent().IsEnum() {
 			return presence.Unknown
 		}
-
 		return presence.Shared
 	}
-
 	return presence.Kind(-m.Raw().oneof)
 }
 
@@ -303,7 +283,6 @@ func (m Member) Parent() Type {
 	if m.IsZero() {
 		return Type{}
 	}
-
 	return id.Wrap(m.Context(), m.Raw().parent)
 }
 
@@ -318,7 +297,6 @@ func (m Member) Element() Type {
 	if m.IsZero() {
 		return Type{}
 	}
-
 	return GetRef(m.Context(), m.Raw().elem)
 }
 
@@ -343,7 +321,6 @@ func (m Member) Extend() Extend {
 	if m.IsZero() || m.Raw().extendee.IsZero() {
 		return Extend{}
 	}
-
 	return id.Wrap(m.Context(), m.Raw().extendee)
 }
 
@@ -354,7 +331,6 @@ func (m Member) Oneof() Oneof {
 	if m.Presence() != presence.Shared {
 		return Oneof{}
 	}
-
 	return m.Parent().Oneofs().At(int(m.Raw().oneof))
 }
 
@@ -402,19 +378,15 @@ func (m Member) Deprecated() Value {
 	if m.IsZero() {
 		return Value{}
 	}
-
 	builtins := m.Context().builtins()
-
 	field := builtins.FieldDeprecated
 	if m.IsEnumValue() {
 		field = builtins.EnumValueDeprecated
 	}
-
 	d := m.Options().Field(field)
 	if b, _ := d.AsBool(); b {
 		return d
 	}
-
 	return Value{}
 }
 
@@ -440,7 +412,6 @@ func (m Member) Targets() iter.Seq[OptionTarget] {
 		if m.IsZero() {
 			return
 		}
-
 		if m.Raw().optionTargets == 0 {
 			OptionTargets()(yield)
 			return
@@ -456,7 +427,6 @@ func (m Member) Targets() iter.Seq[OptionTarget] {
 			if bits&mask != 0 && !yield(t) {
 				return
 			}
-
 			bits &^= mask
 		}
 	}
@@ -498,7 +468,6 @@ func (e Extend) AST() ast.DeclDef {
 	if e.IsZero() {
 		return ast.DeclDef{}
 	}
-
 	return id.Wrap(e.Context().AST(), e.Raw().def)
 }
 
@@ -517,11 +486,9 @@ func (e Extend) InternedScope() intern.ID {
 	if e.IsZero() {
 		return 0
 	}
-
 	if ty := e.Parent(); !ty.IsZero() {
 		return ty.InternedFullName()
 	}
-
 	return e.Context().InternedPackage()
 }
 
@@ -530,7 +497,6 @@ func (e Extend) Extendee() Type {
 	if e.IsZero() {
 		return Type{}
 	}
-
 	return GetRef(e.Context(), e.Raw().ty)
 }
 
@@ -539,7 +505,6 @@ func (e Extend) Parent() Type {
 	if e.IsZero() {
 		return Type{}
 	}
-
 	return id.Wrap(e.Context(), e.Raw().parent)
 }
 
@@ -549,7 +514,6 @@ func (e Extend) Extensions() seq.Indexer[Member] {
 	if !e.IsZero() {
 		members = e.Raw().members
 	}
-
 	return seq.NewFixedSlice(members, func(_ int, p id.ID[Member]) Member {
 		return id.Wrap(e.Context(), p)
 	})
@@ -573,7 +537,6 @@ func (o Oneof) AST() ast.DeclDef {
 	if o.IsZero() {
 		return ast.DeclDef{}
 	}
-
 	return id.Wrap(o.Context().AST(), o.Raw().def)
 }
 
@@ -582,7 +545,6 @@ func (o Oneof) Name() string {
 	if o.IsZero() {
 		return ""
 	}
-
 	return o.Context().session.intern.Value(o.Raw().name)
 }
 
@@ -591,7 +553,6 @@ func (o Oneof) FullName() FullName {
 	if o.IsZero() {
 		return ""
 	}
-
 	return FullName(o.Context().session.intern.Value(o.Raw().fqn))
 }
 
@@ -600,7 +561,6 @@ func (o Oneof) InternedName() intern.ID {
 	if o.IsZero() {
 		return 0
 	}
-
 	return o.Raw().name
 }
 
@@ -609,7 +569,6 @@ func (o Oneof) InternedFullName() intern.ID {
 	if o.IsZero() {
 		return 0
 	}
-
 	return o.Raw().fqn
 }
 
@@ -627,7 +586,6 @@ func (o Oneof) Index() int {
 	if o.IsZero() {
 		return 0
 	}
-
 	return int(o.Raw().index)
 }
 
@@ -637,7 +595,6 @@ func (o Oneof) Members() seq.Indexer[Member] {
 	if !o.IsZero() {
 		members = o.Raw().members
 	}
-
 	return seq.NewFixedSlice(members, func(_ int, p id.ID[Member]) Member {
 		return id.Wrap(o.Context(), p)
 	})
@@ -657,7 +614,6 @@ func (o Oneof) Options() MessageValue {
 	if o.IsZero() {
 		return MessageValue{}
 	}
-
 	return id.Wrap(o.Context(), o.Raw().options).AsMessage()
 }
 
@@ -666,7 +622,6 @@ func (o Oneof) FeatureSet() FeatureSet {
 	if o.IsZero() {
 		return FeatureSet{}
 	}
-
 	return id.Wrap(o.Context(), o.Raw().features)
 }
 
@@ -723,7 +678,6 @@ func (r ReservedRange) AsTagRange() TagRange {
 	if r.IsZero() {
 		return TagRange{}
 	}
-
 	return TagRange{
 		id.WrapContext(r.Context()),
 		rawTagRange{
@@ -749,7 +703,6 @@ func (r ReservedRange) FeatureSet() FeatureSet {
 	if r.IsZero() {
 		return FeatureSet{}
 	}
-
 	return id.Wrap(r.Context(), r.Raw().features)
 }
 
@@ -757,7 +710,6 @@ func (r ReservedRange) FeatureSet() FeatureSet {
 // future use.
 type ReservedName struct {
 	withContext
-
 	raw *rawReservedName
 }
 
@@ -771,7 +723,6 @@ func (r ReservedName) AST() ast.ExprAny {
 	if r.IsZero() {
 		return ast.ExprAny{}
 	}
-
 	return r.raw.ast
 }
 
@@ -780,7 +731,6 @@ func (r ReservedName) Name() string {
 	if r.IsZero() {
 		return ""
 	}
-
 	return r.Context().session.intern.Value(r.raw.name)
 }
 
@@ -789,6 +739,5 @@ func (r ReservedName) InternedName() intern.ID {
 	if r.IsZero() {
 		return 0
 	}
-
 	return r.raw.name
 }

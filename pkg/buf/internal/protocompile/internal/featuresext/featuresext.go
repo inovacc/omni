@@ -66,24 +66,19 @@ func JavaFeaturesDescriptor() (protoreflect.FileDescriptor, error) {
 
 func buildDescriptor(name string, data []byte) (protoreflect.FileDescriptor, error) {
 	var files descriptorpb.FileDescriptorSet
-
 	err := proto.Unmarshal(data, &files)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load descriptor for %q: %w", name, err)
 	}
-
-	if len(files.GetFile()) != 1 {
-		return nil, fmt.Errorf("failed to load descriptor for %q: expected embedded descriptor set to contain exactly one file but it instead has %d", name, len(files.GetFile()))
+	if len(files.File) != 1 {
+		return nil, fmt.Errorf("failed to load descriptor for %q: expected embedded descriptor set to contain exactly one file but it instead has %d", name, len(files.File))
 	}
-
-	if files.GetFile()[0].GetName() != name {
-		return nil, fmt.Errorf("failed to load descriptor for %q: embedded descriptor contains wrong file %q", name, files.GetFile()[0].GetName())
+	if files.File[0].GetName() != name {
+		return nil, fmt.Errorf("failed to load descriptor for %q: embedded descriptor contains wrong file %q", name, files.File[0].GetName())
 	}
-
-	descriptor, err := protodesc.NewFile(files.GetFile()[0], protoregistry.GlobalFiles)
+	descriptor, err := protodesc.NewFile(files.File[0], protoregistry.GlobalFiles)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load descriptor for %q: %w", name, err)
 	}
-
 	return descriptor, nil
 }

@@ -26,12 +26,10 @@ import (
 
 func TestInsert(t *testing.T) {
 	t.Parallel()
-
 	type in struct {
 		start, end int
 		value      string
 	}
-
 	type out = interval.Entry[int, []string]
 
 	tests := []struct {

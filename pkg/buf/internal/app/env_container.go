@@ -25,13 +25,11 @@ type envContainer struct {
 
 func newEnvContainer(m map[string]string) *envContainer {
 	variables := make(map[string]string)
-
 	for key, value := range m {
 		if value != "" {
 			variables[key] = value
 		}
 	}
-
 	return &envContainer{
 		variables: variables,
 	}
@@ -44,18 +42,15 @@ func newEnvContainerForEnviron(environ []string) (*envContainer, error) {
 			// Do not print out as we don't want to mistakenly leak a secure environment variable
 			return nil, errors.New("environment variable does not contain =")
 		}
-
 		split := strings.SplitN(elem, "=", 2)
 		if len(split) != 2 {
 			// Do not print out as we don't want to mistakenly leak a secure environment variable
 			return nil, errors.New("unknown environment split")
 		}
-
 		if split[1] != "" {
 			variables[split[0]] = split[1]
 		}
 	}
-
 	return &envContainer{
 		variables: variables,
 	}, nil

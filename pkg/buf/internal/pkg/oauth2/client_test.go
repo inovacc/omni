@@ -93,7 +93,6 @@ func TestRegisterDevice(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
-
 			ctx := context.Background()
 			c := NewClient("https://buf.build", &http.Client{
 				Transport: testRoundTripFunc(func(r *http.Request) (*http.Response, error) {
@@ -101,13 +100,11 @@ func TestRegisterDevice(t *testing.T) {
 					assert.Equal(t, r.URL.Path, DeviceRegistrationPath)
 					assert.Equal(t, r.Header.Get("Content-Type"), "application/json")
 					assert.Equal(t, r.Header.Get("Accept"), "application/json")
-
 					return test.transport(t, r)
 				}),
 			})
 			output, err := c.RegisterDevice(ctx, test.input)
 			assert.Equal(t, test.output, output)
-
 			if test.err != nil {
 				assert.EqualError(t, err, test.err.Error())
 			}
@@ -208,7 +205,6 @@ func TestAuthorizeDevice(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
-
 			ctx := context.Background()
 			c := NewClient("https://buf.build", &http.Client{
 				Transport: testRoundTripFunc(func(r *http.Request) (*http.Response, error) {
@@ -216,13 +212,11 @@ func TestAuthorizeDevice(t *testing.T) {
 					assert.Equal(t, r.URL.Path, DeviceAuthorizationPath)
 					assert.Equal(t, r.Header.Get("Content-Type"), "application/x-www-form-urlencoded")
 					assert.Equal(t, r.Header.Get("Accept"), "application/json")
-
 					return test.transport(t, r)
 				}),
 			})
 			output, err := c.AuthorizeDevice(ctx, test.input)
 			assert.Equal(t, test.output, output)
-
 			if test.err != nil {
 				assert.EqualError(t, err, test.err.Error())
 			}
@@ -234,7 +228,6 @@ func TestAccessDeviceToken(t *testing.T) {
 	t.Parallel()
 
 	var pollingCount int
-
 	tests := []struct {
 		name      string
 		input     *DeviceAccessTokenRequest
@@ -270,12 +263,10 @@ func TestAccessDeviceToken(t *testing.T) {
 		},
 		transport: func(t *testing.T, r *http.Request) (*http.Response, error) {
 			testAssertFormRequest(t, r, url.Values{"client_id": {"clientID"}, "client_secret": {"clientSecret"}, "device_code": {"deviceCode"}, "grant_type": {"urn:ietf:params:oauth:grant-type:device_code"}})
-
 			if pollingCount == 0 {
 				pollingCount++
 				return testNewJSONResponse(t, http.StatusBadRequest, `{"error":"authorization_pending","error_description":"authorization pending"}`), nil
 			}
-
 			return testNewJSONResponse(t, http.StatusOK, `{"access_token":"accessToken","token_type":"bearer","expires_in":100,"refresh_token":"refreshToken","scope":"scope"}`), nil
 		},
 		output: &DeviceAccessTokenResponse{
@@ -320,7 +311,6 @@ func TestAccessDeviceToken(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
-
 			ctx := context.Background()
 			c := NewClient("https://buf.build", &http.Client{
 				Transport: testRoundTripFunc(func(r *http.Request) (*http.Response, error) {
@@ -328,7 +318,6 @@ func TestAccessDeviceToken(t *testing.T) {
 					assert.Equal(t, r.URL.Path, DeviceTokenPath)
 					assert.Equal(t, r.Header.Get("Content-Type"), "application/x-www-form-urlencoded")
 					assert.Equal(t, r.Header.Get("Accept"), "application/json")
-
 					return test.transport(t, r)
 				}),
 			})
@@ -347,7 +336,6 @@ func (s testRoundTripFunc) RoundTrip(r *http.Request) (*http.Response, error) {
 
 func testNewJSONResponse(t *testing.T, statusCode int, body string) *http.Response {
 	t.Helper()
-
 	return &http.Response{
 		StatusCode: statusCode,
 		Header:     http.Header{"Content-Type": []string{"application/json"}},
@@ -357,21 +345,17 @@ func testNewJSONResponse(t *testing.T, statusCode int, body string) *http.Respon
 
 func testAssertJSONRequest(t *testing.T, r *http.Request, expect string) {
 	t.Helper()
-
 	body, err := io.ReadAll(r.Body)
 	if !assert.NoError(t, err) {
 		return
 	}
-
 	assert.JSONEq(t, string(body), expect)
 }
 
 func testAssertFormRequest(t *testing.T, r *http.Request, values url.Values) {
 	t.Helper()
-
 	if !assert.NoError(t, r.ParseForm()) {
 		return
 	}
-
 	assert.Equal(t, r.Form, values)
 }

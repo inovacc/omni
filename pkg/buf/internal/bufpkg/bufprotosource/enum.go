@@ -79,7 +79,6 @@ func (e *enum) ReservedTagRanges() []TagRange {
 	for i, reservedEnumRange := range e.reservedEnumRanges {
 		tagRanges[i] = reservedEnumRange
 	}
-
 	return tagRanges
 }
 

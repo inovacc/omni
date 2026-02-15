@@ -46,10 +46,8 @@ func newTokenProviderFromString(token string, isFromEnvVar bool) (TokenProvider,
 		if strings.Contains(tokens[0], "@") {
 			return newMultipleTokenProvider(tokens, isFromEnvVar)
 		}
-
 		return newSingleTokenProvider(tokens[0], isFromEnvVar)
 	}
-
 	return newMultipleTokenProvider(tokens, isFromEnvVar)
 }
 
@@ -65,15 +63,12 @@ func newSingleTokenProvider(token string, isFromEnvVar bool) (*singleTokenProvid
 	if strings.Contains(token, "@") {
 		return nil, errors.New("token cannot contain special character `@`")
 	}
-
 	if strings.Contains(token, ",") {
 		return nil, errors.New("token cannot contain special character `,`")
 	}
-
 	if token == "" {
 		return nil, errors.New("single token cannot be empty")
 	}
-
 	return &singleTokenProvider{
 		setBufTokenEnvVar: isFromEnvVar,
 		token:             token,
@@ -96,32 +91,25 @@ type multipleTokenProvider struct {
 
 func newMultipleTokenProvider(tokens []string, isFromEnvVar bool) (*multipleTokenProvider, error) {
 	addressToToken := make(map[string]string)
-
 	for _, token := range tokens {
 		split := strings.Split(token, "@")
 		if len(split) != 2 {
 			return nil, fmt.Errorf("invalid token: %s", token)
 		}
-
 		if split[0] == "" || split[1] == "" {
 			return nil, fmt.Errorf("invalid token: %s", token)
 		}
-
 		if strings.Contains(split[0], ":") {
 			return nil, fmt.Errorf("invalid token: %s, token cannot contain special character `:`", token)
 		}
-
 		if strings.Contains(split[0], ",") {
 			return nil, fmt.Errorf("invalid token: %s, token cannot contain special character `,`", token)
 		}
-
 		if _, ok := addressToToken[split[1]]; ok {
 			return nil, fmt.Errorf("invalid token: %s, repeated remote address: %s", token, split[1])
 		}
-
 		addressToToken[split[1]] = split[0]
 	}
-
 	return &multipleTokenProvider{
 		addressToToken: addressToToken,
 		isFromEnvVar:   isFromEnvVar,

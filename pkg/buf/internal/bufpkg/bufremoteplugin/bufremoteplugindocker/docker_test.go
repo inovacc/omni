@@ -84,18 +84,14 @@ func TestPushError(t *testing.T) {
 
 func TestMain(m *testing.M) {
 	var dockerEnabled bool
-
 	if cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation()); err == nil {
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 		defer cancel()
-
 		if _, err := cli.Ping(ctx); err == nil {
 			dockerEnabled = true
 		}
-
 		_ = cli.Close()
 	}
-
 	if dockerEnabled && runtime.GOOS == "windows" {
 		// Windows runners don't support building Linux images - need to disable for now.
 		dockerEnabled = false
@@ -128,7 +124,6 @@ func TestGetImageDigestFromMessage(t *testing.T) {
 
 func assertImageDigestFromStatusString(t *testing.T, status string, expectedDigest string) {
 	t.Helper()
-
 	digest := getImageDigestFromMessage(jsonmessage.JSONMessage{Status: status})
 	assert.Equal(t, expectedDigest, digest)
 }
@@ -142,22 +137,18 @@ func createClient(t testing.TB, options ...ClientOption) Client {
 			t.Errorf("failed to close client: %v", err)
 		}
 	})
-
 	return dockerClient
 }
 
 func buildDockerPlugin(t testing.TB, dockerfilePath string, pluginIdentity string) (string, error) {
 	t.Helper()
-
 	docker, err := exec.LookPath("docker")
 	if err != nil {
 		return "", err
 	}
-
 	imageName := fmt.Sprintf("%s:%s", pluginIdentity, stringid.GenerateRandomID())
 	envContainer, err := app.NewEnvContainerForOS()
 	require.NoError(t, err)
-
 	if err := xexec.Run(
 		context.Background(),
 		docker,
@@ -169,7 +160,6 @@ func buildDockerPlugin(t testing.TB, dockerfilePath string, pluginIdentity strin
 	); err != nil {
 		return "", err
 	}
-
 	t.Logf("created image: %s", imageName)
 	t.Cleanup(func() {
 		if err := xexec.Run(
@@ -183,7 +173,6 @@ func buildDockerPlugin(t testing.TB, dockerfilePath string, pluginIdentity strin
 			t.Logf("failed to remove temporary docker image: %v", err)
 		}
 	})
-
 	return imageName, nil
 }
 
@@ -204,7 +193,6 @@ type pushedImage struct {
 
 func newDockerServer(t testing.TB, version string) *dockerServer {
 	t.Helper()
-
 	versionPrefix := "/v" + version
 	dockerServer := &dockerServer{
 		t:             t,
@@ -215,22 +203,18 @@ func newDockerServer(t testing.TB, version string) *dockerServer {
 	mux.HandleFunc(versionPrefix+"/images/", dockerServer.imagesHandler)
 	mux.HandleFunc("/_ping", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add("Content-Type", "application/json")
-
 		if err := json.NewEncoder(w).Encode(&types.Ping{APIVersion: version}); err != nil {
 			t.Fatalf("failed to encode response: %v", err)
 		}
 	})
-
 	protocols := new(http.Protocols)
 	protocols.SetHTTP1(true)
 	protocols.SetUnencryptedHTTP2(true)
-
 	server := httptest.NewUnstartedServer(mux)
 	server.Config.Protocols = protocols
 	server.Start()
 	dockerServer.httpServer = server
 	t.Cleanup(server.Close)
-
 	return dockerServer
 }
 
@@ -238,75 +222,60 @@ func (d *dockerServer) imagesHandler(w http.ResponseWriter, r *http.Request) {
 	if _, err := io.Copy(io.Discard, r.Body); err != nil {
 		d.t.Error("failed to discard body:", err)
 	}
-
 	pathSuffix := strings.TrimPrefix(r.URL.Path, d.versionPrefix+"/images/")
-
 	submatches := imagePattern.FindStringSubmatch(pathSuffix)
 	if len(submatches) == 0 {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-
 	image, tag, operation := submatches[1], submatches[2], submatches[3]
 	// ImageInspectWithRaw
 	if r.Method == http.MethodGet && operation == "json" {
 		d.mu.RLock()
 		defer d.mu.RUnlock()
-
 		foundImageID := d.findImageIDFromName(image + ":" + tag)
 		if len(foundImageID) == 0 {
 			http.NotFound(w, r)
 			return
 		}
-
 		if err := json.NewEncoder(w).Encode(&dockerimage.InspectResponse{
 			ID:       "sha256:" + foundImageID,
 			RepoTags: d.pushedImages[foundImageID].tags,
 		}); err != nil {
 			d.t.Error("failed to encode image inspect response:", err)
 		}
-
 		return
 	}
 	// ImageRemove
 	if r.Method == http.MethodDelete {
 		d.mu.Lock()
 		defer d.mu.Unlock()
-
 		foundImageID := d.findImageIDFromName(image + ":" + tag)
 		if len(foundImageID) == 0 {
 			http.NotFound(w, r)
 			return
 		}
-
 		delete(d.pushedImages, foundImageID)
-
 		if err := json.NewEncoder(w).Encode([]dockerimage.DeleteResponse{
 			{Deleted: "sha256:" + foundImageID},
 		}); err != nil {
 			d.t.Error("failed to encode image delete response:", err)
 		}
-
 		return
 	}
 	// ImagePush
 	w.WriteHeader(http.StatusOK)
-
 	if d.pushErr != nil {
 		d.writeError(w, d.pushErr)
 		return
 	}
-
 	d.mu.Lock()
 	defer d.mu.Unlock()
-
 	if _, ok := d.pushedImages[image]; !ok {
 		d.pushedImages[image] = &pushedImage{}
 	}
-
 	imageTag := r.URL.Query()["tag"][0]
 	d.pushedImages[image].tags = append(d.pushedImages[image].tags, imageTag)
-
 	auxJSON, err := json.Marshal(map[string]any{
 		"Tag":    imageTag,
 		"Digest": "sha256:" + stringid.GenerateRandomID(),
@@ -316,14 +285,12 @@ func (d *dockerServer) imagesHandler(w http.ResponseWriter, r *http.Request) {
 		d.writeError(w, err)
 		return
 	}
-
 	if err := json.NewEncoder(w).Encode(&jsonmessage.JSONMessage{
 		Progress: &jsonmessage.JSONProgress{},
 		Aux:      (*json.RawMessage)(&auxJSON),
 	}); err != nil {
 		d.t.Error("failed to write JSON:", err)
 	}
-
 	if _, err := w.Write([]byte("\r\n")); err != nil {
 		d.t.Error("failed to write CRLF:", err)
 	}
@@ -335,7 +302,6 @@ func (d *dockerServer) findImageIDFromName(name string) string {
 			return imageID
 		}
 	}
-
 	return ""
 }
 
@@ -343,7 +309,6 @@ func (d *dockerServer) writeError(w http.ResponseWriter, err error) {
 	if err := json.NewEncoder(w).Encode(&jsonmessage.JSONMessage{Error: &jsonmessage.JSONError{Message: err.Error()}}); err != nil {
 		d.t.Error("failed to write json message:", err)
 	}
-
 	if _, err := w.Write([]byte{'\r', '\n'}); err != nil {
 		d.t.Error("failed to write CRLF", err)
 	}

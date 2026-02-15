@@ -46,16 +46,13 @@ type aggregate string
 
 func TestCustomOptionsAreKnown(t *testing.T) {
 	t.Parallel()
-
 	for _, withOverride := range []bool{false, true} {
 		name := "no overrides"
 		if withOverride {
 			name = "with override descriptor.proto"
 		}
-
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
-
 			sources := map[string]string{
 				"test.proto": `
 					syntax = "proto3";
@@ -74,7 +71,6 @@ func TestCustomOptionsAreKnown(t *testing.T) {
 					}
 					`,
 			}
-
 			resolver := protocompile.Resolver(&protocompile.SourceResolver{
 				Accessor: protocompile.SourceAccessorFromMap(sources),
 			})
@@ -92,23 +88,19 @@ func TestCustomOptionsAreKnown(t *testing.T) {
 			} else {
 				resolver = protocompile.WithStandardImports(resolver)
 			}
-
 			compiler := &protocompile.Compiler{
 				Resolver: resolver,
 			}
 			files, err := compiler.Compile(t.Context(), "test.proto")
 			require.NoError(t, err)
 			require.Len(t, files, 1)
-
 			var knownOptionNames []string
-
 			fileOptions := files[0].Options().ProtoReflect()
 			assert.Empty(t, fileOptions.GetUnknown())
 			fileOptions.Range(func(fd protoreflect.FieldDescriptor, _ protoreflect.Value) bool {
 				if fd.IsExtension() {
 					knownOptionNames = append(knownOptionNames, string(fd.FullName()))
 				}
-
 				return true
 			})
 			sort.Strings(knownOptionNames)
@@ -242,7 +234,6 @@ func TestOptionsInUnlinkedFiles(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
-
 			h := reporter.NewHandler(nil)
 			ast, err := parser.Parse("test.proto", strings.NewReader(tc.contents), h)
 			require.NoError(t, err, "failed to parse")
@@ -250,11 +241,9 @@ func TestOptionsInUnlinkedFiles(t *testing.T) {
 			require.NoError(t, err, "failed to produce descriptor proto")
 			_, err = options.InterpretUnlinkedOptions(res)
 			require.NoError(t, err, "failed to interpret options")
-
 			actual := map[string]any{}
 			buildUninterpretedMapForFile(res.FileDescriptorProto(), actual)
 			assert.Equal(t, tc.uninterpreted, actual, "resulted in wrong uninterpreted options")
-
 			if tc.checkInterpreted != nil {
 				tc.checkInterpreted(t, res.FileDescriptorProto())
 			}
@@ -264,7 +253,6 @@ func TestOptionsInUnlinkedFiles(t *testing.T) {
 
 func TestOptionsInUnlinkedFileInvalid(t *testing.T) {
 	t.Parallel()
-
 	h := reporter.NewHandler(nil)
 	ast, err := parser.Parse(
 		"test.proto",
@@ -284,23 +272,18 @@ func TestOptionsInUnlinkedFileInvalid(t *testing.T) {
 
 func buildUninterpretedMapForFile(fd *descriptorpb.FileDescriptorProto, opts map[string]any) {
 	buildUninterpretedMap(fd.GetName(), fd.GetOptions().GetUninterpretedOption(), opts)
-
 	for _, md := range fd.GetMessageType() {
 		buildUninterpretedMapForMessage(fd.GetPackage(), md, opts)
 	}
-
 	for _, extd := range fd.GetExtension() {
 		buildUninterpretedMap(qualify(fd.GetPackage(), extd.GetName()), extd.GetOptions().GetUninterpretedOption(), opts)
 	}
-
 	for _, ed := range fd.GetEnumType() {
 		buildUninterpretedMapForEnum(fd.GetPackage(), ed, opts)
 	}
-
 	for _, sd := range fd.GetService() {
 		svcFqn := qualify(fd.GetPackage(), sd.GetName())
 		buildUninterpretedMap(svcFqn, sd.GetOptions().GetUninterpretedOption(), opts)
-
 		for _, mtd := range sd.GetMethod() {
 			buildUninterpretedMap(qualify(svcFqn, mtd.GetName()), mtd.GetOptions().GetUninterpretedOption(), opts)
 		}
@@ -310,27 +293,21 @@ func buildUninterpretedMapForFile(fd *descriptorpb.FileDescriptorProto, opts map
 func buildUninterpretedMapForMessage(qual string, md *descriptorpb.DescriptorProto, opts map[string]any) {
 	fqn := qualify(qual, md.GetName())
 	buildUninterpretedMap(fqn, md.GetOptions().GetUninterpretedOption(), opts)
-
 	for _, fld := range md.GetField() {
 		buildUninterpretedMap(qualify(fqn, fld.GetName()), fld.GetOptions().GetUninterpretedOption(), opts)
 	}
-
 	for _, ood := range md.GetOneofDecl() {
 		buildUninterpretedMap(qualify(fqn, ood.GetName()), ood.GetOptions().GetUninterpretedOption(), opts)
 	}
-
 	for _, extr := range md.GetExtensionRange() {
 		buildUninterpretedMap(qualify(fqn, fmt.Sprintf("%d-%d", extr.GetStart(), extr.GetEnd()-1)), extr.GetOptions().GetUninterpretedOption(), opts)
 	}
-
 	for _, nmd := range md.GetNestedType() {
 		buildUninterpretedMapForMessage(fqn, nmd, opts)
 	}
-
 	for _, extd := range md.GetExtension() {
 		buildUninterpretedMap(qualify(fqn, extd.GetName()), extd.GetOptions().GetUninterpretedOption(), opts)
 	}
-
 	for _, ed := range md.GetEnumType() {
 		buildUninterpretedMapForEnum(fqn, ed, opts)
 	}
@@ -339,7 +316,6 @@ func buildUninterpretedMapForMessage(qual string, md *descriptorpb.DescriptorPro
 func buildUninterpretedMapForEnum(qual string, ed *descriptorpb.EnumDescriptorProto, opts map[string]any) {
 	fqn := qualify(qual, ed.GetName())
 	buildUninterpretedMap(fqn, ed.GetOptions().GetUninterpretedOption(), opts)
-
 	for _, evd := range ed.GetValue() {
 		buildUninterpretedMap(qualify(fqn, evd.GetName()), evd.GetOptions().GetUninterpretedOption(), opts)
 	}
@@ -355,22 +331,17 @@ func buildUninterpretedMap(prefix string, uos []*descriptorpb.UninterpretedOptio
 				parts[i] = np.GetNamePart()
 			}
 		}
-
 		uoName := fmt.Sprintf("%s:%s", prefix, strings.Join(parts, "."))
 		key := uoName
 		i := 0
-
 		for {
 			if _, ok := opts[key]; !ok {
 				break
 			}
-
 			i++
 			key = fmt.Sprintf("%s#%d", uoName, i)
 		}
-
 		var val any
-
 		switch {
 		case uo.AggregateValue != nil:
 			val = aggregate(uo.GetAggregateValue())
@@ -385,7 +356,6 @@ func buildUninterpretedMap(prefix string, uos []*descriptorpb.UninterpretedOptio
 		default:
 			val = string(uo.GetStringValue())
 		}
-
 		opts[key] = val
 	}
 }
@@ -394,13 +364,11 @@ func qualify(qualifier, name string) string {
 	if qualifier == "" {
 		return name
 	}
-
 	return qualifier + "." + name
 }
 
 func TestOptionsEncoding(t *testing.T) {
 	t.Parallel()
-
 	testCases := map[string]string{
 		"proto2-opts-same-file": "options/options.proto",
 		"proto2":                "options/test.proto",
@@ -411,42 +379,33 @@ func TestOptionsEncoding(t *testing.T) {
 	for testCaseName, file := range testCases {
 		t.Run(testCaseName, func(t *testing.T) {
 			t.Parallel()
-
 			fileToCompile := strings.TrimPrefix(file, "options/")
-
 			importPath := "../internal/testdata"
 			if fileToCompile != file {
 				importPath = "../internal/testdata/options"
 			}
-
 			compiler := protocompile.Compiler{
 				Resolver: protocompile.WithStandardImports(&protocompile.SourceResolver{
 					ImportPaths: []string{importPath},
 				}),
 			}
 			fds, err := compiler.Compile(t.Context(), fileToCompile)
-
 			var panicErr protocompile.PanicError
 			if errors.As(err, &panicErr) {
 				t.Logf("panic! %v\n%s", panicErr.Value, panicErr.Stack)
 			}
-
 			require.NoError(t, err)
 
 			// Make sure we can round-trip the descriptors
 			res, ok := fds[0].(linker.Result)
 			require.True(t, ok)
-
 			actualFdset := &descriptorpb.FileDescriptorSet{
 				File: []*descriptorpb.FileDescriptorProto{protoutil.ProtoFromFileDescriptor(res)},
 			}
 			data, err := proto.Marshal(actualFdset)
 			require.NoError(t, err)
-
 			resolver := linker.ResolverFromFile(fds[0])
-
 			var roundTripped descriptorpb.FileDescriptorSet
-
 			err = proto.UnmarshalOptions{Resolver: resolver}.Unmarshal(data, &roundTripped)
 			require.NoError(t, err)
 			prototest.AssertMessagesEqual(t, actualFdset, &roundTripped, "round-tripped "+file)
@@ -454,13 +413,11 @@ func TestOptionsEncoding(t *testing.T) {
 			// drum roll... make sure the descriptors we produce are semantically equivalent
 			// to those produced by protoc
 			descriptorSetFile := fmt.Sprintf("../internal/testdata/%sset", file)
-
 			fdset := prototest.LoadDescriptorSet(t, descriptorSetFile, resolver)
 			if !prototest.CheckFiles(t, res, fdset, false) {
 				outputDescriptorSetFile := strings.ReplaceAll(descriptorSetFile, ".proto", ".actual.proto")
 				actualData, err := proto.Marshal(actualFdset)
 				require.NoError(t, err)
-
 				err = os.WriteFile(outputDescriptorSetFile, actualData, 0644)
 				if err != nil {
 					t.Logf("failed to write actual to file: %v", err)
@@ -490,24 +447,19 @@ func TestInterpretOptionsWithoutAST(t *testing.T) {
 		Resolver: protocompile.WithStandardImports(protocompile.ResolverFunc(
 			func(name string) (protocompile.SearchResult, error) {
 				var res protocompile.SearchResult
-
 				data, err := os.ReadFile(filepath.Join("../internal/testdata", name))
 				if err != nil {
 					return res, err
 				}
-
 				fileNode, err := parser.Parse(name, bytes.NewReader(data), reporter.NewHandler(nil))
 				if err != nil {
 					return res, err
 				}
-
 				parseResult, err := parser.ResultFromAST(fileNode, true, reporter.NewHandler(nil))
 				if err != nil {
 					return res, err
 				}
-
 				res.Proto = parseResult.FileDescriptorProto()
-
 				return res, nil
 			},
 		)),
@@ -518,14 +470,14 @@ func TestInterpretOptionsWithoutAST(t *testing.T) {
 	for _, file := range files {
 		fromNoAST := filesFromNoAST.FindFileByPath(file.Path())
 		require.NotNil(t, fromNoAST)
-
-		fd := file.(linker.Result).FileDescriptorProto()
-		fdFromNoAST := fromNoAST.(linker.Result).FileDescriptorProto()
+		fd := file.(linker.Result).FileDescriptorProto()               //nolint:errcheck
+		fdFromNoAST := fromNoAST.(linker.Result).FileDescriptorProto() //nolint:errcheck
 		// final protos, with options interpreted, match
 		prototest.AssertMessagesEqual(t, fd, fdFromNoAST, file.Path())
 	}
 }
 
+//nolint:errcheck
 func TestInterpretOptionsWithoutASTNoOp(t *testing.T) {
 	t.Parallel()
 	// Similar to above test, where we have descriptor protos and no AST. But this
@@ -547,21 +499,17 @@ func TestInterpretOptionsWithoutASTNoOp(t *testing.T) {
 		Resolver: protocompile.WithStandardImports(protocompile.ResolverFunc(
 			func(name string) (protocompile.SearchResult, error) {
 				var res protocompile.SearchResult
-
 				fd := files.FindFileByPath(name)
 				if fd == nil {
 					file, err := protoregistry.GlobalFiles.FindFileByPath(name)
 					if err != nil {
 						return res, err
 					}
-
 					res.Proto = protodesc.ToFileDescriptorProto(file)
 				} else {
 					res.Proto = fd.(linker.Result).FileDescriptorProto()
 				}
-
 				res.Proto = proto.Clone(res.Proto).(*descriptorpb.FileDescriptorProto)
-
 				return res, nil
 			},
 		)),
@@ -572,7 +520,6 @@ func TestInterpretOptionsWithoutASTNoOp(t *testing.T) {
 	for _, file := range files {
 		fromNoAST := filesFromNoAST.FindFileByPath(file.Path())
 		require.NotNil(t, fromNoAST)
-
 		fd := file.(linker.Result).FileDescriptorProto()
 		fdFromNoAST := fromNoAST.(linker.Result).FileDescriptorProto()
 		// final protos, with options interpreted, match
@@ -582,7 +529,6 @@ func TestInterpretOptionsWithoutASTNoOp(t *testing.T) {
 
 func TestInterpretOptionsFeatureLifetimeWarnings(t *testing.T) {
 	t.Parallel()
-
 	sources := map[string]string{
 		"features.proto": `
 			syntax = "proto2";
@@ -667,9 +613,7 @@ func TestInterpretOptionsFeatureLifetimeWarnings(t *testing.T) {
 			option features.(custom).deprecated_and_removed = true;
 			`,
 	}
-
 	var warnings []string
-
 	rep := reporter.NewReporter(nil, func(err reporter.ErrorWithPos) {
 		warnings = append(warnings, err.Error())
 	})
@@ -681,14 +625,12 @@ func TestInterpretOptionsFeatureLifetimeWarnings(t *testing.T) {
 	}
 	_, err := compiler.Compile(t.Context(), "test.proto")
 	require.NoError(t, err)
-
 	expectedWarnings := []string{
 		`test.proto:10:25: field "Custom.deprecated_and_removed" is deprecated as of edition 2023: other custom feature is not to be used either`,
 		`test.proto:6:25: field "google.protobuf.FeatureSet.deprecated" is deprecated as of edition 2023: do not use this!`,
 		`test.proto:7:25: field "google.protobuf.FeatureSet.deprecated_and_removed" is deprecated as of edition 2023: don't use this either!`,
 		`test.proto:9:25: field "Custom.deprecated" is deprecated as of edition 2023: custom feature is not to be used`,
 	}
-
 	sort.Strings(warnings)
 	assert.Equal(t, expectedWarnings, warnings)
 }

@@ -45,7 +45,6 @@ func (w *walker) walk() {
 	if pkg := w.AST().Package(); !pkg.IsZero() {
 		w.File.pkg = w.session.intern.Intern(pkg.Path().Canonicalized())
 	}
-
 	w.pkg = w.Package()
 
 	w.syntax = syntax.Proto2
@@ -168,7 +167,6 @@ func (w *walker) newType(def ast.DeclDef, parent any) Type {
 	fqn := w.fullname(parentTy, name)
 
 	var visibility token.ID
-
 	for prefix := range def.Type().Prefixes() {
 		switch prefix.Prefix() {
 		case keyword.Local, keyword.Export:
@@ -176,7 +174,6 @@ func (w *walker) newType(def ast.DeclDef, parent any) Type {
 		default:
 			continue
 		}
-
 		break
 	}
 
@@ -210,7 +207,6 @@ func (w *walker) newType(def ast.DeclDef, parent any) Type {
 					ast:  v,
 					name: ty.Context().session.intern.Intern(name),
 				})
-
 				continue
 			}
 
@@ -231,10 +227,10 @@ func (w *walker) newType(def ast.DeclDef, parent any) Type {
 
 	if !parentTy.IsZero() {
 		parentTy.Raw().nested = append(parentTy.Raw().nested, ty.ID())
-		w.types = append(w.types, ty.ID())
+		w.File.types = append(w.File.types, ty.ID())
 	} else {
-		w.types = slices.Insert(w.types, w.topLevelTypesEnd, ty.ID())
-		w.topLevelTypesEnd++
+		w.File.types = slices.Insert(w.File.types, w.File.topLevelTypesEnd, ty.ID())
+		w.File.topLevelTypesEnd++
 	}
 
 	return ty
@@ -243,12 +239,10 @@ func (w *walker) newType(def ast.DeclDef, parent any) Type {
 //nolint:unparam // Complains about the return value for some reason.
 func (w *walker) newField(def ast.DeclDef, parent any, group bool) Member {
 	parentTy := extractParentType(parent)
-
 	name := def.Name().AsIdent().Name()
 	if group {
 		name = strings.ToLower(name)
 	}
-
 	fqn := w.fullname(parentTy, name)
 
 	member := id.Wrap(w.File, id.ID[Member](w.arenas.members.NewCompressed(rawMember{
@@ -274,14 +268,14 @@ func (w *walker) newField(def ast.DeclDef, parent any, group bool) Member {
 	if !parentTy.IsZero() {
 		if _, ok := parent.(extend); ok {
 			parentTy.Raw().members = append(parentTy.Raw().members, member.ID())
-			w.extns = append(w.extns, member.ID())
+			w.File.extns = append(w.File.extns, member.ID())
 		} else {
 			parentTy.Raw().members = slices.Insert(parentTy.Raw().members, int(parentTy.Raw().extnsStart), member.ID())
 			parentTy.Raw().extnsStart++
 		}
 	} else if _, ok := parent.(extend); ok {
-		w.extns = slices.Insert(w.extns, w.topLevelExtnsEnd, member.ID())
-		w.topLevelExtnsEnd++
+		w.File.extns = slices.Insert(w.File.extns, w.File.topLevelExtnsEnd, member.ID())
+		w.File.topLevelExtnsEnd++
 	}
 
 	return member
@@ -305,7 +299,6 @@ func (w *walker) newOneof(def ast.DefOneof, parent any) Oneof {
 	})))
 
 	parentTy.Raw().oneofs = append(parentTy.Raw().oneofs, oneof.ID())
-
 	return oneof
 }
 
@@ -343,8 +336,7 @@ func (w *walker) newService(def ast.DeclDef, parent any) Service {
 		fqn:  w.session.intern.Intern(string(fqn)),
 	})))
 
-	w.services = append(w.services, service.ID())
-
+	w.File.services = append(w.File.services, service.ID())
 	return service
 }
 
@@ -365,7 +357,6 @@ func (w *walker) newMethod(def ast.DeclDef, parent any) Method {
 	})))
 
 	service.Raw().methods = append(service.Raw().methods, method.ID())
-
 	return method
 }
 
@@ -379,6 +370,5 @@ func (w *walker) fullname(parentTy Type, name string) string {
 			parentName = parentName.Parent()
 		}
 	}
-
 	return string(parentName.Append(name))
 }

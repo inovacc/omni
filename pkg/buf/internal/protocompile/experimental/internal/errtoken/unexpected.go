@@ -65,7 +65,6 @@ func UnexpectedEOF(c *token.Cursor, where taxa.Place) Unexpected {
 			Got:   taxa.EOF,
 		}
 	}
-
 	return Unexpected{What: tok, Where: where}
 }
 
@@ -86,7 +85,6 @@ func (e Unexpected) Diagnose(d *report.Diagnostic) {
 	}
 
 	what := e.What.Span()
-
 	snippet := report.Snippet(what)
 	if e.Want.Len() > 0 {
 		snippet = report.Snippetf(what, "expected %v", e.Want.Join("or"))

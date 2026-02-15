@@ -24,7 +24,6 @@ import (
 
 func TestAuthErrorUnwrap(t *testing.T) {
 	t.Parallel()
-
 	cause := errors.New("underlying cause")
 	err := &AuthError{cause: cause}
 	assert.Equal(t, cause, err.Unwrap())
@@ -32,7 +31,6 @@ func TestAuthErrorUnwrap(t *testing.T) {
 
 func TestAuthErrorError(t *testing.T) {
 	t.Parallel()
-
 	cause := errors.New("underlying cause")
 	err := &AuthError{cause: cause}
 	assert.Equal(t, "underlying cause", err.Error())
@@ -40,7 +38,6 @@ func TestAuthErrorError(t *testing.T) {
 
 func TestAuthErrorTokenEnvKey(t *testing.T) {
 	t.Parallel()
-
 	cause := errors.New("underlying cause")
 	err := &AuthError{cause: cause, tokenEnvKey: "abcd"}
 	assert.Equal(t, "abcd", err.TokenEnvKey())
@@ -48,7 +45,6 @@ func TestAuthErrorTokenEnvKey(t *testing.T) {
 
 func TestAsAuthError(t *testing.T) {
 	t.Parallel()
-
 	cause := errors.New("underlying cause")
 	authErr := &AuthError{cause: cause}
 	err := fmt.Errorf("wrapped error: %w", authErr)

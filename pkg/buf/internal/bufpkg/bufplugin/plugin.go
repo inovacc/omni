@@ -214,27 +214,21 @@ func newPlugin(
 	if name == "" {
 		return nil, syserror.New("name not present when constructing a Plugin")
 	}
-
 	if isWasm && getData == nil {
 		return nil, syserror.Newf("getData not present when constructing a Wasm Plugin")
 	}
-
 	if !isLocal && pluginFullName == nil {
 		return nil, syserror.New("pluginFullName not present when constructing a remote Plugin")
 	}
-
 	if !isLocal && !isWasm {
 		return nil, syserror.New("remote non-Wasm Plugins are not supported")
 	}
-
 	if isLocal && commitID != uuid.Nil {
 		return nil, syserror.New("commitID present when constructing a local Plugin")
 	}
-
 	if pluginFullName == nil && commitID != uuid.Nil {
 		return nil, syserror.New("pluginFullName not present and commitID present when constructing a remote Plugin")
 	}
-
 	plugin := &plugin{
 		description:    description,
 		pluginFullName: pluginFullName,
@@ -246,7 +240,6 @@ func newPlugin(
 		getData:        sync.OnceValues(getData),
 	}
 	plugin.digestTypeToGetDigest = newSyncOnceValueDigestTypeToGetDigestFuncForPlugin(plugin)
-
 	return plugin, nil
 }
 
@@ -274,7 +267,6 @@ func (p *plugin) Description() string {
 	if p.description != "" {
 		return p.description
 	}
-
 	return p.OpaqueID()
 }
 
@@ -282,7 +274,6 @@ func (p *plugin) Data() ([]byte, error) {
 	if !p.isWasm {
 		return nil, fmt.Errorf("Plugin is not a Wasm Plugin")
 	}
-
 	return p.getData()
 }
 
@@ -291,7 +282,6 @@ func (p *plugin) Digest(digestType DigestType) (Digest, error) {
 	if !ok {
 		return nil, syserror.Newf("DigestType %v was not in plugin.digestTypeToGetDigest", digestType)
 	}
-
 	return getDigest()
 }
 
@@ -310,7 +300,6 @@ func newSyncOnceValueDigestTypeToGetDigestFuncForPlugin(plugin *plugin) map[Dige
 	for digestType := range digestTypeToString {
 		m[digestType] = sync.OnceValues(newGetDigestFuncForPluginAndDigestType(plugin, digestType))
 	}
-
 	return m
 }
 
@@ -320,12 +309,10 @@ func newGetDigestFuncForPluginAndDigestType(plugin *plugin, digestType DigestTyp
 		if err != nil {
 			return nil, err
 		}
-
 		bufcasDigest, err := bufcas.NewDigestForContent(bytes.NewReader(data))
 		if err != nil {
 			return nil, err
 		}
-
 		return NewDigest(digestType, bufcasDigest)
 	}
 }

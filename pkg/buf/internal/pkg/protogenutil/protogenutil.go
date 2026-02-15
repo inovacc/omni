@@ -34,7 +34,6 @@ func NewHandler(f func(*protogen.Plugin) error, options ...HandlerOption) protop
 	for _, option := range options {
 		option(handlerOptions)
 	}
-
 	return protoplugin.HandlerFunc(
 		func(
 			ctx context.Context,
@@ -48,16 +47,13 @@ func NewHandler(f func(*protogen.Plugin) error, options ...HandlerOption) protop
 			if err != nil {
 				return err
 			}
-
 			if err := f(plugin); err != nil {
 				plugin.Error(err)
 			}
-
 			response := plugin.Response()
 			responseWriter.AddCodeGeneratorResponseFiles(response.GetFile()...)
 			responseWriter.AddError(response.GetError())
 			responseWriter.SetFeatureProto3Optional()
-
 			return nil
 		},
 	)
@@ -75,14 +71,12 @@ func NewFileHandler(f func(*protogen.Plugin, []*protogen.File) error, options ..
 					generateFiles = append(generateFiles, file)
 				}
 			}
-
 			sort.Slice(
 				generateFiles,
 				func(i int, j int) bool {
 					return generateFiles[i].Proto.GetName() < generateFiles[j].Proto.GetName()
 				},
 			)
-
 			return f(plugin, generateFiles)
 		},
 		options...,
@@ -100,7 +94,6 @@ func NewPerFileHandler(f func(*protogen.Plugin, *protogen.File) error, options .
 					return err
 				}
 			}
-
 			return nil
 		},
 		options...,
@@ -117,11 +110,9 @@ func NewGoPackageHandler(f func(*protogen.Plugin, []*GoPackageFileSet) error, op
 	return NewHandler(
 		func(plugin *protogen.Plugin) error {
 			generatedDirToGoPackageFileSet := make(map[string]*GoPackageFileSet)
-
 			for _, file := range plugin.Files {
 				if file.Generate {
 					generatedDir := path.Dir(file.GeneratedFilenamePrefix)
-
 					goPackageFileSet, ok := generatedDirToGoPackageFileSet[generatedDir]
 					if !ok {
 						generatedDirToGoPackageFileSet[generatedDir] = &GoPackageFileSet{
@@ -140,7 +131,6 @@ func NewGoPackageHandler(f func(*protogen.Plugin, []*GoPackageFileSet) error, op
 								string(file.GoImportPath),
 							)
 						}
-
 						if goPackageFileSet.GoPackageName != file.GoPackageName {
 							return fmt.Errorf(
 								"mismatched go package names for generated directory %q: %q %q",
@@ -149,7 +139,6 @@ func NewGoPackageHandler(f func(*protogen.Plugin, []*GoPackageFileSet) error, op
 								string(file.GoPackageName),
 							)
 						}
-
 						if goPackageFileSet.ProtoPackage != file.Proto.GetPackage() {
 							return fmt.Errorf(
 								"mismatched proto package names for generated directory %q: %q %q",
@@ -158,24 +147,20 @@ func NewGoPackageHandler(f func(*protogen.Plugin, []*GoPackageFileSet) error, op
 								file.Proto.GetPackage(),
 							)
 						}
-
 						goPackageFileSet.Files = append(goPackageFileSet.Files, file)
 					}
 				}
 			}
-
 			goPackageFileSets := make([]*GoPackageFileSet, 0, len(generatedDirToGoPackageFileSet))
 			for _, goPackageFileSet := range generatedDirToGoPackageFileSet {
 				goPackageFileSets = append(goPackageFileSets, goPackageFileSet)
 			}
-
 			sort.Slice(
 				goPackageFileSets,
 				func(i int, j int) bool {
 					return goPackageFileSets[i].ProtoPackage < goPackageFileSets[j].ProtoPackage
 				},
 			)
-
 			return f(plugin, goPackageFileSets)
 		},
 		options...,
@@ -196,7 +181,6 @@ func NewPerGoPackageHandler(f func(*protogen.Plugin, *GoPackageFileSet) error, o
 					return err
 				}
 			}
-
 			return nil
 		},
 		options...,
@@ -235,14 +219,12 @@ func (g *GoPackageFileSet) Services() []*protogen.Service {
 	for _, file := range g.Files {
 		services = append(services, file.Services...)
 	}
-
 	sort.Slice(
 		services,
 		func(i int, j int) bool {
 			return services[i].GoName < services[j].GoName
 		},
 	)
-
 	return services
 }
 
@@ -305,7 +287,6 @@ type NamedHelper interface {
 // NewNamedFileHandler returns a new file handler for a named plugin.
 func NewNamedFileHandler(f func(NamedHelper, *protogen.Plugin, []*protogen.File) error) protoplugin.Handler {
 	namedHelper := newNamedHelper()
-
 	return NewFileHandler(
 		func(plugin *protogen.Plugin, files []*protogen.File) error {
 			return f(namedHelper, plugin, files)
@@ -319,7 +300,6 @@ func NewNamedFileHandler(f func(NamedHelper, *protogen.Plugin, []*protogen.File)
 // NewNamedPerFileHandler returns a new per-file handler for a named plugin.
 func NewNamedPerFileHandler(f func(NamedHelper, *protogen.Plugin, *protogen.File) error) protoplugin.Handler {
 	namedHelper := newNamedHelper()
-
 	return NewPerFileHandler(
 		func(plugin *protogen.Plugin, file *protogen.File) error {
 			return f(namedHelper, plugin, file)
@@ -333,7 +313,6 @@ func NewNamedPerFileHandler(f func(NamedHelper, *protogen.Plugin, *protogen.File
 // NewNamedGoPackageHandler returns a new go package handler for a named plugin.
 func NewNamedGoPackageHandler(f func(NamedHelper, *protogen.Plugin, []*GoPackageFileSet) error) protoplugin.Handler {
 	namedHelper := newNamedHelper()
-
 	return NewGoPackageHandler(
 		func(plugin *protogen.Plugin, goPackageFileSets []*GoPackageFileSet) error {
 			return f(namedHelper, plugin, goPackageFileSets)
@@ -347,7 +326,6 @@ func NewNamedGoPackageHandler(f func(NamedHelper, *protogen.Plugin, []*GoPackage
 // NewNamedPerGoPackageHandler returns a new per-go-package handler for a named plugin.
 func NewNamedPerGoPackageHandler(f func(NamedHelper, *protogen.Plugin, *GoPackageFileSet) error) protoplugin.Handler {
 	namedHelper := newNamedHelper()
-
 	return NewPerGoPackageHandler(
 		func(plugin *protogen.Plugin, goPackageFileSet *GoPackageFileSet) error {
 			return f(namedHelper, plugin, goPackageFileSet)
@@ -363,7 +341,6 @@ func ValidateMethodUnary(method *protogen.Method) error {
 	if method.Desc.IsStreamingClient() || method.Desc.IsStreamingServer() {
 		return fmt.Errorf("plugin does not allow streaming methods: %v", method.GoName)
 	}
-
 	return nil
 }
 
@@ -372,7 +349,6 @@ func ValidateFieldNotOneof(field *protogen.Field) error {
 	if oneof := field.Oneof; oneof != nil && !oneof.Desc.IsSynthetic() {
 		return fmt.Errorf("plugin does not allow oneofs for request fields: %v", field.GoName)
 	}
-
 	return nil
 }
 
@@ -381,7 +357,6 @@ func ValidateFieldNotMap(field *protogen.Field) error {
 	if field.Desc.IsMap() {
 		return fmt.Errorf("plugin does not allow maps for request fields: %v", field.GoName)
 	}
-
 	return nil
 }
 
@@ -393,7 +368,6 @@ func GetUnexportGoName(goName string) string {
 	if goName == "" {
 		return ""
 	}
-
 	return strings.ToLower(goName[:1]) + goName[1:]
 }
 
@@ -406,45 +380,36 @@ func GetRequestAndResponseParameterStrings(
 	requestParameterStrings = make([]string, len(requestFields))
 	responseParameterStrings = make([]string, len(responseFields))
 	fieldNames := make(map[string]struct{})
-
 	for i, field := range requestFields {
 		if err := ValidateFieldNotOneof(field); err != nil {
 			return nil, nil, err
 		}
-
 		fieldGoType, err := GetFieldGoType(generatedFile, field)
 		if err != nil {
 			return nil, nil, err
 		}
-
 		fieldName := GetUnexportGoName(field.GoName)
 		fieldNames[fieldName] = struct{}{}
 		requestParameterStrings[i] = fieldName + ` ` + fieldGoType
 	}
-
 	for i, field := range responseFields {
 		if err := ValidateFieldNotOneof(field); err != nil {
 			return nil, nil, err
 		}
-
 		fieldGoType, err := GetFieldGoType(generatedFile, field)
 		if err != nil {
 			return nil, nil, err
 		}
-
 		fieldName := GetUnexportGoName(field.GoName)
 		for {
 			if _, ok := fieldNames[fieldName]; !ok {
 				break
 			}
-
 			fieldName = fieldName + "Response"
 		}
-
 		fieldNames[fieldName] = struct{}{}
 		responseParameterStrings[i] = fieldName + ` ` + fieldGoType
 	}
-
 	return requestParameterStrings, responseParameterStrings, nil
 }
 
@@ -459,17 +424,13 @@ func GetParameterErrorReturnString(
 		if err := ValidateFieldNotOneof(field); err != nil {
 			return "", err
 		}
-
 		fieldGoZeroValue, err := GetFieldGoZeroValue(generatedFile, field)
 		if err != nil {
 			return "", err
 		}
-
 		varStrings[i] = fieldGoZeroValue
 	}
-
 	varStrings[len(varStrings)-1] = errorVarName
-
 	return "return " + strings.Join(varStrings, ", "), nil
 }
 
@@ -482,7 +443,6 @@ func GetFieldGoType(
 	field *protogen.Field,
 ) (string, error) {
 	var goType string
-
 	pointer := field.Desc.HasPresence()
 	switch field.Desc.Kind() {
 	case protoreflect.BoolKind:
@@ -512,7 +472,6 @@ func GetFieldGoType(
 	default:
 		return "", fmt.Errorf("unknown Kind: %T", field.Desc.Kind())
 	}
-
 	switch {
 	case field.Desc.IsList():
 		return "[]" + goType, nil
@@ -521,19 +480,15 @@ func GetFieldGoType(
 		if err != nil {
 			return "", err
 		}
-
 		valType, err := GetFieldGoType(generatedFile, field.Message.Fields[1])
 		if err != nil {
 			return "", err
 		}
-
 		return fmt.Sprintf("map[%v]%v", keyType, valType), nil
 	}
-
 	if pointer {
 		goType = "*" + goType
 	}
-
 	return goType, nil
 }
 
@@ -545,15 +500,12 @@ func GetFieldGoZeroValue(
 	if field.Desc.HasPresence() {
 		return "nil", nil
 	}
-
 	if field.Desc.IsList() {
 		return "nil", nil
 	}
-
 	if field.Desc.IsMap() {
 		return "nil", nil
 	}
-
 	switch field.Desc.Kind() {
 	case protoreflect.BoolKind:
 		return "false", nil
