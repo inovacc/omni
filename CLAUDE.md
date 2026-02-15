@@ -49,6 +49,8 @@ omni/
 │   ├── twig/           # Tree scanning, formatting, comparison
 │   └── video/          # Video download engine (YouTube, HLS, generic)
 ├── internal/cli/       # CLI wrappers (I/O, flags, stdin handling)
+│   ├── cmderr/         # Unified error model (sentinels, exit codes)
+│   ├── command/        # Unified Command interface + Registry + adapters
 │   ├── <command>/      # Each command delegates to pkg/ for core logic
 │   │   ├── <command>.go
 │   │   ├── <command>_test.go
@@ -136,6 +138,35 @@ func RunFormat(w io.Writer, args []string, opts Options) error {
 }
 ```
 
+#### Unified Command Interface
+
+All new commands should implement the `Command` interface from `internal/cli/command/`:
+
+```go
+// Command is the interface all CLI commands should implement.
+type Command interface {
+    Run(ctx context.Context, w io.Writer, r io.Reader, args []string) error
+}
+```
+
+**Registry** maps command names to implementations (thread-safe):
+```go
+reg := command.NewRegistry()
+reg.Register("head", command.AdaptWriterReaderArgs(
+    func(w io.Writer, r io.Reader, args []string) error {
+        return head.RunHead(w, r, args, head.HeadOptions{Lines: 10})
+    },
+))
+cmd, ok := reg.Get("head")
+```
+
+**Adapters** bridge existing Run signatures to the Command interface:
+- `AdaptWriterArgs(fn)` — for `func(io.Writer, []string) error` (hash, base, archive)
+- `AdaptWriterReaderArgs(fn)` — for `func(io.Writer, io.Reader, []string) error` (head, tail, sort)
+- `AdaptFull(fn)` — for `func(context.Context, io.Writer, io.Reader, []string) error`
+
+**Migration:** Incrementally adopt — wrap existing Run functions with adapters, register in the Registry. The `pipe` command can use the Registry to dispatch commands.
+
 #### Platform-Specific Code
 
 Use build tags for platform-specific implementations:
@@ -152,10 +183,50 @@ internal/cli/kill/
 └── kill_windows.go # Windows signals (INT, KILL, TERM only)
 ```
 
-#### Error Handling
+#### Error Handling (cmderr)
 
+All commands should use `internal/cli/cmderr` sentinels for error classification.
+The root command (`cmd/root.go`) maps these to exit codes via `cmderr.ExitCodeFor()`.
+
+**Sentinels → Exit Codes:**
+| Sentinel | Exit Code | Use For |
+|----------|-----------|---------|
+| `cmderr.ErrNotFound` | 1 | File/resource not found |
+| `cmderr.ErrConflict` | 1 | Verification failures, sort disorder |
+| `cmderr.ErrInvalidInput` | 2 | Bad flags, missing operands, parse errors |
+| `cmderr.ErrPermission` | 3 | Permission denied |
+| `cmderr.ErrIO` | 4 | I/O errors |
+| `cmderr.ErrTimeout` | 5 | Timeouts |
+| `cmderr.ErrUnsupported` | 6 | Unsupported operations |
+
+**Pattern — classify errors from os/io:**
+```go
+if errors.Is(err, os.ErrNotExist) {
+    return cmderr.Wrap(cmderr.ErrNotFound, fmt.Sprintf("head: %s", err))
+}
+if errors.Is(err, os.ErrPermission) {
+    return cmderr.Wrap(cmderr.ErrPermission, fmt.Sprintf("head: %s", err))
+}
+return fmt.Errorf("head: %w", err) // fallback for unclassified errors
+```
+
+**Pattern — validation errors:**
+```go
+return cmderr.Wrap(cmderr.ErrInvalidInput, "path clean: missing operand")
+```
+
+**Pattern — silent exit (grep-style):**
+```go
+return cmderr.SilentExit(1) // no message, just exit code
+```
+
+**Commands adopted:** cat, curl, crypt, diff, grep, find, fs, jq, ls, sed, head, tail, text (sort/uniq), hash, path, archive, base, xxd, yq
+
+**Commands NOT yet adopted:** ~130 remaining — adopt in future batches following the same pattern.
+
+**General rules:**
 - Always wrap errors with context: `fmt.Errorf("command: %w", err)`
-- Write errors to stderr: `fmt.Fprintf(os.Stderr, "error: %v\n", err)`
+- Write informational errors to stderr: `fmt.Fprintf(os.Stderr, "error: %v\n", err)`
 - Return errors, don't panic
 
 #### Output Patterns
@@ -631,6 +702,14 @@ Current coverage: ~30.5% overall, 51.6% omni-owned (~75% avg for pkg/)
 | `internal/cli/pipeline/pipeline_test.go` | CLI wrapper integration tests |
 | `internal/cli/exist/exist_test.go` | File, dir, path, command, env, process, port existence checks, JSON/quiet modes |
 | `internal/cli/project/project_test.go` | Project detection, deps parsing, health scoring, output formatting |
+| `internal/cli/command/command_test.go` | Command interface, Registry (register, get, names, concurrency), adapters |
+| `pkg/video/downloader/progress_test.go` | SpeedTracker, FormatBytes, FormatSpeed, FormatETA, FormatPercent |
+| `pkg/video/downloader/fragment_test.go` | SaveFragmentState/LoadFragmentState roundtrip, RemoveFragmentState, AppendToFile |
+| `pkg/video/downloader/downloader_test.go` | SelectDownloader type assertions for all protocols |
+| `pkg/video/nethttp/cookies_test.go` | LoadNetscapeCookies parsing, roundtrip, malformed lines, nonexistent file |
+| `pkg/video/nethttp/sapisidhash_test.go` | ComputeSAPISIDHash format, ExtractSAPISID from cookie jar |
+| `pkg/video/extractor/helpers_test.go` | SearchRegex, ParseJSON, ParseM3U8Formats |
+| `pkg/video/options_test.go` | applyOptions defaults, With* option composition |
 
 ### Golden Master Tests
 
