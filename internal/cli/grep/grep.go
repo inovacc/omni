@@ -7,6 +7,7 @@ import (
 	"os"
 	"regexp"
 
+	"github.com/inovacc/omni/internal/cli/cmderr"
 	"github.com/inovacc/omni/internal/cli/input"
 	"github.com/inovacc/omni/internal/cli/output"
 	pkggrep "github.com/inovacc/omni/pkg/search/grep"
@@ -141,11 +142,11 @@ func RunGrep(w io.Writer, r io.Reader, pattern string, args []string, opts GrepO
 			return nil
 		}
 
-		return fmt.Errorf("no match")
+		return cmderr.SilentExit(1)
 	}
 
 	if !anyMatch {
-		return fmt.Errorf("no match")
+		return cmderr.SilentExit(1)
 	}
 
 	return nil
