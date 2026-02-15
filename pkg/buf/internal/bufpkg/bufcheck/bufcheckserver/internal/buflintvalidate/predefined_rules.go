@@ -17,10 +17,10 @@ package buflintvalidate
 import (
 	"strings"
 
+	"buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go/buf/validate"
 	celpv "buf.build/go/protovalidate/cel"
 	"github.com/google/cel-go/cel"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufprotosource"
-	"buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go/buf/validate"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/protoencoding"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/syserror"
 )

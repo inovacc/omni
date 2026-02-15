@@ -21,11 +21,11 @@ import (
 	"io/fs"
 	"path/filepath"
 
-	"github.com/inovacc/omni/pkg/buf/internal/protoplugin"
 	"github.com/inovacc/omni/pkg/buf/internal/app"
 	"github.com/inovacc/omni/pkg/buf/internal/app/appext"
 	bufconfig2 "github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufconfig"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/slogapp"
+	"github.com/inovacc/omni/pkg/buf/internal/protoplugin"
 )
 
 // GetModuleConfigAndPluginConfigsForProtocPlugin gets the [bufmodule.ModuleConfig] and

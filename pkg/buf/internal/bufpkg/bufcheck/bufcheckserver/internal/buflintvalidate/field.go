@@ -22,9 +22,9 @@ import (
 	"strings"
 	"unicode/utf8"
 
+	"buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go/buf/validate"
 	"buf.build/go/protovalidate"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufprotosource"
-	"buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go/buf/validate"
 	protoencoding2 "github.com/inovacc/omni/pkg/buf/internal/pkg/protoencoding"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/syserror"
 	"google.golang.org/protobuf/proto"

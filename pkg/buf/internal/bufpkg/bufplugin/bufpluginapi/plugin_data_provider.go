@@ -19,11 +19,11 @@ import (
 	"fmt"
 	"log/slog"
 
+	"connectrpc.com/connect"
 	"github.com/google/uuid"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufparse"
 	bufplugin2 "github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufplugin"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufregistryapi/bufregistryapiplugin"
-	"connectrpc.com/connect"
 	pluginv1beta1 "github.com/inovacc/omni/pkg/buf/internal/gen/bufbuild/registry/protocolbuffers/go/buf/registry/plugin/v1beta1"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/syserror"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/uuidutil"

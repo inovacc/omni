@@ -19,8 +19,8 @@ import (
 	"fmt"
 	"log/slog"
 
-	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufregistryapi/bufregistryapiowner"
 	"connectrpc.com/connect"
+	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufregistryapi/bufregistryapiowner"
 	ownerv1 "github.com/inovacc/omni/pkg/buf/internal/gen/bufbuild/registry/protocolbuffers/go/buf/registry/owner/v1"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/cache"
 )
