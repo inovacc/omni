@@ -1,11 +1,12 @@
 package cmd
 
 import (
-	"encoding/json"
+	"io"
 	"os"
 	"strings"
 
 	"github.com/inovacc/omni/internal/cli/caseconv"
+	"github.com/inovacc/omni/internal/cli/output"
 	"github.com/spf13/cobra"
 )
 
@@ -223,25 +224,22 @@ Examples:
   omni case detect "hello_world"      # snake
   omni case detect "HELLO_WORLD"      # constant`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		jsonOutput, _ := cmd.Flags().GetBool("json")
+		format := getOutputOpts(cmd).GetFormat()
+		f := output.New(cmd.OutOrStdout(), format)
 
 		if len(args) == 0 {
-			return runCaseDetectStdin(os.Stdout, jsonOutput)
+			return runCaseDetectStdin(cmd.OutOrStdout(), f)
 		}
 
 		for _, arg := range args {
-			caseType := caseconv.DetectCase(arg)
-			if jsonOutput {
-				result := struct {
+			ct := caseconv.DetectCase(arg)
+			if f.IsJSON() {
+				return f.Print(struct {
 					Input string `json:"input"`
 					Case  string `json:"case"`
-				}{
-					Input: arg,
-					Case:  string(caseType),
-				}
-				return json.NewEncoder(os.Stdout).Encode(result)
+				}{Input: arg, Case: string(ct)})
 			}
-			_, _ = os.Stdout.WriteString(string(caseType) + "\n")
+			_, _ = cmd.OutOrStdout().Write([]byte(string(ct) + "\n"))
 		}
 		return nil
 	},
@@ -257,16 +255,18 @@ Examples:
   omni case all "hello world"
   omni case all "helloWorld"`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		jsonOutput, _ := cmd.Flags().GetBool("json")
+		format := getOutputOpts(cmd).GetFormat()
+		f := output.New(cmd.OutOrStdout(), format)
+		w := cmd.OutOrStdout()
 
 		if len(args) == 0 {
-			return runCaseAllStdin(os.Stdout, jsonOutput)
+			return runCaseAllStdin(w, f)
 		}
 
 		for _, arg := range args {
 			conversions := caseconv.ConvertAll(arg)
 
-			if jsonOutput {
+			if f.IsJSON() {
 				result := struct {
 					Input       string            `json:"input"`
 					Conversions map[string]string `json:"conversions"`
@@ -277,15 +277,15 @@ Examples:
 				for ct, val := range conversions {
 					result.Conversions[string(ct)] = val
 				}
-				return json.NewEncoder(os.Stdout).Encode(result)
+				return f.Print(result)
 			}
 
-			_, _ = os.Stdout.WriteString("Input: " + arg + "\n")
-			_, _ = os.Stdout.WriteString("───────────────────────────\n")
+			_, _ = w.Write([]byte("Input: " + arg + "\n"))
+			_, _ = w.Write([]byte("───────────────────────────\n"))
 			for _, ct := range caseconv.ValidCaseTypes() {
-				_, _ = os.Stdout.WriteString(padRight(string(ct), 12) + conversions[ct] + "\n")
+				_, _ = w.Write([]byte(padRight(string(ct), 12) + conversions[ct] + "\n"))
 			}
-			_, _ = os.Stdout.WriteString("\n")
+			_, _ = w.Write([]byte("\n"))
 		}
 		return nil
 	},
@@ -294,45 +294,39 @@ Examples:
 func runCaseCmd(caseType caseconv.CaseType) func(*cobra.Command, []string) error {
 	return func(cmd *cobra.Command, args []string) error {
 		opts := caseconv.Options{
-			Case: caseType,
+			Case:         caseType,
+			OutputFormat: getOutputOpts(cmd).GetFormat(),
 		}
-		opts.JSON, _ = cmd.Flags().GetBool("json")
 
-		return caseconv.RunCase(os.Stdout, args, opts)
+		return caseconv.RunCase(cmd.OutOrStdout(), args, opts)
 	}
 }
 
-func runCaseDetectStdin(w *os.File, jsonOutput bool) error {
+func runCaseDetectStdin(w io.Writer, f *output.Formatter) error {
 	buf := make([]byte, 4096)
 	n, _ := os.Stdin.Read(buf)
 	input := strings.TrimSpace(string(buf[:n]))
 
-	caseType := caseconv.DetectCase(input)
-	if jsonOutput {
-		result := struct {
+	ct := caseconv.DetectCase(input)
+	if f.IsJSON() {
+		return f.Print(struct {
 			Input string `json:"input"`
 			Case  string `json:"case"`
-		}{
-			Input: input,
-			Case:  string(caseType),
-		}
-
-		return json.NewEncoder(w).Encode(result)
+		}{Input: input, Case: string(ct)})
 	}
 
-	_, _ = w.WriteString(string(caseType) + "\n")
-
+	_, _ = w.Write([]byte(string(ct) + "\n"))
 	return nil
 }
 
-func runCaseAllStdin(w *os.File, jsonOutput bool) error {
+func runCaseAllStdin(w io.Writer, f *output.Formatter) error {
 	buf := make([]byte, 4096)
 	n, _ := os.Stdin.Read(buf)
 	input := strings.TrimSpace(string(buf[:n]))
 
 	conversions := caseconv.ConvertAll(input)
 
-	if jsonOutput {
+	if f.IsJSON() {
 		result := struct {
 			Input       string            `json:"input"`
 			Conversions map[string]string `json:"conversions"`
@@ -343,17 +337,14 @@ func runCaseAllStdin(w *os.File, jsonOutput bool) error {
 		for ct, val := range conversions {
 			result.Conversions[string(ct)] = val
 		}
-
-		return json.NewEncoder(w).Encode(result)
+		return f.Print(result)
 	}
 
-	_, _ = w.WriteString("Input: " + input + "\n")
-
-	_, _ = w.WriteString("───────────────────────────\n")
+	_, _ = w.Write([]byte("Input: " + input + "\n"))
+	_, _ = w.Write([]byte("───────────────────────────\n"))
 	for _, ct := range caseconv.ValidCaseTypes() {
-		_, _ = w.WriteString(padRight(string(ct), 12) + conversions[ct] + "\n")
+		_, _ = w.Write([]byte(padRight(string(ct), 12) + conversions[ct] + "\n"))
 	}
-
 	return nil
 }
 
@@ -385,8 +376,4 @@ func init() {
 	caseCmd.AddCommand(caseDetectCmd)
 	caseCmd.AddCommand(caseAllCmd)
 
-	// Add --json flag to all subcommands
-	for _, cmd := range caseCmd.Commands() {
-		cmd.Flags().Bool("json", false, "output as JSON")
-	}
 }

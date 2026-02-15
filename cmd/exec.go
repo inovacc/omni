@@ -29,10 +29,11 @@ Examples:
 		noPrompt, _ := cmd.Flags().GetBool("no-prompt")
 
 		return exec.Run(os.Stdout, args[0], args[1:], exec.Options{
-			Force:    force,
-			Strict:   strict,
-			DryRun:   dryRun,
-			NoPrompt: noPrompt,
+			Force:        force,
+			Strict:       strict,
+			DryRun:       dryRun,
+			NoPrompt:     noPrompt,
+			OutputFormat: getOutputOpts(cmd).GetFormat(),
 		})
 	},
 }

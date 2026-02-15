@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"encoding/json"
 	"testing"
+
+	"github.com/inovacc/omni/internal/cli/output"
 )
 
 func TestToUpper(t *testing.T) {
@@ -397,7 +399,7 @@ func TestRunCase(t *testing.T) {
 func TestRunCaseJSON(t *testing.T) {
 	var buf bytes.Buffer
 
-	opts := Options{Case: CaseCamel, JSON: true}
+	opts := Options{Case: CaseCamel, OutputFormat: output.FormatJSON}
 
 	err := RunCase(&buf, []string{"hello world"}, opts)
 	if err != nil {
