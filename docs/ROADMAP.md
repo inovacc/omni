@@ -39,7 +39,7 @@ Foundation commands using Go standard library.
 
 ```
 omni/
-├── cmd/                    # Cobra CLI commands (148+ commands)
+├── cmd/                    # Cobra CLI commands (155+ commands)
 │   ├── root.go
 │   ├── ls.go
 │   ├── pwd.go
@@ -643,7 +643,7 @@ Language              Files      Lines       Code   Comments     Blanks
 | Unified input package | `internal/cli/input` - file/stdin handling | P0 | 2-3 hrs |
 | Logger JSON export | Export logs to file/stdout in JSON | P1 | 1-2 hrs |
 | Missing tests | twig/builder, twig/parser tests | P1 | 1-2 hrs |
-| Command interface | Define unified Command interface contract | P2 | 2-3 hrs |
+| ~~Command interface~~ | ~~Define unified Command interface contract~~ | ✅ Done | — |
 
 ### Unified Input Package
 

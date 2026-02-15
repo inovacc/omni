@@ -584,7 +584,7 @@ omni/
 - **Omni pkg/ Average:** ~75% (16 of 31 packages above 80%)
 - **Total Test Cases:** 700+
 - **Black-box Tests:** 15 Python test suites
-- **Golden Master Tests:** 91 snapshot tests across 12 categories
+- **Golden Master Tests:** 90 snapshot tests across 12 categories
 
 ## Platform Support
 
@@ -682,7 +682,7 @@ Or use Taskfile:
 ```bash
 task test               # Unit tests with coverage
 task test:blackbox      # Black-box tests (14 Python suites)
-task test:golden        # Golden master tests (81 snapshot tests)
+task test:golden        # Golden master tests (90 snapshot tests)
 task test:golden:update # Regenerate snapshots after intentional changes
 task lint               # Linting
 

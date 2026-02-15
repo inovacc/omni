@@ -762,7 +762,7 @@ task docker:test:golden:update   # Regenerate and persist to host via volume mou
 
 **Structure:**
 - `testing/golden_engine.py` — Lightweight engine (auto-discovered by `run_all.py`)
-- `testing/golden/golden_tests.yaml` — Declarative test registry (81 tests, 11 categories)
+- `testing/golden/golden_tests.yaml` — Declarative test registry (90 tests, 12 categories)
 - `testing/golden/snapshots/` — JSON metadata + .stdout sidecars
 - `tools/golden/src/golden/` — Full engine (11 modules: manifest, parallel, map, Docker)
 - `tools/golden/golden_tests.yaml` — Shared registry (same tests)
