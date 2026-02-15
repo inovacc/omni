@@ -34,6 +34,30 @@ func TestNormalizeVideoURL_LeavesNonHTTPUntouched(t *testing.T) {
 	}
 }
 
+func TestNormalizeVideoURL_BareYouTubeID(t *testing.T) {
+	tests := []struct {
+		name string
+		in   string
+		want string
+	}{
+		{"standard ID", "dQw4w9WgXcQ", "https://www.youtube.com/watch?v=dQw4w9WgXcQ"},
+		{"ID with dash", "YqHNOVlyIjU", "https://www.youtube.com/watch?v=YqHNOVlyIjU"},
+		{"ID with underscore", "abc_def-123", "https://www.youtube.com/watch?v=abc_def-123"},
+		{"too short", "dQw4w9WgXc", "dQw4w9WgXc"},
+		{"too long", "dQw4w9WgXcQQ", "dQw4w9WgXcQQ"},
+		{"has space", "dQw4w9 gXcQ", "dQw4w9 gXcQ"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := normalizeVideoURL(tt.in)
+			if got != tt.want {
+				t.Fatalf("normalizeVideoURL(%q) = %q, want %q", tt.in, got, tt.want)
+			}
+		})
+	}
+}
+
 func TestNormalizeVideoURL_NoTUnchanged(t *testing.T) {
 	in := "https://www.youtube.com/watch?v=YqHNOVlyIjU&list=abc123"
 	got := normalizeVideoURL(in)

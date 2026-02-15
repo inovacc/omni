@@ -1,13 +1,14 @@
 package cron
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"slices"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/inovacc/omni/internal/cli/output"
 )
 
 // Schedule represents a parsed cron schedule
@@ -24,9 +25,9 @@ type Schedule struct {
 
 // Options configures the cron command behavior
 type Options struct {
-	JSON     bool // output as JSON
-	Next     int  // show next N run times
-	Validate bool // just validate the expression
+	OutputFormat output.Format // output format
+	Next         int           // show next N run times
+	Validate     bool          // just validate the expression
 }
 
 // Run parses and displays cron expression information
@@ -42,16 +43,14 @@ func Run(w io.Writer, args []string, opts Options) error {
 		return fmt.Errorf("cron: %w", err)
 	}
 
+	f := output.New(w, opts.OutputFormat)
+
 	if opts.Validate {
-		if opts.JSON {
-			result := map[string]any{
+		if f.IsJSON() {
+			return f.Print(map[string]any{
 				"valid":      true,
 				"expression": expr,
-			}
-			enc := json.NewEncoder(w)
-			enc.SetIndent("", "  ")
-
-			return enc.Encode(result)
+			})
 		}
 
 		_, _ = fmt.Fprintf(w, "Valid cron expression: %s\n", expr)
@@ -63,11 +62,8 @@ func Run(w io.Writer, args []string, opts Options) error {
 		schedule.NextRuns = getNextRuns(schedule, opts.Next)
 	}
 
-	if opts.JSON {
-		enc := json.NewEncoder(w)
-		enc.SetIndent("", "  ")
-
-		return enc.Encode(schedule)
+	if f.IsJSON() {
+		return f.Print(schedule)
 	}
 
 	// Human-readable output

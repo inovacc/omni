@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/inovacc/omni/internal/cli/output"
 	"github.com/inovacc/omni/internal/cli/timecmd"
 	"github.com/spf13/cobra"
 )
@@ -23,12 +24,24 @@ Examples:
   omni time sleep 2    # Time a sleep operation
   omni time            # Just show current time info`,
 	RunE: func(cmd *cobra.Command, args []string) error {
+		outFmt := getOutputOpts(cmd).GetFormat()
+		w := cmd.OutOrStdout()
+
 		if len(args) == 0 {
-			// Just print current time
 			now := time.Now()
-			_, _ = fmt.Fprintf(cmd.OutOrStdout(), "Current time: %s\n", now.Format(time.RFC3339))
-			_, _ = fmt.Fprintf(cmd.OutOrStdout(), "Unix timestamp: %d\n", now.Unix())
-			_, _ = fmt.Fprintf(cmd.OutOrStdout(), "Unix nano: %d\n", now.UnixNano())
+			f := output.New(w, outFmt)
+			if f.IsJSON() {
+				return f.Print(map[string]any{
+					"time":      now.Format(time.RFC3339),
+					"unix":      now.Unix(),
+					"unix_nano": now.UnixNano(),
+				})
+			}
+
+			_, _ = fmt.Fprintf(w, "Current time: %s\n", now.Format(time.RFC3339))
+			_, _ = fmt.Fprintf(w, "Unix timestamp: %d\n", now.Unix())
+			_, _ = fmt.Fprintf(w, "Unix nano: %d\n", now.UnixNano())
+
 			return nil
 		}
 
@@ -42,10 +55,11 @@ Examples:
 				}
 			}
 
-			_, err = timecmd.RunTime(cmd.ErrOrStderr(), func() error {
+			_, err = timecmd.RunTimeJSON(cmd.ErrOrStderr(), outFmt, func() error {
 				time.Sleep(duration)
 				return nil
 			})
+
 			return err
 		}
 

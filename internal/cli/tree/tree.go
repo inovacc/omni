@@ -8,6 +8,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/inovacc/omni/internal/cli/output"
 	twig2 "github.com/inovacc/omni/pkg/twig"
 	"github.com/inovacc/omni/pkg/twig/comparer"
 	"github.com/inovacc/omni/pkg/twig/models"
@@ -22,9 +23,10 @@ type TreeOptions struct {
 	NoDirSlash  bool     // don't add trailing slash to directories
 	Stats       bool     // -s: show statistics
 	Hash        bool     // --hash: show file hashes
-	JSON        bool     // -j: output as JSON
-	JSONStream  bool     // --json-stream: streaming NDJSON output
-	NoColor     bool     // --no-color: disable colors
+	JSON         bool          // -j: output as JSON (local flag, kept for -j shorthand)
+	JSONStream   bool          // --json-stream: streaming NDJSON output
+	OutputFormat output.Format // global output format
+	NoColor      bool          // --no-color: disable colors
 	Size        bool     // --size: show file sizes
 	Date        bool     // --date: show modification dates
 	MaxFiles    int      // --max-files: cap total scanned items
@@ -46,6 +48,9 @@ func RunTree(w io.Writer, args []string, opts TreeOptions) error {
 		path = args[0]
 	}
 
+	// Merge local -j flag with global --json
+	useJSON := opts.JSON || opts.OutputFormat == output.FormatJSON
+
 	// Build tree options
 	var treeOpts []twig2.TreeOption
 
@@ -54,7 +59,7 @@ func RunTree(w io.Writer, args []string, opts TreeOptions) error {
 	treeOpts = append(treeOpts, twig2.WithDirsOnly(opts.DirsOnly))
 	treeOpts = append(treeOpts, twig2.WithDirSlash(!opts.NoDirSlash))
 	treeOpts = append(treeOpts, twig2.WithColors(!opts.NoColor))
-	treeOpts = append(treeOpts, twig2.WithJSONOutput(opts.JSON))
+	treeOpts = append(treeOpts, twig2.WithJSONOutput(useJSON))
 	treeOpts = append(treeOpts, twig2.WithShowHash(opts.Hash))
 	treeOpts = append(treeOpts, twig2.WithShowSize(opts.Size))
 	treeOpts = append(treeOpts, twig2.WithShowDate(opts.Date))

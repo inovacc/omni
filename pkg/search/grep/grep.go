@@ -8,11 +8,12 @@ import (
 
 // Options configures grep behavior.
 type Options struct {
-	IgnoreCase   bool // Case insensitive matching
-	InvertMatch  bool // Select non-matching lines
-	FixedStrings bool // Interpret pattern as fixed string (no regex)
-	WordRegexp   bool // Match whole words only
-	LineRegexp   bool // Match whole lines only
+	IgnoreCase     bool // Case insensitive matching
+	InvertMatch    bool // Select non-matching lines
+	FixedStrings   bool // Interpret pattern as fixed string (no regex)
+	WordRegexp     bool // Match whole words only
+	LineRegexp     bool // Match whole lines only
+	ExtendedRegexp bool // Interpret pattern as ERE (skip BRE conversion)
 }
 
 // Option is a functional option for Search.
@@ -119,9 +120,40 @@ func searchWithOptions(lines []string, pattern string, opt Options) []string {
 	return out
 }
 
+// convertBREtoERE converts a BRE (Basic Regular Expression) pattern to ERE
+// (Extended Regular Expression). In BRE mode (default grep), metacharacters
+// like |, (, ), {, }, +, ? must be backslash-escaped to have special meaning.
+// Go's regexp package uses ERE, so we convert by unescaping these.
+func convertBREtoERE(pattern string) string {
+	var b strings.Builder
+	b.Grow(len(pattern))
+
+	for i := 0; i < len(pattern); i++ {
+		if pattern[i] == '\\' && i+1 < len(pattern) {
+			next := pattern[i+1]
+			switch next {
+			case '|', '(', ')', '{', '}', '+', '?':
+				b.WriteByte(next)
+				i++ // skip the backslash
+			default:
+				b.WriteByte('\\')
+				b.WriteByte(next)
+				i++
+			}
+		} else {
+			b.WriteByte(pattern[i])
+		}
+	}
+
+	return b.String()
+}
+
 func compilePattern(pattern string, opts Options) (*regexp.Regexp, error) {
 	if opts.FixedStrings {
 		pattern = regexp.QuoteMeta(pattern)
+	} else if !opts.ExtendedRegexp {
+		// Default grep mode is BRE; convert to ERE for Go's regexp engine
+		pattern = convertBREtoERE(pattern)
 	}
 
 	if opts.WordRegexp {

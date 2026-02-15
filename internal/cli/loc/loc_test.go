@@ -6,6 +6,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/inovacc/omni/internal/cli/output"
 )
 
 func TestRunLoc(t *testing.T) {
@@ -71,7 +73,7 @@ hello()
 	t.Run("json output", func(t *testing.T) {
 		var buf bytes.Buffer
 
-		err := RunLoc(&buf, []string{tmpDir}, Options{JSON: true})
+		err := RunLoc(&buf, []string{tmpDir}, Options{OutputFormat: output.FormatJSON})
 		if err != nil {
 			t.Fatalf("RunLoc() error = %v", err)
 		}
@@ -245,7 +247,7 @@ echo "hello"
 
 	var buf bytes.Buffer
 
-	err = RunLoc(&buf, []string{tmpDir}, Options{JSON: true})
+	err = RunLoc(&buf, []string{tmpDir}, Options{OutputFormat: output.FormatJSON})
 	if err != nil {
 		t.Fatalf("RunLoc() error = %v", err)
 	}

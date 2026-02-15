@@ -40,14 +40,13 @@ Examples:
   omni cron "@daily"                    # Every day at midnight
   omni cron --next 5 "0 */2 * * *"      # Show next 5 runs`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		jsonOutput, _ := cmd.Flags().GetBool("json")
 		next, _ := cmd.Flags().GetInt("next")
 		validate, _ := cmd.Flags().GetBool("validate")
 
 		opts := cron.Options{
-			JSON:     jsonOutput,
-			Next:     next,
-			Validate: validate,
+			OutputFormat: getOutputOpts(cmd).GetFormat(),
+			Next:         next,
+			Validate:     validate,
 		}
 
 		return cron.Run(cmd.OutOrStdout(), args, opts)
@@ -57,7 +56,6 @@ Examples:
 func init() {
 	rootCmd.AddCommand(cronCmd)
 
-	cronCmd.Flags().Bool("json", false, "output as JSON")
 	cronCmd.Flags().Int("next", 0, "show next N scheduled runs")
 	cronCmd.Flags().Bool("validate", false, "only validate the expression")
 }

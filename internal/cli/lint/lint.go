@@ -10,15 +10,16 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/inovacc/omni/internal/cli/output"
 	"gopkg.in/yaml.v3"
 )
 
 // LintOptions configures the lint command behavior.
 type LintOptions struct {
-	Format string // Output format: text, json
-	Fix    bool   // Auto-fix issues where possible
-	Strict bool   // Enable strict mode (more warnings)
-	Quiet  bool   // Only show errors, not warnings
+	OutputFormat output.Format // output format
+	Fix          bool          // Auto-fix issues where possible
+	Strict       bool          // Enable strict mode (more warnings)
+	Quiet        bool          // Only show errors, not warnings
 }
 
 // LintSeverity represents the severity of a lint issue.
@@ -218,7 +219,13 @@ func RunLint(w io.Writer, args []string, opts LintOptions) error {
 		}
 	}
 
-	// Output results
+	// JSON output
+	f := output.New(w, opts.OutputFormat)
+	if f.IsJSON() {
+		return f.Print(allResults)
+	}
+
+	// Text output
 	for _, result := range allResults {
 		if len(result.Issues) == 0 {
 			if !opts.Quiet {
