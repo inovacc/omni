@@ -3,13 +3,13 @@ package caseconv
 
 import (
 	"bufio"
-	"encoding/json"
 	"fmt"
 	"io"
 	"os"
 	"strings"
 	"unicode"
 
+	"github.com/inovacc/omni/internal/cli/output"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 )
@@ -35,8 +35,8 @@ const (
 
 // Options configures case conversion
 type Options struct {
-	Case CaseType // Target case type
-	JSON bool     // Output as JSON
+	Case         CaseType      // Target case type
+	OutputFormat output.Format // Output format
 }
 
 // Result represents conversion result
@@ -70,18 +70,19 @@ func RunCase(w io.Writer, args []string, opts Options) error {
 		inputs = args
 	}
 
-	if opts.JSON {
+	f := output.New(w, opts.OutputFormat)
+	if f.IsJSON() {
 		result := ListResult{Case: string(opts.Case)}
 		for _, input := range inputs {
-			output := Convert(input, opts.Case)
+			out := Convert(input, opts.Case)
 			result.Results = append(result.Results, Result{
 				Input:  input,
-				Output: output,
+				Output: out,
 				Case:   string(opts.Case),
 			})
 		}
 
-		return json.NewEncoder(w).Encode(result)
+		return f.Print(result)
 	}
 
 	for _, input := range inputs {

@@ -2,22 +2,22 @@ package pipe
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"io"
 	"slices"
 	"strings"
 
+	"github.com/inovacc/omni/internal/cli/output"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 )
 
 // Options configure the pipe command behavior
 type Options struct {
-	JSON      bool   // --json: output pipeline result as JSON
-	Separator string // --sep: command separator (default "|")
-	Verbose   bool   // --verbose: show intermediate steps
-	VarName   string // --var: variable name for output substitution (default "OUT")
+	OutputFormat output.Format // output format (text/json)
+	Separator    string        // --sep: command separator (default "|")
+	Verbose      bool          // --verbose: show intermediate steps
+	VarName      string        // --var: variable name for output substitution (default "OUT")
 }
 
 // Result represents the pipeline execution result
@@ -125,11 +125,9 @@ func Run(w io.Writer, args []string, opts Options, registry *CommandRegistry) er
 	result.Output = input.String()
 
 	// Output result
-	if opts.JSON {
-		enc := json.NewEncoder(w)
-		enc.SetIndent("", "  ")
-
-		return enc.Encode(result)
+	f := output.New(w, opts.OutputFormat)
+	if f.IsJSON() {
+		return f.Print(result)
 	}
 
 	if !opts.Verbose {
@@ -534,11 +532,9 @@ func RunWithInput(w io.Writer, input string, args []string, opts Options, regist
 
 	result.Output = inputBuf.String()
 
-	if opts.JSON {
-		enc := json.NewEncoder(w)
-		enc.SetIndent("", "  ")
-
-		return enc.Encode(result)
+	f := output.New(w, opts.OutputFormat)
+	if f.IsJSON() {
+		return f.Print(result)
 	}
 
 	if !opts.Verbose {

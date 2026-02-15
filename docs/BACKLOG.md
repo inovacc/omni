@@ -24,27 +24,24 @@ See CLAUDE.md for the full command inventory.
 ### Core Infrastructure
 - [ ] Unified `Command` interface contract
 - [ ] Consistent error model with exit codes
-- [ ] Add `--json` flag to remaining commands that lack it
-- [ ] Unified output formatter (text/json/table)
+- [x] Add `--json` flag to remaining commands that lack it
+- [x] Unified output formatter (text/json/table)
 
 ---
 
 ## Medium Priority (P1)
 
-### Data Formatting
-- [ ] `yaml fmt` - YAML formatter/beautifier
-  - Consistent indentation, key sorting, quote normalization
-- [ ] `yaml k8s` - Kubernetes YAML formatter
-  - Standard key ordering (apiVersion, kind, metadata, spec, status)
-  - Multi-document support, remove empty fields
+### Data Formatting ✅
+- [x] `yaml fmt` - YAML formatter/beautifier (indentation, key sorting, remove empty)
+- [x] `yaml k8s` - Kubernetes YAML formatter (standard key ordering, multi-document)
 
-### GitHub Hacks
-- [ ] `gh-pr-checkout` - Checkout PR by number
-- [ ] `gh-pr-diff` - Show PR diff locally
-- [ ] `gh-pr-approve` - Quick approve PR
-- [ ] `gh-issue-mine` - List issues assigned to me
-- [ ] `gh-repo-clone-org` - Clone all repos from org
-- [ ] `gh-actions-rerun` - Rerun failed workflow
+### GitHub Hacks ✅
+- [x] `gh-pr-checkout` - Checkout PR by number
+- [x] `gh-pr-diff` - Show PR diff locally
+- [x] `gh-pr-approve` - Quick approve PR
+- [x] `gh-issue-mine` - List issues assigned to me
+- [x] `gh-repo-clone-org` - Clone all repos from org
+- [x] `gh-actions-rerun` - Rerun failed workflow
 
 ### Cloud & DevOps Integrations
 
@@ -68,17 +65,16 @@ See CLAUDE.md for the full command inventory.
 ## Medium-Low Priority (P1.5)
 
 ### Video Enhancements
-- [ ] `omni video ydl <ID>` / `omni video id <ID>` — shortcut to download by video ID instead of full URL
-  - Also support `omni video download <ID>` resolving to `https://youtube.com/watch?v=<ID>`
-  - Add `--description` flag to include video description in output/sidecar
+- [x] `omni video download <ID>` — shortcut to download by bare 11-char YouTube ID (auto-resolves to full URL)
+- [ ] Add `--description` flag to include video description in output/sidecar
 
 ### Tree Enhancements
 - [ ] `omni tree` optimize with multi-analyzer architecture
   - Spawn multiple analyzers writing to temp files, then assemble final structure
   - Add `--longest-path` flag to find and display the longest path in the tree
 
-### Curl Enhancements
-- [ ] `omni curl --json <url>` — flag to indicate the response is JSON (pretty-print, parse, colorize)
+### Curl Enhancements ✅
+- [x] `omni curl --json <url>` — auto-pretty-print JSON responses via global `--json` flag
 
 ### Tool Analysis & Enhancement
 - [ ] Audit all 155+ tools for consistency, missing features, edge cases

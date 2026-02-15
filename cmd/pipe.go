@@ -69,7 +69,7 @@ Supported commands include all omni commands:
   base64, hex, json, jq, yq, curl, and many more.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		opts := pipe.Options{}
-		opts.JSON, _ = cmd.Flags().GetBool("json")
+		opts.OutputFormat = getOutputOpts(cmd).GetFormat()
 		opts.Separator, _ = cmd.Flags().GetString("sep")
 		opts.Verbose, _ = cmd.Flags().GetBool("verbose")
 		opts.VarName, _ = cmd.Flags().GetString("var")
@@ -104,7 +104,6 @@ Supported commands include all omni commands:
 func init() {
 	rootCmd.AddCommand(pipeCmd)
 
-	pipeCmd.Flags().Bool("json", false, "output result as JSON with metadata")
 	pipeCmd.Flags().StringP("sep", "s", "|", "command separator")
 	pipeCmd.Flags().BoolP("verbose", "v", false, "show intermediate results")
 	pipeCmd.Flags().String("var", "OUT", "variable name for output substitution (default: OUT)")

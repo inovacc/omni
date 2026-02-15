@@ -8,14 +8,17 @@ import (
 	osexec "os/exec"
 	"strings"
 	"text/tabwriter"
+
+	"github.com/inovacc/omni/internal/cli/output"
 )
 
 // Options configures the exec behavior.
 type Options struct {
-	Force    bool // skip credential checks
-	Strict   bool // abort if credentials missing
-	DryRun   bool // show checks without executing
-	NoPrompt bool // don't prompt, just warn and proceed
+	Force        bool          // skip credential checks
+	Strict       bool          // abort if credentials missing
+	DryRun       bool          // show checks without executing
+	NoPrompt     bool          // don't prompt, just warn and proceed
+	OutputFormat output.Format // output format (text/json)
 }
 
 // Run executes a command with pre-flight credential detection.
@@ -40,6 +43,10 @@ func Run(w io.Writer, command string, args []string, opts Options) error {
 	}
 
 	if opts.DryRun {
+		f := output.New(w, opts.OutputFormat)
+		if f.IsJSON() {
+			return f.Print(buildDryRunResult(command, args, results))
+		}
 		printResults(w, command, args, results)
 		return nil
 	}
@@ -103,6 +110,37 @@ func printResults(w io.Writer, command string, args []string, results []Credenti
 		_, _ = fmt.Fprintf(tw, "%s\t%s\t%s\n", r.Tool, status, details)
 	}
 	_ = tw.Flush()
+}
+
+// DryRunResult represents dry-run output for JSON mode
+type DryRunResult struct {
+	Command string            `json:"command"`
+	Args    []string          `json:"args,omitempty"`
+	Checks  []CredentialCheck `json:"checks"`
+}
+
+// CredentialCheck represents a single credential check result
+type CredentialCheck struct {
+	Tool       string   `json:"tool"`
+	Status     string   `json:"status"`
+	Missing    []string `json:"missing,omitempty"`
+	Suggestion string   `json:"suggestion,omitempty"`
+}
+
+func buildDryRunResult(command string, args []string, results []CredentialStatus) DryRunResult {
+	r := DryRunResult{Command: command, Args: args}
+	for _, s := range results {
+		check := CredentialCheck{Tool: s.Tool}
+		if s.Present {
+			check.Status = "ok"
+		} else {
+			check.Status = "missing"
+			check.Missing = s.Missing
+			check.Suggestion = s.Suggestion
+		}
+		r.Checks = append(r.Checks, check)
+	}
+	return r
 }
 
 func printMissing(w io.Writer, missing []CredentialStatus) {
