@@ -26,9 +26,9 @@ import (
 	"net/http/httptest"
 	"sync"
 
+	"connectrpc.com/connect"
 	"github.com/inovacc/omni/pkg/buf/internal/app"
 	"github.com/inovacc/omni/pkg/buf/internal/app/appext"
-	"connectrpc.com/connect"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/protoencoding"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/verbose"
 	"google.golang.org/protobuf/proto"

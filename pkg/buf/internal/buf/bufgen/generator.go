@@ -22,6 +22,7 @@ import (
 	"path/filepath"
 	"sort"
 
+	connect "connectrpc.com/connect"
 	"github.com/inovacc/omni/pkg/buf/internal/app"
 	"github.com/inovacc/omni/pkg/buf/internal/buf/bufprotopluginexec"
 	bufconfig2 "github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufconfig"
@@ -32,7 +33,6 @@ import (
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufprotoplugin/bufprotopluginos"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufremoteplugin"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufremoteplugin/bufremotepluginref"
-	connect "connectrpc.com/connect"
 	"github.com/inovacc/omni/pkg/buf/internal/gen/proto/connect/buf/alpha/registry/v1alpha1/registryv1alpha1connect"
 	"github.com/inovacc/omni/pkg/buf/internal/gen/proto/go/buf/alpha/registry/v1alpha1"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/connectclient"

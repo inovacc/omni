@@ -18,8 +18,8 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufparse"
 	"connectrpc.com/connect"
+	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufparse"
 )
 
 var (

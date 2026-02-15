@@ -28,8 +28,8 @@ import (
 	"github.com/inovacc/omni/pkg/buf/internal/protocompile/parser"
 	"github.com/inovacc/omni/pkg/buf/internal/protocompile/reporter"
 	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
-	xurls "mvdan.cc/xurls/v2"
 	"go.lsp.dev/protocol"
+	xurls "mvdan.cc/xurls/v2"
 )
 
 const (

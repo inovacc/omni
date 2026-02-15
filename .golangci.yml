@@ -3,21 +3,15 @@ version: "2"
 run:
   timeout: 10m
   tests: false
-  skip-dirs:
-    - "^pkg[\\\\/]buf"
-  skip-dirs-use-default: false
 
 linters:
   default: none
   enable:
     - govet
-
-exclusions:
-  generated: lax
-  presets:
-    - comments
-    - std-error-handling
-  rules:
-    - path: "^pkg[\\\\/]buf[\\\\/]"
-      linters:
-        - govet
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - std-error-handling
+    paths:
+      - "pkg/buf"

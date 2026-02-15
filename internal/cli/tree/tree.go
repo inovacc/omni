@@ -16,24 +16,24 @@ import (
 
 // TreeOptions configures the tree command behavior
 type TreeOptions struct {
-	All         bool     // -a: show hidden files
-	DirsOnly    bool     // -d: show only directories
-	Depth       int      // --depth: maximum depth (-1 for unlimited)
-	Ignore      []string // -i: patterns to ignore
-	NoDirSlash  bool     // don't add trailing slash to directories
-	Stats       bool     // -s: show statistics
-	Hash        bool     // --hash: show file hashes
+	All          bool          // -a: show hidden files
+	DirsOnly     bool          // -d: show only directories
+	Depth        int           // --depth: maximum depth (-1 for unlimited)
+	Ignore       []string      // -i: patterns to ignore
+	NoDirSlash   bool          // don't add trailing slash to directories
+	Stats        bool          // -s: show statistics
+	Hash         bool          // --hash: show file hashes
 	JSON         bool          // -j: output as JSON (local flag, kept for -j shorthand)
 	JSONStream   bool          // --json-stream: streaming NDJSON output
 	OutputFormat output.Format // global output format
 	NoColor      bool          // --no-color: disable colors
-	Size        bool     // --size: show file sizes
-	Date        bool     // --date: show modification dates
-	MaxFiles    int      // --max-files: cap total scanned items
-	MaxHashSize int64    // --max-hash-size: skip hashing large files
-	Threads     int      // -t/--threads: parallel workers
-	Compare     []string // --compare: two JSON files to compare
-	DetectMoves bool     // --detect-moves: detect moved files in compare
+	Size         bool          // --size: show file sizes
+	Date         bool          // --date: show modification dates
+	MaxFiles     int           // --max-files: cap total scanned items
+	MaxHashSize  int64         // --max-hash-size: skip hashing large files
+	Threads      int           // -t/--threads: parallel workers
+	Compare      []string      // --compare: two JSON files to compare
+	DetectMoves  bool          // --detect-moves: detect moved files in compare
 }
 
 // RunTree executes the tree command
