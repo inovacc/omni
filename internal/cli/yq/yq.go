@@ -2,12 +2,14 @@ package yq
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"os"
 	"strconv"
 	"strings"
 
+	"github.com/inovacc/omni/internal/cli/cmderr"
 	"github.com/inovacc/omni/internal/cli/jq"
 )
 
@@ -50,7 +52,7 @@ func RunYq(w io.Writer, r io.Reader, args []string, opts YqOptions) error {
 
 		docs, err := parseYAML(string(data))
 		if err != nil {
-			return fmt.Errorf("yq: parse error: %w", err)
+			return cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("yq: parse error: %s", err))
 		}
 
 		inputs = docs
@@ -68,12 +70,15 @@ func RunYq(w io.Writer, r io.Reader, args []string, opts YqOptions) error {
 			}
 
 			if err != nil {
+				if errors.Is(err, os.ErrNotExist) {
+					return cmderr.Wrap(cmderr.ErrNotFound, fmt.Sprintf("yq: %s", err))
+				}
 				return fmt.Errorf("yq: %w", err)
 			}
 
 			docs, err := parseYAML(string(data))
 			if err != nil {
-				return fmt.Errorf("yq: %s: parse error: %w", file, err)
+				return cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("yq: %s: parse error: %s", file, err))
 			}
 
 			inputs = append(inputs, docs...)

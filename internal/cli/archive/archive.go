@@ -5,12 +5,15 @@ import (
 	"archive/zip"
 	"compress/gzip"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/inovacc/omni/internal/cli/cmderr"
 )
 
 // ArchiveOptions configures the archive command behavior
@@ -57,12 +60,12 @@ func RunArchive(w io.Writer, args []string, opts ArchiveOptions) error {
 		return listArchive(w, opts)
 	}
 
-	return fmt.Errorf("archive: must specify -c, -x, or -t")
+	return cmderr.Wrap(cmderr.ErrInvalidInput, "archive: must specify -c, -x, or -t")
 }
 
 func createArchive(w io.Writer, sources []string, opts ArchiveOptions) error {
 	if opts.File == "" {
-		return fmt.Errorf("archive: no output file specified (-f)")
+		return cmderr.Wrap(cmderr.ErrInvalidInput, "archive: no output file specified (-f)")
 	}
 
 	// Determine format from extension
@@ -267,7 +270,7 @@ func createZipArchive(w io.Writer, outFile *os.File, sources []string, opts Arch
 
 func extractArchive(w io.Writer, opts ArchiveOptions) error {
 	if opts.File == "" {
-		return fmt.Errorf("archive: no input file specified (-f)")
+		return cmderr.Wrap(cmderr.ErrInvalidInput, "archive: no input file specified (-f)")
 	}
 
 	isZip := strings.HasSuffix(opts.File, ".zip")
@@ -282,6 +285,9 @@ func extractArchive(w io.Writer, opts ArchiveOptions) error {
 func extractTarArchive(w io.Writer, opts ArchiveOptions) error {
 	f, err := os.Open(opts.File)
 	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return cmderr.Wrap(cmderr.ErrNotFound, fmt.Sprintf("archive: %s", err))
+		}
 		return fmt.Errorf("archive: %w", err)
 	}
 
@@ -453,7 +459,7 @@ func extractZipArchive(w io.Writer, opts ArchiveOptions) error {
 
 func listArchive(w io.Writer, opts ArchiveOptions) error {
 	if opts.File == "" {
-		return fmt.Errorf("archive: no input file specified (-f)")
+		return cmderr.Wrap(cmderr.ErrInvalidInput, "archive: no input file specified (-f)")
 	}
 
 	isZip := strings.HasSuffix(opts.File, ".zip")

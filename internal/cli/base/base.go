@@ -2,10 +2,12 @@ package base
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"io"
 	"os"
 
+	"github.com/inovacc/omni/internal/cli/cmderr"
 	pkgenc "github.com/inovacc/omni/pkg/encoding"
 )
 
@@ -28,6 +30,9 @@ func RunBase64(w io.Writer, args []string, opts BaseOptions) error {
 	} else {
 		f, err := os.Open(args[0])
 		if err != nil {
+			if errors.Is(err, os.ErrNotExist) {
+				return cmderr.Wrap(cmderr.ErrNotFound, fmt.Sprintf("base64: %s", err))
+			}
 			return fmt.Errorf("base64: %w", err)
 		}
 
@@ -74,6 +79,9 @@ func RunBase32(w io.Writer, args []string, opts BaseOptions) error {
 	} else {
 		f, err := os.Open(args[0])
 		if err != nil {
+			if errors.Is(err, os.ErrNotExist) {
+				return cmderr.Wrap(cmderr.ErrNotFound, fmt.Sprintf("base32: %s", err))
+			}
 			return fmt.Errorf("base32: %w", err)
 		}
 
@@ -116,6 +124,9 @@ func RunBase58(w io.Writer, args []string, opts BaseOptions) error {
 	} else {
 		f, err := os.Open(args[0])
 		if err != nil {
+			if errors.Is(err, os.ErrNotExist) {
+				return cmderr.Wrap(cmderr.ErrNotFound, fmt.Sprintf("base58: %s", err))
+			}
 			return fmt.Errorf("base58: %w", err)
 		}
 
