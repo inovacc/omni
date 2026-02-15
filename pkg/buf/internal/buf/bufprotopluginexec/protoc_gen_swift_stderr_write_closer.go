@@ -42,7 +42,6 @@ func (p *protocGenSwiftStderrWriteCloser) Close() error {
 	if len(data) == 0 {
 		return nil
 	}
-
 	newData := bytes.ReplaceAll(
 		data,
 		// If swift-protobuf changes their error message, this may not longer filter properly
@@ -63,15 +62,12 @@ func (p *protocGenSwiftStderrWriteCloser) Close() error {
 	if len(newData) == 0 {
 		return nil
 	}
-
 	n, err := p.delegate.Write(newData)
 	if err != nil {
 		return err
 	}
-
 	if n != len(newData) {
 		return errors.New("incomplete write")
 	}
-
 	return nil
 }

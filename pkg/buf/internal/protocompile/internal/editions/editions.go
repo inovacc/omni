@@ -110,20 +110,16 @@ func ResolveFeature(
 		}
 		// Navigate the fields to find the value
 		var val protoreflect.Value
-
 		for i, field := range fields {
 			if i > 0 {
 				msgRef = val.Message()
 			}
-
 			if !msgRef.Has(field) {
 				val = protoreflect.Value{}
 				break
 			}
-
 			val = msgRef.Get(field)
 		}
-
 		if val.IsValid() {
 			// All fields were set!
 			return val, nil
@@ -134,7 +130,6 @@ func ResolveFeature(
 			// We've reached the end of the inheritance chain.
 			return protoreflect.Value{}, nil
 		}
-
 		element = parent
 	}
 }
@@ -172,7 +167,6 @@ func GetEdition(d protoreflect.Descriptor) descriptorpb.Edition {
 			// and then querying for the edition from that. :/
 			return descriptorpb.Edition_EDITION_UNKNOWN
 		}
-
 		return descriptorpb.Edition(withEdition.Edition())
 	default:
 		return descriptorpb.Edition_EDITION_UNKNOWN
@@ -200,20 +194,16 @@ func GetEditionDefaults(edition descriptorpb.Edition) *descriptorpb.FeatureSet {
 			// defaults for these static, non-extension fields.
 			for i, length := 0, fields.Len(); i < length; i++ {
 				field := fields.Get(i)
-
 				val, err := GetFeatureDefault(edition, FeatureSetType, field)
 				if err != nil {
 					// should we fail somehow??
 					continue
 				}
-
 				defaultsRef.Set(field, val)
 			}
-
 			editionDefaults[edition] = defaults
 		}
 	})
-
 	return editionDefaults[edition]
 }
 
@@ -233,18 +223,14 @@ func GetFeatureDefault(edition descriptorpb.Edition, container protoreflect.Mess
 		// this is most likely impossible except for contrived use cases...
 		return protoreflect.Value{}, fmt.Errorf("options is %T instead of *descriptorpb.FieldOptions", feature.Options())
 	}
-
 	maxEdition := descriptorpb.Edition(-1)
-
 	var maxVal string
-
-	for _, def := range opts.GetEditionDefaults() {
+	for _, def := range opts.EditionDefaults {
 		if def.GetEdition() <= edition && def.GetEdition() > maxEdition {
 			maxEdition = def.GetEdition()
 			maxVal = def.GetValue()
 		}
 	}
-
 	if maxEdition == -1 {
 		// no matching default found
 		return protoreflect.Value{}, fmt.Errorf("no relevant default for edition %s", edition)
@@ -257,12 +243,10 @@ func GetFeatureDefault(edition descriptorpb.Edition, container protoreflect.Mess
 	// array or map literal syntax to worry about.)
 	if feature.Kind() == protoreflect.MessageKind || feature.Kind() == protoreflect.GroupKind {
 		fldVal := container.Zero().NewField(feature)
-
 		err := unmarshaler.Unmarshal([]byte(maxVal), fldVal.Message().Interface())
 		if err != nil {
 			return protoreflect.Value{}, err
 		}
-
 		return fldVal, nil
 	}
 	// The value is the textformat for the field. But prototext doesn't provide a way
@@ -273,22 +257,17 @@ func GetFeatureDefault(edition descriptorpb.Edition, container protoreflect.Mess
 	} else {
 		maxVal = fmt.Sprintf("%s: %s", feature.Name(), maxVal)
 	}
-
 	empty := container.New()
-
 	err := unmarshaler.Unmarshal([]byte(maxVal), empty.Interface())
 	if err != nil {
 		return protoreflect.Value{}, err
 	}
-
 	return empty.Get(feature), nil
 }
 
 func adaptFeatureSet(msg *descriptorpb.FeatureSet, field protoreflect.FieldDescriptor) (protoreflect.Message, error) {
 	msgRef := msg.ProtoReflect()
-
 	var actualField protoreflect.FieldDescriptor
-
 	switch {
 	case field.IsExtension():
 		// Extensions can be used directly with the feature set, even if
@@ -303,7 +282,6 @@ func adaptFeatureSet(msg *descriptorpb.FeatureSet, field protoreflect.FieldDescr
 			// let's try to parse the unrecognized bytes, just in case they contain
 			// this extension.
 			temp := &descriptorpb.FeatureSet{}
-
 			unmarshaler := proto.UnmarshalOptions{
 				AllowPartial: true,
 				Resolver:     resolverForExtension{field},
@@ -311,7 +289,6 @@ func adaptFeatureSet(msg *descriptorpb.FeatureSet, field protoreflect.FieldDescr
 			if err := unmarshaler.Unmarshal(msgRef.GetUnknown(), temp); err != nil {
 				return nil, fmt.Errorf("failed to parse unrecognized fields of FeatureSet: %w", err)
 			}
-
 			return temp.ProtoReflect(), nil
 		}
 	case field.ContainingMessage() == FeatureSetDescriptor:
@@ -331,15 +308,12 @@ func adaptFeatureSet(msg *descriptorpb.FeatureSet, field protoreflect.FieldDescr
 	if actualField != nil && msgRef.Has(actualField) {
 		subset := &descriptorpb.FeatureSet{}
 		subset.ProtoReflect().Set(actualField, msgRef.Get(actualField))
-
 		var err error
-
 		data, err = proto.MarshalOptions{AllowPartial: true}.MarshalAppend(data, subset)
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal FeatureSet field %s to bytes: %w", field.Name(), err)
 		}
 	}
-
 	if len(data) == 0 {
 		// No relevant data to copy over, so we can just return
 		// a zero value message
@@ -353,7 +327,6 @@ func adaptFeatureSet(msg *descriptorpb.FeatureSet, field protoreflect.FieldDescr
 	if err := (proto.UnmarshalOptions{AllowPartial: true}).Unmarshal(data, other); err != nil {
 		return nil, fmt.Errorf("failed to marshal FeatureSet field %s to bytes: %w", field.Name(), err)
 	}
-
 	return other, nil
 }
 
@@ -373,7 +346,6 @@ func (r resolverForExtension) FindExtensionByName(field protoreflect.FullName) (
 	if field == r.ext.FullName() {
 		return asExtensionType(r.ext), nil
 	}
-
 	return nil, protoregistry.NotFound
 }
 
@@ -381,7 +353,6 @@ func (r resolverForExtension) FindExtensionByNumber(message protoreflect.FullNam
 	if message == r.ext.ContainingMessage().FullName() && field == r.ext.Number() {
 		return asExtensionType(r.ext), nil
 	}
-
 	return nil, protoregistry.NotFound
 }
 
@@ -389,13 +360,11 @@ func asExtensionType(ext protoreflect.ExtensionDescriptor) protoreflect.Extensio
 	if xtd, ok := ext.(protoreflect.ExtensionTypeDescriptor); ok {
 		return xtd.Type()
 	}
-
 	return dynamicpb.NewExtensionType(ext)
 }
 
 func computeEditionsRange(minEdition, maxEdition descriptorpb.Edition) map[string]descriptorpb.Edition { //nolint:unparam // minEdition is a parameter that may change
 	supportedEditions := map[string]descriptorpb.Edition{}
-
 	for editionNum := range descriptorpb.Edition_name {
 		edition := descriptorpb.Edition(editionNum)
 		if edition >= minEdition && edition <= maxEdition {
@@ -403,7 +372,6 @@ func computeEditionsRange(minEdition, maxEdition descriptorpb.Edition) map[strin
 			supportedEditions[name] = edition
 		}
 	}
-
 	return supportedEditions
 }
 
@@ -416,7 +384,6 @@ func actualDescriptor(msg protoreflect.Message, ext protoreflect.ExtensionDescri
 		// nothing to match; safe as is
 		return nil
 	}
-
 	val := msg.Get(ext)
 	switch {
 	case ext.IsMap(): // should not actually be possible
@@ -426,12 +393,10 @@ func actualDescriptor(msg protoreflect.Message, ext protoreflect.ExtensionDescri
 		}
 		// We know msg.Has(field) is true, from above, so there's at least one entry.
 		var matches bool
-
 		val.Map().Range(func(_ protoreflect.MapKey, val protoreflect.Value) bool {
 			matches = val.Message().Descriptor() == expectedDescriptor
 			return false
 		})
-
 		if matches {
 			return nil
 		}
@@ -451,15 +416,12 @@ func actualDescriptor(msg protoreflect.Message, ext protoreflect.ExtensionDescri
 	// one can query the associated message descriptor. But for extensions, we
 	// have to do the slow thing, and range through all fields looking for it.
 	var actualField protoreflect.FieldDescriptor
-
 	msg.Range(func(fd protoreflect.FieldDescriptor, _ protoreflect.Value) bool {
 		if fd.Number() == ext.Number() {
 			actualField = fd
 			return false
 		}
-
 		return true
 	})
-
 	return actualField
 }

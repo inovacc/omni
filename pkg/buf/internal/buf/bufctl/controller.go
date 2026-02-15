@@ -258,11 +258,9 @@ func newController(
 	for _, option := range options {
 		option(controller)
 	}
-
 	if err := validateFileAnnotationErrorFormat(controller.fileAnnotationErrorFormat); err != nil {
 		return nil, err
 	}
-
 	controller.storageosProvider = newStorageosProvider(controller.disableSymlinks)
 	controller.buffetchRefParser = buffetch.NewRefParser(logger)
 	controller.buffetchReader = buffetch.NewReader(
@@ -288,7 +286,6 @@ func newController(
 	controller.workspaceDepManagerProvider = bufworkspace2.NewWorkspaceDepManagerProvider(
 		logger,
 	)
-
 	return controller, nil
 }
 
@@ -298,17 +295,14 @@ func (c *controller) GetWorkspace(
 	options ...FunctionOption,
 ) (_ bufworkspace2.Workspace, retErr error) {
 	defer c.handleFileAnnotationSetRetError(&retErr)
-
 	functionOptions := newFunctionOptions(c)
 	for _, option := range options {
 		option(functionOptions)
 	}
-
 	sourceOrModuleRef, err := c.buffetchRefParser.GetSourceOrModuleRef(ctx, sourceOrModuleInput)
 	if err != nil {
 		return nil, err
 	}
-
 	switch t := sourceOrModuleRef.(type) {
 	case buffetch.ProtoFileRef:
 		return c.getWorkspaceForProtoFileRef(ctx, t, functionOptions)
@@ -328,17 +322,14 @@ func (c *controller) GetWorkspaceDepManager(
 	options ...FunctionOption,
 ) (_ bufworkspace2.WorkspaceDepManager, retErr error) {
 	defer c.handleFileAnnotationSetRetError(&retErr)
-
 	functionOptions := newFunctionOptions(c)
 	for _, option := range options {
 		option(functionOptions)
 	}
-
 	dirRef, err := c.buffetchRefParser.GetDirRef(ctx, dirPath)
 	if err != nil {
 		return nil, err
 	}
-
 	return c.getWorkspaceDepManagerForDirRef(ctx, dirRef, functionOptions)
 }
 
@@ -348,12 +339,10 @@ func (c *controller) GetImage(
 	options ...FunctionOption,
 ) (_ bufimage.Image, retErr error) {
 	defer c.handleFileAnnotationSetRetError(&retErr)
-
 	functionOptions := newFunctionOptions(c)
 	for _, option := range options {
 		option(functionOptions)
 	}
-
 	return c.getImage(ctx, input, functionOptions)
 }
 
@@ -363,12 +352,10 @@ func (c *controller) GetImageForInputConfig(
 	options ...FunctionOption,
 ) (_ bufimage.Image, retErr error) {
 	defer c.handleFileAnnotationSetRetError(&retErr)
-
 	functionOptions := newFunctionOptions(c)
 	for _, option := range options {
 		option(functionOptions)
 	}
-
 	return c.getImageForInputConfig(ctx, inputConfig, functionOptions)
 }
 
@@ -378,12 +365,10 @@ func (c *controller) GetImageForWorkspace(
 	options ...FunctionOption,
 ) (_ bufimage.Image, retErr error) {
 	defer c.handleFileAnnotationSetRetError(&retErr)
-
 	functionOptions := newFunctionOptions(c)
 	for _, option := range options {
 		option(functionOptions)
 	}
-
 	return c.getImageForWorkspace(ctx, workspace, functionOptions)
 }
 
@@ -394,19 +379,15 @@ func (c *controller) GetTargetImageWithConfigsAndCheckClient(
 	options ...FunctionOption,
 ) (_ []ImageWithConfig, _ bufcheck.Client, retErr error) {
 	defer c.handleFileAnnotationSetRetError(&retErr)
-
 	functionOptions := newFunctionOptions(c)
 	for _, option := range options {
 		option(functionOptions)
 	}
-
 	ref, err := c.buffetchRefParser.GetRef(ctx, input)
 	if err != nil {
 		return nil, nil, err
 	}
-
 	var workspace bufworkspace2.Workspace
-
 	switch t := ref.(type) {
 	case buffetch.ProtoFileRef:
 		workspace, err = c.getWorkspaceForProtoFileRef(ctx, t, functionOptions)
@@ -428,7 +409,6 @@ func (c *controller) GetTargetImageWithConfigsAndCheckClient(
 		if err != nil {
 			return nil, nil, err
 		}
-
 		bucket, err := c.storageosProvider.NewReadWriteBucket(
 			".",
 			storageos.ReadWriteBucketWithSymlinksIfSupported(),
@@ -436,10 +416,8 @@ func (c *controller) GetTargetImageWithConfigsAndCheckClient(
 		if err != nil {
 			return nil, nil, err
 		}
-
 		lintConfig := bufconfig2.DefaultLintConfigV1
 		breakingConfig := bufconfig2.DefaultBreakingConfigV1
-
 		var (
 			pluginConfigs            []bufconfig2.PluginConfig
 			policyConfigs            []bufconfig2.PolicyConfig
@@ -448,7 +426,6 @@ func (c *controller) GetTargetImageWithConfigsAndCheckClient(
 			policyPluginKeyProvider  = bufpolicy2.NopPolicyPluginKeyProvider
 			policyPluginDataProvider = bufpolicy2.NopPolicyPluginDataProvider
 		)
-
 		bufYAMLFile, err := bufconfig2.GetBufYAMLFileForPrefixOrOverride(
 			ctx,
 			bucket,
@@ -472,7 +449,6 @@ func (c *controller) GetTargetImageWithConfigsAndCheckClient(
 			} else {
 				lintConfig = topLevelLintConfig
 			}
-
 			if topLevelBreakingConfig := bufYAMLFile.TopLevelBreakingConfig(); topLevelBreakingConfig == nil {
 				if fileVersion := bufYAMLFile.FileVersion(); fileVersion != bufconfig2.FileVersionV2 {
 					return nil, nil, syserror.Newf("non-v2 version with no top-level breaking config: %s", fileVersion)
@@ -502,7 +478,6 @@ func (c *controller) GetTargetImageWithConfigsAndCheckClient(
 					remotePolicyKeys             []bufpolicy2.PolicyKey
 					policyNameToRemotePluginKeys map[string][]bufplugin2.PluginKey
 				)
-
 				if bufLockFile, err := bufconfig2.GetBufLockFileForPrefix(
 					ctx,
 					bucket,
@@ -519,7 +494,6 @@ func (c *controller) GetTargetImageWithConfigsAndCheckClient(
 					remotePolicyKeys = bufLockFile.RemotePolicyKeys()
 					policyNameToRemotePluginKeys = bufLockFile.PolicyNameToRemotePluginKeys()
 				}
-
 				pluginKeyProvider, err = newStaticPluginKeyProviderForPluginConfigs(
 					pluginConfigs,
 					remotePluginKeys,
@@ -527,7 +501,6 @@ func (c *controller) GetTargetImageWithConfigsAndCheckClient(
 				if err != nil {
 					return nil, nil, err
 				}
-
 				policyKeyProvider, err = newStaticPolicyKeyProviderForPolicyConfigs(
 					policyConfigs,
 					remotePolicyKeys,
@@ -535,7 +508,6 @@ func (c *controller) GetTargetImageWithConfigsAndCheckClient(
 				if err != nil {
 					return nil, nil, err
 				}
-
 				policyPluginKeyProvider, err = newStaticPolicyPluginKeyProviderForPolicyConfigs(
 					policyConfigs,
 					policyNameToRemotePluginKeys,
@@ -543,7 +515,6 @@ func (c *controller) GetTargetImageWithConfigsAndCheckClient(
 				if err != nil {
 					return nil, nil, err
 				}
-
 				policyPluginDataProvider, err = newStaticPolicyPluginDataProviderForPolicyConfigs(
 					c.pluginDataProvider,
 					policyConfigs,
@@ -553,7 +524,6 @@ func (c *controller) GetTargetImageWithConfigsAndCheckClient(
 				}
 			}
 		}
-
 		imageWithConfigs := []ImageWithConfig{
 			newImageWithConfig(
 				image,
@@ -565,7 +535,6 @@ func (c *controller) GetTargetImageWithConfigsAndCheckClient(
 				policyConfigs,
 			),
 		}
-
 		checkClient, err := bufcheck.NewClient(
 			c.logger,
 			bufcheck.ClientWithStderr(c.container.Stderr()),
@@ -585,23 +554,19 @@ func (c *controller) GetTargetImageWithConfigsAndCheckClient(
 		if err != nil {
 			return nil, nil, err
 		}
-
 		return imageWithConfigs, checkClient, nil
 	default:
 		// This is a system error.
 		return nil, nil, syserror.Newf("invalid Ref: %T", ref)
 	}
-
 	targetImageWithConfigs, err := c.buildTargetImageWithConfigs(ctx, workspace, functionOptions)
 	if err != nil {
 		return nil, nil, err
 	}
-
 	checkClient, err := c.GetCheckClientForWorkspace(ctx, workspace, wasmRuntime)
 	if err != nil {
 		return nil, nil, err
 	}
-
 	return targetImageWithConfigs, checkClient, err
 }
 
@@ -611,7 +576,6 @@ func (c *controller) GetImportableImageFileInfos(
 	options ...FunctionOption,
 ) (_ []bufimage.ImageFileInfo, retErr error) {
 	defer c.handleFileAnnotationSetRetError(&retErr)
-
 	functionOptions := newFunctionOptions(c)
 	for _, option := range options {
 		option(functionOptions)
@@ -625,26 +589,22 @@ func (c *controller) GetImportableImageFileInfos(
 	if err != nil {
 		return nil, err
 	}
-
 	var imageFileInfos []bufimage.ImageFileInfo
 	// For images, we want to get a bucket with no local paths. For everything else,
 	// we want to get a bucket with local paths. datawkt.ReadBucket will result in
 	// no local paths, otherwise we get the bucket from the bufwktstore.Store to
 	// get local paths.
 	wktBucket := datawkt.ReadBucket
-
 	switch t := ref.(type) {
 	case buffetch.ProtoFileRef:
 		workspace, err := c.getWorkspaceForProtoFileRef(ctx, t, functionOptions)
 		if err != nil {
 			return nil, err
 		}
-
 		imageFileInfos, err = getImageFileInfosForModuleSet(ctx, workspace)
 		if err != nil {
 			return nil, err
 		}
-
 		wktBucket, err = c.wktStore.GetBucket(ctx)
 		if err != nil {
 			return nil, err
@@ -654,12 +614,10 @@ func (c *controller) GetImportableImageFileInfos(
 		if err != nil {
 			return nil, err
 		}
-
 		imageFileInfos, err = getImageFileInfosForModuleSet(ctx, workspace)
 		if err != nil {
 			return nil, err
 		}
-
 		wktBucket, err = c.wktStore.GetBucket(ctx)
 		if err != nil {
 			return nil, err
@@ -669,12 +627,10 @@ func (c *controller) GetImportableImageFileInfos(
 		if err != nil {
 			return nil, err
 		}
-
 		imageFileInfos, err = getImageFileInfosForModuleSet(ctx, workspace)
 		if err != nil {
 			return nil, err
 		}
-
 		wktBucket, err = c.wktStore.GetBucket(ctx)
 		if err != nil {
 			return nil, err
@@ -684,9 +640,7 @@ func (c *controller) GetImportableImageFileInfos(
 		if err != nil {
 			return nil, err
 		}
-
 		imageFiles := image.Files()
-
 		imageFileInfos = make([]bufimage.ImageFileInfo, len(imageFiles))
 		for i, imageFile := range imageFiles {
 			imageFileInfos[i] = imageFile
@@ -695,7 +649,6 @@ func (c *controller) GetImportableImageFileInfos(
 		// This is a system error.
 		return nil, syserror.Newf("invalid Ref: %T", ref)
 	}
-
 	imageFileInfos, err = bufimage.AppendWellKnownTypeImageFileInfos(
 		ctx,
 		wktBucket,
@@ -704,14 +657,12 @@ func (c *controller) GetImportableImageFileInfos(
 	if err != nil {
 		return nil, err
 	}
-
 	sort.Slice(
 		imageFileInfos,
 		func(i int, j int) bool {
 			return imageFileInfos[i].Path() < imageFileInfos[j].Path()
 		},
 	)
-
 	return imageFileInfos, nil
 }
 
@@ -722,7 +673,6 @@ func (c *controller) PutImage(
 	options ...FunctionOption,
 ) (retErr error) {
 	defer c.handleFileAnnotationSetRetError(&retErr)
-
 	functionOptions := newFunctionOptions(c)
 	for _, option := range options {
 		option(functionOptions)
@@ -730,7 +680,6 @@ func (c *controller) PutImage(
 	// Must be messageRefParser NOT c.buffetchRefParser as a NewMessageRefParser
 	// defaults to a defaultMessageEncoding and not dir.
 	messageRefParser := buffetch.NewMessageRefParser(c.logger)
-
 	messageRef, err := messageRefParser.GetMessageRef(ctx, imageOutput)
 	if err != nil {
 		return err
@@ -739,17 +688,14 @@ func (c *controller) PutImage(
 	if messageRef.IsNull() {
 		return nil
 	}
-
 	marshaler, err := newProtoencodingMarshaler(image, messageRef)
 	if err != nil {
 		return err
 	}
-
 	putImage, err := filterImage(image, functionOptions, false)
 	if err != nil {
 		return err
 	}
-
 	var putMessage proto.Message
 	if functionOptions.imageAsFileDescriptorSet {
 		putMessage = bufimage.ImageToFileDescriptorSet(putImage)
@@ -759,23 +705,18 @@ func (c *controller) PutImage(
 			return err
 		}
 	}
-
 	data, err := marshaler.Marshal(putMessage)
 	if err != nil {
 		return err
 	}
-
 	writeCloser, err := c.buffetchWriter.PutMessageFile(ctx, c.container, messageRef)
 	if err != nil {
 		return err
 	}
-
 	defer func() {
 		retErr = errors.Join(retErr, writeCloser.Close())
 	}()
-
 	_, err = writeCloser.Write(data)
-
 	return err
 }
 
@@ -788,7 +729,6 @@ func (c *controller) GetMessage(
 	options ...FunctionOption,
 ) (_ proto.Message, _ buffetch.MessageEncoding, retErr error) {
 	defer c.handleFileAnnotationSetRetError(&retErr)
-
 	functionOptions := newFunctionOptions(c)
 	for _, option := range options {
 		option(functionOptions)
@@ -801,30 +741,23 @@ func (c *controller) GetMessage(
 			defaultMessageEncoding,
 		),
 	)
-
 	messageRef, err := messageRefParser.GetMessageRef(ctx, messageInput)
 	if err != nil {
 		return nil, 0, err
 	}
-
 	messageEncoding := messageRef.MessageEncoding()
 	if messageRef.IsNull() {
 		return nil, messageEncoding, nil
 	}
-
 	var validator protoyaml.Validator
-
 	if functionOptions.messageValidation {
 		protovalidateValidator, err := protovalidate.New()
 		if err != nil {
 			return nil, 0, err
 		}
-
 		validator = yamlValidator{protovalidateValidator}
 	}
-
 	var unmarshaler protoencoding.Unmarshaler
-
 	switch messageEncoding {
 	case buffetch.MessageEncodingBinpb:
 		unmarshaler = protoencoding.NewWireUnmarshaler(schemaImage.Resolver())
@@ -844,32 +777,26 @@ func (c *controller) GetMessage(
 		// This is a system error.
 		return nil, 0, syserror.Newf("unknown MessageEncoding: %v", messageEncoding)
 	}
-
 	readCloser, err := c.buffetchReader.GetMessageFile(ctx, c.container, messageRef)
 	if err != nil {
 		return nil, 0, err
 	}
-
 	data, err := xio.ReadAllAndClose(readCloser)
 	if err != nil {
 		return nil, 0, err
 	}
-
 	message, err := bufreflect.NewMessage(ctx, schemaImage, typeName)
 	if err != nil {
 		return nil, 0, err
 	}
-
 	if err := unmarshaler.Unmarshal(data, message); err != nil {
 		return nil, 0, err
 	}
-
 	if validator != nil {
 		if err := validator.Validate(message); err != nil {
 			return nil, 0, err
 		}
 	}
-
 	return message, messageEncoding, nil
 }
 
@@ -882,7 +809,6 @@ func (c *controller) PutMessage(
 	options ...FunctionOption,
 ) (retErr error) {
 	defer c.handleFileAnnotationSetRetError(&retErr)
-
 	functionOptions := newFunctionOptions(c)
 	for _, option := range options {
 		option(functionOptions)
@@ -895,33 +821,26 @@ func (c *controller) PutMessage(
 			defaultMessageEncoding,
 		),
 	)
-
 	messageRef, err := messageRefParser.GetMessageRef(ctx, messageOutput)
 	if err != nil {
 		return err
 	}
-
 	if messageRef.IsNull() {
 		return nil
 	}
-
 	marshaler, err := newProtoencodingMarshaler(schemaImage, messageRef)
 	if err != nil {
 		return err
 	}
-
 	data, err := marshaler.Marshal(message)
 	if err != nil {
 		return err
 	}
-
 	writeCloser, err := c.buffetchWriter.PutMessageFile(ctx, c.container, messageRef)
 	if err != nil {
 		return err
 	}
-
 	_, err = writeCloser.Write(data)
-
 	return errors.Join(err, writeCloser.Close())
 }
 
@@ -937,7 +856,6 @@ func (c *controller) GetCheckClientForWorkspace(
 	if err != nil {
 		return nil, err
 	}
-
 	policyKeyProvider, err := newStaticPolicyKeyProviderForPolicyConfigs(
 		workspace.PolicyConfigs(),
 		workspace.RemotePolicyKeys(),
@@ -945,7 +863,6 @@ func (c *controller) GetCheckClientForWorkspace(
 	if err != nil {
 		return nil, err
 	}
-
 	policyPluginKeyProvider, err := newStaticPolicyPluginKeyProviderForPolicyConfigs(
 		workspace.PolicyConfigs(),
 		workspace.PolicyNameToRemotePluginKeys(),
@@ -953,7 +870,6 @@ func (c *controller) GetCheckClientForWorkspace(
 	if err != nil {
 		return nil, err
 	}
-
 	policyPluginDataProvider, err := newStaticPolicyPluginDataProviderForPolicyConfigs(
 		c.pluginDataProvider,
 		workspace.PolicyConfigs(),
@@ -961,7 +877,6 @@ func (c *controller) GetCheckClientForWorkspace(
 	if err != nil {
 		return nil, err
 	}
-
 	return bufcheck.NewClient(
 		c.logger,
 		bufcheck.ClientWithStderr(c.container.Stderr()),
@@ -992,7 +907,6 @@ func (c *controller) getImage(
 	if err != nil {
 		return nil, err
 	}
-
 	return c.getImageForRef(ctx, ref, functionOptions)
 }
 
@@ -1005,7 +919,6 @@ func (c *controller) getImageForInputConfig(
 	if err != nil {
 		return nil, err
 	}
-
 	return c.getImageForRef(ctx, ref, functionOptions)
 }
 
@@ -1020,21 +933,18 @@ func (c *controller) getImageForRef(
 		if err != nil {
 			return nil, err
 		}
-
 		return c.getImageForWorkspace(ctx, workspace, functionOptions)
 	case buffetch.SourceRef:
 		workspace, err := c.getWorkspaceForSourceRef(ctx, t, functionOptions)
 		if err != nil {
 			return nil, err
 		}
-
 		return c.getImageForWorkspace(ctx, workspace, functionOptions)
 	case buffetch.ModuleRef:
 		workspace, err := c.getWorkspaceForModuleRef(ctx, t, functionOptions)
 		if err != nil {
 			return nil, err
 		}
-
 		return c.getImageForWorkspace(ctx, workspace, functionOptions)
 	case buffetch.MessageRef:
 		return c.getImageForMessageRef(ctx, t, functionOptions)
@@ -1057,11 +967,9 @@ func (c *controller) getImageForWorkspace(
 	if err != nil {
 		return nil, err
 	}
-
 	if err := c.warnUnconfiguredTransitiveImports(ctx, workspace, image); err != nil {
 		return nil, err
 	}
-
 	return image, nil
 }
 
@@ -1077,7 +985,6 @@ func (c *controller) getWorkspaceForProtoFileRef(
 		// TODO FUTURE: Feed flag names through to here.
 		return nil, fmt.Errorf("--path is not valid for use with .proto file references")
 	}
-
 	if len(functionOptions.targetExcludePaths) > 0 {
 		// Even though we didn't have an explicit error case, this never actually worked
 		// properly in the pre-refactor buf CLI. We're going to call it unusable and this
@@ -1085,7 +992,6 @@ func (c *controller) getWorkspaceForProtoFileRef(
 		// TODO FUTURE: Feed flag names through to here.
 		return nil, fmt.Errorf("--exclude-path is not valid for use with .proto file references")
 	}
-
 	readBucketCloser, bucketTargeting, err := c.buffetchReader.GetSourceReadBucketCloser(
 		ctx,
 		c.container,
@@ -1095,11 +1001,9 @@ func (c *controller) getWorkspaceForProtoFileRef(
 	if err != nil {
 		return nil, err
 	}
-
 	defer func() {
 		retErr = errors.Join(retErr, readBucketCloser.Close())
 	}()
-
 	options := []bufworkspace2.WorkspaceBucketOption{
 		bufworkspace2.WithProtoFileTargetPath(
 			protoFileRef.ProtoFilePath(),
@@ -1115,7 +1019,6 @@ func (c *controller) getWorkspaceForProtoFileRef(
 			bufworkspace2.WithIgnoreAndDisallowV1BufWorkYAMLs(),
 		)
 	}
-
 	return c.workspaceProvider.GetWorkspaceForBucket(
 		ctx,
 		readBucketCloser,
@@ -1138,11 +1041,9 @@ func (c *controller) getWorkspaceForSourceRef(
 	if err != nil {
 		return nil, err
 	}
-
 	defer func() {
 		retErr = errors.Join(retErr, readBucketCloser.Close())
 	}()
-
 	options := []bufworkspace2.WorkspaceBucketOption{
 		bufworkspace2.WithConfigOverride(
 			functionOptions.configOverride,
@@ -1154,7 +1055,6 @@ func (c *controller) getWorkspaceForSourceRef(
 			bufworkspace2.WithIgnoreAndDisallowV1BufWorkYAMLs(),
 		)
 	}
-
 	return c.workspaceProvider.GetWorkspaceForBucket(
 		ctx,
 		readBucketCloser,
@@ -1195,7 +1095,6 @@ func (c *controller) getWorkspaceForModuleRef(
 	if err != nil {
 		return nil, err
 	}
-
 	return c.workspaceProvider.GetWorkspaceForModuleKey(
 		ctx,
 		moduleKey,
@@ -1218,18 +1117,15 @@ func (c *controller) getImageForMessageRef(
 	if err != nil {
 		return nil, err
 	}
-
 	defer func() {
 		retErr = errors.Join(retErr, readCloser.Close())
 	}()
-
 	data, err := io.ReadAll(readCloser)
 	if err != nil {
 		return nil, err
 	}
 
 	protoImage := &imagev1.Image{}
-
 	var imageFromProtoOptions []bufimage.NewImageForProtoOption
 
 	switch messageEncoding := messageRef.MessageEncoding(); messageEncoding {
@@ -1244,7 +1140,6 @@ func (c *controller) getImageForMessageRef(
 		if err != nil {
 			return nil, err
 		}
-
 		if err := protoencoding.NewJSONUnmarshaler(resolver).Unmarshal(data, protoImage); err != nil {
 			return nil, err
 		}
@@ -1255,7 +1150,6 @@ func (c *controller) getImageForMessageRef(
 		if err != nil {
 			return nil, err
 		}
-
 		if err := protoencoding.NewTxtpbUnmarshaler(resolver).Unmarshal(data, protoImage); err != nil {
 			return nil, err
 		}
@@ -1267,7 +1161,6 @@ func (c *controller) getImageForMessageRef(
 		if err != nil {
 			return nil, err
 		}
-
 		if err := protoencoding.NewYAMLUnmarshaler(resolver).Unmarshal(data, protoImage); err != nil {
 			return nil, err
 		}
@@ -1288,7 +1181,6 @@ func (c *controller) getImageForMessageRef(
 	if err != nil {
 		return nil, err
 	}
-
 	return filterImage(image, functionOptions, false)
 }
 
@@ -1301,7 +1193,6 @@ func (c *controller) buildImage(
 	if functionOptions.imageExcludeSourceInfo {
 		options = append(options, bufimage.WithExcludeSourceCodeInfo())
 	}
-
 	image, err := bufimage.BuildImage(
 		ctx,
 		c.logger,
@@ -1311,7 +1202,6 @@ func (c *controller) buildImage(
 	if err != nil {
 		return nil, err
 	}
-
 	return filterImage(image, functionOptions, true)
 }
 
@@ -1323,7 +1213,6 @@ func (c *controller) buildTargetImageWithConfigs(
 	functionOptions *functionOptions,
 ) ([]ImageWithConfig, error) {
 	modules := bufmodule2.ModuleSetTargetModules(workspace)
-
 	imageWithConfigs := make([]ImageWithConfig, 0, len(modules))
 	for _, module := range modules {
 		c.logger.DebugContext(
@@ -1345,7 +1234,6 @@ func (c *controller) buildTargetImageWithConfigs(
 		// Build image will use the target info to build the image for the specific
 		// module. Non-targeted modules will not be included in the image.
 		moduleReadBucket := bufmodule2.ModuleSetToModuleReadBucketWithOnlyProtoFiles(moduleSet)
-
 		targetFileInfos, err := bufmodule2.GetTargetFileInfos(ctx, moduleReadBucket)
 		if err != nil {
 			return nil, err
@@ -1357,7 +1245,6 @@ func (c *controller) buildTargetImageWithConfigs(
 		if len(targetFileInfos) == 0 {
 			continue
 		}
-
 		image, err := c.buildImage(
 			ctx,
 			moduleReadBucket,
@@ -1366,11 +1253,9 @@ func (c *controller) buildTargetImageWithConfigs(
 		if err != nil {
 			return nil, err
 		}
-
 		if err := c.warnUnconfiguredTransitiveImports(ctx, workspace, image); err != nil {
 			return nil, err
 		}
-
 		imageWithConfigs = append(
 			imageWithConfigs,
 			newImageWithConfig(
@@ -1384,13 +1269,11 @@ func (c *controller) buildTargetImageWithConfigs(
 			),
 		)
 	}
-
 	if len(imageWithConfigs) == 0 {
 		// If we had no target modules, or no target files within the modules after path filtering, this is an error.
 		// We could have a better user error than this. This gets back to the lack of allowNotExist.
 		return nil, bufmodule2.ErrNoTargetProtoFiles
 	}
-
 	return imageWithConfigs, nil
 }
 
@@ -1419,16 +1302,13 @@ func (c *controller) warnUnconfiguredTransitiveImports(
 			if moduleFullName == nil {
 				return "", syserror.New("FullName nil on ModuleRef")
 			}
-
 			return moduleFullName.String(), nil
 		},
 	)
 	if err != nil {
 		return err
 	}
-
 	configuredFullNameStringMap := xslices.ToStructMap(configuredFullNameStrings)
-
 	for _, localModule := range bufmodule2.ModuleSetLocalModules(workspace) {
 		if moduleFullName := localModule.FullName(); moduleFullName != nil {
 			configuredFullNameStringMap[moduleFullName.String()] = struct{}{}
@@ -1441,7 +1321,6 @@ func (c *controller) warnUnconfiguredTransitiveImports(
 	// in the Workspace, and we're safe to ignore it with respect to calculating the undeclared
 	// transitive imports.
 	pathToFullNameString := make(map[string]string)
-
 	for _, imageFile := range image.Files() {
 		// If nil, this came from a local unnamed Module in the Workspace, and we're safe to ignore.
 		if moduleFullName := imageFile.FullName(); moduleFullName != nil {
@@ -1454,14 +1333,12 @@ func (c *controller) warnUnconfiguredTransitiveImports(
 		if imageFile.IsImport() {
 			continue
 		}
-
 		for _, importPath := range imageFile.FileDescriptorProto().GetDependency() {
 			moduleFullNameString, ok := pathToFullNameString[importPath]
 			if !ok {
 				// The import was from a local unnamed Module in the Workspace.
 				continue
 			}
-
 			if _, ok := configuredFullNameStringMap[moduleFullNameString]; !ok {
 				c.logger.Warn(fmt.Sprintf(
 					`File %q imports %q, which is not in your workspace or in the dependencies declared in your buf.yaml, but is found in transitive dependency %q.
@@ -1474,7 +1351,6 @@ Declare %q in the deps key in your buf.yaml.`,
 			}
 		}
 	}
-
 	return nil
 }
 
@@ -1486,14 +1362,12 @@ func (c *controller) handleFileAnnotationSetRetError(retErrAddr *error) {
 	if *retErrAddr == nil {
 		return
 	}
-
 	var fileAnnotationSet bufanalysis.FileAnnotationSet
 	if errors.As(*retErrAddr, &fileAnnotationSet) {
 		writer := c.container.Stderr()
 		if c.fileAnnotationsToStdout {
 			writer = c.container.Stdout()
 		}
-
 		if err := bufanalysis.PrintFileAnnotationSet(
 			writer,
 			fileAnnotationSet,
@@ -1502,7 +1376,6 @@ func (c *controller) handleFileAnnotationSetRetError(retErrAddr *error) {
 			*retErrAddr = err
 			return
 		}
-
 		*retErrAddr = ErrFileAnnotation
 	}
 }
@@ -1525,7 +1398,6 @@ func getImageFileInfosForModuleSet(ctx context.Context, moduleSet bufmodule2.Mod
 	if err != nil {
 		return nil, err
 	}
-
 	return xslices.Map(
 		fileInfos,
 		func(fileInfo bufmodule2.FileInfo) bufimage.ImageFileInfo {
@@ -1542,7 +1414,6 @@ func bootstrapResolver(
 	if err := unmarshaler.Unmarshal(data, firstProtoImage); err != nil {
 		return nil, err
 	}
-
 	return protoencoding.NewResolver(firstProtoImage.GetFile()...)
 }
 
@@ -1555,15 +1426,11 @@ func filterImage(
 	imageCameFromAWorkspace bool,
 ) (bufimage.Image, error) {
 	newImage := image
-
 	var err error
-
 	if functionOptions.imageExcludeImports {
 		newImage = bufimage.ImageWithoutImports(newImage)
 	}
-
 	includeTypes := functionOptions.imageIncludeTypes
-
 	excludeTypes := functionOptions.imageExcludeTypes
 	if len(includeTypes) > 0 || len(excludeTypes) > 0 {
 		newImage, err = bufimageutil.FilterImage(
@@ -1576,18 +1443,15 @@ func filterImage(
 			return nil, err
 		}
 	}
-
 	if !imageCameFromAWorkspace {
 		if len(functionOptions.targetPaths) > 0 || len(functionOptions.targetExcludePaths) > 0 {
 			// bufimage expects normalized paths, so we need to normalize the paths
 			// from functionOptions before passing them through.
 			normalizedTargetPaths := make([]string, 0, len(functionOptions.targetPaths))
-
 			normalizedExcludePaths := make([]string, 0, len(functionOptions.targetExcludePaths))
 			for _, targetPath := range functionOptions.targetPaths {
 				normalizedTargetPaths = append(normalizedTargetPaths, normalpath.Normalize(targetPath))
 			}
-
 			for _, excludePath := range functionOptions.targetExcludePaths {
 				normalizedExcludePaths = append(normalizedExcludePaths, normalpath.Normalize(excludePath))
 			}
@@ -1602,7 +1466,6 @@ func filterImage(
 			}
 		}
 	}
-
 	return newImage, nil
 }
 
@@ -1611,7 +1474,6 @@ func newStorageosProvider(disableSymlinks bool) storageos.Provider {
 	if !disableSymlinks {
 		options = append(options, storageos.ProviderWithSymlinks())
 	}
-
 	return storageos.NewProvider(options...)
 }
 
@@ -1639,7 +1501,7 @@ func newJSONMarshaler(
 	messageRef buffetch.MessageRef,
 ) protoencoding.Marshaler {
 	jsonMarshalerOptions := []protoencoding.JSONMarshalerOption{
-		// protoencoding.JSONMarshalerWithIndent(),
+		//protoencoding.JSONMarshalerWithIndent(),
 	}
 	if messageRef.UseProtoNames() {
 		jsonMarshalerOptions = append(
@@ -1647,14 +1509,12 @@ func newJSONMarshaler(
 			protoencoding.JSONMarshalerWithUseProtoNames(),
 		)
 	}
-
 	if messageRef.UseEnumNumbers() {
 		jsonMarshalerOptions = append(
 			jsonMarshalerOptions,
 			protoencoding.JSONMarshalerWithUseEnumNumbers(),
 		)
 	}
-
 	return protoencoding.NewJSONMarshaler(resolver, jsonMarshalerOptions...)
 }
 
@@ -1671,14 +1531,12 @@ func newYAMLMarshaler(
 			protoencoding.YAMLMarshalerWithUseProtoNames(),
 		)
 	}
-
 	if messageRef.UseEnumNumbers() {
 		yamlMarshalerOptions = append(
 			yamlMarshalerOptions,
 			protoencoding.YAMLMarshalerWithUseEnumNumbers(),
 		)
 	}
-
 	return protoencoding.NewYAMLMarshaler(resolver, yamlMarshalerOptions...)
 }
 
@@ -1686,13 +1544,11 @@ func validateFileAnnotationErrorFormat(fileAnnotationErrorFormat string) error {
 	if fileAnnotationErrorFormat == "" {
 		return nil
 	}
-
 	if slices.Contains(bufanalysis.AllFormatStrings, fileAnnotationErrorFormat) {
 		return nil
 	}
 	// TODO FUTURE: get standard flag names and bindings into this package.
 	fileAnnotationErrorFormatFlagName := "error-format"
-
 	return appcmd.NewInvalidArgumentErrorf("--%s: invalid format: %q", fileAnnotationErrorFormatFlagName, fileAnnotationErrorFormat)
 }
 
@@ -1726,7 +1582,6 @@ func newStaticPluginKeyProviderForPluginConfigs(
 			return nil, fmt.Errorf(`remote plugin %q is not in the buf.lock file, use "buf plugin update" to pin remote refs`, remotePluginRef)
 		}
 	}
-
 	return bufplugin2.NewStaticPluginKeyProvider(pluginKeys)
 }
 
@@ -1760,7 +1615,6 @@ func newStaticPolicyKeyProviderForPolicyConfigs(
 			return nil, fmt.Errorf(`remote policy %q is not in the buf.lock file, use "buf policy update" to pin remote refs`, remotePolicyRef)
 		}
 	}
-
 	return bufpolicy2.NewStaticPolicyKeyProvider(policyKeys)
 }
 
@@ -1776,7 +1630,6 @@ func newStaticPolicyPluginKeyProviderForPolicyConfigs(
 			// The buf.lock stores the name.
 			policyName = policyConfig.Ref().FullName().String()
 		}
-
 		return policyName
 	})
 	if err != nil {
@@ -1791,12 +1644,10 @@ func newStaticPolicyPluginKeyProviderForPolicyConfigs(
 		if err != nil {
 			return nil, fmt.Errorf("failed to validate remote PluginKeys for Policy %q: %w", policyName, err)
 		}
-
 		if _, ok := policyNames[policyName]; !ok {
 			return nil, fmt.Errorf("remote plugins configured for unknown policy %q", policyName)
 		}
 	}
-
 	return bufpolicy2.NewStaticPolicyPluginKeyProvider(policyNameToRemotePluginKeys)
 }
 
@@ -1808,7 +1659,6 @@ func newStaticPolicyPluginDataProviderForPolicyConfigs(
 	policyConfigs []bufconfig2.PolicyConfig,
 ) (bufpolicy2.PolicyPluginDataProvider, error) {
 	policyNameToPluginDataProvider := make(map[string]bufplugin2.PluginDataProvider)
-
 	for _, policyConfig := range policyConfigs {
 		policyName := policyConfig.Name()
 		if _, ok := policyNameToPluginDataProvider[policyName]; ok {
@@ -1817,6 +1667,5 @@ func newStaticPolicyPluginDataProviderForPolicyConfigs(
 		// We use the same pluginDataProvider for all policies.
 		policyNameToPluginDataProvider[policyName] = pluginDataProvider
 	}
-
 	return bufpolicy2.NewStaticPolicyPluginDataProvider(policyNameToPluginDataProvider)
 }

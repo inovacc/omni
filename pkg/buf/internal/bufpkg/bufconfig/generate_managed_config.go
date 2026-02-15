@@ -172,7 +172,6 @@ func newGenerateManagedConfigFromExternalV1Beta1(
 	var (
 		overrides []ManagedOverrideRule
 	)
-
 	if externalCCEnableArenas := externalConfig.CcEnableArenas; externalCCEnableArenas != nil {
 		override, err := NewManagedOverrideRuleForFileOption(
 			"",
@@ -183,10 +182,8 @@ func newGenerateManagedConfigFromExternalV1Beta1(
 		if err != nil {
 			return nil, err
 		}
-
 		overrides = append(overrides, override)
 	}
-
 	if externalJavaMultipleFiles := externalConfig.JavaMultipleFiles; externalJavaMultipleFiles != nil {
 		override, err := NewManagedOverrideRuleForFileOption(
 			"",
@@ -197,10 +194,8 @@ func newGenerateManagedConfigFromExternalV1Beta1(
 		if err != nil {
 			return nil, err
 		}
-
 		overrides = append(overrides, override)
 	}
-
 	if externalOptimizeFor := externalConfig.OptimizeFor; externalOptimizeFor != "" {
 		defaultOverride, err := NewManagedOverrideRuleForFileOption(
 			"",
@@ -211,10 +206,8 @@ func newGenerateManagedConfigFromExternalV1Beta1(
 		if err != nil {
 			return nil, err
 		}
-
 		overrides = append(overrides, defaultOverride)
 	}
-
 	return &generateManagedConfig{
 		enabled:   enabled,
 		overrides: overrides,
@@ -228,7 +221,6 @@ func newGenerateManagedConfigFromExternalV1(
 		disables  []ManagedDisableRule
 		overrides []ManagedOverrideRule
 	)
-
 	if externalCCEnableArenas := externalConfig.CcEnableArenas; externalCCEnableArenas != nil {
 		override, err := NewManagedOverrideRuleForFileOption(
 			"",
@@ -239,10 +231,8 @@ func newGenerateManagedConfigFromExternalV1(
 		if err != nil {
 			return nil, err
 		}
-
 		overrides = append(overrides, override)
 	}
-
 	if externalJavaMultipleFiles := externalConfig.JavaMultipleFiles; externalJavaMultipleFiles != nil {
 		override, err := NewManagedOverrideRuleForFileOption(
 			"",
@@ -253,10 +243,8 @@ func newGenerateManagedConfigFromExternalV1(
 		if err != nil {
 			return nil, err
 		}
-
 		overrides = append(overrides, override)
 	}
-
 	if externalJavaStringCheckUtf8 := externalConfig.JavaStringCheckUtf8; externalJavaStringCheckUtf8 != nil {
 		override, err := NewManagedOverrideRuleForFileOption(
 			"",
@@ -267,15 +255,12 @@ func newGenerateManagedConfigFromExternalV1(
 		if err != nil {
 			return nil, err
 		}
-
 		overrides = append(overrides, override)
 	}
-
 	if externalJavaPackagePrefix := externalConfig.JavaPackagePrefix; !externalJavaPackagePrefix.isEmpty() {
 		if externalJavaPackagePrefix.Default == "" {
 			return nil, errors.New("java_package_prefix requires a default value")
 		}
-
 		defaultOverride, err := NewManagedOverrideRuleForFileOption(
 			"",
 			"",
@@ -285,9 +270,7 @@ func newGenerateManagedConfigFromExternalV1(
 		if err != nil {
 			return nil, err
 		}
-
 		overrides = append(overrides, defaultOverride)
-
 		javaPackagePrefixDisables, javaPackagePrefixOverrides, err := disablesAndOverridesFromExceptAndOverrideV1(
 			FileOptionJavaPackage,
 			externalJavaPackagePrefix.Except,
@@ -297,11 +280,9 @@ func newGenerateManagedConfigFromExternalV1(
 		if err != nil {
 			return nil, err
 		}
-
 		disables = append(disables, javaPackagePrefixDisables...)
 		overrides = append(overrides, javaPackagePrefixOverrides...)
 	}
-
 	if externalCsharpNamespace := externalConfig.CsharpNamespace; !externalCsharpNamespace.isEmpty() {
 		csharpNamespaceDisables, csharpNamespaceOverrides, err := disablesAndOverridesFromExceptAndOverrideV1(
 			FileOptionCsharpNamespace,
@@ -312,16 +293,13 @@ func newGenerateManagedConfigFromExternalV1(
 		if err != nil {
 			return nil, err
 		}
-
 		disables = append(disables, csharpNamespaceDisables...)
 		overrides = append(overrides, csharpNamespaceOverrides...)
 	}
-
 	if externalOptimizeFor := externalConfig.OptimizeFor; !externalOptimizeFor.isEmpty() {
 		if externalOptimizeFor.Default == "" {
 			return nil, errors.New("optimize_for requires a default value")
 		}
-
 		defaultOverride, err := NewManagedOverrideRuleForFileOption(
 			"",
 			"",
@@ -331,9 +309,7 @@ func newGenerateManagedConfigFromExternalV1(
 		if err != nil {
 			return nil, err
 		}
-
 		overrides = append(overrides, defaultOverride)
-
 		optimizeForDisables, optimizeForOverrides, err := disablesAndOverridesFromExceptAndOverrideV1(
 			FileOptionOptimizeFor,
 			externalOptimizeFor.Except,
@@ -343,16 +319,13 @@ func newGenerateManagedConfigFromExternalV1(
 		if err != nil {
 			return nil, err
 		}
-
 		disables = append(disables, optimizeForDisables...)
 		overrides = append(overrides, optimizeForOverrides...)
 	}
-
 	if externalGoPackagePrefix := externalConfig.GoPackagePrefix; !externalGoPackagePrefix.isEmpty() {
 		if externalGoPackagePrefix.Default == "" {
 			return nil, errors.New("go_package_prefix requires a default value")
 		}
-
 		defaultOverride, err := NewManagedOverrideRuleForFileOption(
 			"",
 			"",
@@ -362,9 +335,7 @@ func newGenerateManagedConfigFromExternalV1(
 		if err != nil {
 			return nil, err
 		}
-
 		overrides = append(overrides, defaultOverride)
-
 		goPackagePrefixDisables, goPackagePrefixOverrides, err := disablesAndOverridesFromExceptAndOverrideV1(
 			FileOptionGoPackage,
 			externalGoPackagePrefix.Except,
@@ -374,11 +345,9 @@ func newGenerateManagedConfigFromExternalV1(
 		if err != nil {
 			return nil, err
 		}
-
 		disables = append(disables, goPackagePrefixDisables...)
 		overrides = append(overrides, goPackagePrefixOverrides...)
 	}
-
 	if externalObjcClassPrefix := externalConfig.ObjcClassPrefix; !externalObjcClassPrefix.isEmpty() {
 		if externalObjcClassPrefix.Default != "" {
 			// objc class prefix allows empty default
@@ -391,10 +360,8 @@ func newGenerateManagedConfigFromExternalV1(
 			if err != nil {
 				return nil, err
 			}
-
 			overrides = append(overrides, defaultOverride)
 		}
-
 		objcClassPrefixDisables, objcClassPrefixOverrides, err := disablesAndOverridesFromExceptAndOverrideV1(
 			FileOptionObjcClassPrefix,
 			externalObjcClassPrefix.Except,
@@ -404,11 +371,9 @@ func newGenerateManagedConfigFromExternalV1(
 		if err != nil {
 			return nil, err
 		}
-
 		disables = append(disables, objcClassPrefixDisables...)
 		overrides = append(overrides, objcClassPrefixOverrides...)
 	}
-
 	if externalRubyPackage := externalConfig.RubyPackage; !externalRubyPackage.isEmpty() {
 		rubyPackageDisables, rubyPackageOverrides, err := disablesAndOverridesFromExceptAndOverrideV1(
 			FileOptionRubyPackage,
@@ -419,11 +384,9 @@ func newGenerateManagedConfigFromExternalV1(
 		if err != nil {
 			return nil, err
 		}
-
 		disables = append(disables, rubyPackageDisables...)
 		overrides = append(overrides, rubyPackageOverrides...)
 	}
-
 	if externalSwiftPrefix := externalConfig.SwiftPrefix; !externalSwiftPrefix.isEmpty() {
 		if externalSwiftPrefix.Default != "" {
 			// objc class prefix allows empty default
@@ -436,10 +399,8 @@ func newGenerateManagedConfigFromExternalV1(
 			if err != nil {
 				return nil, err
 			}
-
 			overrides = append(overrides, defaultOverride)
 		}
-
 		swiftPrefixDisables, swiftPrefixOverrides, err := disablesAndOverridesFromExceptAndOverrideV1(
 			FileOptionSwiftPrefix,
 			externalSwiftPrefix.Except,
@@ -449,18 +410,14 @@ func newGenerateManagedConfigFromExternalV1(
 		if err != nil {
 			return nil, err
 		}
-
 		disables = append(disables, swiftPrefixDisables...)
 		overrides = append(overrides, swiftPrefixOverrides...)
 	}
-
 	perFileOverrides, err := overrideRulesForPerFileOverridesV1(externalConfig.Override)
 	if err != nil {
 		return nil, err
 	}
-
 	overrides = append(overrides, perFileOverrides...)
-
 	return &generateManagedConfig{
 		enabled:   externalConfig.Enabled,
 		disables:  disables,
@@ -471,11 +428,8 @@ func newGenerateManagedConfigFromExternalV1(
 func newGenerateManagedConfigFromExternalV2(
 	externalConfig externalGenerateManagedConfigV2,
 ) (GenerateManagedConfig, error) {
-	var (
-		disables  []ManagedDisableRule
-		overrides []ManagedOverrideRule
-	)
-
+	var disables []ManagedDisableRule
+	var overrides []ManagedOverrideRule
 	for _, externalDisableConfig := range externalConfig.Disable {
 		var (
 			fileOption  FileOption
@@ -488,14 +442,12 @@ func newGenerateManagedConfigFromExternalV2(
 				return nil, err
 			}
 		}
-
 		if externalDisableConfig.FieldOption != "" {
 			fieldOption, err = parseFieldOption(externalDisableConfig.FieldOption)
 			if err != nil {
 				return nil, err
 			}
 		}
-
 		disable, err := newManagedDisableRule(
 			externalDisableConfig.Path,
 			externalDisableConfig.Module,
@@ -506,29 +458,23 @@ func newGenerateManagedConfigFromExternalV2(
 		if err != nil {
 			return nil, err
 		}
-
 		disables = append(disables, disable)
 	}
-
 	for _, externalOverrideConfig := range externalConfig.Override {
 		if externalOverrideConfig.FileOption == "" && externalOverrideConfig.FieldOption == "" {
 			return nil, errors.New("must set file_option or field_option for an override")
 		}
-
 		if externalOverrideConfig.FileOption != "" && externalOverrideConfig.FieldOption != "" {
 			return nil, errors.New("exactly one of file_option and field_option must be set for an override")
 		}
-
 		if externalOverrideConfig.Value == nil {
 			return nil, errors.New("must set value for an override")
 		}
-
 		if externalOverrideConfig.FieldOption != "" {
 			fieldOption, err := parseFieldOption(externalOverrideConfig.FieldOption)
 			if err != nil {
 				return nil, err
 			}
-
 			override, err := NewManagedOverrideRuleForFieldOption(
 				externalOverrideConfig.Path,
 				externalOverrideConfig.Module,
@@ -539,21 +485,16 @@ func newGenerateManagedConfigFromExternalV2(
 			if err != nil {
 				return nil, err
 			}
-
 			overrides = append(overrides, override)
-
 			continue
 		}
-
 		if externalOverrideConfig.Field != "" {
 			return nil, errors.New("must not set field for a file_option override")
 		}
-
 		fileOption, err := parseFileOption(externalOverrideConfig.FileOption)
 		if err != nil {
 			return nil, err
 		}
-
 		override, err := NewManagedOverrideRuleForFileOption(
 			externalOverrideConfig.Path,
 			externalOverrideConfig.Module,
@@ -563,10 +504,8 @@ func newGenerateManagedConfigFromExternalV2(
 		if err != nil {
 			return nil, err
 		}
-
 		overrides = append(overrides, override)
 	}
-
 	return &generateManagedConfig{
 		enabled:   externalConfig.Enabled,
 		disables:  disables,
@@ -606,27 +545,22 @@ func newManagedDisableRule(
 	if path == "" && moduleFullName == "" && fieldName == "" && fileOption == FileOptionUnspecified && fieldOption == FieldOptionUnspecified {
 		return nil, errors.New("empty disable rule is not allowed")
 	}
-
 	if fieldName != "" && fileOption != FileOptionUnspecified {
 		return nil, errors.New("cannot disable a file option for a field")
 	}
-
 	if fileOption != FileOptionUnspecified && fieldOption != FieldOptionUnspecified {
 		return nil, errors.New("at most one of file_option and field_option can be specified")
 	}
-
 	if path != "" {
 		if err := validatePath(path); err != nil {
 			return nil, fmt.Errorf("invalid path for disable rule: %w", err)
 		}
 	}
-
 	if moduleFullName != "" {
 		if _, err := bufparse.ParseFullName(moduleFullName); err != nil {
 			return nil, err
 		}
 	}
-
 	return &managedDisableRule{
 		path:           path,
 		moduleFullName: moduleFullName,
@@ -678,28 +612,23 @@ func newFileOptionManagedOverrideRule(
 	if !ok {
 		return nil, fmt.Errorf("invalid fileOption: %v", fileOption)
 	}
-
 	if value == nil {
 		return nil, fmt.Errorf("value must be specified for override")
 	}
-
 	parsedValue, err := parseOverrideValueFunc(value)
 	if err != nil {
 		return nil, fmt.Errorf("invalid value %v for %v: %w", value, fileOption, err)
 	}
-
 	if moduleFullName != "" {
 		if _, err := bufparse.ParseFullName(moduleFullName); err != nil {
 			return nil, fmt.Errorf("invalid module name for %v override: %w", fileOption, err)
 		}
 	}
-
 	if path != "" {
 		if err := validatePath(path); err != nil {
 			return nil, fmt.Errorf("invalid path for %v override: %w", fileOption, err)
 		}
 	}
-
 	return &managedOverrideRule{
 		path:           path,
 		moduleFullName: moduleFullName,
@@ -720,28 +649,23 @@ func newFieldOptionManagedOverrideRule(
 	if !ok {
 		return nil, fmt.Errorf("invalid fieldOption: %v", fieldOption)
 	}
-
 	if value == nil {
 		return nil, fmt.Errorf("value must be specified for override")
 	}
-
 	parsedValue, err := parseOverrideValueFunc(value)
 	if err != nil {
 		return nil, fmt.Errorf("invalid value %v for %v: %w", value, fieldOption, err)
 	}
-
 	if moduleFullName != "" {
 		if _, err := bufparse.ParseFullName(moduleFullName); err != nil {
 			return nil, fmt.Errorf("invalid module name for %v override: %w", fieldOption, err)
 		}
 	}
-
 	if path != "" {
 		if err := validatePath(path); err != nil {
 			return nil, fmt.Errorf("invalid path for %v override: %w", fieldOption, err)
 		}
 	}
-
 	return &managedOverrideRule{
 		path:           path,
 		moduleFullName: moduleFullName,
@@ -787,19 +711,15 @@ func disablesAndOverridesFromExceptAndOverrideV1(
 		disables  []ManagedDisableRule
 		overrides []ManagedOverrideRule
 	)
-
 	seenExceptFullNames := make(map[string]struct{}, len(exceptFullNames))
 	for _, exceptFullName := range exceptFullNames {
 		if _, err := bufparse.ParseFullName(exceptFullName); err != nil {
 			return nil, nil, err
 		}
-
 		if _, ok := seenExceptFullNames[exceptFullName]; ok {
 			return nil, nil, fmt.Errorf("%q is defined multiple times in except", exceptFullName)
 		}
-
 		seenExceptFullNames[exceptFullName] = struct{}{}
-
 		disable, err := newManagedDisableRule(
 			"",
 			exceptFullName,
@@ -810,7 +730,6 @@ func disablesAndOverridesFromExceptAndOverrideV1(
 		if err != nil {
 			return nil, nil, err
 		}
-
 		disables = append(disables, disable)
 	}
 	// Sort by keys for deterministic order.
@@ -819,11 +738,9 @@ func disablesAndOverridesFromExceptAndOverrideV1(
 		if _, err := bufparse.ParseFullName(overrideFullName); err != nil {
 			return nil, nil, err
 		}
-
 		if _, ok := seenExceptFullNames[overrideFullName]; ok {
 			return nil, nil, fmt.Errorf("override %q is already defined as an except", overrideFullName)
 		}
-
 		override, err := NewManagedOverrideRuleForFileOption(
 			"",
 			overrideFullName,
@@ -833,10 +750,8 @@ func disablesAndOverridesFromExceptAndOverrideV1(
 		if err != nil {
 			return nil, nil, err
 		}
-
 		overrides = append(overrides, override)
 	}
-
 	return disables, overrides, nil
 }
 
@@ -844,27 +759,21 @@ func overrideRulesForPerFileOverridesV1(
 	fileOptionToFilePathToOverride map[string]map[string]string,
 ) ([]ManagedOverrideRule, error) {
 	var overrideRules []ManagedOverrideRule
-
 	sortedFileOptionStrings := xslices.MapKeysToSortedSlice(fileOptionToFilePathToOverride)
 	for _, fileOptionString := range sortedFileOptionStrings {
 		fileOption, ok := stringToFileOption[strings.ToLower(fileOptionString)]
 		if !ok {
 			return nil, fmt.Errorf("%q is not a valid file option", fileOptionString)
 		}
-
 		filePathToOverride := fileOptionToFilePathToOverride[fileOptionString]
-
 		sortedFilePaths := xslices.MapKeysToSortedSlice(filePathToOverride)
 		for _, filePath := range sortedFilePaths {
 			err := validatePath(filePath)
 			if err != nil {
 				return nil, fmt.Errorf("invalid import path for override %s: %w", fileOptionString, err)
 			}
-
 			overrideString := filePathToOverride[filePath]
-
 			var overrideValue any = overrideString
-
 			switch fileOption {
 			case FileOptionCcEnableArenas, FileOptionJavaMultipleFiles, FileOptionJavaStringCheckUtf8:
 				overrideValue, err = strconv.ParseBool(overrideString)
@@ -872,7 +781,6 @@ func overrideRulesForPerFileOverridesV1(
 					return nil, fmt.Errorf("")
 				}
 			}
-
 			overrideRule, err := NewManagedOverrideRuleForFileOption(
 				filePath,
 				"",
@@ -882,11 +790,9 @@ func overrideRulesForPerFileOverridesV1(
 			if err != nil {
 				return nil, err
 			}
-
 			overrideRules = append(overrideRules, overrideRule)
 		}
 	}
-
 	return overrideRules, nil
 }
 
@@ -896,20 +802,16 @@ func newExternalManagedConfigV2FromGenerateManagedConfig(
 	if managedConfig == nil {
 		return externalGenerateManagedConfigV2{}, nil
 	}
-
 	var externalDisables []externalManagedDisableConfigV2
-
 	for _, disable := range managedConfig.Disables() {
 		var fileOptionName string
 		if disable.FileOption() != FileOptionUnspecified {
 			fileOptionName = disable.FileOption().String()
 		}
-
 		var fieldOptionName string
 		if disable.FieldOption() != FieldOptionUnspecified {
 			fieldOptionName = disable.FieldOption().String()
 		}
-
 		externalDisables = append(
 			externalDisables,
 			externalManagedDisableConfigV2{
@@ -921,25 +823,20 @@ func newExternalManagedConfigV2FromGenerateManagedConfig(
 			},
 		)
 	}
-
 	var externalOverrides []externalManagedOverrideConfigV2
-
 	for _, override := range managedConfig.Overrides() {
 		var fileOptionName string
 		if override.FileOption() != FileOptionUnspecified {
 			fileOptionName = override.FileOption().String()
 		}
-
 		var fieldOptionName string
 		if override.FieldOption() != FieldOptionUnspecified {
 			fieldOptionName = override.FieldOption().String()
 		}
-
 		value, err := getOverrideValue(fileOptionName, fieldOptionName, override.Value())
 		if err != nil {
 			return externalGenerateManagedConfigV2{}, err
 		}
-
 		externalOverrides = append(
 			externalOverrides,
 			externalManagedOverrideConfigV2{
@@ -952,7 +849,6 @@ func newExternalManagedConfigV2FromGenerateManagedConfig(
 			},
 		)
 	}
-
 	return externalGenerateManagedConfigV2{
 		Enabled:  managedConfig.Enabled(),
 		Disable:  externalDisables,
@@ -965,13 +861,11 @@ func validatePath(path string) error {
 	if err != nil {
 		return err
 	}
-
 	if path != normalizedPath {
 		return fmt.Errorf(
 			"path %q in your configuration must be relative and use '/' as the path separator",
 			path,
 		)
 	}
-
 	return nil
 }

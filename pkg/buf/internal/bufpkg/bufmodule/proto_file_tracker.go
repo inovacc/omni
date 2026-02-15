@@ -50,7 +50,6 @@ func (t *protoFileTracker) trackModule(module Module) {
 	if _, ok := t.opaqueIDToProtoFileExists[opaqueID]; !ok {
 		t.opaqueIDToProtoFileExists[opaqueID] = false
 	}
-
 	t.opaqueIDToDescription[opaqueID] = module.Description()
 }
 
@@ -61,17 +60,14 @@ func (t *protoFileTracker) trackFileInfo(fileInfo FileInfo) {
 	if fileInfo.FileType() != FileTypeProto {
 		return
 	}
-
 	module := fileInfo.Module()
 	opaqueID := module.OpaqueID()
 	t.opaqueIDToProtoFileExists[opaqueID] = true
-
 	protoPathOpaqueIDMap, ok := t.protoPathToOpaqueIDMap[fileInfo.Path()]
 	if !ok {
 		protoPathOpaqueIDMap = make(map[string]struct{})
 		t.protoPathToOpaqueIDMap[fileInfo.Path()] = protoPathOpaqueIDMap
 	}
-
 	protoPathOpaqueIDMap[opaqueID] = struct{}{}
 	t.opaqueIDToDescription[opaqueID] = module.Description()
 }
@@ -79,7 +75,6 @@ func (t *protoFileTracker) trackFileInfo(fileInfo FileInfo) {
 // validate validates. This should be called when all tracking is complete.
 func (t *protoFileTracker) validate() error {
 	var noProtoFilesErrors []*NoProtoFilesError
-
 	for opaqueID, protoFileExists := range t.opaqueIDToProtoFileExists {
 		if !protoFileExists {
 			description, ok := t.opaqueIDToDescription[opaqueID]
@@ -87,7 +82,6 @@ func (t *protoFileTracker) validate() error {
 				// This should never happen, but we want to make sure we return an error.
 				description = opaqueID
 			}
-
 			noProtoFilesErrors = append(
 				noProtoFilesErrors,
 				&NoProtoFilesError{
@@ -96,9 +90,7 @@ func (t *protoFileTracker) validate() error {
 			)
 		}
 	}
-
 	var duplicateProtoPathErrors []*DuplicateProtoPathError
-
 	for protoPath, opaqueIDMap := range t.protoPathToOpaqueIDMap {
 		if len(opaqueIDMap) > 1 {
 			moduleDescriptions := xslices.Map(
@@ -110,7 +102,6 @@ func (t *protoFileTracker) validate() error {
 			if len(moduleDescriptions) <= 1 {
 				return syserror.Newf("only got %d Module descriptions for opaque IDs %v", len(moduleDescriptions), opaqueIDMap)
 			}
-
 			duplicateProtoPathErrors = append(
 				duplicateProtoPathErrors,
 				&DuplicateProtoPathError{
@@ -120,7 +111,6 @@ func (t *protoFileTracker) validate() error {
 			)
 		}
 	}
-
 	if len(noProtoFilesErrors) != 0 || len(duplicateProtoPathErrors) != 0 {
 		sort.Slice(
 			noProtoFilesErrors,
@@ -134,18 +124,14 @@ func (t *protoFileTracker) validate() error {
 				return duplicateProtoPathErrors[i].ProtoPath < duplicateProtoPathErrors[j].ProtoPath
 			},
 		)
-
 		errs := make([]error, 0, len(noProtoFilesErrors)+len(duplicateProtoPathErrors))
 		for _, noProtoFilesError := range noProtoFilesErrors {
 			errs = append(errs, noProtoFilesError)
 		}
-
 		for _, duplicateProtoPathError := range duplicateProtoPathErrors {
 			errs = append(errs, duplicateProtoPathError)
 		}
-
 		return errors.Join(errs...)
 	}
-
 	return nil
 }

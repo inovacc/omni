@@ -47,24 +47,20 @@ func (c *cleaner) DeleteOuts(
 	if err != nil {
 		return err
 	}
-
 	pwd, err = reallyCleanPath(pwd)
 	if err != nil {
 		return err
 	}
-
 	for _, pluginOut := range pluginOuts {
 		if err := validatePluginOut(pwd, pluginOut); err != nil {
 			return err
 		}
 	}
-
 	for _, pluginOut := range pluginOuts {
 		if err := c.deleteOut(ctx, pluginOut); err != nil {
 			return err
 		}
 	}
-
 	return nil
 }
 
@@ -74,7 +70,6 @@ func (c *cleaner) deleteOut(
 ) error {
 	dirPath := pluginOut
 	removePath := "."
-
 	switch filepath.Ext(pluginOut) {
 	case ".jar", ".zip":
 		dirPath = normalpath.Dir(pluginOut)
@@ -82,7 +77,6 @@ func (c *cleaner) deleteOut(
 	default:
 		// Assume output is a directory.
 	}
-
 	bucket, err := c.storageosProvider.NewReadWriteBucket(
 		dirPath,
 		storageos.ReadWriteBucketWithSymlinksIfSupported(),
@@ -91,10 +85,8 @@ func (c *cleaner) deleteOut(
 		if errors.Is(err, fs.ErrNotExist) {
 			return nil
 		}
-
 		return err
 	}
-
 	return bucket.DeleteAll(ctx, removePath)
 }
 
@@ -103,28 +95,23 @@ func validatePluginOut(pwd string, pluginOut string) error {
 		// This is just triple-making sure.
 		return syserror.New("got empty pluginOut in bufprotopluginos.Cleaner")
 	}
-
 	if pluginOut == "." {
 		// This is just a really defensive safety check. We can't see a reason you'd want to delete
 		// your current working directory other than something like a (cd proto && buf generate), so
 		// until and unless someone complains, we're just going to outlaw this.
 		return errors.New("cannot use --clean if your plugin will output to the current directory")
 	}
-
 	cleanedPluginOut, err := reallyCleanPath(pluginOut)
 	if err != nil {
 		if errors.Is(err, fs.ErrNotExist) {
 			return nil
 		}
-
 		return err
 	}
-
 	if cleanedPluginOut == pwd {
 		// Same thing, more defense for now.
 		return errors.New("cannot use --clean if your plugin will output to the current directory")
 	}
-
 	return nil
 }
 
@@ -133,6 +120,5 @@ func reallyCleanPath(path string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-
 	return filepath.EvalSymlinks(path)
 }

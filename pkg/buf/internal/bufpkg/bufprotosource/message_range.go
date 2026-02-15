@@ -63,7 +63,6 @@ func (r *messageRange) Max() bool {
 	if r.message.MessageSetWireFormat() {
 		return r.end == MessageSetRangeInclusiveMax
 	}
-
 	return r.end == MessageRangeInclusiveMax
 }
 

@@ -43,7 +43,6 @@ func TestReferences(t *testing.T) {
 		uri  protocol.URI
 		line uint32
 	}
-
 	tests := []struct {
 		name               string
 		targetURI          protocol.URI
@@ -142,7 +141,6 @@ func TestReferences(t *testing.T) {
 			t.Parallel()
 
 			var locations []protocol.Location
-
 			_, refErr := clientJSONConn.Call(ctx, protocol.MethodTextDocumentReferences, protocol.ReferenceParams{
 				TextDocumentPositionParams: protocol.TextDocumentPositionParams{
 					TextDocument: protocol.TextDocumentIdentifier{

@@ -75,7 +75,6 @@ func (f FileOption) String() string {
 	if !ok {
 		return strconv.Itoa(int(f))
 	}
-
 	return s
 }
 
@@ -95,7 +94,6 @@ func (f FieldOption) String() string {
 	if !ok {
 		return strconv.Itoa(int(f))
 	}
-
 	return s
 }
 
@@ -181,12 +179,10 @@ func parseFileOption(s string) (FileOption, error) {
 	if s == "" {
 		return 0, errors.New("empty file_option")
 	}
-
 	f, ok := stringToFileOption[s]
 	if ok {
 		return f, nil
 	}
-
 	return 0, fmt.Errorf("unknown file_option: %q", s)
 }
 
@@ -195,12 +191,10 @@ func parseFieldOption(s string) (FieldOption, error) {
 	if s == "" {
 		return 0, errors.New("empty field_option")
 	}
-
 	f, ok := stringToFieldOption[s]
 	if ok {
 		return f, nil
 	}
-
 	return 0, fmt.Errorf("unknown field_option: %q", s)
 }
 
@@ -209,7 +203,6 @@ func parseOverrideValue[T string | bool](overrideValue any) (any, error) {
 	if !ok {
 		return nil, fmt.Errorf("expected a %T, got %T", parsedValue, overrideValue)
 	}
-
 	return parsedValue, nil
 }
 
@@ -218,12 +211,10 @@ func parseOverrideValueOptimizeMode(overrideValue any) (any, error) {
 	if !ok {
 		return nil, errors.New("must be one of SPEED, CODE_SIZE or LITE_RUNTIME")
 	}
-
 	optimizeMode, ok := descriptorpb.FileOptions_OptimizeMode_value[optimizeModeName]
 	if !ok {
 		return nil, errors.New("must be one of SPEED, CODE_SIZE or LITE_RUNTIME")
 	}
-
 	return descriptorpb.FileOptions_OptimizeMode(optimizeMode), nil
 }
 
@@ -232,12 +223,10 @@ func parseOverrideValueJSType(override any) (any, error) {
 	if !ok {
 		return nil, errors.New("must be one of JS_NORMAL, JS_STRING or JS_NUMBER")
 	}
-
 	jsTypeEnum, ok := descriptorpb.FieldOptions_JSType_value[jsTypeName]
 	if !ok {
 		return nil, errors.New("must be one of JS_NORMAL, JS_STRING or JS_NUMBER")
 	}
-
 	return descriptorpb.FieldOptions_JSType(jsTypeEnum), nil
 }
 
@@ -247,19 +236,15 @@ func parseOverrideValueJSType(override any) (any, error) {
 // Otherwise we just return the value.
 func getOverrideValue(fileOptionName string, fieldOptionName string, value any) (any, error) {
 	var optionName string
-
 	if fileOptionName != "" && fieldOptionName != "" {
 		return externalGenerateManagedConfigV2{}, fmt.Errorf("field option %s and file option %s set on the same override", fileOptionName, fieldOptionName)
 	}
-
 	if fileOptionName != "" {
 		optionName = fileOptionName
-
 		fileOption, err := parseFileOption(fileOptionName)
 		if err != nil {
 			return nil, err
 		}
-
 		switch fileOption {
 		case
 			FileOptionJavaPackage,
@@ -288,15 +273,12 @@ func getOverrideValue(fileOptionName string, fieldOptionName string, value any) 
 			}
 		}
 	}
-
 	if fieldOptionName != "" {
 		optionName = fieldOptionName
-
 		fieldOption, err := parseFieldOption(fieldOptionName)
 		if err != nil {
 			return nil, err
 		}
-
 		switch fieldOption {
 		case FieldOptionJSType:
 			if jsTypeValue, ok := value.(descriptorpb.FieldOptions_JSType); ok {
@@ -304,6 +286,5 @@ func getOverrideValue(fileOptionName string, fieldOptionName string, value any) 
 			}
 		}
 	}
-
 	return nil, fmt.Errorf("unable to get override value for %s: %v", optionName, value)
 }

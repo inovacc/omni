@@ -50,20 +50,16 @@ func readConfigFromFile(path string) (*config, error) {
 	if path == "" {
 		return &webpagesConfig, nil
 	}
-
 	file, err := os.Open(path)
 	if err != nil {
 		return nil, err
 	}
-
 	data, err := io.ReadAll(file)
 	if err != nil {
 		return nil, err
 	}
-
 	if err := yaml.Unmarshal(data, &webpagesConfig); err != nil {
 		return nil, err
 	}
-
 	return &webpagesConfig, err
 }

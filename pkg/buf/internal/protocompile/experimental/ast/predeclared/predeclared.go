@@ -70,7 +70,6 @@ func FromKeyword(kw keyword.Keyword) Name {
 	if n.InRange() {
 		return n
 	}
-
 	return Unknown
 }
 
@@ -79,7 +78,6 @@ func (n Name) String() string {
 	if !n.InRange() {
 		return fmt.Sprintf("Name(%d)", int(n))
 	}
-
 	return keyword.Keyword(n).String()
 }
 
@@ -88,7 +86,6 @@ func (n Name) GoString() string {
 	if !n.InRange() {
 		return fmt.Sprintf("predeclared.Name(%d)", int(n))
 	}
-
 	return keyword.Keyword(n).GoString()
 }
 
@@ -193,7 +190,6 @@ func All() iter.Seq[Name] {
 		if !yield(Unknown) {
 			return
 		}
-
 		for i := Int32; i <= Max; i++ {
 			if !yield(i) {
 				return

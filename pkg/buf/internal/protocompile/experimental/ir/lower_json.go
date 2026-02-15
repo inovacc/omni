@@ -99,7 +99,6 @@ func populateJSONNames(file *File, r *report.Report) {
 		if custom {
 			name = got
 		}
-
 		extn.Raw().jsonName = file.session.intern.Intern(name)
 
 		if custom {
@@ -136,7 +135,6 @@ func (e errJSONConflict) Diagnose(d *report.Diagnostic) {
 			if e.involvesCustomName {
 				return report.Snippetf(option.ValueAST(), "`%s` specifies custom name here", m.Name())
 			}
-
 			return report.Snippetf(m.AST().Name(), "this implies (default) JSON name `%s`", m.JSONName())
 		}
 
@@ -153,7 +151,6 @@ func (e errJSONConflict) Diagnose(d *report.Diagnostic) {
 		_, secondCustom := e.second.PseudoOptions().JSONName.AsString()
 
 		var what string
-
 		switch {
 		case firstCustom && secondCustom:
 			what = "both fields set"

@@ -36,7 +36,6 @@ func newBucket(pathToImmutableObject map[string]*internal.ImmutableObject) *buck
 	if pathToImmutableObject == nil {
 		pathToImmutableObject = make(map[string]*internal.ImmutableObject)
 	}
-
 	return &bucket{
 		pathToImmutableObject: pathToImmutableObject,
 	}
@@ -47,7 +46,6 @@ func (b *bucket) Get(ctx context.Context, path string) (storage.ReadObjectCloser
 	if err != nil {
 		return nil, err
 	}
-
 	return newReadObjectCloser(immutableObject), nil
 }
 
@@ -60,9 +58,7 @@ func (b *bucket) Walk(ctx context.Context, prefix string, f func(storage.ObjectI
 	if err != nil {
 		return err
 	}
-
 	walkChecker := storageutil.NewWalkChecker()
-
 	b.lock.RLock()
 	defer b.lock.RUnlock()
 	// To ensure same iteration order.
@@ -72,29 +68,23 @@ func (b *bucket) Walk(ctx context.Context, prefix string, f func(storage.ObjectI
 	for path := range b.pathToImmutableObject {
 		paths = append(paths, path)
 	}
-
 	sort.Strings(paths)
-
 	for _, path := range paths {
 		immutableObject, ok := b.pathToImmutableObject[path]
 		if !ok {
 			// this is a system error
 			return syserror.Newf("path %q not in pathToObject", path)
 		}
-
 		if err := walkChecker.Check(ctx); err != nil {
 			return err
 		}
-
 		if !normalpath2.EqualsOrContainsPath(prefix, path, normalpath2.Relative) {
 			continue
 		}
-
 		if err := f(immutableObject); err != nil {
 			return err
 		}
 	}
-
 	return nil
 }
 
@@ -113,10 +103,8 @@ func (b *bucket) Delete(ctx context.Context, path string) error {
 	if err != nil {
 		return err
 	}
-
 	b.lock.Lock()
 	defer b.lock.Unlock()
-
 	if _, ok := b.pathToImmutableObject[path]; !ok {
 		return &fs.PathError{Op: "stat", Path: path, Err: fs.ErrNotExist}
 	}
@@ -124,7 +112,6 @@ func (b *bucket) Delete(ctx context.Context, path string) error {
 	// that reader will continue to read the original file, but we accept this
 	// as no less consistent than os mechanics.
 	delete(b.pathToImmutableObject, path)
-
 	return nil
 }
 
@@ -133,10 +120,8 @@ func (b *bucket) DeleteAll(ctx context.Context, prefix string) error {
 	if err != nil {
 		return err
 	}
-
 	b.lock.Lock()
 	defer b.lock.Unlock()
-
 	for path := range b.pathToImmutableObject {
 		if normalpath2.EqualsOrContainsPath(prefix, path, normalpath2.Relative) {
 			// Note that if there is an existing reader for an object of the same path,
@@ -145,7 +130,6 @@ func (b *bucket) DeleteAll(ctx context.Context, prefix string) error {
 			delete(b.pathToImmutableObject, path)
 		}
 	}
-
 	return nil
 }
 
@@ -162,10 +146,8 @@ func (b *bucket) readLockAndGetImmutableObject(ctx context.Context, path string)
 	if err != nil {
 		return nil, err
 	}
-
 	b.lock.RLock()
 	defer b.lock.RUnlock()
-
 	immutableObject, ok := b.pathToImmutableObject[path]
 	if !ok {
 		// it would be nice if this was external path for every bucket
@@ -174,6 +156,5 @@ func (b *bucket) readLockAndGetImmutableObject(ctx context.Context, path string)
 		// an object, we do not have an external path
 		return nil, &fs.PathError{Op: "read", Path: path, Err: fs.ErrNotExist}
 	}
-
 	return immutableObject, nil
 }

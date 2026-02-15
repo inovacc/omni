@@ -51,7 +51,6 @@ func (e Control) AsAny() Expr {
 	if e.IsZero() {
 		return Expr{}
 	}
-
 	return id.WrapDyn(e.Context(), id.NewDyn(KindControl, id.ID[Expr](e.ID())))
 }
 
@@ -65,7 +64,6 @@ func (e Control) KeywordToken() token.Token {
 	if e.IsZero() {
 		return token.Zero
 	}
-
 	return id.Wrap(e.Context().Stream(), e.Raw().kw)
 }
 
@@ -75,7 +73,6 @@ func (e Control) IfToken() token.Token {
 	if e.IsZero() {
 		return token.Zero
 	}
-
 	return id.Wrap(e.Context().Stream(), e.Raw().ifT)
 }
 
@@ -84,7 +81,6 @@ func (e Control) Args() Params {
 	if e.IsZero() {
 		return Params{}
 	}
-
 	return id.Wrap(e.Context(), e.Raw().args)
 }
 
@@ -95,7 +91,6 @@ func (e Control) Condition() Expr {
 	if e.IsZero() {
 		return Expr{}
 	}
-
 	return id.WrapDyn(e.Context(), e.Raw().cond)
 }
 

@@ -40,7 +40,7 @@ func newRule(checkRule check.Rule, pluginName string, policyName string) *rule {
 
 func (r *rule) BufcheckCategories() []Category {
 	return xslices.Map(
-		r.Categories(),
+		r.Rule.Categories(),
 		func(checkCategory check.Category) Category {
 			return newCategory(checkCategory, r.pluginName, r.policyName)
 		},
@@ -65,13 +65,11 @@ func rulesForType[R check.Rule](allRules []R, ruleType check.RuleType) []R {
 // Returns Rules in same order as in allRules.
 func rulesForRuleIDs[R check.Rule](allRules []R, ruleIDs []string) []R {
 	rules := make([]R, 0, len(allRules))
-
 	ruleIDMap := xslices.ToStructMap(ruleIDs)
 	for _, rule := range allRules {
 		if _, ok := ruleIDMap[rule.ID()]; ok {
 			rules = append(rules, rule)
 		}
 	}
-
 	return rules
 }

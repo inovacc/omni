@@ -31,28 +31,22 @@ import (
 
 func TestErrorReporting(t *testing.T) {
 	t.Parallel()
-
 	tooManyErrors := errors.New("too many errors")
 	limitedErrReporter := func(limit int, count *int) reporter.ErrorReporter {
 		return func(err reporter.ErrorWithPos) error {
 			fmt.Printf("* error reported: %v\n", err)
-
 			*count++
 			if *count > limit {
 				return tooManyErrors
 			}
-
 			return nil
 		}
 	}
 	trackingReporter := func(errs *[]reporter.ErrorWithPos, count *int) reporter.ErrorReporter {
 		return func(err reporter.ErrorWithPos) error {
 			fmt.Printf("* error reported: %v\n", err)
-
 			*count++
-
 			*errs = append(*errs, err)
-
 			return nil
 		}
 	}
@@ -60,9 +54,7 @@ func TestErrorReporting(t *testing.T) {
 	failFastReporter := func(count *int) reporter.ErrorReporter {
 		return func(err reporter.ErrorWithPos) error {
 			fmt.Printf("* error reported: %v\n", err)
-
 			*count++
-
 			return fail
 		}
 	}
@@ -221,35 +213,27 @@ func TestErrorReporting(t *testing.T) {
 	}
 
 	ctx := t.Context()
-
 	for i, tc := range testCases {
 		fmt.Printf("---- case #%d: tracking ----\n", i+1)
-
 		compiler := Compiler{
 			Resolver: &SourceResolver{Accessor: SourceAccessorFromMap(tc.files)},
 		}
 
 		var reported []reporter.ErrorWithPos
-
 		count := 0
 		compiler.Reporter = reporter.NewReporter(trackingReporter(&reported, &count), nil)
 		_, err := compiler.Compile(ctx, tc.fileNames...)
-
 		reportedMsgs := make([]string, len(reported))
 		for j := range reported {
 			reportedMsgs[j] = reported[j].Error()
 		}
-
 		t.Logf("case #%d: got %d errors:\n\t%s", i+1, len(reported), strings.Join(reportedMsgs, "\n\t"))
 
 		// returns sentinel, but all actual errors in reported
 		assert.Equal(t, reporter.ErrInvalidSource, err, "case #%d: parse should have failed with invalid source error", i+1)
-
 		var match []string
-
 		for _, errs := range tc.expectedErrs {
 			actualErrs := reportedMsgs
-
 			if errs[0] == "*" {
 				// errors could be reported in any order due to goroutine execution
 				// interleaving, so compare sorted
@@ -258,17 +242,14 @@ func TestErrorReporting(t *testing.T) {
 				copy(actualErrs, reportedMsgs)
 				sort.Strings(actualErrs)
 			}
-
 			if reflect.DeepEqual(errs, actualErrs) {
 				match = errs
 				break
 			}
 		}
-
 		assert.NotNil(t, match, "case #%d: reported errors do not match expected", i+1)
 
 		fmt.Printf("---- case #%d: fail fast ----\n", i+1)
-
 		count = 0
 		compiler.Reporter = reporter.NewReporter(failFastReporter(&count), nil)
 		_, err = compiler.Compile(ctx, tc.fileNames...)
@@ -276,10 +257,8 @@ func TestErrorReporting(t *testing.T) {
 		assert.Equal(t, 1, count, "case #%d: parse should have called reporter only once", i+1)
 
 		fmt.Printf("---- case #%d: error limit ----\n", i+1)
-
 		count = 0
 		compiler.Reporter = reporter.NewReporter(limitedErrReporter(2, &count), nil)
-
 		_, err = compiler.Compile(ctx, tc.fileNames...)
 		if count > 2 {
 			assert.Equal(t, tooManyErrors, err, "case #%d: parse should have failed with too many errors", i+1)
@@ -291,7 +270,6 @@ func TestErrorReporting(t *testing.T) {
 					maxErrs = len(errs)
 				}
 			}
-
 			assert.Greater(t, maxErrs, 2, "case #%d: should not have called reporter so many times (%d), max expected errors only %d", i+1, count, maxErrs)
 		} else {
 			// less than threshold means reporter always returned nil,
@@ -299,14 +277,12 @@ func TestErrorReporting(t *testing.T) {
 			assert.Equal(t, reporter.ErrInvalidSource, err, "case #%d: parse should have failed with invalid source error", i+1)
 			// the number of errors reported should match some error scenario
 			okay := false
-
 			for _, errs := range tc.expectedErrs {
 				if len(errs) == count {
 					okay = true
 					break
 				}
 			}
-
 			assert.True(t, okay, "case #%d: parse called reporter unexpected number of times (%d)", i+1, count)
 		}
 	}
@@ -314,7 +290,6 @@ func TestErrorReporting(t *testing.T) {
 
 func TestWarningReporting(t *testing.T) {
 	t.Parallel()
-
 	type msg struct {
 		pos  ast.SourcePos
 		text string
@@ -437,9 +412,7 @@ func TestWarningReporting(t *testing.T) {
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
 			ctx := t.Context()
-
 			var msgs []msg
-
 			rep := func(warn reporter.ErrorWithPos) {
 				msgs = append(msgs, msg{
 					pos: warn.GetPosition(), text: warn.Unwrap().Error(),
@@ -459,7 +432,6 @@ func TestWarningReporting(t *testing.T) {
 					actualNotices[j] = fmt.Sprintf("%s: %s", msg.pos, msg.text)
 				}
 			}
-
 			assert.Equal(t, testCase.expectedNotices, actualNotices)
 		})
 	}

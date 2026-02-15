@@ -26,8 +26,7 @@ import (
 // File queries with different Openers are considered distinct.
 type File struct {
 	source.Opener // Must be comparable.
-
-	Path string
+	Path          string
 
 	// If set, any errors generated from opening the file are logged as
 	// diagnostics. Setting this to false is useful for cases where the
@@ -52,15 +51,14 @@ func (f File) Key() any {
 func (f File) Execute(t *incremental.Task) (*source.File, error) {
 	if !f.ReportError {
 		file, err := f.Open(f.Path)
+
 		if err != nil {
 			return nil, err
 		}
-
 		return file, nil
 	}
 
 	f.ReportError = false
-
 	r, err := incremental.Resolve(t, f)
 	if err != nil {
 		return nil, err
@@ -71,7 +69,6 @@ func (f File) Execute(t *incremental.Task) (*source.File, error) {
 		t.Report().Errorf("%v", err).Apply(
 			report.InFile(f.Path),
 		)
-
 		return nil, err
 	}
 

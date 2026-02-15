@@ -65,9 +65,7 @@ func (m *Map[K, V]) Insert(key K) (value *V, found bool) {
 		v = &counted[V]{}
 		m.table[key] = v
 	}
-
 	v.count++
-
 	return &v.value, found
 }
 
@@ -78,12 +76,10 @@ func (m *Map[K, V]) Insert(key K) (value *V, found bool) {
 func (m *Map[K, V]) Get(key K) *V {
 	m.lock.RLock()
 	defer m.lock.RUnlock()
-
 	value := m.table[key]
 	if value == nil {
 		return nil
 	}
-
 	return &value.value
 }
 
@@ -123,7 +119,6 @@ func (m *Map[K, V]) Delete(key K) *V {
 	}
 
 	delete(m.table, key)
-
 	return &v.value
 }
 

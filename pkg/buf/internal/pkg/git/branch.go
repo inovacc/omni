@@ -28,7 +28,6 @@ func (r *branch) cloneBranch() string {
 	if r == nil {
 		return ""
 	}
-
 	return r.branch
 }
 

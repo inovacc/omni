@@ -45,7 +45,6 @@ func (fm *fileManager) Track(uri protocol.URI) *file {
 		file.lsp = fm.lsp
 		file.uri = uri
 	}
-
 	return file
 }
 

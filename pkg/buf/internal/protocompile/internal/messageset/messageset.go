@@ -58,6 +58,5 @@ func CanSupportMessageSets() bool {
 		//    message "MessageSet" is a MessageSet, which is a legacy proto1 feature that is no longer supported
 		messageSetSupport = err == nil
 	})
-
 	return messageSetSupport
 }

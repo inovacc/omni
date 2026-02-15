@@ -21,8 +21,8 @@ import (
 	"log/slog"
 	"path/filepath"
 
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/protoencoding"
 	"github.com/inovacc/omni/pkg/buf/internal/protoplugin"
+	"github.com/inovacc/omni/pkg/buf/internal/pkg/protoencoding"
 	"github.com/inovacc/omni/pkg/buf/internal/standard/xio"
 	"github.com/inovacc/omni/pkg/buf/internal/standard/xlog/xslog"
 	"github.com/inovacc/omni/pkg/buf/internal/standard/xos/xexec"
@@ -59,10 +59,8 @@ func (h *binaryHandler) Handle(
 	if err != nil {
 		return err
 	}
-
 	responseBuffer := bytes.NewBuffer(nil)
 	stderrWriteCloser := newStderrWriteCloser(pluginEnv.Stderr, h.pluginPath)
-
 	runOptions := []xexec.RunOption{
 		xexec.WithEnv(pluginEnv.Environ),
 		xexec.WithStdin(bytes.NewReader(requestData)),
@@ -72,7 +70,6 @@ func (h *binaryHandler) Handle(
 	if len(h.pluginArgs) > 0 {
 		runOptions = append(runOptions, xexec.WithArgs(h.pluginArgs...))
 	}
-
 	if err := xexec.Run(
 		ctx,
 		h.pluginPath,
@@ -80,18 +77,15 @@ func (h *binaryHandler) Handle(
 	); err != nil {
 		return err
 	}
-
 	response := &pluginpb.CodeGeneratorResponse{}
 	if err := protoencoding.NewWireUnmarshaler(nil).Unmarshal(responseBuffer.Bytes(), response); err != nil {
 		return err
 	}
-
 	responseWriter.AddCodeGeneratorResponseFiles(response.GetFile()...)
 	responseWriter.AddError(response.GetError())
 	responseWriter.SetSupportedFeatures(response.GetSupportedFeatures())
 	responseWriter.SetMinimumEdition(response.GetMinimumEdition())
 	responseWriter.SetMaximumEdition(response.GetMaximumEdition())
-
 	return nil
 }
 

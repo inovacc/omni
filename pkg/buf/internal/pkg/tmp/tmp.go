@@ -47,35 +47,27 @@ func NewFile(ctx context.Context, reader io.Reader) (File, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	file, err := os.CreateTemp("", id.String())
 	if err != nil {
 		return nil, err
 	}
-
 	path := file.Name()
 	// just in case
 	absPath, err := filepath.Abs(filepath.Clean(path))
 	if err != nil {
 		return nil, err
 	}
-
 	closer := func() error { return os.Remove(absPath) }
-
 	go func() {
 		<-ctx.Done()
-
 		_ = closer()
 	}()
-
 	_, err = io.Copy(file, reader)
-
 	err = errors.Join(err, file.Close())
 	if err != nil {
 		err = errors.Join(err, closer())
 		return nil, err
 	}
-
 	return newFile(closerFunc(closer), absPath), nil
 }
 
@@ -90,12 +82,10 @@ func NewDir(ctx context.Context, options ...DirOption) (File, error) {
 	for _, option := range options {
 		option(dirOptions)
 	}
-
 	id, err := uuidutil.New()
 	if err != nil {
 		return nil, err
 	}
-
 	path, err := os.MkdirTemp(dirOptions.basePath, id.String())
 	if err != nil {
 		return nil, err
@@ -105,15 +95,11 @@ func NewDir(ctx context.Context, options ...DirOption) (File, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	closer := func() error { return os.RemoveAll(absPath) }
-
 	go func() {
 		<-ctx.Done()
-
 		_ = closer()
 	}()
-
 	return newFile(closerFunc(closer), absPath), nil
 }
 

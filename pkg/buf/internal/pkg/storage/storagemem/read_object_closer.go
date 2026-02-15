@@ -40,7 +40,6 @@ func (r *readObjectCloser) Read(p []byte) (int, error) {
 	if r.closed {
 		return 0, storage.ErrClosed
 	}
-
 	return r.reader.Read(p)
 }
 
@@ -48,8 +47,6 @@ func (r *readObjectCloser) Close() error {
 	if r.closed {
 		return storage.ErrClosed
 	}
-
 	r.closed = true
-
 	return nil
 }

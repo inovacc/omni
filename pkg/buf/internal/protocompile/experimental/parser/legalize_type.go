@@ -31,7 +31,6 @@ func legalizeMethodParams(p *parser, list ast.TypeList, what taxa.Noun) {
 		p.Errorf("expected exactly one type in %s, got %d", what, list.Len()).Apply(
 			report.Snippet(list),
 		)
-
 		return
 	}
 
@@ -41,9 +40,7 @@ func legalizeMethodParams(p *parser, list ast.TypeList, what taxa.Noun) {
 		legalizePath(p, what.In(), ty.AsPath().Path, pathOptions{AllowAbsolute: true})
 	case ast.TypeKindPrefixed:
 		prefixed := ty.AsPrefixed()
-
 		var mod ast.TypePrefixed
-
 		for {
 			switch {
 			case !prefixed.Prefix().IsMethodTypeModifier():
@@ -70,12 +67,10 @@ func legalizeMethodParams(p *parser, list ast.TypeList, what taxa.Noun) {
 				prefixed = prefixed.Type().AsPrefixed()
 				continue
 			}
-
 			break
 		}
 
 		ty = prefixed.Type()
-
 		fallthrough
 	default:
 		p.Error(errtoken.Unexpected{
@@ -89,7 +84,6 @@ func legalizeMethodParams(p *parser, list ast.TypeList, what taxa.Noun) {
 // legalizeFieldType legalizes the type of a message field.
 func legalizeFieldType(p *parser, what taxa.Noun, ty ast.TypeAny, topLevel bool, mod ast.TypePrefixed, oneof ast.DeclDef) {
 	expected := taxa.TypePath.AsSet()
-
 	if oneof.IsZero() {
 		switch p.syntax {
 		case syntax.Proto2:

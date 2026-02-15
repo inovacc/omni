@@ -61,10 +61,8 @@ func PromptUserForDelete(container app.Container, entityType string, expectedAns
 		if errors.Is(err, ErrNotATTY) {
 			return errors.New("cannot perform an interactive delete from a non-TTY device")
 		}
-
 		return err
 	}
-
 	if confirmation != expectedAnswer {
 		return fmt.Errorf(
 			"expected %q, but received %q",
@@ -72,7 +70,6 @@ func PromptUserForDelete(container app.Container, entityType string, expectedAns
 			confirmation,
 		)
 	}
-
 	return nil
 }
 
@@ -84,20 +81,16 @@ func promptUser(container app.Container, prompt string, isPassword bool) (string
 	if !ok || !term.IsTerminal(int(file.Fd())) {
 		return "", ErrNotATTY
 	}
-
 	var attempts int
 	for attempts < userPromptAttempts {
 		attempts++
-
 		if _, err := fmt.Fprint(
 			container.Stdout(),
 			prompt,
 		); err != nil {
 			return "", syserror.Wrap(err)
 		}
-
 		var value string
-
 		if isPassword {
 			data, err := term.ReadPassword(int(file.Fd()))
 			if err != nil {
@@ -108,10 +101,8 @@ func promptUser(container app.Container, prompt string, isPassword bool) (string
 				if errors.Is(err, io.EOF) {
 					return "", err
 				}
-
 				return "", syserror.Wrap(err)
 			}
-
 			value = string(data)
 		} else {
 			scanner := bufio.NewScanner(container.Stdin())
@@ -120,22 +111,18 @@ func promptUser(container app.Container, prompt string, isPassword bool) (string
 				if err := scanner.Err(); err != nil {
 					return "", syserror.Wrap(err)
 				}
-
 				return "", io.EOF
 			}
-
 			value = scanner.Text()
 			if err := scanner.Err(); err != nil {
 				return "", syserror.Wrap(err)
 			}
 		}
-
 		if len(strings.TrimSpace(value)) != 0 {
 			// We want to preserve spaces in user input, so we only apply
 			// strings.TrimSpace to verify an answer was provided.
 			return value, nil
 		}
-
 		if attempts < userPromptAttempts {
 			// We only want to ask the user to try again if they actually
 			// have another attempt.
@@ -147,6 +134,5 @@ func promptUser(container app.Container, prompt string, isPassword bool) (string
 			}
 		}
 	}
-
 	return "", NewTooManyEmptyAnswersError(userPromptAttempts)
 }

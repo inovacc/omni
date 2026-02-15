@@ -116,7 +116,7 @@ type BufYAMLFile interface {
 	// The ModuleRefs in this list will be unique by FullName.
 	// Sorted by FullName.
 	ConfiguredDepModuleRefs() []bufparse2.Ref
-	// IncludeDocsLink specifies whether a top-level comment with a link to our public docs
+	//IncludeDocsLink specifies whether a top-level comment with a link to our public docs
 	// should be included at the top of the buf.yaml file.
 	IncludeDocsLink() bool
 
@@ -138,7 +138,6 @@ func NewBufYAMLFile(
 	for _, option := range options {
 		option(bufYAMLFileOptions)
 	}
-
 	return newBufYAMLFile(
 		fileVersion,
 		nil,
@@ -186,24 +185,19 @@ func GetBufYAMLFileForPrefix(
 // Of course, the original author never envisioned buf.work.yamls, merging buf.work.yamls into buf.yamls,
 // buf.gen.yamls, or anything of the like, and was very concentrated on "because Bazel."
 func GetBufYAMLFileForOverride(override string) (BufYAMLFile, error) {
-	var (
-		data     []byte
-		fileName string
-		err      error
-	)
-
+	var data []byte
+	var fileName string
+	var err error
 	switch filepath.Ext(override) {
 	case ".json", ".yaml", ".yml":
 		data, err = os.ReadFile(override)
 		if err != nil {
 			return nil, fmt.Errorf("could not read file: %v", err)
 		}
-
 		fileName = filepath.Base(fileName)
 	default:
 		data = []byte(override)
 	}
-
 	return readFile(bytes.NewReader(data), fileName, readBufYAMLFile)
 }
 
@@ -218,7 +212,6 @@ func GetBufYAMLFileForPrefixOrOverride(
 	if override != "" {
 		return GetBufYAMLFileForOverride(override)
 	}
-
 	return GetBufYAMLFileForPrefix(ctx, bucket, prefix)
 }
 
@@ -291,20 +284,16 @@ func newBufYAMLFile(
 	if len(moduleConfigs) == 0 {
 		return nil, errors.New("had 0 ModuleConfigs passed to NewBufYAMLFile")
 	}
-
 	for _, moduleConfig := range moduleConfigs {
 		if (fileVersion == FileVersionV1Beta1 || fileVersion == FileVersionV1) && moduleConfig.DirPath() != "." {
 			return nil, fmt.Errorf("invalid DirPath %q in NewBufYAMLFile for %v ModuleConfig", moduleConfig.DirPath(), fileVersion)
 		}
-
 		if moduleConfig == nil {
 			return nil, errors.New("ModuleConfig was nil in NewBufYAMLFile")
 		}
-
 		if fileVersion != moduleConfig.LintConfig().FileVersion() {
 			return nil, fmt.Errorf("FileVersion %v was passed to NewBufYAMLFile but had LintConfig FileVersion %v", fileVersion, moduleConfig.LintConfig().FileVersion())
 		}
-
 		if fileVersion != moduleConfig.BreakingConfig().FileVersion() {
 			return nil, fmt.Errorf("FileVersion %v was passed to NewBufYAMLFile but had BreakingConfig FileVersion %v", fileVersion, moduleConfig.BreakingConfig().FileVersion())
 		}
@@ -313,7 +302,6 @@ func newBufYAMLFile(
 	if _, err := bufparse2.FullNameStringToUniqueValue(moduleConfigs); err != nil {
 		return nil, err
 	}
-
 	if _, err := bufparse2.FullNameStringToUniqueValue(configuredDepModuleRefs); err != nil {
 		return nil, err
 	}
@@ -333,7 +321,6 @@ func newBufYAMLFile(
 				configuredDepModuleRefs[j].FullName().String()
 		},
 	)
-
 	return &bufYAMLFile{
 		fileVersion:             fileVersion,
 		objectData:              objectData,
@@ -418,11 +405,9 @@ func readBufYAMLFile(
 		if err := getUnmarshalStrict(allowJSON)(data, &externalBufYAMLFile); err != nil {
 			return nil, err
 		}
-
 		if fileVersion == FileVersionV1 && len(externalBufYAMLFile.Build.Roots) > 0 {
 			return nil, fmt.Errorf("build.roots cannot be set on version %v: %v", fileVersion, externalBufYAMLFile.Build.Roots)
 		}
-
 		var moduleFullName bufparse2.FullName
 		if externalBufYAMLFile.Name != "" {
 			moduleFullName, err = bufparse2.ParseFullName(externalBufYAMLFile.Name)
@@ -430,7 +415,6 @@ func readBufYAMLFile(
 				return nil, err
 			}
 		}
-
 		rootToExcludes, err := getRootToExcludes(externalBufYAMLFile.Build.Roots, externalBufYAMLFile.Build.Excludes)
 		if err != nil {
 			return nil, err
@@ -442,12 +426,10 @@ func readBufYAMLFile(
 			// In v1beta1 and v1, includes is not an option and is always empty.
 			rootToIncludes[root] = []string{}
 		}
-
 		configuredDepModuleRefs, err := getConfiguredDepModuleRefsForExternalDeps(externalBufYAMLFile.Deps)
 		if err != nil {
 			return nil, err
 		}
-
 		lintConfig, err := getLintConfigForExternalLintV1Beta1V1(
 			fileVersion,
 			externalBufYAMLFile.Lint,
@@ -457,7 +439,6 @@ func readBufYAMLFile(
 		if err != nil {
 			return nil, err
 		}
-
 		breakingConfig, err := getBreakingConfigForExternalBreaking(
 			fileVersion,
 			externalBufYAMLFile.Breaking,
@@ -467,7 +448,6 @@ func readBufYAMLFile(
 		if err != nil {
 			return nil, err
 		}
-
 		moduleConfig, err := newModuleConfig(
 			"",
 			moduleFullName,
@@ -479,7 +459,6 @@ func readBufYAMLFile(
 		if err != nil {
 			return nil, err
 		}
-
 		return newBufYAMLFile(
 			fileVersion,
 			objectData,
@@ -498,7 +477,6 @@ func readBufYAMLFile(
 		if err := getUnmarshalStrict(allowJSON)(data, &externalBufYAMLFile); err != nil {
 			return nil, err
 		}
-
 		externalModules := externalBufYAMLFile.Modules
 		if len(externalModules) == 0 {
 			externalModules = []externalBufYAMLFileModuleV2{
@@ -513,20 +491,16 @@ func readBufYAMLFile(
 		// If a module does not have its own lint section, then we use this as the default.
 		defaultExternalLintConfig := externalBufYAMLFile.Lint
 		defaultExternalBreakingConfig := externalBufYAMLFile.Breaking
-
 		var moduleConfigs []ModuleConfig
-
 		for _, externalModule := range externalModules {
 			dirPath := externalModule.Path
 			if dirPath == "" {
 				dirPath = "."
 			}
-
 			dirPath, err := normalpath2.NormalizeAndValidate(dirPath)
 			if err != nil {
 				return nil, fmt.Errorf("invalid module path: %w", err)
 			}
-
 			var moduleFullName bufparse2.FullName
 			if externalModule.Name != "" {
 				moduleFullName, err = bufparse2.ParseFullName(externalModule.Name)
@@ -545,18 +519,15 @@ func readBufYAMLFile(
 				// user error
 				return nil, err
 			}
-
 			relIncludes, err := xslices.MapError(
 				normalIncludes,
 				func(normalInclude string) (string, error) {
 					if normalInclude == dirPath {
 						return "", fmt.Errorf("include path %q is equal to module directory %q", normalInclude, dirPath)
 					}
-
 					if !normalpath2.EqualsOrContainsPath(dirPath, normalInclude, normalpath2.Relative) {
 						return "", fmt.Errorf("include path %q does not reside within module directory %q", normalInclude, dirPath)
 					}
-
 					if normalpath2.Ext(normalInclude) == ".proto" {
 						return "", fmt.Errorf("includes can only be directories but file %q discovered", normalInclude)
 					}
@@ -569,7 +540,6 @@ func readBufYAMLFile(
 			}
 			// The only root for v2 buf.yamls must be "." and relIncludes are already relative to the moduleDirPath.
 			rootToIncludes := map[string][]string{".": relIncludes}
-
 			relExcludes, err := xslices.MapError(
 				externalModule.Excludes,
 				func(normalExclude string) (string, error) {
@@ -578,15 +548,12 @@ func readBufYAMLFile(
 						// user error
 						return "", fmt.Errorf("invalid exclude path: %w", err)
 					}
-
 					if normalExclude == dirPath {
 						return "", fmt.Errorf("exclude path %q is equal to module directory %q", normalExclude, dirPath)
 					}
-
 					if !normalpath2.EqualsOrContainsPath(dirPath, normalExclude, normalpath2.Relative) {
 						return "", fmt.Errorf("exclude path %q does not reside within module directory %q", normalExclude, dirPath)
 					}
-
 					if len(normalIncludes) > 0 {
 						// Each exclude path must be contained in some include path. It is invalid to say include "proto/foo/v1"
 						// and also exclude "proto/foo/v2", because the exclude path is redundant.
@@ -597,18 +564,15 @@ func readBufYAMLFile(
 							if normalInclude == normalExclude {
 								return "", fmt.Errorf("%q is both an include path and an exclude path", normalExclude)
 							}
-
 							if normalpath2.ContainsPath(normalExclude, normalInclude, normalpath2.Relative) {
 								return "", fmt.Errorf("%q (an include path) is a subdirectory of %q (an exclude path)", normalInclude, normalExclude)
 							}
-
 							if normalpath2.ContainsPath(normalInclude, normalExclude, normalpath2.Relative) {
 								foundContainingInclude = true
 								// Do not exit early here, continue to validate the exclude path against the rest of include paths,
 								// to make sure the exclude path does not equal to or contains any of the include path.
 							}
 						}
-
 						if !foundContainingInclude {
 							return "", fmt.Errorf("include paths are specified but %q is not contained within any of them", normalExclude)
 						}
@@ -620,21 +584,17 @@ func readBufYAMLFile(
 			if err != nil {
 				return nil, err
 			}
-
 			rootToExcludes, err := getRootToExcludes([]string{"."}, relExcludes)
 			if err != nil {
 				return nil, err
 			}
-
 			externalLintConfig := defaultExternalLintConfig
 			lintRequirePathsToBeContainedWithinModuleDirPath := false
-
 			if !externalModule.Lint.isEmpty() {
 				externalLintConfig = externalModule.Lint
 				// We have a module-specific configuration, all paths must be within the module.
 				lintRequirePathsToBeContainedWithinModuleDirPath = true
 			}
-
 			lintConfig, err := getLintConfigForExternalLintV2(
 				fileVersion,
 				externalLintConfig,
@@ -644,16 +604,13 @@ func readBufYAMLFile(
 			if err != nil {
 				return nil, err
 			}
-
 			externalBreakingConfig := defaultExternalBreakingConfig
 			breakingRequirePathsToBeContainedWithinModuleDirPath := false
-
 			if !externalModule.Breaking.isEmpty() {
 				externalBreakingConfig = externalModule.Breaking
 				// We have a module-specific configuration, all paths must be within the module.
 				breakingRequirePathsToBeContainedWithinModuleDirPath = true
 			}
-
 			breakingConfig, err := getBreakingConfigForExternalBreaking(
 				fileVersion,
 				externalBreakingConfig,
@@ -663,7 +620,6 @@ func readBufYAMLFile(
 			if err != nil {
 				return nil, err
 			}
-
 			moduleConfig, err := newModuleConfig(
 				dirPath,
 				moduleFullName,
@@ -675,10 +631,8 @@ func readBufYAMLFile(
 			if err != nil {
 				return nil, err
 			}
-
 			moduleConfigs = append(moduleConfigs, moduleConfig)
 		}
-
 		var topLevelLintConfig LintConfig
 		if !defaultExternalLintConfig.isEmpty() {
 			topLevelLintConfig, err = getLintConfigForExternalLintV2(
@@ -691,7 +645,6 @@ func readBufYAMLFile(
 				return nil, err
 			}
 		}
-
 		var topLevelBreakingConfig BreakingConfig
 		if !defaultExternalBreakingConfig.isEmpty() {
 			topLevelBreakingConfig, err = getBreakingConfigForExternalBreaking(
@@ -704,34 +657,26 @@ func readBufYAMLFile(
 				return nil, err
 			}
 		}
-
 		var pluginConfigs []PluginConfig
-
 		for _, externalPluginConfig := range externalBufYAMLFile.Plugins {
 			pluginConfig, err := newPluginConfigForExternalV2(externalPluginConfig)
 			if err != nil {
 				return nil, err
 			}
-
 			pluginConfigs = append(pluginConfigs, pluginConfig)
 		}
-
 		var policyConfigs []PolicyConfig
-
 		for _, externalPolicyConfig := range externalBufYAMLFile.Policies {
 			policyConfig, err := newPolicyConfigForExternalV2(externalPolicyConfig)
 			if err != nil {
 				return nil, err
 			}
-
 			policyConfigs = append(policyConfigs, policyConfig)
 		}
-
 		configuredDepModuleRefs, err := getConfiguredDepModuleRefsForExternalDeps(externalBufYAMLFile.Deps)
 		if err != nil {
 			return nil, err
 		}
-
 		return newBufYAMLFile(
 			fileVersion,
 			objectData,
@@ -757,13 +702,11 @@ func writeBufYAMLFile(writer io.Writer, bufYAMLFile BufYAMLFile) error {
 		if len(moduleConfigs) != 1 {
 			return syserror.Newf("expected 1 ModuleConfig, got %d", len(moduleConfigs))
 		}
-
 		moduleConfig := moduleConfigs[0]
 		// Just some extra sanity checking that we've properly validated.
 		if moduleConfig.DirPath() != "." {
 			return syserror.Newf("expected ModuleConfig DirPath to be . but was %q", moduleConfig.DirPath())
 		}
-
 		externalBufYAMLFile := externalBufYAMLFileV1Beta1V1{
 			Version: fileVersion.String(),
 		}
@@ -777,20 +720,16 @@ func writeBufYAMLFile(writer io.Writer, bufYAMLFile BufYAMLFile) error {
 		if moduleFullName := moduleConfig.FullName(); moduleFullName != nil {
 			externalBufYAMLFile.Name = moduleFullName.String()
 		}
-
 		rootToExcludes := moduleConfig.RootToExcludes()
 		excludes, ok := rootToExcludes["."]
-
 		switch fileVersion {
 		case FileVersionV1:
 			if len(rootToExcludes) != 1 {
 				return syserror.Newf("had rootToExcludes length %d for NewModuleConfig with FileVersion %v", len(rootToExcludes), fileVersion)
 			}
-
 			if !ok {
 				return syserror.Newf("had rootToExcludes without key \".\" for NewModuleConfig with FileVersion %v", fileVersion)
 			}
-
 			for _, exclude := range excludes {
 				// Excludes are defined to be sorted.
 				externalBufYAMLFile.Build.Excludes = append(
@@ -801,7 +740,7 @@ func writeBufYAMLFile(writer io.Writer, bufYAMLFile BufYAMLFile) error {
 			}
 		case FileVersionV1Beta1:
 			// If "." -> empty, do not add anything.
-			if len(rootToExcludes) != 1 || (!ok || len(excludes) != 0) {
+			if len(rootToExcludes) != 1 || !(ok && len(excludes) == 0) {
 				roots := xslices.MapKeysToSortedSlice(rootToExcludes)
 				for _, root := range roots {
 					externalBufYAMLFile.Build.Roots = append(
@@ -822,15 +761,12 @@ func writeBufYAMLFile(writer io.Writer, bufYAMLFile BufYAMLFile) error {
 			// Unreachable - we're in a v1/v1beta1 case statement above.
 			return syserror.Newf("expected v1 or v1beta1, got FileVersion: %v", fileVersion)
 		}
-
 		externalBufYAMLFile.Lint = getExternalLintV1Beta1V1ForLintConfig(moduleConfig.LintConfig(), ".")
 		externalBufYAMLFile.Breaking = getExternalBreakingForBreakingConfig(moduleConfig.BreakingConfig(), ".")
-
 		data, err := encoding.MarshalYAML(&externalBufYAMLFile)
 		if err != nil {
 			return err
 		}
-
 		if bufYAMLFile.IncludeDocsLink() {
 			data = bytes.Join(
 				[][]byte{
@@ -840,9 +776,7 @@ func writeBufYAMLFile(writer io.Writer, bufYAMLFile BufYAMLFile) error {
 				[]byte("\n"),
 			)
 		}
-
 		_, err = writer.Write(data)
-
 		return err
 	case FileVersionV2:
 		externalBufYAMLFile := externalBufYAMLFileV2{
@@ -874,55 +808,44 @@ func writeBufYAMLFile(writer io.Writer, bufYAMLFile BufYAMLFile) error {
 			joinDirPath := func(importPath string) string {
 				return normalpath2.Join(moduleDirPath, importPath)
 			}
-
 			externalModule := externalBufYAMLFileModuleV2{
 				Path: moduleDirPath,
 			}
 			if moduleFullName := moduleConfig.FullName(); moduleFullName != nil {
 				externalModule.Name = moduleFullName.String()
 			}
-
 			rootToIncludes := moduleConfig.RootToIncludes()
 			if len(rootToIncludes) != 1 {
 				return syserror.Newf("had rootToIncludes length %d for NewModuleConfig with FileVersion %v", len(rootToIncludes), fileVersion)
 			}
-
 			includes, ok := rootToIncludes["."]
 			if !ok {
 				return syserror.Newf("had rootToIncludes without key \".\" for NewModuleConfig with FileVersion %v", fileVersion)
 			}
-
 			externalModule.Includes = xslices.Map(includes, joinDirPath)
-
 			rootToExcludes := moduleConfig.RootToExcludes()
 			if len(rootToExcludes) != 1 {
 				return syserror.Newf("had rootToExcludes length %d for NewModuleConfig with FileVersion %v", len(rootToExcludes), fileVersion)
 			}
-
 			excludes, ok := rootToExcludes["."]
 			if !ok {
 				return syserror.Newf("had rootToExcludes without key \".\" for NewModuleConfig with FileVersion %v", fileVersion)
 			}
-
 			externalModule.Excludes = xslices.Map(excludes, joinDirPath)
 
 			externalLint := getExternalLintV2ForLintConfig(moduleConfig.LintConfig(), moduleDirPath)
-
 			externalLintData, err := json.Marshal(externalLint)
 			if err != nil {
 				return syserror.Wrap(err)
 			}
-
 			stringToExternalLint[string(externalLintData)] = externalLint
 			externalModule.Lint = externalLint
 
 			externalBreaking := getExternalBreakingForBreakingConfig(moduleConfig.BreakingConfig(), moduleDirPath)
-
 			externalBreakingData, err := json.Marshal(externalBreaking)
 			if err != nil {
 				return syserror.Wrap(err)
 			}
-
 			stringToExternalBreaking[string(externalBreakingData)] = externalBreaking
 			externalModule.Breaking = externalBreaking
 
@@ -934,21 +857,17 @@ func writeBufYAMLFile(writer io.Writer, bufYAMLFile BufYAMLFile) error {
 			if err != nil {
 				return syserror.Wrap(err)
 			}
-
 			externalBreaking, err := getZeroOrSingleValueForMap(stringToExternalBreaking)
 			if err != nil {
 				return syserror.Wrap(err)
 			}
-
 			externalBufYAMLFile.Lint = externalLint
-
 			externalBufYAMLFile.Breaking = externalBreaking
 			for i := range externalBufYAMLFile.Modules {
 				externalBufYAMLFile.Modules[i].Lint = externalBufYAMLFileLintV2{}
 				externalBufYAMLFile.Modules[i].Breaking = externalBufYAMLFileBreakingV1Beta1V1V2{}
 			}
 		}
-
 		if len(externalBufYAMLFile.Modules) == 1 && externalBufYAMLFile.Modules[0].Path == "." && len(externalBufYAMLFile.Modules[0].Excludes) == 0 {
 			// We know that lint and breaking will already be top-level from the above if statement.
 			externalBufYAMLFile.Name = externalBufYAMLFile.Modules[0].Name
@@ -956,36 +875,29 @@ func writeBufYAMLFile(writer io.Writer, bufYAMLFile BufYAMLFile) error {
 		}
 
 		var externalPlugins []externalBufYAMLFilePluginV2
-
 		for _, pluginConfig := range bufYAMLFile.PluginConfigs() {
 			externalPlugin, err := newExternalV2ForPluginConfig(pluginConfig)
 			if err != nil {
 				return syserror.Wrap(err)
 			}
-
 			externalPlugins = append(externalPlugins, externalPlugin)
 		}
-
 		externalBufYAMLFile.Plugins = externalPlugins
 
 		var externalPolicies []externalBufYAMLFilePolicyV2
-
 		for _, policyConfig := range bufYAMLFile.PolicyConfigs() {
 			externalPolicy, err := newExternalV2ForPolicyConfig(policyConfig)
 			if err != nil {
 				return syserror.Wrap(err)
 			}
-
 			externalPolicies = append(externalPolicies, externalPolicy)
 		}
-
 		externalBufYAMLFile.Policies = externalPolicies
 
 		data, err := encoding.MarshalYAML(&externalBufYAMLFile)
 		if err != nil {
 			return err
 		}
-
 		if bufYAMLFile.IncludeDocsLink() {
 			data = bytes.Join(
 				[][]byte{
@@ -995,9 +907,7 @@ func writeBufYAMLFile(writer io.Writer, bufYAMLFile BufYAMLFile) error {
 				[]byte("\n"),
 			)
 		}
-
 		_, err = writer.Write(data)
-
 		return err
 	default:
 		// This is a system error since we've already parsed.
@@ -1011,21 +921,17 @@ func getRootToExcludes(roots []string, fullExcludes []string) (map[string][]stri
 	}
 
 	rootToExcludes := make(map[string][]string)
-
 	roots, err := normalizeAndCheckPaths(roots, "root")
 	if err != nil {
 		return nil, err
 	}
-
 	for _, root := range roots {
 		// we already checked duplicates, but just in case
 		if _, ok := rootToExcludes[root]; ok {
 			return nil, fmt.Errorf("unexpected duplicate root: %q", root)
 		}
-
 		rootToExcludes[root] = []string{}
 	}
-
 	if len(fullExcludes) == 0 {
 		return rootToExcludes, nil
 	}
@@ -1040,7 +946,6 @@ func getRootToExcludes(roots []string, fullExcludes []string) (map[string][]stri
 		if normalpath2.Ext(fullExclude) == ".proto" {
 			return nil, fmt.Errorf("excludes can only be directories but file %q discovered", fullExclude)
 		}
-
 		if _, ok := rootToExcludes[fullExclude]; ok {
 			return nil, fmt.Errorf("%q is both a root and exclude, which means the entire root is excluded, which is not valid", fullExclude)
 		}
@@ -1054,7 +959,6 @@ func getRootToExcludes(roots []string, fullExcludes []string) (map[string][]stri
 			return nil, fmt.Errorf("exclude %q is not contained in any root, which is not valid", fullExclude)
 		case 1:
 			root := matchingRoots[0]
-
 			exclude, err := normalpath2.Rel(root, fullExclude)
 			if err != nil {
 				return nil, err
@@ -1064,7 +968,6 @@ func getRootToExcludes(roots []string, fullExcludes []string) (map[string][]stri
 			if err != nil {
 				return nil, err
 			}
-
 			rootToExcludes[root] = append(rootToExcludes[root], exclude)
 		default:
 			// This should never happen, but just in case.
@@ -1078,10 +981,8 @@ func getRootToExcludes(roots []string, fullExcludes []string) (map[string][]stri
 			// This should never happen, but just in case.
 			return nil, fmt.Errorf("excludes %v are not unique", excludes)
 		}
-
 		rootToExcludes[root] = uniqueSortedExcludes
 	}
-
 	return rootToExcludes, nil
 }
 
@@ -1094,10 +995,8 @@ func getConfiguredDepModuleRefsForExternalDeps(
 		if err != nil {
 			return nil, fmt.Errorf("invalid dep: %w", err)
 		}
-
 		configuredDepModuleRefs[i] = moduleRef
 	}
-
 	return configuredDepModuleRefs, nil
 }
 
@@ -1108,12 +1007,10 @@ func getLintConfigForExternalLintV1Beta1V1(
 	requirePathsToBeContainedWithinModuleDirPath bool,
 ) (LintConfig, error) {
 	var checkConfig CheckConfig
-
 	disabled, err := isLintOrBreakingDisabledBasedOnIgnores("lint.ignore", externalLint.Ignore, moduleDirPath)
 	if err != nil {
 		return nil, err
 	}
-
 	if disabled {
 		checkConfig = newDisabledCheckConfig(fileVersion)
 	} else {
@@ -1121,20 +1018,16 @@ func getLintConfigForExternalLintV1Beta1V1(
 		if err != nil {
 			return nil, err
 		}
-
 		ignoreOnly := make(map[string][]string)
-
 		for idOrCategory, paths := range externalLint.IgnoreOnly {
 			relPaths, err := getRelPathsForLintOrBreakingExternalPaths("lint.ignore_only", paths, moduleDirPath, requirePathsToBeContainedWithinModuleDirPath)
 			if err != nil {
 				return nil, err
 			}
-
 			if len(relPaths) > 0 {
 				ignoreOnly[idOrCategory] = relPaths
 			}
 		}
-
 		checkConfig, err = newEnabledCheckConfig(
 			fileVersion,
 			externalLint.Use,
@@ -1147,7 +1040,6 @@ func getLintConfigForExternalLintV1Beta1V1(
 			return nil, err
 		}
 	}
-
 	return newLintConfig(
 		checkConfig,
 		externalLint.EnumZeroValueSuffix,
@@ -1166,12 +1058,10 @@ func getLintConfigForExternalLintV2(
 	requirePathsToBeContainedWithinModuleDirPath bool,
 ) (LintConfig, error) {
 	var checkConfig CheckConfig
-
 	disabled, err := isLintOrBreakingDisabledBasedOnIgnores("lint.ignore", externalLint.Ignore, moduleDirPath)
 	if err != nil {
 		return nil, err
 	}
-
 	if disabled {
 		checkConfig = newDisabledCheckConfig(fileVersion)
 	} else {
@@ -1179,20 +1069,16 @@ func getLintConfigForExternalLintV2(
 		if err != nil {
 			return nil, err
 		}
-
 		ignoreOnly := make(map[string][]string)
-
 		for idOrCategory, paths := range externalLint.IgnoreOnly {
 			relPaths, err := getRelPathsForLintOrBreakingExternalPaths("lint.ignore_only", paths, moduleDirPath, requirePathsToBeContainedWithinModuleDirPath)
 			if err != nil {
 				return nil, err
 			}
-
 			if len(relPaths) > 0 {
 				ignoreOnly[idOrCategory] = relPaths
 			}
 		}
-
 		checkConfig, err = newEnabledCheckConfig(
 			fileVersion,
 			externalLint.Use,
@@ -1205,7 +1091,6 @@ func getLintConfigForExternalLintV2(
 			return nil, err
 		}
 	}
-
 	return newLintConfig(
 		checkConfig,
 		externalLint.EnumZeroValueSuffix,
@@ -1224,12 +1109,10 @@ func getBreakingConfigForExternalBreaking(
 	requirePathsToBeContainedWithinModuleDirPath bool,
 ) (BreakingConfig, error) {
 	var checkConfig CheckConfig
-
 	disabled, err := isLintOrBreakingDisabledBasedOnIgnores("breaking.ignore", externalBreaking.Ignore, moduleDirPath)
 	if err != nil {
 		return nil, err
 	}
-
 	if disabled {
 		checkConfig = newDisabledCheckConfig(fileVersion)
 	} else {
@@ -1237,20 +1120,16 @@ func getBreakingConfigForExternalBreaking(
 		if err != nil {
 			return nil, err
 		}
-
 		ignoreOnly := make(map[string][]string)
-
 		for idOrCategory, paths := range externalBreaking.IgnoreOnly {
 			relPaths, err := getRelPathsForLintOrBreakingExternalPaths("breaking.ignore_only", paths, moduleDirPath, requirePathsToBeContainedWithinModuleDirPath)
 			if err != nil {
 				return nil, err
 			}
-
 			if len(relPaths) > 0 {
 				ignoreOnly[idOrCategory] = relPaths
 			}
 		}
-
 		checkConfig, err = newEnabledCheckConfig(
 			fileVersion,
 			externalBreaking.Use,
@@ -1263,7 +1142,6 @@ func getBreakingConfigForExternalBreaking(
 			return nil, err
 		}
 	}
-
 	return newBreakingConfig(
 		checkConfig,
 		externalBreaking.IgnoreUnstablePackages,
@@ -1285,12 +1163,10 @@ func isLintOrBreakingDisabledBasedOnIgnores(
 			// user error
 			return false, fmt.Errorf("%s: invalid path: %w", fieldName, err)
 		}
-
 		if ignore == moduleDirPath {
 			return true, nil
 		}
 	}
-
 	return false, nil
 }
 
@@ -1324,23 +1200,18 @@ func getRelPathsForLintOrBreakingExternalPaths(
 			// user error
 			return nil, fmt.Errorf("%s: invalid path: %w", fieldName, err)
 		}
-
 		if !normalpath2.EqualsOrContainsPath(moduleDirPath, path, normalpath2.Relative) {
 			if !requirePathsToBeContainedWithinModuleDirPath {
 				continue
 			}
-
 			return nil, fmt.Errorf("%s: path %q is not contained within module directory %q", fieldName, path, moduleDirPath)
 		}
-
 		relPath, err := normalpath2.Rel(moduleDirPath, path)
 		if err != nil {
 			return nil, err
 		}
-
 		relPaths = append(relPaths, relPath)
 	}
-
 	return relPaths, nil
 }
 
@@ -1353,12 +1224,10 @@ func getExternalLintV1Beta1V1ForLintConfig(lintConfig LintConfig, moduleDirPath 
 	externalLint.Use = lintConfig.UseIDsAndCategories()
 	externalLint.Except = lintConfig.ExceptIDsAndCategories()
 	externalLint.Ignore = xslices.Map(lintConfig.IgnorePaths(), joinDirPath)
-
 	externalLint.IgnoreOnly = make(map[string][]string, len(lintConfig.IgnoreIDOrCategoryToPaths()))
 	for idOrCategory, importPaths := range lintConfig.IgnoreIDOrCategoryToPaths() {
 		externalLint.IgnoreOnly[idOrCategory] = xslices.Map(importPaths, joinDirPath)
 	}
-
 	externalLint.EnumZeroValueSuffix = lintConfig.EnumZeroValueSuffix()
 	externalLint.RPCAllowSameRequestResponse = lintConfig.RPCAllowSameRequestResponse()
 	externalLint.RPCAllowGoogleProtobufEmptyRequests = lintConfig.RPCAllowGoogleProtobufEmptyRequests()
@@ -1366,7 +1235,6 @@ func getExternalLintV1Beta1V1ForLintConfig(lintConfig LintConfig, moduleDirPath 
 	externalLint.ServiceSuffix = lintConfig.ServiceSuffix()
 	externalLint.AllowCommentIgnores = lintConfig.AllowCommentIgnores()
 	externalLint.DisableBuiltin = lintConfig.DisableBuiltin()
-
 	return externalLint
 }
 
@@ -1379,12 +1247,10 @@ func getExternalLintV2ForLintConfig(lintConfig LintConfig, moduleDirPath string)
 	externalLint.Use = lintConfig.UseIDsAndCategories()
 	externalLint.Except = lintConfig.ExceptIDsAndCategories()
 	externalLint.Ignore = xslices.Map(lintConfig.IgnorePaths(), joinDirPath)
-
 	externalLint.IgnoreOnly = make(map[string][]string, len(lintConfig.IgnoreIDOrCategoryToPaths()))
 	for idOrCategory, importPaths := range lintConfig.IgnoreIDOrCategoryToPaths() {
 		externalLint.IgnoreOnly[idOrCategory] = xslices.Map(importPaths, joinDirPath)
 	}
-
 	externalLint.EnumZeroValueSuffix = lintConfig.EnumZeroValueSuffix()
 	externalLint.RPCAllowSameRequestResponse = lintConfig.RPCAllowSameRequestResponse()
 	externalLint.RPCAllowGoogleProtobufEmptyRequests = lintConfig.RPCAllowGoogleProtobufEmptyRequests()
@@ -1392,7 +1258,6 @@ func getExternalLintV2ForLintConfig(lintConfig LintConfig, moduleDirPath string)
 	externalLint.ServiceSuffix = lintConfig.ServiceSuffix()
 	externalLint.DisallowCommentIgnores = !lintConfig.AllowCommentIgnores()
 	externalLint.DisableBuiltin = lintConfig.DisableBuiltin()
-
 	return externalLint
 }
 
@@ -1405,15 +1270,12 @@ func getExternalBreakingForBreakingConfig(breakingConfig BreakingConfig, moduleD
 	externalBreaking.Use = breakingConfig.UseIDsAndCategories()
 	externalBreaking.Except = breakingConfig.ExceptIDsAndCategories()
 	externalBreaking.Ignore = xslices.Map(breakingConfig.IgnorePaths(), joinDirPath)
-
 	externalBreaking.IgnoreOnly = make(map[string][]string, len(breakingConfig.IgnoreIDOrCategoryToPaths()))
 	for idOrCategory, importPaths := range breakingConfig.IgnoreIDOrCategoryToPaths() {
 		externalBreaking.IgnoreOnly[idOrCategory] = xslices.Map(importPaths, joinDirPath)
 	}
-
 	externalBreaking.IgnoreUnstablePackages = breakingConfig.IgnoreUnstablePackages()
 	externalBreaking.DisableBuiltin = breakingConfig.DisableBuiltin()
-
 	return externalBreaking
 }
 
@@ -1581,7 +1443,6 @@ func getZeroOrSingleValueForMap[K comparable, V any](m map[K]V) (V, error) {
 	if len(m) > 1 {
 		return zero, syserror.Newf("map was of length %d empty in getZeroOrSingleValueForMap", len(m))
 	}
-
 	for _, v := range m {
 		return v, nil
 	}

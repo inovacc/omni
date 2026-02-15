@@ -52,7 +52,6 @@ func parseDecl(p *parser, c *token.Cursor, in taxa.Noun) ast.DeclAny {
 		unexpected = append(unexpected, c.Next())
 		first = c.Peek()
 	}
-
 	switch len(unexpected) {
 	case 0:
 	case 1:
@@ -111,7 +110,6 @@ func parseDecl(p *parser, c *token.Cursor, in taxa.Noun) ast.DeclAny {
 
 	// Check for the various special cases.
 	next := c.Peek()
-
 	switch kw.Keyword() {
 	case keyword.Syntax, keyword.Edition:
 		// Syntax and edition are parsed only at the top level. Otherwise, they
@@ -136,7 +134,6 @@ func parseDecl(p *parser, c *token.Cursor, in taxa.Noun) ast.DeclAny {
 		} else {
 			eq, err := parseEquals(p, c, in)
 			args.Equals = eq
-
 			if err != nil {
 				p.Error(err)
 			}
@@ -177,7 +174,6 @@ func parseDecl(p *parser, c *token.Cursor, in taxa.Noun) ast.DeclAny {
 		if in != taxa.TopLevel {
 			break
 		}
-
 		in := taxa.Package
 
 		args := ast.DeclPackageArgs{
@@ -194,7 +190,6 @@ func parseDecl(p *parser, c *token.Cursor, in taxa.Noun) ast.DeclAny {
 
 			semi, err := parseSemi(p, c, in)
 			args.Semicolon = semi
-
 			if err != nil {
 				p.Error(err)
 			}
@@ -227,7 +222,6 @@ func parseDecl(p *parser, c *token.Cursor, in taxa.Noun) ast.DeclAny {
 
 		for path.AsIdent().Keyword().IsModifier() {
 			args.Modifiers = append(args.Modifiers, path.AsIdent())
-
 			path = ast.Path{}
 			if canStartPath(c.Peek()) {
 				path = parsePath(p, c)
@@ -252,7 +246,6 @@ func parseDecl(p *parser, c *token.Cursor, in taxa.Noun) ast.DeclAny {
 		} else {
 			semi, err := parseSemi(p, c, in)
 			args.Semicolon = semi
-
 			if err != nil {
 				p.Error(err)
 			}
@@ -274,7 +267,6 @@ func parseDecl(p *parser, c *token.Cursor, in taxa.Noun) ast.DeclAny {
 		// through the expression machinery to get foo to bar as a single
 		// expression.
 		c.Rewind(mark)
-
 		return parseRange(p, c).AsAny()
 	}
 
@@ -285,7 +277,6 @@ func parseDecl(p *parser, c *token.Cursor, in taxa.Noun) ast.DeclAny {
 		in:     in,
 		args:   ast.DeclDefArgs{Type: ty, Name: path},
 	}
-
 	return def.parse().AsAny()
 }
 
@@ -332,7 +323,6 @@ func parseRange(p *parser, c *token.Cursor) ast.DeclRange {
 	// to parse this as an array, instead.
 	if !canStartOptions(c.Peek()) {
 		var last token.Token
-
 		d := delimited[ast.ExprAny]{
 			p: p, c: c,
 			what: taxa.Expr,
@@ -375,7 +365,6 @@ func parseRange(p *parser, c *token.Cursor) ast.DeclRange {
 					// to do 2*O(log n) line lookups.
 					prev := last.Span().EndLoc()
 					next := t.Span().StartLoc()
-
 					return prev.Line != next.Line
 				}
 
@@ -431,7 +420,6 @@ func tryParseOptions(p *parser, c *token.Cursor, in taxa.Noun) ast.CompactOption
 	if !canStartOptions(c.Peek()) {
 		return ast.CompactOptions{}
 	}
-
 	return parseOptions(p, c.Next(), in)
 }
 
@@ -464,7 +452,6 @@ func parseOptions(p *parser, brackets token.Token, _ taxa.Noun) ast.CompactOptio
 					}),
 					report.Notef("top-level `option` assignment uses `=`, not `:`"),
 				)
-
 				fallthrough
 			case "=":
 				c.Next()
@@ -482,7 +469,6 @@ func parseOptions(p *parser, brackets token.Token, _ taxa.Noun) ast.CompactOptio
 				Equals: eq,
 				Value:  parseExpr(p, c, taxa.CompactOptions.In()),
 			}
-
 			return option, !option.Value.IsZero()
 		},
 		start: canStartPath,

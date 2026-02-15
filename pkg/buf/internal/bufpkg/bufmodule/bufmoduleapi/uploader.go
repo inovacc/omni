@@ -21,10 +21,10 @@ import (
 	"strings"
 	"time"
 
-	"connectrpc.com/connect"
 	"github.com/google/uuid"
 	bufmodule2 "github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufmodule"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufregistryapi/bufregistryapimodule"
+	"connectrpc.com/connect"
 	modulev1 "github.com/inovacc/omni/pkg/buf/internal/gen/bufbuild/registry/protocolbuffers/go/buf/registry/module/v1"
 	modulev1beta1 "github.com/inovacc/omni/pkg/buf/internal/gen/bufbuild/registry/protocolbuffers/go/buf/registry/module/v1beta1"
 	ownerv1 "github.com/inovacc/omni/pkg/buf/internal/gen/bufbuild/registry/protocolbuffers/go/buf/registry/owner/v1"
@@ -51,7 +51,7 @@ type UploaderOption func(*uploader)
 
 // UploaderWithPublicRegistry returns a new UploaderOption that specifies
 // the hostname of the public registry. By default this is "buf.build", however in testing,
-// this may be something else. This is needed to discern which registry to make calls
+// this may be something else. This is needed to discern which which registry to make calls
 // against in the case where there is >1 registries represented in the ModuleKeys - we always
 // want to call the non-public registry.
 func UploaderWithPublicRegistry(publicRegistry string) UploaderOption {
@@ -91,7 +91,6 @@ func newUploader(
 	for _, option := range options {
 		option(uploader)
 	}
-
 	return uploader
 }
 
@@ -119,15 +118,12 @@ func (a *uploader) Upload(
 				a.logger.Warn("Excluding unnamed module", slog.String("module", moduleDescription))
 				return false, nil
 			}
-
 			return false, fmt.Errorf("a name must be specified in buf.yaml to push module: %s", moduleDescription)
 		}
-
 		deps, err := module.ModuleDeps()
 		if err != nil {
 			return false, err
 		}
-
 		if allDepModuleDescriptions := xslices.Reduce(deps, func(allDepModuleDescriptions []string, dep bufmodule2.ModuleDep) []string {
 			if moduleName := dep.FullName(); moduleName == nil {
 				return append(allDepModuleDescriptions, dep.Description())
@@ -143,18 +139,15 @@ func (a *uploader) Upload(
 				),
 			)
 		}
-
 		return true, nil
 	})
 	if err != nil {
 		return nil, err
 	}
-
 	if len(contentModules) == 0 {
 		// Nothing to upload.
 		return nil, nil
 	}
-
 	primaryRegistry, err := getSingleRegistryForContentModules(contentModules)
 	if err != nil {
 		return nil, err
@@ -178,7 +171,6 @@ func (a *uploader) Upload(
 			if err != nil {
 				return nil, err
 			}
-
 			modules[i] = module
 		}
 	} else {
@@ -195,13 +187,12 @@ func (a *uploader) Upload(
 	}
 
 	var v1beta1ProtoScopedLabelRefs []*modulev1beta1.ScopedLabelRef
-
 	if len(uploadOptions.Tags()) > 0 {
 		contentModuleSortedDefaultLabels := xslices.ToUniqueSorted(
 			xslices.Map(
 				modules,
 				func(module *modulev1.Module) string {
-					return module.GetDefaultLabelName()
+					return module.DefaultLabelName
 				},
 			),
 		)
@@ -217,7 +208,6 @@ func (a *uploader) Upload(
 				strings.Join(contentModuleSortedDefaultLabels, ", "),
 			)
 		}
-
 		if len(contentModuleSortedDefaultLabels) < 1 {
 			// This should never happen, every module should have a default label, so we return
 			// a syserror.
@@ -288,7 +278,6 @@ func (a *uploader) Upload(
 	}
 
 	var universalProtoCommits []*universalProtoCommit
-
 	if len(remoteDepRegistries) > 0 && (len(remoteDepRegistries) > 1 || remoteDepRegistries[0] != primaryRegistry) {
 		// If we have dependencies on other registries, or we have multiple registries we depend on, we have
 		// to use legacy federation.
@@ -304,8 +293,7 @@ func (a *uploader) Upload(
 		if err != nil {
 			return nil, err
 		}
-
-		universalProtoCommits, err = xslices.MapError(response.Msg.GetCommits(), newUniversalProtoCommitForV1Beta1)
+		universalProtoCommits, err = xslices.MapError(response.Msg.Commits, newUniversalProtoCommitForV1Beta1)
 		if err != nil {
 			return nil, err
 		}
@@ -321,10 +309,9 @@ func (a *uploader) Upload(
 		protoDepCommitIds := xslices.Map(
 			v1beta1ProtoUploadRequestDepRefs,
 			func(v1beta1ProtoDepRef *modulev1beta1.UploadRequest_DepRef) string {
-				return v1beta1ProtoDepRef.GetCommitId()
+				return v1beta1ProtoDepRef.CommitId
 			},
 		)
-
 		response, err := a.moduleClientProvider.V1UploadServiceClient(primaryRegistry).Upload(
 			ctx,
 			connect.NewRequest(
@@ -337,8 +324,7 @@ func (a *uploader) Upload(
 		if err != nil {
 			return nil, err
 		}
-
-		universalProtoCommits, err = xslices.MapError(response.Msg.GetCommits(), newUniversalProtoCommitForV1)
+		universalProtoCommits, err = xslices.MapError(response.Msg.Commits, newUniversalProtoCommitForV1)
 		if err != nil {
 			return nil, err
 		}
@@ -347,7 +333,6 @@ func (a *uploader) Upload(
 	if len(universalProtoCommits) != len(v1beta1ProtoUploadRequestContents) {
 		return nil, fmt.Errorf("expected %d Commits, got %d", len(v1beta1ProtoUploadRequestContents), len(universalProtoCommits))
 	}
-
 	commits := make([]bufmodule2.Commit, len(universalProtoCommits))
 	for i, universalProtoCommit := range universalProtoCommits {
 		// This is how we get the FullName without calling the ModuleService or OwnerService.
@@ -355,12 +340,10 @@ func (a *uploader) Upload(
 		// We've maintained ordering throughout this function, so we can do this.
 		// The API returns Commits in the same order as the Contents.
 		moduleFullName := contentModules[i].FullName()
-
 		commitID, err := uuidutil.FromDashless(universalProtoCommit.ID)
 		if err != nil {
 			return nil, err
 		}
-
 		moduleKey, err := bufmodule2.NewModuleKey(
 			moduleFullName,
 			commitID,
@@ -371,7 +354,6 @@ func (a *uploader) Upload(
 		if err != nil {
 			return nil, err
 		}
-
 		commits[i] = bufmodule2.NewCommit(
 			moduleKey,
 			func() (time.Time, error) {
@@ -379,7 +361,6 @@ func (a *uploader) Upload(
 			},
 		)
 	}
-
 	return commits, nil
 }
 
@@ -400,7 +381,6 @@ func (a *uploader) createContentModuleIfNotExist(
 			if err != nil {
 				return nil, err
 			}
-
 			response, err := a.moduleClientProvider.V1ModuleServiceClient(primaryRegistry).CreateModules(
 				ctx,
 				connect.NewRequest(
@@ -424,20 +404,17 @@ func (a *uploader) createContentModuleIfNotExist(
 				return nil, err
 			}
 			// Check that we only created a single module
-			if len(response.Msg.GetModules()) != 1 {
-				return nil, syserror.Newf("expected 1 Module, found %d", len(response.Msg.GetModules()))
+			if len(response.Msg.Modules) != 1 {
+				return nil, syserror.Newf("expected 1 Module, found %d", len(response.Msg.Modules))
 			}
 			// Return the created module.
-			return response.Msg.GetModules()[0], nil
+			return response.Msg.Modules[0], nil
 		}
-
 		return nil, err
 	}
-
 	if len(modules) != 1 {
 		return nil, syserror.Newf("expected 1 Module, found %d", len(modules))
 	}
-
 	return modules[0], nil
 }
 
@@ -469,8 +446,7 @@ func (a *uploader) validateContentModulesExist(
 	if err != nil {
 		return nil, err
 	}
-
-	return response.Msg.GetModules(), nil
+	return response.Msg.Modules, nil
 }
 
 func getV1Beta1ProtoUploadRequestContent(
@@ -483,11 +459,9 @@ func getV1Beta1ProtoUploadRequestContent(
 	if !module.IsLocal() {
 		return nil, syserror.New("expected local Module in getProtoLegacyFederationUploadRequestContent")
 	}
-
 	if module.FullName() == nil {
 		return nil, syserror.Newf("expected module name for local module: %s", module.Description())
 	}
-
 	if module.FullName().Registry() != primaryRegistry {
 		// This should never happen - the upload Modules should already be verified above to come from one registry.
 		return nil, syserror.Newf("attempting to upload content for registry other than %s in getProtoLegacyFederationUploadRequestContent", primaryRegistry)
@@ -513,7 +487,6 @@ func getV1Beta1ProtoUploadRequestContent(
 	if sourceControlURL != "" {
 		uploadRequestContent.SourceControlUrl = sourceControlURL
 	}
-
 	return uploadRequestContent, nil
 }
 
@@ -523,12 +496,10 @@ func remoteDepToV1Beta1ProtoUploadRequestDepRef(
 	if remoteDep.FullName() == nil {
 		return nil, syserror.Newf("expected module name for remote module dependency %q", remoteDep.OpaqueID())
 	}
-
 	depCommitID := remoteDep.CommitID()
 	if depCommitID == uuid.Nil {
 		return nil, syserror.Newf("did not have a commit ID for a remote module dependency %q", remoteDep.OpaqueID())
 	}
-
 	return &modulev1beta1.UploadRequest_DepRef{
 		CommitId: uuidutil.ToDashless(depCommitID),
 		Registry: remoteDep.FullName().Registry(),

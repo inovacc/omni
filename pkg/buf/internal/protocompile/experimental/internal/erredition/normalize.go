@@ -43,7 +43,6 @@ func normalizeReason(text string) string {
 		if match == "." {
 			return ""
 		}
-
 		return ";" + strings.ToLower(match[1:])
 	})
 
@@ -54,6 +53,5 @@ func normalizeReason(text string) string {
 
 	// Finally, de-capitalize the first letter.
 	r, n := utf8.DecodeRuneInString(text)
-
 	return string(unicode.ToLower(r)) + text[n:]
 }

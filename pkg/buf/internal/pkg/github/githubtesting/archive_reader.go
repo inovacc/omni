@@ -76,7 +76,6 @@ func (a *archiveReader) GetArchive(
 	if err != nil {
 		return err
 	}
-
 	defer func() {
 		retErr = errors.Join(retErr, unlocker.Unlock())
 	}()
@@ -87,42 +86,34 @@ func (a *archiveReader) GetArchive(
 		if !fileInfo.IsDir() {
 			return fmt.Errorf("expected %s to be a directory", outputDirPath)
 		}
-
 		return nil
 	}
-
 	request, err := http.NewRequestWithContext(
 		ctx,
-		http.MethodGet,
+		"GET",
 		fmt.Sprintf("https://github.com/%s/%s/archive/%s.tar.gz", owner, repository, ref),
 		nil,
 	)
 	if err != nil {
 		return err
 	}
-
 	response, err := a.httpClient.Do(request)
 	if err != nil {
 		return err
 	}
-
 	defer func() {
 		retErr = errors.Join(retErr, response.Body.Close())
 	}()
-
 	if response.StatusCode != http.StatusOK {
 		return fmt.Errorf("expected HTTP status code %d to be %d", response.StatusCode, http.StatusOK)
 	}
-
 	gzipReader, err := gzip.NewReader(response.Body)
 	if err != nil {
 		return err
 	}
-
 	defer func() {
 		retErr = errors.Join(retErr, gzipReader.Close())
 	}()
-
 	if err := os.MkdirAll(outputDirPath, 0755); err != nil {
 		return err
 	}
@@ -131,7 +122,6 @@ func (a *archiveReader) GetArchive(
 	if err != nil {
 		return err
 	}
-
 	return storagearchive.Untar(
 		ctx,
 		gzipReader,

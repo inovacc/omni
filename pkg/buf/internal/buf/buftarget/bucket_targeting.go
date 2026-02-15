@@ -105,7 +105,6 @@ func newBucketTargeting(
 	// paths to the input dir.
 	mappedTargetPaths := targetPaths
 	mappedTargetExcludePaths := targetExcludePaths
-
 	if controllingWorkspace != nil && controllingWorkspace.Path() != "." {
 		// If a controlling workspace was found, we map the paths to the controlling workspace
 		// because we'll be working with a workspace bucket.
@@ -114,30 +113,24 @@ func newBucketTargeting(
 			if err != nil {
 				return nil, err
 			}
-
 			mappedTargetPath, err = normalpath2.NormalizeAndValidate(mappedTargetPath)
 			if err != nil {
 				return nil, err
 			}
-
 			mappedTargetPaths[i] = mappedTargetPath
 		}
-
 		for i, targetExcludePath := range targetExcludePaths {
 			mappedTargetExcludePath, err := normalpath2.Rel(controllingWorkspace.Path(), targetExcludePath)
 			if err != nil {
 				return nil, err
 			}
-
 			mappedTargetExcludePath, err = normalpath2.NormalizeAndValidate(mappedTargetExcludePath)
 			if err != nil {
 				return nil, err
 			}
-
 			mappedTargetExcludePaths[i] = mappedTargetExcludePath
 		}
 	}
-
 	return &bucketTargeting{
 		controllingWorkspace: controllingWorkspace,
 		subDirPath:           mappedInputDir,
@@ -196,7 +189,6 @@ func mapControllingWorkspaceAndPath(
 		if err != nil {
 			return nil, "", err
 		}
-
 		if controllingWorkspace != nil {
 			logger.DebugContext(
 				ctx,
@@ -204,22 +196,17 @@ func mapControllingWorkspaceAndPath(
 				slog.String("curDirPath", curDirPath),
 				slog.String("path", path),
 			)
-
 			subDirPath, err := normalpath2.Rel(curDirPath, path)
 			if err != nil {
 				return nil, "", err
 			}
-
 			return controllingWorkspace, subDirPath, nil
 		}
-
 		if curDirPath == "." {
 			break
 		}
-
 		curDirPath = normalpath2.Dir(curDirPath)
 	}
-
 	logger.DebugContext(
 		ctx,
 		"buffetch no termination found",

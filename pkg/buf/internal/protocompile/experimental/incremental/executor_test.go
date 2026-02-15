@@ -136,7 +136,6 @@ func TestUnchanged(t *testing.T) {
 
 	for range runs {
 		exec.Evict(ParseInt{"42"})
-
 		results, _, _ := incremental.Run(ctx, exec, queries...)
 		for j, r := range results[1:] {
 			// All calls after an eviction should return true for Changed.
@@ -150,13 +149,10 @@ func TestUnchanged(t *testing.T) {
 
 		exec.Evict(ParseInt{"42"})
 		barrier.Add(1)
-
 		for i := range gsPerRun {
 			wg.Add(1)
-
 			go func() {
 				barrier.Wait() // Ensure all goroutines start together.
-
 				defer wg.Done()
 
 				results, _, _ := incremental.Run(ctx, exec, queries...)
@@ -172,7 +168,6 @@ func TestUnchanged(t *testing.T) {
 				}
 			}()
 		}
-
 		barrier.Done()
 		wg.Wait()
 
@@ -208,11 +203,9 @@ func (i ParseInt) Execute(t *incremental.Task) (int, error) {
 	if err != nil {
 		t.Report().Errorf("%s", err)
 	}
-
 	if v < 0 {
 		return 0, fmt.Errorf("negative value: %v", v)
 	}
-
 	return v, nil
 }
 
@@ -227,7 +220,7 @@ func (s Sum) Key() any {
 
 func (s Sum) Execute(t *incremental.Task) (int, error) {
 	var queries []incremental.Query[int] //nolint:prealloc
-	for s := range strings.SplitSeq(s.Input, ",") {
+	for _, s := range strings.Split(s.Input, ",") {
 		queries = append(queries, ParseInt{s})
 	}
 
@@ -237,7 +230,6 @@ func (s Sum) Execute(t *incremental.Task) (int, error) {
 	}
 
 	var v int
-
 	for _, i := range ints {
 		if i.Fatal != nil {
 			return 0, i.Fatal
@@ -245,7 +237,6 @@ func (s Sum) Execute(t *incremental.Task) (int, error) {
 
 		v += i.Value
 	}
-
 	return v, nil
 }
 

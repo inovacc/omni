@@ -51,7 +51,6 @@ func (e If) AsAny() Expr {
 	if e.IsZero() {
 		return Expr{}
 	}
-
 	return id.WrapDyn(e.Context(), id.NewDyn(KindIf, id.ID[Expr](e.ID())))
 }
 
@@ -60,7 +59,6 @@ func (e If) IfToken() token.Token {
 	if e.IsZero() {
 		return token.Zero
 	}
-
 	return id.Wrap(e.Context().Stream(), e.Raw().ifT)
 }
 
@@ -69,7 +67,6 @@ func (e If) ElseToken() token.Token {
 	if e.IsZero() {
 		return token.Zero
 	}
-
 	return id.Wrap(e.Context().Stream(), e.Raw().elseT)
 }
 
@@ -80,7 +77,6 @@ func (e If) Condition() Expr {
 	if e.IsZero() {
 		return Expr{}
 	}
-
 	return id.WrapDyn(e.Context(), e.Raw().cond)
 }
 
@@ -89,7 +85,6 @@ func (e If) Block() Block {
 	if e.IsZero() {
 		return Block{}
 	}
-
 	return id.Wrap(e.Context(), e.Raw().block)
 }
 
@@ -98,7 +93,6 @@ func (e If) Else() If {
 	if e.IsZero() {
 		return If{}
 	}
-
 	return id.Wrap(e.Context(), e.Raw().else_)
 }
 

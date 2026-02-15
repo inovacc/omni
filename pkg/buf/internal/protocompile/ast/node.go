@@ -97,7 +97,6 @@ func (n *compositeNode) End() Token {
 // into the file's contents.
 type RuneNode struct {
 	terminalNode
-
 	Rune rune
 }
 
@@ -114,7 +113,6 @@ func NewRuneNode(r rune, tok Token) *RuneNode {
 // the semicolon.
 type EmptyDeclNode struct {
 	compositeNode
-
 	Semicolon *RuneNode
 }
 
@@ -124,7 +122,6 @@ func NewEmptyDeclNode(semicolon *RuneNode) *EmptyDeclNode {
 	if semicolon == nil {
 		panic("semicolon is nil")
 	}
-
 	return &EmptyDeclNode{
 		compositeNode: compositeNode{
 			children: []Node{semicolon},

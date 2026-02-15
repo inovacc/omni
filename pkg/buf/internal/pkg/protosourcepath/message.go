@@ -64,13 +64,11 @@ func messages(
 			childAssociatedPath(fullSourcePath, index, messageNameTypeTag),
 		)
 	}
-
 	if len(fullSourcePath) == index+1 {
 		// This does not extend beyond the message declaration, return associated paths and
 		// terminate here.
 		return nil, associatedPaths, nil
 	}
-
 	return message, associatedPaths, nil
 }
 
@@ -87,7 +85,6 @@ func message(token int32, fullSourcePath protoreflect.SourcePath, index int, _ b
 		if len(fullSourcePath) < index+2 {
 			return nil, nil, newInvalidSourcePathError(fullSourcePath, "cannot have field declaration without index")
 		}
-
 		return fields, nil, nil
 	case messageOneOfsTypeTag:
 		// We check to make sure that the length of the source path contains at least the current
@@ -96,7 +93,6 @@ func message(token int32, fullSourcePath protoreflect.SourcePath, index int, _ b
 		if len(fullSourcePath) < index+2 {
 			return nil, nil, newInvalidSourcePathError(fullSourcePath, "cannot have oneof declaration without index")
 		}
-
 		return oneOfs, nil, nil
 	case nestedMessagesTypeTag:
 		// We check to make sure that the length of the source path contains at least the current
@@ -105,7 +101,6 @@ func message(token int32, fullSourcePath protoreflect.SourcePath, index int, _ b
 		if len(fullSourcePath) < index+2 {
 			return nil, nil, newInvalidSourcePathError(fullSourcePath, "cannot have a nested message declaration without index")
 		}
-
 		return messages, nil, nil
 	case nestedEnumsTypeTag:
 		// We check to make sure that the length of the source path contains at least the current
@@ -114,7 +109,6 @@ func message(token int32, fullSourcePath protoreflect.SourcePath, index int, _ b
 		if len(fullSourcePath) < index+2 {
 			return nil, nil, newInvalidSourcePathError(fullSourcePath, "cannot have a nested enum declaration without index")
 		}
-
 		return enums, nil, nil
 	case messageOptionTypeTag:
 		// For options, we add the full path and then return the options state to validate
@@ -137,7 +131,6 @@ func message(token int32, fullSourcePath protoreflect.SourcePath, index int, _ b
 		// validate the path.
 		return reservedNames, []protoreflect.SourcePath{currentPath(fullSourcePath, index)}, nil
 	}
-
 	return nil, nil, newInvalidSourcePathError(fullSourcePath, "invalid message path")
 }
 
@@ -157,7 +150,6 @@ func oneOfs(
 			childAssociatedPath(fullSourcePath, index, messageOneOfNameTypeTag),
 		)
 	}
-
 	return oneOf, associatedPaths, nil
 }
 
@@ -167,14 +159,12 @@ func oneOf(token int32, fullSourcePath protoreflect.SourcePath, _ int, _ bool) (
 		// Encountered a terminal one of token, can terminate here immediately.
 		return nil, nil, nil
 	}
-
 	switch token {
 	case messageOneOfOptionTypeTag:
 		// For options, we add the full path and then return the options state to validate
 		// the path.
 		return options, []protoreflect.SourcePath{slices.Clone(fullSourcePath)}, nil
 	}
-
 	return nil, nil, newInvalidSourcePathError(fullSourcePath, "invalid one of path")
 }
 
@@ -195,12 +185,10 @@ func extensionRanges(
 			childAssociatedPath(fullSourcePath, index, messageExtensionRangeEndTypeTag),
 		)
 	}
-
 	if len(fullSourcePath) == index+1 {
 		// This does not extend beyond the declaration, return associated paths and terminate here.
 		return nil, associatedPaths, nil
 	}
-
 	return extensionRange, associatedPaths, nil
 }
 
@@ -211,13 +199,11 @@ func extensionRange(token int32, fullSourcePath protoreflect.SourcePath, _ int, 
 		// Encountered a terminal extension range token, can terminate here immediately.
 		return nil, nil, nil
 	}
-
 	switch token {
 	case messageExtensionRangeOptionTypeTag:
 		// For options, we add the full path and then return the options state to validate
 		// the path.
 		return options, []protoreflect.SourcePath{slices.Clone(fullSourcePath)}, nil
 	}
-
 	return nil, nil, newInvalidSourcePathError(fullSourcePath, "invalid extension range path")
 }

@@ -124,7 +124,6 @@ func (f *File) Indentation(offset int) string {
 	margin := strings.IndexFunc(f.Text()[nl:], func(r rune) bool {
 		return !unicode.In(r, unicode.Pattern_White_Space)
 	})
-
 	return f.Text()[nl : nl+margin]
 }
 
@@ -154,7 +153,6 @@ func (f *File) LineOffsets(line int) (start, end int) {
 	if len(lines) == line {
 		return lines[line-1], len(f.Text())
 	}
-
 	return lines[line-1], lines[line]
 }
 
@@ -186,9 +184,7 @@ func location(f *File, offset int, units length.Unit, allowNonPrint bool) Locati
 	}
 
 	chunk := f.Text()[lines[line]:offset]
-
 	var column int
-
 	switch units {
 	case length.Runes:
 		for range chunk {
@@ -219,9 +215,7 @@ func inverseLocation(f *File, line, column int, units length.Unit) int {
 	// Find the start the given line.
 	start, end := f.LineOffsets(line)
 	chunk := f.text[start:end]
-
 	var offset int
-
 	switch units {
 	case length.Runes:
 		for offset = range chunk {
@@ -230,7 +224,6 @@ func inverseLocation(f *File, line, column int, units length.Unit) int {
 				break
 			}
 		}
-
 		offset += column
 	case length.Bytes:
 		offset = column - 1
@@ -242,7 +235,6 @@ func inverseLocation(f *File, line, column int, units length.Unit) int {
 				break
 			}
 		}
-
 		if column > 0 {
 			offset += column
 		}
@@ -279,6 +271,5 @@ func (f *File) lines() []int {
 
 		f.lineIndex = append(f.lineIndex, next)
 	})
-
 	return f.lineIndex
 }

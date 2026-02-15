@@ -121,7 +121,6 @@ func (q *AnyQuery) Underlying() any {
 	if q == nil {
 		return nil
 	}
-
 	return q.actual
 }
 
@@ -153,6 +152,5 @@ func AsTyped[Q Query[T], T any](q Query[any]) (downcast Q, ok bool) {
 	}
 
 	downcast, ok = qAny.actual.(Q)
-
 	return downcast, ok
 }

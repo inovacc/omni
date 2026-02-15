@@ -26,7 +26,6 @@ import (
 
 func TestGlobalBasic(t *testing.T) {
 	t.Parallel()
-
 	ctx := context.Background()
 	tempDirPath := t.TempDir()
 	filePath := filepath.Join(tempDirPath, "path/to/lock")
@@ -50,7 +49,6 @@ func TestGlobalBasic(t *testing.T) {
 
 func TestLockerBasic(t *testing.T) {
 	t.Parallel()
-
 	ctx := context.Background()
 	tempDirPath := t.TempDir()
 	filePath := "path/to/lock"
@@ -72,12 +70,10 @@ func TestLockerBasic(t *testing.T) {
 	require.Error(t, err)
 	require.NoError(t, unlocker.Unlock())
 	require.NoError(t, unlocker2.Unlock())
-
 	absolutePath := "/not/normalized/and/validated"
 	if runtime.GOOS == "windows" {
 		absolutePath = "C:\\not\\normalized\\and\\validated"
 	}
-
 	_, err = locker.Lock(ctx, absolutePath)
 	require.Error(t, err)
 }

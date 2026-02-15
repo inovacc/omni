@@ -31,11 +31,8 @@ var (
 // This defaults to the number of CPUs.
 func Parallelism() int {
 	globalLock.RLock()
-
 	parallelism := globalParallelism
-
 	globalLock.RUnlock()
-
 	return parallelism
 }
 
@@ -46,11 +43,8 @@ func SetParallelism(parallelism int) {
 	if parallelism < 1 {
 		parallelism = 1
 	}
-
 	globalLock.Lock()
-
 	globalParallelism = parallelism
-
 	globalLock.Unlock()
 }
 
@@ -63,42 +57,28 @@ func Parallelize(ctx context.Context, jobs []func(context.Context) error, option
 	for _, option := range options {
 		option(parallelizeOptions)
 	}
-
 	switch len(jobs) {
 	case 0:
 		return nil
 	case 1:
 		return jobs[0](ctx)
 	}
-
 	multiplier := max(parallelizeOptions.multiplier, 1)
-
 	var cancel context.CancelFunc
 	if parallelizeOptions.cancelOnFailure {
 		ctx, cancel = context.WithCancel(ctx)
 		defer cancel()
 	}
-
 	semaphoreC := make(chan struct{}, Parallelism()*multiplier)
-
-	var (
-		errs []error
-		lock sync.Mutex
-	)
-
+	var errs []error
+	var lock sync.Mutex
 	addError := func(err error) {
 		lock.Lock()
-
 		errs = append(errs, err)
-
 		lock.Unlock()
 	}
-
-	var (
-		wg   sync.WaitGroup
-		stop bool
-	)
-
+	var wg sync.WaitGroup
+	var stop bool
 	for _, job := range jobs {
 		if stop {
 			break
@@ -112,34 +92,30 @@ func Parallelize(ctx context.Context, jobs []func(context.Context) error, option
 		select {
 		case <-ctx.Done():
 			stop = true
-
 			addError(ctx.Err())
 		case semaphoreC <- struct{}{}:
 			select {
 			case <-ctx.Done():
 				stop = true
-
 				addError(ctx.Err())
 			default:
 				job := job
-
-				wg.Go(func() {
+				wg.Add(1)
+				go func() {
 					if err := job(ctx); err != nil {
 						addError(err)
-
 						if cancel != nil {
 							cancel()
 						}
 					}
 					// This will never block.
 					<-semaphoreC
-				})
+					wg.Done()
+				}()
 			}
 		}
 	}
-
 	wg.Wait()
-
 	switch len(errs) {
 	case 0:
 		return nil

@@ -68,19 +68,14 @@ func checkNumericRules[
 	// formatFunc returns the value suitable for printing with %v.
 	formatFunc func(*T) any,
 ) error {
-	var (
-		fieldCount                                                     int
-		constant, lowerBound, upperBound                               *T
-		isLowerBoundInclusive, isUpperBoundInclusive                   bool
-		constFieldNumber, lowerBoundFieldNumber, upperBoundFieldNumber int32
-		err                                                            error
-	)
-
+	var fieldCount int
+	var constant, lowerBound, upperBound *T
+	var isLowerBoundInclusive, isUpperBoundInclusive bool
+	var constFieldNumber, lowerBoundFieldNumber, upperBoundFieldNumber int32
+	var err error
 	ruleMessage.Range(func(field protoreflect.FieldDescriptor, value protoreflect.Value) bool {
 		fieldCount++
-
 		var convertErrorMessage string
-
 		fieldNumber := int32(field.Number())
 		switch fieldName := string(field.Name()); fieldName {
 		case "const":
@@ -101,7 +96,6 @@ func checkNumericRules[
 			upperBoundFieldNumber = fieldNumber
 			isUpperBoundInclusive = true
 		}
-
 		if convertErrorMessage != "" {
 			adder.addForPathf(
 				[]int32{ruleFieldNumber, fieldNumber},
@@ -111,14 +105,11 @@ func checkNumericRules[
 				convertErrorMessage,
 			)
 		}
-
 		return true
 	})
-
 	if err != nil {
 		return err
 	}
-
 	if constant != nil && fieldCount > 1 {
 		adder.addForPathf(
 			[]int32{ruleFieldNumber, constFieldNumber},
@@ -128,7 +119,6 @@ func checkNumericRules[
 			adder.getFieldRuleName(ruleFieldNumber),
 		)
 	}
-
 	if lowerBound == nil || upperBound == nil {
 		return nil
 	}
@@ -137,7 +127,6 @@ func checkNumericRules[
 	if !equalFunc(upperBound, lowerBound) {
 		return nil
 	}
-
 	if isUpperBoundInclusive && isLowerBoundInclusive {
 		adder.addForPathsf(
 			[][]int32{
@@ -150,10 +139,8 @@ func checkNumericRules[
 			adder.getFieldRuleName(ruleFieldNumber, upperBoundFieldNumber),
 			adder.getFieldRuleName(ruleFieldNumber),
 		)
-
 		return nil
 	}
-
 	adder.addForPathsf(
 		[][]int32{
 			{ruleFieldNumber, lowerBoundFieldNumber},
@@ -164,7 +151,6 @@ func checkNumericRules[
 		adder.getFieldRuleName(ruleFieldNumber, lowerBoundFieldNumber),
 		adder.getFieldRuleName(ruleFieldNumber, upperBoundFieldNumber),
 	)
-
 	return nil
 }
 
@@ -175,7 +161,6 @@ func getNumericPointerFromValue[
 	if !ok {
 		return nil, "", fmt.Errorf("unable to cast value to type %T", number)
 	}
-
 	return &number, "", nil
 }
 
@@ -184,19 +169,15 @@ func getTimestampFromValue(value protoreflect.Value) (*timestamppb.Timestamp, st
 	if err != nil {
 		return nil, "", err
 	}
-
 	timestamp := &timestamppb.Timestamp{}
-
 	err = protoencoding.NewWireUnmarshaler(nil).Unmarshal(bytes, timestamp)
 	if err != nil {
 		return nil, "", err
 	}
-
 	timestampErr := timestamp.CheckValid()
 	if timestampErr == nil {
 		return timestamp, "", nil
 	}
-
 	return nil, timestampErr.Error(), nil
 }
 
@@ -205,18 +186,14 @@ func getDurationFromValue(value protoreflect.Value) (*durationpb.Duration, strin
 	if err != nil {
 		return nil, "", err
 	}
-
 	duration := &durationpb.Duration{}
-
 	err = protoencoding.NewWireUnmarshaler(nil).Unmarshal(bytes, duration)
 	if err != nil {
 		return nil, "", err
 	}
-
 	if durationErrString := checkDuration(duration); durationErrString != "" {
 		return nil, durationErrString, nil
 	}
-
 	return duration, "", nil
 }
 
@@ -225,11 +202,11 @@ func compareNumber[T int32 | int64 | uint32 | uint64 | float32 | float64](a *T, 
 }
 
 func compareTimestamp(t1 *timestamppb.Timestamp, t2 *timestamppb.Timestamp) bool {
-	return t1.GetSeconds() == t2.GetSeconds() && t1.GetNanos() == t2.GetNanos()
+	return t1.Seconds == t2.Seconds && t1.Nanos == t2.Nanos
 }
 
 func compareDuration(d1 *durationpb.Duration, d2 *durationpb.Duration) bool {
-	return d1.GetSeconds() == d2.GetSeconds() && d1.GetNanos() == d2.GetNanos()
+	return d1.Seconds == d2.Seconds && d1.Nanos == d2.Nanos
 }
 
 func checkDuration(duration *durationpb.Duration) string {
@@ -245,7 +222,6 @@ func checkDuration(duration *durationpb.Duration) string {
 		Nanos:   -854775428,
 	}
 	secs := duration.GetSeconds()
-
 	nanos := duration.GetNanos()
 	switch {
 	case nanos <= -1e9 || nanos >= +1e9:
@@ -255,6 +231,5 @@ func checkDuration(duration *durationpb.Duration) string {
 	case duration.AsDuration() > maxDuration.AsDuration() || duration.AsDuration() < minDuration.AsDuration():
 		return fmt.Sprintf("duration (%v) must be in the range %v to %v", duration, minDuration, maxDuration)
 	}
-
 	return ""
 }

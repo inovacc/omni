@@ -49,7 +49,6 @@ func NewGenerateConfig(
 	if len(generatePluginConfigs) == 0 {
 		return nil, newNoPluginsError()
 	}
-
 	return &generateConfig{
 		cleanPluginOuts:       cleanPluginOuts,
 		generatePluginConfigs: generatePluginConfigs,
@@ -74,11 +73,9 @@ func newGenerateConfigFromExternalFileV1Beta1(
 	if err != nil {
 		return nil, err
 	}
-
 	if len(externalFile.Plugins) == 0 {
 		return nil, newNoPluginsError()
 	}
-
 	generatePluginConfigs, err := xslices.MapError(
 		externalFile.Plugins,
 		newGeneratePluginConfigFromExternalV1Beta1,
@@ -86,7 +83,6 @@ func newGenerateConfigFromExternalFileV1Beta1(
 	if err != nil {
 		return nil, err
 	}
-
 	return &generateConfig{
 		generatePluginConfigs: generatePluginConfigs,
 		generateManagedConfig: generateManagedConfig,
@@ -100,11 +96,9 @@ func newGenerateConfigFromExternalFileV1(
 	if err != nil {
 		return nil, err
 	}
-
 	if len(externalFile.Plugins) == 0 {
 		return nil, newNoPluginsError()
 	}
-
 	generatePluginConfigs, err := xslices.MapError(
 		externalFile.Plugins,
 		newGeneratePluginConfigFromExternalV1,
@@ -112,7 +106,6 @@ func newGenerateConfigFromExternalFileV1(
 	if err != nil {
 		return nil, err
 	}
-
 	return &generateConfig{
 		generatePluginConfigs: generatePluginConfigs,
 		generateManagedConfig: generateManagedConfig,
@@ -127,7 +120,6 @@ func newGenerateConfigFromExternalFileV2(
 	if err != nil {
 		return nil, err
 	}
-
 	generatePluginConfigs, err := xslices.MapError(
 		externalFile.Plugins,
 		newGeneratePluginConfigFromExternalV2,
@@ -135,7 +127,6 @@ func newGenerateConfigFromExternalFileV2(
 	if err != nil {
 		return nil, err
 	}
-
 	return &generateConfig{
 		cleanPluginOuts:       externalFile.Clean,
 		generateManagedConfig: generateManagedConfig,

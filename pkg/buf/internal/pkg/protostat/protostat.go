@@ -65,7 +65,6 @@ func GetStats(ctx context.Context, fileWalker FileWalker) (*Stats, error) {
 		),
 	)
 	statsBuilder := newStatsBuilder()
-
 	if err := fileWalker.Walk(
 		ctx,
 		func(file io.Reader) error {
@@ -88,9 +87,7 @@ func GetStats(ctx context.Context, fileWalker FileWalker) (*Stats, error) {
 	); err != nil {
 		return nil, err
 	}
-
 	statsBuilder.Packages = len(statsBuilder.packages)
-
 	return statsBuilder.Stats, nil
 }
 
@@ -115,7 +112,6 @@ func MergeStats(statsSlice ...*Stats) *Stats {
 		resultStats.DeprecatedRPCs += stats.DeprecatedRPCs
 		resultStats.Extensions += stats.Extensions
 	}
-
 	return resultStats
 }
 
@@ -134,7 +130,6 @@ func newStatsBuilder() *statsBuilder {
 
 func examineFile(statsBuilder *statsBuilder, fileNode *ast.FileNode) {
 	statsBuilder.Files++
-
 	for _, decl := range fileNode.Decls {
 		switch decl := decl.(type) {
 		case *ast.PackageNode:
@@ -147,12 +142,10 @@ func examineFile(statsBuilder *statsBuilder, fileNode *ast.FileNode) {
 			examineExtend(statsBuilder, decl)
 		case *ast.ServiceNode:
 			statsBuilder.Services++
-
 			for _, decl := range decl.Decls {
 				rpcNode, ok := decl.(*ast.RPCNode)
 				if ok {
 					statsBuilder.RPCs++
-
 					statsBuilder.Types++
 					if isDeprecated(rpcNode) {
 						statsBuilder.DeprecatedRPCs++
@@ -167,12 +160,10 @@ func examineFile(statsBuilder *statsBuilder, fileNode *ast.FileNode) {
 // The node parameter is used to check for deprecated options, and can be a MessageNode or GroupNode.
 func examineMessage(statsBuilder *statsBuilder, messageBody *ast.MessageBody, node ast.NodeWithOptions) {
 	statsBuilder.Messages++
-
 	statsBuilder.Types++
 	if node != nil && isDeprecated(node) {
 		statsBuilder.DeprecatedMessages++
 	}
-
 	for _, decl := range messageBody.Decls {
 		switch decl := decl.(type) {
 		case *ast.FieldNode, *ast.MapFieldNode:
@@ -202,12 +193,10 @@ func examineMessage(statsBuilder *statsBuilder, messageBody *ast.MessageBody, no
 
 func examineEnum(statsBuilder *statsBuilder, enumNode *ast.EnumNode) {
 	statsBuilder.Enums++
-
 	statsBuilder.Types++
 	if isDeprecated(enumNode) {
 		statsBuilder.DeprecatedEnums++
 	}
-
 	for _, decl := range enumNode.Decls {
 		_, ok := decl.(*ast.EnumValueNode)
 		if ok {
@@ -233,20 +222,16 @@ func isDeprecated(node ast.NodeWithOptions) bool {
 	if groupNode, ok := node.(*ast.GroupNode); ok && groupNode.Options == nil {
 		return false
 	}
-
 	deprecated := false
-
 	node.RangeOptions(func(opt *ast.OptionNode) bool {
 		// Check if this is the "deprecated" option (simple name, not extension)
 		if opt.Name == nil || len(opt.Name.Parts) != 1 {
 			return true // continue
 		}
-
 		part := opt.Name.Parts[0]
 		if part.IsExtension() {
 			return true // continue
 		}
-
 		if part.Value() != "deprecated" {
 			return true // continue
 		}
@@ -258,9 +243,7 @@ func isDeprecated(node ast.NodeWithOptions) bool {
 		case ast.Identifier:
 			deprecated = string(v) == "true"
 		}
-
 		return false // stop iterating once we find deprecated option
 	})
-
 	return deprecated
 }

@@ -23,13 +23,11 @@ import (
 
 func TestPluginIdentityForString(t *testing.T) {
 	t.Parallel()
-
 	expectedPluginIdentity, err := NewPluginIdentity("foo.com", "bar", "baz")
 	require.NoError(t, err)
 	assert.Equal(t, "foo.com", expectedPluginIdentity.Remote())
 	assert.Equal(t, "bar", expectedPluginIdentity.Owner())
 	assert.Equal(t, "baz", expectedPluginIdentity.Plugin())
-
 	pluginIdentity, err := PluginIdentityForString("foo.com/bar/baz")
 	require.NoError(t, err)
 	assert.Equal(t, expectedPluginIdentity, pluginIdentity)
@@ -37,7 +35,6 @@ func TestPluginIdentityForString(t *testing.T) {
 
 func TestPluginIdentityForStringError(t *testing.T) {
 	t.Parallel()
-
 	testCases := []struct {
 		Name  string
 		Input string
@@ -74,7 +71,6 @@ func TestPluginIdentityForStringError(t *testing.T) {
 	for _, testCase := range testCases {
 		t.Run(testCase.Name, func(t *testing.T) {
 			t.Parallel()
-
 			_, err := PluginIdentityForString(testCase.Input)
 			require.Error(t, err)
 		})

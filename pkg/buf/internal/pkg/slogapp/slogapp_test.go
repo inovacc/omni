@@ -26,15 +26,11 @@ import (
 
 func TestNoStack(t *testing.T) {
 	t.Parallel()
-
 	var sb strings.Builder
-
 	logger, err := NewLogger(&sb, appext.LogLevelInfo, appext.LogFormatJSON)
 	require.NoError(t, err)
 	logger.Error("boom")
-
 	var logFields map[string]any
-
 	err = json.Unmarshal([]byte(sb.String()), &logFields)
 	require.NoError(t, err)
 	assert.NotContains(t, logFields, "stacktrace")

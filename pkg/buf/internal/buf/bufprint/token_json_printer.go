@@ -40,6 +40,5 @@ func (p *tokenJSONPrinter) PrintTokens(
 			return err
 		}
 	}
-
 	return nil
 }

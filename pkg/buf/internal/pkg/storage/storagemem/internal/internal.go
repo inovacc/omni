@@ -44,7 +44,6 @@ func NewImmutableObject(
 	if externalPath == "" {
 		externalPath = normalpath.Unnormalize(path)
 	}
-
 	return &ImmutableObject{
 		ObjectInfo: storageutil.NewObjectInfo(path, externalPath, localPath),
 		data:       data,

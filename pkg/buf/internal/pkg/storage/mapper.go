@@ -81,12 +81,10 @@ func (p prefixMapper) UnmapFullPath(fullPath string) (string, bool, error) {
 	if !normalpath2.EqualsOrContainsPath(p.prefix, fullPath, normalpath2.Relative) {
 		return "", false, nil
 	}
-
 	path, err := normalpath2.Rel(p.prefix, fullPath)
 	if err != nil {
 		return "", false, err
 	}
-
 	return path, true, nil
 }
 
@@ -102,23 +100,17 @@ func (c chainMapper) MapPath(path string) (string, bool) {
 
 func (c chainMapper) UnmapFullPath(fullPath string) (string, bool, error) {
 	path := fullPath
-
-	var (
-		matches bool
-		err     error
-	)
-
+	var matches bool
+	var err error
 	for _, mapper := range c.mappers {
 		path, matches, err = mapper.UnmapFullPath(path)
 		if err != nil {
 			return "", false, err
 		}
-
 		if !matches {
 			return "", false, nil
 		}
 	}
-
 	return path, true, nil
 }
 
@@ -127,18 +119,14 @@ func (c chainMapper) mapFunc(
 	f func(Mapper, string) (string, bool),
 ) (string, bool) {
 	fullPathOrPrefix := pathOrPrefix
-
 	var matches bool
-
 	for i := len(c.mappers) - 1; i >= 0; i-- {
 		mapper := c.mappers[i]
-
 		fullPathOrPrefix, matches = f(mapper, fullPathOrPrefix)
 		if !matches {
 			return "", false
 		}
 	}
-
 	return fullPathOrPrefix, true
 }
 

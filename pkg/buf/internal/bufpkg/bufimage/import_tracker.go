@@ -39,7 +39,6 @@ func (t *importTracker) markUsed(importer *imagev1.ImageFile, element string) {
 		//       the resolved files, so nothing to mark anyway...
 		return
 	}
-
 	importedFile := desc.ParentFile().Path()
 
 	fileImports := t.used[importer.GetName()]
@@ -47,7 +46,6 @@ func (t *importTracker) markUsed(importer *imagev1.ImageFile, element string) {
 		fileImports = map[string]struct{}{}
 		t.used[importer.GetName()] = fileImports
 	}
-
 	for _, depPath := range importer.GetDependency() {
 		if importedFile == depPath {
 			// Found it!
@@ -62,7 +60,6 @@ func (t *importTracker) markUsed(importer *imagev1.ImageFile, element string) {
 			// Shouldn't be possible... bail.
 			continue
 		}
-
 		if t.publiclyImports(depFile, importedFile) {
 			// Found it!
 			fileImports[depPath] = struct{}{}
@@ -78,16 +75,13 @@ func (t *importTracker) publiclyImports(file protoreflect.FileDescriptor, import
 		if !dep.IsPublic {
 			continue
 		}
-
 		if dep.Path() == importedFile {
 			return true
 		}
-
 		if t.publiclyImports(dep, importedFile) {
 			return true
 		}
 	}
-
 	return false
 }
 
@@ -97,26 +91,20 @@ func (t *importTracker) findUsedImports(protoImage *imagev1.Image) {
 			// no imports so nothing to do
 			continue
 		}
-
 		t.findUsedImportsInOptions(file, file.GetOptions())
-
 		for _, msg := range file.GetMessageType() {
 			t.findUsedImportsInMessage(file, msg)
 		}
-
 		for _, enum := range file.GetEnumType() {
 			t.findUsedImportsInEnum(file, enum)
 		}
-
 		for _, ext := range file.GetExtension() {
 			t.findUsedImportsInField(file, ext)
 		}
-
 		for _, svc := range file.GetService() {
-			t.findUsedImportsInOptions(file, svc.GetOptions())
-
-			for _, method := range svc.GetMethod() {
-				t.findUsedImportsInOptions(file, method.GetOptions())
+			t.findUsedImportsInOptions(file, svc.Options)
+			for _, method := range svc.Method {
+				t.findUsedImportsInOptions(file, method.Options)
 				t.markUsed(file, method.GetInputType())
 				t.markUsed(file, method.GetOutputType())
 			}
@@ -125,51 +113,43 @@ func (t *importTracker) findUsedImports(protoImage *imagev1.Image) {
 }
 
 func (t *importTracker) findUsedImportsInMessage(file *imagev1.ImageFile, msg *descriptorpb.DescriptorProto) {
-	t.findUsedImportsInOptions(file, msg.GetOptions())
-
-	for _, field := range msg.GetField() {
+	t.findUsedImportsInOptions(file, msg.Options)
+	for _, field := range msg.Field {
 		t.findUsedImportsInField(file, field)
 	}
-
-	for _, oneof := range msg.GetOneofDecl() {
-		t.findUsedImportsInOptions(file, oneof.GetOptions())
+	for _, oneof := range msg.OneofDecl {
+		t.findUsedImportsInOptions(file, oneof.Options)
+	}
+	for _, extRange := range msg.ExtensionRange {
+		t.findUsedImportsInOptions(file, extRange.Options)
 	}
 
-	for _, extRange := range msg.GetExtensionRange() {
-		t.findUsedImportsInOptions(file, extRange.GetOptions())
-	}
-
-	for _, nestedMsg := range msg.GetNestedType() {
+	for _, nestedMsg := range msg.NestedType {
 		t.findUsedImportsInMessage(file, nestedMsg)
 	}
-
-	for _, enum := range msg.GetEnumType() {
+	for _, enum := range msg.EnumType {
 		t.findUsedImportsInEnum(file, enum)
 	}
-
-	for _, ext := range msg.GetExtension() {
+	for _, ext := range msg.Extension {
 		t.findUsedImportsInField(file, ext)
 	}
 }
 
 func (t *importTracker) findUsedImportsInEnum(file *imagev1.ImageFile, enum *descriptorpb.EnumDescriptorProto) {
-	t.findUsedImportsInOptions(file, enum.GetOptions())
-
-	for _, value := range enum.GetValue() {
-		t.findUsedImportsInOptions(file, value.GetOptions())
+	t.findUsedImportsInOptions(file, enum.Options)
+	for _, value := range enum.Value {
+		t.findUsedImportsInOptions(file, value.Options)
 	}
 }
 
 func (t *importTracker) findUsedImportsInField(file *imagev1.ImageFile, field *descriptorpb.FieldDescriptorProto) {
-	t.findUsedImportsInOptions(file, field.GetOptions())
-
+	t.findUsedImportsInOptions(file, field.Options)
 	switch field.GetType() {
 	case descriptorpb.FieldDescriptorProto_TYPE_MESSAGE,
 		descriptorpb.FieldDescriptorProto_TYPE_GROUP,
 		descriptorpb.FieldDescriptorProto_TYPE_ENUM:
 		t.markUsed(file, field.GetTypeName())
 	}
-
 	extendee := field.GetExtendee()
 	if extendee != "" {
 		t.markUsed(file, extendee)
@@ -187,13 +167,11 @@ func (t *importTracker) findUsedImportsInOptionValue(file *imagev1.ImageFile, op
 	if optionField.IsExtension() {
 		t.markUsed(file, string(optionField.FullName()))
 	}
-
 	switch {
 	case optionField.IsMap():
 		if optionField.MapValue().Message() == nil {
 			return // no messages to examine
 		}
-
 		val.Map().Range(func(k protoreflect.MapKey, v protoreflect.Value) bool {
 			t.findUsedImportsInMessageValue(file, v.Message())
 			return true
@@ -202,7 +180,6 @@ func (t *importTracker) findUsedImportsInOptionValue(file *imagev1.ImageFile, op
 		if optionField.Message() == nil {
 			return // no messages to examine
 		}
-
 		list := val.List()
 		for i, l := 0, list.Len(); i < l; i++ {
 			t.findUsedImportsInMessageValue(file, list.Get(i).Message())
@@ -219,7 +196,6 @@ func (t *importTracker) findUsedImportsInMessageValue(file *imagev1.ImageFile, m
 			// ruh-roh... this should not happen
 			return
 		}
-
 		valueField := msg.Descriptor().Fields().ByNumber(2)
 		if valueField == nil || valueField.Kind() != protoreflect.BytesKind || valueField.IsList() {
 			// oof, this should not happen
@@ -227,26 +203,21 @@ func (t *importTracker) findUsedImportsInMessageValue(file *imagev1.ImageFile, m
 		}
 
 		typeURL := msg.Get(typeURLField).String()
-
 		msgType, err := t.resolver.FindMessageByURL(typeURL)
 		if err != nil {
 			// message is not present in the image
 			return
 		}
-
 		t.markUsed(file, string(msgType.Descriptor().FullName()))
 		// process Any messages that might be nested inside this one
 		value := msg.Get(valueField).Bytes()
-
 		nestedMessage := msgType.New()
 		if err := protoencoding.NewWireUnmarshaler(t.resolver).Unmarshal(value, nestedMessage.Interface()); err != nil {
 			// bytes are not valid; skip it
 			return
 		}
-
 		msg = nestedMessage // fall-through to recurse into this message
 	}
-
 	msg.Range(func(field protoreflect.FieldDescriptor, val protoreflect.Value) bool {
 		t.findUsedImportsInOptionValue(file, field, val)
 		return true

@@ -52,7 +52,6 @@ func GetMachineForName(envContainer app.EnvContainer, name string) (_ Machine, r
 	if err != nil {
 		return nil, err
 	}
-
 	return GetMachineForNameAndFilePath(name, filePath)
 }
 
@@ -62,7 +61,6 @@ func PutMachines(envContainer app.EnvContainer, machines ...Machine) error {
 	if err != nil {
 		return err
 	}
-
 	return putMachinesForFilePath(machines, filePath)
 }
 
@@ -74,7 +72,6 @@ func DeleteMachineForName(envContainer app.EnvContainer, name string) (bool, err
 	if err != nil {
 		return false, err
 	}
-
 	return deleteMachineForFilePath(name, filePath)
 }
 
@@ -83,12 +80,10 @@ func GetFilePath(envContainer app.EnvContainer) (string, error) {
 	if netrcFilePath := envContainer.Env("NETRC"); netrcFilePath != "" {
 		return netrcFilePath, nil
 	}
-
 	homeDirPath, err := app.HomeDirPath(envContainer)
 	if err != nil {
 		return "", err
 	}
-
 	return filepath.Join(homeDirPath, netrcFilename), nil
 }
 
@@ -101,15 +96,12 @@ func GetMachineForNameAndFilePath(name string, filePath string) (_ Machine, retE
 		if os.IsNotExist(err) {
 			return nil, nil
 		}
-
 		return nil, err
 	}
-
 	netrcStruct, err := netrclib.Parse(filePath)
 	if err != nil {
 		return nil, err
 	}
-
 	netrcMachine := netrcStruct.Machine(name)
 	if netrcMachine == nil {
 		netrcMachine = netrcStruct.Machine("default")
@@ -122,7 +114,6 @@ func GetMachineForNameAndFilePath(name string, filePath string) (_ Machine, retE
 	if machineName == "default" {
 		machineName = ""
 	}
-
 	return newMachine(
 		machineName,
 		netrcMachine.Get("login"),
@@ -132,11 +123,8 @@ func GetMachineForNameAndFilePath(name string, filePath string) (_ Machine, retE
 
 func putMachinesForFilePath(machines []Machine, filePath string) (retErr error) {
 	var netrcStruct *netrclib.Netrc
-
 	fileInfo, err := os.Stat(filePath)
-
 	var fileMode fs.FileMode
-
 	if err != nil {
 		if os.IsNotExist(err) {
 			netrcStruct = &netrclib.Netrc{}
@@ -149,22 +137,18 @@ func putMachinesForFilePath(machines []Machine, filePath string) (retErr error) 
 		if err != nil {
 			return err
 		}
-
 		fileMode = fileInfo.Mode()
 	}
-
 	for _, machine := range machines {
 		if foundMachine := netrcStruct.Machine(machine.Name()); foundMachine != nil {
 			netrcStruct.RemoveMachine(machine.Name())
 		}
-
 		netrcStruct.AddMachine(
 			machine.Name(),
 			machine.Login(),
 			machine.Password(),
 		)
 	}
-
 	return os.WriteFile(filePath, []byte(netrcStruct.Render()), fileMode)
 }
 
@@ -175,25 +159,19 @@ func deleteMachineForFilePath(name string, filePath string) (_ bool, retErr erro
 			// If a netrc file does not already exist, there's nothing to be done.
 			return false, nil
 		}
-
 		return false, err
 	}
-
 	netrcStruct, err := netrclib.Parse(filePath)
 	if err != nil {
 		return false, err
 	}
-
 	if netrcStruct.Machine(name) == nil {
 		// Machine is not set, there is nothing to be done.
 		return false, nil
 	}
-
 	netrcStruct.RemoveMachine(name)
-
 	if err := os.WriteFile(filePath, []byte(netrcStruct.Render()), fileInfo.Mode()); err != nil {
 		return false, err
 	}
-
 	return true, nil
 }

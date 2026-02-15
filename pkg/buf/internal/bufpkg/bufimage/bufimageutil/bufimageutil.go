@@ -53,23 +53,19 @@ func FreeMessageRangeStrings(
 	image bufimage.Image,
 ) ([]string, error) {
 	var s []string
-
 	for _, filePath := range filePaths {
 		imageFile := image.GetFile(filePath)
 		if imageFile == nil {
 			return nil, fmt.Errorf("unexpected nil image file: %q", filePath)
 		}
-
 		prefix := imageFile.FileDescriptorProto().GetPackage()
 		if prefix != "" {
 			prefix += "."
 		}
-
 		for _, message := range imageFile.FileDescriptorProto().GetMessageType() {
 			s = freeMessageRangeStringsRec(s, prefix+message.GetName(), message)
 		}
 	}
-
 	return s, nil
 }
 
@@ -118,7 +114,6 @@ func WithIncludeTypes(typeNames ...string) ImageFilterOption {
 		if len(typeNames) > 0 && opts.includeTypes == nil {
 			opts.includeTypes = make(map[string]struct{}, len(typeNames))
 		}
-
 		for _, typeName := range typeNames {
 			opts.includeTypes[typeName] = struct{}{}
 		}
@@ -139,7 +134,6 @@ func WithExcludeTypes(typeNames ...string) ImageFilterOption {
 		if len(typeNames) > 0 && opts.excludeTypes == nil {
 			opts.excludeTypes = make(map[string]struct{}, len(typeNames))
 		}
-
 		for _, typeName := range typeNames {
 			opts.excludeTypes[typeName] = struct{}{}
 		}
@@ -239,7 +233,6 @@ func FilterImage(image bufimage.Image, options ...ImageFilterOption) (bufimage.I
 	if len(options) == 0 {
 		return image, nil
 	}
-
 	filterOptions := newImageFilterOptions()
 	for _, option := range options {
 		option(filterOptions)
@@ -249,7 +242,6 @@ func FilterImage(image bufimage.Image, options ...ImageFilterOption) (bufimage.I
 		len(filterOptions.includeTypes) == 0 {
 		return image, nil
 	}
-
 	return filterImage(image, filterOptions)
 }
 
@@ -263,10 +255,8 @@ func StripSourceRetentionOptions(image bufimage.Image) (bufimage.Image, error) {
 		if err != nil {
 			return nil, fmt.Errorf("failed to strip source-retention options from file %q: %w", inputFile.Path(), err)
 		}
-
 		updatedFiles[i] = updatedFile
 	}
-
 	return bufimage.NewImage(updatedFiles)
 }
 
@@ -334,13 +324,10 @@ func (t *transitiveClosure) hasOption(
 	if !fieldDescriptor.IsExtension() {
 		return true
 	}
-
 	if !options.includeCustomOptions {
 		return false
 	}
-
 	fullName := fieldDescriptor.FullName()
-
 	descriptor := imageIndex.ByName[fullName].element
 	switch mode := t.elements[descriptor]; mode {
 	case inclusionModeExplicit, inclusionModeImplicit, inclusionModeEnclosing:
@@ -374,21 +361,17 @@ func (t *transitiveClosure) includeType(
 		// If an extension field, check if the extendee is excluded.
 		if field, ok := descriptorInfo.element.(*descriptorpb.FieldDescriptorProto); ok && field.Extendee != nil {
 			extendeeName := protoreflect.FullName(strings.TrimPrefix(field.GetExtendee(), "."))
-
 			extendeeInfo, ok := imageIndex.ByName[extendeeName]
 			if !ok {
 				return fmt.Errorf("missing %q", extendeeName)
 			}
-
 			if mode := t.elements[extendeeInfo.element]; mode == inclusionModeExcluded {
 				return fmt.Errorf("cannot include extension field %q as the extendee type %q is excluded", typeName, extendeeName)
 			}
 		}
-
 		if err := t.addElement(descriptorInfo.element, "", false, imageIndex, options); err != nil {
 			return fmt.Errorf("inclusion of type %q: %w", typeName, err)
 		}
-
 		return nil
 	}
 	// It could be a package name
@@ -397,34 +380,28 @@ func (t *transitiveClosure) includeType(
 		// but it's not...
 		return fmt.Errorf("inclusion of type %q: %w", typeName, ErrImageFilterTypeNotFound)
 	}
-
 	if !options.allowImportedTypes {
 		// if package includes only imported files, then reject
 		onlyImported := true
-
 		for _, file := range pkg.files {
 			if !file.IsImport() {
 				onlyImported = false
 				break
 			}
 		}
-
 		if onlyImported {
 			return fmt.Errorf("inclusion of type %q: %w", typeName, ErrImageFilterTypeIsImport)
 		}
 	}
-
 	for _, file := range pkg.files {
 		fileDescriptor := file.FileDescriptorProto()
 		if mode := t.elements[fileDescriptor]; mode == inclusionModeExcluded {
 			return fmt.Errorf("inclusion of excluded package %q", typeName)
 		}
-
 		if err := t.addElement(fileDescriptor, "", false, imageIndex, options); err != nil {
 			return fmt.Errorf("inclusion of type %q: %w", typeName, err)
 		}
 	}
-
 	return nil
 }
 
@@ -432,21 +409,17 @@ func (t *transitiveClosure) addImport(fromPath, toPath string) {
 	if _, ok := t.imports[toPath]; !ok {
 		t.imports[toPath] = nil // mark as seen
 	}
-
 	if fromPath == "" {
 		return // the base included type, not imported
 	}
-
 	if fromPath == toPath {
 		return // no need for a file to import itself
 	}
-
 	imps := t.imports[fromPath]
 	if imps == nil {
 		imps = make(map[string]struct{}, 2)
 		t.imports[fromPath] = imps
 	}
-
 	imps[toPath] = struct{}{}
 }
 
@@ -462,17 +435,13 @@ func (t *transitiveClosure) addElement(
 		if existingMode == inclusionModeExcluded {
 			return nil // already excluded
 		}
-
 		t.addImport(referrerFile, descriptorInfo.file.Path())
-
 		if existingMode == inclusionModeImplicit && !impliedByCustomOption {
 			// upgrade from implied to explicitly part of closure
 			t.elements[descriptor] = inclusionModeExplicit
 		}
-
 		return nil // already added this element
 	}
-
 	if impliedByCustomOption {
 		t.elements[descriptor] = inclusionModeImplicit
 	} else {
@@ -501,20 +470,16 @@ func (t *transitiveClosure) addElement(
 			if err != nil {
 				return err
 			}
-
 			if !isIncluded {
 				continue
 			}
-
 			if index := field.OneofIndex; index != nil {
 				index := *index
 				if index < 0 || int(index) >= len(oneofFieldCounts) {
 					return fmt.Errorf("invalid oneof index %d for field %q", index, field.GetName())
 				}
-
 				oneofFieldCounts[index]++
 			}
-
 			if err := t.exploreCustomOptions(field, descriptorInfo.file.Path(), imageIndex, opts); err != nil {
 				return err
 			}
@@ -527,7 +492,6 @@ func (t *transitiveClosure) addElement(
 				t.elements[oneOfDescriptor] = inclusionModeExcluded
 				continue
 			}
-
 			if err := t.exploreCustomOptions(oneOfDescriptor, descriptorInfo.file.Path(), imageIndex, opts); err != nil {
 				return err
 			}
@@ -549,26 +513,21 @@ func (t *transitiveClosure) addElement(
 	case *descriptorpb.ServiceDescriptorProto:
 		for _, method := range typedDescriptor.GetMethod() {
 			inputName := protoreflect.FullName(strings.TrimPrefix(method.GetInputType(), "."))
-
 			inputInfo, ok := imageIndex.ByName[inputName]
 			if !ok {
 				return fmt.Errorf("missing %q", inputName)
 			}
-
 			outputName := protoreflect.FullName(strings.TrimPrefix(method.GetOutputType(), "."))
-
 			outputInfo, ok := imageIndex.ByName[outputName]
 			if !ok {
 				return fmt.Errorf("missing %q", outputName)
 			}
-
 			inputMode, outputMode := t.elements[inputInfo.element], t.elements[outputInfo.element]
 			if inputMode == inclusionModeExcluded || outputMode == inclusionModeExcluded {
 				// The input or ouptut is excluded, so this method is also excluded.
 				t.elements[inputInfo.element] = inclusionModeExcluded
 				continue
 			}
-
 			if err := t.addElement(method, "", false, imageIndex, opts); err != nil {
 				return err
 			}
@@ -576,33 +535,26 @@ func (t *transitiveClosure) addElement(
 
 	case *descriptorpb.MethodDescriptorProto:
 		inputName := protoreflect.FullName(strings.TrimPrefix(typedDescriptor.GetInputType(), "."))
-
 		inputInfo, ok := imageIndex.ByName[inputName]
 		if !ok {
 			return fmt.Errorf("missing %q", inputName)
 		}
-
 		outputName := protoreflect.FullName(strings.TrimPrefix(typedDescriptor.GetOutputType(), "."))
-
 		outputInfo, ok := imageIndex.ByName[outputName]
 		if !ok {
 			return fmt.Errorf("missing %q", outputName)
 		}
-
 		if inputMode := t.elements[inputInfo.element]; inputMode == inclusionModeExcluded {
 			// The input is excluded, it's an error to include the method.
 			return fmt.Errorf("cannot include method %q as the input type %q is excluded", descriptorInfo.fullName, inputInfo.fullName)
 		}
-
 		if outputMode := t.elements[outputInfo.element]; outputMode == inclusionModeExcluded {
 			// The output is excluded, it's an error to include the method.
 			return fmt.Errorf("cannot include method %q as the output type %q is excluded", descriptorInfo.fullName, outputInfo.fullName)
 		}
-
 		if err := t.addElement(inputInfo.element, descriptorInfo.file.Path(), false, imageIndex, opts); err != nil {
 			return err
 		}
-
 		if err := t.addElement(outputInfo.element, descriptorInfo.file.Path(), false, imageIndex, opts); err != nil {
 			return err
 		}
@@ -613,33 +565,26 @@ func (t *transitiveClosure) addElement(
 		if typedDescriptor.Extendee == nil {
 			return errorUnsupportedFilterType(descriptor, descriptorInfo.fullName)
 		}
-
 		if typedDescriptor.GetExtendee() == "" {
 			return fmt.Errorf("expected extendee for field %q to not be empty", descriptorInfo.fullName)
 		}
-
 		extendeeName := protoreflect.FullName(strings.TrimPrefix(typedDescriptor.GetExtendee(), "."))
-
 		extendeeInfo, ok := imageIndex.ByName[extendeeName]
 		if !ok {
 			return fmt.Errorf("missing %q", extendeeName)
 		}
-
 		if mode := t.elements[extendeeInfo.element]; mode == inclusionModeExcluded {
 			// The extendee is excluded, so this extension is also excluded.
 			t.elements[descriptor] = inclusionModeExcluded
 			return nil
 		}
-
 		if err := t.addElement(extendeeInfo.element, descriptorInfo.file.Path(), impliedByCustomOption, imageIndex, opts); err != nil {
 			return err
 		}
-
 		isIncluded, err := t.addFieldType(typedDescriptor, descriptorInfo.file.Path(), imageIndex, opts)
 		if err != nil {
 			return err
 		}
-
 		if !isIncluded {
 			t.elements[descriptor] = inclusionModeExcluded
 			return nil
@@ -686,7 +631,6 @@ func (t *transitiveClosure) excludeType(
 			return err
 		}
 	}
-
 	return nil
 }
 
@@ -700,10 +644,8 @@ func (t *transitiveClosure) excludeElement(
 		if existingMode != inclusionModeExcluded {
 			return fmt.Errorf("type %q is already included", descriptorInfo.fullName)
 		}
-
 		return nil
 	}
-
 	t.elements[descriptor] = inclusionModeExcluded
 	switch descriptor := descriptor.(type) {
 	case *descriptorpb.FileDescriptorProto:
@@ -712,19 +654,16 @@ func (t *transitiveClosure) excludeElement(
 				return err
 			}
 		}
-
 		for _, descriptor := range descriptor.GetEnumType() {
 			if err := t.excludeElement(descriptor, imageIndex, opts); err != nil {
 				return err
 			}
 		}
-
 		for _, descriptor := range descriptor.GetService() {
 			if err := t.excludeElement(descriptor, imageIndex, opts); err != nil {
 				return err
 			}
 		}
-
 		for _, extension := range descriptor.GetExtension() {
 			if err := t.excludeElement(extension, imageIndex, opts); err != nil {
 				return err
@@ -737,13 +676,11 @@ func (t *transitiveClosure) excludeElement(
 				return err
 			}
 		}
-
 		for _, enumDescriptor := range descriptor.GetEnumType() {
 			if err := t.excludeElement(enumDescriptor, imageIndex, opts); err != nil {
 				return err
 			}
 		}
-
 		for _, extensionDescriptor := range descriptor.GetExtension() {
 			if err := t.excludeElement(extensionDescriptor, imageIndex, opts); err != nil {
 				return err
@@ -763,20 +700,17 @@ func (t *transitiveClosure) excludeElement(
 		if descriptor.Extendee == nil {
 			return errorUnsupportedFilterType(descriptor, descriptorInfo.fullName)
 		}
-
 		if descriptor.GetExtendee() == "" {
 			return fmt.Errorf("expected extendee for field %q to not be empty", descriptorInfo.fullName)
 		}
 	default:
 		return errorUnsupportedFilterType(descriptor, descriptorInfo.fullName)
 	}
-
 	return nil
 }
 
 func errorUnsupportedFilterType(descriptor namedDescriptor, fullName protoreflect.FullName) error {
 	var descriptorType string
-
 	switch d := descriptor.(type) {
 	case *descriptorpb.FileDescriptorProto:
 		descriptorType = "file"
@@ -801,7 +735,6 @@ func errorUnsupportedFilterType(descriptor namedDescriptor, fullName protoreflec
 	default:
 		descriptorType = fmt.Sprintf("%T", d)
 	}
-
 	return fmt.Errorf("%s is unsupported filter type: %s", fullName, descriptorType)
 }
 
@@ -811,16 +744,13 @@ func (t *transitiveClosure) addEnclosing(descriptor namedDescriptor, enclosingFi
 	for descriptor != nil {
 		_, isMsg := descriptor.(*descriptorpb.DescriptorProto)
 		_, isSvc := descriptor.(*descriptorpb.ServiceDescriptorProto)
-
 		_, isFile := descriptor.(*descriptorpb.FileDescriptorProto)
 		if !isMsg && !isSvc && !isFile {
 			break // not an enclosing type
 		}
-
 		if _, ok := t.elements[descriptor]; ok {
 			break // already in closure
 		}
-
 		t.elements[descriptor] = inclusionModeEnclosing
 		if err := t.exploreCustomOptions(descriptor, enclosingFile, imageIndex, opts); err != nil {
 			return err
@@ -828,7 +758,6 @@ func (t *transitiveClosure) addEnclosing(descriptor namedDescriptor, enclosingFi
 		// now move into this element's parent
 		descriptor = imageIndex.ByDescriptor[descriptor].parent
 	}
-
 	return nil
 }
 
@@ -838,17 +767,14 @@ func (t *transitiveClosure) addFieldType(field *descriptorpb.FieldDescriptorProt
 		descriptorpb.FieldDescriptorProto_TYPE_MESSAGE,
 		descriptorpb.FieldDescriptorProto_TYPE_GROUP:
 		typeName := protoreflect.FullName(strings.TrimPrefix(field.GetTypeName(), "."))
-
 		info, ok := imageIndex.ByName[typeName]
 		if !ok {
 			return false, fmt.Errorf("missing %q", typeName)
 		}
-
 		if mode := t.elements[info.element]; mode == inclusionModeExcluded {
 			// The field's type is excluded, so this field is also excluded.
 			return false, nil
 		}
-
 		err := t.addElement(info.element, referrerFile, false, imageIndex, opts)
 		if err != nil {
 			return false, err
@@ -872,7 +798,6 @@ func (t *transitiveClosure) addFieldType(field *descriptorpb.FieldDescriptorProt
 	default:
 		return false, fmt.Errorf("unknown field type %d", field.GetType())
 	}
-
 	return true, nil
 }
 
@@ -883,32 +808,27 @@ func (t *transitiveClosure) addExtensions(
 	if !opts.includeKnownExtensions {
 		return nil // nothing to do
 	}
-
 	for e, mode := range t.elements {
 		if mode != inclusionModeExplicit {
 			// we only collect extensions for messages that are directly reachable/referenced.
 			continue
 		}
-
 		msgDescriptor, ok := e.(*descriptorpb.DescriptorProto)
 		if !ok {
 			// not a message, nothing to do
 			continue
 		}
-
 		descriptorInfo := imageIndex.ByDescriptor[msgDescriptor]
 		for _, extendsDescriptor := range imageIndex.NameToExtensions[descriptorInfo.fullName] {
 			if mode := t.elements[extendsDescriptor]; mode == inclusionModeExcluded {
 				// This extension field is excluded.
 				continue
 			}
-
 			if err := t.addElement(extendsDescriptor, "", false, imageIndex, opts); err != nil {
 				return err
 			}
 		}
 	}
-
 	return nil
 }
 
@@ -923,7 +843,6 @@ func (t *transitiveClosure) exploreCustomOptions(
 	}
 
 	var options protoreflect.Message
-
 	switch descriptor := descriptor.(type) {
 	case *descriptorpb.FileDescriptorProto:
 		options = descriptor.GetOptions().ProtoReflect()
@@ -948,9 +867,7 @@ func (t *transitiveClosure) exploreCustomOptions(
 	}
 
 	optionsName := options.Descriptor().FullName()
-
 	var err error
-
 	options.Range(func(fd protoreflect.FieldDescriptor, val protoreflect.Value) bool {
 		if !t.hasOption(fd, imageIndex, opts) {
 			return true
@@ -965,20 +882,15 @@ func (t *transitiveClosure) exploreCustomOptions(
 		if !fd.IsExtension() {
 			return true
 		}
-
 		optionsByNumber := imageIndex.NameToOptions[optionsName]
-
 		field, ok := optionsByNumber[int32(fd.Number())]
 		if !ok {
 			// Option is unrecognized, ignore it.
 			return true
 		}
-
 		err = t.addElement(field, referrerFile, true, imageIndex, opts)
-
 		return err == nil
 	})
-
 	return err
 }
 
@@ -997,15 +909,12 @@ func (t *transitiveClosure) exploreOptionValueForAny(
 	case fd.IsMap():
 		if isMessageKind(fd.MapValue().Kind()) {
 			var err error
-
 			val.Map().Range(func(_ protoreflect.MapKey, v protoreflect.Value) bool {
 				if err = t.exploreOptionSingularValueForAny(v.Message(), referrerFile, imageIndex, opts); err != nil {
 					return false
 				}
-
 				return true
 			})
-
 			return err
 		}
 	case isMessageKind(fd.Kind()):
@@ -1020,7 +929,6 @@ func (t *transitiveClosure) exploreOptionValueForAny(
 			return t.exploreOptionSingularValueForAny(val.Message(), referrerFile, imageIndex, opts)
 		}
 	}
-
 	return nil
 }
 
@@ -1038,11 +946,9 @@ func (t *transitiveClosure) exploreOptionSingularValueForAny(
 			// should not be possible...
 			return nil
 		}
-
 		typeURL := msg.Get(typeURLFd).String()
 		pos := strings.LastIndexByte(typeURL, '/')
 		msgType := protoreflect.FullName(typeURL[pos+1:])
-
 		d, _ := imageIndex.ByName[msgType].element.(*descriptorpb.DescriptorProto)
 		if d != nil {
 			if err := t.addElement(d, referrerFile, false, imageIndex, opts); err != nil {
@@ -1054,12 +960,10 @@ func (t *transitiveClosure) exploreOptionSingularValueForAny(
 	}
 	// keep digging
 	var err error
-
 	msg.Range(func(fd protoreflect.FieldDescriptor, val protoreflect.Value) bool {
 		err = t.exploreOptionValueForAny(fd, val, referrerFile, imageIndex, opts)
 		return err == nil
 	})
-
 	return err
 }
 
@@ -1075,19 +979,15 @@ func freeMessageRangeStringsRec(
 	for _, nestedMessage := range message.GetNestedType() {
 		s = freeMessageRangeStringsRec(s, fullName+"."+nestedMessage.GetName(), nestedMessage)
 	}
-
 	freeRanges := freeMessageRanges(message)
 	if len(freeRanges) == 0 {
 		return s
 	}
-
 	suffixes := make([]string, len(freeRanges))
 	for i, freeRange := range freeRanges {
 		start := freeRange.start
 		end := freeRange.end
-
 		var suffix string
-
 		switch {
 		case start == end:
 			suffix = fmt.Sprintf("%d", start)
@@ -1096,10 +996,8 @@ func freeMessageRangeStringsRec(
 		default:
 			suffix = fmt.Sprintf("%d-%d", start, end)
 		}
-
 		suffixes[i] = suffix
 	}
-
 	return append(s, fmt.Sprintf(
 		"%- 35s free: %s",
 		fullName,
@@ -1116,39 +1014,30 @@ func freeMessageRanges(message *descriptorpb.DescriptorProto) []int32Range {
 		// we subtract one because ranges in the proto have exclusive end
 		used = append(used, int32Range{start: reservedRange.GetStart(), end: reservedRange.GetEnd() - 1})
 	}
-
 	for _, extensionRange := range message.GetExtensionRange() {
 		// we subtract one because ranges in the proto have exclusive end
 		used = append(used, int32Range{start: extensionRange.GetStart(), end: extensionRange.GetEnd() - 1})
 	}
-
 	for _, field := range message.GetField() {
 		used = append(used, int32Range{start: field.GetNumber(), end: field.GetNumber()})
 	}
-
 	sort.Slice(used, func(i, j int) bool {
 		return used[i].start < used[j].start
 	})
 	// now compute the inverse (unused ranges)
-	var (
-		unused []int32Range
-		last   int32
-	)
-
+	var unused []int32Range
+	var last int32
 	for _, r := range used {
 		if r.start <= last+1 {
 			last = r.end
 			continue
 		}
-
 		unused = append(unused, int32Range{start: last + 1, end: r.start - 1})
 		last = r.end
 	}
-
 	if last < messageRangeInclusiveMax {
 		unused = append(unused, int32Range{start: last + 1, end: messageRangeInclusiveMax})
 	}
-
 	return unused
 }
 
@@ -1171,16 +1060,13 @@ func newImageFilterOptions() *imageFilterOptions {
 
 func stripSourceRetentionOptionsFromFile(imageFile bufimage.ImageFile) (bufimage.ImageFile, error) {
 	fileDescriptor := imageFile.FileDescriptorProto()
-
 	updatedFileDescriptor, err := protopluginutil.StripSourceRetentionOptions(fileDescriptor)
 	if err != nil {
 		return nil, err
 	}
-
 	if updatedFileDescriptor == fileDescriptor {
 		return imageFile, nil
 	}
-
 	return bufimage.NewImageFile(
 		updatedFileDescriptor,
 		imageFile.FullName(),

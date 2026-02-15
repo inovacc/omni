@@ -164,7 +164,6 @@ func TestCommitProviderForCommitKeyBasic(t *testing.T) {
 
 func TestModuleDataProviderBasic(t *testing.T) {
 	t.Parallel()
-
 	ctx := context.Background()
 
 	bsrProvider, moduleKeys := testGetBSRProviderAndModuleKeys(t, ctx)
@@ -236,7 +235,6 @@ func TestConcurrentCacheReadWrite(t *testing.T) {
 
 	for range 20 {
 		require.NoError(t, os.MkdirAll(cacheDir, 0755))
-
 		jobs, err := xslices.MapError(
 			[]int{0, 1, 2, 3, 4},
 			func(i int) (func(ctx context.Context) error, error) {
@@ -244,7 +242,6 @@ func TestConcurrentCacheReadWrite(t *testing.T) {
 				if err != nil {
 					return nil, err
 				}
-
 				filelocker, err := filelock.NewLocker(
 					cacheDir,
 					filelock.LockerWithLockRetryDelay(10*time.Millisecond), // Drops test time from ~16s to ~1s
@@ -252,7 +249,6 @@ func TestConcurrentCacheReadWrite(t *testing.T) {
 				if err != nil {
 					return nil, err
 				}
-
 				cacheProvider := newModuleDataProvider(
 					logger,
 					bsrProvider,
@@ -262,7 +258,6 @@ func TestConcurrentCacheReadWrite(t *testing.T) {
 						filelocker,
 					),
 				)
-
 				return func(ctx context.Context) error {
 					moduleDatas, err := cacheProvider.GetModuleDatasForModuleKeys(
 						ctx,
@@ -271,14 +266,12 @@ func TestConcurrentCacheReadWrite(t *testing.T) {
 					if err != nil {
 						return err
 					}
-
 					for _, moduleData := range moduleDatas {
 						// Calling moduleData.Bucket() checks the digest
 						if _, err := moduleData.Bucket(); err != nil {
 							return err
 						}
 					}
-
 					return nil
 				}, nil
 			},
@@ -338,6 +331,5 @@ func testGetBSRProviderAndModuleKeys(t *testing.T, ctx context.Context) (bufmodu
 	)
 	require.NoError(t, err)
 	require.Equal(t, 3, len(moduleKeys))
-
 	return bsrProvider, moduleKeys
 }

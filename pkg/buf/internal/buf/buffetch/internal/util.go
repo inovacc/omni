@@ -27,13 +27,10 @@ func formatsToString(formats map[string]struct{}) string {
 	if len(formats) == 0 {
 		return "[]"
 	}
-
 	s := make([]string, 0, len(formats))
 	for format := range formats {
 		s = append(s, format)
 	}
-
 	sort.Strings(s)
-
 	return "[" + strings.Join(s, ",") + "]"
 }

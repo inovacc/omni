@@ -44,12 +44,10 @@ func resolveFeature(
 	if featureField == nil {
 		return protoreflect.Value{}, fmt.Errorf("unable to resolve field descriptor for %s.%s", extension.Message().FullName(), fieldName)
 	}
-
 	if featureField.Kind() != expectedKind || featureField.IsList() {
 		return protoreflect.Value{}, fmt.Errorf("resolved field descriptor for %s.%s has unexpected type: expected optional %s, got %s %s",
 			extension.Message().FullName(), fieldName, expectedKind, featureField.Cardinality(), featureField.Kind())
 	}
-
 	return protoutil.ResolveCustomFeature(
 		field,
 		extension.Type(),

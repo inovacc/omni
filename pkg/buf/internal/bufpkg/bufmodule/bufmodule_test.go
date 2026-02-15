@@ -115,7 +115,6 @@ func TestBasic(t *testing.T) {
 		bufmodule2.DigestTypeB5,
 	)
 	require.NoError(t, err)
-
 	for _, moduleKey := range moduleKeys {
 		moduleSetBuilder.AddRemoteModule(moduleKey, false)
 	}
@@ -218,7 +217,7 @@ func TestBasic(t *testing.T) {
 		module2,
 		"module2.proto",
 	)
-	// module2ProtoFileInfo, err := module2.StatFileInfo(ctx, "module2.proto")
+	//module2ProtoFileInfo, err := module2.StatFileInfo(ctx, "module2.proto")
 	//require.NoError(t, err)
 	//imports, err := module2ProtoFileInfo.protoFileImports()
 	//require.NoError(t, err)
@@ -246,7 +245,6 @@ func TestBasic(t *testing.T) {
 	require.Equal(t, extdep2.OpaqueID(), extdep2Deps[0].Parent().OpaqueID())
 
 	module1 := moduleSet.GetModuleForOpaqueID("path/to/module1")
-
 	require.NotNil(t, extdep2)
 	require.Equal(
 		t,
@@ -309,7 +307,6 @@ func TestBasic(t *testing.T) {
 		graph,
 		bufmodule2.Module.OpaqueID,
 	)
-
 	graphRemoteOnly, err := bufmodule2.ModuleSetToDAG(moduleSet, bufmodule2.ModuleSetToDAGWithRemoteOnly())
 	require.NoError(t, err)
 	dagtest.RequireGraphEqual(
@@ -339,7 +336,6 @@ func TestBasic(t *testing.T) {
 		graphRemoteOnly,
 		bufmodule2.Module.OpaqueID,
 	)
-
 	remoteDeps, err := bufmodule2.RemoteDepsForModuleSet(moduleSet)
 	require.NoError(t, err)
 	require.Equal(
@@ -353,7 +349,6 @@ func TestBasic(t *testing.T) {
 		xslices.Map(remoteDeps, func(remoteDep bufmodule2.RemoteDep) string { return remoteDep.OpaqueID() }),
 	)
 	transitiveRemoteDeps := xslices.Filter(remoteDeps, func(remoteDep bufmodule2.RemoteDep) bool { return !remoteDep.IsDirect() })
-
 	require.NoError(t, err)
 	require.Equal(
 		t,
@@ -402,7 +397,6 @@ func TestModuleCycleError(t *testing.T) {
 	require.NotNil(t, moduleA)
 	_, err = moduleA.ModuleDeps()
 	require.Error(t, err)
-
 	moduleCycleError := &bufmodule2.ModuleCycleError{}
 	require.True(t, errors.As(err, &moduleCycleError), err.Error())
 	require.Equal(
@@ -420,7 +414,6 @@ func TestModuleCycleError(t *testing.T) {
 	require.NotNil(t, moduleB)
 	_, err = moduleB.ModuleDeps()
 	require.Error(t, err)
-
 	moduleCycleError = &bufmodule2.ModuleCycleError{}
 	require.True(t, errors.As(err, &moduleCycleError), err.Error())
 	require.Equal(
@@ -438,7 +431,6 @@ func TestModuleCycleError(t *testing.T) {
 	require.NotNil(t, moduleC)
 	_, err = moduleC.ModuleDeps()
 	require.Error(t, err)
-
 	moduleCycleError = &bufmodule2.ModuleCycleError{}
 	require.True(t, errors.As(err, &moduleCycleError), err.Error())
 	require.Equal(
@@ -486,7 +478,6 @@ func TestDuplicateProtoPathError(t *testing.T) {
 
 	checkError := func(err error) {
 		require.Error(t, err)
-
 		duplicateProtoPathError := &bufmodule2.DuplicateProtoPathError{}
 		require.True(t, errors.As(err, &duplicateProtoPathError), err.Error())
 		require.Equal(
@@ -505,7 +496,6 @@ func TestDuplicateProtoPathError(t *testing.T) {
 	}
 	_, err = moduleA.ModuleDeps()
 	checkError(err)
-
 	moduleReadBucket := bufmodule2.ModuleSetToModuleReadBucketWithOnlyProtoFiles(moduleSet)
 	_, err = moduleReadBucket.StatFileInfo(ctx, "a.proto")
 	checkError(err)
@@ -543,7 +533,6 @@ func TestNoProtoFilesError(t *testing.T) {
 
 	checkError := func(err error) {
 		require.Error(t, err)
-
 		noProtoFilesError := &bufmodule2.NoProtoFilesError{}
 		require.True(t, errors.As(err, &noProtoFilesError), err.Error())
 		require.Contains(
@@ -586,7 +575,6 @@ func TestProtoFileTargetPath(t *testing.T) {
 	moduleSetBuilder.AddLocalModule(bucket, "module1", true)
 	moduleSet, err := moduleSetBuilder.Build()
 	require.NoError(t, err)
-
 	module1 := moduleSet.GetModuleForOpaqueID("module1")
 	require.NotNil(t, module1)
 	testFilePaths(
@@ -621,7 +609,6 @@ func TestProtoFileTargetPath(t *testing.T) {
 	)
 	moduleSet, err = moduleSetBuilder.Build()
 	require.NoError(t, err)
-
 	module1 = moduleSet.GetModuleForOpaqueID("module1")
 	require.NotNil(t, module1)
 	testFilePaths(
@@ -652,7 +639,6 @@ func TestProtoFileTargetPath(t *testing.T) {
 	)
 	moduleSet, err = moduleSetBuilder.Build()
 	require.NoError(t, err)
-
 	module1 = moduleSet.GetModuleForOpaqueID("module1")
 	require.NotNil(t, module1)
 	testFilePaths(
@@ -676,19 +662,16 @@ func TestProtoFileTargetPath(t *testing.T) {
 func testNewBucketForPathToData(t *testing.T, pathToData map[string][]byte) storage.ReadBucket {
 	bucket, err := storagemem.NewReadBucket(pathToData)
 	require.NoError(t, err)
-
 	return bucket
 }
 
 func testGetDepOpaqueIDToDirect(t *testing.T, module bufmodule2.Module) map[string]bool {
 	moduleDeps, err := module.ModuleDeps()
 	require.NoError(t, err)
-
 	depOpaqueIDToDirect := make(map[string]bool)
 	for _, moduleDep := range moduleDeps {
 		depOpaqueIDToDirect[moduleDep.OpaqueID()] = moduleDep.IsDirect()
 	}
-
 	return depOpaqueIDToDirect
 }
 

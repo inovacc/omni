@@ -46,7 +46,6 @@ func (n FullName) ToAbsolute() FullName {
 	if n.Absolute() {
 		return n
 	}
-
 	return "." + n
 }
 
@@ -59,7 +58,6 @@ func (n FullName) ToRelative() FullName {
 func (n FullName) First() string {
 	n = n.ToRelative()
 	name, _, _ := strings.Cut(string(n), ".")
-
 	return name
 }
 
@@ -75,7 +73,6 @@ func (n FullName) Components() iter.Seq[string] {
 			if !yield(name) || !more {
 				return
 			}
-
 			n = FullName(rest)
 		}
 	}
@@ -117,7 +114,6 @@ func (n FullName) appendToBytes(b []byte, names ...string) []byte {
 	if n != "" {
 		m++
 	}
-
 	for _, name := range names {
 		m += len(name)
 	}
@@ -129,7 +125,6 @@ func (n FullName) appendToBytes(b []byte, names ...string) []byte {
 		if len(b) > 0 {
 			b = append(b, '.')
 		}
-
 		b = append(b, name...)
 	}
 

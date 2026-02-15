@@ -30,9 +30,7 @@ func policyToBufConfigLintConfig(
 	if err != nil {
 		return nil, err
 	}
-
 	policyLintConfig := policyConfig.LintConfig()
-
 	checkConfig, err := bufconfig2.NewEnabledCheckConfig(
 		bufconfig2.FileVersionV2,
 		policyLintConfig.UseIDsAndCategories(),
@@ -44,7 +42,6 @@ func policyToBufConfigLintConfig(
 	if err != nil {
 		return nil, err
 	}
-
 	return bufconfig2.NewLintConfig(
 		checkConfig,
 		policyLintConfig.EnumZeroValueSuffix(),
@@ -66,9 +63,7 @@ func policyToBufConfigBreakingConfig(
 	if err != nil {
 		return nil, err
 	}
-
 	policyBreakingConfig := policyConfig.BreakingConfig()
-
 	checkConfig, err := bufconfig2.NewEnabledCheckConfig(
 		bufconfig2.FileVersionV2,
 		policyBreakingConfig.UseIDsAndCategories(),
@@ -80,7 +75,6 @@ func policyToBufConfigBreakingConfig(
 	if err != nil {
 		return nil, err
 	}
-
 	return bufconfig2.NewBreakingConfig(
 		checkConfig,
 		policyBreakingConfig.IgnoreUnstablePackages(),
@@ -95,8 +89,6 @@ func policyToBufConfigPluginConfigs(
 	if err != nil {
 		return nil, err
 	}
-
 	pluginConfigs := policyConfig.PluginConfigs()
-
 	return bufpolicyconfig.PluginConfigsToBufConfig(pluginConfigs)
 }

@@ -54,12 +54,10 @@ func ReadWasmFileFromOS(name string) ([]byte, error) {
 		path = name
 	} else {
 		var err error
-
 		path, err = unsafeLookPath(name)
 		if err != nil {
 			return nil, fmt.Errorf("could not find file %q in PATH: %v", name, err)
 		}
 	}
-
 	return os.ReadFile(path)
 }

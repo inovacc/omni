@@ -73,7 +73,6 @@ func NewEnvContainerForOS() (EnvContainer, error) {
 func NewEnvContainerWithOverrides(envContainer EnvContainer, overrides map[string]string) EnvContainer {
 	m := EnvironMap(envContainer)
 	maps.Copy(m, overrides)
-
 	return newEnvContainer(m)
 }
 
@@ -183,7 +182,6 @@ func NewContainerForOS() (Container, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	return newContainer(
 		envContainer,
 		NewStdinContainerForOS(),
@@ -242,12 +240,10 @@ type EnvStdioContainer interface {
 // Sorted.
 func Environ(envContainer EnvContainer) []string {
 	var environ []string
-
 	envContainer.ForEachEnv(func(key string, value string) {
 		environ = append(environ, key+"="+value)
 	})
 	sort.Strings(environ)
-
 	return environ
 }
 
@@ -256,14 +252,12 @@ func Environ(envContainer EnvContainer) []string {
 // No key will have an empty value.
 func EnvironMap(envContainer EnvContainer) map[string]string {
 	m := make(map[string]string)
-
 	envContainer.ForEachEnv(func(key string, value string) {
 		// This should be done anyways per the EnvContainer documentation but just to make sure
 		if value != "" {
 			m[key] = value
 		}
 	})
-
 	return m
 }
 
@@ -272,12 +266,10 @@ func EnvironMap(envContainer EnvContainer) map[string]string {
 // Equivalent to os.Args.
 func Args(argList ArgContainer) []string {
 	numArgs := argList.NumArgs()
-
 	args := make([]string, numArgs)
 	for i := range numArgs {
 		args[i] = argList.Arg(i)
 	}
-
 	return args
 }
 
@@ -289,7 +281,6 @@ func EnvBool(container EnvContainer, key string, defaultValue bool) (bool, error
 	if value == "" {
 		return defaultValue, nil
 	}
-
 	return strconv.ParseBool(value)
 }
 
@@ -326,7 +317,6 @@ func Main(ctx context.Context, f func(context.Context, Container) error) {
 		printError(container, err)
 		os.Exit(GetExitCode(err))
 	}
-
 	os.Exit(GetExitCode(Run(ctx, container, f)))
 }
 
@@ -339,7 +329,6 @@ func Run(ctx context.Context, container Container, f func(context.Context, Conta
 		printError(container, err)
 		return err
 	}
-
 	return nil
 }
 
@@ -373,11 +362,9 @@ func GetExitCode(err error) int {
 	if err == nil {
 		return 0
 	}
-
 	appErr := &appError{}
 	if errors.As(err, &appErr) {
 		return appErr.exitCode
 	}
-
 	return 1
 }

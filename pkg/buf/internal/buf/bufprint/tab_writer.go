@@ -34,9 +34,7 @@ func (t *tabWriter) Write(values ...string) error {
 	if len(values) == 0 {
 		return nil
 	}
-
 	_, err := t.delegate.Write([]byte(strings.Join(values, "\t") + "\n"))
-
 	return err
 }
 

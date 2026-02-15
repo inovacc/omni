@@ -64,15 +64,12 @@ func newPluginReference(identity PluginIdentity, version string, revision int) (
 	if err := ValidatePluginIdentity(identity); err != nil {
 		return nil, err
 	}
-
 	if err := ValidatePluginVersion(version); err != nil {
 		return nil, err
 	}
-
 	if err := validatePluginRevision(revision); err != nil {
 		return nil, err
 	}
-
 	return &pluginReference{
 		identity: identity,
 		version:  version,
@@ -85,7 +82,6 @@ func ValidatePluginVersion(version string) error {
 	if !semver.IsValid(version) {
 		return fmt.Errorf("plugin version %q is not a valid semantic version", version)
 	}
-
 	return nil
 }
 
@@ -93,6 +89,5 @@ func validatePluginRevision(revision int) error {
 	if revision < 0 || revision > math.MaxInt32 {
 		return fmt.Errorf("revision %d is out of accepted range %d-%d", revision, 0, math.MaxInt32)
 	}
-
 	return nil
 }

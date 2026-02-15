@@ -148,7 +148,6 @@ func TestGoogleapis(t *testing.T) {
 		},
 		testGetImageFilePaths(imageWithoutImports),
 	)
-
 	_, err = bufimage.ImageWithOnlyPaths(
 		image,
 		[]string{
@@ -311,7 +310,6 @@ func TestCompareSemicolons(t *testing.T) {
 
 func TestModuleTargetFiles(t *testing.T) {
 	t.Parallel()
-
 	moduleSet, err := bufmoduletesting.NewModuleSet(
 		bufmoduletesting.ModuleData{
 			Name: "buf.build/foo/a",
@@ -341,14 +339,11 @@ func TestModuleTargetFiles(t *testing.T) {
 	require.NoError(t, err)
 	testTargetImageFiles := func(t *testing.T, want []string, opaqueID ...string) {
 		targetModuleSet := moduleSet
-
 		if len(opaqueID) > 0 {
 			var err error
-
 			targetModuleSet, err = moduleSet.WithTargetOpaqueIDs(opaqueID...)
 			require.NoError(t, err)
 		}
-
 		image, err := bufimage.BuildImage(
 			context.Background(),
 			slogtestext.NewLogger(t),
@@ -368,37 +363,30 @@ func testBuildGoogleapis(t *testing.T, includeSourceInfo bool) bufimage.Image {
 	googleapisDirPath := buftesting.GetGoogleapisDirPath(t, buftestingDirPath)
 	image, fileAnnotations := testBuild(t, includeSourceInfo, googleapisDirPath, true)
 	require.Equal(t, 0, len(fileAnnotations), fileAnnotations)
-
 	return image
 }
 
 func testBuild(t *testing.T, includeSourceInfo bool, dirPath string, parallelism bool) (bufimage.Image, []bufanalysis.FileAnnotation) {
 	moduleSet, err := bufmoduletesting.NewModuleSetForDirPath(dirPath)
 	require.NoError(t, err)
-
 	var options []bufimage.BuildImageOption
 	if !includeSourceInfo {
 		options = append(options, bufimage.WithExcludeSourceCodeInfo())
 	}
-
 	if !parallelism {
 		options = append(options, bufimage.WithNoParallelism())
 	}
-
 	image, err := bufimage.BuildImage(
 		context.Background(),
 		slogtestext.NewLogger(t),
 		bufmodule.ModuleSetToModuleReadBucketWithOnlyProtoFiles(moduleSet),
 		options...,
 	)
-
 	var fileAnnotationSet bufanalysis.FileAnnotationSet
 	if errors.As(err, &fileAnnotationSet) {
 		return image, fileAnnotationSet.FileAnnotations()
 	}
-
 	require.NoError(t, err)
-
 	return image, nil
 }
 
@@ -407,23 +395,18 @@ func testGetImageFilePaths(image bufimage.Image) []string {
 	for _, file := range image.Files() {
 		fileNames = append(fileNames, file.Path())
 	}
-
 	sort.Strings(fileNames)
-
 	return fileNames
 }
 
 func testGetImageImportPaths(image bufimage.Image) []string {
 	var importNames []string
-
 	for _, file := range image.Files() {
 		if file.IsImport() {
 			importNames = append(importNames, file.Path())
 		}
 	}
-
 	sort.Strings(importNames)
-
 	return importNames
 }
 
@@ -431,18 +414,14 @@ func testFileAnnotations(t *testing.T, relDirPath string, parallelism bool, want
 	t.Helper()
 
 	_, fileAnnotations := testBuild(t, false, filepath.Join("testdata", filepath.FromSlash(relDirPath)), parallelism)
-
 	got := make([]string, len(fileAnnotations))
 	for i, annotation := range fileAnnotations {
 		got[i] = annotation.String()
 	}
-
 	require.Equal(t, len(want), len(got))
-
 	for i := range want {
 		options := strings.Split(want[i], "||")
 		matched := false
-
 		for _, option := range options {
 			option = strings.TrimSpace(option)
 			if got[i] == option {
@@ -450,14 +429,12 @@ func testFileAnnotations(t *testing.T, relDirPath string, parallelism bool, want
 				break
 			}
 		}
-
 		require.True(t, matched, "annotation at index %d: wanted %q ; got %q", i, want[i], got[i])
 	}
 }
 
 func testImageWithExcludedFilePaths(t *testing.T, image bufimage.Image, excludePaths []string) {
 	t.Helper()
-
 	for _, imageFile := range image.Files() {
 		if !imageFile.IsImport() {
 			for _, excludePath := range excludePaths {

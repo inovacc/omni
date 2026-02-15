@@ -52,7 +52,6 @@ func (s *Session) Lower(source *ast.File, errs *report.Report, importer Importer
 	})
 
 	ok = true
-
 	for _, d := range errs.Diagnostics[prior:] {
 		if d.Level() >= report.Error {
 			ok = false

@@ -27,7 +27,6 @@ func NewPluginKeyProvider(container appext.Container) (bufplugin.PluginKeyProvid
 	if err != nil {
 		return nil, err
 	}
-
 	return bufpluginapi.NewPluginKeyProvider(
 		container.Logger(),
 		bufregistryapiplugin.NewClientProvider(

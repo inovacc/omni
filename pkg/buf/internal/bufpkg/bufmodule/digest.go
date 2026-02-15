@@ -69,7 +69,6 @@ func (d DigestType) String() string {
 	if !ok {
 		return strconv.Itoa(int(d))
 	}
-
 	return s
 }
 
@@ -87,7 +86,6 @@ func ParseDigestType(s string) (DigestType, error) {
 			fmt.Errorf("unknown type: %q", s),
 		)
 	}
-
 	return d, nil
 }
 
@@ -121,7 +119,6 @@ func NewDigest(digestType DigestType, bufcasDigest bufcas2.Digest) (Digest, erro
 				bufcasDigest.Type(),
 			)
 		}
-
 		return newDigest(digestType, bufcasDigest), nil
 	default:
 		// This is a system error.
@@ -142,7 +139,6 @@ func ParseDigest(s string) (Digest, error) {
 		// This should be considered a system error.
 		return nil, errors.New("empty string passed to ParseDigest")
 	}
-
 	digestTypeString, hexValue, ok := strings.Cut(s, ":")
 	if !ok {
 		return nil, bufparse.NewParseError(
@@ -151,7 +147,6 @@ func ParseDigest(s string) (Digest, error) {
 			errors.New(`must in the form "digest_type:digest_hex_value"`),
 		)
 	}
-
 	digestType, err := ParseDigestType(digestTypeString)
 	if err != nil {
 		return nil, bufparse.NewParseError(
@@ -160,7 +155,6 @@ func ParseDigest(s string) (Digest, error) {
 			err,
 		)
 	}
-
 	value, err := hex.DecodeString(hexValue)
 	if err != nil {
 		return nil, bufparse.NewParseError(
@@ -169,14 +163,12 @@ func ParseDigest(s string) (Digest, error) {
 			errors.New(`could not parse hex: must in the form "digest_type:digest_hex_value"`),
 		)
 	}
-
 	switch digestType {
 	case DigestTypeB4, DigestTypeB5:
 		bufcasDigest, err := bufcas2.NewDigest(value)
 		if err != nil {
 			return nil, err
 		}
-
 		return NewDigest(digestType, bufcasDigest)
 	default:
 		return nil, syserror.Newf("unknown DigestType: %v", digestType)
@@ -192,15 +184,12 @@ func DigestEqual(a Digest, b Digest) bool {
 	if (a == nil) != (b == nil) {
 		return false
 	}
-
 	if a == nil {
 		return true
 	}
-
 	if a.Type() != b.Type() {
 		return false
 	}
-
 	return bytes.Equal(a.Value(), b.Value())
 }
 
@@ -244,7 +233,6 @@ func getB4Digest(
 	v1BufLockObjectData ObjectData,
 ) (Digest, error) {
 	var fileNodes []bufcas2.FileNode
-
 	if err := storage2.WalkReadObjects(
 		ctx,
 		// This is extreme defensive programming. We've gone out of our way to make sure
@@ -266,7 +254,6 @@ func getB4Digest(
 	); err != nil {
 		return nil, err
 	}
-
 	for _, objectData := range []ObjectData{
 		v1BufYAMLObjectData,
 		v1BufLockObjectData,
@@ -275,30 +262,24 @@ func getB4Digest(
 			// We may not have object data for one of these files, this is valid.
 			continue
 		}
-
 		digest, err := bufcas2.NewDigestForContent(bytes.NewReader(objectData.Data()))
 		if err != nil {
 			return nil, err
 		}
-
 		fileNode, err := bufcas2.NewFileNode(objectData.Name(), digest)
 		if err != nil {
 			return nil, err
 		}
-
 		fileNodes = append(fileNodes, fileNode)
 	}
-
 	manifest, err := bufcas2.NewManifest(fileNodes)
 	if err != nil {
 		return nil, err
 	}
-
 	bufcasDigest, err := bufcas2.ManifestToDigest(manifest)
 	if err != nil {
 		return nil, err
 	}
-
 	return NewDigest(DigestTypeB4, bufcasDigest)
 }
 
@@ -316,7 +297,6 @@ func getB5DigestForBucketAndModuleDeps(
 	if err != nil {
 		return nil, err
 	}
-
 	return getB5DigestForBucketAndDepDigests(ctx, bucketWithStorageMatcherApplied, depDigests)
 }
 
@@ -334,7 +314,6 @@ func getB5DigestForBucketAndDepModuleKeys(
 	if err != nil {
 		return nil, err
 	}
-
 	return getB5DigestForBucketAndDepDigests(ctx, bucketWithStorageMatcherApplied, depDigests)
 }
 
@@ -358,7 +337,6 @@ func getB5DigestForBucketAndDepDigests(
 	if err != nil {
 		return nil, err
 	}
-
 	if filesDigest.Type() != bufcas2.DigestTypeShake256 {
 		return nil, syserror.Newf("trying to compute b5 Digest with files digest of type %v", filesDigest.Type())
 	}
@@ -371,14 +349,12 @@ func getB5DigestForBucketAndDepDigests(
 				// digest from the BSR, we should never have a b5 digest here.
 				return "", syserror.Newf("trying to compute b5 Digest with dependency digest of type %v", digest.Type())
 			}
-
 			return digest.String(), nil
 		},
 	)
 	if err != nil {
 		return nil, err
 	}
-
 	sort.Strings(depDigestStrings)
 	// Now, place the file digest first, then the sorted dependency digests afterwards.
 	digestStrings := append([]string{filesDigest.String()}, depDigestStrings...)
@@ -397,7 +373,6 @@ func getFilesDigestForB5Digest(
 	bucketWithStorageMatcherApplied storage2.ReadBucket,
 ) (bufcas2.Digest, error) {
 	var fileNodes []bufcas2.FileNode
-
 	if err := storage2.WalkReadObjects(
 		ctx,
 		// This is extreme defensive programming. We've gone out of our way to make sure
@@ -419,11 +394,9 @@ func getFilesDigestForB5Digest(
 	); err != nil {
 		return nil, err
 	}
-
 	manifest, err := bufcas2.NewManifest(fileNodes)
 	if err != nil {
 		return nil, err
 	}
-
 	return bufcas2.ManifestToDigest(manifest)
 }

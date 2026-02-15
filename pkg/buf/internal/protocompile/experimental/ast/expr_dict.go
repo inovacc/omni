@@ -62,11 +62,9 @@ func (e ExprDict) Braces() token.Token {
 // Elements returns the sequence of expressions in this array.
 func (e ExprDict) Elements() Commas[ExprField] {
 	type slice = commas[ExprField, id.ID[ExprField]]
-
 	if e.IsZero() {
 		return slice{}
 	}
-
 	return slice{
 		file: e.Context(),
 		SliceInserter: seq.NewSliceInserter(

@@ -149,7 +149,7 @@ type OptionExtensionDescriptor interface {
 
 	// OptionLocation returns the source location where the given option field
 	// value is defined. The extra path can be additional path elements, for getting
-	// the location of specific elements inside the field, for message
+	// getting the location of specific elements inside the field, for message
 	// and repeated values.
 	//
 	// If a precise location cannot be found, but a general one can be, the general
@@ -587,10 +587,8 @@ func FilePathToFile(files ...File) (map[string]File, error) {
 		if _, ok := filePathToFile[filePath]; ok {
 			return nil, fmt.Errorf("duplicate filePath: %q", filePath)
 		}
-
 		filePathToFile[filePath] = file
 	}
-
 	return filePathToFile, nil
 }
 
@@ -626,13 +624,11 @@ func ForEachEnum(f func(Enum) error, containerDescriptor ContainerDescriptor) er
 			return err
 		}
 	}
-
 	for _, message := range containerDescriptor.Messages() {
 		if err := ForEachEnum(f, message); err != nil {
 			return err
 		}
 	}
-
 	return nil
 }
 
@@ -647,13 +643,11 @@ func ForEachExtension(f func(Field) error, containerDescriptor ContainerDescript
 			return err
 		}
 	}
-
 	for _, message := range containerDescriptor.Messages() {
 		if err := ForEachExtension(f, message); err != nil {
 			return err
 		}
 	}
-
 	return nil
 }
 
@@ -666,12 +660,10 @@ func ForEachMessage(f func(Message) error, containerDescriptor ContainerDescript
 		if err := f(message); err != nil {
 			return err
 		}
-
 		if err := ForEachMessage(f, message); err != nil {
 			return err
 		}
 	}
-
 	return nil
 }
 
@@ -682,7 +674,6 @@ func ForEachMessage(f func(Message) error, containerDescriptor ContainerDescript
 // which should generally never happen for properly-formed ContainerDescriptors.
 func NestedNameToEnum(containerDescriptor ContainerDescriptor) (map[string]Enum, error) {
 	nestedNameToEnum := make(map[string]Enum)
-
 	if err := ForEachEnum(
 		func(enum Enum) error {
 			nestedName := enum.NestedName()
@@ -696,7 +687,6 @@ func NestedNameToEnum(containerDescriptor ContainerDescriptor) (map[string]Enum,
 	); err != nil {
 		return nil, err
 	}
-
 	return nestedNameToEnum, nil
 }
 
@@ -708,7 +698,6 @@ func NestedNameToEnum(containerDescriptor ContainerDescriptor) (map[string]Enum,
 // ContainerDescriptors.
 func NestedNameToExtension(containerDescriptor ContainerDescriptor) (map[string]Field, error) {
 	nestedNameToExtension := make(map[string]Field)
-
 	if err := ForEachExtension(
 		func(extension Field) error {
 			nestedName := extension.NestedName()
@@ -722,7 +711,6 @@ func NestedNameToExtension(containerDescriptor ContainerDescriptor) (map[string]
 	); err != nil {
 		return nil, err
 	}
-
 	return nestedNameToExtension, nil
 }
 
@@ -732,7 +720,6 @@ func NestedNameToExtension(containerDescriptor ContainerDescriptor) (map[string]
 // which should generally never happen for properly-formed Files.
 func FullNameToEnum(files ...File) (map[string]Enum, error) {
 	fullNameToEnum := make(map[string]Enum)
-
 	for _, file := range files {
 		if err := ForEachEnum(
 			func(enum Enum) error {
@@ -748,7 +735,6 @@ func FullNameToEnum(files ...File) (map[string]Enum, error) {
 			return nil, err
 		}
 	}
-
 	return fullNameToEnum, nil
 }
 
@@ -759,7 +745,6 @@ func FullNameToEnum(files ...File) (map[string]Enum, error) {
 // which should generally never happen for properly-formed Files.
 func PackageToNestedNameToEnum(files ...File) (map[string]map[string]Enum, error) {
 	packageToNestedNameToEnum := make(map[string]map[string]Enum)
-
 	for _, file := range files {
 		if err := ForEachEnum(
 			func(enum Enum) error {
@@ -781,7 +766,6 @@ func PackageToNestedNameToEnum(files ...File) (map[string]map[string]Enum, error
 			return nil, err
 		}
 	}
-
 	return packageToNestedNameToEnum, nil
 }
 
@@ -792,7 +776,6 @@ func PackageToNestedNameToEnum(files ...File) (map[string]map[string]Enum, error
 // which should generally never happen for properly-formed Files.
 func PackageToNestedNameToExtension(files ...File) (map[string]map[string]Field, error) {
 	packageToNestedNameToExtension := make(map[string]map[string]Field)
-
 	for _, file := range files {
 		if err := ForEachExtension(
 			func(enum Field) error {
@@ -814,7 +797,6 @@ func PackageToNestedNameToExtension(files ...File) (map[string]map[string]Field,
 			return nil, err
 		}
 	}
-
 	return packageToNestedNameToExtension, nil
 }
 
@@ -824,16 +806,13 @@ func PackageToNestedNameToExtension(files ...File) (map[string]map[string]Field,
 // which should generally never happen for properly-formed Enums.
 func NameToEnumValue(enum Enum) (map[string]EnumValue, error) {
 	nameToEnumValue := make(map[string]EnumValue)
-
 	for _, enumValue := range enum.Values() {
 		name := enumValue.Name()
 		if _, ok := nameToEnumValue[name]; ok {
 			return nil, fmt.Errorf("duplicate enum value name for enum %q: %q", enum.NestedName(), name)
 		}
-
 		nameToEnumValue[name] = enumValue
 	}
-
 	return nameToEnumValue, nil
 }
 
@@ -845,24 +824,19 @@ func NameToEnumValue(enum Enum) (map[string]EnumValue, error) {
 // which should generally never happen for properly-formed Enums.
 func NumberToNameToEnumValue(enum Enum) (map[int]map[string]EnumValue, error) {
 	numberToNameToEnumValue := make(map[int]map[string]EnumValue)
-
 	for _, enumValue := range enum.Values() {
 		number := enumValue.Number()
-
 		nameToEnumValue, ok := numberToNameToEnumValue[number]
 		if !ok {
 			nameToEnumValue = make(map[string]EnumValue)
 			numberToNameToEnumValue[number] = nameToEnumValue
 		}
-
 		name := enumValue.Name()
 		if _, ok := nameToEnumValue[name]; ok {
 			return nil, fmt.Errorf("duplicate enum value name for enum %q: %q", enum.NestedName(), name)
 		}
-
 		nameToEnumValue[name] = enumValue
 	}
-
 	return numberToNameToEnumValue, nil
 }
 
@@ -873,7 +847,6 @@ func NumberToNameToEnumValue(enum Enum) (map[int]map[string]EnumValue, error) {
 // which should generally never happen for properly-formed files.
 func NestedNameToMessage(containerDescriptor ContainerDescriptor) (map[string]Message, error) {
 	nestedNameToMessage := make(map[string]Message)
-
 	if err := ForEachMessage(
 		func(message Message) error {
 			nestedName := message.NestedName()
@@ -887,7 +860,6 @@ func NestedNameToMessage(containerDescriptor ContainerDescriptor) (map[string]Me
 	); err != nil {
 		return nil, err
 	}
-
 	return nestedNameToMessage, nil
 }
 
@@ -897,7 +869,6 @@ func NestedNameToMessage(containerDescriptor ContainerDescriptor) (map[string]Me
 // which should generally never happen for properly-formed Files.
 func FullNameToMessage(files ...File) (map[string]Message, error) {
 	fullNameToMessage := make(map[string]Message)
-
 	for _, file := range files {
 		if err := ForEachMessage(
 			func(message Message) error {
@@ -913,7 +884,6 @@ func FullNameToMessage(files ...File) (map[string]Message, error) {
 			return nil, err
 		}
 	}
-
 	return fullNameToMessage, nil
 }
 
@@ -924,7 +894,6 @@ func FullNameToMessage(files ...File) (map[string]Message, error) {
 // which should generally never happen for properly-formed Files.
 func PackageToNestedNameToMessage(files ...File) (map[string]map[string]Message, error) {
 	packageToNestedNameToMessage := make(map[string]map[string]Message)
-
 	for _, file := range files {
 		if err := ForEachMessage(
 			func(message Message) error {
@@ -946,7 +915,6 @@ func PackageToNestedNameToMessage(files ...File) (map[string]map[string]Message,
 			return nil, err
 		}
 	}
-
 	return packageToNestedNameToMessage, nil
 }
 
@@ -958,16 +926,13 @@ func PackageToNestedNameToMessage(files ...File) (map[string]map[string]Message,
 // which should generally never happen for properly-formed Messages.
 func NumberToMessageField(message Message) (map[int]Field, error) {
 	numberToMessageField := make(map[int]Field)
-
 	for _, messageField := range message.Fields() {
 		number := messageField.Number()
 		if _, ok := numberToMessageField[number]; ok {
 			return nil, fmt.Errorf("duplicate message field: %d", number)
 		}
-
 		numberToMessageField[number] = messageField
 	}
-
 	return numberToMessageField, nil
 }
 
@@ -983,13 +948,11 @@ func NumberToMessageFieldForLabel(message Message, label descriptorpb.FieldDescr
 	if err != nil {
 		return nil, err
 	}
-
 	for number, field := range numberToField {
 		if field.Label() != label {
 			delete(numberToField, number)
 		}
 	}
-
 	return numberToField, nil
 }
 
@@ -999,16 +962,13 @@ func NumberToMessageFieldForLabel(message Message, label descriptorpb.FieldDescr
 // which should generally never happen for properly-formed Messages.
 func NameToMessageOneof(message Message) (map[string]Oneof, error) {
 	nameToMessageOneof := make(map[string]Oneof)
-
 	for _, messageOneof := range message.Oneofs() {
 		name := messageOneof.Name()
 		if _, ok := nameToMessageOneof[name]; ok {
 			return nil, fmt.Errorf("duplicate message oneof: %q", name)
 		}
-
 		nameToMessageOneof[name] = messageOneof
 	}
-
 	return nameToMessageOneof, nil
 }
 
@@ -1018,16 +978,13 @@ func NameToMessageOneof(message Message) (map[string]Oneof, error) {
 // generally never happen for properly-formed Files.
 func NameToService(file File) (map[string]Service, error) {
 	nameToService := make(map[string]Service)
-
 	for _, service := range file.Services() {
 		name := service.Name()
 		if _, ok := nameToService[name]; ok {
 			return nil, fmt.Errorf("duplicate service: %q", name)
 		}
-
 		nameToService[name] = service
 	}
-
 	return nameToService, nil
 }
 
@@ -1037,18 +994,15 @@ func NameToService(file File) (map[string]Service, error) {
 // generally never happen for properly-formed Files.
 func FullNameToService(files ...File) (map[string]Service, error) {
 	fullNameToService := make(map[string]Service)
-
 	for _, file := range files {
 		for _, service := range file.Services() {
 			fullName := service.FullName()
 			if _, ok := fullNameToService[fullName]; ok {
 				return nil, fmt.Errorf("duplicate service: %q", fullName)
 			}
-
 			fullNameToService[fullName] = service
 		}
 	}
-
 	return fullNameToService, nil
 }
 
@@ -1059,26 +1013,21 @@ func FullNameToService(files ...File) (map[string]Service, error) {
 // which should generally never happen for properly-formed Files.
 func PackageToNameToService(files ...File) (map[string]map[string]Service, error) {
 	packageToNameToService := make(map[string]map[string]Service)
-
 	for _, file := range files {
 		pkg := file.Package()
-
 		nameToService, ok := packageToNameToService[pkg]
 		if !ok {
 			nameToService = make(map[string]Service)
 			packageToNameToService[pkg] = nameToService
 		}
-
 		for _, service := range file.Services() {
 			name := service.Name()
 			if _, ok := nameToService[name]; ok {
 				return nil, fmt.Errorf("duplicate service in package %q: %q", pkg, name)
 			}
-
 			nameToService[name] = service
 		}
 	}
-
 	return packageToNameToService, nil
 }
 
@@ -1096,18 +1045,14 @@ func PackageToDirectlyImportedPackageToFileImports(files ...File) (map[string]ma
 	if err != nil {
 		return nil, err
 	}
-
 	packageToDirectlyImportedPackageToFileImports := make(map[string]map[string][]FileImport)
-
 	for _, file := range files {
 		pkg := file.Package()
-
 		directlyImportedPackageToFileImports, ok := packageToDirectlyImportedPackageToFileImports[pkg]
 		if !ok {
 			directlyImportedPackageToFileImports = make(map[string][]FileImport)
 			packageToDirectlyImportedPackageToFileImports[pkg] = directlyImportedPackageToFileImports
 		}
-
 		for _, fileImport := range file.FileImports() {
 			if importedFile, ok := filePathToFile[fileImport.Import()]; ok {
 				importedPkg := importedFile.Package()
@@ -1120,7 +1065,6 @@ func PackageToDirectlyImportedPackageToFileImports(files ...File) (map[string]ma
 			}
 		}
 	}
-
 	return packageToDirectlyImportedPackageToFileImports, nil
 }
 
@@ -1130,16 +1074,13 @@ func PackageToDirectlyImportedPackageToFileImports(files ...File) (map[string]ma
 // generally never happen for properly-formed Services.
 func NameToMethod(service Service) (map[string]Method, error) {
 	nameToMethod := make(map[string]Method)
-
 	for _, method := range service.Methods() {
 		name := method.Name()
 		if _, ok := nameToMethod[name]; ok {
 			return nil, fmt.Errorf("duplicate method: %q", name)
 		}
-
 		nameToMethod[name] = method
 	}
-
 	return nameToMethod, nil
 }
 
@@ -1149,7 +1090,6 @@ func NameToMethod(service Service) (map[string]Method, error) {
 // generally never happen for properly-formed Files.
 func FullNameToMethod(files ...File) (map[string]Method, error) {
 	fullNameToMethod := make(map[string]Method)
-
 	for _, file := range files {
 		for _, service := range file.Services() {
 			for _, method := range service.Methods() {
@@ -1157,17 +1097,15 @@ func FullNameToMethod(files ...File) (map[string]Method, error) {
 				if _, ok := fullNameToMethod[fullName]; ok {
 					return nil, fmt.Errorf("duplicate method: %q", fullName)
 				}
-
 				fullNameToMethod[fullName] = method
 			}
 		}
 	}
-
 	return fullNameToMethod, nil
 }
 
 // StringToReservedTagRange maps the ReservedTagRanges in the ReservedDescriptor to a map
-// from string to reserved TagRange.
+// from string string to reserved TagRange.
 //
 // Ignores duplicates.
 func StringToReservedTagRange(reservedDescriptor ReservedDescriptor) map[string]TagRange {
@@ -1175,7 +1113,6 @@ func StringToReservedTagRange(reservedDescriptor ReservedDescriptor) map[string]
 	for _, reservedTagRange := range reservedDescriptor.ReservedTagRanges() {
 		stringToReservedTagRange[TagRangeString(reservedTagRange)] = reservedTagRange
 	}
-
 	return stringToReservedTagRange
 }
 
@@ -1188,12 +1125,11 @@ func ValueToReservedName(reservedDescriptor ReservedDescriptor) map[string]Reser
 	for _, reservedName := range reservedDescriptor.ReservedNames() {
 		valueToReservedName[reservedName.Value()] = reservedName
 	}
-
 	return valueToReservedName
 }
 
 // StringToExtensionMessageRange maps the ExtensionMessageRanges in the Message to a map
-// from string to ExtensionMessageRange.
+// from string string to ExtensionMessageRange.
 //
 // Ignores duplicates.
 func StringToExtensionMessageRange(message Message) map[string]MessageRange {
@@ -1201,7 +1137,6 @@ func StringToExtensionMessageRange(message Message) map[string]MessageRange {
 	for _, extensionMessageRange := range message.ExtensionMessageRanges() {
 		stringToExtensionMessageRange[TagRangeString(extensionMessageRange)] = extensionMessageRange
 	}
-
 	return stringToExtensionMessageRange
 }
 
@@ -1209,13 +1144,11 @@ func StringToExtensionMessageRange(message Message) map[string]MessageRange {
 func NumberInReservedRanges(number int, reservedRanges ...TagRange) bool {
 	for _, reservedRange := range reservedRanges {
 		start := reservedRange.Start()
-
 		end := reservedRange.End()
 		if number >= start && number <= end {
 			return true
 		}
 	}
-
 	return false
 }
 
@@ -1226,7 +1159,6 @@ func NameInReservedNames(name string, reservedNames ...ReservedName) bool {
 			return true
 		}
 	}
-
 	return false
 }
 
@@ -1236,19 +1168,16 @@ func EnumIsSubset(supersetEnum Enum, subsetEnum Enum) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-
 	subsetNameToEnumValue, err := NameToEnumValue(subsetEnum)
 	if err != nil {
 		return false, err
 	}
-
 	for subsetName, subsetEnumValue := range subsetNameToEnumValue {
 		supersetEnumValue, ok := supersetNameToEnumValue[subsetName]
 		if !ok {
 			// The enum value does not exist by name, this is not a superset.
 			return false, nil
 		}
-
 		if subsetEnumValue.Number() != supersetEnumValue.Number() {
 			// The enum values are not equal, this is not a superset.
 			return false, nil
@@ -1262,16 +1191,13 @@ func EnumIsSubset(supersetEnum Enum, subsetEnum Enum) (bool, error) {
 // TagRangeString returns the string representation of the range.
 func TagRangeString(tagRange TagRange) string {
 	start := tagRange.Start()
-
 	end := tagRange.End()
 	if start == end {
 		return fmt.Sprintf("[%d]", start)
 	}
-
 	if tagRange.Max() {
 		return fmt.Sprintf("[%d,max]", start)
 	}
-
 	return fmt.Sprintf("[%d,%d]", start, end)
 }
 
@@ -1297,7 +1223,6 @@ func CheckTagRangeIsSubset(supersetRanges []TagRange, subsetRanges []TagRange) (
 				return false, missingTagRanges
 			}
 		}
-
 		if supersetTagRangeGroups[i].start > subsetTagRanges[j].Start() ||
 			supersetTagRangeGroups[i].end < subsetTagRanges[j].End() {
 			missingTagRanges = append(missingTagRanges, subsetTagRanges[j])
@@ -1332,7 +1257,6 @@ func groupAdjacentTagRanges(ranges []TagRange) []tagRangeGroup {
 			if sortedTagRanges[i].End() > groupedTagRanges[j].end {
 				groupedTagRanges[j].end = sortedTagRanges[i].End()
 			}
-
 			groupedTagRanges[j].ranges = groupedTagRanges[j].ranges[0 : len(groupedTagRanges[j].ranges)+1]
 		} else {
 			groupedTagRanges = append(groupedTagRanges, tagRangeGroup{
@@ -1368,7 +1292,6 @@ func mapFiles(files []File, getKey func(File) string) (map[string][]File, error)
 			return nil, err
 		}
 	}
-
 	return mapToSortedFiles(keyToFilePathToFile), nil
 }
 
@@ -1378,13 +1301,10 @@ func addUniqueFileToMap(keyToFilePathToFile map[string]map[string]File, key stri
 		filePathToFile = make(map[string]File)
 		keyToFilePathToFile[key] = filePathToFile
 	}
-
 	if _, ok := filePathToFile[file.Path()]; ok {
 		return fmt.Errorf("duplicate file: %s", file.Path())
 	}
-
 	filePathToFile[file.Path()] = file
-
 	return nil
 }
 
@@ -1395,11 +1315,9 @@ func mapToSortedFiles(keyToFileMap map[string]map[string]File) map[string][]File
 		for _, file := range fileMap {
 			files = append(files, file)
 		}
-
 		SortFiles(files)
 		keyToSortedFiles[key] = files
 	}
-
 	return keyToSortedFiles
 }
 

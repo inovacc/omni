@@ -34,12 +34,10 @@ func TrimLines(output string) string {
 func SplitTrimLines(output string) []string {
 	// this should work for windows as well as \r will be trimmed
 	split := strings.Split(output, "\n")
-
 	lines := make([]string, len(split))
 	for i, line := range split {
 		lines[i] = strings.TrimSpace(line)
 	}
-
 	return lines
 }
 
@@ -49,7 +47,6 @@ func SplitTrimLines(output string) []string {
 func SplitTrimLinesNoEmpty(output string) []string {
 	// this should work for windows as well as \r will be trimmed
 	split := strings.Split(output, "\n")
-
 	lines := make([]string, 0, len(split))
 	for _, line := range split {
 		line = strings.TrimSpace(line)
@@ -57,7 +54,6 @@ func SplitTrimLinesNoEmpty(output string) []string {
 			lines = append(lines, line)
 		}
 	}
-
 	return lines
 }
 
@@ -73,11 +69,9 @@ func WordWrap(text string, charLimit int) []string {
 	init := make([]byte, 0, len(text))
 	buf := bytes.NewBuffer(init)
 
-	var (
-		current                 int
-		wordBuf, spaceBuf       bytes.Buffer
-		wordBufLen, spaceBufLen int
-	)
+	var current int
+	var wordBuf, spaceBuf bytes.Buffer
+	var wordBufLen, spaceBufLen int
 
 	for _, char := range text {
 		if char == '\n' {
@@ -85,53 +79,40 @@ func WordWrap(text string, charLimit int) []string {
 				if current+spaceBufLen <= charLimit {
 					_, _ = spaceBuf.WriteTo(buf)
 				}
-
 				spaceBuf.Reset()
-
 				spaceBufLen = 0
 			} else {
 				_, _ = spaceBuf.WriteTo(buf)
 				spaceBuf.Reset()
-
 				spaceBufLen = 0
 				_, _ = wordBuf.WriteTo(buf)
 				wordBuf.Reset()
-
 				wordBufLen = 0
 			}
-
 			buf.WriteRune(char)
-
 			current = 0
 		} else if unicode.IsSpace(char) && char != nbsp {
 			if spaceBuf.Len() == 0 || wordBuf.Len() > 0 {
 				current += spaceBufLen + wordBufLen
 				_, _ = spaceBuf.WriteTo(buf)
 				spaceBuf.Reset()
-
 				spaceBufLen = 0
 				_, _ = wordBuf.WriteTo(buf)
 				wordBuf.Reset()
-
 				wordBufLen = 0
 			}
 
 			spaceBuf.WriteRune(char)
-
 			spaceBufLen++
 		} else {
 			wordBuf.WriteRune(char)
-
 			wordBufLen++
 
 			if current+wordBufLen+spaceBufLen > charLimit && wordBufLen < charLimit {
 				lines = append(lines, buf.String())
 				buf.Reset()
-
 				current = 0
-
 				spaceBuf.Reset()
-
 				spaceBufLen = 0
 			}
 		}
@@ -145,7 +126,6 @@ func WordWrap(text string, charLimit int) []string {
 		_, _ = spaceBuf.WriteTo(buf)
 		_, _ = wordBuf.WriteTo(buf)
 	}
-
 	lines = append(lines, buf.String())
 
 	return lines
@@ -161,7 +141,6 @@ func SliceToUniqueSortedSliceFilterEmptyStrings(s []string) []string {
 			delete(m, key)
 		}
 	}
-
 	return xslices.MapKeysToSortedSlice(m)
 }
 
@@ -170,7 +149,6 @@ func JoinSliceQuoted(s []string, sep string) string {
 	if len(s) == 0 {
 		return ""
 	}
-
 	return `"` + strings.Join(s, `"`+sep+`"`) + `"`
 }
 
@@ -179,7 +157,6 @@ func SliceToString(s []string) string {
 	if len(s) == 0 {
 		return ""
 	}
-
 	return "[" + strings.Join(s, ",") + "]"
 }
 
@@ -265,23 +242,19 @@ func ToUpperSnakeCase(s string, options ...SnakeCaseOption) string {
 // Splits on '-', '_', ' ', '\t', '\n', '\r'.
 // Uppercase letters will stay uppercase.
 func ToPascalCase(s string) string {
-	var output strings.Builder
-
+	output := ""
 	var previous rune
-
 	for i, c := range strings.TrimSpace(s) {
 		if !isDelimiter(c) {
 			if i == 0 || isDelimiter(previous) || unicode.IsUpper(c) {
-				output.WriteString(string(unicode.ToUpper(c)))
+				output += string(unicode.ToUpper(c))
 			} else {
-				output.WriteString(string(unicode.ToLower(c)))
+				output += string(unicode.ToLower(c))
 			}
 		}
-
 		previous = c
 	}
-
-	return output.String()
+	return output
 }
 
 // IsAlphanumeric returns true for [0-9a-zA-Z].
@@ -321,15 +294,12 @@ func toSnakeCase(s string, options ...SnakeCaseOption) string {
 	for _, option := range options {
 		option(snakeCaseOptions)
 	}
-
 	output := ""
-
 	s = strings.TrimFunc(s, isDelimiter)
 	for i, c := range s {
 		if isDelimiter(c) {
 			c = '_'
 		}
-
 		if i == 0 {
 			output += string(c)
 		} else if isSnakeCaseNewWord(c, snakeCaseOptions.newWordOnDigits) &&
@@ -338,11 +308,10 @@ func toSnakeCase(s string, options ...SnakeCaseOption) string {
 				(snakeCaseOptions.newWordOnDigits && unicode.IsDigit(c)) ||
 				(unicode.IsLower(rune(s[i-1])))) {
 			output += "_" + string(c)
-		} else if !isDelimiter(c) || output[len(output)-1] != '_' {
+		} else if !(isDelimiter(c) && output[len(output)-1] == '_') {
 			output += string(c)
 		}
 	}
-
 	return output
 }
 
@@ -350,7 +319,6 @@ func isSnakeCaseNewWord(r rune, newWordOnDigits bool) bool {
 	if newWordOnDigits {
 		return unicode.IsUpper(r) || unicode.IsDigit(r)
 	}
-
 	return unicode.IsUpper(r)
 }
 

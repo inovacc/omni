@@ -76,6 +76,5 @@ func (r Ref[T]) ChangeContext(base, next *File) Ref[T] {
 	}
 
 	r.file = int32(idx) + 1
-
 	return r
 }

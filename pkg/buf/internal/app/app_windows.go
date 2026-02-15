@@ -51,7 +51,6 @@ func HomeDirPath(envContainer EnvContainer) (string, error) {
 	if value := envContainer.Env("USERPROFILE"); value != "" {
 		return value, nil
 	}
-
 	return "", errors.New("%USERPROFILE% is not set")
 }
 
@@ -70,7 +69,6 @@ func CacheDirPath(envContainer EnvContainer) (string, error) {
 	if value := envContainer.Env("LOCALAPPDATA"); value != "" {
 		return value, nil
 	}
-
 	return "", errors.New("%LocalAppData% is not set")
 }
 
@@ -89,7 +87,6 @@ func ConfigDirPath(envContainer EnvContainer) (string, error) {
 	if value := envContainer.Env("APPDATA"); value != "" {
 		return value, nil
 	}
-
 	return "", errors.New("%AppData% is not set")
 }
 
@@ -108,6 +105,5 @@ func DataDirPath(envContainer EnvContainer) (string, error) {
 	if value := envContainer.Env("LOCALAPPDATA"); value != "" {
 		return value, nil
 	}
-
 	return "", errors.New("%LocalAppData% is not set")
 }

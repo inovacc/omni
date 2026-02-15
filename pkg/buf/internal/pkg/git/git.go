@@ -225,7 +225,6 @@ func CheckDirectoryIsValidGitCheckout(
 	dir string,
 ) error {
 	stdout := bytes.NewBuffer(nil)
-
 	stderr := bytes.NewBuffer(nil)
 	if err := xexec.Run(
 		ctx,
@@ -242,10 +241,8 @@ func CheckDirectoryIsValidGitCheckout(
 				return fmt.Errorf("dir %s: %w", dir, ErrInvalidGitCheckout)
 			}
 		}
-
 		return err
 	}
-
 	return nil
 }
 
@@ -258,9 +255,7 @@ func CheckForUncommittedGitChanges(
 ) ([]string, error) {
 	stdout := bytes.NewBuffer(nil)
 	stderr := bytes.NewBuffer(nil)
-
 	var modifiedFiles []string
-
 	environ := app.Environ(envContainer)
 	// Unstaged changes
 	if err := xexec.Run(
@@ -274,7 +269,6 @@ func CheckForUncommittedGitChanges(
 	); err != nil {
 		return nil, fmt.Errorf("failed to get unstaged changes: %w: %s", err, stderr.String())
 	}
-
 	modifiedFiles = append(modifiedFiles, getAllTrimmedLinesFromBuffer(stdout)...)
 
 	stdout = bytes.NewBuffer(nil)
@@ -293,7 +287,6 @@ func CheckForUncommittedGitChanges(
 	}
 
 	modifiedFiles = append(modifiedFiles, getAllTrimmedLinesFromBuffer(stdout)...)
-
 	return modifiedFiles, nil
 }
 
@@ -304,7 +297,6 @@ func GetCurrentHEADGitCommit(
 	dir string,
 ) (string, error) {
 	stdout := bytes.NewBuffer(nil)
-
 	stderr := bytes.NewBuffer(nil)
 	if err := xexec.Run(
 		ctx,
@@ -317,7 +309,6 @@ func GetCurrentHEADGitCommit(
 	); err != nil {
 		return "", fmt.Errorf("failed to get current HEAD commit: %w: %s", err, stderr.String())
 	}
-
 	return strings.TrimSpace(stdout.String()), nil
 }
 
@@ -332,7 +323,6 @@ func GetRefsForGitCommitAndRemote(
 	gitCommitSha string,
 ) ([]string, error) {
 	stdout := bytes.NewBuffer(nil)
-
 	stderr := bytes.NewBuffer(nil)
 	if err := xexec.Run(
 		ctx,
@@ -345,11 +335,8 @@ func GetRefsForGitCommitAndRemote(
 	); err != nil {
 		return nil, fmt.Errorf("failed to get refs for remote %s: %w: %s", remote, err, stderr.String())
 	}
-
 	scanner := bufio.NewScanner(stdout)
-
 	var refs []string
-
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
 		if ref, found := strings.CutPrefix(line, gitCommitSha); found {
@@ -358,16 +345,13 @@ func GetRefsForGitCommitAndRemote(
 				// Remove the ^{} suffix for pseudo-ref tags
 				tag, _ = strings.CutSuffix(tag, pseudoRefSuffix)
 				refs = append(refs, tag)
-
 				continue
 			}
-
 			if branch, isBranchHead := strings.CutPrefix(ref, headsPrefix); isBranchHead {
 				refs = append(refs, branch)
 			}
 		}
 	}
-
 	return refs, nil
 }
 
@@ -379,7 +363,6 @@ func IsValidRef(
 	dir, ref string,
 ) error {
 	stdout := bytes.NewBuffer(nil)
-
 	stderr := bytes.NewBuffer(nil)
 	if err := xexec.Run(
 		ctx,
@@ -396,10 +379,8 @@ func IsValidRef(
 				return fmt.Errorf("could not find ref %s in %s: %w", ref, dir, ErrInvalidRef)
 			}
 		}
-
 		return err
 	}
-
 	return nil
 }
 
@@ -417,7 +398,6 @@ func ReadFileAtRef(
 	path, ref string,
 ) ([]byte, error) {
 	orig := path
-
 	path, err := filepath.Abs(path)
 	if err != nil {
 		return nil, err
@@ -434,7 +414,6 @@ func ReadFileAtRef(
 			if parent == dir {
 				return nil, fmt.Errorf("could not find .git directory for %s: %w", orig, ErrInvalidGitCheckout)
 			}
-
 			dir = parent
 		} else {
 			return nil, err
@@ -449,7 +428,6 @@ func ReadFileAtRef(
 
 	// Call git show to show us the file we want.
 	stdout := bytes.NewBuffer(nil)
-
 	stderr := bytes.NewBuffer(nil)
 	if err := xexec.Run(ctx, gitCommand,
 		xexec.WithArgs("--no-pager", "show", ref+":"+rel),
@@ -466,11 +444,9 @@ func ReadFileAtRef(
 
 func getAllTrimmedLinesFromBuffer(buffer *bytes.Buffer) []string {
 	scanner := bufio.NewScanner(buffer)
-
 	var lines []string
 	for scanner.Scan() {
 		lines = append(lines, strings.TrimSpace(scanner.Text()))
 	}
-
 	return lines
 }

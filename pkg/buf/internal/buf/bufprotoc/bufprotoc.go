@@ -47,14 +47,11 @@ func NewModuleSetForProtoc(
 	if err != nil {
 		return nil, err
 	}
-
 	absFilePaths, err := normalizeAndAbsolutePaths(filePaths, "input file")
 	if err != nil {
 		return nil, err
 	}
-
 	var rootBuckets []storage2.ReadBucket
-
 	for _, includeDirPath := range includeDirPaths {
 		rootBucket, err := storageosProvider.NewReadWriteBucket(
 			includeDirPath,
@@ -67,7 +64,6 @@ func NewModuleSetForProtoc(
 		// https://github.com/bufbuild/buf/issues/113
 		rootBuckets = append(rootBuckets, storage2.FilterReadBucket(rootBucket, storage2.MatchPathExt(".proto")))
 	}
-
 	targetPaths, err := xslices.MapError(
 		absFilePaths,
 		func(absFilePath string) (string, error) {
@@ -88,7 +84,6 @@ func NewModuleSetForProtoc(
 			nil,
 		),
 	)
-
 	return moduleSetBuilder.Build()
 }
 
@@ -96,13 +91,11 @@ func NewModuleSetForProtoc(
 
 func applyRootsToTargetPath(roots []string, path string, pathType normalpath2.PathType) (string, error) {
 	var matchingRoots []string
-
 	for _, root := range roots {
 		if normalpath2.ContainsPath(root, path, pathType) {
 			matchingRoots = append(matchingRoots, root)
 		}
 	}
-
 	switch len(matchingRoots) {
 	case 0:
 		// this is a user error and will likely happen often
@@ -137,24 +130,19 @@ func normalizeAndAbsolutePaths(paths []string, name string) ([]string, error) {
 	if len(paths) == 0 {
 		return paths, nil
 	}
-
 	outputs := make([]string, len(paths))
 	for i, path := range paths {
 		if path == "" {
 			return nil, fmt.Errorf("%s contained an empty path", name)
 		}
-
 		output, err := normalpath2.NormalizeAndAbsolute(path)
 		if err != nil {
 			// user error
 			return nil, err
 		}
-
 		outputs[i] = output
 	}
-
 	sort.Strings(outputs)
-
 	for i := range outputs {
 		for j := i + 1; j < len(outputs); j++ {
 			output1 := outputs[i]
@@ -163,16 +151,13 @@ func normalizeAndAbsolutePaths(paths []string, name string) ([]string, error) {
 			if output1 == output2 {
 				return nil, fmt.Errorf("duplicate %s %q", name, output1)
 			}
-
 			if normalpath2.EqualsOrContainsPath(output2, output1, normalpath2.Absolute) {
 				return nil, fmt.Errorf("%s %q is within %s %q which is not allowed", name, output1, name, output2)
 			}
-
 			if normalpath2.EqualsOrContainsPath(output1, output2, normalpath2.Absolute) {
 				return nil, fmt.Errorf("%s %q is within %s %q which is not allowed", name, output2, name, output1)
 			}
 		}
 	}
-
 	return outputs, nil
 }

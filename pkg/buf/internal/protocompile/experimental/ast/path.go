@@ -104,7 +104,6 @@ func (p Path) ToRelative() Path {
 			break
 		}
 	}
-
 	return p
 }
 
@@ -115,7 +114,6 @@ func (p Path) AsIdent() token.Token {
 	if !first.Separator().IsZero() {
 		return token.Zero
 	}
-
 	return first.AsIdent()
 }
 
@@ -144,7 +142,6 @@ func (p Path) IsIdents(idents ...string) bool {
 			return true
 		}
 	}
-
 	return false
 }
 
@@ -167,7 +164,6 @@ func (p Path) Components(yield func(PathComponent) bool) {
 	}
 
 	var cursor *token.Cursor
-
 	first := id.Wrap(p.Context().Stream(), p.raw.start)
 	if p.IsSynthetic() {
 		cursor = first.SyntheticChildren(p.raw.synthRange())
@@ -175,11 +171,8 @@ func (p Path) Components(yield func(PathComponent) bool) {
 		cursor = token.NewCursorAt(first)
 	}
 
-	var (
-		sep token.Token
-		idx uint32
-	)
-
+	var sep token.Token
+	var idx uint32
 	for tok := range cursor.Rest() {
 		if !p.IsSynthetic() && tok.ID() > p.raw.end {
 			// We've reached the end of the path.
@@ -192,23 +185,18 @@ func (p Path) Components(yield func(PathComponent) bool) {
 				if !yield(PathComponent{p.withContext, p.raw, sep.ID(), 0, idx}) {
 					return
 				}
-
 				idx++
 			}
-
 			sep = tok
-
 			continue
 		}
 
 		if !yield(PathComponent{p.withContext, p.raw, sep.ID(), tok.ID(), idx}) {
 			return
 		}
-
 		idx++
 		sep = token.Zero
 	}
-
 	if !sep.IsZero() {
 		yield(PathComponent{p.withContext, p.raw, sep.ID(), 0, idx})
 	}
@@ -228,30 +216,23 @@ func (p Path) Split(n int) (prefix, suffix Path) {
 	if n < 0 || p.IsZero() {
 		return Path{}, Path{}
 	}
-
 	if n == 0 {
 		return Path{}, p
 	}
 
-	var (
-		i     int
-		prev  PathComponent
-		found bool
-	)
-
+	var i int
+	var prev PathComponent
+	var found bool
 	for pc := range p.Components {
 		if n > 0 {
 			prev = pc
 			n--
-
 			if !pc.Separator().IsZero() {
 				i++
 			}
-
 			if !pc.Name().IsZero() {
 				i++
 			}
-
 			continue
 		}
 
@@ -308,7 +289,6 @@ func (p Path) Canonicalized() string {
 
 	var out strings.Builder
 	p.canonicalized(&out)
-
 	return out.String()
 }
 
@@ -321,7 +301,6 @@ func (p Path) canonicalized(out *strings.Builder) {
 		if i > 0 || !pc.Separator().IsZero() {
 			out.WriteString(pc.Separator().Text())
 		}
-
 		if id := pc.Name(); !id.IsZero() {
 			out.WriteString(id.Name())
 		} else {
@@ -334,7 +313,6 @@ func (p Path) canonicalized(out *strings.Builder) {
 
 func (p Path) isCanonical() bool {
 	var prev PathComponent
-
 	for pc := range p.Components {
 		sep := pc.Separator()
 		name := pc.Name()
@@ -342,7 +320,6 @@ func (p Path) isCanonical() bool {
 		if name.IsZero() {
 			return false
 		}
-
 		if !sep.IsZero() && sep.Span().End != name.Span().Start {
 			return false
 		}
@@ -354,7 +331,6 @@ func (p Path) isCanonical() bool {
 
 			// Ensure that the parens tightly wrap extn.
 			parens := name.Span()
-
 			extn := extn.Span()
 			if parens.Start+1 != extn.Start || parens.End-1 != extn.End {
 				return false
@@ -367,7 +343,6 @@ func (p Path) isCanonical() bool {
 			if sep.IsZero() {
 				return false
 			}
-
 			if prev.Name().Span().End != sep.Span().Start {
 				return false
 			}
@@ -385,7 +360,6 @@ func (p Path) trim() Path {
 		id.Wrap(p.Context().Stream(), p.raw.start).Kind().IsSkippable() {
 		p.raw.start++
 	}
-
 	for p.raw.start < p.raw.end &&
 		id.Wrap(p.Context().Stream(), p.raw.end).Kind().IsSkippable() {
 		p.raw.end--
@@ -436,7 +410,6 @@ func (e ExprPath) AsAny() ExprAny {
 // (for an extension name).
 type PathComponent struct {
 	withContext
-
 	path            PathID
 	separator, name token.ID
 	idx             uint32
@@ -452,7 +425,6 @@ func (p PathComponent) IsFirst() bool {
 	if p.Path().IsSynthetic() {
 		return p.idx == 0
 	}
-
 	return p.separator == p.path.start || p.name == p.path.start
 }
 
@@ -462,7 +434,6 @@ func (p PathComponent) IsLast() bool {
 		i, j := p.path.synthRange()
 		return int(p.idx) == j-i
 	}
-
 	return p.separator == p.path.end || p.name == p.path.end
 }
 
@@ -540,7 +511,6 @@ func (p PathComponent) IsEmpty() bool {
 func (p PathComponent) Next() PathComponent {
 	_, after := p.SplitAfter()
 	next, _ := iterx.First(after.Components)
-
 	return next
 }
 
@@ -567,7 +537,6 @@ func (p PathComponent) AsExtension() Path {
 		if first.IsZero() {
 			first = tok
 		}
-
 		last = tok
 	}
 
@@ -583,7 +552,6 @@ func (p PathComponent) AsIdent() token.Token {
 	if tok.Kind() == token.Ident {
 		return tok
 	}
-
 	return token.Zero
 }
 

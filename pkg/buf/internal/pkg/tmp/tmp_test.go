@@ -28,7 +28,6 @@ import (
 
 func TestFile(t *testing.T) {
 	t.Parallel()
-
 	ctx := context.Background()
 	tmpFile, err := NewFile(ctx, strings.NewReader("foo"))
 	require.NoError(t, err)
@@ -43,7 +42,6 @@ func TestFile(t *testing.T) {
 
 func TestFileCancel(t *testing.T) {
 	t.Parallel()
-
 	ctx, cancel := context.WithCancel(context.Background())
 	tmpFile, err := NewFile(ctx, strings.NewReader("foo"))
 	require.NoError(t, err)
@@ -51,14 +49,12 @@ func TestFileCancel(t *testing.T) {
 	assert.NoError(t, err)
 	cancel()
 	time.Sleep(1 * time.Second)
-
 	_, err = os.ReadFile(tmpFile.Path())
 	assert.Error(t, err)
 }
 
 func TestDir(t *testing.T) {
 	t.Parallel()
-
 	ctx := context.Background()
 	tmpDir, err := NewDir(ctx)
 	require.NoError(t, err)
@@ -73,7 +69,6 @@ func TestDir(t *testing.T) {
 
 func TestDirCancel(t *testing.T) {
 	t.Parallel()
-
 	ctx, cancel := context.WithCancel(context.Background())
 	tmpDir, err := NewDir(ctx)
 	require.NoError(t, err)
@@ -81,7 +76,6 @@ func TestDirCancel(t *testing.T) {
 	assert.NoError(t, err)
 	cancel()
 	time.Sleep(1 * time.Second)
-
 	_, err = os.Lstat(tmpDir.Path())
 	assert.Error(t, err)
 }

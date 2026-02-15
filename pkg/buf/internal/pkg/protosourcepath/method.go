@@ -59,13 +59,11 @@ func methods(
 			childAssociatedPath(fullSourcePath, index, methodServerStreamingTypeTag),
 		)
 	}
-
 	if len(fullSourcePath) == index+1 {
 		// This does not extend beyond the method declaration, return associated paths and
 		// terminate here.
 		return nil, associatedPaths, nil
 	}
-
 	return method, associatedPaths, nil
 }
 
@@ -75,13 +73,11 @@ func method(token int32, fullSourcePath protoreflect.SourcePath, _ int, _ bool) 
 		// Encountered a terminal method token, can terminate here immediately.
 		return nil, nil, nil
 	}
-
 	switch token {
 	case methodOptionTypeTag:
 		// For options, we add the full path and then return the options state to validate
 		// the path.
 		return options, []protoreflect.SourcePath{slices.Clone(fullSourcePath)}, nil
 	}
-
 	return nil, nil, newInvalidSourcePathError(fullSourcePath, "invalid method path")
 }

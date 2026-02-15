@@ -73,7 +73,6 @@ func newCommit(
 	for _, option := range options {
 		option(commitOptions)
 	}
-
 	if commitOptions.expectedDigest != nil {
 		// We need to preserve this, as if we do not, the new value for moduleKey
 		// will end up recursively calling itself when moduleKey.Digest() is called
@@ -88,7 +87,6 @@ func newCommit(
 				if err != nil {
 					return nil, err
 				}
-
 				if !DigestEqual(commitOptions.expectedDigest, moduleKeyDigest) {
 					return nil, &DigestMismatchError{
 						FullName:       originalModuleKey.FullName(),
@@ -97,12 +95,10 @@ func newCommit(
 						ActualDigest:   moduleKeyDigest,
 					}
 				}
-
 				return moduleKeyDigest, nil
 			},
 		)
 	}
-
 	return &commit{
 		moduleKey:     moduleKey,
 		getCreateTime: sync.OnceValues(getCreateTime),
@@ -118,7 +114,6 @@ func (c *commit) CreateTime() (time.Time, error) {
 	if _, err := c.moduleKey.Digest(); err != nil {
 		return time.Time{}, err
 	}
-
 	return c.getCreateTime()
 }
 

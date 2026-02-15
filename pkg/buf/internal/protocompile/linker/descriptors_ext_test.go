@@ -59,7 +59,6 @@ func TestFields(t *testing.T) {
 	for _, testCase := range testCases {
 		t.Run(testCase.filename, func(t *testing.T) {
 			t.Parallel()
-
 			protocFd, err := testCase.fileSet.FindFileByPath(testCase.filename)
 			require.NoError(t, err)
 
@@ -70,7 +69,6 @@ func TestFields(t *testing.T) {
 			}
 			results, err := compiler.Compile(t.Context(), testCase.filename)
 			require.NoError(t, err)
-
 			fd := results[0]
 
 			checkAttributes(t, protocFd, fd, fmt.Sprintf("%q", testCase.filename))
@@ -80,7 +78,6 @@ func TestFields(t *testing.T) {
 
 func TestUnescape(t *testing.T) {
 	t.Parallel()
-
 	fileProto := &descriptorpb.FileDescriptorProto{
 		Name:   proto.String("foo.proto"),
 		Syntax: proto.String("proto2"),
@@ -122,16 +119,13 @@ func checkAttributes(t *testing.T, exp, actual container, path string) {
 	if assert.Equal(t, exp.Messages().Len(), actual.Messages().Len()) {
 		for i := range exp.Messages().Len() {
 			expMsg := exp.Messages().Get(i)
-
 			actMsg := actual.Messages().Get(i)
 			if !assert.Equal(t, expMsg.Name(), actMsg.Name(), "%s: message name at index %d", path, i) {
 				continue
 			}
-
 			checkAttributes(t, expMsg, actMsg, fmt.Sprintf("%s.%s", path, expMsg.Name()))
 		}
 	}
-
 	checkAttributesInEnums(t, exp.Enums(), actual.Enums(), "enums in "+path)
 	checkAttributesInFields(t, exp.Extensions(), actual.Extensions(), "extensions in "+path)
 
@@ -147,15 +141,12 @@ func checkAttributesInFields(t *testing.T, exp, actual protoreflect.ExtensionDes
 	if !assert.Equal(t, exp.Len(), actual.Len(), "%s: number of fields", where) {
 		return
 	}
-
 	for i := range exp.Len() {
 		expFld := exp.Get(i)
-
 		actFld := actual.Get(i)
 		if !assert.Equal(t, expFld.Name(), actFld.Name(), "%s: field name at index %d", where, i) {
 			continue
 		}
-
 		assert.Equal(t, expFld.Number(), actFld.Number(), "%s: field number at index %d (%s)", where, i, expFld.Name())
 		assert.Equal(t, expFld.Cardinality(), actFld.Cardinality(), "%s: field cardinality at index %d (%s)", where, i, expFld.Name())
 		assert.Equal(t, expFld.Kind(), actFld.Kind(), "%s: field kind at index %d (%s)", where, i, expFld.Name())
@@ -173,7 +164,6 @@ func checkAttributesInFields(t *testing.T, exp, actual protoreflect.ExtensionDes
 		assert.Equal(t, expFld.HasDefault(), actFld.HasDefault(), "%s: field has default at index %d (%s)", where, i, expFld.Name())
 
 		expVal := expFld.Default().Interface()
-
 		actVal := actFld.Default().Interface()
 		if fl, ok := expVal.(float32); ok && math.IsNaN(float64(fl)) {
 			actFl, actOk := actVal.(float32)
@@ -186,7 +176,6 @@ func checkAttributesInFields(t *testing.T, exp, actual protoreflect.ExtensionDes
 		}
 
 		expEnumVal := expFld.DefaultEnumValue()
-
 		actEnumVal := actFld.DefaultEnumValue()
 		if expEnumVal == nil {
 			assert.Nil(t, actEnumVal, "%s: field default enum value should be nil at index %d (%s)", where, i, expFld.Name())
@@ -196,12 +185,11 @@ func checkAttributesInFields(t *testing.T, exp, actual protoreflect.ExtensionDes
 		}
 
 		expFldProto := protoutil.ProtoFromFieldDescriptor(expFld)
-
 		actFldProto := protoutil.ProtoFromFieldDescriptor(actFld)
 		if expFldProto.DefaultValue == nil {
-			assert.Nil(t, actFldProto.GetDefaultValue(), "%s: field default value should be nil at index %d (%s)", where, i, expFld.Name())
+			assert.Nil(t, actFldProto.DefaultValue, "%s: field default value should be nil at index %d (%s)", where, i, expFld.Name())
 		} else {
-			assert.Equal(t, expFldProto.GetDefaultValue(), actFldProto.GetDefaultValue(), "%s: field default value at index %d (%s)", where, i, expFld.Name())
+			assert.Equal(t, expFldProto.DefaultValue, actFldProto.DefaultValue, "%s: field default value at index %d (%s)", where, i, expFld.Name())
 		}
 
 		// proto3 optionals
@@ -218,11 +206,10 @@ func checkAttributesInFields(t *testing.T, exp, actual protoreflect.ExtensionDes
 			// runtime descriptor to proto being lossy :/
 			continue
 		}
-
 		if expFldProto.Proto3Optional == nil {
-			assert.Nil(t, actFldProto.GetProto3Optional(), "%s: field proto3 optional should be nil at index %d (%s)", where, i, expFld.Name())
+			assert.Nil(t, actFldProto.Proto3Optional, "%s: field proto3 optional should be nil at index %d (%s)", where, i, expFld.Name())
 		} else {
-			assert.Equal(t, expFldProto.GetProto3Optional(), actFldProto.GetProto3Optional(), "%s: field proto3 optional at index %d (%s)", where, i, expFld.Name())
+			assert.Equal(t, expFldProto.Proto3Optional, actFldProto.Proto3Optional, "%s: field proto3 optional at index %d (%s)", where, i, expFld.Name())
 		}
 	}
 }
@@ -231,10 +218,8 @@ func checkAttributesInOneofs(t *testing.T, exp, actual protoreflect.OneofDescrip
 	if !assert.Equal(t, exp.Len(), actual.Len(), "%s: number of fields", where) {
 		return
 	}
-
 	for i := range exp.Len() {
 		expOo := exp.Get(i)
-
 		actOo := actual.Get(i)
 		if !assert.Equal(t, expOo.Name(), actOo.Name(), "%s: oneof name at index %d", where, i) {
 			continue
@@ -246,15 +231,12 @@ func checkAttributesInEnums(t *testing.T, exp, actual protoreflect.EnumDescripto
 	if !assert.Equal(t, exp.Len(), actual.Len(), "%s: number of enums", where) {
 		return
 	}
-
 	for i := range exp.Len() {
 		expEnum := exp.Get(i)
-
 		actEnum := actual.Get(i)
 		if !assert.Equal(t, expEnum.Name(), actEnum.Name(), "%s: enum name at index %d", where, i) {
 			continue
 		}
-
 		assert.Equal(t, expEnum.IsClosed(), actEnum.IsClosed(), "%s: enum is closed at index %d (%s)", where, i, expEnum.Name())
 	}
 }

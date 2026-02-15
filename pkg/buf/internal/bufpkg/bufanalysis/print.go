@@ -65,38 +65,30 @@ func printAsGitLabCodeQuality(writer io.Writer, fileAnnotations []FileAnnotation
 		if f == nil {
 			continue
 		}
-
 		gitLabCodeQualityContentIssue, err := newExternalGitLabCodeQualityIssue(f)
 		if err != nil {
 			return err
 		}
-
 		report = append(report, gitLabCodeQualityContentIssue)
 	}
-
 	return json.NewEncoder(writer).Encode(report)
 }
 
 func printAsJUnit(writer io.Writer, fileAnnotations []FileAnnotation) error {
 	encoder := xml.NewEncoder(writer)
 	encoder.Indent("", "  ")
-
 	testsuites := xml.StartElement{Name: xml.Name{Local: "testsuites"}}
-
 	err := encoder.EncodeToken(testsuites)
 	if err != nil {
 		return err
 	}
-
 	annotationsByPath := groupAnnotationsByPath(fileAnnotations)
 	for _, annotations := range annotationsByPath {
 		path := "<input>"
 		if fileInfo := annotations[0].FileInfo(); fileInfo != nil {
 			path = fileInfo.ExternalPath()
 		}
-
 		path = strings.TrimSuffix(path, ".proto")
-
 		testsuite := xml.StartElement{
 			Name: xml.Name{Local: "testsuite"},
 			Attr: []xml.Attr{
@@ -109,48 +101,39 @@ func printAsJUnit(writer io.Writer, fileAnnotations []FileAnnotation) error {
 		if err := encoder.EncodeToken(testsuite); err != nil {
 			return err
 		}
-
 		for _, annotation := range annotations {
 			if err := printFileAnnotationAsJUnit(encoder, annotation); err != nil {
 				return err
 			}
 		}
-
 		if err := encoder.EncodeToken(xml.EndElement{Name: testsuite.Name}); err != nil {
 			return err
 		}
 	}
-
 	if err := encoder.EncodeToken(xml.EndElement{Name: testsuites.Name}); err != nil {
 		return err
 	}
-
 	if err := encoder.Flush(); err != nil {
 		return err
 	}
-
 	if _, err := writer.Write([]byte("\n")); err != nil {
 		return err
 	}
-
 	return nil
 }
 
 func printFileAnnotationAsJUnit(encoder *xml.Encoder, annotation FileAnnotation) error {
 	testcase := xml.StartElement{Name: xml.Name{Local: "testcase"}}
-
 	name := annotation.Type()
 	if annotation.StartColumn() != 0 {
 		name += fmt.Sprintf("_%d_%d", annotation.StartLine(), annotation.StartColumn())
 	} else if annotation.StartLine() != 0 {
 		name += fmt.Sprintf("_%d", annotation.StartLine())
 	}
-
 	testcase.Attr = append(testcase.Attr, xml.Attr{Name: xml.Name{Local: "name"}, Value: name})
 	if err := encoder.EncodeToken(testcase); err != nil {
 		return err
 	}
-
 	failure := xml.StartElement{
 		Name: xml.Name{Local: "failure"},
 		Attr: []xml.Attr{
@@ -161,39 +144,31 @@ func printFileAnnotationAsJUnit(encoder *xml.Encoder, annotation FileAnnotation)
 	if err := encoder.EncodeToken(failure); err != nil {
 		return err
 	}
-
 	if err := encoder.EncodeToken(xml.EndElement{Name: failure.Name}); err != nil {
 		return err
 	}
-
 	if err := encoder.EncodeToken(xml.EndElement{Name: testcase.Name}); err != nil {
 		return err
 	}
-
 	return nil
 }
 
 func groupAnnotationsByPath(annotations []FileAnnotation) [][]FileAnnotation {
 	pathToIndex := make(map[string]int)
 	annotationsByPath := make([][]FileAnnotation, 0)
-
 	for _, annotation := range annotations {
 		path := "<input>"
 		if fileInfo := annotation.FileInfo(); fileInfo != nil {
 			path = fileInfo.ExternalPath()
 		}
-
 		index, ok := pathToIndex[path]
 		if !ok {
 			index = len(annotationsByPath)
 			pathToIndex[path] = index
-
 			annotationsByPath = append(annotationsByPath, nil)
 		}
-
 		annotationsByPath[index] = append(annotationsByPath[index], annotation)
 	}
-
 	return annotationsByPath
 }
 
@@ -207,22 +182,18 @@ func printFileAnnotationAsMSVS(buffer *bytes.Buffer, f FileAnnotation) error {
 	if f == nil {
 		return nil
 	}
-
 	path := "<input>"
 	line := atLeast1(f.StartLine())
 	column := atLeast1(f.StartColumn())
-
 	message := f.Message()
 	if f.FileInfo() != nil {
 		path = f.FileInfo().ExternalPath()
 	}
-
 	typeString := f.Type()
 	if typeString == "" {
 		// should never happen but just in case
 		typeString = "FAILURE"
 	}
-
 	if message == "" {
 		message = f.Type()
 		// should never happen but just in case
@@ -230,38 +201,30 @@ func printFileAnnotationAsMSVS(buffer *bytes.Buffer, f FileAnnotation) error {
 			message = "FAILURE"
 		}
 	}
-
 	_, _ = buffer.WriteString(path)
 	_, _ = buffer.WriteRune('(')
-
 	_, _ = buffer.WriteString(strconv.Itoa(line))
 	if column != 0 {
 		_, _ = buffer.WriteRune(',')
 		_, _ = buffer.WriteString(strconv.Itoa(column))
 	}
-
 	_, _ = buffer.WriteString(") : error ")
 	_, _ = buffer.WriteString(typeString)
 	_, _ = buffer.WriteString(" : ")
-
 	_, _ = buffer.WriteString(message)
 	if pluginName, policyName := f.PluginName(), f.PolicyName(); pluginName != "" || policyName != "" {
 		_, _ = buffer.WriteString(" (")
 		if pluginName != "" {
 			_, _ = buffer.WriteString(pluginName)
 		}
-
 		if pluginName != "" && policyName != "" {
 			_, _ = buffer.WriteString(", ")
 		}
-
 		if policyName != "" {
 			_, _ = buffer.WriteString(policyName)
 		}
-
 		_, _ = buffer.WriteRune(')')
 	}
-
 	return nil
 }
 
@@ -270,9 +233,7 @@ func printFileAnnotationAsJSON(buffer *bytes.Buffer, f FileAnnotation) error {
 	if err != nil {
 		return err
 	}
-
 	_, _ = buffer.Write(data)
-
 	return nil
 }
 
@@ -280,7 +241,6 @@ func printFileAnnotationAsGithubActions(buffer *bytes.Buffer, f FileAnnotation) 
 	if f == nil {
 		return nil
 	}
-
 	_, _ = buffer.WriteString("::error ")
 
 	// file= is required for GitHub Actions, however it is possible to not have
@@ -290,7 +250,6 @@ func printFileAnnotationAsGithubActions(buffer *bytes.Buffer, f FileAnnotation) 
 	if f.FileInfo() != nil {
 		path = f.FileInfo().ExternalPath()
 	}
-
 	_, _ = buffer.WriteString("file=")
 	_, _ = buffer.WriteString(path)
 
@@ -317,25 +276,20 @@ func printFileAnnotationAsGithubActions(buffer *bytes.Buffer, f FileAnnotation) 
 	}
 
 	_, _ = buffer.WriteString("::")
-
 	_, _ = buffer.WriteString(f.Message())
 	if pluginName, policyName := f.PluginName(), f.PolicyName(); pluginName != "" || policyName != "" {
 		_, _ = buffer.WriteString(" (")
 		if pluginName != "" {
 			_, _ = buffer.WriteString(pluginName)
 		}
-
 		if pluginName != "" && policyName != "" {
 			_, _ = buffer.WriteString(", ")
 		}
-
 		if policyName != "" {
 			_, _ = buffer.WriteString(policyName)
 		}
-
 		_, _ = buffer.WriteRune(')')
 	}
-
 	return nil
 }
 
@@ -356,7 +310,6 @@ func newExternalFileAnnotation(f FileAnnotation) externalFileAnnotation {
 	if f.FileInfo() != nil {
 		path = f.FileInfo().ExternalPath()
 	}
-
 	return externalFileAnnotation{
 		Path:        path,
 		StartLine:   atLeast1(f.StartLine()),
@@ -422,7 +375,6 @@ func newExternalGitLabCodeQualityIssue(f FileAnnotation) (*externalGitLabCodeQua
 		// the repository. This will need to be enforced by the user.
 		path = f.FileInfo().ExternalPath()
 	}
-
 	gitLabCodeQualityIssue := externalGitLabCodeQualityIssue{
 		Description: f.Message(),
 		CheckName:   f.Type(),
@@ -441,7 +393,6 @@ func newExternalGitLabCodeQualityIssue(f FileAnnotation) (*externalGitLabCodeQua
 		},
 		Severity: "minor",
 	}
-
 	gitLabCodeQualityIssueContent, err := json.Marshal(gitLabCodeQualityIssue)
 	if err != nil {
 		return nil, err
@@ -451,9 +402,7 @@ func newExternalGitLabCodeQualityIssue(f FileAnnotation) (*externalGitLabCodeQua
 	if err != nil {
 		return nil, err
 	}
-
 	gitLabCodeQualityIssue.Fingerprint = hex.EncodeToString(hash.Value())
-
 	return &gitLabCodeQualityIssue, nil
 }
 
@@ -465,16 +414,13 @@ func printEachAnnotationOnNewLine(
 	buffer := bytes.NewBuffer(nil)
 	for _, fileAnnotation := range fileAnnotations {
 		buffer.Reset()
-
 		if err := fileAnnotationPrinter(buffer, fileAnnotation); err != nil {
 			return err
 		}
-
 		_, _ = buffer.WriteString("\n")
 		if _, err := writer.Write(buffer.Bytes()); err != nil {
 			return err
 		}
 	}
-
 	return nil
 }

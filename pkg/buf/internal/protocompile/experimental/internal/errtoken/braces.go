@@ -42,11 +42,9 @@ func (e Unmatched) Diagnose(d *report.Diagnostic) {
 
 	if e.Keyword == left {
 		d.Apply(report.Snippetf(e.Span, "expected a closing `%s`", right))
-
 		if !e.Mismatch.IsZero() {
 			d.Apply(report.Snippetf(e.Mismatch, "closed by this instead"))
 		}
-
 		if !e.ShouldMatch.IsZero() {
 			d.Apply(report.Snippetf(e.ShouldMatch, "help: perhaps it was meant to match this?"))
 		}

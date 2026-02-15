@@ -74,7 +74,6 @@ func legalizeDecl(p *parser, parent classified, decl ast.DeclAny) {
 		what := classified{def, taxa.Classify(def)}
 
 		legalizeDef(p, parent, def)
-
 		for decl := range seq.Values(body.Decls()) {
 			legalizeDecl(p, what, decl)
 		}
@@ -85,7 +84,6 @@ func legalizeDecl(p *parser, parent classified, decl ast.DeclAny) {
 func legalizeRange(p *parser, parent classified, decl ast.DeclRange) {
 	in := taxa.Extensions
 	validParents := taxa.Message.AsSet()
-
 	if decl.IsReserved() {
 		in = taxa.Reserved
 		validParents = validParents.With(taxa.Enum)
@@ -105,7 +103,6 @@ func legalizeRange(p *parser, parent classified, decl ast.DeclRange) {
 	}
 
 	want := taxa.NewSet(taxa.Int, taxa.Range)
-
 	if in == taxa.Reserved {
 		if p.syntax.IsEdition() {
 			want = want.With(taxa.Ident)
@@ -115,7 +112,6 @@ func legalizeRange(p *parser, parent classified, decl ast.DeclRange) {
 	}
 
 	var names, tags []ast.ExprAny
-
 	for expr := range seq.Values(decl.Ranges()) {
 		switch expr.Kind() {
 		case ast.ExprKindPath:
@@ -128,7 +124,6 @@ func legalizeRange(p *parser, parent classified, decl ast.DeclRange) {
 			if p.syntax.IsEdition() {
 				break
 			}
-
 			p.Errorf("cannot use %vs in %v in %v", taxa.Ident, in, taxa.SyntaxMode).Apply(
 				report.Snippet(expr),
 				report.Snippetf(p.syntaxNode, "%v is specified here", taxa.SyntaxMode),
@@ -149,14 +144,12 @@ func legalizeRange(p *parser, parent classified, decl ast.DeclRange) {
 			lit := expr.AsLiteral()
 			if str := lit.AsString(); !str.IsZero() {
 				name := str.Text()
-
 				if in == taxa.Extensions {
 					p.Error(errtoken.Unexpected{
 						What:  expr,
 						Where: in.In(),
 						Want:  want,
 					})
-
 					break
 				}
 
@@ -186,11 +179,9 @@ func legalizeRange(p *parser, parent classified, decl ast.DeclRange) {
 					if parent.what == taxa.Enum {
 						field = taxa.EnumValue
 					}
-
 					p.Errorf("reserved %v name is not a valid identifier", field).Apply(
 						report.Snippet(expr),
 					)
-
 					break
 				}
 
@@ -226,7 +217,6 @@ func legalizeRange(p *parser, parent classified, decl ast.DeclRange) {
 		most := tags
 		leastWhat := "name"
 		mostWhat := "tag"
-
 		if len(names) > len(tags) ||
 			// When tied, use whichever comes last lexicographically.
 			(len(names) == len(tags) && names[0].Span().Start < tags[0].Span().Start) {
@@ -240,9 +230,7 @@ func legalizeRange(p *parser, parent classified, decl ast.DeclRange) {
 		)
 
 		span := decl.Span()
-
 		var edits []report.Edit
-
 		for _, expr := range least {
 			// Delete leading whitespace and trailing whitespace (and a comma, too).
 			toDelete := expr.Span().GrowLeft(unicode.IsSpace).GrowRight(unicode.IsSpace)
@@ -261,7 +249,6 @@ func legalizeRange(p *parser, parent classified, decl ast.DeclRange) {
 		comma := slicesx.LastPointer(most).Span()
 		if comma.End < slicesx.LastPointer(least).Span().End {
 			comma.Start = comma.End
-
 			comma = comma.GrowRight(unicode.IsSpace)
 			if r, _ := stringsx.Rune(comma.After(), 0); r == ',' {
 				comma.End++

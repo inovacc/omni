@@ -30,11 +30,9 @@ func (m *wireMarshaler) Marshal(message proto.Message) ([]byte, error) {
 	options := proto.MarshalOptions{
 		Deterministic: true,
 	}
-
 	data, err := options.Marshal(message)
 	if err != nil {
 		return nil, fmt.Errorf("wire marshal: %w", err)
 	}
-
 	return data, err
 }

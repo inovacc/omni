@@ -37,32 +37,25 @@ func FindOption(res hasOptionNode, handler errorHandler, scope string, opts []*d
 
 func findOption(res hasOptionNode, handler errorHandler, scope string, opts []*descriptorpb.UninterpretedOption, name string, exact, first bool) (int, error) {
 	found := -1
-
 	for i, opt := range opts {
-		if exact && len(opt.GetName()) != 1 {
+		if exact && len(opt.Name) != 1 {
 			continue
 		}
-
-		if opt.GetName()[0].GetIsExtension() || opt.GetName()[0].GetNamePart() != name {
+		if opt.Name[0].GetIsExtension() || opt.Name[0].GetNamePart() != name {
 			continue
 		}
-
 		if first {
 			return i, nil
 		}
-
 		if found >= 0 {
 			optNode := res.OptionNode(opt)
 			fn := res.FileNode()
 			node := optNode.GetName()
 			nodeInfo := fn.NodeInfo(node)
-
 			return -1, handler(nodeInfo, "%s: option %s cannot be defined more than once", scope, name)
 		}
-
 		found = i
 	}
-
 	return found, nil
 }
 

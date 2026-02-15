@@ -58,14 +58,9 @@ func getAssociatedSourcePaths(
 	excludeChildAssociatedPaths bool,
 ) ([]protoreflect.SourcePath, error) {
 	var result []protoreflect.SourcePath
-
 	currentState := start
-
-	var (
-		associatedSourcePaths []protoreflect.SourcePath
-		err                   error
-	)
-
+	var associatedSourcePaths []protoreflect.SourcePath
+	var err error
 	for i, token := range sourcePath {
 		if currentState == nil {
 			// We have not parsed the entire source path, but received a terminal state, this is
@@ -120,7 +115,6 @@ func start(token int32, fullSourcePath protoreflect.SourcePath, index int, _ boo
 		if len(fullSourcePath) < index+2 {
 			return nil, nil, newInvalidSourcePathError(fullSourcePath, "cannot have dependency declaration without index")
 		}
-
 		return dependencies, nil, nil
 	case messagesTypeTag:
 		// We check to make sure that the length of the source path contains at least the current
@@ -129,7 +123,6 @@ func start(token int32, fullSourcePath protoreflect.SourcePath, index int, _ boo
 		if len(fullSourcePath) < index+2 {
 			return nil, nil, newInvalidSourcePathError(fullSourcePath, "cannot have message declaration without index")
 		}
-
 		return messages, nil, nil
 	case enumsTypeTag:
 		// We check to make sure that the length of the source path contains at least the current
@@ -138,7 +131,6 @@ func start(token int32, fullSourcePath protoreflect.SourcePath, index int, _ boo
 		if len(fullSourcePath) < index+2 {
 			return nil, nil, newInvalidSourcePathError(fullSourcePath, "cannot have enum declaration without index")
 		}
-
 		return enums, nil, nil
 	case servicesTypeTag:
 		// We check to make sure that the length of the source path contains at least the current
@@ -147,7 +139,6 @@ func start(token int32, fullSourcePath protoreflect.SourcePath, index int, _ boo
 		if len(fullSourcePath) < index+2 {
 			return nil, nil, newInvalidSourcePathError(fullSourcePath, "cannot have service declaration without index")
 		}
-
 		return services, nil, nil
 	case fileOptionsTypeTag:
 		// For options, we add the full path and then return the options state to validate
@@ -158,7 +149,6 @@ func start(token int32, fullSourcePath protoreflect.SourcePath, index int, _ boo
 		// the path.
 		return extensions, []protoreflect.SourcePath{currentPath(fullSourcePath, index)}, nil
 	}
-
 	return nil, nil, newInvalidSourcePathError(fullSourcePath, "invalid source path")
 }
 
@@ -198,7 +188,6 @@ func reservedRanges(
 			childAssociatedPath(fullSourcePath, index, reservedRangeEndTypeTag),
 		)
 	}
-
 	return reservedRange, associatedPaths, nil
 }
 
@@ -210,7 +199,6 @@ func reservedRange(token int32, fullSourcePath protoreflect.SourcePath, _ int, _
 	if !slices.Contains(terminalReservedRangeTokens, token) {
 		return nil, nil, newInvalidSourcePathError(fullSourcePath, "invalid reserved range path")
 	}
-
 	return nil, nil, nil
 }
 

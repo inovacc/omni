@@ -58,11 +58,9 @@ func (c *MessageContext) String() string {
 	if c.ElementType != "file" {
 		_, _ = fmt.Fprintf(&ctx, "%s %s: ", c.ElementType, c.ElementName)
 	}
-
 	if c.Option != nil && c.Option.Name != nil {
 		ctx.WriteString("option ")
-		writeOptionName(&ctx, c.Option.GetName())
-
+		writeOptionName(&ctx, c.Option.Name)
 		if c.File.AST() == nil {
 			// if we have no source position info, try to provide as much context
 			// as possible (if nodes != nil, we don't need this because any errors
@@ -71,10 +69,8 @@ func (c *MessageContext) String() string {
 				_, _ = fmt.Fprintf(&ctx, " at %s", c.OptAggPath)
 			}
 		}
-
 		ctx.WriteString(": ")
 	}
-
 	return ctx.String()
 }
 
@@ -86,13 +82,11 @@ func writeOptionName(buf *bytes.Buffer, parts []*descriptorpb.UninterpretedOptio
 		} else {
 			buf.WriteByte('.')
 		}
-
 		nm := p.GetNamePart()
 		if nm[0] == '.' {
 			// skip leading dot
 			nm = nm[1:]
 		}
-
 		if p.GetIsExtension() {
 			buf.WriteByte('(')
 			buf.WriteString(nm)

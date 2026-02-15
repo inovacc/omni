@@ -104,7 +104,6 @@ func testZeroAny[T any](t *testing.T) {
 			if m.Func.Type().NumIn() != 1 || m.Func.Type().NumOut() == 0 {
 				continue
 			}
-
 			returns := m.Func.Call([]reflect.Value{v})
 			switch m.Name {
 			case "IsZero":
@@ -118,7 +117,7 @@ func testZeroAny[T any](t *testing.T) {
 			case "Context":
 				assert.Len(t, returns, 1)
 				assert.True(t, returns[0].Type().Comparable())
-				assert.True(t, returns[0].Type().AssignableTo(reflect.TypeFor[*ir.File]()))
+				assert.True(t, returns[0].Type().AssignableTo(reflect.TypeOf(&ir.File{})))
 			default:
 				for i, r := range returns {
 					if r.Type().Kind() == reflect.Func {
@@ -130,7 +129,6 @@ func testZeroAny[T any](t *testing.T) {
 						assert.Equal(t, 1, m.Type().NumOut())
 						r = m.Call(nil)[0]
 					}
-
 					assert.Zero(t, r.Interface(), "non-zero return #%d %#v of %T.%s", i, r, z, m.Name)
 				}
 			}

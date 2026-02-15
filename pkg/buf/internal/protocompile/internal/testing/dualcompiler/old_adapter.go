@@ -79,7 +79,6 @@ func (r *oldCompilationResult) Files() []CompiledFile {
 	for i, file := range r.files {
 		result[i] = &oldCompiledFile{file: file}
 	}
-
 	return result
 }
 

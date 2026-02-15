@@ -27,7 +27,6 @@ import (
 
 func TestDescriptorProtosEnterAndExit(t *testing.T) {
 	t.Parallel()
-
 	file := protodesc.ToFileDescriptorProto((*descriptorpb.FileDescriptorProto)(nil).ProtoReflect().Descriptor().ParentFile())
 	nameStack := []string{file.GetPackage()}
 	err := DescriptorProtosEnterAndExit(
@@ -60,9 +59,7 @@ func TestDescriptorProtosEnterAndExit(t *testing.T) {
 			default:
 				t.Fatalf("unknown descriptor type: %T", d)
 			}
-
 			nameStack = append(nameStack, string(fullName))
-
 			return nil
 		},
 		func(_ protoreflect.FullName, _ proto.Message) error {
@@ -77,6 +74,5 @@ func joinNames(prefix, name string) string {
 	if len(prefix) == 0 {
 		return name
 	}
-
 	return prefix + "." + name
 }

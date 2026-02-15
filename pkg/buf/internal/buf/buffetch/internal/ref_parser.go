@@ -52,7 +52,6 @@ func newRefParser(logger *slog.Logger, options ...RefParserOption) *refParser {
 	for _, option := range options {
 		option(refParser)
 	}
-
 	return refParser
 }
 
@@ -65,7 +64,6 @@ func (a *refParser) GetParsedRef(
 	for _, option := range options {
 		option(getParsedRefOptions)
 	}
-
 	return a.getParsedRef(ctx, value, getParsedRefOptions.allowedFormats)
 }
 
@@ -78,7 +76,6 @@ func (a *refParser) GetParsedRefForInputConfig(
 	for _, option := range options {
 		option(getParsedRefOptions)
 	}
-
 	return a.getParsedRefForInputConfig(ctx, inputConfig, getParsedRefOptions.allowedFormats)
 }
 
@@ -92,12 +89,10 @@ func (a *refParser) getParsedRef(
 	if err != nil {
 		return nil, err
 	}
-
 	rawRef, err := a.getRawRef(path, value, options)
 	if err != nil {
 		return nil, err
 	}
-
 	return a.parseRawRef(rawRef, allowedFormats)
 }
 
@@ -110,7 +105,6 @@ func (a *refParser) getParsedRefForInputConfig(
 	if err != nil {
 		return nil, err
 	}
-
 	return a.parseRawRef(rawRef, allowedFormats)
 }
 
@@ -129,21 +123,18 @@ func (a *refParser) getRawRef(
 			return nil, err
 		}
 	}
-
 	for key, value := range options {
 		switch key {
 		case "format":
 			if app.IsDevNull(path) {
 				return nil, NewFormatOverrideNotAllowedForDevNullError(app.DevNullFilePath)
 			}
-
 			rawRef.Format = value
 		case "compression":
 			compressionType, err := parseCompressionType(value)
 			if err != nil {
 				return nil, err
 			}
-
 			rawRef.CompressionType = compressionType
 		case "branch":
 			rawRef.GitBranch = value
@@ -158,7 +149,6 @@ func (a *refParser) getRawRef(
 			if err != nil {
 				return nil, err
 			}
-
 			rawRef.GitDepth = depth
 		case "recurse_submodules":
 			// TODO FUTURE: need to refactor to make sure this is not set for any non-git input
@@ -177,14 +167,12 @@ func (a *refParser) getRawRef(
 			if err != nil {
 				return nil, NewOptionsCouldNotParseStripComponentsError(value)
 			}
-
 			rawRef.ArchiveStripComponents = uint32(stripComponents)
 		case "subdir":
 			subDirPath, err := parseSubDirPath(value)
 			if err != nil {
 				return nil, err
 			}
-
 			rawRef.SubDirPath = subDirPath
 		case "include_package_files":
 			switch value {
@@ -208,11 +196,9 @@ func (a *refParser) getRawRef(
 			rawRef.GitDepth = 50
 		}
 	}
-
 	if err := a.validateRawRef(displayName, rawRef); err != nil {
 		return nil, err
 	}
-
 	return rawRef, nil
 }
 
@@ -228,7 +214,6 @@ func (a *refParser) getRawRefForInputConfig(
 			return nil, err
 		}
 	}
-
 	switch inputConfig.Type() {
 	case bufconfig.InputConfigTypeModule:
 		rawRef.Format = "mod"
@@ -260,14 +245,11 @@ func (a *refParser) getRawRefForInputConfig(
 			if *inputConfig.Depth() == 0 {
 				return nil, NewDepthZeroError()
 			}
-
 			rawRef.GitDepth = *inputConfig.Depth()
 		}
-
 		rawRef.GitBranch = inputConfig.Branch()
 		rawRef.GitCommitOrTag = inputConfig.CommitOrTag()
 		rawRef.GitRef = inputConfig.Ref()
-
 		rawRef.GitRecurseSubmodules = inputConfig.RecurseSubmodules()
 		if rawRef.GitDepth == 0 {
 			// Default to 1
@@ -278,7 +260,6 @@ func (a *refParser) getRawRefForInputConfig(
 			}
 		}
 	}
-
 	var err error
 	if compression := inputConfig.Compression(); compression != "" {
 		rawRef.CompressionType, err = parseCompressionType(compression)
@@ -286,19 +267,15 @@ func (a *refParser) getRawRefForInputConfig(
 			return nil, err
 		}
 	}
-
 	rawRef.IncludePackageFiles = inputConfig.IncludePackageFiles()
 	rawRef.ArchiveStripComponents = inputConfig.StripComponents()
-
 	rawRef.SubDirPath, err = parseSubDirPath(inputConfig.SubDir())
 	if err != nil {
 		return nil, err
 	}
-
 	if err := a.validateRawRef(inputConfig.Location(), rawRef); err != nil {
 		return nil, err
 	}
-
 	return rawRef, nil
 }
 
@@ -311,18 +288,15 @@ func (a *refParser) parseRawRef(
 	_, dirOK := a.dirFormatToInfo[rawRef.Format]
 	_, gitOK := a.gitFormatToInfo[rawRef.Format]
 	_, moduleOK := a.moduleFormatToInfo[rawRef.Format]
-
 	_, protoFileOK := a.protoFileFormatToInfo[rawRef.Format]
-	if !singleOK && !archiveOK && !dirOK && !gitOK && !moduleOK && !protoFileOK {
+	if !(singleOK || archiveOK || dirOK || gitOK || moduleOK || protoFileOK) {
 		return nil, NewFormatUnknownError(rawRef.Format)
 	}
-
 	if len(allowedFormats) > 0 {
 		if _, ok := allowedFormats[rawRef.Format]; !ok {
 			return nil, NewFormatNotAllowedError(rawRef.Format, allowedFormats)
 		}
 	}
-
 	if !singleOK && len(rawRef.UnrecognizedOptions) > 0 {
 		// Only single refs allow custom options. In every other case, this is an error.
 		//
@@ -331,36 +305,27 @@ func (a *refParser) parseRawRef(
 		for key := range rawRef.UnrecognizedOptions {
 			keys = append(keys, key)
 		}
-
 		sort.Strings(keys)
-
 		return nil, NewOptionsInvalidKeysError(keys...)
 	}
-
 	if singleOK {
 		return getSingleRef(rawRef, singleFormatInfo.defaultCompressionType, singleFormatInfo.customOptionKeys)
 	}
-
 	if archiveOK {
 		return getArchiveRef(rawRef, archiveFormatInfo.archiveType, archiveFormatInfo.defaultCompressionType)
 	}
-
 	if protoFileOK {
 		return getProtoFileRef(rawRef)
 	}
-
 	if dirOK {
 		return getDirRef(rawRef)
 	}
-
 	if gitOK {
 		return getGitRef(rawRef)
 	}
-
 	if moduleOK {
 		return getModuleRef(rawRef)
 	}
-
 	return nil, NewFormatUnknownError(rawRef.Format)
 }
 
@@ -372,16 +337,13 @@ func (a *refParser) validateRawRef(
 	if rawRef.Format == "" {
 		return NewFormatCannotBeDeterminedError(displayName)
 	}
-
 	_, gitOK := a.gitFormatToInfo[rawRef.Format]
 	archiveFormatInfo, archiveOK := a.archiveFormatToInfo[rawRef.Format]
-
 	_, singleOK := a.singleFormatToInfo[rawRef.Format]
 	if gitOK {
 		if rawRef.GitBranch != "" && rawRef.GitCommitOrTag != "" {
 			return NewCannotSpecifyGitBranchAndCommitOrTagError()
 		}
-
 		if rawRef.GitRef != "" && rawRef.GitCommitOrTag != "" {
 			return NewCannotSpecifyCommitOrTagWithRefError()
 		}
@@ -400,19 +362,16 @@ func (a *refParser) validateRawRef(
 			return NewCannotSpecifyCompressionForZipError()
 		}
 	}
-
 	if !singleOK && !archiveOK {
 		if rawRef.CompressionType != 0 {
 			return NewOptionsInvalidForFormatError(rawRef.Format, displayName, "compression set")
 		}
 	}
-
 	if !archiveOK && !gitOK {
 		if rawRef.SubDirPath != "" {
 			return NewOptionsInvalidForFormatError(rawRef.Format, displayName, "subdir set")
 		}
 	}
-
 	return nil
 }
 
@@ -435,11 +394,9 @@ func parseGitDepth(value string) (uint32, error) {
 	if err != nil {
 		return 0, NewDepthParseError(value)
 	}
-
 	if depth == 0 {
 		return 0, NewDepthZeroError()
 	}
-
 	return uint32(depth), nil
 }
 
@@ -448,11 +405,9 @@ func parseSubDirPath(value string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-
 	if subDirPath == "." {
 		return "", nil
 	}
-
 	return subDirPath, nil
 }
 
@@ -470,37 +425,28 @@ func getRawPathAndOptions(value string) (string, map[string]string, error) {
 	case 2:
 		path := strings.TrimSpace(splitValue[0])
 		optionsString := strings.TrimSpace(splitValue[1])
-
 		if path == "" {
 			return "", nil, newValueStartsWithHashtagError(value)
 		}
-
 		if optionsString == "" {
 			return "", nil, newValueEndsWithHashtagError(value)
 		}
-
 		options := make(map[string]string)
-
-		for pair := range strings.SplitSeq(optionsString, ",") {
+		for _, pair := range strings.Split(optionsString, ",") {
 			split := strings.Split(pair, "=")
 			if len(split) != 2 {
 				return "", nil, newOptionsInvalidError(optionsString)
 			}
-
 			key := strings.TrimSpace(split[0])
-
 			value := strings.TrimSpace(split[1])
 			if key == "" || value == "" {
 				return "", nil, newOptionsInvalidError(optionsString)
 			}
-
 			if _, ok := options[key]; ok {
 				return "", nil, newOptionsDuplicateKeyError(key)
 			}
-
 			options[key] = value
 		}
-
 		return path, options, nil
 	default:
 		return "", nil, newValueMultipleHashtagsError(value)
@@ -516,19 +462,15 @@ func getSingleRef(
 	if compressionType == 0 {
 		compressionType = defaultCompressionType
 	}
-
 	var invalidKeys []string
-
 	for key := range rawRef.UnrecognizedOptions {
 		if _, ok := customOptionKeys[key]; !ok {
 			invalidKeys = append(invalidKeys, key)
 		}
 	}
-
 	if len(invalidKeys) > 0 {
 		return nil, NewOptionsInvalidKeysError(invalidKeys...)
 	}
-
 	return newSingleRef(
 		rawRef.Format,
 		rawRef.Path,
@@ -546,7 +488,6 @@ func getArchiveRef(
 	if compressionType == 0 {
 		compressionType = defaultCompressionType
 	}
-
 	return newArchiveRef(
 		rawRef.Format,
 		rawRef.Path,
@@ -573,7 +514,6 @@ func getGitRef(
 	if err != nil {
 		return nil, err
 	}
-
 	return newGitRef(
 		rawRef.Format,
 		rawRef.Path,
@@ -598,29 +538,23 @@ func getGitRefName(path string, branch string, commitOrTag string, ref string) (
 	if branch == "" && commitOrTag == "" && ref == "" {
 		return nil, nil
 	}
-
 	if branch != "" && commitOrTag != "" {
 		// already did this in getRawRef but just in case
 		return nil, NewCannotSpecifyGitBranchAndCommitOrTagError()
 	}
-
 	if ref != "" && commitOrTag != "" {
 		// already did this in getRawRef but just in case
 		return nil, NewCannotSpecifyCommitOrTagWithRefError()
 	}
-
 	if ref != "" && branch != "" {
 		return git.NewRefNameWithBranch(ref, branch), nil
 	}
-
 	if ref != "" {
 		return git.NewRefName(ref), nil
 	}
-
 	if branch != "" {
 		return git.NewBranchName(branch), nil
 	}
-
 	return git.NewTagName(commitOrTag), nil
 }
 

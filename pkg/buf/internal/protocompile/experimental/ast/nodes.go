@@ -43,13 +43,11 @@ func (n *Nodes) File() *File {
 // To create a path component with an extension value, see [Nodes.NewExtensionComponent].
 func (n *Nodes) NewPathComponent(separator, name token.Token) PathComponent {
 	n.panicIfNotOurs(separator, name)
-
 	if !separator.IsZero() {
 		if separator.Kind() != token.Keyword || (separator.Text() != "." && separator.Text() != "/") {
 			panic(fmt.Sprintf("protocompile/ast: passed non '.' or '/' separator to NewPathComponent: %s", separator))
 		}
 	}
-
 	if name.Kind() != token.Ident {
 		panic("protocompile/ast: passed non-identifier name to NewPathComponent")
 	}
@@ -65,7 +63,6 @@ func (n *Nodes) NewPathComponent(separator, name token.Token) PathComponent {
 // given path.
 func (n *Nodes) NewExtensionComponent(separator token.Token, path Path) PathComponent {
 	n.panicIfNotOurs(separator, path)
-
 	if !separator.IsZero() {
 		if separator.Kind() != token.Keyword || (separator.Text() != "." && separator.Text() != "/") {
 			panic(fmt.Sprintf("protocompile/ast: passed non '.' or '/' separator to NewPathComponent: %s", separator))
@@ -77,28 +74,22 @@ func (n *Nodes) NewExtensionComponent(separator token.Token, path Path) PathComp
 		stream := n.stream
 		start := stream.NewPunct("(")
 		end := stream.NewPunct(")")
-
 		var children []token.Token
-
 		path.Components(func(pc PathComponent) bool {
 			if !pc.Separator().IsZero() {
 				children = append(children, pc.Separator())
 			}
-
 			if !pc.Name().IsZero() {
 				children = append(children, pc.Name())
 			}
-
 			return true
 		})
 		stream.NewFused(start, end, children...)
 
 		name = start.ID()
-
 		if n.extnPathCache == nil {
 			n.extnPathCache = make(map[PathID]token.ID)
 		}
-
 		n.extnPathCache[path.raw] = name
 	}
 
@@ -125,19 +116,15 @@ func (n *Nodes) NewPath(components ...PathComponent) Path {
 	// parens here.
 	start := stream.NewPunct("(")
 	end := stream.NewPunct(")")
-
 	var children []token.Token
-
 	for _, pc := range components {
 		if !pc.Separator().IsZero() {
 			children = append(children, pc.Separator())
 		}
-
 		if !pc.Name().IsZero() {
 			children = append(children, pc.Name())
 		}
 	}
-
 	stream.NewFused(start, end, children...)
 
 	path := PathID{start: start.ID()}.withSynthRange(0, len(children))
@@ -145,7 +132,6 @@ func (n *Nodes) NewPath(components ...PathComponent) Path {
 	if n.extnPathCache == nil {
 		n.extnPathCache = make(map[PathID]token.ID)
 	}
-
 	n.extnPathCache[path] = path.start
 
 	return path.In(n.File())
@@ -226,7 +212,6 @@ func (n *Nodes) NewDeclDef(args DeclDefArgs) DeclDef {
 		kw := PathID{args.Keyword.ID(), args.Keyword.ID()}.In(n.File())
 		raw.ty = TypePath{Path: kw}.AsAny().ID()
 	}
-
 	if !args.Returns.IsZero() {
 		raw.signature = &rawSignature{
 			returns: args.Returns.ID(),
@@ -355,14 +340,12 @@ func (n *Nodes) panicIfNotOurs(that ...any) {
 		}
 
 		var path string
-
 		switch that := that.(type) {
 		case interface{ Context() *token.Stream }:
 			ctx := that.Context()
 			if ctx == nil || ctx == n.File().Stream() {
 				continue
 			}
-
 			path = ctx.Path()
 
 		case interface{ Context() *File }:
@@ -370,7 +353,6 @@ func (n *Nodes) panicIfNotOurs(that ...any) {
 			if ctx == nil || ctx == n.File() {
 				continue
 			}
-
 			path = ctx.Stream().Path()
 
 		default:

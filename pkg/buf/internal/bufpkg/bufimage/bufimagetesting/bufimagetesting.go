@@ -52,7 +52,6 @@ func NewImageFile(
 		unusedDependencyIndexes,
 	)
 	require.NoError(t, err)
-
 	return imageFile
 }
 
@@ -118,6 +117,5 @@ func normalizeImageFiles(t testing.TB, imageFiles []bufimage.ImageFile) []bufima
 			imageFile.UnusedDependencyIndexes(),
 		)
 	}
-
 	return normalizedImageFiles
 }

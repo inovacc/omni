@@ -39,7 +39,6 @@ func (e Record) AsAny() Expr {
 	if e.IsZero() {
 		return Expr{}
 	}
-
 	return id.WrapDyn(e.Context(), id.NewDyn(KindRecord, id.ID[Expr](e.ID())))
 }
 
@@ -48,7 +47,6 @@ func (e Record) Entries() Params {
 	if e.IsZero() {
 		return Params{}
 	}
-
 	return id.WrapRaw(e.Context(), id.ID[Params](e.ID()), e.Raw())
 }
 

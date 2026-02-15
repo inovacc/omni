@@ -52,7 +52,6 @@ func NewFileNode(path string, digest Digest) (FileNode, error) {
 	if err := validateFileNodeParameters(path, digest); err != nil {
 		return nil, err
 	}
-
 	return newFileNode(path, digest), nil
 }
 
@@ -70,7 +69,6 @@ func ParseFileNode(s string) (FileNode, error) {
 			errors.New(`must in the form "digest[SP][SP]path"`),
 		)
 	}
-
 	digest, err := ParseDigest(split[0])
 	if err != nil {
 		return nil, bufparse.NewParseError(
@@ -79,7 +77,6 @@ func ParseFileNode(s string) (FileNode, error) {
 			err,
 		)
 	}
-
 	path := split[1]
 	if err := validateFileNodeParameters(path, digest); err != nil {
 		return nil, bufparse.NewParseError(
@@ -88,7 +85,6 @@ func ParseFileNode(s string) (FileNode, error) {
 			err,
 		)
 	}
-
 	return newFileNode(path, digest), nil
 }
 
@@ -125,19 +121,15 @@ func validateFileNodeParameters(path string, digest Digest) error {
 	if path == "" {
 		return errors.New("path was empty")
 	}
-
 	normalizedPath, err := normalpath.NormalizeAndValidate(path)
 	if err != nil {
 		return fmt.Errorf("path %q was not valid: %w", path, err)
 	}
-
 	if path != normalizedPath {
 		return fmt.Errorf("path %q was not equal to normalized path %q", path, normalizedPath)
 	}
-
 	if digest == nil {
 		return errors.New("no digest specified")
 	}
-
 	return nil
 }

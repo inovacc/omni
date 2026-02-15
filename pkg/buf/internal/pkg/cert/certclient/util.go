@@ -52,27 +52,22 @@ func NewClientTLS(options ...TLSOption) (*tls.Config, error) {
 	for _, opt := range options {
 		opt(opts)
 	}
-
 	rootCertDatas := make([][]byte, len(opts.rootCertFilePaths))
 	for i, rootCertFilePath := range opts.rootCertFilePaths {
 		rootCertData, err := os.ReadFile(rootCertFilePath)
 		if err != nil {
 			return nil, err
 		}
-
 		rootCertDatas[i] = rootCertData
 	}
-
 	return newClientTLSConfigFromRootCertDatas(opts.useSystemCerts, rootCertDatas...)
 }
 
 // newClientTLSConfigFromRootCertDatas creates a new tls.Config from root certificate datas.
 func newClientTLSConfigFromRootCertDatas(useSystemCerts bool, rootCertDatas ...[]byte) (*tls.Config, error) {
 	var certPool *x509.CertPool
-
 	if useSystemCerts {
 		var err error
-
 		certPool, err = x509.SystemCertPool()
 		if err != nil {
 			return nil, fmt.Errorf("failed to acquire system cert pool: %w", err)
@@ -80,13 +75,11 @@ func newClientTLSConfigFromRootCertDatas(useSystemCerts bool, rootCertDatas ...[
 	} else {
 		certPool = x509.NewCertPool()
 	}
-
 	for _, rootCertData := range rootCertDatas {
 		if !certPool.AppendCertsFromPEM(rootCertData) {
 			return nil, errors.New("failed to append root certificate")
 		}
 	}
-
 	return newClientTLSConfigFromRootCertPool(certPool), nil
 }
 

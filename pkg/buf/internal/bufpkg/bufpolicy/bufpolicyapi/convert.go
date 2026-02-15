@@ -36,16 +36,14 @@ var (
 // Validation is performed to ensure the DigestType is known, and the value
 // is a valid digest value for the given DigestType.
 func V1Beta1ProtoToDigest(protoDigest *policyv1beta1.Digest) (bufpolicy2.Digest, error) {
-	digestType, err := v1beta1ProtoToDigestType(protoDigest.GetType())
+	digestType, err := v1beta1ProtoToDigestType(protoDigest.Type)
 	if err != nil {
 		return nil, err
 	}
-
-	bufcasDigest, err := bufcas.NewDigest(protoDigest.GetValue())
+	bufcasDigest, err := bufcas.NewDigest(protoDigest.Value)
 	if err != nil {
 		return nil, err
 	}
-
 	return bufpolicy2.NewDigest(digestType, bufcasDigest)
 }
 
@@ -56,12 +54,10 @@ func V1Beta1ProtoToPolicyConfig(registry string, policyConfigV1Beta1 *policyv1be
 	if err != nil {
 		return nil, err
 	}
-
 	breakingConfig, err := getBreakingConfigForV1Beta1BreakingConfig(policyConfigV1Beta1.GetBreaking())
 	if err != nil {
 		return nil, err
 	}
-
 	pluginConfigs, err := xslices.MapError(
 		policyConfigV1Beta1.GetPlugins(),
 		func(pluginConfigV1Beta1 *policyv1beta1.PolicyConfig_CheckPluginConfig) (bufpolicy2.PluginConfig, error) {
@@ -71,7 +67,6 @@ func V1Beta1ProtoToPolicyConfig(registry string, policyConfigV1Beta1 *policyv1be
 	if err != nil {
 		return nil, err
 	}
-
 	return bufpolicy2.NewPolicyConfig(
 		lintConfig,
 		breakingConfig,
@@ -88,12 +83,10 @@ func PolicyConfigToV1Beta1Proto(policyConfig bufpolicy2.PolicyConfig) (*policyv1
 			if pluginRef == nil {
 				return nil, fmt.Errorf("plugin config %q has no reference", pluginConfig.Name())
 			}
-
 			pluginOptions, err := pluginConfig.Options().ToProto()
 			if err != nil {
 				return nil, err
 			}
-
 			return &policyv1beta1.PolicyConfig_CheckPluginConfig{
 				Name: &policyv1beta1.PolicyConfig_CheckPluginConfig_Name{
 					Owner:  pluginRef.FullName().Owner(),
@@ -108,7 +101,6 @@ func PolicyConfigToV1Beta1Proto(policyConfig bufpolicy2.PolicyConfig) (*policyv1
 	if err != nil {
 		return nil, err
 	}
-
 	return &policyv1beta1.PolicyConfig{
 		Lint: &policyv1beta1.PolicyConfig_LintConfig{
 			Use:                                  policyConfig.LintConfig().UseIDsAndCategories(),
@@ -146,7 +138,6 @@ func v1beta1ProtoToDigestType(protoDigestType policyv1beta1.DigestType) (bufpoli
 	if !ok {
 		return 0, fmt.Errorf("unknown policyv1beta1.DigestType: %v", protoDigestType)
 	}
-
 	return digestType, nil
 }
 
@@ -181,7 +172,6 @@ func getPluginConfigForV1Beta1PluginConfig(
 	pluginConfigV1Beta1 *policyv1beta1.PolicyConfig_CheckPluginConfig,
 ) (bufpolicy2.PluginConfig, error) {
 	nameV1Beta1 := pluginConfigV1Beta1.GetName()
-
 	pluginRef, err := bufparse.NewRef(
 		registry,
 		nameV1Beta1.GetOwner(),
@@ -191,12 +181,10 @@ func getPluginConfigForV1Beta1PluginConfig(
 	if err != nil {
 		return nil, err
 	}
-
 	pluginOptions, err := option.OptionsForProtoOptions(pluginConfigV1Beta1.GetOptions())
 	if err != nil {
 		return nil, err
 	}
-
 	return bufpolicy2.NewPluginConfig(
 		nameV1Beta1.String(),
 		pluginRef,

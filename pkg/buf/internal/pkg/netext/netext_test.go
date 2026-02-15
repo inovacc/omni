@@ -22,7 +22,6 @@ import (
 
 func TestValidateHostname(t *testing.T) {
 	t.Parallel()
-
 	tests := []struct {
 		description string
 		hostname    string
@@ -109,7 +108,6 @@ func TestValidateHostname(t *testing.T) {
 		tt := test
 		t.Run(tt.description, func(t *testing.T) {
 			t.Parallel()
-
 			hostname, err := ValidateHostname(tt.hostname)
 			if tt.isValid {
 				assert.Equal(t, tt.hostname, hostname)

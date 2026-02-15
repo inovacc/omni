@@ -48,23 +48,19 @@ func Run(
 
 	stdin := runOptions.stdin
 	stdout := runOptions.stdout
-
 	stdoutBuffer := bytes.NewBuffer(nil)
 	if stdout == nil {
 		stdout = stdoutBuffer
 	} else {
 		stdout = io.MultiWriter(stdout, stdoutBuffer)
 	}
-
 	stderr := runOptions.stderr
-
 	stderrBuffer := bytes.NewBuffer(nil)
 	if stderr == nil {
 		stderr = stderrBuffer
 	} else {
 		stderr = io.MultiWriter(stderr, stderrBuffer)
 	}
-
 	var env map[string]string
 	if runOptions.newEnv != nil {
 		env = runOptions.newEnv(testingUse)
@@ -89,29 +85,23 @@ func Run(
 		// If no expectedExitCodes specified, we expect the 0 exit code.
 		expectedExitCodes[0] = struct{}{}
 	}
-
 	var foundExpectedExitCode bool
-
 	for expectedExitCode := range runOptions.expectedExitCodes {
 		if exitCode == expectedExitCode {
 			foundExpectedExitCode = true
 			break
 		}
 	}
-
 	if !foundExpectedExitCode {
 		expectedExitCodesSlice := make([]int, 0, len(runOptions.expectedExitCodes))
 		for expectedExitCode := range runOptions.expectedExitCodes {
 			expectedExitCodesSlice = append(expectedExitCodesSlice, expectedExitCode)
 		}
-
 		sort.Ints(expectedExitCodesSlice)
-
 		message := fmt.Sprintf("one of %v", expectedExitCodesSlice)
 		if len(expectedExitCodesSlice) == 1 {
 			message = strconv.Itoa(expectedExitCodesSlice[0])
 		}
-
 		require.True(
 			t,
 			false,
@@ -130,7 +120,6 @@ func Run(
 			requireErrorMessage(runOptions.args, stdoutBuffer, stderrBuffer),
 		)
 	}
-
 	if runOptions.expectedStderrPresent {
 		require.Equal(
 			t,
@@ -139,7 +128,6 @@ func Run(
 			requireErrorMessage(runOptions.args, stdoutBuffer, stderrBuffer),
 		)
 	}
-
 	if runOptions.expectedStderrPartialsPresent {
 		if len(runOptions.expectedStderrPartials) == 0 {
 			require.Empty(
@@ -149,7 +137,6 @@ func Run(
 				requireErrorMessage(runOptions.args, stdoutBuffer, stderrBuffer),
 			)
 		}
-
 		for _, expectedStderrPartial := range runOptions.expectedStderrPartials {
 			require.Contains(
 				t,
@@ -261,7 +248,6 @@ func requireErrorMessage(args []string, stdout *bytes.Buffer, stderr *bytes.Buff
 		// To make the args copy-pastable.
 		quotedArgs[i] = `'` + arg + `'`
 	}
-
 	return fmt.Sprintf(
 		"args: %s\nstdout: %s\nstderr: %s",
 		strings.Join(quotedArgs, " "),
@@ -281,12 +267,10 @@ func trimLines(output string) string {
 func splitTrimLines(output string) []string {
 	// this should work for windows as well as \r will be trimmed
 	split := strings.Split(output, "\n")
-
 	lines := make([]string, len(split))
 	for i, line := range split {
 		lines[i] = strings.TrimSpace(line)
 	}
-
 	return lines
 }
 

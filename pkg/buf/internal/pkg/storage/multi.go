@@ -92,12 +92,10 @@ func (m *multiReadBucket) Get(ctx context.Context, path string) (ReadObjectClose
 			return readObjectCloser, nil
 		}
 	}
-
 	_, delegateIndex, err := m.getObjectInfoAndDelegateIndex(ctx, "read", path)
 	if err != nil {
 		return nil, err
 	}
-
 	return m.delegates[delegateIndex].Get(ctx, path)
 }
 
@@ -108,7 +106,6 @@ func (m *multiReadBucket) Stat(ctx context.Context, path string) (ObjectInfo, er
 
 func (m *multiReadBucket) Walk(ctx context.Context, prefix string, f func(ObjectInfo) error) error {
 	seenPathToExternalPath := make(map[string]string)
-
 	for _, delegate := range m.delegates {
 		if err := delegate.Walk(
 			ctx,
@@ -133,7 +130,6 @@ func (m *multiReadBucket) Walk(ctx context.Context, prefix string, f func(Object
 			return err
 		}
 	}
-
 	return nil
 }
 
@@ -142,18 +138,14 @@ func (m *multiReadBucket) getObjectInfoAndDelegateIndex(
 	op string,
 	path string,
 ) (ObjectInfo, int, error) {
-	var (
-		objectInfos     []ObjectInfo
-		delegateIndices []int
-	)
-
+	var objectInfos []ObjectInfo
+	var delegateIndices []int
 	for i, delegate := range m.delegates {
 		objectInfo, err := delegate.Stat(ctx, path)
 		if err != nil {
 			if IsNotExist(err) {
 				continue
 			}
-
 			return nil, 0, err
 		}
 		// If overlay, we can stop here - we've found the path and will select
@@ -161,11 +153,9 @@ func (m *multiReadBucket) getObjectInfoAndDelegateIndex(
 		if m.overlay {
 			return objectInfo, i, nil
 		}
-
 		objectInfos = append(objectInfos, objectInfo)
 		delegateIndices = append(delegateIndices, i)
 	}
-
 	switch len(objectInfos) {
 	case 0:
 		return nil, 0, &fs.PathError{Op: op, Path: path, Err: fs.ErrNotExist}
@@ -176,7 +166,6 @@ func (m *multiReadBucket) getObjectInfoAndDelegateIndex(
 		for i, objectInfo := range objectInfos {
 			externalPaths[i] = objectInfo.ExternalPath()
 		}
-
 		return nil, 0, NewErrExistsMultipleLocations(path, externalPaths...)
 	}
 }
@@ -188,7 +177,6 @@ func (nopReadBucket) Get(ctx context.Context, path string) (ReadObjectCloser, er
 	if err != nil {
 		return nil, err
 	}
-
 	return nil, &fs.PathError{Op: "read", Path: path, Err: fs.ErrNotExist}
 }
 
@@ -197,7 +185,6 @@ func (nopReadBucket) Stat(ctx context.Context, path string) (ObjectInfo, error) 
 	if err != nil {
 		return nil, err
 	}
-
 	return nil, &fs.PathError{Op: "stat", Path: path, Err: fs.ErrNotExist}
 }
 

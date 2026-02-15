@@ -25,7 +25,6 @@ import (
 
 func TestParseConfigFromExternalV1(t *testing.T) {
 	t.Parallel()
-
 	testcases := []struct {
 		description    string
 		externalConfig externalBufGenYAMLFileV1
@@ -742,7 +741,6 @@ func TestParseConfigFromExternalV1(t *testing.T) {
 	for _, testcase := range testcases {
 		t.Run(testcase.description, func(t *testing.T) {
 			t.Parallel()
-
 			parsedConfig, err := newGenerateConfigFromExternalFileV1(testcase.externalConfig)
 			require.NoError(t, err)
 			require.Equal(t, testcase.expectedConfig, parsedConfig)
@@ -752,7 +750,6 @@ func TestParseConfigFromExternalV1(t *testing.T) {
 
 func TestParseConfigFromExternalV1Fail(t *testing.T) {
 	t.Parallel()
-
 	testcases := []struct {
 		description    string
 		externalConfig externalBufGenYAMLFileV1
@@ -819,7 +816,6 @@ func TestParseConfigFromExternalV1Fail(t *testing.T) {
 	for _, testcase := range testcases {
 		t.Run(testcase.description, func(t *testing.T) {
 			t.Parallel()
-
 			_, err := newGenerateConfigFromExternalFileV1(testcase.externalConfig)
 			require.Error(t, err)
 		})

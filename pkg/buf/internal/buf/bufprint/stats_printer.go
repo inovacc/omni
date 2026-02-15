@@ -67,7 +67,6 @@ Extensions:          %d
 			stats.DeprecatedRPCs,
 			stats.Extensions,
 		)
-
 		return err
 	case FormatJSON:
 		return json.NewEncoder(p.writer).Encode(stats)

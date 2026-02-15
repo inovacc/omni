@@ -28,7 +28,6 @@ func NewGraphProvider(container appext.Container) (bufmodule.GraphProvider, erro
 	if err != nil {
 		return nil, err
 	}
-
 	return newGraphProvider(
 		container,
 		bufregistryapimodule.NewClientProvider(clientConfig),

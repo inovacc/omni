@@ -166,7 +166,6 @@ func (t *Task) aborted() error {
 	if !ok {
 		return nil
 	}
-
 	return err
 }
 
@@ -195,7 +194,6 @@ func (t *Task) aborted() error {
 // because it's generic.
 func Resolve[T any](caller *Task, queries ...Query[T]) (results []Result[T], expired error) {
 	caller.checkDone()
-
 	if len(queries) == 0 {
 		return nil, nil
 	}
@@ -210,7 +208,6 @@ func Resolve[T any](caller *Task, queries ...Query[T]) (results []Result[T], exp
 	join.TryAcquire(int64(len(queries))) // Always succeeds because there are no waiters.
 
 	var needWait bool
-
 	for i, qt := range queries {
 		q := AsAny(qt) // This will also cache the result of q.Key() for us.
 		if q == nil {
@@ -229,7 +226,6 @@ func Resolve[T any](caller *Task, queries ...Query[T]) (results []Result[T], exp
 		if callerTask == nil {
 			continue // Root.
 		}
-
 		callerTask.deps.Store(dep, struct{}{})
 		dep.callers.Store(callerTask, struct{}{})
 	}
@@ -246,7 +242,7 @@ func Resolve[T any](caller *Task, queries ...Query[T]) (results []Result[T], exp
 					// This type assertion will always succeed, unless the user has
 					// distinct queries with the same key, which is a sufficiently
 					// unrecoverable condition that a panic is acceptable.
-					results[i].Value = r.Value.(T)
+					results[i].Value = r.Value.(T) //nolint:errcheck
 				}
 
 				results[i].Fatal = r.Fatal
@@ -264,7 +260,6 @@ func Resolve[T any](caller *Task, queries ...Query[T]) (results []Result[T], exp
 		// go to sleep. This avoids potential resource starvation for deeply-nested
 		// queries on low parallelism settings.
 		caller.release()
-
 		if join.Acquire(caller.ctx, int64(len(queries))) != nil {
 			return nil, context.Cause(caller.ctx)
 		}
@@ -367,7 +362,6 @@ func (t *task) start(caller *Task, q *AnyQuery, sync bool, done func(*result)) (
 	if r != nil && closed(r.done) {
 		caller.log("cache hit", "%[1]T/%[1]v", q.Underlying())
 		done(r)
-
 		return false
 	}
 
@@ -380,7 +374,6 @@ func (t *task) start(caller *Task, q *AnyQuery, sync bool, done func(*result)) (
 	go func() {
 		done(t.run(caller, q, true))
 	}()
-
 	return true
 }
 
@@ -389,7 +382,6 @@ func (t *task) start(caller *Task, q *AnyQuery, sync bool, done func(*result)) (
 func (t *task) checkCycle(caller *Task, q *AnyQuery) error {
 	deps := slicesx.NewQueue[*task](1)
 	deps.PushFront(t)
-
 	parent := make(map[*task]*task)
 	hasCycle := false
 
@@ -398,14 +390,12 @@ func (t *task) checkCycle(caller *Task, q *AnyQuery) error {
 			hasCycle = true
 			break
 		}
-
 		node.deps.Range(func(depAny any, _ any) bool {
-			dep := depAny.(*task)
+			dep := depAny.(*task) //nolint:errcheck
 			if _, ok := parent[dep]; !ok {
 				parent[dep] = node
 				deps.PushBack(dep)
 			}
-
 			return true
 		})
 	}
@@ -416,12 +406,10 @@ func (t *task) checkCycle(caller *Task, q *AnyQuery) error {
 
 	// Reconstruct the cycle path from t.task back to target.
 	var cycle []*AnyQuery
-
 	cycle = append(cycle, caller.task.query)
 	for current := parent[caller.task]; current != nil && current != t; current = parent[current] {
 		cycle = append(cycle, current.query)
 	}
-
 	cycle = append(cycle, t.query)
 
 	// Reverse to get the correct dependency order (target -> ... -> t.task).
@@ -442,7 +430,6 @@ func (t *task) run(caller *Task, q *AnyQuery, async bool) (output *result) {
 		if closed(output.done) {
 			return output
 		}
-
 		return t.waitUntilDone(caller, output, q, async)
 	}
 
@@ -455,7 +442,6 @@ func (t *task) run(caller *Task, q *AnyQuery, async bool) (output *result) {
 		if output == nil {
 			return nil // Leader panicked but we did see a result.
 		}
-
 		return t.waitUntilDone(caller, output, q, async)
 	}
 
@@ -496,7 +482,6 @@ func (t *task) run(caller *Task, q *AnyQuery, async bool) (output *result) {
 				// panicking, so we don't blow up the whole process. The root G for
 				// this Run call will panic when it exits Resolve.
 				_ = recover()
-
 				runtime.Goexit()
 			}
 		}
@@ -566,7 +551,6 @@ func (t *task) underlying() any {
 	if t != nil {
 		return t.query.Underlying()
 	}
-
 	return nil
 }
 

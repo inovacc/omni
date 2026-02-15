@@ -15,12 +15,12 @@
 package bufcli
 
 import (
-	"connectrpc.com/connect"
 	otelconnect "connectrpc.com/otelconnect"
 	"github.com/inovacc/omni/pkg/buf/internal/app/appext"
 	"github.com/inovacc/omni/pkg/buf/internal/buf/bufapp"
 	bufconnect2 "github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufconnect"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/buftransport"
+	"connectrpc.com/connect"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/connectclient"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/netrc"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/transport/http/httpclient"
@@ -34,9 +34,7 @@ func NewConnectClientConfig(container appext.Container) (*connectclient.Config, 
 	if err != nil {
 		return nil, err
 	}
-
 	netrcTokenProvider := bufconnect2.NewNetrcTokenProvider(container, netrc.GetMachineForName)
-
 	return newConnectClientConfigWithOptions(
 		container,
 		connectclient.WithAuthInterceptorProvider(
@@ -52,7 +50,6 @@ func NewConnectClientConfigWithToken(container appext.Container, token string) (
 	if err != nil {
 		return nil, err
 	}
-
 	return newConnectClientConfigWithOptions(
 		container,
 		connectclient.WithAuthInterceptorProvider(
@@ -79,7 +76,6 @@ func newConnectClientConfigWithOptions(container appext.Container, opts ...conne
 			if config.TLS == nil {
 				return buftransport.PrependHTTP(address)
 			}
-
 			return buftransport.PrependHTTPS(address)
 		}),
 		connectclient.WithInterceptors(
@@ -92,7 +88,6 @@ func newConnectClientConfigWithOptions(container appext.Container, opts ...conne
 			},
 		),
 	}
-
 	return connectclient.NewConfig(client, append(options, opts...)...), nil
 }
 
@@ -102,6 +97,5 @@ func newConfig(container appext.Container) (*bufapp.Config, error) {
 	if err := appext.ReadConfig(container, &externalConfig); err != nil {
 		return nil, err
 	}
-
 	return bufapp.NewConfig(container, externalConfig)
 }

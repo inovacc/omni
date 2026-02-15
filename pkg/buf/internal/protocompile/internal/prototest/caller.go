@@ -41,6 +41,5 @@ func CallerDirWithSkip(t *testing.T, skip int) string {
 	if !ok {
 		t.Fatal("protocompile/internal: could not determine test file's directory; the binary may have been stripped")
 	}
-
 	return filepath.Dir(file)
 }

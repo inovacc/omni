@@ -31,10 +31,8 @@ func NewLogger(t testing.TB, options ...LoggerOption) *slog.Logger {
 	for _, option := range options {
 		option(loggerOptions)
 	}
-
 	logger, err := slogapp.NewLogger(os.Stderr, loggerOptions.logLevel, appext.LogFormatText)
 	require.NoError(t, err)
-
 	return logger
 }
 

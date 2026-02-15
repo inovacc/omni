@@ -46,12 +46,10 @@ func ansiToMarkup(text string) string {
 			code = "reset"
 		} else {
 			parts := strings.SplitN(code, ";", 2)
-
 			var name strings.Builder
 			if parts[0] == "1" {
 				name.WriteString("b.")
 			}
-
 			name.WriteString(place[(parts[1][0]-'0')/2])
 			name.WriteString(colors[parts[1][1]-'0'])
 			code = name.String()
@@ -65,7 +63,6 @@ func TestRender(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		t.Skip("Skipped on Windows: golden files have Unix line endings affecting byte offsets")
 	}
-
 	t.Parallel()
 
 	corpus := golden.Corpus{
@@ -81,7 +78,6 @@ func TestRender(t *testing.T) {
 
 	corpus.Run(t, func(t *testing.T, path, text string, outputs []string) {
 		r := new(report.Report)
-
 		err := r.AppendFromProto(func(m proto.Message) error {
 			// Convert YAML -> JSON. We don't use protoyaml here because that depends
 			// on GRPC and that depends on the universe.
@@ -92,7 +88,7 @@ func TestRender(t *testing.T) {
 
 			// Convert files.text into base64 to appease protojson.
 			if files, ok := bag["files"]; ok {
-				for _, file := range files.([]any) {
+				for _, file := range files.([]any) { //nolint:errcheck
 					if file, ok := file.(map[string]any); ok {
 						if text, ok := file["text"].(string); ok {
 							file["text"] = base64.RawStdEncoding.EncodeToString([]byte(text))
@@ -117,7 +113,6 @@ func TestRender(t *testing.T) {
 			ShowRemarks: true,
 			ShowDebug:   true,
 		}.RenderString(r)
-
 		outputs[0] = text
 		if text != "" {
 			text += "\n"

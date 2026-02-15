@@ -26,7 +26,6 @@ func New() (uuid.UUID, error) {
 	if err != nil {
 		return uuid.Nil, err
 	}
-
 	return id, nil
 }
 
@@ -44,7 +43,6 @@ func FromString(s string) (uuid.UUID, error) {
 	if len(s) != 36 {
 		return uuid.Nil, fmt.Errorf("expected uuid to be of length 36 but was %d: %s", len(s), s)
 	}
-
 	return uuid.Parse(s)
 }
 
@@ -74,15 +72,12 @@ func ValidateDashless(dashless string) error {
 // This only accepts uuids with dashes.
 func FromStringSlice(s []string) ([]uuid.UUID, error) {
 	var parsedUUIDS []uuid.UUID
-
 	for _, stringID := range s {
 		parsed, err := FromString(stringID)
 		if err != nil {
 			return nil, err
 		}
-
 		parsedUUIDS = append(parsedUUIDS, parsed)
 	}
-
 	return parsedUUIDS, nil
 }

@@ -121,7 +121,6 @@ func newPluginConfigForExternalV2(
 	externalConfig externalBufYAMLFilePluginV2,
 ) (PluginConfig, error) {
 	options := make(map[string]any)
-
 	for key, value := range externalConfig.Options {
 		if len(key) == 0 {
 			return nil, errors.New("must specify option key")
@@ -130,7 +129,6 @@ func newPluginConfigForExternalV2(
 		if value == nil {
 			return nil, errors.New("must specify option value")
 		}
-
 		options[key] = value
 	}
 	// Plugins are specified as a path, remote reference, or Wasm file.
@@ -138,11 +136,9 @@ func newPluginConfigForExternalV2(
 	if err != nil {
 		return nil, err
 	}
-
 	if len(path) == 0 {
 		return nil, errors.New("must specify a path to the plugin")
 	}
-
 	name, args := path[0], path[1:]
 	// Remote plugins are specified as plugin references.
 	if pluginRef, err := bufparse.ParseRef(path[0]); err == nil {
@@ -165,7 +161,6 @@ func newPluginConfigForExternalV2(
 			args,
 		)
 	}
-
 	return newLocalPluginConfig(
 		name,
 		options,
@@ -181,7 +176,6 @@ func newLocalPluginConfig(
 	if name == "" {
 		return nil, errors.New("must specify a name to the plugin")
 	}
-
 	return &pluginConfig{
 		pluginConfigType: PluginConfigTypeLocal,
 		name:             name,
@@ -198,11 +192,9 @@ func newLocalWasmPluginConfig(
 	if name == "" {
 		return nil, errors.New("must specify a name to the plugin")
 	}
-
 	if filepath.Ext(name) != ".wasm" {
 		return nil, fmt.Errorf("must specify a name to the plugin, and the name must end with .wasm")
 	}
-
 	return &pluginConfig{
 		pluginConfigType: PluginConfigTypeLocalWasm,
 		name:             name,
@@ -254,17 +246,14 @@ func newExternalV2ForPluginConfig(
 	if !ok {
 		return externalBufYAMLFilePluginV2{}, syserror.Newf("unknown implementation of PluginConfig: %T", pluginConfig)
 	}
-
 	externalBufYAMLFilePluginV2 := externalBufYAMLFilePluginV2{
 		Options: pluginConfig.Options(),
 	}
-
 	args := pluginConfig.Args()
 	if len(args) == 0 {
 		externalBufYAMLFilePluginV2.Plugin = pluginConfig.Name()
 	} else {
 		externalBufYAMLFilePluginV2.Plugin = append([]string{pluginConfig.Name()}, args...)
 	}
-
 	return externalBufYAMLFilePluginV2, nil
 }

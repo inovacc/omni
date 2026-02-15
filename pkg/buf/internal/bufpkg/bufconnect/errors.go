@@ -34,7 +34,6 @@ func (e *AuthError) Error() string {
 	if e.cause == nil {
 		return "unknown error"
 	}
-
 	return e.cause.Error()
 }
 
@@ -56,9 +55,7 @@ func (e *AuthError) TokenEnvKey() string {
 // AsAuthError uses errors.As to unwrap any error and look for an *AuthError.
 func AsAuthError(err error) (*AuthError, bool) {
 	var authErr *AuthError
-
 	ok := errors.As(err, &authErr)
-
 	return authErr, ok
 }
 
@@ -75,7 +72,6 @@ func (e *AugmentedConnectError) Error() string {
 	if e.cause == nil {
 		return "unknown error"
 	}
-
 	return e.cause.Error()
 }
 

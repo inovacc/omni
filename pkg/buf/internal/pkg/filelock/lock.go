@@ -64,24 +64,19 @@ func lockForFunc(
 	if err := os.MkdirAll(filepath.Dir(filePath), 0755); err != nil {
 		return nil, err
 	}
-
 	var cancel context.CancelFunc
 	if lockOptions.timeout != 0 {
 		ctx, cancel = context.WithTimeout(ctx, lockOptions.timeout)
 		defer cancel()
 	}
-
 	flock := flock.New(filePath)
-
 	locked, err := tryLockContextFunc(flock, ctx, lockOptions.retryDelay)
 	if err != nil {
 		return nil, fmt.Errorf("could not get file lock %q: %w", filePath, err)
 	}
-
 	if !locked {
 		return nil, fmt.Errorf("could not lock %q", filePath)
 	}
-
 	return flock, nil
 }
 

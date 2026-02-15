@@ -63,25 +63,20 @@ func printRules(writer io.Writer, rules []Rule, options ...PrintRulesOption) (re
 	for _, option := range options {
 		option(printRulesOptions)
 	}
-
 	if len(rules) == 0 {
 		return nil
 	}
-
 	rules = cloneAndSortRulesForPrint(rules)
 	categoriesFunc := Rule.Categories
-
 	if !printRulesOptions.includeDeprecated {
 		rules = xslices.Filter(rules, func(rule Rule) bool { return !rule.Deprecated() })
 		categoriesFunc = func(rule Rule) []check.Category {
 			return xslices.Filter(rule.Categories(), func(category check.Category) bool { return !category.Deprecated() })
 		}
 	}
-
 	if printRulesOptions.asJSON {
 		return printRulesJSON(writer, rules, categoriesFunc)
 	}
-
 	return printRulesText(writer, rules, categoriesFunc)
 }
 
@@ -93,12 +88,10 @@ func printRulesJSON(writer io.Writer, rules []Rule, categoriesFunc func(Rule) []
 		if err != nil {
 			return err
 		}
-
 		if _, err := fmt.Fprintln(writer, string(data)); err != nil {
 			return err
 		}
 	}
-
 	return nil
 }
 
@@ -109,11 +102,8 @@ func printRulesText(writer io.Writer, rules []Rule, categoriesFunc func(Rule) []
 		pluginName string
 		policyName string
 	}
-
 	var policyPluginKeys []policyPluginKey
-
 	policyPluginKeyToRules := make(map[policyPluginKey][]Rule)
-
 	for _, rule := range rules {
 		key := policyPluginKey{
 			pluginName: rule.PluginName(),
@@ -122,50 +112,39 @@ func printRulesText(writer io.Writer, rules []Rule, categoriesFunc func(Rule) []
 		if _, ok := policyPluginKeyToRules[key]; !ok {
 			policyPluginKeys = append(policyPluginKeys, key)
 		}
-
 		policyPluginKeyToRules[key] = append(policyPluginKeyToRules[key], rule)
 	}
-
 	sort.Slice(policyPluginKeys, func(i int, j int) bool {
 		keyOne, keyTwo := policyPluginKeys[i], policyPluginKeys[j]
 		if keyOne.policyName == keyTwo.policyName {
 			return keyOne.pluginName < keyTwo.pluginName
 		}
-
 		return keyOne.policyName < keyTwo.policyName
 	})
-
 	longestRuleID := getLongestRuleID(rules)
 	longestRuleCategories := getLongestRuleCategories(rules, categoriesFunc)
 
 	tabWriter := tabwriter.NewWriter(writer, 0, 0, 2, ' ', 0)
-
 	defer func() {
 		retErr = errors.Join(retErr, tabWriter.Flush())
 	}()
-
 	writer = tabWriter
-
 	for index, key := range policyPluginKeys {
 		rules := policyPluginKeyToRules[key]
-
 		havePrintedSection := index > 0
 		if havePrintedSection {
 			if _, err := fmt.Fprintln(writer); err != nil {
 				return err
 			}
 		}
-
 		if len(rules) == 0 {
 			// This should never happen.
 			return syserror.Newf("no rules for plugin name %q", key.pluginName)
 		}
-
 		if err := printRulesTextSection(writer, rules, categoriesFunc, key.policyName, key.pluginName, havePrintedSection, longestRuleID, longestRuleCategories); err != nil {
 			return err
 		}
 	}
-
 	return nil
 }
 
@@ -181,7 +160,6 @@ func printRulesTextSection(
 ) error {
 	subLongestRuleID := getLongestRuleID(rules)
 	subLongestRuleCategories := getLongestRuleCategories(rules, categoriesFunc)
-
 	if policyName != "" || pluginName != "" {
 		var builder strings.Builder
 		if policyName != "" {
@@ -190,22 +168,18 @@ func printRulesTextSection(
 				_, _ = builder.WriteString(" ")
 			}
 		}
-
 		if pluginName != "" {
 			_, _ = builder.WriteString(pluginName)
 		}
-
 		if _, err := fmt.Fprintf(writer, "%s\n\n", builder.String()); err != nil {
 			return err
 		}
 	}
-
 	if !havePrintedSection {
 		if _, err := fmt.Fprintln(writer, textHeader); err != nil {
 			return err
 		}
 	}
-
 	for _, rule := range rules {
 		var defaultString string
 		if rule.Default() {
@@ -213,14 +187,12 @@ func printRulesTextSection(
 		} else {
 			defaultString = strings.Repeat(" ", len(defaultHeader))
 		}
-
 		id := rule.ID()
 		// If our globally-longest ID is longer than any ID we have in this section, AND this current ID
 		// is the longest, pad it with spaces so that all the sections have their columns aligned.
 		if len(globallyLongestRuleID) > len(subLongestRuleID) && id == subLongestRuleID {
 			id = id + strings.Repeat(" ", len(globallyLongestRuleID)-len(subLongestRuleID))
 		}
-
 		categories := getCategoriesString(categoriesFunc(rule))
 		if len(globallyLongestRuleCategories) > len(subLongestRuleCategories) && categories == subLongestRuleCategories {
 			categories = categories + strings.Repeat(" ", len(globallyLongestRuleCategories)-len(subLongestRuleCategories))
@@ -230,7 +202,6 @@ func printRulesTextSection(
 			return err
 		}
 	}
-
 	return nil
 }
 
@@ -242,7 +213,6 @@ func getLongestRuleID(rules []Rule) string {
 			if len(accumulator) > len(id) {
 				return accumulator
 			}
-
 			return id
 		},
 		"",
@@ -260,7 +230,6 @@ func getLongestRuleCategories(
 			if len(accumulator) > len(categories) {
 				return accumulator
 			}
-
 			return categories
 		},
 		"",
@@ -288,14 +257,12 @@ func cloneAndSortRulesForPrint(rules []Rule) []Rule {
 			two := rules[j]
 			// Sort non-policy rules before policy rules, then by policy name.
 			onePolicyName := one.PolicyName()
-
 			twoPolicyName := two.PolicyName()
 			if onePolicyName != twoPolicyName {
 				return onePolicyName < twoPolicyName
 			}
 			// Sort builtin rules before plugin rules, then plugin rules by plugin name.
 			onePluginName := one.PluginName()
-
 			twoPluginName := two.PluginName()
 			if onePluginName != twoPluginName {
 				return onePluginName < twoPluginName
@@ -304,51 +271,39 @@ func cloneAndSortRulesForPrint(rules []Rule) []Rule {
 			if one.Default() && !two.Default() {
 				return true
 			}
-
 			if !one.Default() && two.Default() {
 				return false
 			}
-
 			oneCategories := one.Categories()
 			sort.Slice(oneCategories, func(i int, j int) bool { return printCategoryIDLess(oneCategories[i].ID(), oneCategories[j].ID()) })
-
 			twoCategories := two.Categories()
 			sort.Slice(twoCategories, func(i int, j int) bool { return printCategoryIDLess(twoCategories[i].ID(), twoCategories[j].ID()) })
-
 			if len(oneCategories) == 0 && len(twoCategories) > 0 {
 				return false
 			}
-
 			if len(oneCategories) > 0 && len(twoCategories) == 0 {
 				return true
 			}
-
 			if len(oneCategories) > 0 && len(twoCategories) > 0 {
 				compare := printCategoryIDCompare(oneCategories[0].ID(), twoCategories[0].ID())
 				if compare < 0 {
 					return true
 				}
-
 				if compare > 0 {
 					return false
 				}
 			}
-
 			oneCategoriesString := getCategoriesString(oneCategories)
-
 			twoCategoriesString := getCategoriesString(twoCategories)
 			if oneCategoriesString < twoCategoriesString {
 				return true
 			}
-
 			if oneCategoriesString > twoCategoriesString {
 				return false
 			}
-
 			return one.ID() < two.ID()
 		},
 	)
-
 	return rules
 }
 
@@ -358,34 +313,27 @@ func printCategoryIDLess(one string, two string) bool {
 
 func printCategoryIDCompare(one string, two string) int {
 	onePriority, oneIsTopLevel := topLevelCategoryIDToPriority[one]
-
 	twoPriority, twoIsTopLevel := topLevelCategoryIDToPriority[two]
 	if oneIsTopLevel && !twoIsTopLevel {
 		return -1
 	}
-
 	if !oneIsTopLevel && twoIsTopLevel {
 		return 1
 	}
-
 	if oneIsTopLevel && twoIsTopLevel {
 		if onePriority < twoPriority {
 			return -1
 		}
-
 		if onePriority > twoPriority {
 			return 1
 		}
 	}
-
 	if one < two {
 		return -1
 	}
-
 	if one > two {
 		return 1
 	}
-
 	return 0
 }
 

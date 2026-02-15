@@ -31,7 +31,6 @@ import (
 
 func TestGetReadBucketCloserForBucketNoTerminateFileName(t *testing.T) {
 	t.Parallel()
-
 	ctx := context.Background()
 	inputBucket, err := storageos.NewProvider().NewReadWriteBucket("testdata/bufyaml/one/two")
 	require.NoError(t, err)
@@ -51,7 +50,6 @@ func TestGetReadBucketCloserForBucketNoTerminateFileName(t *testing.T) {
 
 func TestGetReadBucketCloserTerminateFileName(t *testing.T) {
 	t.Parallel()
-
 	ctx := context.Background()
 	inputBucket, err := storageos.NewProvider().NewReadWriteBucket("testdata/bufyaml/one/two")
 	require.NoError(t, err)
@@ -74,7 +72,6 @@ func TestGetReadBucketCloserTerminateFileName(t *testing.T) {
 
 func TestGetReadBucketCloserForBucketNoSubDirPath(t *testing.T) {
 	t.Parallel()
-
 	ctx := context.Background()
 	inputBucket, err := storageos.NewProvider().NewReadWriteBucket("testdata/bufyaml/one/two/three/four/five")
 	require.NoError(t, err)
@@ -97,7 +94,6 @@ func TestGetReadBucketCloserForBucketNoSubDirPath(t *testing.T) {
 
 func TestGetReadBucketCloserForBucketAbs(t *testing.T) {
 	t.Parallel()
-
 	ctx := context.Background()
 	absDirPath, err := filepath.Abs(".")
 	require.NoError(t, err)
@@ -122,7 +118,6 @@ func TestGetReadBucketCloserForBucketAbs(t *testing.T) {
 
 func TestGetReadWriteBucketForOSNoTerminateFileName(t *testing.T) {
 	t.Parallel()
-
 	ctx := context.Background()
 	readWriteBucket, bucketTargeting, err := getReadWriteBucketForOS(
 		ctx,
@@ -143,7 +138,6 @@ func TestGetReadWriteBucketForOSNoTerminateFileName(t *testing.T) {
 
 func TestGetReadWriteBucketForOSTerminateFileName(t *testing.T) {
 	t.Parallel()
-
 	ctx := context.Background()
 	readWriteBucket, bucketTargeting, err := getReadWriteBucketForOS(
 		ctx,
@@ -167,21 +161,18 @@ func TestGetReadWriteBucketForOSTerminateFileName(t *testing.T) {
 
 func TestGetReadWriteBucketForOSParentPwd(t *testing.T) {
 	// Cannot be parallel since we chdir.
+
 	ctx := context.Background()
 	pwd, err := osext.Getwd()
 	require.NoError(t, err)
 	require.NoError(t, osext.Chdir(normalpath.Unnormalize(normalpath.Join(pwd, "testdata/bufyaml/one/two/three/four"))))
-
 	defer func() {
 		r := recover()
-
 		assert.NoError(t, osext.Chdir(pwd))
-
 		if r != nil {
 			panic(r)
 		}
 	}()
-
 	readWriteBucket, bucketTargeting, err := getReadWriteBucketForOS(
 		ctx,
 		slogtestext.NewLogger(t),
@@ -204,23 +195,20 @@ func TestGetReadWriteBucketForOSParentPwd(t *testing.T) {
 
 func TestGetReadWriteBucketForOSAbsPwd(t *testing.T) {
 	// Cannot be parallel since we chdir.
+
 	ctx := context.Background()
 	absDirPath, err := filepath.Abs(".")
 	require.NoError(t, err)
 	pwd, err := osext.Getwd()
 	require.NoError(t, err)
 	require.NoError(t, osext.Chdir(normalpath.Unnormalize(normalpath.Join(pwd, "testdata/bufyaml/one/two/three/four"))))
-
 	defer func() {
 		r := recover()
-
 		assert.NoError(t, osext.Chdir(pwd))
-
 		if r != nil {
 			panic(r)
 		}
 	}()
-
 	readWriteBucket, bucketTargeting, err := getReadWriteBucketForOS(
 		ctx,
 		slogtestext.NewLogger(t),
@@ -243,7 +231,6 @@ func TestGetReadWriteBucketForOSAbsPwd(t *testing.T) {
 
 func TestGetReadBucketCloserForOSProtoFileNoWorkspaceTerminateFileName(t *testing.T) {
 	t.Parallel()
-
 	ctx := context.Background()
 	readBucketCloser, bucketTargeting, err := getReadBucketCloserForOSProtoFile(
 		ctx,
@@ -257,7 +244,6 @@ func TestGetReadBucketCloserForOSProtoFileNoWorkspaceTerminateFileName(t *testin
 	require.Equal(t, "proto", readBucketCloser.SubDirPath())
 	require.Len(t, bucketTargeting.TargetPaths(), 1)
 	require.Equal(t, "proto/foo.proto", bucketTargeting.TargetPaths()[0])
-
 	fileInfo, err := readBucketCloser.Stat(ctx, "buf.yaml")
 	require.NoError(t, err)
 	require.Equal(t, "testdata/bufyaml/one/two/three/four/five/buf.yaml", filepath.ToSlash(fileInfo.ExternalPath()))
@@ -266,7 +252,6 @@ func TestGetReadBucketCloserForOSProtoFileNoWorkspaceTerminateFileName(t *testin
 
 func TestGetReadBucketCloserForOSProtoFileTerminateFileName(t *testing.T) {
 	t.Parallel()
-
 	ctx := context.Background()
 	readBucketCloser, bucketTargeting, err := getReadBucketCloserForOSProtoFile(
 		ctx,
@@ -280,7 +265,6 @@ func TestGetReadBucketCloserForOSProtoFileTerminateFileName(t *testing.T) {
 	require.Equal(t, "four/five/proto", readBucketCloser.SubDirPath())
 	require.Len(t, bucketTargeting.TargetPaths(), 1)
 	require.Equal(t, "four/five/proto/foo.proto", bucketTargeting.TargetPaths()[0])
-
 	fileInfo, err := readBucketCloser.Stat(ctx, "four/five/buf.yaml")
 	require.NoError(t, err)
 	require.Equal(t, "testdata/bufyaml/one/two/three/four/five/buf.yaml", filepath.ToSlash(fileInfo.ExternalPath()))
@@ -292,21 +276,18 @@ func TestGetReadBucketCloserForOSProtoFileTerminateFileName(t *testing.T) {
 
 func TestGetReadBucketCloserForOSProtoFileParentPwd(t *testing.T) {
 	// Cannot be parallel since we chdir.
+
 	ctx := context.Background()
 	pwd, err := osext.Getwd()
 	require.NoError(t, err)
 	require.NoError(t, osext.Chdir(normalpath.Unnormalize(normalpath.Join(pwd, "testdata/bufyaml/one/two/three/four"))))
-
 	defer func() {
 		r := recover()
-
 		assert.NoError(t, osext.Chdir(pwd))
-
 		if r != nil {
 			panic(r)
 		}
 	}()
-
 	readBucketCloser, bucketTargeting, err := getReadBucketCloserForOSProtoFile(
 		ctx,
 		slogtestext.NewLogger(t),
@@ -319,7 +300,6 @@ func TestGetReadBucketCloserForOSProtoFileParentPwd(t *testing.T) {
 	require.Equal(t, "four/five/proto", readBucketCloser.SubDirPath())
 	require.Len(t, bucketTargeting.TargetPaths(), 1)
 	require.Equal(t, "four/five/proto/foo.proto", bucketTargeting.TargetPaths()[0])
-
 	fileInfo, err := readBucketCloser.Stat(ctx, "four/five/buf.yaml")
 	require.NoError(t, err)
 	require.Equal(t, "five/buf.yaml", filepath.ToSlash(fileInfo.ExternalPath()))
@@ -331,23 +311,20 @@ func TestGetReadBucketCloserForOSProtoFileParentPwd(t *testing.T) {
 
 func TestGetReadBucketCloserForOSProtoFileAbsPwd(t *testing.T) {
 	// Cannot be parallel since we chdir.
+
 	ctx := context.Background()
 	absDirPath, err := filepath.Abs(".")
 	require.NoError(t, err)
 	pwd, err := osext.Getwd()
 	require.NoError(t, err)
 	require.NoError(t, osext.Chdir(normalpath.Unnormalize(normalpath.Join(pwd, "testdata/bufyaml/one/two/three/four"))))
-
 	defer func() {
 		r := recover()
-
 		assert.NoError(t, osext.Chdir(pwd))
-
 		if r != nil {
 			panic(r)
 		}
 	}()
-
 	readBucketCloser, bucketTargeting, err := getReadBucketCloserForOSProtoFile(
 		ctx,
 		slogtestext.NewLogger(t),
@@ -360,7 +337,6 @@ func TestGetReadBucketCloserForOSProtoFileAbsPwd(t *testing.T) {
 	require.Equal(t, "four/five/proto", readBucketCloser.SubDirPath())
 	require.Len(t, bucketTargeting.TargetPaths(), 1)
 	require.Equal(t, "four/five/proto/foo.proto", bucketTargeting.TargetPaths()[0])
-
 	fileInfo, err := readBucketCloser.Stat(ctx, "four/five/buf.yaml")
 	require.NoError(t, err)
 	require.Equal(t, normalpath.Join(absDirPath, "testdata/bufyaml/one/two/three/four/five/buf.yaml"), filepath.ToSlash(fileInfo.ExternalPath()))
@@ -372,7 +348,6 @@ func TestGetReadBucketCloserForOSProtoFileAbsPwd(t *testing.T) {
 
 func TestGetReadBucketCloserForOSProtoFileNoBufYAMLTerminateFileName(t *testing.T) {
 	t.Parallel()
-
 	ctx := context.Background()
 	readBucketCloser, bucketTargeting, err := getReadBucketCloserForOSProtoFile(
 		ctx,
@@ -386,7 +361,6 @@ func TestGetReadBucketCloserForOSProtoFileNoBufYAMLTerminateFileName(t *testing.
 	require.Equal(t, "four/five/proto", readBucketCloser.SubDirPath())
 	require.Len(t, bucketTargeting.TargetPaths(), 1)
 	require.Equal(t, "four/five/proto/foo.proto", bucketTargeting.TargetPaths()[0])
-
 	fileInfo, err := readBucketCloser.Stat(ctx, "four/five/proto/foo.proto")
 	require.NoError(t, err)
 	require.Equal(t, "testdata/nobufyaml/one/two/three/four/five/proto/foo.proto", filepath.ToSlash(fileInfo.ExternalPath()))
@@ -395,21 +369,18 @@ func TestGetReadBucketCloserForOSProtoFileNoBufYAMLTerminateFileName(t *testing.
 
 func TestGetReadBucketCloserForOSProtoFileNoBufYAMLParentPwd(t *testing.T) {
 	// Cannot be parallel since we chdir.
+
 	ctx := context.Background()
 	pwd, err := osext.Getwd()
 	require.NoError(t, err)
 	require.NoError(t, osext.Chdir(normalpath.Unnormalize(normalpath.Join(pwd, "testdata/nobufyaml/one/two/three/four"))))
-
 	defer func() {
 		r := recover()
-
 		assert.NoError(t, osext.Chdir(pwd))
-
 		if r != nil {
 			panic(r)
 		}
 	}()
-
 	readBucketCloser, bucketTargeting, err := getReadBucketCloserForOSProtoFile(
 		ctx,
 		slogtestext.NewLogger(t),
@@ -422,7 +393,6 @@ func TestGetReadBucketCloserForOSProtoFileNoBufYAMLParentPwd(t *testing.T) {
 	require.Equal(t, "four/five/proto", readBucketCloser.SubDirPath())
 	require.Len(t, bucketTargeting.TargetPaths(), 1)
 	require.Equal(t, "four/five/proto/foo.proto", bucketTargeting.TargetPaths()[0])
-
 	fileInfo, err := readBucketCloser.Stat(ctx, "four/five/proto/foo.proto")
 	require.NoError(t, err)
 	require.Equal(t, "five/proto/foo.proto", filepath.ToSlash(fileInfo.ExternalPath()))
@@ -442,17 +412,13 @@ func TestGetReadBucketCloserForOSProtoFileNoBufYAMLAbsPwd(t *testing.T) {
 	pwd, err := osext.Getwd()
 	require.NoError(t, err)
 	require.NoError(t, osext.Chdir(normalpath.Unnormalize(normalpath.Join(pwd, "testdata/nobufyaml/one/two/three/four"))))
-
 	defer func() {
 		r := recover()
-
 		assert.NoError(t, osext.Chdir(pwd))
-
 		if r != nil {
 			panic(r)
 		}
 	}()
-
 	readBucketCloser, bucketTargeting, err := getReadBucketCloserForOSProtoFile(
 		ctx,
 		slogtestext.NewLogger(t),
@@ -465,7 +431,6 @@ func TestGetReadBucketCloserForOSProtoFileNoBufYAMLAbsPwd(t *testing.T) {
 	require.Equal(t, "four/five", readBucketCloser.SubDirPath())
 	require.Len(t, bucketTargeting.TargetPaths(), 1)
 	require.Equal(t, "four/five/proto/foo.proto", bucketTargeting.TargetPaths()[0])
-
 	fileInfo, err := readBucketCloser.Stat(ctx, "four/five/proto/foo.proto")
 	require.NoError(t, err)
 	require.Equal(t, normalpath.Join(absDirPath, "testdata/nobufyaml/one/two/three/four/five/proto/foo.proto"), fileInfo.ExternalPath())
@@ -489,7 +454,6 @@ func testNewTerminateAtFileNamesFunc(terminateFileNames ...string) buftarget2.Te
 					return buftarget2.NewControllingWorkspace(prefix, nil, nil), nil
 				}
 			}
-
 			return nil, nil
 		},
 	)

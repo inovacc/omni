@@ -46,7 +46,6 @@ const (
 // can be passed to [Justify].
 type Edit struct {
 	report.Edit
-
 	Kind Kind
 }
 
@@ -107,7 +106,6 @@ func between(span source.Span, e *report.Edit) {
 		if !ok || !unicode.IsSpace(r) {
 			return 0
 		}
-
 		return utf8.RuneLen(r)
 	}
 	spaceBefore := func(idx int) int {
@@ -115,7 +113,6 @@ func between(span source.Span, e *report.Edit) {
 		if !ok || !unicode.IsSpace(r) {
 			return 0
 		}
-
 		return utf8.RuneLen(r)
 	}
 
@@ -123,7 +120,6 @@ func between(span source.Span, e *report.Edit) {
 	// whitespace. However, this is not always possible, in which case we
 	// must add whitespace to text.
 	prev := spaceBefore(e.Start)
-
 	next := spaceAfter(e.End)
 	switch {
 	case prev > 0 && next > 0:

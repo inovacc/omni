@@ -18,10 +18,10 @@ import (
 	"context"
 	"log/slog"
 
-	"connectrpc.com/connect"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufparse"
 	bufplugin2 "github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufplugin"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufregistryapi/bufregistryapiplugin"
+	"connectrpc.com/connect"
 	pluginv1beta1 "github.com/inovacc/omni/pkg/buf/internal/gen/bufbuild/registry/protocolbuffers/go/buf/registry/plugin/v1beta1"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/syserror"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/uuidutil"
@@ -79,7 +79,6 @@ func (p *pluginKeyProvider) GetPluginKeysForPluginRefs(
 	); err != nil {
 		return nil, err
 	}
-
 	registryToIndexedPluginRefs := xslices.ToIndexedValuesMap(
 		pluginRefs,
 		func(pluginRef bufparse.Ref) string {
@@ -87,7 +86,6 @@ func (p *pluginKeyProvider) GetPluginKeysForPluginRefs(
 		},
 	)
 	indexedPluginKeys := make([]xslices.Indexed[bufplugin2.PluginKey], 0, len(pluginRefs))
-
 	for registry, indexedPluginRefs := range registryToIndexedPluginRefs {
 		indexedRegistryPluginKeys, err := p.getIndexedPluginKeysForRegistryAndIndexedPluginRefs(
 			ctx,
@@ -98,10 +96,8 @@ func (p *pluginKeyProvider) GetPluginKeysForPluginRefs(
 		if err != nil {
 			return nil, err
 		}
-
 		indexedPluginKeys = append(indexedPluginKeys, indexedRegistryPluginKeys...)
 	}
-
 	return xslices.IndexedToSortedValues(indexedPluginKeys), nil
 }
 
@@ -121,7 +117,6 @@ func (p *pluginKeyProvider) getIndexedPluginKeysForRegistryAndIndexedPluginRefs(
 				Ref: ref,
 			}
 		}
-
 		return &pluginv1beta1.ResourceRef{
 			Value: &pluginv1beta1.ResourceRef_Name_{
 				Name: resourceRefName,
@@ -138,24 +133,21 @@ func (p *pluginKeyProvider) getIndexedPluginKeysForRegistryAndIndexedPluginRefs(
 	if err != nil {
 		return nil, err
 	}
-
-	commits := pluginResponse.Msg.GetCommits()
+	commits := pluginResponse.Msg.Commits
 	if len(commits) != len(indexedPluginRefs) {
 		return nil, syserror.New("did not get the expected number of plugin datas")
 	}
 
 	indexedPluginKeys := make([]xslices.Indexed[bufplugin2.PluginKey], len(commits))
 	for i, commit := range commits {
-		commitID, err := uuidutil.FromDashless(commit.GetId())
+		commitID, err := uuidutil.FromDashless(commit.Id)
 		if err != nil {
 			return nil, err
 		}
-
-		digest, err := V1Beta1ProtoToDigest(commit.GetDigest())
+		digest, err := V1Beta1ProtoToDigest(commit.Digest)
 		if err != nil {
 			return nil, err
 		}
-
 		pluginKey, err := bufplugin2.NewPluginKey(
 			// Note we don't have to resolve owner_name and plugin_name since we already have them.
 			indexedPluginRefs[i].Value.FullName(),
@@ -167,12 +159,10 @@ func (p *pluginKeyProvider) getIndexedPluginKeysForRegistryAndIndexedPluginRefs(
 		if err != nil {
 			return nil, err
 		}
-
 		indexedPluginKeys[i] = xslices.Indexed[bufplugin2.PluginKey]{
 			Value: pluginKey,
 			Index: indexedPluginRefs[i].Index,
 		}
 	}
-
 	return indexedPluginKeys, nil
 }

@@ -32,7 +32,6 @@ func (r *refWithBranch) cloneBranch() string {
 	if r == nil {
 		return ""
 	}
-
 	return r.branch
 }
 
@@ -40,7 +39,6 @@ func (r *refWithBranch) checkout() string {
 	if r == nil {
 		return ""
 	}
-
 	return r.ref
 }
 

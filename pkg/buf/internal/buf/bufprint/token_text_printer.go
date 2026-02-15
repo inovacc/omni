@@ -36,7 +36,6 @@ func (p *tokenTextPrinter) PrintTokens(ctx context.Context, tokens ...*registryv
 	if len(tokens) == 0 {
 		return nil
 	}
-
 	return WithTabWriter(
 		p.writer,
 		[]string{
@@ -56,7 +55,6 @@ func (p *tokenTextPrinter) PrintTokens(ctx context.Context, tokens ...*registryv
 					return err
 				}
 			}
-
 			return nil
 		},
 	)

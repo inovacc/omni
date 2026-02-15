@@ -30,7 +30,6 @@ func TestStripLegacyOptions(t *testing.T) {
 
 	t.Run("no-legacy-options", func(t *testing.T) {
 		t.Parallel()
-
 		noLegacy := getFileWithNoLegacyOptions()
 		files := []*descriptorpb.FileDescriptorProto{noLegacy}
 		err := stripLegacyOptions(files)
@@ -42,7 +41,6 @@ func TestStripLegacyOptions(t *testing.T) {
 	})
 	t.Run("legacy_options", func(t *testing.T) {
 		t.Parallel()
-
 		legacy := getFileWithLegacyOptions()
 		files := []*descriptorpb.FileDescriptorProto{legacy}
 		err := stripLegacyOptions(files)
@@ -54,7 +52,6 @@ func TestStripLegacyOptions(t *testing.T) {
 	})
 	t.Run("mixed", func(t *testing.T) {
 		t.Parallel()
-
 		noLegacy := getFileWithNoLegacyOptions()
 		legacy := getFileWithLegacyOptions()
 		files := []*descriptorpb.FileDescriptorProto{noLegacy, legacy}

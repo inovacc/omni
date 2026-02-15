@@ -34,7 +34,6 @@ func newReadWriteBucket(
 	bucketTargeting buftarget.BucketTargeting,
 ) *readWriteBucket {
 	normalizedSubDirPath := normalpath.Normalize(bucketTargeting.SubDirPath())
-
 	return &readWriteBucket{
 		ReadWriteBucket: storageReadWriteBucket,
 		subDirPath:      normalizedSubDirPath,

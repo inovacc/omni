@@ -45,7 +45,6 @@ func (r *runner) Run(ctx context.Context, env pluginrpc.Env) error {
 	if len(r.programArgs) > 0 {
 		args = append(slices.Clone(r.programArgs), env.Args...)
 	}
-
 	if err := xexec.Run(
 		ctx,
 		r.programName,
@@ -59,9 +58,7 @@ func (r *runner) Run(ctx context.Context, env pluginrpc.Env) error {
 		if errors.As(err, &execExitError) {
 			return pluginrpc.NewExitError(execExitError.ExitCode(), execExitError)
 		}
-
 		return err
 	}
-
 	return nil
 }

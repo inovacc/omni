@@ -83,16 +83,13 @@ func (r Renderer) Render(report *Report, out io.Writer) (errorCount, warningCoun
 		writer:   writer{out: out},
 		ss:       newStyleSheet(r),
 	}
-
 	return state.render(report)
 }
 
 // RenderString is a helper for calling [Renderer.Render] with a [strings.Builder].
 func (r Renderer) RenderString(report *Report) (text string, errorCount, warningCount int) {
 	var buf strings.Builder
-
 	e, w, _ := r.Render(report, &buf)
-
 	return buf.String(), e, w
 }
 
@@ -103,7 +100,6 @@ func (r *renderer) render(report *Report) (errorCount, warningCount int, err err
 		}
 
 		r.diagnostic(report, diagnostic)
-
 		if err := r.Flush(); err != nil {
 			return errorCount, warningCount, err
 		}
@@ -119,7 +115,6 @@ func (r *renderer) render(report *Report) (errorCount, warningCount int, err err
 			}
 		}
 	}
-
 	if r.Compact {
 		return errorCount, warningCount, err
 	}
@@ -142,7 +137,6 @@ func (r *renderer) render(report *Report) (errorCount, warningCount int, err err
 			warningCount, plural(warningCount), r.ss.reset,
 		)
 	}
-
 	return errorCount, warningCount, r.Flush()
 }
 
@@ -182,7 +176,6 @@ func (r *renderer) diagnostic(report *Report, d Diagnostic) {
 	// For the simple style, we imitate the Go compiler.
 	if r.Compact {
 		r.WriteString(r.ss.ColorForLevel(d.level))
-
 		primary := d.Primary()
 		switch {
 		case primary.File != nil:
@@ -199,10 +192,8 @@ func (r *renderer) diagnostic(report *Report, d Diagnostic) {
 		default:
 			fmt.Fprintf(r, "%s: %s", level, d.message)
 		}
-
 		r.WriteString(r.ss.reset)
 		r.WriteString("\n")
-
 		return
 	}
 
@@ -231,7 +222,6 @@ func (r *renderer) diagnostic(report *Report, d Diagnostic) {
 	for _, loc := range locations {
 		greatestLine = max(greatestLine, loc[1].Line)
 	}
-
 	r.margin = max(2, len(strconv.Itoa(greatestLine))) // Easier than messing with math.Log10()
 
 	// Render all the diagnostic windows.
@@ -267,12 +257,10 @@ func (r *renderer) diagnostic(report *Report, d Diagnostic) {
 
 			primary := snippets[0]
 			start := locations[i][0]
-
 			sep := ":::"
 			if i == 0 {
 				sep = "-->"
 			}
-
 			fmt.Fprintf(r, "%s %s:%d:%d\n", sep, primary.Path(), start.Line, start.Column)
 		} else if len(snippets[0].edits) > 0 {
 			r.WriteString("\n")
@@ -312,7 +300,6 @@ func (r *renderer) diagnostic(report *Report, d Diagnostic) {
 	type footer struct {
 		color, label, text string
 	}
-
 	footers := iterx.Chain(
 		slicesx.Map(d.notes, func(s string) footer { return footer{r.ss.bRemark, "note", s} }),
 		slicesx.Map(d.help, func(s string) footer { return footer{r.ss.bRemark, "help", s} }),
@@ -343,7 +330,6 @@ func (r *renderer) diagnostic(report *Report, d Diagnostic) {
 		r.buf = r.buf[:0]
 		r.WriteString(r.ss.reset)
 		r.WriteString("\n")
-
 		return
 	}
 
@@ -383,14 +369,12 @@ func buildWindow(level Level, locations [][2]source.Location, snippets []snippet
 	// calculate the join of all of the spans in the window, and find the
 	// nearest \n runes in the text.
 	w.start = locations[0][0].Line
-
 	w.offsets[0] = snippets[0].Start
 	for i := range snippets {
 		w.start = min(w.start, locations[i][0].Line)
 		w.offsets[0] = min(w.offsets[0], locations[i][0].Offset)
 		w.offsets[1] = max(w.offsets[1], locations[i][1].Offset)
 	}
-
 	w.offsets[0], w.offsets[1] = adjustLineOffsets(w.file.Text(), w.offsets[0], w.offsets[1])
 
 	// Now, convert each span into an underline or multiline.
@@ -426,7 +410,6 @@ func buildWindow(level Level, locations [][2]source.Location, snippets []snippet
 			if snippet.primary {
 				ml.level = level
 			}
-
 			continue
 		}
 
@@ -443,7 +426,6 @@ func buildWindow(level Level, locations [][2]source.Location, snippets []snippet
 		if snippet.primary {
 			ul.level = level
 		}
-
 		if ul.start == ul.end {
 			ul.end++
 		}
@@ -458,7 +440,6 @@ func buildWindow(level Level, locations [][2]source.Location, snippets []snippet
 			} else {
 				lineEnd += snippet.Start
 			}
-
 			uw := unicodex.Width{Column: ul.start, EscapeNonPrint: true}
 			uw.WriteString(w.file.Text()[snippet.Start:lineEnd])
 			ul.end = uw.Column
@@ -479,7 +460,6 @@ func buildWindow(level Level, locations [][2]source.Location, snippets []snippet
 		cmpx.Key(func(m multiline) int { return m.start }),
 		cmpx.Key(func(m multiline) int { return -m.end }), // Descending order.
 	))
-
 	return w
 }
 
@@ -527,7 +507,6 @@ func (r *renderer) window(w *window) (needsTrailingBreak bool) {
 		// Note that we artificially limit the number of rendered multis to
 		// 8 in the code that builds the window itself.
 		var multilineBitset uint
-
 		for i := multi.start; i <= multi.end; i++ {
 			for col, ml := range info[i-w.start].sidebar {
 				if ml != nil {
@@ -535,7 +514,6 @@ func (r *renderer) window(w *window) (needsTrailingBreak bool) {
 				}
 			}
 		}
-
 		idx := bits.TrailingZeros(^multilineBitset)
 
 		// Apply the index to every element of sidebar.
@@ -544,7 +522,6 @@ func (r *renderer) window(w *window) (needsTrailingBreak bool) {
 			for len(*line) < idx+1 {
 				*line = append(*line, nil)
 			}
-
 			(*line)[idx] = multi
 		}
 
@@ -552,7 +529,6 @@ func (r *renderer) window(w *window) (needsTrailingBreak bool) {
 		info[multi.start-w.start].shouldEmit = true
 		info[multi.end-w.start].shouldEmit = true
 	}
-
 	var sidebarLen int
 	for _, info := range info {
 		sidebarLen = max(sidebarLen, len(info.sidebar))
@@ -580,19 +556,16 @@ func (r *renderer) window(w *window) (needsTrailingBreak bool) {
 
 		slices.SortStableFunc(part, cmpx.Key(func(ul underline) int { return -ul.Len() }))
 		nesting.Clear()
-
 		for _, ul := range slicesx.Pointers(part) {
 			nesting.Insert(ul.start, ul.end-1, ul)
 		}
 
 		var sublines [][]*underline
-
 		for set := range nesting.Sets() {
 			var subline []*underline
 			for entry := range set {
 				subline = append(subline, entry.Value)
 			}
-
 			slices.SortStableFunc(subline, cmpx.Key(func(ul *underline) int { return ul.start }))
 			sublines = append(sublines, subline)
 		}
@@ -611,7 +584,6 @@ func (r *renderer) window(w *window) (needsTrailingBreak bool) {
 					rightmost = ul
 				}
 			}
-
 			return rightmost
 		})
 
@@ -631,7 +603,6 @@ func (r *renderer) window(w *window) (needsTrailingBreak bool) {
 
 			uw := unicodex.Width{Column: startCol}
 			uw.WriteString(ul.message)
-
 			if uw.Column > unicodex.MaxMessageWidth {
 				// Move rightmost into the normal underlines, because it causes wrapping.
 				rightmost[i] = nil
@@ -643,16 +614,13 @@ func (r *renderer) window(w *window) (needsTrailingBreak bool) {
 		sublineBufs := make([][]byte, len(sublines))
 		for i, sub := range sublines {
 			buf := bytes.Repeat([]byte(" "), sublineLens[i])
-
 			for _, ul := range sub {
 				b := byte('^')
 				if ul.level == noteLevel {
 					b = '-'
 				}
-
 				slicesx.Fill(buf[ul.start-1:ul.end-1], b)
 			}
-
 			sublineBufs[i] = buf
 		}
 
@@ -668,12 +636,10 @@ func (r *renderer) window(w *window) (needsTrailingBreak bool) {
 		// This is slightly complicated, because there are two layers: the
 		// pipes, and whatever message goes on the pipes.
 		var rest []*underline
-
 		for _, ul := range slicesx.Pointers(part) {
 			if slices.Contains(rightmost, ul) || ul.message == "" {
 				continue
 			}
-
 			rest = append(rest, ul)
 		}
 
@@ -681,7 +647,6 @@ func (r *renderer) window(w *window) (needsTrailingBreak bool) {
 			return len(ul.message)
 		}))
 		nesting.Clear()
-
 		for _, ul := range rest {
 			start := ul.start - 1
 			if ul.Len() > 3 {
@@ -692,19 +657,16 @@ func (r *renderer) window(w *window) (needsTrailingBreak bool) {
 		}
 
 		var messages [][]*underline
-
 		for set := range nesting.Sets() {
 			var s []*underline
 			for entry := range set {
 				s = append(s, entry.Value)
 			}
-
 			slices.SortStableFunc(s, cmpx.Key(func(ul *underline) int {
 				return ul.start
 			}))
 			messages = append(messages, s)
 		}
-
 		slices.SortStableFunc(messages, cmpx.Key(func(uls []*underline) int {
 			return uls[0].start
 		}))
@@ -717,7 +679,6 @@ func (r *renderer) window(w *window) (needsTrailingBreak bool) {
 
 			// First, lay out the pipes for this and all following lines.
 			var nonColorLen int
-
 			for _, line := range messages[i:] {
 				for _, ul := range line {
 					col := ul.start - 1
@@ -814,12 +775,10 @@ func (r *renderer) window(w *window) (needsTrailingBreak bool) {
 			// Count the number of pipes that come before the end of the
 			// underlines.
 			pipes := 0
-
 			for i, b := range buf {
 				if ul != nil && ul.end <= i {
 					break
 				}
-
 				if b&0x80 != 0 {
 					pipes++
 				}
@@ -848,19 +807,16 @@ func (r *renderer) window(w *window) (needsTrailingBreak bool) {
 				if pipes > 0 {
 					offset += len(color)
 				}
-
 				pipes--
 			}
 
 			// Append the message for this subline, if any.
 			if ul != nil && ul.message != "" {
 				color := r.ss.BoldForLevel(ul.level)
-
 				end := ul.end + offset + len(color) + len(ul.message)
 				for len(buf) < end {
 					buf = append(buf, ' ')
 				}
-
 				copy(buf[ul.end+offset:], color)
 				copy(buf[ul.end+offset+len(color):], ul.message)
 			}
@@ -880,20 +836,16 @@ func (r *renderer) window(w *window) (needsTrailingBreak bool) {
 	// | code code code
 	// \______________^ message
 	var line strings.Builder
-
 	for lineIdx := range info {
 		cur := &info[lineIdx]
 		prevStart := -1
-
 		for mlIdx, ml := range cur.sidebar {
 			if ml == nil {
 				continue
 			}
 
 			line.Reset()
-
 			var isStart bool
-
 			switch w.start + lineIdx {
 			case ml.start:
 				if ml.startWidth == 0 {
@@ -901,7 +853,6 @@ func (r *renderer) window(w *window) (needsTrailingBreak bool) {
 				}
 
 				isStart = true
-
 				fallthrough
 			case ml.end:
 				// We need to be flush with the sidebar here, so we trim the trailing space.
@@ -917,7 +868,6 @@ func (r *renderer) window(w *window) (needsTrailingBreak bool) {
 							// pipe. We need to account for one escape per multiline, and also need to skip
 							// past the color escape on the pipe we want to erase.
 							codeLen := len(r.ss.bAccent)
-
 							idx := mlIdx*(2+codeLen) + codeLen
 							if idx < len(sidebar) {
 								sidebar[idx] = ' '
@@ -929,7 +879,6 @@ func (r *renderer) window(w *window) (needsTrailingBreak bool) {
 				// Delete the last pipe and replace it with a slash or space, depending.
 				// on orientation.
 				line.Write(sidebar[:len(sidebar)-1])
-
 				if isStart {
 					line.WriteByte(' ')
 				} else {
@@ -963,7 +912,6 @@ func (r *renderer) window(w *window) (needsTrailingBreak bool) {
 					line.WriteByte(' ')
 					line.WriteString(ml.message)
 				}
-
 				cur.underlines = append(cur.underlines, line.String())
 			}
 
@@ -982,13 +930,11 @@ func (r *renderer) window(w *window) (needsTrailingBreak bool) {
 	// otherwise, doing it in-place will cause every nonempty line after a must-emit line
 	// to be shown, which we don't want.
 	mustEmit := make(map[int]bool)
-
 	for i := range info {
 		if info[i].shouldEmit {
 			mustEmit[i] = true
 		}
 	}
-
 	for i := range info {
 		printable := func(r rune) bool { return !unicode.IsSpace(r) }
 
@@ -1004,28 +950,23 @@ func (r *renderer) window(w *window) (needsTrailingBreak bool) {
 			if a == "" || b == "" {
 				return true
 			}
-
 			d1 := strings.IndexFunc(a, printable)
 			if d1 == -1 {
 				d1 = len(a)
 			}
-
 			d2 := strings.IndexFunc(b, printable)
 			if d2 == -1 {
 				d2 = len(b)
 			}
-
 			return a[:d1] == b[:d2]
 		}
 
 		if mustEmit[i-1] && sameIndent(lines[i-1], lines[i]) {
 			score++
 		}
-
 		if mustEmit[i+1] && sameIndent(lines[i+1], lines[i]) {
 			score++
 		}
-
 		if score >= 2 {
 			info[i].shouldEmit = true
 		}
@@ -1035,7 +976,6 @@ func (r *renderer) window(w *window) (needsTrailingBreak bool) {
 	for i := range info {
 		mustEmit[i] = info[i].shouldEmit
 	}
-
 	for i := range info {
 		if mustEmit[i-1] && mustEmit[i+1] {
 			info[i].shouldEmit = true
@@ -1043,7 +983,6 @@ func (r *renderer) window(w *window) (needsTrailingBreak bool) {
 	}
 
 	lastEmit := w.start
-
 	for i, line := range lines {
 		cur := &info[i]
 		lineno := i + w.start
@@ -1055,7 +994,6 @@ func (r *renderer) window(w *window) (needsTrailingBreak bool) {
 		// If the last multi of the previous line starts on that line, make its
 		// pipe here a slash so that it connects properly.
 		slashAt := -1
-
 		if i > 0 {
 			prevSidebar := info[i-1].sidebar
 			if len(prevSidebar) > 0 &&
@@ -1064,7 +1002,6 @@ func (r *renderer) window(w *window) (needsTrailingBreak bool) {
 				slashAt = len(prevSidebar) - 1
 			}
 		}
-
 		sidebar := r.sidebar(sidebarLen, lineno, slashAt, cur.sidebar)
 
 		if i > 0 && !info[i-1].shouldEmit {
@@ -1077,7 +1014,6 @@ func (r *renderer) window(w *window) (needsTrailingBreak bool) {
 			// Generate a sidebar as before but this time we want to look at the
 			// last line that was actually emitted.
 			slashAt := -1
-
 			prevSidebar := info[lastEmit-w.start].sidebar
 			if len(prevSidebar) > 0 &&
 				prevSidebar[len(prevSidebar)-1].start == lastEmit &&
@@ -1098,7 +1034,6 @@ func (r *renderer) window(w *window) (needsTrailingBreak bool) {
 		// showing in a terminal.
 		uw := &unicodex.Width{EscapeNonPrint: true, Out: &r.writer}
 		uw.WriteString(line)
-
 		needsTrailingBreak = true
 
 		// If this happens to be an annotated line, this is when it gets annotated.
@@ -1139,7 +1074,6 @@ type multiline struct {
 
 func (r *renderer) sidebar(bars, lineno, slashAt int, multis []*multiline) string {
 	var sidebar strings.Builder
-
 	for i, ml := range multis {
 		if ml == nil {
 			sidebar.WriteString("  ")
@@ -1158,14 +1092,11 @@ func (r *renderer) sidebar(bars, lineno, slashAt int, multis []*multiline) strin
 		default:
 			sidebar.WriteByte(' ')
 		}
-
 		sidebar.WriteByte(' ')
 	}
-
 	for sidebar.Len() < bars*2 {
 		sidebar.WriteByte(' ')
 	}
-
 	return sidebar.String()
 }
 
@@ -1198,7 +1129,6 @@ func (r *renderer) suggestion(snip snippet) {
 
 		aLine := startLine
 		bLine := startLine
-
 		for i, hunk := range hunks {
 			if hunk.content == "" {
 				continue
@@ -1213,7 +1143,7 @@ func (r *renderer) suggestion(snip snippet) {
 				continue
 			}
 
-			for line := range strings.SplitSeq(hunk.content, "\n") {
+			for _, line := range strings.Split(hunk.content, "\n") {
 				lineno := aLine
 				if hunk.kind == '+' {
 					lineno = bLine
@@ -1244,14 +1174,12 @@ func (r *renderer) suggestion(snip snippet) {
 		r.WriteString(r.ss.nAccent)
 		r.WriteSpaces(r.margin)
 		r.WriteString(" | ")
-
 		return
 	}
 
 	span, hunks := hunkDiff(snip.Span, snip.edits)
 	fmt.Fprintf(r, "\n%s%*d | ", r.ss.nAccent, r.margin, span.StartLoc().Line)
 	uw := &unicodex.Width{EscapeNonPrint: true, Out: &r.writer}
-
 	for _, hunk := range hunks {
 		if hunk.content == "" {
 			continue
@@ -1269,10 +1197,8 @@ func (r *renderer) suggestion(snip snippet) {
 	r.WriteString(r.ss.nAccent)
 	r.WriteSpaces(r.margin)
 	r.WriteString(" | ")
-
 	uw.Column = 0
 	uw.Out = nil
-
 	for _, hunk := range hunks {
 		if hunk.content == "" {
 			continue
@@ -1281,7 +1207,6 @@ func (r *renderer) suggestion(snip snippet) {
 		prev := uw.Column
 		uw.WriteString(hunk.content)
 		r.WriteString(hunk.bold(&r.ss))
-
 		for range uw.Column - prev {
 			r.WriteString(string(hunk.kind))
 		}
@@ -1298,7 +1223,6 @@ func adjustLineOffsets(text string, start, end int) (int, int) {
 	} else {
 		end = len(text)
 	}
-
 	return start, end
 }
 

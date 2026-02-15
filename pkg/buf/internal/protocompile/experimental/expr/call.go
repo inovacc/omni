@@ -46,7 +46,6 @@ func (e Call) AsAny() Expr {
 	if e.IsZero() {
 		return Expr{}
 	}
-
 	return id.WrapDyn(e.Context(), id.NewDyn(KindCall, id.ID[Expr](e.ID())))
 }
 
@@ -55,7 +54,6 @@ func (e Call) Callee() Expr {
 	if e.IsZero() {
 		return Expr{}
 	}
-
 	return id.WrapDyn(e.Context(), e.Raw().callee)
 }
 
@@ -64,7 +62,6 @@ func (e Call) Args() Params {
 	if e.IsZero() {
 		return Params{}
 	}
-
 	return id.Wrap(e.Context(), e.Raw().args)
 }
 

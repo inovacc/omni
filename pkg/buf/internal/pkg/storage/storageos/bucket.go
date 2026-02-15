@@ -43,7 +43,6 @@ func newBucket(rootPath string, symlinks bool) (*bucket, error) {
 	if err := validateDirPathExists(rootPath, symlinks); err != nil {
 		return nil, err
 	}
-
 	absoluteRootPath, err := filepath.Abs(rootPath)
 	if err != nil {
 		return nil, err
@@ -51,7 +50,6 @@ func newBucket(rootPath string, symlinks bool) (*bucket, error) {
 	// do not validate - allow anything with OS buckets including
 	// absolute paths and jumping context
 	rootPath = normalpath2.Normalize(rootPath)
-
 	return &bucket{
 		rootPath:         rootPath,
 		absoluteRootPath: absoluteRootPath,
@@ -64,11 +62,9 @@ func (b *bucket) Get(ctx context.Context, path string) (storage2.ReadObjectClose
 	if err != nil {
 		return nil, err
 	}
-
 	if err := b.validateExternalPath(path, externalPath); err != nil {
 		return nil, err
 	}
-
 	resolvedPath := externalPath
 	if b.symlinks {
 		resolvedPath, err = filepath.EvalSymlinks(externalPath)
@@ -76,7 +72,6 @@ func (b *bucket) Get(ctx context.Context, path string) (storage2.ReadObjectClose
 			return nil, err
 		}
 	}
-
 	file, err := os.Open(resolvedPath)
 	if err != nil {
 		return nil, err
@@ -94,7 +89,6 @@ func (b *bucket) Stat(ctx context.Context, path string) (storage2.ObjectInfo, er
 	if err != nil {
 		return nil, err
 	}
-
 	if err := b.validateExternalPath(path, externalPath); err != nil {
 		return nil, err
 	}
@@ -116,14 +110,11 @@ func (b *bucket) Walk(
 	if err != nil {
 		return err
 	}
-
 	walkChecker := storageutil.NewWalkChecker()
-
 	var walkOptions []xfilepath.WalkOption
 	if b.symlinks {
 		walkOptions = append(walkOptions, xfilepath.WalkWithSymlinks())
 	}
-
 	if err := xfilepath.Walk(
 		externalPrefix,
 		func(externalPath string, fileInfo os.FileInfo, err error) error {
@@ -171,10 +162,8 @@ func (b *bucket) Walk(
 			// Should be a no-op according to the spec.
 			return nil
 		}
-
 		return err
 	}
-
 	return nil
 }
 
@@ -183,16 +172,13 @@ func (b *bucket) Put(ctx context.Context, path string, options ...storage2.PutOp
 	if err != nil {
 		return nil, err
 	}
-
 	externalDir := filepath.Dir(externalPath)
-
 	var fileInfo os.FileInfo
 	if b.symlinks {
 		fileInfo, err = os.Stat(externalDir)
 	} else {
 		fileInfo, err = os.Lstat(externalDir)
 	}
-
 	if err != nil {
 		if os.IsNotExist(err) {
 			if err := os.MkdirAll(externalDir, 0755); err != nil {
@@ -204,23 +190,17 @@ func (b *bucket) Put(ctx context.Context, path string, options ...storage2.PutOp
 	} else if !fileInfo.IsDir() {
 		return nil, newErrNotDir(externalDir)
 	}
-
-	var (
-		file      *os.File
-		finalPath string
-	)
-
+	var file *os.File
+	var finalPath string
 	if storage2.NewPutOptions(options).Atomic() {
 		file, err = os.CreateTemp(externalDir, ".tmp"+filepath.Base(externalPath)+"*")
 		finalPath = externalPath
 	} else {
 		file, err = os.Create(externalPath)
 	}
-
 	if err != nil {
 		return nil, err
 	}
-
 	return newWriteObjectCloser(
 		file,
 		finalPath,
@@ -239,10 +219,8 @@ func (b *bucket) Delete(ctx context.Context, path string) error {
 		if os.IsNotExist(err) {
 			return &fs.PathError{Op: "stat", Path: path, Err: fs.ErrNotExist}
 		}
-
 		return err
 	}
-
 	return nil
 }
 
@@ -251,16 +229,13 @@ func (b *bucket) DeleteAll(ctx context.Context, prefix string) error {
 	if err != nil {
 		return err
 	}
-
 	if err := os.RemoveAll(externalPrefix); err != nil {
 		// this is a no-nop per the documentation
 		if os.IsNotExist(err) {
 			return nil
 		}
-
 		return err
 	}
-
 	return nil
 }
 
@@ -273,12 +248,10 @@ func (b *bucket) getExternalPath(path string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-
 	realClean, err := xfilepath.RealClean(normalpath2.Join(b.rootPath, path))
 	if err != nil {
 		return "", err
 	}
-
 	return normalpath2.Unnormalize(realClean), nil
 }
 
@@ -286,17 +259,13 @@ func (b *bucket) validateExternalPath(path string, externalPath string) error {
 	// this is potentially introducing two calls to a file
 	// instead of one, ie we do both Stat and Open as opposed to just Open
 	// we do this to make sure we are only reading regular files
-	var (
-		fileInfo os.FileInfo
-		err      error
-	)
-
+	var fileInfo os.FileInfo
+	var err error
 	if b.symlinks {
 		fileInfo, err = os.Stat(externalPath)
 	} else {
 		fileInfo, err = os.Lstat(externalPath)
 	}
-
 	if err != nil {
 		if os.IsNotExist(err) {
 			return &fs.PathError{Op: "stat", Path: path, Err: fs.ErrNotExist}
@@ -315,14 +284,12 @@ func (b *bucket) validateExternalPath(path string, externalPath string) error {
 		// multi buckets don't unnecessarily fail when one of
 		// its delegates actually defines the path.
 		lastParentPath := externalPath
-
 		parentPath := filepath.Dir(externalPath)
 		for ; parentPath != lastParentPath; lastParentPath, parentPath = parentPath, filepath.Dir(parentPath) {
 			parentFileInfo, err := os.Stat(parentPath)
 			if err != nil {
 				continue
 			}
-
 			if parentFileInfo.Mode().IsRegular() {
 				// This error primarily serves as a sentinel error,
 				// but we preserve the original path argument so that
@@ -330,16 +297,13 @@ func (b *bucket) validateExternalPath(path string, externalPath string) error {
 				return &fs.PathError{Op: "stat", Path: path, Err: fs.ErrNotExist}
 			}
 		}
-
 		return err
 	}
-
 	if !fileInfo.Mode().IsRegular() {
 		// making this a user error as any access means this was generally requested
 		// by the user, since we only call the function for Walk on regular files
 		return &fs.PathError{Op: "stat", Path: path, Err: fs.ErrNotExist}
 	}
-
 	return nil
 }
 
@@ -348,12 +312,10 @@ func (b *bucket) getExternalPrefix(prefix string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-
 	realClean, err := xfilepath.RealClean(normalpath2.Join(b.rootPath, prefix))
 	if err != nil {
 		return "", err
 	}
-
 	return normalpath2.Unnormalize(realClean), nil
 }
 
@@ -416,7 +378,6 @@ func (w *writeObjectCloser) Write(p []byte) (int, error) {
 	if err != nil {
 		w.writeErr.Store(err)
 	}
-
 	return n, toStorageError(err)
 }
 
@@ -437,12 +398,10 @@ func (w *writeObjectCloser) Close() error {
 		if atomicWriteErr != nil {
 			return toStorageError(errors.Join(atomicWriteErr, os.Remove(w.file.Name())))
 		}
-
 		if err := os.Rename(w.file.Name(), w.path); err != nil {
 			return toStorageError(errors.Join(err, os.Remove(w.file.Name())))
 		}
 	}
-
 	return err
 }
 
@@ -462,12 +421,10 @@ func (e *onceError) Load() error {
 	if atomicValue == nil {
 		return nil
 	}
-
 	err, ok := atomicValue.(error)
 	if !ok {
 		return syserror.Newf("expected error but got %T", atomicValue)
 	}
-
 	return err
 }
 
@@ -480,31 +437,24 @@ func toStorageError(err error) error {
 	if errors.Is(err, os.ErrClosed) {
 		return storage2.ErrClosed
 	}
-
 	return err
 }
 
 // validateDirPathExists returns a non-nil error if the given dirPath
 // is not a valid directory path.
 func validateDirPathExists(dirPath string, symlinks bool) error {
-	var (
-		fileInfo os.FileInfo
-		err      error
-	)
-
+	var fileInfo os.FileInfo
+	var err error
 	if symlinks {
 		fileInfo, err = os.Stat(dirPath)
 	} else {
 		fileInfo, err = os.Lstat(dirPath)
 	}
-
 	if err != nil {
 		return err
 	}
-
 	if !fileInfo.IsDir() {
 		return newErrNotDir(dirPath)
 	}
-
 	return nil
 }

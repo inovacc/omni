@@ -82,7 +82,6 @@ func getModuleDeps(
 	module Module,
 ) ([]ModuleDep, error) {
 	depOpaqueIDToModuleDep := make(map[string]ModuleDep)
-
 	protoFileTracker := newProtoFileTracker()
 	if err := getModuleDepsRec(
 		ctx,
@@ -96,11 +95,9 @@ func getModuleDeps(
 	); err != nil {
 		return nil, err
 	}
-
 	if err := protoFileTracker.validate(); err != nil {
 		return nil, err
 	}
-
 	moduleDeps := make([]ModuleDep, 0, len(depOpaqueIDToModuleDep))
 	for _, moduleDep := range depOpaqueIDToModuleDep {
 		moduleDeps = append(moduleDeps, moduleDep)
@@ -112,7 +109,6 @@ func getModuleDeps(
 			return moduleDeps[i].OpaqueID() < moduleDeps[j].OpaqueID()
 		},
 	)
-
 	return moduleDeps, nil
 }
 
@@ -140,13 +136,10 @@ func getModuleDepsRec(
 			),
 		}
 	}
-
 	if _, ok := visitedOpaqueIDToDescription[opaqueID]; ok {
 		return nil
 	}
-
 	visitedOpaqueIDToDescription[opaqueID] = module.Description()
-
 	moduleSet := module.ModuleSet()
 	if moduleSet == nil {
 		// This should never happen.
@@ -158,7 +151,6 @@ func getModuleDepsRec(
 	// see a dep later, it will still be a direct dep in the map, but will be ignored
 	// on recursive calls.
 	var newModuleDeps []ModuleDep
-
 	if err := module.WalkFileInfos(
 		ctx,
 		func(fileInfo FileInfo) error {
@@ -232,7 +224,6 @@ func getModuleDepsRec(
 	); err != nil {
 		return err
 	}
-
 	parentOpaqueIDs[opaqueID] = struct{}{}
 	newOrderedParentOpaqueIDs := append(orderedParentOpaqueIDs, opaqueID)
 	// Triple-check to make sure newModuleDeps order is deterministic. This is just defensive.
@@ -242,7 +233,6 @@ func getModuleDepsRec(
 			return newModuleDeps[i].OpaqueID() < newModuleDeps[j].OpaqueID()
 		},
 	)
-
 	for _, newModuleDep := range newModuleDeps {
 		if err := getModuleDepsRec(
 			ctx,
@@ -259,8 +249,6 @@ func getModuleDepsRec(
 			return err
 		}
 	}
-
 	delete(parentOpaqueIDs, opaqueID)
-
 	return nil
 }

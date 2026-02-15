@@ -47,14 +47,11 @@ func (k *keyRWLock) Unlock(key string) {
 
 func (k *keyRWLock) getRWLock(key string) *sync.RWMutex {
 	k.lock.Lock()
-
 	rwLock, ok := k.keyToRWLock[key]
 	if !ok {
 		rwLock = &sync.RWMutex{}
 		k.keyToRWLock[key] = rwLock
 	}
-
 	k.lock.Unlock()
-
 	return rwLock
 }

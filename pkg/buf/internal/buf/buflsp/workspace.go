@@ -63,9 +63,7 @@ func (w *workspaceManager) LeaseWorkspace(ctx context.Context, uri protocol.URI)
 	if err != nil {
 		return nil, err
 	}
-
 	workspace.Lease()
-
 	return workspace, nil
 }
 
@@ -73,28 +71,21 @@ func (w *workspaceManager) LeaseWorkspace(ctx context.Context, uri protocol.URI)
 func (w *workspaceManager) Cleanup(ctx context.Context) {
 	// Delete in-place.
 	index := 0
-
 	for _, workspace := range w.workspaces {
 		if workspace.refCount > 0 {
 			w.workspaces[index] = workspace
 			index++
-
 			continue // workspace leased
 		}
-
 		w.lsp.logger.Debug("workspace: cleanup removing workspace", slog.String("parent", workspace.workspaceURI.Filename()))
-
 		for _, file := range workspace.pathToFile {
 			file.Close(ctx)
 		}
-
 		workspace.pathToFile = nil
 	}
-
 	for j := index; j < len(w.workspaces); j++ {
 		w.workspaces[j] = nil
 	}
-
 	w.workspaces = w.workspaces[:index]
 }
 
@@ -110,9 +101,7 @@ func (w *workspaceManager) getOrCreateWorkspace(ctx context.Context, uri protoco
 			if err := workspace.Refresh(ctx); err != nil {
 				return nil, err
 			}
-
 			w.lsp.logger.Debug("workspace: reusing workspace", slog.String("file", uri.Filename()), slog.String("parent", workspace.workspaceURI.Filename()))
-
 			return workspace, nil
 		}
 	}
@@ -131,9 +120,7 @@ func (w *workspaceManager) getOrCreateWorkspace(ctx context.Context, uri protoco
 	if err := workspace.Refresh(ctx); err != nil {
 		return nil, err
 	}
-
 	w.workspaces = append(w.workspaces, workspace)
-
 	return workspace, nil
 }
 
@@ -161,7 +148,6 @@ func (w *workspace) Lease() {
 func (w *workspace) Release() int {
 	w.lsp.logger.Debug("workspace: release", slog.String("path", w.workspaceURI.Filename()))
 	w.refCount--
-
 	return w.refCount
 }
 
@@ -170,17 +156,13 @@ func (w *workspace) Refresh(ctx context.Context) error {
 	if w == nil {
 		return nil
 	}
-
 	fileName := w.workspaceURI.Filename()
-
 	bufWorkspace, err := w.lsp.controller.GetWorkspace(ctx, fileName)
 	if err != nil {
 		w.lsp.logger.Error("workspace: get workspace", slog.String("file", fileName), xslog.ErrorAttr(err))
 		return err
 	}
-
 	fileNameToFileInfo := make(map[string]bufmodule2.FileInfo)
-
 	for _, module := range bufWorkspace.Modules() {
 		if err := module.WalkFileInfos(ctx, func(fileInfo bufmodule2.FileInfo) error {
 			if fileInfo.FileType() != bufmodule2.FileTypeProto {
@@ -203,7 +185,6 @@ func (w *workspace) Refresh(ctx context.Context) error {
 	w.fileNameToFileInfo = fileNameToFileInfo
 	w.checkClient = checkClient
 	w.indexFiles(ctx)
-
 	return nil
 }
 
@@ -213,7 +194,6 @@ func (w *workspace) FileInfo() iter.Seq[bufmodule2.FileInfo] {
 		if w == nil {
 			return
 		}
-
 		for _, fileInfo := range w.fileNameToFileInfo {
 			if !yield(fileInfo) {
 				return
@@ -227,7 +207,6 @@ func (w *workspace) Workspace() bufworkspace.Workspace {
 	if w == nil {
 		return nil
 	}
-
 	return w.workspace
 }
 
@@ -236,14 +215,11 @@ func (w *workspace) GetModule(uri protocol.URI) bufmodule2.Module {
 	if w == nil {
 		return nil
 	}
-
 	fileName := uri.Filename()
 	if fileInfo, ok := w.fileNameToFileInfo[fileName]; ok {
 		return fileInfo.Module()
 	}
-
 	w.lsp.logger.Warn("workspace: module not found", slog.String("file", fileName), slog.String("parent", w.workspaceURI.Filename()))
-
 	return nil
 }
 
@@ -252,7 +228,6 @@ func (w *workspace) CheckClient() bufcheck.Client {
 	if w == nil {
 		return nil
 	}
-
 	return w.checkClient
 }
 
@@ -261,7 +236,6 @@ func (w *workspace) PathToFile() map[string]*file {
 	if w == nil {
 		return nil
 	}
-
 	return w.pathToFile
 }
 
@@ -314,12 +288,10 @@ func (w *workspace) indexFiles(ctx context.Context) {
 func (w *workspace) fileInfos(ctx context.Context) iter.Seq[storage.ObjectInfo] {
 	return func(yield func(storage.ObjectInfo) bool) {
 		seen := make(map[string]struct{})
-
 		for fileInfo := range w.FileInfo() {
 			if !yield(fileInfo) {
 				return
 			}
-
 			seen[fileInfo.Path()] = struct{}{}
 		}
 		// Add all wellknown types if not provided within the workspace.

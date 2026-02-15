@@ -28,8 +28,8 @@ import (
 	"github.com/inovacc/omni/pkg/buf/internal/protocompile/parser"
 	"github.com/inovacc/omni/pkg/buf/internal/protocompile/reporter"
 	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
-	"go.lsp.dev/protocol"
 	xurls "mvdan.cc/xurls/v2"
+	"go.lsp.dev/protocol"
 )
 
 const (
@@ -64,7 +64,6 @@ func newServer(lsp *lsp) (protocol.Server, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to create HTTPS URL regex: %w", err)
 	}
-
 	celEnv, err := cel.NewEnv(
 		cel.Lib(celpv.NewLibrary()),
 		cel.EnableMacroCallTracking(),
@@ -72,7 +71,6 @@ func newServer(lsp *lsp) (protocol.Server, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to create CEL environment: %w", err)
 	}
-
 	return &server{
 		lsp:           lsp,
 		httpsURLRegex: httpsURLRegex,
@@ -85,7 +83,7 @@ func newServer(lsp *lsp) (protocol.Server, error) {
 // -- Lifecycle Methods
 
 // Initialize is the first message the LSP receives from the client. This is where all
-// initialization of the server wrt to the project is invoked on must occur.
+// initialization of the server wrt to the project is is invoked on must occur.
 func (s *server) Initialize(
 	ctx context.Context,
 	params *protocol.InitializeParams,
@@ -104,12 +102,12 @@ func (s *server) Initialize(
 
 	// Set initial trace value, if provided.
 	if params.Trace != "" {
-		s.traceValue.Store(&params.Trace)
+		s.lsp.traceValue.Store(&params.Trace)
 	}
 
 	info := &protocol.ServerInfo{
 		Name:    serverName,
-		Version: s.bufVersion,
+		Version: s.lsp.bufVersion,
 	}
 
 	// The LSP protocol library doesn't actually provide SemanticTokensOptions
@@ -118,7 +116,6 @@ func (s *server) Initialize(
 		TokenTypes     []string `json:"tokenTypes"`
 		TokenModifiers []string `json:"tokenModifiers"`
 	}
-
 	type SemanticTokensOptions struct {
 		Legend SemanticTokensLegend `json:"legend"`
 		Full   bool                 `json:"full"`
@@ -187,27 +184,27 @@ func (s *server) SetTrace(
 	ctx context.Context,
 	params *protocol.SetTraceParams,
 ) error {
-	s.traceValue.Store(&params.Value)
+	s.lsp.traceValue.Store(&params.Value)
 	return nil
 }
 
 // Shutdown is sent by the client when it wants the server to shut down and exit.
 // The client will wait until Shutdown returns, and then call Exit.
 func (s *server) Shutdown(ctx context.Context) error {
-	s.shutdown = true
+	s.lsp.shutdown = true
 	return nil
 }
 
 // Exit is a notification that the client has seen shutdown complete, and that the
 // server should now exit.
 func (s *server) Exit(ctx context.Context) error {
-	if !s.shutdown {
+	if !s.lsp.shutdown {
 		return errors.New("shutdown was not called or not yet completed")
 	}
 
 	// Close the connection. This will let the server shut down gracefully once this
 	// notification is replied to.
-	return s.conn.Close()
+	return s.lsp.conn.Close()
 }
 
 // -- File synchronization methods.
@@ -221,7 +218,6 @@ func (s *server) DidOpen(
 	file := s.fileManager.Track(params.TextDocument.URI)
 	file.RefreshWorkspace(ctx)
 	file.Update(ctx, params.TextDocument.Version, params.TextDocument.Text)
-
 	return nil
 }
 
@@ -238,7 +234,6 @@ func (s *server) DidChange(
 	}
 
 	file.Update(ctx, params.TextDocument.Version, params.ContentChanges[0].Text)
-
 	return nil
 }
 
@@ -254,9 +249,7 @@ func (s *server) DidSave(
 		// Update for a file we don't know about? Seems bad!
 		return fmt.Errorf("received update for file that was not open: %q", params.TextDocument.URI)
 	}
-
 	file.RefreshWorkspace(ctx)
-
 	return nil
 }
 
@@ -274,12 +267,8 @@ func (s *server) Formatting(
 		// Format for a file we don't know about? Seems bad!
 		return nil, fmt.Errorf("received update for file that was not open: %q", params.TextDocument.URI)
 	}
-
-	var (
-		errorsWithPos        []reporter.ErrorWithPos
-		warningErrorsWithPos []reporter.ErrorWithPos
-	)
-
+	var errorsWithPos []reporter.ErrorWithPos
+	var warningErrorsWithPos []reporter.ErrorWithPos
 	handler := reporter.NewHandler(reporter.NewReporter(
 		func(errorWithPos reporter.ErrorWithPos) error {
 			errorsWithPos = append(errorsWithPos, errorWithPos)
@@ -289,27 +278,22 @@ func (s *server) Formatting(
 			warningErrorsWithPos = append(warningErrorsWithPos, errorWithPos)
 		},
 	))
-
 	parsed, err := parser.Parse(file.uri.Filename(), strings.NewReader(file.file.Text()), handler)
 	if err == nil {
 		_, _ = parser.ResultFromAST(parsed, true, handler)
 	}
-
 	if len(errorsWithPos) > 0 {
 		return nil, fmt.Errorf("cannot format file %q, %v error(s) found", file.uri.Filename(), len(errorsWithPos))
 	}
 	// Currently we have no way to honor any of the parameters.
 	_ = params
-
 	if parsed == nil {
 		return nil, nil
 	}
-
 	var out strings.Builder
 	if err := bufformat.FormatFileNode(&out, parsed); err != nil {
 		return nil, err
 	}
-
 	newText := out.String()
 	if newText == file.file.Text() {
 		return nil, nil
@@ -317,12 +301,10 @@ func (s *server) Formatting(
 
 	// Calculate the end location for the file range.
 	endLine := strings.Count(file.file.Text(), "\n")
-
 	endCharacter := 0
 	for _, char := range file.file.Text()[strings.LastIndexByte(file.file.Text(), '\n')+1:] {
 		endCharacter += utf16.RuneLen(char)
 	}
-
 	return []protocol.TextEdit{
 		{
 			Range: protocol.Range{
@@ -348,7 +330,6 @@ func (s *server) DidClose(
 	if file := s.fileManager.Get(params.TextDocument.URI); file != nil {
 		file.Close(ctx)
 	}
-
 	return nil
 }
 
@@ -374,7 +355,6 @@ func (s *server) Hover(
 	docs = replacer.Replace(docs)
 
 	range_ := symbol.Range() // Need to spill this here because Hover.Range is a pointer.
-
 	return &protocol.Hover{
 		Contents: protocol.MarkupContent{
 			Kind:  protocol.Markdown,
@@ -393,7 +373,6 @@ func (s *server) Definition(
 	if symbol == nil {
 		return nil, nil
 	}
-
 	return []protocol.Location{
 		symbol.Definition(),
 	}, nil
@@ -408,7 +387,6 @@ func (s *server) TypeDefinition(
 	if symbol == nil {
 		return nil, nil
 	}
-
 	return []protocol.Location{
 		symbol.TypeDefinition(),
 	}, nil
@@ -442,12 +420,10 @@ func (s *server) Completion(
 	if file == nil {
 		return nil, nil
 	}
-
 	items := getCompletionItems(ctx, file, params.Position)
 	if len(items) == 0 {
 		return nil, nil
 	}
-
 	return &protocol.CompletionList{Items: items}, nil
 }
 
@@ -473,9 +449,7 @@ func (s *server) Symbols(
 	params *protocol.WorkspaceSymbolParams,
 ) ([]protocol.SymbolInformation, error) {
 	query := strings.ToLower(params.Query)
-
 	var results []protocol.SymbolInformation
-
 	for _, file := range s.fileManager.uriToFile.Range {
 		for symbol := range file.GetSymbols(query) {
 			results = append(results, symbol)
@@ -484,7 +458,6 @@ func (s *server) Symbols(
 			}
 		}
 	}
-
 	return results, nil
 }
 
@@ -497,7 +470,6 @@ func (s *server) DocumentSymbol(ctx context.Context, params *protocol.DocumentSy
 	if file == nil {
 		return nil, nil
 	}
-
 	anyResults := []any{}
 	for symbol := range file.GetSymbols("") {
 		anyResults = append(anyResults, symbol)
@@ -505,7 +477,6 @@ func (s *server) DocumentSymbol(ctx context.Context, params *protocol.DocumentSy
 			break
 		}
 	}
-
 	return anyResults, nil
 }
 
@@ -519,7 +490,6 @@ func (s *server) DocumentHighlight(ctx context.Context, params *protocol.Documen
 	if symbol == nil {
 		return nil, nil
 	}
-
 	return symbol.DocumentHighlights(), nil
 }
 
@@ -529,23 +499,19 @@ func (s *server) CodeAction(ctx context.Context, params *protocol.CodeActionPara
 	if file == nil {
 		return nil, nil
 	}
-
 	codeActionSet := xslices.ToStructMap(params.Context.Only)
 
 	var actions []protocol.CodeAction
-
 	if _, ok := codeActionSet[protocol.SourceOrganizeImports]; len(codeActionSet) == 0 || ok {
 		if organizeImportsAction := s.getOrganizeImportsCodeAction(ctx, file); organizeImportsAction != nil {
 			actions = append(actions, *organizeImportsAction)
 		}
 	}
-
 	if _, ok := codeActionSet[protocol.RefactorRewrite]; len(codeActionSet) == 0 || ok {
 		if deprecateAction := s.getDeprecateCodeAction(ctx, file, params); deprecateAction != nil {
 			actions = append(actions, *deprecateAction)
 		}
 	}
-
 	return actions, nil
 }
 
@@ -561,7 +527,6 @@ func (s *server) PrepareRename(ctx context.Context, params *protocol.PrepareRena
 	if symbol == nil {
 		return nil, nil
 	}
-
 	switch symbol.kind.(type) {
 	case *referenceable, *static, *reference:
 		// Don't allow renaming symbols defined in non-local files (e.g., WKTs from ~/.cache)
@@ -570,16 +535,12 @@ func (s *server) PrepareRename(ctx context.Context, params *protocol.PrepareRena
 		if symbol.def != nil && symbol.def.file != nil {
 			defFile = symbol.def.file
 		}
-
 		if defFile != nil && !defFile.IsLocal() {
 			return nil, fmt.Errorf("cannot rename a symbol in a non-local file")
 		}
-
 		rnge := reportSpanToProtocolRange(symbol.span)
-
 		return &rnge, nil
 	}
-
 	return nil, nil
 }
 
@@ -598,11 +559,9 @@ func (s *server) Rename(
 	if symbol.def != nil && symbol.def.file != nil {
 		defFile = symbol.def.file
 	}
-
 	if defFile != nil && !defFile.IsLocal() {
 		return nil, fmt.Errorf("cannot rename a symbol in a non-local file")
 	}
-
 	return symbol.Rename(params.NewName)
 }
 
@@ -615,7 +574,6 @@ func (s *server) FoldingRanges(
 	if file == nil {
 		return nil, nil
 	}
-
 	return s.foldingRange(file), nil
 }
 
@@ -628,7 +586,6 @@ func (s *server) DocumentLink(
 	if file == nil {
 		return nil, nil
 	}
-
 	return s.documentLink(file), nil
 }
 
@@ -643,6 +600,5 @@ func (s *server) getSymbol(
 	if file == nil {
 		return nil
 	}
-
 	return file.SymbolAt(ctx, position)
 }

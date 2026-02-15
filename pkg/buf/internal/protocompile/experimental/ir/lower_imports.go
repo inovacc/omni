@@ -57,7 +57,6 @@ func buildImports(file *File, r *report.Report, importer Importer) {
 		if lit.IsZero() {
 			continue // Already legalized in parser.legalizeImport()
 		}
-
 		path := canonicalizeImportPath(lit.Text(), r, imp)
 		if path == "" {
 			continue
@@ -76,13 +75,11 @@ func buildImports(file *File, r *report.Report, importer Importer) {
 			r.Errorf("imported file does not exist").Apply(
 				report.Snippetf(imp, "imported here"),
 			)
-
 			continue
 		default:
 			r.Errorf("could not open imported file: %v", err).Apply(
 				report.Snippetf(imp, "imported here"),
 			)
-
 			continue
 		}
 
@@ -124,12 +121,12 @@ func buildImports(file *File, r *report.Report, importer Importer) {
 		file.imports.Insert(Import{File: file}, -1, false)
 		file.imports.byPath[file.session.builtins.DescriptorFile] = uint32(len(file.imports.files) - 1)
 		file.imports.causes[file.session.builtins.DescriptorFile] = uint32(len(file.imports.files) - 1)
-
 		return
 	}
 
 	// Otherwise, try to look it up.
 	dproto, err := importer(-1, DescriptorProtoPath, ast.DeclImport{})
+
 	if err != nil {
 		panic(fmt.Errorf("could not import %q: %w", DescriptorProtoPath, err))
 	}
@@ -151,7 +148,6 @@ func diagnoseCycle(r *report.Report, cycle *ErrCycle) {
 
 	for i, imp := range cycle.Cycle {
 		var message string
-
 		if path := imp.ImportPath().AsLiteral().AsString(); !path.IsZero() {
 			switch i {
 			case 0:
@@ -162,7 +158,6 @@ func diagnoseCycle(r *report.Report, cycle *ErrCycle) {
 				message = fmt.Sprintf("...which imports %q...", path.Text())
 			}
 		}
-
 		err.Apply(
 			report.PageBreak,
 			report.Snippetf(imp, "%v", message),
@@ -184,14 +179,12 @@ func canonicalizeImportPath(path string, r *report.Report, decl ast.DeclImport) 
 				report.Snippet(decl.ImportPath()),
 			)
 		}
-
 		return ""
 	}
 
 	orig := path
 	// Not filepath.ToSlash, since this conversion is file-system independent.
 	path = strings.ReplaceAll(path, `\`, `/`)
-
 	hasBackslash := orig != path
 	if r != nil && hasBackslash {
 		r.Errorf("import path cannot use `\\` as a path separator").Apply(
@@ -205,7 +198,6 @@ func canonicalizeImportPath(path string, r *report.Report, decl ast.DeclImport) 
 	}
 
 	path = filepath.ToSlash(filepath.Clean(path))
-
 	isClean := !hasBackslash && orig == path
 	if r != nil && !isClean {
 		r.Errorf("import path must not contain `.`, `..`, or repeated separators").Apply(
@@ -242,7 +234,6 @@ func canonicalizeImportPath(path string, r *report.Report, decl ast.DeclImport) 
 		r.Errorf("import path must be relative").Apply(
 			report.Snippetf(decl.ImportPath(), "this path begins with a `%c`", path[0]),
 		)
-
 		return ""
 	}
 

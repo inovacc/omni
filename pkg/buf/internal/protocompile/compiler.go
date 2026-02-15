@@ -142,7 +142,6 @@ func (c *Compiler) Compile(ctx context.Context, files ...string) (linker.Files, 
 	par := c.MaxParallelism
 	if par <= 0 {
 		par = runtime.GOMAXPROCS(-1)
-
 		cpus := runtime.NumCPU()
 		if par > cpus {
 			par = cpus
@@ -155,7 +154,6 @@ func (c *Compiler) Compile(ctx context.Context, files ...string) (linker.Files, 
 	if sym == nil {
 		sym = &linker.Symbols{}
 	}
-
 	e := executor{
 		c:       c,
 		h:       h,
@@ -174,33 +172,27 @@ func (c *Compiler) Compile(ctx context.Context, files ...string) (linker.Files, 
 	// so we need this loop to define the result. So this loop holds the
 	// lock the whole time so async tasks can't create a result first.
 	results := make([]*result, len(files))
-
 	func() {
 		e.mu.Lock()
 		defer e.mu.Unlock()
-
 		for i, f := range files {
 			results[i] = e.compileLocked(ctx, f, true)
 		}
 	}()
 
 	descs := make([]linker.File, len(files))
-
 	var firstError error
-
 	for i, r := range results {
 		select {
 		case <-r.ready:
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		}
-
 		if r.err != nil {
 			if firstError == nil {
 				firstError = r.err
 			}
 		}
-
 		descs[i] = r.res
 	}
 
@@ -243,14 +235,12 @@ func (r *result) complete(f linker.File) {
 func (r *result) setBlockedOn(deps []string) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-
 	r.blockedOn = deps
 }
 
 func (r *result) getBlockedOn() []string {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-
 	return r.blockedOn
 }
 
@@ -287,7 +277,6 @@ func (e *executor) compileLocked(ctx context.Context, file string, explicitFile 
 		explicitFile: explicitFile,
 	}
 	e.results[file] = r
-
 	go func() {
 		defer func() {
 			if p := recover(); p != nil {
@@ -306,10 +295,8 @@ func (e *executor) compileLocked(ctx context.Context, file string, explicitFile 
 				//  send the compiler an out-of-band error? Or log?
 			}
 		}()
-
 		e.doCompile(ctx, file, r)
 	}()
-
 	return r
 }
 
@@ -346,7 +333,6 @@ func (e errFailedToResolve) Error() string {
 		// underlying error already refers to path in question, so we don't need to add more context
 		return errMsg
 	}
-
 	return fmt.Sprintf("could not resolve path %q: %s", e.path, e.err.Error())
 }
 
@@ -360,11 +346,9 @@ func (e *executor) hasOverrideDescriptorProto() bool {
 			// ignore a panic here; just assume no custom descriptor.proto
 			_ = recover()
 		}()
-
 		res, err := e.c.Resolver.FindFileByPath(descriptorProtoPath)
 		e.descriptorProtoIsCustom = err == nil && res.Desc != standardImports[descriptorProtoPath]
 	})
-
 	return e.descriptorProtoIsCustom
 }
 
@@ -387,7 +371,6 @@ func (e *executor) doCompile(ctx context.Context, file string, r *result) {
 		if sr.Source == nil {
 			return
 		}
-
 		if c, ok := sr.Source.(io.Closer); ok {
 			_ = c.Close()
 		}
@@ -398,7 +381,6 @@ func (e *executor) doCompile(ctx context.Context, file string, r *result) {
 		r.fail(err)
 		return
 	}
-
 	r.complete(desc)
 }
 
@@ -432,7 +414,6 @@ func (t *task) asFile(ctx context.Context, name string, r SearchResult) (linker.
 		if r.Desc.Path() != name {
 			return nil, fmt.Errorf("search result for %q returned descriptor for %q", name, r.Desc.Path())
 		}
-
 		return linker.NewFileRecursive(r.Desc)
 	}
 
@@ -440,7 +421,6 @@ func (t *task) asFile(ctx context.Context, name string, r SearchResult) (linker.
 	if err != nil {
 		return nil, err
 	}
-
 	if linkRes, ok := parseRes.(linker.Result); ok {
 		// if resolver returned a parse result that was actually a link result,
 		// use the link result directly (no other steps needed)
@@ -448,25 +428,20 @@ func (t *task) asFile(ctx context.Context, name string, r SearchResult) (linker.
 	}
 
 	var deps []linker.File
-
 	fileDescriptorProto := parseRes.FileDescriptorProto()
-
 	var wantsDescriptorProto bool
-
-	imports := fileDescriptorProto.GetDependency()
+	imports := fileDescriptorProto.Dependency
 
 	if t.e.hasOverrideDescriptorProto() {
 		// we only consider implicitly including descriptor.proto if it's overridden
 		if name != descriptorProtoPath {
 			var includesDescriptorProto bool
-
-			for _, dep := range fileDescriptorProto.GetDependency() {
+			for _, dep := range fileDescriptorProto.Dependency {
 				if dep == descriptorProtoPath {
 					includesDescriptorProto = true
 					break
 				}
 			}
-
 			if !includesDescriptorProto {
 				wantsDescriptorProto = true
 				// make a defensive copy so we don't inadvertently mutate
@@ -480,14 +455,12 @@ func (t *task) asFile(ctx context.Context, name string, r SearchResult) (linker.
 	}
 
 	var overrideDescriptorProto linker.File
-
 	if len(imports) > 0 {
 		t.r.setBlockedOn(imports)
 
-		results := make([]*result, len(fileDescriptorProto.GetDependency()))
+		results := make([]*result, len(fileDescriptorProto.Dependency))
 		checked := map[string]struct{}{}
-
-		for i, dep := range fileDescriptorProto.GetDependency() {
+		for i, dep := range fileDescriptorProto.Dependency {
 			span := findImportSpan(parseRes, dep)
 			if name == dep {
 				// doh! file imports itself
@@ -500,12 +473,9 @@ func (t *task) asFile(ctx context.Context, name string, r SearchResult) (linker.
 			if err := t.e.checkForDependencyCycle(res, []string{name, dep}, span, checked); err != nil {
 				return nil, err
 			}
-
 			results[i] = res
 		}
-
 		deps = make([]linker.File, len(results))
-
 		var descriptorProtoRes *result
 		if wantsDescriptorProto {
 			descriptorProtoRes = t.e.compile(ctx, descriptorProtoPath)
@@ -527,16 +497,13 @@ func (t *task) asFile(ctx context.Context, name string, r SearchResult) (linker.
 						// source position that pinpoints the import statement and report it.
 						return nil, reporter.Error(findImportSpan(parseRes, res.name), rerr)
 					}
-
 					return nil, res.err
 				}
-
 				deps[i] = res.res
 			case <-ctx.Done():
 				return nil, ctx.Err()
 			}
 		}
-
 		if descriptorProtoRes != nil {
 			select {
 			case <-descriptorProtoRes.ready:
@@ -554,7 +521,6 @@ func (t *task) asFile(ctx context.Context, name string, r SearchResult) (linker.
 		if err := t.e.s.Acquire(ctx, 1); err != nil {
 			return nil, err
 		}
-
 		t.released = false
 	}
 
@@ -566,9 +532,7 @@ func (e *executor) checkForDependencyCycle(res *result, sequence []string, span 
 		// already checked this one
 		return nil
 	}
-
 	checked[res.name] = struct{}{}
-
 	deps := res.getBlockedOn()
 	for _, dep := range deps {
 		// is this a cycle?
@@ -582,27 +546,22 @@ func (e *executor) checkForDependencyCycle(res *result, sequence []string, span 
 		e.mu.Lock()
 		depRes := e.results[dep]
 		e.mu.Unlock()
-
 		if depRes == nil {
 			continue
 		}
-
 		if err := e.checkForDependencyCycle(depRes, append(sequence, dep), span, checked); err != nil {
 			return err
 		}
 	}
-
 	return nil
 }
 
 func handleImportCycle(h *reporter.Handler, span ast.SourceSpan, importSequence []string, dep string) {
 	var buf bytes.Buffer
 	buf.WriteString("cycle found in imports: ")
-
 	for _, imp := range importSequence {
 		_, _ = fmt.Fprintf(&buf, "%q -> ", imp)
 	}
-
 	_, _ = fmt.Fprintf(&buf, "%q", dep)
 	// error is saved and returned in caller
 	_ = h.HandleErrorWithPos(span, errors.New(buf.String()))
@@ -613,7 +572,6 @@ func findImportSpan(res parser.Result, dep string) ast.SourceSpan {
 	if root == nil {
 		return ast.UnknownSpan(res.FileNode().Name())
 	}
-
 	for _, decl := range root.Decls {
 		if imp, ok := decl.(*ast.ImportNode); ok {
 			if imp.Name.AsString() == dep {
@@ -644,11 +602,9 @@ func (t *task) link(parseRes parser.Result, deps linker.Files, overrideDescripto
 	if err := file.ValidateOptions(t.h, t.e.sym); err != nil {
 		return nil, err
 	}
-
 	if t.r.explicitFile {
 		file.CheckForUnusedImports(t.h)
 	}
-
 	if err := t.h.Error(); err != nil {
 		return nil, err
 	}
@@ -658,18 +614,15 @@ func (t *task) link(parseRes parser.Result, deps linker.Files, overrideDescripto
 		if t.e.c.SourceInfoMode&SourceInfoExtraComments != 0 {
 			srcInfoOpts = append(srcInfoOpts, sourceinfo.WithExtraComments())
 		}
-
 		if t.e.c.SourceInfoMode&SourceInfoExtraOptionLocations != 0 {
 			srcInfoOpts = append(srcInfoOpts, sourceinfo.WithExtraOptionLocations())
 		}
-
 		parseRes.FileDescriptorProto().SourceCodeInfo = sourceinfo.GenerateSourceInfo(parseRes.AST(), optsIndex, srcInfoOpts...)
 	} else if t.e.c.SourceInfoMode == SourceInfoNone {
 		// If results came from unlinked FileDescriptorProto, it could have
 		// source info that we should strip.
 		parseRes.FileDescriptorProto().SourceCodeInfo = nil
 	}
-
 	if len(parseRes.FileDescriptorProto().GetSourceCodeInfo().GetLocation()) > 0 {
 		// If we have source code info in the descriptor proto at this point,
 		// we have to build the index of locations.
@@ -679,12 +632,11 @@ func (t *task) link(parseRes parser.Result, deps linker.Files, overrideDescripto
 	if !t.e.c.RetainASTs {
 		file.RemoveAST()
 	}
-
 	return file, nil
 }
 
 func needsSourceInfo(parseRes parser.Result, mode SourceInfoMode) bool {
-	return mode != SourceInfoNone && parseRes.AST() != nil && parseRes.FileDescriptorProto().GetSourceCodeInfo() == nil
+	return mode != SourceInfoNone && parseRes.AST() != nil && parseRes.FileDescriptorProto().SourceCodeInfo == nil
 }
 
 func (t *task) asParseResult(name string, r SearchResult) (parser.Result, error) {
@@ -696,7 +648,6 @@ func (t *task) asParseResult(name string, r SearchResult) (parser.Result, error)
 		// next stage. So to make anu mutations thread-safe, we must make a
 		// defensive copy.
 		res := parser.Clone(r.ParseResult)
-
 		return res, nil
 	}
 
@@ -707,8 +658,7 @@ func (t *task) asParseResult(name string, r SearchResult) (parser.Result, error)
 		// If the file descriptor needs linking, it will be mutated during the
 		// next stage. So to make any mutations thread-safe, we must make a
 		// defensive copy.
-		descProto := proto.Clone(r.Proto).(*descriptorpb.FileDescriptorProto)
-
+		descProto := proto.Clone(r.Proto).(*descriptorpb.FileDescriptorProto) //nolint:errcheck
 		return parser.ResultWithoutAST(descProto), nil
 	}
 
@@ -725,7 +675,6 @@ func (t *task) asAST(name string, r SearchResult) (*ast.FileNode, error) {
 		if r.AST.Name() != name {
 			return nil, fmt.Errorf("search result for %q returned descriptor for %q", name, r.AST.Name())
 		}
-
 		return r.AST, nil
 	}
 

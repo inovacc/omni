@@ -61,7 +61,6 @@ func (d DeclBody) AsAny() DeclAny {
 	if d.IsZero() {
 		return DeclAny{}
 	}
-
 	return id.WrapDyn(d.Context(), id.NewDyn(DeclKindBody, id.ID[DeclAny](d.ID())))
 }
 
@@ -99,7 +98,6 @@ func (d DeclBody) Decls() seq.Inserter[DeclAny] {
 	if d.IsZero() {
 		return seq.SliceInserter2[DeclAny, DeclKind, id.ID[DeclAny]]{}
 	}
-
 	return seq.NewSliceInserter2(
 		&d.Raw().kinds,
 		&d.Raw().ptrs,

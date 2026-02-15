@@ -149,7 +149,6 @@ func (i *imports) Recurse(dedup intern.Map[ast.DeclImport]) {
 			if file.Public && imp.Public {
 				i.Insert(imp, int(i.transPublicEnd), true)
 				i.transPublicEnd++
-
 				continue
 			}
 
@@ -165,7 +164,6 @@ func (i *imports) Recurse(dedup intern.Map[ast.DeclImport]) {
 	for n, imp := range i.files {
 		i.byPath[imp.file.InternedPath()] = uint32(n)
 	}
-
 	for k, file := range seq.All(i.Directs()) {
 		// Direct imports take precedence over transitive imports.
 		i.causes[file.InternedPath()] = uint32(k)
@@ -205,9 +203,7 @@ func (i *imports) DescriptorProto() *File {
 	if i == nil {
 		return nil
 	}
-
 	imported, _ := slicesx.Last(i.files)
-
 	return imported.file
 }
 
@@ -217,13 +213,11 @@ func (i *imports) Directs() seq.Indexer[Import] {
 	if i != nil {
 		slice = i.files[:i.importEnd]
 	}
-
 	return seq.NewFixedSlice(
 		slice,
 		func(j int, imported imported) Import {
 			n := uint32(j)
 			public := n < i.publicEnd
-
 			return Import{
 				File:    imported.file,
 				Public:  public,
@@ -248,12 +242,10 @@ func (i *imports) Transitive() seq.Indexer[Import] {
 	if i != nil {
 		slice = i.files[:max(0, len(i.files)-1)] // Exclude the implicit descriptor.proto
 	}
-
 	return seq.NewFixedSlice(
 		slice,
 		func(j int, imported imported) Import {
 			n := uint32(j)
-
 			return Import{
 				File: imported.file,
 				Public: n < i.publicEnd ||

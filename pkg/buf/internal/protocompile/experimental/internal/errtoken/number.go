@@ -33,7 +33,6 @@ type InvalidNumber struct {
 func (e InvalidNumber) Diagnose(d *report.Diagnostic) {
 	// Check for an extra decimal point in the mantissa.
 	mant := e.Token.AsNumber().Mantissa()
-
 	first := strings.Index(mant.Text(), ".")
 	if first != -1 {
 		second := strings.Index(mant.Text()[first+1:], ".")
@@ -44,14 +43,12 @@ func (e InvalidNumber) Diagnose(d *report.Diagnostic) {
 				report.Snippet(mant.Range(second, second)),
 				report.Snippetf(mant.Range(first, first), "first one is here"),
 			)
-
 			return
 		}
 	}
 
 	// Ditto for the exponent.
 	exp := e.Token.AsNumber().Exponent()
-
 	first = strings.Index(exp.Text(), ".")
 	if first != -1 {
 		if first < exp.Len()-1 {
@@ -62,7 +59,6 @@ func (e InvalidNumber) Diagnose(d *report.Diagnostic) {
 			report.Message("non-integer exponent in %s", taxa.Classify(e.Token)),
 			report.Snippetf(exp.Range(first, exp.Len()), "fractional part given here"),
 		)
-
 		return
 	}
 
@@ -70,7 +66,6 @@ func (e InvalidNumber) Diagnose(d *report.Diagnostic) {
 	if e.badDigit(d, e.Token.AsNumber().Mantissa()) {
 		return
 	}
-
 	if e.badDigit(d, e.Token.AsNumber().Exponent()) {
 		return
 	}
@@ -88,12 +83,10 @@ func (e InvalidNumber) badDigit(d *report.Diagnostic, digits source.Span) bool {
 	}
 
 	base := e.Token.AsNumber().Base()
-
 	for i, r := range digits.Text() {
 		if strings.ContainsRune("_-+.", r) {
 			continue
 		}
-
 		if _, ok := unicodex.Digit(r, base); ok {
 			continue
 		}
@@ -107,7 +100,6 @@ func (e InvalidNumber) badDigit(d *report.Diagnostic, digits source.Span) bool {
 		if e.Token.AsNumber().IsLegacyOctal() {
 			d.Apply(report.Helpf("a leading `0` digit causes the whole literal to be interpreted as octal"))
 		}
-
 		return true
 	}
 

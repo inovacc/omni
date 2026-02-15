@@ -19,8 +19,8 @@ import (
 	"fmt"
 	"log/slog"
 
-	"connectrpc.com/connect"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufregistryapi/bufregistryapiowner"
+	"connectrpc.com/connect"
 	ownerv1 "github.com/inovacc/omni/pkg/buf/internal/gen/bufbuild/registry/protocolbuffers/go/buf/registry/owner/v1"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/cache"
 )
@@ -71,12 +71,10 @@ func (a *v1ProtoOwnerProvider) getV1ProtoOwnerForProtoOwnerID(
 			if err != nil {
 				return nil, err
 			}
-
-			if len(response.Msg.GetOwners()) != 1 {
-				return nil, fmt.Errorf("expected 1 Owner, got %d", len(response.Msg.GetOwners()))
+			if len(response.Msg.Owners) != 1 {
+				return nil, fmt.Errorf("expected 1 Owner, got %d", len(response.Msg.Owners))
 			}
-
-			return response.Msg.GetOwners()[0], nil
+			return response.Msg.Owners[0], nil
 		},
 	)
 }

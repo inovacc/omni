@@ -54,11 +54,9 @@ func (p *compiledModule) Run(ctx context.Context, env pluginrpc.Env) error {
 	if err != nil {
 		return fmt.Errorf("failed to instantiate module: %w", err)
 	}
-
 	if err := wazeroModule.Close(ctx); err != nil {
 		return fmt.Errorf("failed to close module: %w", err)
 	}
-
 	return nil
 }
 

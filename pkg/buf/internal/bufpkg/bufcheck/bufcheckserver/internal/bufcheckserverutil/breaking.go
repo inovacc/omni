@@ -41,12 +41,10 @@ func NewBreakingFilePairRuleHandler(
 			if err != nil {
 				return err
 			}
-
 			previousFilePathToFile, err := bufprotosource.FilePathToFile(request.AgainstProtosourceFiles()...)
 			if err != nil {
 				return err
 			}
-
 			for previousFilePath, previousFile := range previousFilePathToFile {
 				if file, ok := filePathToFile[previousFilePath]; ok {
 					if err := f(responseWriter, request, file, previousFile); err != nil {
@@ -54,7 +52,6 @@ func NewBreakingFilePairRuleHandler(
 					}
 				}
 			}
-
 			return nil
 		},
 	)
@@ -79,12 +76,10 @@ func NewBreakingEnumPairRuleHandler(
 			if err != nil {
 				return err
 			}
-
 			previousFullNameToEnum, err := bufprotosource.FullNameToEnum(request.AgainstProtosourceFiles()...)
 			if err != nil {
 				return err
 			}
-
 			for previousFullName, previousEnum := range previousFullNameToEnum {
 				if enum, ok := fullNameToEnum[previousFullName]; ok {
 					if err := f(responseWriter, request, enum, previousEnum); err != nil {
@@ -92,7 +87,6 @@ func NewBreakingEnumPairRuleHandler(
 					}
 				}
 			}
-
 			return nil
 		},
 	)
@@ -118,12 +112,10 @@ func NewBreakingEnumValuePairRuleHandler(
 			if err != nil {
 				return err
 			}
-
 			previousNumberToNameToEnumValue, err := bufprotosource.NumberToNameToEnumValue(previousEnum)
 			if err != nil {
 				return err
 			}
-
 			for previousNumber, previousNameToEnumValue := range previousNumberToNameToEnumValue {
 				if nameToEnumValue, ok := numberToNameToEnumValue[previousNumber]; ok {
 					if err := f(responseWriter, request, nameToEnumValue, previousNameToEnumValue); err != nil {
@@ -131,7 +123,6 @@ func NewBreakingEnumValuePairRuleHandler(
 					}
 				}
 			}
-
 			return nil
 		},
 	)
@@ -156,12 +147,10 @@ func NewBreakingMessagePairRuleHandler(
 			if err != nil {
 				return err
 			}
-
 			previousFullNameToMessage, err := bufprotosource.FullNameToMessage(request.AgainstProtosourceFiles()...)
 			if err != nil {
 				return err
 			}
-
 			for previousFullName, previousMessage := range previousFullNameToMessage {
 				if message, ok := fullNameToMessage[previousFullName]; ok {
 					if err := f(responseWriter, request, message, previousMessage); err != nil {
@@ -169,7 +158,6 @@ func NewBreakingMessagePairRuleHandler(
 					}
 				}
 			}
-
 			return nil
 		},
 	)
@@ -195,24 +183,20 @@ func NewBreakingFieldPairRuleHandler(
 			if err != nil {
 				return err
 			}
-
 			previousFullNameToMessage, err := bufprotosource.FullNameToMessage(request.AgainstProtosourceFiles()...)
 			if err != nil {
 				return err
 			}
-
 			for previousFullName, previousMessage := range previousFullNameToMessage {
 				if message, ok := fullNameToMessage[previousFullName]; ok {
 					previousNumberToField, err := bufprotosource.NumberToMessageField(previousMessage)
 					if err != nil {
 						return err
 					}
-
 					numberToField, err := bufprotosource.NumberToMessageField(message)
 					if err != nil {
 						return err
 					}
-
 					for previousNumber, previousField := range previousNumberToField {
 						if field, ok := numberToField[previousNumber]; ok {
 							if err := f(responseWriter, request, field, previousField); err != nil {
@@ -229,14 +213,12 @@ func NewBreakingFieldPairRuleHandler(
 					return err
 				}
 			}
-
 			previousTypeToNumberToField := make(map[string]map[int]bufprotosource.Field)
 			for _, previousFile := range request.AgainstProtosourceFiles() {
 				if err := addToTypeToNumberToExtension(previousFile, previousTypeToNumberToField); err != nil {
 					return err
 				}
 			}
-
 			for previousType, previousNumberToField := range previousTypeToNumberToField {
 				numberToField := typeToNumberToField[previousType]
 				for previousNumber, previousField := range previousNumberToField {
@@ -247,7 +229,6 @@ func NewBreakingFieldPairRuleHandler(
 					}
 				}
 			}
-
 			return nil
 		},
 	)
@@ -272,12 +253,10 @@ func NewBreakingServicePairRuleHandler(
 			if err != nil {
 				return err
 			}
-
 			previousFullNameToService, err := bufprotosource.FullNameToService(request.AgainstProtosourceFiles()...)
 			if err != nil {
 				return err
 			}
-
 			for previousFullName, previousService := range previousFullNameToService {
 				if service, ok := fullNameToService[previousFullName]; ok {
 					if err := f(responseWriter, request, service, previousService); err != nil {
@@ -285,7 +264,6 @@ func NewBreakingServicePairRuleHandler(
 					}
 				}
 			}
-
 			return nil
 		},
 	)
@@ -311,12 +289,10 @@ func NewBreakingMethodPairRuleHandler(
 			if err != nil {
 				return err
 			}
-
 			previousNameToMethod, err := bufprotosource.NameToMethod(previousService)
 			if err != nil {
 				return err
 			}
-
 			for previousName, previousMethod := range previousNameToMethod {
 				if method, ok := nameToMethod[previousName]; ok {
 					if err := f(responseWriter, request, method, previousMethod); err != nil {
@@ -324,7 +300,6 @@ func NewBreakingMethodPairRuleHandler(
 					}
 				}
 			}
-
 			return nil
 		},
 	)
@@ -339,22 +314,18 @@ func addToTypeToNumberToExtension(container bufprotosource.ContainerDescriptor, 
 			numberToExt = make(map[int]bufprotosource.Field)
 			typeToNumberToExt[extension.Extendee()] = numberToExt
 		}
-
 		if existing, ok := numberToExt[extension.Number()]; ok {
 			return fmt.Errorf("duplicate extension %d of %s: %s in %q and %s in %q",
 				extension.Number(), extension.Extendee(),
 				existing.FullName(), existing.File().Path(),
 				extension.FullName(), extension.File().Path())
 		}
-
 		numberToExt[extension.Number()] = extension
 	}
-
 	for _, message := range container.Messages() {
 		if err := addToTypeToNumberToExtension(message, typeToNumberToExt); err != nil {
 			return err
 		}
 	}
-
 	return nil
 }

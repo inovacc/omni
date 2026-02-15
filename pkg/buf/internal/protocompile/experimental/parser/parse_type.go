@@ -55,7 +55,6 @@ func parseTypeAndPath(p *parser, c *token.Cursor, where taxa.Place) (ast.TypeAny
 
 func parseTypeImpl(p *parser, c *token.Cursor, where taxa.Place, pathAfter bool) (ast.TypeAny, ast.Path) {
 	var isList, isInMethod bool
-
 	switch where.Subject() {
 	case taxa.MethodIns, taxa.MethodOuts,
 		taxa.Noun(keyword.Returns): // Used when parsing the invalid `returns foo.Bar` production.
@@ -86,7 +85,6 @@ func parseTypeImpl(p *parser, c *token.Cursor, where taxa.Place, pathAfter bool)
 		}
 
 		first, _ := iterx.First(tyPath.Components)
-
 		ident := first.AsIdent()
 		if ident.IsZero() {
 			break // If this starts with an extension, we're done.
@@ -134,9 +132,7 @@ func parseTypeImpl(p *parser, c *token.Cursor, where taxa.Place, pathAfter bool)
 		// off, since code that follows handles turning it back into a path
 		// based on what comes after it.
 		var isMod bool
-
 		_, rest := tyPath.Split(1)
-
 		switch k := ident.Keyword(); {
 		case k.IsFieldTypeModifier():
 			// NOTE: We do not need to look at isInMethod here, because it
@@ -182,7 +178,6 @@ func parseTypeImpl(p *parser, c *token.Cursor, where taxa.Place, pathAfter bool)
 	// mods, because angle brackets bind more tightly than modifiers.
 	if angles := c.Peek(); angles.Keyword() == keyword.Lt {
 		c.Next() // Consume the angle brackets.
-
 		generic := p.NewTypeGeneric(ast.TypeGenericArgs{
 			Path:          tyPath,
 			AngleBrackets: angles,
@@ -203,7 +198,6 @@ func parseTypeImpl(p *parser, c *token.Cursor, where taxa.Place, pathAfter bool)
 			start: canStartPath,
 			stop: func(t token.Token) bool {
 				kw := t.Keyword()
-
 				return kw == keyword.Gt ||
 					kw == keyword.Assign // Heuristic for stopping reasonably early in the case of map<K, V m = 1;
 			},
@@ -222,7 +216,6 @@ func parseTypeImpl(p *parser, c *token.Cursor, where taxa.Place, pathAfter bool)
 	// interpret the last modifier as the type and the current path type as the
 	// path after the type.
 	var path ast.Path
-
 	if pathAfter {
 		next := c.Peek()
 		if canStartPath(next) {

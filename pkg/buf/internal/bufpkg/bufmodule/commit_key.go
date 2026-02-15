@@ -71,9 +71,7 @@ func UniqueDigestTypeForCommitKeys(commitKeys []CommitKey) (DigestType, error) {
 	if len(commitKeys) == 0 {
 		return 0, syserror.New("empty commitKeys passed to UniqueDigestTypeForCommitKeys")
 	}
-
 	digestTypes := xslices.Map(commitKeys, CommitKey.DigestType)
-
 	digestType := digestTypes[0]
 	for _, otherDigestType := range digestTypes[1:] {
 		if otherDigestType != digestType {
@@ -85,7 +83,6 @@ func UniqueDigestTypeForCommitKeys(commitKeys []CommitKey) (DigestType, error) {
 			)
 		}
 	}
-
 	return digestType, nil
 }
 
@@ -105,15 +102,12 @@ func newCommitKey(
 	if registry == "" {
 		return nil, errors.New("empty registry when constructing CommitKey")
 	}
-
 	if commitID == uuid.Nil {
 		return nil, errors.New("empty commitID when constructing CommitKey")
 	}
-
 	if _, ok := digestTypeToString[digestType]; !ok {
 		return nil, fmt.Errorf("unknown DigestType when constructing CommitKey: %v", digestType)
 	}
-
 	return &commitKey{
 		registry:   registry,
 		commitID:   commitID,

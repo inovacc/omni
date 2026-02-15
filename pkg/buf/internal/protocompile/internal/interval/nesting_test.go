@@ -26,7 +26,6 @@ import (
 
 func TestNesting(t *testing.T) {
 	t.Parallel()
-
 	type in struct {
 		start, end int
 		value      string
@@ -81,7 +80,6 @@ func TestNesting(t *testing.T) {
 			}
 
 			var got [][]interval.Entry[int, string]
-
 			for set := range nesting.Sets() {
 				s := slices.Collect(set)
 				t.Log(s)

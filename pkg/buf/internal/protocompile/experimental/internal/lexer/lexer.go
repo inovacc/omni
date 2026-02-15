@@ -97,7 +97,6 @@ type Lexer struct {
 func (l *Lexer) Lex(file *source.File, r *report.Report) *token.Stream {
 	stream := &token.Stream{File: file}
 	loop(&lexer{Lexer: l, Stream: stream, Report: r})
-
 	return stream
 }
 
@@ -125,7 +124,7 @@ func (l *lexer) push(length int, kind token.Kind) token.Token {
 func (l *lexer) keyword(length int, kind token.Kind, kw keyword.Keyword) token.Token {
 	if l.badBytes > 0 {
 		l.count++
-		tok := l.Push(l.badBytes, token.Unrecognized)
+		tok := l.Stream.Push(l.badBytes, token.Unrecognized)
 		l.badBytes = 0
 
 		l.Errorf("unrecognized token").Apply(
@@ -134,8 +133,7 @@ func (l *lexer) keyword(length int, kind token.Kind, kw keyword.Keyword) token.T
 	}
 
 	l.count++
-
-	return l.PushKeyword(length, kind, kw)
+	return l.Stream.PushKeyword(length, kind, kw)
 }
 
 // rest returns the remaining unlexed text.
@@ -156,7 +154,6 @@ func (l *lexer) peek() rune {
 	if !ok {
 		return -1
 	}
-
 	return r
 }
 
@@ -169,7 +166,6 @@ func (l *lexer) pop() rune {
 		l.cursor += utf8.RuneLen(r)
 		return r
 	}
-
 	return -1
 }
 
@@ -182,10 +178,8 @@ func (l *lexer) takeWhile(f func(rune) bool) string {
 		if r == -1 || !f(r) {
 			break
 		}
-
 		_ = l.pop()
 	}
-
 	return l.Text()[start:l.cursor]
 }
 
@@ -195,10 +189,8 @@ func (l *lexer) seekInclusive(needle string) (string, bool) {
 	if idx := strings.Index(l.rest(), needle); idx != -1 {
 		prefix := l.rest()[:idx+len(needle)]
 		l.cursor += idx + len(needle)
-
 		return prefix, true
 	}
-
 	return "", false
 }
 
@@ -206,7 +198,6 @@ func (l *lexer) seekInclusive(needle string) (string, bool) {
 func (l *lexer) seekEOF() string {
 	rest := l.rest()
 	l.cursor += len(rest)
-
 	return rest
 }
 

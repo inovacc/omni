@@ -43,7 +43,6 @@ func (d *descriptor) getLocation(path []int32) Location {
 	if d.locationStore == nil || len(path) == 0 {
 		return nil
 	}
-
 	return d.locationStore.getLocation(path)
 }
 
@@ -51,22 +50,18 @@ func (d *descriptor) getLocationByPathKey(pathKey string) Location {
 	if d.locationStore == nil || pathKey == "" {
 		return nil
 	}
-
 	return d.locationStore.getLocationByPathKey(pathKey)
 }
 
 func asDescriptor[T protoreflect.Descriptor](d *descriptor, fullName string, kind string) (T, error) {
 	var zero T
-
 	desc, err := d.file.resolver.FindDescriptorByName(protoreflect.FullName(fullName))
 	if err != nil {
 		return zero, err
 	}
-
 	typedDesc, ok := desc.(T)
 	if !ok {
 		return zero, fmt.Errorf("%s is a %T, which is not %s", fullName, desc, kind)
 	}
-
 	return typedDesc, nil
 }

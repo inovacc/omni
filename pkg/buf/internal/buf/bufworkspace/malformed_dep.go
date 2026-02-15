@@ -62,17 +62,14 @@ func MalformedDepsForWorkspace(workspace Workspace) ([]MalformedDep, error) {
 				if moduleFullName := module.FullName(); moduleFullName != nil {
 					return moduleFullName.String()
 				}
-
 				return ""
 			},
 		),
 	)
-
 	remoteDeps, err := bufmodule2.RemoteDepsForModuleSet(workspace)
 	if err != nil {
 		return nil, err
 	}
-
 	moduleFullNameStringToRemoteDep, err := xslices.ToUniqueValuesMapError(
 		remoteDeps,
 		func(remoteDep bufmodule2.RemoteDep) (string, error) {
@@ -80,14 +77,12 @@ func MalformedDepsForWorkspace(workspace Workspace) ([]MalformedDep, error) {
 			if moduleFullName == nil {
 				return "", syserror.Newf("FullName nil on remote Module dependency %q", remoteDep.OpaqueID())
 			}
-
 			return moduleFullName.String(), nil
 		},
 	)
 	if err != nil {
 		return nil, err
 	}
-
 	moduleFullNameStringToConfiguredDepModuleRef, err := xslices.ToUniqueValuesMapError(
 		workspace.ConfiguredDepModuleRefs(),
 		func(moduleRef bufparse.Ref) (string, error) {
@@ -95,19 +90,15 @@ func MalformedDepsForWorkspace(workspace Workspace) ([]MalformedDep, error) {
 			if moduleFullName == nil {
 				return "", syserror.New("FullName nil on ModuleRef")
 			}
-
 			return moduleFullName.String(), nil
 		},
 	)
 	if err != nil {
 		return nil, err
 	}
-
 	var malformedDeps []MalformedDep
-
 	for moduleFullNameString, configuredDepModuleRef := range moduleFullNameStringToConfiguredDepModuleRef {
 		_, isLocalModule := localFullNameStringMap[moduleFullNameString]
-
 		_, isRemoteDep := moduleFullNameStringToRemoteDep[moduleFullNameString]
 		if !isRemoteDep && !isLocalModule {
 			// The module was in buf.yaml deps, but was not in the remote dep list after
@@ -122,7 +113,6 @@ func MalformedDepsForWorkspace(workspace Workspace) ([]MalformedDep, error) {
 			)
 		}
 	}
-
 	sort.Slice(
 		malformedDeps,
 		func(i int, j int) bool {
@@ -130,7 +120,6 @@ func MalformedDepsForWorkspace(workspace Workspace) ([]MalformedDep, error) {
 				malformedDeps[j].ModuleRef().FullName().String()
 		},
 	)
-
 	return malformedDeps, nil
 }
 

@@ -51,11 +51,9 @@ func NewCompilerVersion(version *pluginpb.Version) (*CompilerVersion, error) {
 	if version == nil {
 		return nil, nil
 	}
-
 	if err := validateCompilerVersion(version); err != nil {
 		return nil, err
 	}
-
 	return &CompilerVersion{
 		Major:  int(version.GetMajor()),
 		Minor:  int(version.GetMinor()),
@@ -73,18 +71,15 @@ func (c *CompilerVersion) String() string {
 	if c == nil {
 		return ""
 	}
-
 	var value string
 	if c.Major <= 3 || c.Patch != 0 {
 		value = fmt.Sprintf("%d.%d.%d", c.Major, c.Minor, c.Patch)
 	} else {
 		value = fmt.Sprintf("%d.%d", c.Major, c.Minor)
 	}
-
 	if c.Suffix != "" {
 		return value + "-" + c.Suffix
 	}
-
 	return value
 }
 
@@ -95,23 +90,18 @@ func (c *CompilerVersion) ToProto() *pluginpb.Version {
 	if c == nil {
 		return nil
 	}
-
 	version := &pluginpb.Version{}
 	if c.Major != 0 {
 		version.Major = proto.Int32(int32(c.Major)) // #nosec:G115 should never overflow
 	}
-
 	if c.Minor != 0 {
 		version.Minor = proto.Int32(int32(c.Minor)) // #nosec:G115 should never overflow
 	}
-
 	if c.Patch != 0 {
 		version.Patch = proto.Int32(int32(c.Patch)) // #nosec:G115 should never overflow
 	}
-
 	if c.Suffix != "" {
 		version.Suffix = proto.String(c.Suffix)
 	}
-
 	return version
 }

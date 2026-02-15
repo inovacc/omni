@@ -67,7 +67,6 @@ func NewManifest(fileNodes []FileNode) (Manifest, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	return newManifest(pathToFileNode), nil
 }
 
@@ -78,7 +77,6 @@ func NewManifest(fileNodes []FileNode) (Manifest, error) {
 // Returns an error of type *bufparse.ParseError if the string could not be parsed.
 func ParseManifest(s string) (Manifest, error) {
 	var fileNodes []FileNode
-
 	original := s
 	if len(s) > 0 {
 		if s[len(s)-1] != '\n' {
@@ -88,7 +86,6 @@ func ParseManifest(s string) (Manifest, error) {
 				errors.New("did not end with newline"),
 			)
 		}
-
 		s = s[:len(s)-1]
 		for i, line := range strings.Split(s, "\n") {
 			fileNode, err := ParseFileNode(line)
@@ -99,7 +96,6 @@ func ParseManifest(s string) (Manifest, error) {
 					fmt.Errorf("line %d: %w", i, err),
 				)
 			}
-
 			fileNodes = append(fileNodes, fileNode)
 		}
 	}
@@ -114,7 +110,6 @@ func ParseManifest(s string) (Manifest, error) {
 			err,
 		)
 	}
-
 	return newManifest(pathToFileNode), nil
 }
 
@@ -156,14 +151,12 @@ func newManifest(pathToFileNode map[string]FileNode) *manifest {
 	for _, fileNode := range pathToFileNode {
 		sortedUniqueFileNodes = append(sortedUniqueFileNodes, fileNode)
 	}
-
 	sort.Slice(
 		sortedUniqueFileNodes,
 		func(i int, j int) bool {
 			return sortedUniqueFileNodes[i].Path() < sortedUniqueFileNodes[j].Path()
 		},
 	)
-
 	return &manifest{
 		pathToFileNode:        pathToFileNode,
 		sortedUniqueFileNodes: sortedUniqueFileNodes,
@@ -183,7 +176,6 @@ func (m *manifest) GetDigest(path string) Digest {
 	if fileNode == nil {
 		return nil
 	}
-
 	return fileNode.Digest()
 }
 
@@ -193,7 +185,6 @@ func (m *manifest) String() string {
 		_, _ = buffer.WriteString(fileNode.String())
 		_, _ = buffer.WriteRune('\n')
 	}
-
 	return buffer.String()
 }
 
@@ -212,12 +203,10 @@ func getAndValidateManifestPathToFileNode(fileNodes []FileNode) (map[string]File
 					fileNode.Digest().String(),
 				)
 			}
-
 			return nil, errors.New(errorMessage)
 		} else {
 			pathToFileNode[fileNode.Path()] = fileNode
 		}
 	}
-
 	return pathToFileNode, nil
 }

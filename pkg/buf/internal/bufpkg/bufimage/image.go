@@ -36,26 +36,20 @@ func newImage(files []ImageFile, reorder bool, resolver protoencoding.Resolver) 
 	if len(files) == 0 {
 		return nil, errors.New("image contains no files")
 	}
-
 	pathToImageFile := make(map[string]ImageFile, len(files))
-
 	type commitIDAndFilePath struct {
 		commitID uuid.UUID
 		filePath string
 	}
-
 	moduleFullNameStringToCommitIDAndFilePath := make(map[string]commitIDAndFilePath)
-
 	for _, file := range files {
 		path := file.Path()
 		if _, ok := pathToImageFile[path]; ok {
 			return nil, fmt.Errorf("duplicate file: %s", path)
 		}
-
 		pathToImageFile[path] = file
 		if moduleFullName := file.FullName(); moduleFullName != nil {
 			moduleFullNameString := moduleFullName.String()
-
 			existing, ok := moduleFullNameStringToCommitIDAndFilePath[moduleFullNameString]
 			if ok {
 				if existing.commitID != file.CommitID() {
@@ -76,20 +70,16 @@ func newImage(files []ImageFile, reorder bool, resolver protoencoding.Resolver) 
 			}
 		}
 	}
-
 	if reorder {
 		files = orderImageFiles(files, pathToImageFile)
 	}
-
 	if resolver == nil {
 		fileDescriptorProtos := make([]*descriptorpb.FileDescriptorProto, len(files))
 		for i := range files {
 			fileDescriptorProtos[i] = files[i].FileDescriptorProto()
 		}
-
 		resolver = protoencoding.NewLazyResolver(fileDescriptorProtos...)
 	}
-
 	return &image{
 		files:           files,
 		pathToImageFile: pathToImageFile,
@@ -103,7 +93,6 @@ func newImageNoValidate(files []ImageFile, resolver protoencoding.Resolver) *ima
 		path := file.Path()
 		pathToImageFile[path] = file
 	}
-
 	return &image{
 		files:           files,
 		pathToImageFile: pathToImageFile,
@@ -131,7 +120,6 @@ func orderImageFiles(
 	pathToImageFile map[string]ImageFile,
 ) []ImageFile {
 	outputImageFiles := make([]ImageFile, 0, len(inputImageFiles))
-
 	alreadySeen := map[string]struct{}{}
 	for _, inputImageFile := range inputImageFiles {
 		outputImageFiles = orderImageFilesRec(
@@ -141,7 +129,6 @@ func orderImageFiles(
 			alreadySeen,
 		)
 	}
-
 	return outputImageFiles
 }
 
@@ -155,9 +142,7 @@ func orderImageFilesRec(
 	if _, ok := alreadySeen[path]; ok {
 		return outputImageFiles
 	}
-
 	alreadySeen[path] = struct{}{}
-
 	for _, dependency := range inputImageFile.FileDescriptorProto().GetDependency() {
 		dependencyImageFile, ok := pathToImageFile[dependency]
 		if ok {
@@ -169,6 +154,5 @@ func orderImageFilesRec(
 			)
 		}
 	}
-
 	return append(outputImageFiles, inputImageFile)
 }

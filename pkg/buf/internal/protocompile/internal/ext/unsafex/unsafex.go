@@ -172,7 +172,7 @@ func NoEscape[P ~*E, E any](ptr P) P {
 	p := unsafe.Pointer(ptr)
 	// Xoring the address with zero is a reliable way to hide a pointer from
 	// the compiler.
-	p = unsafe.Pointer(uintptr(p) ^ 0) //nolint:staticcheck,govet
+	p = unsafe.Pointer(uintptr(p) ^ 0) //nolint:staticcheck
 
 	return P(p)
 }

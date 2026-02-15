@@ -51,7 +51,6 @@ type blobSet struct {
 
 func newBlobSet(blobs []Blob) (*blobSet, error) {
 	digestStringToBlob := make(map[string]Blob, len(blobs))
-
 	sortedDigestStrings := make([]string, 0, len(blobs))
 	for _, blob := range blobs {
 		// In the former version of this package, we validated that Blob contents matched for Blobs
@@ -63,9 +62,7 @@ func newBlobSet(blobs []Blob) (*blobSet, error) {
 			sortedDigestStrings = append(sortedDigestStrings, digestString)
 		}
 	}
-
 	sort.Strings(sortedDigestStrings)
-
 	return &blobSet{
 		digestStringToBlob:  digestStringToBlob,
 		sortedDigestStrings: sortedDigestStrings,
@@ -81,7 +78,6 @@ func (b *blobSet) Blobs() []Blob {
 	for _, digestString := range b.sortedDigestStrings {
 		blobs = append(blobs, b.digestStringToBlob[digestString])
 	}
-
 	return blobs
 }
 

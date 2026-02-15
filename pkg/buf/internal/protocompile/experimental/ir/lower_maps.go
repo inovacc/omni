@@ -41,12 +41,10 @@ func generateMapEntries(file *File, r *report.Report) {
 		}
 
 		parent := field.Parent()
-
 		base := parent.FullName()
 		if base == "" {
 			base = file.Package()
 		}
-
 		name := pcinternal.MapEntry(field.Name())
 		fqn := base.Append(name)
 
@@ -77,7 +75,6 @@ func generateMapEntries(file *File, r *report.Report) {
 
 			mapEntryOf: field.ID(),
 		})))
-
 		ty.Raw().memberByName = sync.OnceValue(ty.makeMembersByName)
 		if parent.IsZero() {
 			file.types = slices.Insert(file.types, file.topLevelTypesEnd, ty.ID())

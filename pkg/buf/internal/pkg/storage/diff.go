@@ -108,7 +108,6 @@ func DiffBytes(
 	if err := Diff(ctx, buffer, one, two, options...); err != nil {
 		return nil, err
 	}
-
 	return buffer.Bytes(), nil
 }
 
@@ -143,7 +142,6 @@ func DiffWithFilenames(
 	for _, option := range options {
 		option(diffOptions)
 	}
-
 	externalPaths := diffOptions.externalPaths
 	oneExternalPathPrefix := diffOptions.oneExternalPathPrefix
 	twoExternalPathPrefix := diffOptions.twoExternalPathPrefix
@@ -152,23 +150,18 @@ func DiffWithFilenames(
 	if err != nil {
 		return nil, err
 	}
-
 	twoObjectInfos, err := allObjectInfos(ctx, two, "")
 	if err != nil {
 		return nil, err
 	}
-
 	sortObjectInfos(oneObjectInfos)
 	sortObjectInfos(twoObjectInfos)
-
 	onePathToObjectInfo := pathToObjectInfo(oneObjectInfos)
 	twoPathToObjectInfo := pathToObjectInfo(twoObjectInfos)
-
 	var changedPaths []string
 
 	for _, oneObjectInfo := range oneObjectInfos {
 		path := oneObjectInfo.Path()
-
 		oneDiffPath, err := getDiffPathForObjectInfo(
 			oneObjectInfo,
 			externalPaths,
@@ -177,23 +170,17 @@ func DiffWithFilenames(
 		if err != nil {
 			return nil, err
 		}
-
 		oneData, err := ReadPath(ctx, one, path)
 		if err != nil {
 			return nil, err
 		}
-
-		var (
-			twoData     []byte
-			twoDiffPath string
-		)
-
+		var twoData []byte
+		var twoDiffPath string
 		if twoObjectInfo, ok := twoPathToObjectInfo[path]; ok {
 			twoData, err = ReadPath(ctx, two, path)
 			if err != nil {
 				return nil, err
 			}
-
 			twoDiffPath, err = getDiffPathForObjectInfo(
 				twoObjectInfo,
 				externalPaths,
@@ -202,13 +189,11 @@ func DiffWithFilenames(
 			if err != nil {
 				return nil, err
 			}
-
 			if !bytes.Equal(oneData, twoData) {
 				changedPaths = append(changedPaths, path)
 			}
 		} else {
 			changedPaths = append(changedPaths, path)
-
 			twoDiffPath, err = getDiffPathForNotFound(
 				oneObjectInfo,
 				externalPaths,
@@ -219,12 +204,10 @@ func DiffWithFilenames(
 				return nil, err
 			}
 		}
-
 		for _, transform := range diffOptions.transforms {
 			oneData = transform("one", oneDiffPath, oneData)
 			twoData = transform("two", twoDiffPath, twoData)
 		}
-
 		diffData, err := diff.Diff(
 			ctx,
 			oneData,
@@ -236,24 +219,20 @@ func DiffWithFilenames(
 		if err != nil {
 			return nil, err
 		}
-
 		if len(diffData) > 0 {
 			if _, err := writer.Write(diffData); err != nil {
 				return nil, err
 			}
 		}
 	}
-
 	for _, twoObjectInfo := range twoObjectInfos {
 		path := twoObjectInfo.Path()
 		if _, ok := onePathToObjectInfo[path]; !ok {
 			changedPaths = append(changedPaths, path)
-
 			twoData, err := ReadPath(ctx, two, path)
 			if err != nil {
 				return nil, err
 			}
-
 			oneDiffPath, err := getDiffPathForNotFound(
 				twoObjectInfo,
 				externalPaths,
@@ -263,7 +242,6 @@ func DiffWithFilenames(
 			if err != nil {
 				return nil, err
 			}
-
 			twoDiffPath, err := getDiffPathForObjectInfo(
 				twoObjectInfo,
 				externalPaths,
@@ -272,7 +250,6 @@ func DiffWithFilenames(
 			if err != nil {
 				return nil, err
 			}
-
 			diffData, err := diff.Diff(
 				ctx,
 				nil,
@@ -284,7 +261,6 @@ func DiffWithFilenames(
 			if err != nil {
 				return nil, err
 			}
-
 			if len(diffData) > 0 {
 				if _, err := writer.Write(diffData); err != nil {
 					return nil, err
@@ -296,7 +272,6 @@ func DiffWithFilenames(
 	// in "one" will appear last, even if sort order would have them interleaved.
 	// So we must sort explicitly.
 	sort.Strings(changedPaths)
-
 	return changedPaths, nil
 }
 
@@ -308,16 +283,13 @@ func getDiffPathForObjectInfo(
 	if !externalPaths {
 		return objectInfo.Path(), nil
 	}
-
 	externalPath := objectInfo.ExternalPath()
 	if externalPathPrefix == "" {
 		return externalPath, nil
 	}
-
 	if !strings.HasPrefix(externalPath, externalPathPrefix) {
 		return "", fmt.Errorf("diff: expected %s to have prefix %s", externalPath, externalPathPrefix)
 	}
-
 	return externalPath, nil
 }
 
@@ -330,9 +302,7 @@ func getDiffPathForNotFound(
 	if !externalPaths {
 		return foundObjectInfo.Path(), nil
 	}
-
 	externalPath := foundObjectInfo.ExternalPath()
-
 	switch {
 	case foundExternalPathPrefix == "" && notFoundExternalPathPrefix == "":
 		// no prefix, just return external path
@@ -341,12 +311,11 @@ func getDiffPathForNotFound(
 		// the not-found side has a prefix, append the external path to this prefix, and we're done
 		return notFoundExternalPathPrefix + externalPath, nil
 	default:
-		// foundExternalPathPrefix != "" && notFoundExternalPathPrefix == ""
-		// foundExternalPathPrefix != "" && notFoundExternalPathPrefix != ""
+		//foundExternalPathPrefix != "" && notFoundExternalPathPrefix == ""
+		//foundExternalPathPrefix != "" && notFoundExternalPathPrefix != ""
 		if !strings.HasPrefix(externalPath, foundExternalPathPrefix) {
 			return "", fmt.Errorf("diff: expected %s to have prefix %s", externalPath, foundExternalPathPrefix)
 		}
-
 		return notFoundExternalPathPrefix + strings.TrimPrefix(externalPath, foundExternalPathPrefix), nil
 	}
 }
@@ -369,10 +338,8 @@ func (d *diffOptions) toDiffPackageOptions() []diff.DiffOption {
 	if d.suppressCommands {
 		diffPackageOptions = append(diffPackageOptions, diff.DiffWithSuppressCommands())
 	}
-
 	if d.suppressTimestamps {
 		diffPackageOptions = append(diffPackageOptions, diff.DiffWithSuppressTimestamps())
 	}
-
 	return diffPackageOptions
 }

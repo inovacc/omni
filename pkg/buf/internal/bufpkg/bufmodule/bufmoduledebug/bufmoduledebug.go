@@ -28,15 +28,12 @@ func ModuleSetDebugString(ctx context.Context, moduleSet bufmodule2.ModuleSet) (
 	printer := indent.NewPrinter("  ")
 	printer.Pf("module_set:")
 	printer.In()
-
 	for _, module := range moduleSet.Modules() {
 		if err := printModule(ctx, printer, module); err != nil {
 			return "", err
 		}
 	}
-
 	printer.Out()
-
 	return printer.String()
 }
 
@@ -48,7 +45,6 @@ func ModuleDebugString(ctx context.Context, module bufmodule2.Module) (string, e
 	if err := printModule(ctx, printer, module); err != nil {
 		return "", err
 	}
-
 	return printer.String()
 }
 
@@ -59,15 +55,12 @@ func ModuleReadBucketDebugString(ctx context.Context, moduleReadBucket bufmodule
 	printer := indent.NewPrinter("  ")
 	printer.Pf("module_read_bucket:")
 	printer.In()
-
 	fileInfos, err := bufmodule2.GetFileInfos(ctx, moduleReadBucket)
 	if err != nil {
 		return "", err
 	}
-
 	printer.P("files:")
 	printer.In()
-
 	for _, fileInfo := range fileInfos {
 		printer.Pf("%s:", fileInfo.Path())
 		printer.In()
@@ -75,10 +68,8 @@ func ModuleReadBucketDebugString(ctx context.Context, moduleReadBucket bufmodule
 		printer.Pf("external_path: %s", fileInfo.ExternalPath())
 		printer.Out()
 	}
-
 	printer.Out()
 	printer.Out()
-
 	return printer.String()
 }
 
@@ -87,12 +78,10 @@ func printModule(ctx context.Context, printer indent.Printer, module bufmodule2.
 	if err != nil {
 		return err
 	}
-
 	moduleDeps, err := module.ModuleDeps()
 	if err != nil {
 		return err
 	}
-
 	printer.P("module:")
 	printer.In()
 	printer.Pf("name: %s", module.OpaqueID())
@@ -100,16 +89,13 @@ func printModule(ctx context.Context, printer indent.Printer, module bufmodule2.
 	printer.Pf("local: %v", module.IsLocal())
 	printer.P("deps:")
 	printer.In()
-
 	for _, moduleDep := range moduleDeps {
 		printer.Pf("name:", moduleDep.OpaqueID())
 		printer.Pf("direct: %v", moduleDep.IsDirect())
 	}
-
 	printer.Out()
 	printer.P("files:")
 	printer.In()
-
 	for _, fileInfo := range fileInfos {
 		printer.Pf("%s:", fileInfo.Path())
 		printer.In()
@@ -117,9 +103,7 @@ func printModule(ctx context.Context, printer indent.Printer, module bufmodule2.
 		printer.Pf("external_path: %s", fileInfo.ExternalPath())
 		printer.Out()
 	}
-
 	printer.Out()
 	printer.Out()
-
 	return nil
 }

@@ -74,7 +74,6 @@ func annotationToFileAnnotation(
 			annotation.PolicyName(),
 		)
 	}
-
 	path := fileLocation.FileDescriptor().ProtoreflectFileDescriptor().Path()
 	// While it never should, it is OK if pathToExternalPath returns "" for a given path.
 	// We handle this in fileInfo.
@@ -83,7 +82,6 @@ func annotationToFileAnnotation(
 	startColumn := fileLocation.StartColumn() + 1
 	endLine := fileLocation.EndLine() + 1
 	endColumn := fileLocation.EndColumn() + 1
-
 	return bufanalysis.NewFileAnnotation(
 		fileInfo,
 		startLine,

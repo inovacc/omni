@@ -20,7 +20,6 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
-	"slices"
 	"strings"
 
 	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/ast"
@@ -42,7 +41,6 @@ func (s *server) getDeprecateCodeAction(
 		slog.Uint64("line", uint64(params.Range.Start.Line)),
 		slog.Uint64("char", uint64(params.Range.Start.Character)),
 	)
-
 	if file.workspace == nil || file.ir == nil {
 		s.logger.DebugContext(ctx, "deprecate: no workspace or IR")
 		return nil
@@ -53,7 +51,6 @@ func (s *server) getDeprecateCodeAction(
 		s.logger.DebugContext(ctx, "deprecate: no deprecation target")
 		return nil
 	}
-
 	s.logger.DebugContext(
 		ctx, "deprecate: generating edits",
 		slog.String("fqn_prefix", string(fqnPrefix)),
@@ -63,28 +60,23 @@ func (s *server) getDeprecateCodeAction(
 	// Generate workspace-wide edits for all types matching the FQN prefix.
 	checker := newFullNameMatcher(fqnPrefix)
 	edits := make(map[protocol.DocumentURI][]protocol.TextEdit)
-
 	for _, wsFile := range file.workspace.PathToFile() {
 		if wsFile.ir == nil {
 			continue
 		}
-
 		fileEdits := generateDeprecationEdits(wsFile, checker)
 		if len(fileEdits) > 0 {
 			edits[wsFile.uri] = fileEdits
 		}
 	}
-
 	if len(edits) == 0 {
 		s.logger.DebugContext(ctx, "deprecate: no edits generated")
 		return nil
 	}
-
 	s.logger.DebugContext(
 		ctx, "deprecate: returning code action",
 		slog.Int("edit_count", len(edits)),
 	)
-
 	return &protocol.CodeAction{
 		Title: title,
 		Kind:  protocol.RefactorRewrite,
@@ -102,38 +94,30 @@ func getDeprecationTarget(ctx context.Context, file *file, position protocol.Pos
 		if astFile == nil {
 			return "", ""
 		}
-
 		pkgDecl := astFile.Package()
 		if pkgDecl.IsZero() {
 			return "", ""
 		}
 		// Check if cursor is within the package declaration span.
 		pkgSpan := pkgDecl.Span()
-
 		offset := positionToOffset(file, position)
 		if offsetInSpan(offset, pkgSpan) != 0 {
 			return "", ""
 		}
-
 		cursorLine := int(position.Line) + 1 // Convert 0-indexed to 1-indexed
 		if cursorLine < pkgSpan.StartLoc().Line || cursorLine > pkgSpan.EndLoc().Line {
 			return "", ""
 		}
-
 		pkg := file.ir.Package()
-
 		return pkg, fmt.Sprintf("Deprecate package %s", pkg)
 	}
-
 	if symbol.ir.IsZero() {
 		return "", ""
 	}
-
 	fqn := symbol.ir.FullName()
 	if fqn == "" {
 		return "", ""
 	}
-
 	switch symbol.ir.Kind() {
 	case ir.SymbolKindMessage:
 		return fqn, fmt.Sprintf("Deprecate message %s", fqn)
@@ -201,7 +185,6 @@ func generateDeprecationEdits(file *file, checker *fullNameMatcher) []protocol.T
 			}
 		}
 	}
-
 	return edits
 }
 
@@ -210,7 +193,6 @@ func getPackageFQN(file *file) ir.FullName {
 	if file.ir == nil {
 		return ""
 	}
-
 	return file.ir.Package()
 }
 
@@ -220,18 +202,13 @@ func getSpanIndentation(span source.Span) string {
 	if loc.Line < 1 {
 		return ""
 	}
-
 	text := span.File.Text()
-
 	lines := strings.Split(text, "\n")
 	if loc.Line > len(lines) {
 		return ""
 	}
-
 	line := lines[loc.Line-1]
-
 	var indent strings.Builder
-
 	for _, ch := range line {
 		if ch == ' ' || ch == '\t' {
 			indent.WriteRune(ch)
@@ -239,7 +216,6 @@ func getSpanIndentation(span source.Span) string {
 			break
 		}
 	}
-
 	return indent.String()
 }
 
@@ -250,7 +226,6 @@ func deprecateFile(file *file) *protocol.TextEdit {
 	if deprecated, ok := file.ir.Deprecated().AsBool(); ok && deprecated {
 		return nil
 	}
-
 	astFile := file.ir.AST()
 	if astFile == nil {
 		return nil
@@ -263,7 +238,6 @@ func deprecateFile(file *file) *protocol.TextEdit {
 
 	// Find the insertion point after package or syntax declaration
 	var insertSpan source.Span
-
 	pkgDecl := astFile.Package()
 	if !pkgDecl.IsZero() {
 		insertSpan = pkgDecl.Span()
@@ -283,8 +257,7 @@ func deprecateFile(file *file) *protocol.TextEdit {
 		}
 	}
 	// Insert after the end of the declaration (with blank line for readability)
-	insertLocation := insertSpan.Location(insertSpan.End, positionalEncoding)
-
+	insertLocation := insertSpan.File.Location(insertSpan.End, positionalEncoding)
 	return &protocol.TextEdit{
 		Range:   reportLocationsToProtocolRange(insertLocation, insertLocation),
 		NewText: "\n\noption deprecated = true;",
@@ -298,7 +271,6 @@ func deprecateType(file *file, typ ir.Type) *protocol.TextEdit {
 	if deprecated, ok := typ.Deprecated().AsBool(); ok && deprecated {
 		return nil
 	}
-
 	declDef := typ.AST()
 	if declDef.IsZero() {
 		return nil
@@ -308,7 +280,6 @@ func deprecateType(file *file, typ ir.Type) *protocol.TextEdit {
 	if !body.IsZero() && hasDeprecatedOption(body.Decls()) {
 		return nil
 	}
-
 	return deprecateDeclWithBody(file, declDef)
 }
 
@@ -369,8 +340,7 @@ func hasDeprecatedOption(decls seq.Inserter[ast.DeclAny]) bool {
 		if typePath.IsZero() {
 			continue
 		}
-
-		if !typePath.IsIdents("option") {
+		if !typePath.Path.IsIdents("option") {
 			continue
 		}
 		// Check if the option name is "deprecated"
@@ -378,12 +348,10 @@ func hasDeprecatedOption(decls seq.Inserter[ast.DeclAny]) bool {
 		if namePath.IsZero() {
 			continue
 		}
-
 		if namePath.IsIdents("deprecated") {
 			return true
 		}
 	}
-
 	return false
 }
 
@@ -415,7 +383,6 @@ func deprecateDeclWithBody(file *file, declDef ast.DeclDef) *protocol.TextEdit {
 	// Check if braces are on the same line (empty or single-line body like `{}`)
 	// If so, we need to add a trailing newline + indent for the closing brace
 	var newText string
-
 	if !closeBrace.IsZero() {
 		closeBraceSpan := closeBrace.LeafSpan()
 		if closeBraceSpan.StartLoc().Line == openBraceSpan.EndLoc().Line {
@@ -429,8 +396,7 @@ func deprecateDeclWithBody(file *file, declDef ast.DeclDef) *protocol.TextEdit {
 		newText = "\n" + bodyIndent + "option deprecated = true;"
 	}
 
-	insertLocation := openBraceSpan.Location(openBraceSpan.End, positionalEncoding)
-
+	insertLocation := openBraceSpan.File.Location(openBraceSpan.End, positionalEncoding)
 	return &protocol.TextEdit{
 		Range:   reportLocationsToProtocolRange(insertLocation, insertLocation),
 		NewText: newText,
@@ -452,7 +418,6 @@ func deprecateMethodWithoutBody(file *file, declDef ast.DeclDef) *protocol.TextE
 
 	// Replace the semicolon with a body block
 	semiSpan := semi.Span()
-
 	return &protocol.TextEdit{
 		Range:   reportSpanToProtocolRange(semiSpan),
 		NewText: " {\n" + bodyIndent + "option deprecated = true;\n" + declIndent + "}",
@@ -465,7 +430,6 @@ func deprecateMember(file *file, member ir.Member) *protocol.TextEdit {
 	if _, ok := member.Deprecated().AsBool(); ok {
 		return nil
 	}
-
 	declDef := member.AST()
 	if declDef.IsZero() {
 		return nil
@@ -494,11 +458,8 @@ func deprecateMember(file *file, member ir.Member) *protocol.TextEdit {
 
 				// Check if there's already a comma after the last entry
 				existingComma := entries.Comma(lastIdx)
-
-				var (
-					newText    string
-					insertSpan source.Span
-				)
+				var newText string
+				var insertSpan source.Span
 
 				if existingComma.IsZero() {
 					// No comma - insert after the last entry value
@@ -510,8 +471,7 @@ func deprecateMember(file *file, member ir.Member) *protocol.TextEdit {
 					newText = "\n" + indent + "deprecated = true"
 				}
 
-				insertLocation := insertSpan.Location(insertSpan.End, positionalEncoding)
-
+				insertLocation := insertSpan.File.Location(insertSpan.End, positionalEncoding)
 				return &protocol.TextEdit{
 					Range:   reportLocationsToProtocolRange(insertLocation, insertLocation),
 					NewText: newText,
@@ -520,8 +480,7 @@ func deprecateMember(file *file, member ir.Member) *protocol.TextEdit {
 		}
 
 		// Single-line options: insert ", deprecated = true" before the closing bracket
-		insertLocation := closeBracketSpan.Location(closeBracketSpan.Start, positionalEncoding)
-
+		insertLocation := closeBracketSpan.File.Location(closeBracketSpan.Start, positionalEncoding)
 		return &protocol.TextEdit{
 			Range:   reportLocationsToProtocolRange(insertLocation, insertLocation),
 			NewText: ", deprecated = true",
@@ -533,10 +492,8 @@ func deprecateMember(file *file, member ir.Member) *protocol.TextEdit {
 	if semi.IsZero() {
 		return nil
 	}
-
 	semiSpan := semi.Span()
-	insertLocation := semiSpan.Location(semiSpan.Start, positionalEncoding)
-
+	insertLocation := semiSpan.File.Location(semiSpan.Start, positionalEncoding)
 	return &protocol.TextEdit{
 		Range:   reportLocationsToProtocolRange(insertLocation, insertLocation),
 		NewText: " [deprecated = true]",
@@ -560,14 +517,17 @@ func (d *fullNameMatcher) matchesPrefix(fqn ir.FullName) bool {
 			return true
 		}
 	}
-
 	return false
 }
 
 // matchesExact returns true if the given FQN matches exactly.
 func (d *fullNameMatcher) matchesExact(fqn ir.FullName) bool {
-
-	return slices.Contains(d.prefixes, fqn)
+	for _, prefix := range d.prefixes {
+		if fqn == prefix {
+			return true
+		}
+	}
+	return false
 }
 
 // fqnMatchesPrefix returns true if fqn starts with prefix using component-based matching.
@@ -575,10 +535,8 @@ func fqnMatchesPrefix(fqn, prefix ir.FullName) bool {
 	if len(prefix) > len(fqn) {
 		return false
 	}
-
 	if len(prefix) == len(fqn) {
 		return fqn == prefix
 	}
-
 	return strings.HasPrefix(string(fqn), string(prefix)+".")
 }

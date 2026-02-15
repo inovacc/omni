@@ -22,9 +22,9 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go/buf/validate"
 	"buf.build/go/protovalidate"
 	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufprotosource"
+	"buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go/buf/validate"
 	protoencoding2 "github.com/inovacc/omni/pkg/buf/internal/pkg/protoencoding"
 	"github.com/inovacc/omni/pkg/buf/internal/pkg/syserror"
 	"google.golang.org/protobuf/proto"
@@ -168,12 +168,10 @@ func checkField(
 	if err != nil {
 		return err
 	}
-
 	constraints, err := protovalidate.ResolveFieldRules(fieldDescriptor)
 	if err != nil {
 		return err
 	}
-
 	return checkRulesForField(
 		&adder{
 			field:               field,
@@ -208,11 +206,9 @@ func checkRulesForField(
 	if fieldRules == nil {
 		return nil
 	}
-
 	if fieldDescriptor.IsExtension() {
 		checkRulesForExtension(adder, fieldRules)
 	}
-
 	if fieldDescriptor.ContainingOneof() != nil &&
 		!protodesc.ToFieldDescriptorProto(fieldDescriptor).GetProto3Optional() &&
 		fieldRules.GetRequired() {
@@ -225,9 +221,7 @@ func checkRulesForField(
 			adder.getFieldRuleName(requiredFieldNumber),
 		)
 	}
-
 	checkFieldFlags(adder, fieldDescriptor, fieldRules)
-
 	if err := checkCELForField(
 		adder,
 		fieldRules,
@@ -236,36 +230,26 @@ func checkRulesForField(
 	); err != nil {
 		return err
 	}
-
 	fieldRulesMessage := fieldRules.ProtoReflect()
-
 	typeRulesFieldDescriptor := fieldRulesMessage.WhichOneof(typeOneofDescriptor)
 	if typeRulesFieldDescriptor == nil {
 		return nil
 	}
-
 	typeRulesFieldNumber := int32(typeRulesFieldDescriptor.Number())
 	// Map and repeated special cases that contain fieldRules.
 	if typeRulesFieldNumber == mapRulesFieldNumber {
 		return checkMapRules(adder, fieldRules.GetMap(), fieldDescriptor, containingMessageDescriptor, extensionTypeResolver)
 	}
-
 	if typeRulesFieldNumber == repeatedRulesFieldNumber {
 		return checkRepeatedRules(adder, fieldRules.GetRepeated(), fieldDescriptor, containingMessageDescriptor, extensionTypeResolver)
 	}
-
 	typesMatch := checkRulesTypeMatchFieldType(adder, fieldDescriptor, typeRulesFieldNumber, expectRepeatedRule)
 	if !typesMatch {
 		return nil
 	}
-
 	typeRulesMessage := fieldRulesMessage.Get(typeRulesFieldDescriptor).Message()
-
-	var (
-		exampleValues      []protoreflect.Value
-		exampleFieldNumber int32
-	)
-
+	var exampleValues []protoreflect.Value
+	var exampleFieldNumber int32
 	typeRulesMessage.Range(func(fd protoreflect.FieldDescriptor, value protoreflect.Value) bool {
 		if string(fd.Name()) == exampleName {
 			exampleFieldNumber = int32(fd.Number())
@@ -274,13 +258,10 @@ func checkRulesForField(
 			for i := range list.Len() {
 				exampleValues = append(exampleValues, list.Get(i))
 			}
-
 			return false
 		}
-
 		return true
 	})
-
 	if len(exampleValues) > 0 {
 		if err := checkExampleValues(
 			adder,
@@ -296,12 +277,10 @@ func checkRulesForField(
 			return err
 		}
 	}
-
 	if numberRulesCheckFunc, ok := fieldNumberToCheckNumberRulesFunc[typeRulesFieldNumber]; ok {
 		numberRulesMessage := fieldRulesMessage.Get(typeRulesFieldDescriptor).Message()
 		return numberRulesCheckFunc(adder, typeRulesFieldNumber, numberRulesMessage)
 	}
-
 	switch typeRulesFieldNumber {
 	case boolRulesFieldNumber:
 		// Bool rules only have `const` and does not need validating.
@@ -320,7 +299,6 @@ func checkRulesForField(
 	case fieldMaskRulesFieldNumber:
 		checkFieldMaskRules(adder, fieldRules.GetFieldMask())
 	}
-
 	return nil
 }
 
@@ -330,12 +308,10 @@ func checkFieldFlags(
 	fieldRules *validate.FieldRules,
 ) {
 	var fieldCount int
-
 	fieldRules.ProtoReflect().Range(func(fd protoreflect.FieldDescriptor, v protoreflect.Value) bool {
 		fieldCount++
 		return true
 	})
-
 	if fieldRules.GetIgnore() == validate.Ignore_IGNORE_ALWAYS && fieldCount > 1 {
 		adder.addForPathf(
 			[]int32{ignoreFieldNumber},
@@ -346,7 +322,6 @@ func checkFieldFlags(
 			adder.getFieldRuleName(),
 		)
 	}
-
 	if fieldRules.GetRequired() && fieldRules.GetIgnore() == validate.Ignore_IGNORE_IF_ZERO_VALUE {
 		adder.addForPathsf(
 			[][]int32{
@@ -360,7 +335,6 @@ func checkFieldFlags(
 			validate.Ignore_IGNORE_IF_ZERO_VALUE,
 		)
 	}
-
 	if fieldRules.GetIgnore() == validate.Ignore_IGNORE_IF_ZERO_VALUE && fieldDescriptor.HasPresence() && !fieldDescriptor.IsExtension() {
 		adder.addForPathf(
 			[]int32{ignoreFieldNumber},
@@ -388,20 +362,16 @@ func checkRulesTypeMatchFieldType(
 			adder.fieldPrettyTypeName,
 			adder.getFieldRuleName(ruleFieldNumber),
 		)
-
 		return false
 	}
-
 	if expectedScalarType, ok := fieldNumberToAllowedScalarType[ruleFieldNumber]; ok &&
 		expectedScalarType == fieldDescriptor.Kind() {
 		return true
 	}
-
 	if expectedFieldMessageName, ok := fieldNumberToAllowedMessageName[ruleFieldNumber]; ok &&
 		isFieldDescriptorMessage(fieldDescriptor) && string(fieldDescriptor.Message().FullName()) == expectedFieldMessageName {
 		return true
 	}
-
 	adder.addForPathf(
 		[]int32{ruleFieldNumber},
 		"Field %q is of type %s but has %s rules.",
@@ -409,7 +379,6 @@ func checkRulesTypeMatchFieldType(
 		adder.fieldPrettyTypeName,
 		adder.getFieldRuleName(ruleFieldNumber),
 	)
-
 	return false
 }
 
@@ -425,7 +394,6 @@ func checkRulesForExtension(
 			adder.getFieldRuleName(requiredFieldNumber),
 		)
 	}
-
 	if fieldRules.GetIgnore() == validate.Ignore_IGNORE_IF_ZERO_VALUE {
 		adder.addForPathf(
 			[]int32{ignoreFieldNumber},
@@ -451,10 +419,8 @@ func checkRepeatedRules(
 			baseAdder.fieldName(),
 			baseAdder.getFieldRuleName(repeatedRulesFieldNumber),
 		)
-
 		return nil
 	}
-
 	if repeatedRules.GetUnique() && isFieldDescriptorMessage(fieldDescriptor) {
 		if _, isFieldWrapper := wrapperTypeNames[string(fieldDescriptor.Message().FullName())]; !isFieldWrapper {
 			baseAdder.addForPathf(
@@ -466,30 +432,28 @@ func checkRepeatedRules(
 			)
 		}
 	}
-
-	if repeatedRules.MinItems != nil && repeatedRules.MaxItems != nil && repeatedRules.GetMinItems() > repeatedRules.GetMaxItems() {
+	if repeatedRules.MinItems != nil && repeatedRules.MaxItems != nil && *repeatedRules.MinItems > *repeatedRules.MaxItems {
 		baseAdder.addForPathf(
 			[]int32{repeatedRulesFieldNumber, minItemsFieldNumberInRepeatedFieldRules},
 			"Field %q has value %d for %s, which must be higher than value %d for %s.",
 			baseAdder.fieldName(),
-			repeatedRules.GetMinItems(),
+			*repeatedRules.MinItems,
 			baseAdder.getFieldRuleName(repeatedRulesFieldNumber, minItemsFieldNumberInRepeatedFieldRules),
-			repeatedRules.GetMaxItems(),
+			*repeatedRules.MaxItems,
 			baseAdder.getFieldRuleName(repeatedRulesFieldNumber, maxItemsFieldNumberInRepeatedFieldRules),
 		)
 		baseAdder.addForPathf(
 			[]int32{repeatedRulesFieldNumber, maxItemsFieldNumberInRepeatedFieldRules},
 			"Field %q has value %d for %s, which must be lower than value %d for %s.",
 			baseAdder.fieldName(),
-			repeatedRules.GetMaxItems(),
+			*repeatedRules.MaxItems,
 			baseAdder.getFieldRuleName(repeatedRulesFieldNumber, maxItemsFieldNumberInRepeatedFieldRules),
-			repeatedRules.GetMinItems(),
+			*repeatedRules.MinItems,
 			baseAdder.getFieldRuleName(repeatedRulesFieldNumber, minItemsFieldNumberInRepeatedFieldRules),
 		)
 	}
-
 	itemAdder := baseAdder.cloneWithNewBasePath(repeatedRulesFieldNumber, itemsFieldNumberInRepeatedRules)
-	if repeatedRules.GetItems() != nil && repeatedRules.GetItems().GetRequired() {
+	if repeatedRules.Items != nil && repeatedRules.Items.GetRequired() {
 		itemAdder.addForPathf(
 			[]int32{requiredFieldNumber},
 			"Field %q has %s on repeated item rules, which is unenforceable. The %s constraint cannot be applied to individual items in a repeated field.",
@@ -498,8 +462,7 @@ func checkRepeatedRules(
 			itemAdder.getFieldRuleName(requiredFieldNumber),
 		)
 	}
-
-	return checkRulesForField(itemAdder, repeatedRules.GetItems(), containingMessageDescriptor, nil, fieldDescriptor, false, extensionTypeResolver)
+	return checkRulesForField(itemAdder, repeatedRules.Items, containingMessageDescriptor, nil, fieldDescriptor, false, extensionTypeResolver)
 }
 
 func checkMapRules(
@@ -516,33 +479,30 @@ func checkMapRules(
 			baseAdder.fieldName(),
 			baseAdder.getFieldRuleName(mapRulesFieldNumber),
 		)
-
 		return nil
 	}
-
-	if mapRules.MinPairs != nil && mapRules.MaxPairs != nil && mapRules.GetMinPairs() > mapRules.GetMaxPairs() {
+	if mapRules.MinPairs != nil && mapRules.MaxPairs != nil && *mapRules.MinPairs > *mapRules.MaxPairs {
 		baseAdder.addForPathf(
 			[]int32{mapRulesFieldNumber, minPairsFieldNumberInMapRules},
 			"Field %q has value %d for %s, which must be lower than value %d for %s.",
 			baseAdder.fieldName(),
-			mapRules.GetMinPairs(),
+			*mapRules.MinPairs,
 			baseAdder.getFieldRuleName(mapRulesFieldNumber, minPairsFieldNumberInMapRules),
-			mapRules.GetMaxPairs(),
+			*mapRules.MaxPairs,
 			baseAdder.getFieldRuleName(mapRulesFieldNumber, maxPairsFieldNumberInMapRules),
 		)
 		baseAdder.addForPathf(
 			[]int32{mapRulesFieldNumber, maxPairsFieldNumberInMapRules},
 			"Field %q has value %d for %s, which is lower than value %d for %s.",
 			baseAdder.fieldName(),
-			mapRules.GetMaxPairs(),
+			*mapRules.MaxPairs,
 			baseAdder.getFieldRuleName(mapRulesFieldNumber, maxPairsFieldNumberInMapRules),
-			mapRules.GetMinPairs(),
+			*mapRules.MinPairs,
 			baseAdder.getFieldRuleName(mapRulesFieldNumber, minPairsFieldNumberInMapRules),
 		)
 	}
-
 	keyAdder := baseAdder.cloneWithNewBasePath(mapRulesFieldNumber, keysFieldNumberInMapRules)
-	if mapRules.GetKeys() != nil && mapRules.GetKeys().GetRequired() {
+	if mapRules.Keys != nil && mapRules.Keys.GetRequired() {
 		keyAdder.addForPathf(
 			[]int32{requiredFieldNumber},
 			"Field %q has %s on map key rules, which is unenforceable. The %s constraint cannot be applied to map keys.",
@@ -551,14 +511,12 @@ func checkMapRules(
 			keyAdder.getFieldRuleName(requiredFieldNumber),
 		)
 	}
-
-	err := checkRulesForField(keyAdder, mapRules.GetKeys(), containingMessageDescriptor, fieldDescriptor, fieldDescriptor.MapKey(), false, extensionTypeResolver)
+	err := checkRulesForField(keyAdder, mapRules.Keys, containingMessageDescriptor, fieldDescriptor, fieldDescriptor.MapKey(), false, extensionTypeResolver)
 	if err != nil {
 		return err
 	}
-
 	valueAdder := baseAdder.cloneWithNewBasePath(mapRulesFieldNumber, valuesFieldNumberInMapRules)
-	if mapRules.GetValues() != nil && mapRules.GetValues().GetRequired() {
+	if mapRules.Values != nil && mapRules.Values.GetRequired() {
 		valueAdder.addForPathf(
 			[]int32{requiredFieldNumber},
 			"Field %q has %s on map value rules, which is unenforceable. The %s constraint cannot be applied to map values.",
@@ -567,73 +525,67 @@ func checkMapRules(
 			valueAdder.getFieldRuleName(requiredFieldNumber),
 		)
 	}
-
-	return checkRulesForField(valueAdder, mapRules.GetValues(), containingMessageDescriptor, fieldDescriptor, fieldDescriptor.MapValue(), false, extensionTypeResolver)
+	return checkRulesForField(valueAdder, mapRules.Values, containingMessageDescriptor, fieldDescriptor, fieldDescriptor.MapValue(), false, extensionTypeResolver)
 }
 
 func checkStringRules(adder *adder, stringRules *validate.StringRules) error {
 	checkConst(adder, stringRules, stringRulesFieldNumber)
-
 	if err := checkLenRules(adder, stringRules, stringRulesFieldNumber, "len", "min_len", "max_len"); err != nil {
 		return err
 	}
-
 	if err := checkLenRules(adder, stringRules, stringRulesFieldNumber, "len_bytes", "min_bytes", "max_bytes"); err != nil {
 		return err
 	}
-
-	if stringRules.MinLen != nil && stringRules.MaxBytes != nil && stringRules.GetMaxBytes() < stringRules.GetMinLen() {
+	if stringRules.MinLen != nil && stringRules.MaxBytes != nil && *stringRules.MaxBytes < *stringRules.MinLen {
 		adder.addForPathf(
 			[]int32{stringRulesFieldNumber, minLenFieldNumberInStringRules},
 			"Field %q has value %d for %s, which must be lower than value %d for %s. A string with %d UTF-8 characters has at least %d bytes, which is higher than %d bytes.",
 			adder.fieldName(),
-			stringRules.GetMinLen(),
+			*stringRules.MinLen,
 			adder.getFieldRuleName(stringRulesFieldNumber, minLenFieldNumberInStringRules),
-			stringRules.GetMaxBytes(),
+			*stringRules.MaxBytes,
 			adder.getFieldRuleName(stringRulesFieldNumber, maxBytesFieldNumberInStringRules),
-			stringRules.GetMinLen(),
-			stringRules.GetMinLen(),
-			stringRules.GetMaxBytes(),
+			*stringRules.MinLen,
+			*stringRules.MinLen,
+			*stringRules.MaxBytes,
 		)
 		adder.addForPathf(
 			[]int32{stringRulesFieldNumber, maxBytesFieldNumberInStringRules},
 			"Field %q has value %d for %s, which must be higher than value %d for %s. A string with %d UTF-8 characters has at least %d bytes, which is higher than %d bytes.",
 			adder.fieldName(),
-			stringRules.GetMaxBytes(),
+			*stringRules.MaxBytes,
 			adder.getFieldRuleName(stringRulesFieldNumber, maxBytesFieldNumberInStringRules),
-			stringRules.GetMinLen(),
+			*stringRules.MinLen,
 			adder.getFieldRuleName(stringRulesFieldNumber, minLenFieldNumberInStringRules),
-			stringRules.GetMinLen(),
-			stringRules.GetMinLen(),
-			stringRules.GetMaxBytes(),
+			*stringRules.MinLen,
+			*stringRules.MinLen,
+			*stringRules.MaxBytes,
 		)
 	}
-
-	if stringRules.MaxLen != nil && stringRules.MinBytes != nil && stringRules.GetMaxLen()*4 < stringRules.GetMinBytes() {
+	if stringRules.MaxLen != nil && stringRules.MinBytes != nil && *stringRules.MaxLen*4 < *stringRules.MinBytes {
 		adder.addForPathf(
 			[]int32{stringRulesFieldNumber, minBytesFieldNumberInStringRules},
 			"Field %q has value %d for %s but %d for %s. A string with %d UTF-8 characters has at most %d bytes.",
 			adder.fieldName(),
-			stringRules.GetMinBytes(),
+			*stringRules.MinBytes,
 			adder.getFieldRuleName(stringRulesFieldNumber, minBytesFieldNumberInStringRules),
-			stringRules.GetMaxLen(),
+			*stringRules.MaxLen,
 			adder.getFieldRuleName(stringRulesFieldNumber, maxLenFieldNumberInStringRules),
-			stringRules.GetMaxLen(),
-			stringRules.GetMaxLen()*4,
+			*stringRules.MaxLen,
+			*stringRules.MaxLen*4,
 		)
 		adder.addForPathf(
 			[]int32{stringRulesFieldNumber, maxLenFieldNumberInStringRules},
 			"Field %q has value %d for %s but %d for %s. A string with %d UTF-8 characters has at most %d bytes.",
 			adder.fieldName(),
-			stringRules.GetMaxLen(),
+			*stringRules.MaxLen,
 			adder.getFieldRuleName(stringRulesFieldNumber, maxLenFieldNumberInStringRules),
-			stringRules.GetMinBytes(),
+			*stringRules.MinBytes,
 			adder.getFieldRuleName(stringRulesFieldNumber, minBytesFieldNumberInStringRules),
-			stringRules.GetMaxLen(),
-			stringRules.GetMaxLen()*4,
+			*stringRules.MaxLen,
+			*stringRules.MaxLen*4,
 		)
 	}
-
 	substringFields := []struct {
 		value       *string
 		name        string
@@ -647,52 +599,47 @@ func checkStringRules(adder *adder, stringRules *validate.StringRules) error {
 		if substringField.value == nil {
 			continue
 		}
-
 		substring := *substringField.value
-
 		substringFieldNumber := substringField.fieldNumber
-		if runeCount := uint64(utf8.RuneCountInString(substring)); stringRules.MaxLen != nil && runeCount > stringRules.GetMaxLen() {
+		if runeCount := uint64(utf8.RuneCountInString(substring)); stringRules.MaxLen != nil && runeCount > *stringRules.MaxLen {
 			adder.addForPathf(
 				[]int32{stringRulesFieldNumber, substringFieldNumber},
 				"Field %q has a %s of length %d, exceeding its max_len (%d). It is impossible for a string to contain %q while having less than or equal to %d UTF-8 characters.",
 				adder.fieldName(),
 				adder.getFieldRuleName(stringRulesFieldNumber, substringFieldNumber),
 				runeCount,
-				stringRules.GetMaxLen(),
+				*stringRules.MaxLen,
 				substring,
 				runeCount,
 			)
 		}
-
-		if lenBytes := uint64(len(substring)); stringRules.MaxBytes != nil && lenBytes > stringRules.GetMaxBytes() {
+		if lenBytes := uint64(len(substring)); stringRules.MaxBytes != nil && lenBytes > *stringRules.MaxBytes {
 			adder.addForPathf(
 				[]int32{stringRulesFieldNumber, substringFieldNumber},
 				"Field %q has a %s of %d bytes, exceeding its max_bytes (%d). It is impossible for a string to contain %q while having less than or equal to %d bytes.",
 				adder.fieldName(),
 				adder.getFieldRuleName(stringRulesFieldNumber, substringFieldNumber),
 				lenBytes,
-				stringRules.GetMaxBytes(),
+				*stringRules.MaxBytes,
 				substring,
 				lenBytes,
 			)
 		}
-
-		if stringRules.NotContains != nil && strings.Contains(substring, stringRules.GetNotContains()) {
+		if stringRules.NotContains != nil && strings.Contains(substring, *stringRules.NotContains) {
 			adder.addForPathf(
 				[]int32{stringRulesFieldNumber, substringFieldNumber},
 				"Field %q has a %s (%q) containing its not_contains (%q). It is impossible for a string to contain %q without containing %q.",
 				adder.fieldName(),
 				adder.getFieldRuleName(stringRulesFieldNumber, substringFieldNumber),
 				substring,
-				stringRules.GetNotContains(),
+				*stringRules.NotContains,
 				substring,
-				stringRules.GetNotContains(),
+				*stringRules.NotContains,
 			)
 		}
 	}
-
 	if stringRules.Pattern != nil {
-		if _, err := regexp.Compile(stringRules.GetPattern()); err != nil {
+		if _, err := regexp.Compile(*stringRules.Pattern); err != nil {
 			adder.addForPathf(
 				[]int32{stringRulesFieldNumber, patternFieldNumberInStringRules},
 				"Field %q has a %s that fails to compile: %s.",
@@ -702,8 +649,7 @@ func checkStringRules(adder *adder, stringRules *validate.StringRules) error {
 			)
 		}
 	}
-
-	nonStrict := stringRules.Strict != nil && !stringRules.GetStrict()
+	nonStrict := stringRules.Strict != nil && !*stringRules.Strict
 	if stringRules.GetWellKnownRegex() == validate.KnownRegex_KNOWN_REGEX_UNSPECIFIED && nonStrict {
 		adder.addForPathf(
 			[]int32{stringRulesFieldNumber, strictFieldNumberInStringRules},
@@ -715,43 +661,39 @@ func checkStringRules(adder *adder, stringRules *validate.StringRules) error {
 			adder.getFieldRuleName(stringRulesFieldNumber, wellKnownRegexFieldNumberInStringRules),
 		)
 	}
-
 	return nil
 }
 
 func checkBytesRules(adder *adder, bytesRules *validate.BytesRules) error {
 	checkConst(adder, bytesRules, bytesRulesFieldNumber)
-
 	if err := checkLenRules(adder, bytesRules, bytesRulesFieldNumber, "len", "min_len", "max_len"); err != nil {
 		return err
 	}
-
 	subBytesFields := []struct {
 		value       []byte
 		name        string
 		fieldNumber int32
 	}{
-		{value: bytesRules.GetPrefix(), name: "prefix", fieldNumber: prefixFieldNumberInBytesRules},
-		{value: bytesRules.GetSuffix(), name: "suffix", fieldNumber: suffixFieldNumberInBytesRules},
-		{value: bytesRules.GetContains(), name: "contains", fieldNumber: containsFieldNumberInBytesRules},
+		{value: bytesRules.Prefix, name: "prefix", fieldNumber: prefixFieldNumberInBytesRules},
+		{value: bytesRules.Suffix, name: "suffix", fieldNumber: suffixFieldNumberInBytesRules},
+		{value: bytesRules.Contains, name: "contains", fieldNumber: containsFieldNumberInBytesRules},
 	}
 	for _, subBytesField := range subBytesFields {
-		if bytesRules.MaxLen != nil && uint64(len(subBytesField.value)) > bytesRules.GetMaxLen() {
+		if bytesRules.MaxLen != nil && uint64(len(subBytesField.value)) > *bytesRules.MaxLen {
 			adder.addForPathf(
 				[]int32{bytesRulesFieldNumber, subBytesField.fieldNumber},
 				"Field %q has a %s of %d bytes, exceeding its max_len (%d). It is impossible to contain %q while having less than or equal to %d bytes.",
 				adder.fieldName(),
 				adder.getFieldRuleName(bytesRulesFieldNumber, subBytesField.fieldNumber),
 				len(subBytesField.value),
-				bytesRules.GetMaxLen(),
+				*bytesRules.MaxLen,
 				subBytesField.value,
-				bytesRules.GetMaxLen(),
+				*bytesRules.MaxLen,
 			)
 		}
 	}
-
 	if bytesRules.Pattern != nil {
-		if _, err := regexp.Compile(bytesRules.GetPattern()); err != nil {
+		if _, err := regexp.Compile(*bytesRules.Pattern); err != nil {
 			adder.addForPathf(
 				[]int32{bytesRulesFieldNumber, patternFieldNumberInBytesRules},
 				"Field %q has a %s that fails to compile: %s.",
@@ -761,7 +703,6 @@ func checkBytesRules(adder *adder, bytesRules *validate.BytesRules) error {
 			)
 		}
 	}
-
 	return nil
 }
 
@@ -798,7 +739,6 @@ func checkTimestampRules(adder *adder, timestampRules *validate.TimestampRules) 
 	); err != nil {
 		return err
 	}
-
 	if timestampRules.GetLtNow() && timestampRules.GetGtNow() {
 		adder.addForPathsf(
 			[][]int32{
@@ -811,9 +751,8 @@ func checkTimestampRules(adder *adder, timestampRules *validate.TimestampRules) 
 			adder.getFieldRuleName(timestampRulesFieldNumber, ltNowFieldNumberInTimestampRules),
 		)
 	}
-
-	if timestampRules.GetWithin() != nil {
-		if durationErrString := checkDuration(timestampRules.GetWithin()); durationErrString != "" {
+	if timestampRules.Within != nil {
+		if durationErrString := checkDuration(timestampRules.Within); durationErrString != "" {
 			adder.addForPathf(
 				[]int32{timestampRulesFieldNumber, withInFieldNumberInTimestampRules},
 				"Field %q has an invalid %s: %s.",
@@ -821,26 +760,24 @@ func checkTimestampRules(adder *adder, timestampRules *validate.TimestampRules) 
 				adder.getFieldRuleName(timestampRulesFieldNumber, withInFieldNumberInTimestampRules),
 				durationErrString,
 			)
-		} else if timestampRules.GetWithin().GetSeconds() <= 0 && timestampRules.GetWithin().GetNanos() <= 0 {
+		} else if timestampRules.Within.Seconds <= 0 && timestampRules.Within.Nanos <= 0 {
 			adder.addForPathf(
 				[]int32{timestampRulesFieldNumber, withInFieldNumberInTimestampRules},
 				"Field %q must have a positive %s (%v).",
 				adder.fieldName(),
 				adder.getFieldRuleName(timestampRulesFieldNumber, withInFieldNumberInTimestampRules),
-				timestampRules.GetWithin(),
+				timestampRules.Within,
 			)
 		}
 	}
-
 	return nil
 }
 
 func checkFieldMaskRules(adder *adder, fieldMaskRules *validate.FieldMaskRules) {
 	checkConst(adder, fieldMaskRules, fieldMaskRulesFieldNumber)
-
-	if len(fieldMaskRules.GetIn()) > 0 && len(fieldMaskRules.GetNotIn()) > 0 {
-		for _, in := range fieldMaskRules.GetIn() {
-			if slices.Contains(fieldMaskRules.GetNotIn(), in) {
+	if len(fieldMaskRules.In) > 0 && len(fieldMaskRules.NotIn) > 0 {
+		for _, in := range fieldMaskRules.In {
+			if slices.Contains(fieldMaskRules.NotIn, in) {
 				adder.addForPathf(
 					[]int32{fieldMaskRulesFieldNumber, inFieldMaskRules},
 					"Field %q has path %q in both in and not_in rules.",
@@ -871,7 +808,6 @@ func checkExampleValues(
 	if err := protoencoding2.ReparseExtensions(extensionTypeResolver, typeRulesMessage); err != nil {
 		return err
 	}
-
 	hasRules := len(fieldRules.GetCel()) > 0
 	if !hasRules {
 		typeRulesMessage.Range(func(fd protoreflect.FieldDescriptor, v protoreflect.Value) bool {
@@ -879,11 +815,9 @@ func checkExampleValues(
 				hasRules = true
 				return false
 			}
-
 			return true
 		})
 	}
-
 	if !hasRules {
 		// Since there are no constraints to check example values against, we already checked
 		// if the proper example type has been set on the field, so we can return here.
@@ -909,7 +843,6 @@ func checkExampleValues(
 			violation.GetField().GetElements()[0].GetFieldNumber() == int32(fieldDescriptor.Number()) &&
 			violation.GetField().GetElements()[0].GetSubscript() == nil
 	}
-
 	switch {
 	case fieldDescriptor.IsList():
 		// Field path looks like repeated_field[10]
@@ -919,9 +852,7 @@ func checkExampleValues(
 				violation.GetField().GetElements()[0].GetSubscript() == nil {
 				return false
 			}
-
-			_, ok := violation.GetField().GetElements()[0].GetSubscript().(*validate.FieldPathElement_Index)
-
+			_, ok := violation.GetField().GetElements()[0].Subscript.(*validate.FieldPathElement_Index)
 			return ok
 		}
 	case parentMapFieldDescriptor != nil && fieldDescriptor.Name() == "key":
@@ -933,9 +864,7 @@ func checkExampleValues(
 				violation.GetField().GetElements()[0].GetSubscript() == nil {
 				return false
 			}
-
-			_, ok := violation.GetField().GetElements()[0].GetSubscript().(*validate.FieldPathElement_Index)
-
+			_, ok := violation.GetField().GetElements()[0].Subscript.(*validate.FieldPathElement_Index)
 			return !ok
 		}
 	case parentMapFieldDescriptor != nil && fieldDescriptor.Name() == "value":
@@ -947,17 +876,13 @@ func checkExampleValues(
 				violation.GetField().GetElements()[0].GetSubscript() == nil {
 				return false
 			}
-
-			_, ok := violation.GetField().GetElements()[0].GetSubscript().(*validate.FieldPathElement_Index)
-
+			_, ok := violation.GetField().GetElements()[0].Subscript.(*validate.FieldPathElement_Index)
 			return !ok
 		}
 	}
-
 	for exampleValueIndex, exampleValue := range exampleValues {
 		filterFieldDescriptor := fieldDescriptor
 		messageToValidate := dynamicpb.NewMessage(containingMessageDescriptor)
-
 		switch {
 		case fieldDescriptor.IsList():
 			list := messageToValidate.NewField(fieldDescriptor).List()
@@ -973,21 +898,16 @@ func checkExampleValues(
 			if !mapEntryMessageDescriptor.IsMapEntry() {
 				return syserror.Newf("containing message %q is not a map", mapEntryMessageDescriptor.Name())
 			}
-
 			if !parentMapFieldDescriptor.IsMap() {
 				return syserror.Newf("parent field descriptor %q is passed but is not a map field", parentMapFieldDescriptor.Name())
 			}
-
 			if containingMessageDescriptor.Fields().ByName(parentMapFieldDescriptor.Name()) == nil {
 				return syserror.Newf("containing message %q does not have field named %q", containingMessageDescriptor.Name(), parentMapFieldDescriptor.Name())
 			}
-
 			if parentMapFieldDescriptor.Message().Name() != mapEntryMessageDescriptor.Name() {
 				return syserror.Newf("field %q should have parent of type %q but has type %q", fieldDescriptor.Name(), parentMapFieldDescriptor.Message().Name(), containingMessageDescriptor.Name())
 			}
-
 			mapEntry := messageToValidate.NewField(parentMapFieldDescriptor).Map()
-
 			switch fieldDescriptor.Name() {
 			case "key":
 				mapEntry.Set(
@@ -1002,7 +922,6 @@ func checkExampleValues(
 			default:
 				return syserror.Newf("expected key or value as synthetic field name for map entry's field name, got %q", fieldDescriptor.Name())
 			}
-
 			messageToValidate.Set(parentMapFieldDescriptor, protoreflect.ValueOfMap(mapEntry))
 		case fieldDescriptor.Enum() != nil:
 			// We need to handle enum examples in a special way, since enum examples are set as
@@ -1014,7 +933,6 @@ func checkExampleValues(
 			if !ok {
 				return syserror.Newf("expected enum example value to be int32 for field %q, got %T type instead", fieldDescriptor.FullName(), exampleValue)
 			}
-
 			messageToValidate.Set(fieldDescriptor, protoreflect.ValueOf(protoreflect.EnumNumber(exampleInt32)))
 		case fieldDescriptor.Message() != nil:
 			// We need to handle the case where the field is a wrapper type. We set the value directly base on the wrapper type.
@@ -1024,7 +942,6 @@ func checkExampleValues(
 				if !ok {
 					return syserror.Newf("unexpected type found for float wrapper type %T", exampleValue.Interface())
 				}
-
 				messageToValidate.Set(
 					fieldDescriptor,
 					protoreflect.ValueOf(
@@ -1036,7 +953,6 @@ func checkExampleValues(
 				if !ok {
 					return syserror.Newf("unexpected type found for double wrapper type %T", exampleValue.Interface())
 				}
-
 				messageToValidate.Set(
 					fieldDescriptor,
 					protoreflect.ValueOf(
@@ -1048,7 +964,6 @@ func checkExampleValues(
 				if !ok {
 					return syserror.Newf("unexpected type found for int32 wrapper type %T", exampleValue.Interface())
 				}
-
 				messageToValidate.Set(
 					fieldDescriptor,
 					protoreflect.ValueOf(
@@ -1060,7 +975,6 @@ func checkExampleValues(
 				if !ok {
 					return syserror.Newf("unexpected type found for int64 wrapper type %T", exampleValue.Interface())
 				}
-
 				messageToValidate.Set(
 					fieldDescriptor,
 					protoreflect.ValueOf(
@@ -1072,7 +986,6 @@ func checkExampleValues(
 				if !ok {
 					return syserror.Newf("unexpected type found for uint32 wrapper type %T", exampleValue.Interface())
 				}
-
 				messageToValidate.Set(
 					fieldDescriptor,
 					protoreflect.ValueOf(
@@ -1084,7 +997,6 @@ func checkExampleValues(
 				if !ok {
 					return syserror.Newf("unexpected type found for uint32 wrapper type %T", exampleValue.Interface())
 				}
-
 				messageToValidate.Set(
 					fieldDescriptor,
 					protoreflect.ValueOf(
@@ -1096,7 +1008,6 @@ func checkExampleValues(
 				if !ok {
 					return syserror.Newf("unexpected type found for bool wrapper type %T", exampleValue.Interface())
 				}
-
 				messageToValidate.Set(
 					fieldDescriptor,
 					protoreflect.ValueOf(
@@ -1108,7 +1019,6 @@ func checkExampleValues(
 				if !ok {
 					return syserror.Newf("unexpected type found for string wrapper type %T", exampleValue.Interface())
 				}
-
 				messageToValidate.Set(
 					fieldDescriptor,
 					protoreflect.ValueOf(
@@ -1120,7 +1030,6 @@ func checkExampleValues(
 				if !ok {
 					return syserror.Newf("unexpected type found for bytes wrapper type %T", exampleValue.Interface())
 				}
-
 				messageToValidate.Set(
 					fieldDescriptor,
 					protoreflect.ValueOf(
@@ -1135,7 +1044,6 @@ func checkExampleValues(
 		default:
 			messageToValidate.Set(fieldDescriptor, exampleValue)
 		}
-
 		err := validator.Validate(messageToValidate,
 			protovalidate.WithFilter(
 				protovalidate.FilterFunc(func(
@@ -1149,14 +1057,12 @@ func checkExampleValues(
 		if err == nil {
 			continue
 		}
-
 		var compilationErr *protovalidate.CompilationError
 		if errors.As(err, &compilationErr) {
 			// Expression failing to compile meaning some CEL expressions are invalid,
 			// which is checked in this rule (PROTOVALIDATE), but not by this function.
 			break
 		}
-
 		validationErr := &protovalidate.ValidationError{}
 		if errors.As(err, &validationErr) {
 			for _, violation := range validationErr.Violations {
@@ -1164,13 +1070,10 @@ func checkExampleValues(
 					adder.addForPathf(append(pathToExampleValues, int32(exampleValueIndex)), `"%v" is an example value but does not satisfy rule %q: %s`, exampleValue.Interface(), violation.Proto.GetRuleId(), violation.Proto.GetMessage())
 				}
 			}
-
 			continue
 		}
-
 		return fmt.Errorf("unexpected error from protovalidate: %s", err.Error())
 	}
-
 	return nil
 }
 
@@ -1180,20 +1083,16 @@ func checkConst(adder *adder, rule proto.Message, ruleFieldNumber int32) {
 		constFieldNumber int32
 		isConstSpecified bool
 	)
-
 	ruleMessage := rule.ProtoReflect()
 	ruleMessage.Range(func(fd protoreflect.FieldDescriptor, v protoreflect.Value) bool {
 		fieldCount++
-
 		switch string(fd.Name()) {
 		case "const":
 			isConstSpecified = true
 			constFieldNumber = int32(fd.Number())
 		}
-
 		return true
 	})
-
 	if isConstSpecified && fieldCount > 1 {
 		adder.addForPathf(
 			[]int32{ruleFieldNumber, constFieldNumber},
@@ -1222,7 +1121,6 @@ func checkLenRules(
 		maxLenFieldNumber int32
 		err               error
 	)
-
 	rules.ProtoReflect().Range(func(fd protoreflect.FieldDescriptor, v protoreflect.Value) bool {
 		switch string(fd.Name()) {
 		case lenFieldName:
@@ -1231,7 +1129,6 @@ func checkLenRules(
 				err = fmt.Errorf("%v is not an uint64", v.Interface())
 				return false
 			}
-
 			length = &lengthValue
 			lengthFieldNumber = int32(fd.Number())
 		case minLenFieldName:
@@ -1240,7 +1137,6 @@ func checkLenRules(
 				err = fmt.Errorf("%v is not an uint64", v.Interface())
 				return false
 			}
-
 			minLen = &lengthValue
 			minLenFieldNumber = int32(fd.Number())
 		case maxLenFieldName:
@@ -1249,18 +1145,14 @@ func checkLenRules(
 				err = fmt.Errorf("%v is not an uint64", v.Interface())
 				return false
 			}
-
 			maxLen = &lengthValue
 			maxLenFieldNumber = int32(fd.Number())
 		}
-
 		return true
 	})
-
 	if err != nil {
 		return err
 	}
-
 	if length != nil && minLen != nil {
 		adder.addForPathf(
 			[]int32{ruleFieldNumber, minLenFieldNumber},
@@ -1270,7 +1162,6 @@ func checkLenRules(
 			adder.getFieldRuleName(ruleFieldNumber, minLenFieldNumber),
 		)
 	}
-
 	if length != nil && maxLen != nil {
 		adder.addForPathf(
 			[]int32{ruleFieldNumber, maxLenFieldNumber},
@@ -1280,11 +1171,9 @@ func checkLenRules(
 			adder.getFieldRuleName(ruleFieldNumber, maxLenFieldNumber),
 		)
 	}
-
 	if maxLen == nil || minLen == nil {
 		return nil
 	}
-
 	if *minLen > *maxLen {
 		adder.addForPathf(
 			[]int32{ruleFieldNumber, minLenFieldNumber},
@@ -1318,7 +1207,6 @@ func checkLenRules(
 			lenFieldName,
 		)
 	}
-
 	return nil
 }
 
@@ -1326,7 +1214,6 @@ func getFieldTypePrettyNameName(fieldDescriptor protoreflect.FieldDescriptor) st
 	if !isFieldDescriptorMessage(fieldDescriptor) {
 		return fieldDescriptor.Kind().String()
 	}
-
 	if fieldDescriptor.IsMap() {
 		return fmt.Sprintf(
 			"map<%s, %s>",
@@ -1334,7 +1221,6 @@ func getFieldTypePrettyNameName(fieldDescriptor protoreflect.FieldDescriptor) st
 			getFieldTypePrettyNameName(fieldDescriptor.MapValue()),
 		)
 	}
-
 	return string(fieldDescriptor.Message().FullName())
 }
 

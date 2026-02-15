@@ -55,13 +55,10 @@ func TestFormatting(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-
 			testProtoPath, err := filepath.Abs(filepath.Join("testdata/format", tt.protoFile))
 			require.NoError(t, err)
 			clientJSONConn, testURI := setupLSPServer(t, testProtoPath)
-
 			var textEdits []protocol.TextEdit
-
 			_, formatErr := clientJSONConn.Call(ctx, protocol.MethodTextDocumentFormatting, protocol.DocumentFormattingParams{
 				TextDocument: protocol.TextDocumentIdentifier{
 					URI: testURI,
@@ -69,7 +66,6 @@ func TestFormatting(t *testing.T) {
 			}, &textEdits)
 			require.NoError(t, formatErr)
 			assert.Len(t, textEdits, tt.expectNumEdits)
-
 			if tt.expectEdits {
 				expectedFormatted := getExpectedFormattedContent(t, ctx, testProtoPath)
 				assert.Equal(t, expectedFormatted, textEdits[0].NewText)
@@ -82,7 +78,6 @@ func TestFormatting(t *testing.T) {
 
 func getExpectedFormattedContent(t *testing.T, ctx context.Context, protoPath string) string {
 	t.Helper()
-
 	dir := filepath.Dir(protoPath)
 	bucket, err := storageos.NewProvider().NewReadWriteBucket(dir)
 	require.NoError(t, err)
@@ -90,6 +85,5 @@ func getExpectedFormattedContent(t *testing.T, ctx context.Context, protoPath st
 	require.NoError(t, err)
 	formatted, err := storage.ReadPath(ctx, formattedBucket, filepath.Base(protoPath))
 	require.NoError(t, err)
-
 	return string(formatted)
 }

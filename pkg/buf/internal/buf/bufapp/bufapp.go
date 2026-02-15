@@ -50,12 +50,10 @@ func NewConfig(
 	if externalConfig.Version != currentVersion && !externalConfig.IsEmpty() {
 		return nil, fmt.Errorf("buf configuration at %q must declare 'version: %s'", container.ConfigDirPath(), currentVersion)
 	}
-
 	tlsConfig, err := certclient.NewClientTLSConfig(container, externalConfig.TLS)
 	if err != nil {
 		return nil, err
 	}
-
 	return &Config{
 		TLS: tlsConfig,
 	}, nil

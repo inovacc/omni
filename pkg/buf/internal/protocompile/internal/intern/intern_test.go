@@ -43,7 +43,6 @@ func TestIntern(t *testing.T) {
 	}
 
 	var table intern.Table
-
 	for i := range 3 {
 		for _, s := range data {
 			t.Run(fmt.Sprintf("%s/%d", s, i), func(t *testing.T) {

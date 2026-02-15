@@ -38,7 +38,6 @@ import (
 func Render(options Options, content func(push Sink)) string {
 	d := new(dom)
 	content(d.add)
-
 	return render(options, d)
 }
 
@@ -62,11 +61,9 @@ func (o Options) WithDefaults() Options {
 	if o.MaxWidth == 0 {
 		o.MaxWidth = math.MaxInt
 	}
-
 	if o.TabstopWidth == 0 {
 		o.TabstopWidth = 1
 	}
-
 	return o
 }
 
@@ -123,7 +120,6 @@ func TextIf(cond Cond, text string) Tag {
 		}
 
 		var kind kind
-
 		switch {
 		case stringsx.Every(text, ' '):
 			kind = kindSpace
@@ -164,7 +160,6 @@ func GroupIf(cond Cond, maxWidth int, content func(push Sink)) Tag {
 		if maxWidth == 0 {
 			maxWidth = math.MaxInt
 		}
-
 		d.push(tag{kind: kindGroup, limit: maxWidth, cond: cond}, content)
 	}
 }
@@ -182,7 +177,6 @@ func Indent(by string, content func(push Sink)) Tag {
 			content(d.add)
 			return
 		}
-
 		d.push(tag{kind: kindIndent, text: by}, content)
 	}
 }

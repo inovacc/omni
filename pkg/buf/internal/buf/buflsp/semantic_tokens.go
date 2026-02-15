@@ -114,14 +114,12 @@ func semanticTokensFull(file *file, celEnv *cel.Env) (*protocol.SemanticTokens, 
 		semMod  uint32
 		keyword keyword.Keyword
 	}
-
 	var tokens []tokenInfo
 	// collectToken adds a token to the collection.
 	collectToken := func(span source.Span, semanticType, semanticModifier uint32, kw keyword.Keyword) {
 		if span.IsZero() {
 			return
 		}
-
 		tokens = append(tokens, tokenInfo{
 			span:    span,
 			semType: semanticType,
@@ -139,7 +137,6 @@ func semanticTokensFull(file *file, celEnv *cel.Env) (*protocol.SemanticTokens, 
 		if tok.Kind() == token.Comment {
 			collectToken(tok.Span(), semanticTypeComment, 0, keyword.Unknown)
 		}
-
 		kw := tok.Keyword()
 		switch kw {
 		// These keywords seemingly are not easy to reach via the IR.
@@ -152,7 +149,6 @@ func semanticTokensFull(file *file, celEnv *cel.Env) (*protocol.SemanticTokens, 
 	if kwTok := syntax.KeywordToken(); !kwTok.IsZero() {
 		collectToken(kwTok.Span(), semanticTypeKeyword, 0, kwTok.Keyword())
 	}
-
 	if value := syntax.Value(); !value.Span().IsZero() {
 		collectToken(value.Span(), semanticTypeString, 0, keyword.Unknown)
 	}
@@ -161,7 +157,6 @@ func semanticTokensFull(file *file, celEnv *cel.Env) (*protocol.SemanticTokens, 
 	if kwTok := pkg.KeywordToken(); !kwTok.IsZero() {
 		collectToken(kwTok.Span(), semanticTypeKeyword, 0, kwTok.Keyword())
 	}
-
 	if path := pkg.Path(); !path.Span().IsZero() {
 		collectToken(path.Span(), semanticTypeNamespace, 0, keyword.Unknown)
 	}
@@ -188,11 +183,8 @@ func semanticTokensFull(file *file, celEnv *cel.Env) (*protocol.SemanticTokens, 
 	}
 	// Collect symbol tokens (identifiers, keywords for declarations)
 	for _, symbol := range file.symbols {
-		var (
-			semanticType     uint32
-			semanticModifier uint32
-		)
-
+		var semanticType uint32
+		var semanticModifier uint32
 		switch kind := symbol.kind.(type) {
 		case *option:
 			// Options like [deprecated = true]
@@ -218,7 +210,6 @@ func semanticTokensFull(file *file, celEnv *cel.Env) (*protocol.SemanticTokens, 
 						collectToken(prefixTok.Span(), semanticTypeModifier, 0, keyword.Unknown)
 					}
 				}
-
 				if !fieldDef.Tag.Span().IsZero() {
 					collectToken(fieldDef.Tag.Span(), semanticTypeNumber, 0, keyword.Unknown)
 				}
@@ -232,14 +223,12 @@ func semanticTokensFull(file *file, celEnv *cel.Env) (*protocol.SemanticTokens, 
 				if kwTok := symbol.ir.AsType().AST().KeywordToken(); !kwTok.IsZero() {
 					collectToken(kwTok.Span(), semanticTypeKeyword, 0, kwTok.Keyword())
 				}
-
 				semanticType = semanticTypeStruct
 			case ir.SymbolKindEnum:
 				// Collect "enum" keyword
 				if kwTok := symbol.ir.AsType().AST().KeywordToken(); !kwTok.IsZero() {
 					collectToken(kwTok.Span(), semanticTypeKeyword, 0, kwTok.Keyword())
 				}
-
 				semanticType = semanticTypeEnum
 			case ir.SymbolKindField:
 				// Determine semantic type based on symbol kind
@@ -260,7 +249,6 @@ func semanticTokensFull(file *file, celEnv *cel.Env) (*protocol.SemanticTokens, 
 				if !enumValueDef.Tag.Span().IsZero() {
 					collectToken(enumValueDef.Tag.Span(), semanticTypeNumber, 0, keyword.Unknown)
 				}
-
 				semanticType = semanticTypeEnumMember
 			case ir.SymbolKindExtension:
 				semanticType = semanticTypeVariable
@@ -273,14 +261,12 @@ func semanticTokensFull(file *file, celEnv *cel.Env) (*protocol.SemanticTokens, 
 				if kwTok := symbol.ir.AsService().AST().KeywordToken(); !kwTok.IsZero() {
 					collectToken(kwTok.Span(), semanticTypeKeyword, 0, kwTok.Keyword())
 				}
-
 				semanticType = semanticTypeInterface
 			case ir.SymbolKindOneof:
 				// Collect "oneof" keyword
 				if kwTok := symbol.ir.AsOneof().AST().KeywordToken(); !kwTok.IsZero() {
 					collectToken(kwTok.Span(), semanticTypeKeyword, 0, kwTok.Keyword())
 				}
-
 				semanticType = semanticTypeProperty
 			case ir.SymbolKindMethod:
 				declDef := symbol.ir.AsMethod().AST()
@@ -288,7 +274,6 @@ func semanticTokensFull(file *file, celEnv *cel.Env) (*protocol.SemanticTokens, 
 				if kwTok := declDef.KeywordToken(); !kwTok.IsZero() {
 					collectToken(kwTok.Span(), semanticTypeKeyword, 0, kwTok.Keyword())
 				}
-
 				methodDef := declDef.AsMethod()
 				// Collect "stream" modifiers for input/output types
 				if inputs := methodDef.Signature.Inputs(); inputs.Len() == 1 {
@@ -298,7 +283,6 @@ func semanticTokensFull(file *file, celEnv *cel.Env) (*protocol.SemanticTokens, 
 						}
 					}
 				}
-
 				if outputs := methodDef.Signature.Outputs(); outputs.Len() == 1 {
 					for prefix := range outputs.At(0).Prefixes() {
 						if prefixTok := prefix.PrefixToken(); !prefixTok.IsZero() {
@@ -312,7 +296,6 @@ func semanticTokensFull(file *file, celEnv *cel.Env) (*protocol.SemanticTokens, 
 				continue
 			}
 		}
-
 		if _, ok := symbol.ir.Deprecated().AsBool(); ok {
 			semanticModifier += semanticModifierDeprecated
 		}
@@ -337,7 +320,6 @@ func semanticTokensFull(file *file, celEnv *cel.Env) (*protocol.SemanticTokens, 
 	// When multiple tokens share the same span, prefer more specific types over generic keywords.
 	// For example, "string" appears as both a keyword and a built-in type; we want the type.
 	seen := make(map[source.Span]int)
-
 	dedupedTokens := tokens[:0]
 	for _, tok := range tokens {
 		if idx, exists := seen[tok.span]; exists {
@@ -350,17 +332,14 @@ func semanticTokensFull(file *file, celEnv *cel.Env) (*protocol.SemanticTokens, 
 			dedupedTokens = append(dedupedTokens, tok)
 		}
 	}
-
 	tokens = dedupedTokens
 	// Phase 2: Sort tokens by position (line, then column)
 	slices.SortFunc(tokens, func(a, b tokenInfo) int {
 		aLoc := a.span.StartLoc()
-
 		bLoc := b.span.StartLoc()
 		if aLoc.Line != bLoc.Line {
 			return aLoc.Line - bLoc.Line
 		}
-
 		return aLoc.Column - bLoc.Column
 	})
 	// Phase 3: Delta-encode the sorted tokens
@@ -370,7 +349,6 @@ func semanticTokensFull(file *file, celEnv *cel.Env) (*protocol.SemanticTokens, 
 		encoded           []uint32
 		prevLine, prevCol uint32
 	)
-
 	for _, tok := range tokens {
 		start := tok.span.StartLoc()
 		end := tok.span.EndLoc()
@@ -378,7 +356,6 @@ func semanticTokensFull(file *file, celEnv *cel.Env) (*protocol.SemanticTokens, 
 		if start.Line != end.Line {
 			continue
 		}
-
 		currentLine := uint32(start.Line - 1) // Convert to 0-indexed
 		startCol := uint32(start.Column - 1)  // Convert to 0-indexed
 		deltaCol := startCol
@@ -386,7 +363,6 @@ func semanticTokensFull(file *file, celEnv *cel.Env) (*protocol.SemanticTokens, 
 		if prevLine == currentLine {
 			deltaCol -= prevCol
 		}
-
 		tokenLen := uint32(end.Column - start.Column)
 		// Append: [deltaLine, deltaCol, length, type, modifiers]
 		encoded = append(encoded, currentLine-prevLine, deltaCol, tokenLen, tok.semType, tok.semMod)
@@ -394,10 +370,8 @@ func semanticTokensFull(file *file, celEnv *cel.Env) (*protocol.SemanticTokens, 
 		prevLine = currentLine
 		prevCol = startCol
 	}
-
 	if len(encoded) == 0 {
 		return nil, nil
 	}
-
 	return &protocol.SemanticTokens{Data: encoded}, nil
 }

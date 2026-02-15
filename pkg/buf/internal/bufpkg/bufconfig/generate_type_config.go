@@ -38,7 +38,6 @@ func newGenerateTypeConfig(includeTypes []string) GenerateTypeConfig {
 	if len(includeTypes) == 0 {
 		return nil
 	}
-
 	return &generateTypeConfig{
 		includeTypes: includeTypes,
 	}

@@ -56,7 +56,6 @@ func (e ExprAny) AsError() ExprError {
 	if e.Kind() != ExprKindError {
 		return ExprError{}
 	}
-
 	return id.Wrap(e.Context(), id.ID[ExprError](e.ID().Value()))
 }
 
@@ -68,7 +67,6 @@ func (e ExprAny) AsLiteral() ExprLiteral {
 	if e.Kind() != ExprKindLiteral {
 		return ExprLiteral{}
 	}
-
 	return ExprLiteral{
 		File:  e.Context(),
 		Token: id.Wrap(e.Context().Stream(), id.ID[token.Token](e.ID().Value())),
@@ -85,7 +83,6 @@ func (e ExprAny) AsPath() ExprPath {
 	}
 
 	start, end := e.ID().Raw()
-
 	return ExprPath{Path: PathID{start: token.ID(start), end: token.ID(end)}.In(e.Context())}
 }
 
@@ -97,7 +94,6 @@ func (e ExprAny) AsPrefixed() ExprPrefixed {
 	if e.Kind() != ExprKindPrefixed {
 		return ExprPrefixed{}
 	}
-
 	return id.Wrap(e.Context(), id.ID[ExprPrefixed](e.ID().Value()))
 }
 
@@ -109,7 +105,6 @@ func (e ExprAny) AsRange() ExprRange {
 	if e.Kind() != ExprKindRange {
 		return ExprRange{}
 	}
-
 	return id.Wrap(e.Context(), id.ID[ExprRange](e.ID().Value()))
 }
 
@@ -121,7 +116,6 @@ func (e ExprAny) AsArray() ExprArray {
 	if e.Kind() != ExprKindArray {
 		return ExprArray{}
 	}
-
 	return id.Wrap(e.Context(), id.ID[ExprArray](e.ID().Value()))
 }
 
@@ -133,7 +127,6 @@ func (e ExprAny) AsDict() ExprDict {
 	if e.Kind() != ExprKindDict {
 		return ExprDict{}
 	}
-
 	return id.Wrap(e.Context(), id.ID[ExprDict](e.ID().Value()))
 }
 
@@ -145,7 +138,6 @@ func (e ExprAny) AsField() ExprField {
 	if e.Kind() != ExprKindField {
 		return ExprField{}
 	}
-
 	return id.Wrap(e.Context(), id.ID[ExprField](e.ID().Value()))
 }
 

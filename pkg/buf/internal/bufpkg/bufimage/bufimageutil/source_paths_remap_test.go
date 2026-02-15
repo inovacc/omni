@@ -24,7 +24,6 @@ import (
 
 func TestSourcePathsRemapTrie_Insert(t *testing.T) {
 	t.Parallel()
-
 	expectedSlices := [][]string{
 		{"4"},
 		{"4", "1 -> -1"},
@@ -42,10 +41,8 @@ func TestSourcePathsRemapTrie_Insert(t *testing.T) {
 		{"4", "4 -> 3"},
 		{"4", "5 -> -1"},
 	}
-
 	t.Run("in order", func(t *testing.T) {
 		t.Parallel()
-
 		trie := createTrie(nil)
 		slices := asSlices(trie)
 		require.Equal(t, expectedSlices, slices)
@@ -55,7 +52,6 @@ func TestSourcePathsRemapTrie_Insert(t *testing.T) {
 		rnd := rand.New(rand.NewSource(int64(i)))
 		t.Run(fmt.Sprintf("random order %d", i), func(t *testing.T) {
 			t.Parallel()
-
 			trie := createTrie(func(ops []insertionOp) []insertionOp {
 				shuffle(rnd, ops)
 				return ops
@@ -68,7 +64,6 @@ func TestSourcePathsRemapTrie_Insert(t *testing.T) {
 
 func TestSourcePathsRemapTrie_NewPath(t *testing.T) {
 	t.Parallel()
-
 	trie := createTrie(nil)
 	// make sure the items in the trie construct correct new path
 	path, noComment := trie.newPath([]int32{4, 1})
@@ -169,18 +164,14 @@ func createTrie(permutation func([]insertionOp) []insertionOp) *sourcePathsRemap
 	if permutation != nil {
 		ops = permutation(ops)
 	}
-
 	trie := &sourcePathsRemapTrie{}
-
 	for _, op := range ops {
 		if op.newIndex == -2 {
 			trie.markNoComment(op.oldPath)
 			continue
 		}
-
 		trie.markMoved(op.oldPath, op.newIndex)
 	}
-
 	return trie
 }
 
@@ -198,7 +189,6 @@ func asSlices(t *sourcePathsRemapTrie) [][]string {
 	for _, child := range *t {
 		toSlices(child, nil, &result)
 	}
-
 	return result
 }
 
@@ -208,15 +198,12 @@ func toSlices(t *sourcePathsRemapTrieNode, soFar []string, result *[][]string) {
 	} else {
 		soFar = append(soFar, fmt.Sprintf("%d -> %d", t.oldIndex, t.newIndex))
 	}
-
 	clone := make([]string, len(soFar))
 	copy(clone, soFar)
 	*result = append(*result, clone)
-
 	if len(t.children) == 0 {
 		return
 	}
-
 	for _, child := range t.children {
 		toSlices(child, soFar, result)
 	}

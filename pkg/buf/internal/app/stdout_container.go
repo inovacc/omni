@@ -26,7 +26,6 @@ func newStdoutContainer(writer io.Writer) *stdoutContainer {
 	if writer == nil {
 		writer = io.Discard
 	}
-
 	return &stdoutContainer{
 		writer: newLockedWriter(writer),
 	}

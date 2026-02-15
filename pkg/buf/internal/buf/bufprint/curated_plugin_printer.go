@@ -56,7 +56,6 @@ func (p *curatedPluginPrinter) PrintCuratedPlugins(_ context.Context, format For
 		for _, plugin := range plugins {
 			outputPlugins = append(outputPlugins, registryCuratedPluginToOutputCuratedPlugin(plugin))
 		}
-
 		return json.NewEncoder(p.writer).Encode(paginationWrapper{
 			NextPage: nextPageToken,
 			Results:  outputPlugins,
@@ -70,7 +69,6 @@ func (p *curatedPluginPrinter) printCuratedPluginsText(plugins ...*registryv1alp
 	if len(plugins) == 0 {
 		return nil
 	}
-
 	return WithTabWriter(
 		p.writer,
 		[]string{
@@ -90,7 +88,6 @@ func (p *curatedPluginPrinter) printCuratedPluginsText(plugins ...*registryv1alp
 					return err
 				}
 			}
-
 			return nil
 		},
 	)

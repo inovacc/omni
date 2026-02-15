@@ -106,7 +106,6 @@ func TestDocumentLink(t *testing.T) {
 			clientJSONConn, testURI := setupLSPServer(t, protoPath)
 
 			var links []protocol.DocumentLink
-
 			_, err = clientJSONConn.Call(ctx, protocol.MethodTextDocumentDocumentLink, protocol.DocumentLinkParams{
 				TextDocument: protocol.TextDocumentIdentifier{
 					URI: testURI,
@@ -127,7 +126,6 @@ func TestDocumentLink(t *testing.T) {
 				case linkTargetTypeLocal:
 					localPath, err := filepath.Abs(expected.localPath)
 					require.NoError(t, err)
-
 					expectedURI := uri.New(localPath)
 					assert.Equal(t, expectedURI, link.Target, "link %d (%s): wrong target", i, expected.description)
 				case linkTargetTypeURL:
@@ -162,7 +160,7 @@ type expectedLink struct {
 func assertNoOverlappingRanges(t *testing.T, links []protocol.DocumentLink) {
 	t.Helper()
 
-	for i := range links {
+	for i := 0; i < len(links); i++ {
 		for j := i + 1; j < len(links); j++ {
 			range1 := links[i].Range
 			range2 := links[j].Range
@@ -190,7 +188,6 @@ func rangesOverlap(r1, r2 protocol.Range) bool {
 	if positionLessOrEqual(r1.End, r2.Start) || positionLessOrEqual(r2.End, r1.Start) {
 		return false
 	}
-
 	return true
 }
 
@@ -199,10 +196,8 @@ func positionLessOrEqual(pos1, pos2 protocol.Position) bool {
 	if pos1.Line < pos2.Line {
 		return true
 	}
-
 	if pos1.Line == pos2.Line && pos1.Character <= pos2.Character {
 		return true
 	}
-
 	return false
 }

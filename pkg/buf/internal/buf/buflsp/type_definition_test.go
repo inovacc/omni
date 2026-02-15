@@ -163,9 +163,7 @@ func TestTypeDefinition(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-
 			var locations []protocol.Location
-
 			_, typeDefErr := clientJSONConn.Call(ctx, protocol.MethodTextDocumentTypeDefinition, protocol.TypeDefinitionParams{
 				TextDocumentPositionParams: protocol.TextDocumentPositionParams{
 					TextDocument: protocol.TextDocumentIdentifier{

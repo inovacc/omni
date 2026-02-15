@@ -25,7 +25,6 @@ import (
 
 func TestBasicValidation(t *testing.T) {
 	t.Parallel()
-
 	testCases := map[string]struct {
 		contents string
 		// Expected error message - leave empty if input is expected to succeed
@@ -332,7 +331,7 @@ func TestBasicValidation(t *testing.T) {
 			expectedErr: `test.proto:1:74: syntax error: unexpected '=', expecting '{'`,
 		},
 		"failure_message_decl_start_w_enum": {
-			contents:    "syntax = \"proto3\"; enum { unset = 0; } message Foo { enum bar = 1;",
+			contents:    `syntax = "proto3"; enum enum { unset = 0; } message Foo { enum bar = 1; }`,
 			expectedErr: `test.proto:1:68: syntax error: unexpected '=', expecting '{'`,
 		},
 		"failure_message_decl_start_w_reserved2": {
@@ -1215,12 +1214,10 @@ func TestBasicValidation(t *testing.T) {
 		if tc.expectedErr != "" {
 			expectedPrefix = "failure_"
 		}
-
 		assert.Truef(t, strings.HasPrefix(name, expectedPrefix), "expected test name %q to have %q prefix", name, expectedPrefix)
 
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
-
 			errs := reporter.NewHandler(nil)
 			if ast, err := Parse("test.proto", strings.NewReader(tc.contents), errs); err == nil {
 				_, _ = ResultFromAST(ast, true, errs)
@@ -1239,7 +1236,6 @@ func TestBasicValidation(t *testing.T) {
 			if tc.expectedDiffWithProtoc {
 				expectSuccess = !expectSuccess
 			}
-
 			testByProtoc(t, tc.contents, expectSuccess)
 		})
 	}
