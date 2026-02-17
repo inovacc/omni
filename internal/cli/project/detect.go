@@ -32,8 +32,8 @@ var markers = []markerFile{
 	{"stack.yaml", "Haskell"},
 }
 
-// detectProjectTypes checks for known marker files and returns detected project types.
-func detectProjectTypes(dir string) []ProjectType {
+// DetectProjectTypes checks for known marker files and returns detected project types.
+func DetectProjectTypes(dir string) []ProjectType {
 	var types []ProjectType
 
 	seen := make(map[string]bool)
@@ -104,8 +104,8 @@ var nodeFrameworks = []frameworkMarker{
 	{"@angular/core", "Angular"},
 }
 
-// detectFrameworks checks dependencies for known framework names.
-func detectFrameworks(dir string, types []ProjectType, deps *DepsReport) {
+// DetectFrameworks checks dependencies for known framework names.
+func DetectFrameworks(dir string, types []ProjectType, deps *DepsReport) {
 	if deps == nil {
 		return
 	}
@@ -217,8 +217,8 @@ var skipDirs = map[string]bool{
 	".nuxt":        true,
 }
 
-// countLanguages walks the directory counting files by language.
-func countLanguages(dir string) []LanguageInfo {
+// CountLanguages walks the directory counting files by language.
+func CountLanguages(dir string) []LanguageInfo {
 	type langData struct {
 		count int
 		exts  map[string]bool
@@ -281,8 +281,8 @@ func countLanguages(dir string) []LanguageInfo {
 	return result
 }
 
-// detectBuildTools checks for common build/CI tool config files.
-func detectBuildTools(dir string) []string {
+// DetectBuildTools checks for common build/CI tool config files.
+func DetectBuildTools(dir string) []string {
 	checks := []struct {
 		path string
 		name string

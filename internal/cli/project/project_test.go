@@ -56,7 +56,7 @@ func TestDetectProjectTypes(t *testing.T) {
 				}
 			}
 
-			types := detectProjectTypes(dir)
+			types := DetectProjectTypes(dir)
 			if len(types) == 0 {
 				t.Fatal("expected at least one project type")
 			}
@@ -78,7 +78,7 @@ func TestDetectBuildTools(t *testing.T) {
 		}
 	}
 
-	tools := detectBuildTools(dir)
+	tools := DetectBuildTools(dir)
 	if len(tools) != 2 {
 		t.Fatalf("expected 2 build tools, got %d: %v", len(tools), tools)
 	}
@@ -116,7 +116,7 @@ func TestCountLanguages(t *testing.T) {
 		}
 	}
 
-	langs := countLanguages(dir)
+	langs := CountLanguages(dir)
 
 	langMap := map[string]int{}
 	for _, l := range langs {
@@ -276,10 +276,10 @@ func TestHealthScoring(t *testing.T) {
 		Path:       dir,
 		Name:       "test-project",
 		BuildTools: []string{"Taskfile"},
-		Docs:       checkDocs(dir),
+		Docs:       CheckDocs(dir),
 	}
 
-	health := computeHealth(dir, report)
+	health := ComputeHealth(dir, report)
 
 	if health.Score <= 0 {
 		t.Error("expected positive health score")
@@ -498,7 +498,7 @@ func TestCheckDocs(t *testing.T) {
 	_ = os.WriteFile(filepath.Join(dir, "CLAUDE.md"), []byte("# Project"), 0o644)
 	_ = os.MkdirAll(filepath.Join(dir, "docs"), 0o755)
 
-	report := checkDocs(dir)
+	report := CheckDocs(dir)
 
 	if !report.HasReadme {
 		t.Error("expected HasReadme = true")

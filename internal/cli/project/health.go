@@ -9,13 +9,13 @@ import (
 	"strings"
 )
 
-// computeHealth computes a health score for the project.
-func computeHealth(dir string, report *ProjectReport) *HealthReport {
+// ComputeHealth computes a health score for the project.
+func ComputeHealth(dir string, report *ProjectReport) *HealthReport {
 	health := &HealthReport{}
 
 	docs := report.Docs
 	if docs == nil {
-		docs = checkDocs(dir)
+		docs = CheckDocs(dir)
 	}
 
 	// 1. README (15 points)
@@ -165,16 +165,16 @@ func RunHealth(w io.Writer, args []string, opts Options) error {
 		Name: filepath.Base(dir),
 	}
 
-	report.Types = detectProjectTypes(dir)
-	report.BuildTools = detectBuildTools(dir)
-	report.Docs = checkDocs(dir)
+	report.Types = DetectProjectTypes(dir)
+	report.BuildTools = DetectBuildTools(dir)
+	report.Docs = CheckDocs(dir)
 
 	// Only check git if .git exists
 	if _, err := os.Stat(filepath.Join(dir, ".git")); err == nil {
-		report.Git = analyzeGit(dir, 1)
+		report.Git = AnalyzeGit(dir, 1)
 	}
 
-	health := computeHealth(dir, report)
+	health := ComputeHealth(dir, report)
 
 	if opts.JSON {
 		return formatHealthJSON(w, health)

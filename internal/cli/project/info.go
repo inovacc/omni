@@ -19,28 +19,28 @@ func RunInfo(w io.Writer, args []string, opts Options) error {
 	}
 
 	// Detect project types
-	report.Types = detectProjectTypes(dir)
+	report.Types = DetectProjectTypes(dir)
 
 	// Count languages
-	report.Languages = countLanguages(dir)
+	report.Languages = CountLanguages(dir)
 
 	// Detect build tools
-	report.BuildTools = detectBuildTools(dir)
+	report.BuildTools = DetectBuildTools(dir)
 
 	// Parse dependencies
-	report.Deps = analyzeDeps(dir, report.Types)
+	report.Deps = AnalyzeDeps(dir, report.Types)
 
 	// Detect frameworks (needs deps)
-	detectFrameworks(dir, report.Types, report.Deps)
+	DetectFrameworks(dir, report.Types, report.Deps)
 
 	// Git info
-	report.Git = analyzeGit(dir, opts.Limit)
+	report.Git = AnalyzeGit(dir, opts.Limit)
 
 	// Docs check
-	report.Docs = checkDocs(dir)
+	report.Docs = CheckDocs(dir)
 
 	// Health score
-	report.Health = computeHealth(dir, report)
+	report.Health = ComputeHealth(dir, report)
 
 	return formatReport(w, report, opts)
 }

@@ -11,8 +11,8 @@ import (
 	"strings"
 )
 
-// analyzeGit gathers git repository information.
-func analyzeGit(dir string, limit int) *GitReport {
+// AnalyzeGit gathers git repository information.
+func AnalyzeGit(dir string, limit int) *GitReport {
 	report := &GitReport{}
 
 	// Check if it's a git repo
@@ -140,7 +140,7 @@ func RunGit(w io.Writer, args []string, opts Options) error {
 		return fmt.Errorf("project git: %w", err)
 	}
 
-	report := analyzeGit(dir, opts.Limit)
+	report := AnalyzeGit(dir, opts.Limit)
 
 	if !report.IsRepo {
 		_, _ = fmt.Fprintln(w, "Not a git repository.")

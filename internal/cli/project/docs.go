@@ -8,8 +8,8 @@ import (
 	"strings"
 )
 
-// checkDocs inspects documentation and config file presence.
-func checkDocs(dir string) *DocsReport {
+// CheckDocs inspects documentation and config file presence.
+func CheckDocs(dir string) *DocsReport {
 	report := &DocsReport{}
 
 	// README
@@ -196,7 +196,7 @@ func RunDocs(w io.Writer, args []string, opts Options) error {
 		return fmt.Errorf("project docs: %w", err)
 	}
 
-	report := checkDocs(dir)
+	report := CheckDocs(dir)
 
 	if opts.JSON {
 		return formatDocsJSON(w, report)

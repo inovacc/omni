@@ -13,8 +13,8 @@ import (
 	"github.com/BurntSushi/toml"
 )
 
-// analyzeDeps detects and parses dependency files.
-func analyzeDeps(dir string, types []ProjectType) *DepsReport {
+// AnalyzeDeps detects and parses dependency files.
+func AnalyzeDeps(dir string, types []ProjectType) *DepsReport {
 	report := &DepsReport{}
 	empty := true
 
@@ -472,8 +472,8 @@ func RunDeps(w io.Writer, args []string, opts Options) error {
 		return fmt.Errorf("project deps: %w", err)
 	}
 
-	types := detectProjectTypes(dir)
-	report := analyzeDeps(dir, types)
+	types := DetectProjectTypes(dir)
+	report := AnalyzeDeps(dir, types)
 
 	if report == nil {
 		_, _ = fmt.Fprintln(w, "No dependency files found.")
