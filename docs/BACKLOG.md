@@ -9,7 +9,7 @@ Prioritized items for future development.
 ## Completed
 
 All core, file, text, system, archive, encoding, hashing, data, formatting, search, flow,
-security, pager, comparison, and tooling commands are implemented (148+ commands).
+security, pager, comparison, and tooling commands are implemented (160+ commands).
 
 Completed integrations: Kubernetes, Terraform, Vault, AWS (EC2/S3/IAM/STS/SSM).
 Completed hacks: Git (12 shortcuts), Kubectl (17 shortcuts).
@@ -126,7 +126,7 @@ See CLAUDE.md for the full command inventory.
 
 ### Current Status (February 2026)
 - **Total Test Cases:** ~700+ tests across all packages
-- **Overall Coverage:** 30.9% (includes vendored buf packages)
+- **Overall Coverage:** 25.8% (includes vendored buf packages after flattening)
 - **Omni-owned pkg/ avg:** ~75% (16 of 31 packages above 80%)
 - **Packages without Tests:** twig/builder, twig/parser, video/jsinterp
 - **Packages with new tests (Feb 2026):** video/downloader (progress, fragment, selector), video/nethttp (cookies, SAPISID), video/extractor (helpers, M3U8), video/options
@@ -136,7 +136,7 @@ See CLAUDE.md for the full command inventory.
 - [ ] Platform-specific tests (Windows edge cases, symlinks, permissions)
 - [ ] Large file (>1GB) handling tests
 - [ ] Benchmarks vs GNU tools (sort, grep, file operations)
-- [x] Golden tests with expected output files (82 tests, 11 categories)
+- [x] Golden tests with expected output files (104 tests, 12 categories)
 - [ ] CI coverage threshold enforcement (80%)
 
 ---

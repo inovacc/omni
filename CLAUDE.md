@@ -47,10 +47,12 @@ omni/
 │   ├── pipeline/       # Streaming text processing engine
 │   ├── figlet/         # FIGlet font parser and ASCII art
 │   ├── twig/           # Tree scanning, formatting, comparison
+│   ├── userdirs/       # XDG user directory paths
 │   └── video/          # Video download engine (YouTube, HLS, generic)
 ├── internal/cli/       # CLI wrappers (I/O, flags, stdin handling)
 │   ├── cmderr/         # Unified error model (sentinels, exit codes)
 │   ├── command/        # Unified Command interface + Registry + adapters
+│   ├── repo/           # Repository analyzer (LLM-optimized context generation)
 │   ├── <command>/      # Each command delegates to pkg/ for core logic
 │   │   ├── <command>.go
 │   │   ├── <command>_test.go
@@ -243,7 +245,7 @@ defer func() {
 
 ## Command Categories
 
-### Implemented (155+ commands)
+### Implemented (160+ commands)
 
 | Category | Commands |
 |----------|----------|
@@ -264,7 +266,7 @@ defer func() {
 | **Security** | encrypt, decrypt, uuid, random, jwt decode |
 | **Pagers** | less, more |
 | **Comparison** | diff |
-| **Tooling** | lint, cmdtree, loc, cron, project (info, deps, docs, git, health) |
+| **Tooling** | lint, cmdtree, loc, cron, project (info, deps, docs, git, health), repo (analyze) |
 | **Network** | curl |
 | **Video** | video download, video info, video list-formats, video search, video extractors, video channel |
 | **Cloud/DevOps** | kubectl (k), terraform (tf), aws |
@@ -652,7 +654,7 @@ task test:integration
 
 ### Test Coverage
 
-Current coverage: ~30.5% overall, 51.6% omni-owned (~75% avg for pkg/)
+Current coverage: ~25.8% overall (~75% avg for omni-owned pkg/ packages; total skewed by vendored buf packages)
 
 ### Test Files
 
@@ -703,6 +705,7 @@ Current coverage: ~30.5% overall, 51.6% omni-owned (~75% avg for pkg/)
 | `internal/cli/exist/exist_test.go` | File, dir, path, command, env, process, port existence checks, JSON/quiet modes |
 | `internal/cli/project/project_test.go` | Project detection, deps parsing, health scoring, output formatting |
 | `internal/cli/command/command_test.go` | Command interface, Registry (register, get, names, concurrency), adapters |
+| `internal/cli/repo/repo_test.go` | Repo analyze: path resolution, remote detection, tree, key files, entry points, architecture, sections, JSON/Markdown output |
 | `pkg/video/downloader/progress_test.go` | SpeedTracker, FormatBytes, FormatSpeed, FormatETA, FormatPercent |
 | `pkg/video/downloader/fragment_test.go` | SaveFragmentState/LoadFragmentState roundtrip, RemoveFragmentState, AppendToFile |
 | `pkg/video/downloader/downloader_test.go` | SelectDownloader type assertions for all protocols |
@@ -762,7 +765,7 @@ task docker:test:golden:update   # Regenerate and persist to host via volume mou
 
 **Structure:**
 - `testing/golden_engine.py` — Lightweight engine (auto-discovered by `run_all.py`)
-- `testing/golden/golden_tests.yaml` — Declarative test registry (90 tests, 12 categories)
+- `testing/golden/golden_tests.yaml` — Declarative test registry (104 tests, 12 categories)
 - `testing/golden/snapshots/` — JSON metadata + .stdout sidecars
 - `tools/golden/src/golden/` — Full engine (11 modules: manifest, parallel, map, Docker)
 - `tools/golden/golden_tests.yaml` — Shared registry (same tests)

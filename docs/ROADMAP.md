@@ -39,7 +39,7 @@ Foundation commands using Go standard library.
 
 ```
 omni/
-├── cmd/                    # Cobra CLI commands (155+ commands)
+├── cmd/                    # Cobra CLI commands (160+ commands)
 │   ├── root.go
 │   ├── ls.go
 │   ├── pwd.go

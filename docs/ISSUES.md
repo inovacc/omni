@@ -52,7 +52,7 @@
 |------|-------|----------|
 | pkg/video/jsinterp | No unit tests | P2 |
 | pkg/twig/builder, pkg/twig/parser | No tests | P2 |
-| Overall coverage 30.5% (51.6% omni-owned) | Heavily skewed by vendored buf packages | P1 |
+| Overall coverage 25.8% | Heavily skewed by vendored buf packages after module flattening | P1 |
 | cmderr adoption ~19/155+ commands | ~130 commands still return raw fmt.Errorf without exit code classification | P1 |
 
 ### Recently Resolved
@@ -63,6 +63,8 @@
 | pkg/video/nethttp | Added cookies, SAPISID hash tests (Feb 2026) |
 | pkg/video/extractor | Added helpers, ParseM3U8Formats tests (Feb 2026) |
 | pkg/video/options | Added applyOptions, With* option tests (Feb 2026) |
+| internal/cli/project/ | Exported 8 functions for reuse by repo package (Feb 2026) |
+| internal/cli/repo/ | New package: repo analyze with 17 tests (Feb 2026) |
 
 ---
 

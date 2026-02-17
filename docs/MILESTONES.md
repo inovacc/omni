@@ -11,7 +11,7 @@
 - [x] Cross-platform support (Linux, macOS, Windows)
 - [x] Basic test suite
 
-**Test Coverage:** 30.5% overall, 51.6% omni-owned (pkg/ packages avg ~75%)
+**Test Coverage:** 25.8% overall (pkg/ packages avg ~75%)
 
 ---
 
@@ -51,7 +51,7 @@
 ---
 
 ### v1.4.0 - Cloud, DevOps & Engines
-**Released:** Tagged in repository (current)
+**Released:** Tagged in repository
 
 **Goals:**
 - [x] Kubernetes integration via k8s.io/kubectl
@@ -71,6 +71,19 @@
 
 ---
 
+### v1.5.0 - Infrastructure & Analysis
+**Released:** Tagged in repository (current)
+
+**Goals:**
+- [x] Unified `Command` interface contract (`internal/cli/command/`)
+- [x] cmderr error sentinels adopted in 19+ commands (batches 1-2)
+- [x] `repo analyze` command — LLM-optimized repository context generation
+- [x] Exported project package functions for reuse (DetectProjectTypes, AnalyzeDeps, etc.)
+- [x] Golden master tests expanded to 104 tests, 12 categories
+- [x] Flatten buf module into omni root module
+
+---
+
 ## Planned
 
 ### v2.0.0 - Production Ready
@@ -82,7 +95,7 @@
 - [ ] `--json` flag on all commands
 - [ ] 80%+ overall test coverage
 - [ ] CI coverage threshold enforcement
-- [x] Golden master testing framework (81 tests, 11 categories)
+- [x] Golden master testing framework (104 tests, 12 categories)
 - [ ] Full command reference documentation
 - [ ] Automated releases with goreleaser
 - [ ] Multi-platform, multi-arch builds
@@ -93,7 +106,7 @@
 
 ## Test Coverage Summary
 
-**Current Total:** 30.5% (includes vendored buf packages) | **Omni-owned:** 51.6%
+**Current Total:** 25.8% (includes vendored buf packages) | **Omni-owned pkg/ avg:** ~75%
 
 ### Omni-owned pkg/ Packages
 

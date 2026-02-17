@@ -72,6 +72,15 @@
 - Dependency analysis, documentation status
 - Git info, health scoring (0-100, A-F grade)
 
+### Repository Context Generator
+- **Status:** Complete
+- `repo analyze` — structured Markdown/JSON context optimized for LLM consumption
+- Directory tree, key file contents, entry points, architecture inference
+- API surface analysis (exported func counts per pkg/ package)
+- Test pattern detection, CI/CD config, config files
+- Remote repository support (clones via gh/git to temp dir)
+- Section filtering, compact mode, file output
+
 ### Reusable pkg/ Libraries
 - **Status:** Complete (16 packages)
 - idgen, hashutil, jsonutil, encoding, cryptutil, sqlfmt, cssfmt, htmlfmt
