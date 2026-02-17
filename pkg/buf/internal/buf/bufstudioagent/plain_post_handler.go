@@ -27,10 +27,11 @@ import (
 	"net/url"
 
 	"connectrpc.com/connect"
-	"github.com/inovacc/omni/pkg/buf/internal/gen/proto/go/buf/alpha/studio/v1alpha1"
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/protoencoding"
-	"github.com/inovacc/omni/pkg/buf/internal/standard/xlog/xslog"
+	"github.com/inovacc/omni/pkg/buf/pkg/protoencoding"
+	"github.com/inovacc/omni/pkg/buf/pkg/standard/xlog/xslog"
 	"google.golang.org/protobuf/proto"
+
+	studiov1alpha1 "github.com/inovacc/omni/pkg/buf/internal/gen/proto/go/buf/alpha/studio/v1alpha1"
 )
 
 // MaxMessageSizeBytesDefault determines the maximum number of bytes to read

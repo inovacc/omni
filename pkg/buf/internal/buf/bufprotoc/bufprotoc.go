@@ -21,12 +21,12 @@ import (
 	"log/slog"
 	"sort"
 
-	bufmodule2 "github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufmodule"
-	normalpath2 "github.com/inovacc/omni/pkg/buf/internal/pkg/normalpath"
-	storage2 "github.com/inovacc/omni/pkg/buf/internal/pkg/storage"
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/storage/storageos"
-	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
-	"github.com/inovacc/omni/pkg/buf/internal/standard/xstrings"
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufmodule"
+	normalpath2 "github.com/inovacc/omni/pkg/buf/pkg/normalpath"
+	"github.com/inovacc/omni/pkg/buf/pkg/standard/xslices"
+	"github.com/inovacc/omni/pkg/buf/pkg/standard/xstrings"
+	storage2 "github.com/inovacc/omni/pkg/buf/pkg/storage"
+	"github.com/inovacc/omni/pkg/buf/pkg/storage/storageos"
 )
 
 // NewModuleSetForProtoc returns a new ModuleSet for protoc -I dirPaths and filePaths.
@@ -42,7 +42,7 @@ func NewModuleSetForProtoc(
 	storageosProvider storageos.Provider,
 	includeDirPaths []string,
 	filePaths []string,
-) (bufmodule2.ModuleSet, error) {
+) (bufmodule.ModuleSet, error) {
 	absIncludeDirPaths, err := normalizeAndAbsolutePaths(includeDirPaths, "include directory")
 	if err != nil {
 		return nil, err
@@ -74,12 +74,12 @@ func NewModuleSetForProtoc(
 		return nil, err
 	}
 
-	moduleSetBuilder := bufmodule2.NewModuleSetBuilder(ctx, logger, bufmodule2.NopModuleDataProvider, bufmodule2.NopCommitProvider)
+	moduleSetBuilder := bufmodule.NewModuleSetBuilder(ctx, logger, bufmodule.NopModuleDataProvider, bufmodule.NopCommitProvider)
 	moduleSetBuilder.AddLocalModule(
 		storage2.MultiReadBucket(rootBuckets...),
 		".",
 		true,
-		bufmodule2.LocalModuleWithTargetPaths(
+		bufmodule.LocalModuleWithTargetPaths(
 			targetPaths,
 			nil,
 		),

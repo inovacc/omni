@@ -1,31 +1,30 @@
-GO_ALL_REPO_PKGS := ./cmd/... ./private/...
+GO_ALL_REPO_PKGS := ./cmd/... ./internal/...
 GO_GET_PKGS := $(GO_GET_PKGS) \
 	github.com/bufbuild/protocompile@main
 GO_BINS := $(GO_BINS) \
 	cmd/buf \
 	cmd/protoc-gen-buf-breaking \
 	cmd/protoc-gen-buf-lint \
-	private/buf/bufwkt/cmd/wkt-go-data \
-	private/bufpkg/bufmodule/bufmoduleapi/cmd/buf-legacyfederation-go-data \
-	private/bufpkg/bufmodule/bufmoduletesting/cmd/buf-digest \
-	private/bufpkg/bufmodule/bufmoduletesting/cmd/buf-new-commit-id \
-	private/pkg/bandeps/cmd/bandeps \
-	private/pkg/git/cmd/git-ls-files-unstaged \
-	private/pkg/storage/cmd/ddiff \
-	private/pkg/storage/cmd/storage-go-data \
-	private/pkg/licenseheader/cmd/license-header
+	internal/buf/bufwkt/cmd/wkt-go-data \
+	internal/buf/bufmodule/bufmoduleapi/cmd/buf-legacyfederation-go-data \
+	internal/buf/bufmodule/bufmoduletesting/cmd/buf-digest \
+	internal/buf/bufmodule/bufmoduletesting/cmd/buf-new-commit-id \
+	internal/pkg/git/cmd/git-ls-files-unstaged \
+	internal/pkg/storage/cmd/ddiff \
+	internal/pkg/storage/cmd/storage-go-data \
+	internal/pkg/licenseheader/cmd/license-header
 GO_TEST_BINS := $(GO_TEST_BINS) \
 	cmd/buf/internal/command/alpha/protoc/internal/protoc-gen-insertion-point-receiver \
 	cmd/buf/internal/command/alpha/protoc/internal/protoc-gen-insertion-point-writer \
 	cmd/buf/internal/command/generate/internal/protoc-gen-top-level-type-names-yaml \
-	private/bufpkg/bufcheck/internal/cmd/buf-plugin-panic \
-	private/bufpkg/bufcheck/internal/cmd/buf-plugin-suffix \
-	private/bufpkg/bufcheck/internal/cmd/buf-plugin-protovalidate-ext \
-	private/bufpkg/bufcheck/internal/cmd/buf-plugin-rpc-ext \
-	private/bufpkg/bufcheck/internal/cmd/buf-plugin-duplicate-category \
-	private/bufpkg/bufcheck/internal/cmd/buf-plugin-duplicate-rule
+	internal/buf/bufcheck/internal/cmd/buf-plugin-panic \
+	internal/buf/bufcheck/internal/cmd/buf-plugin-suffix \
+	internal/buf/bufcheck/internal/cmd/buf-plugin-protovalidate-ext \
+	internal/buf/bufcheck/internal/cmd/buf-plugin-rpc-ext \
+	internal/buf/bufcheck/internal/cmd/buf-plugin-duplicate-category \
+	internal/buf/bufcheck/internal/cmd/buf-plugin-duplicate-rule
 GO_TEST_WASM_BINS := $(GO_TEST_WASM_BINS) \
-	private/bufpkg/bufcheck/internal/cmd/buf-plugin-suffix
+	internal/buf/bufcheck/internal/cmd/buf-plugin-suffix
 GO_MOD_VERSION := 1.23
 DOCKER_BINS := $(DOCKER_BINS) buf
 FILE_IGNORES := $(FILE_IGNORES) \
@@ -37,15 +36,14 @@ FILE_IGNORES := $(FILE_IGNORES) \
 	cmd/buf/testdata/imports/cache/v3/modulelocks/ \
 	cmd/buf/testdata/imports/corrupted_cache_dep/v3/modulelocks/ \
 	cmd/buf/testdata/imports/corrupted_cache_file/v3/modulelocks/ \
-	private/bufpkg/buftesting/cache/ \
-	private/buf/buftesting/cache/ \
-	private/pkg/storage/storageos/tmp/
+	internal/buf/buftesting/cache/ \
+	internal/buf/buftesting/cache/ \
+	internal/pkg/storage/storageos/tmp/
 LICENSE_HEADER_LICENSE_TYPE := apache
 LICENSE_HEADER_COPYRIGHT_HOLDER := Buf Technologies, Inc.
 LICENSE_HEADER_YEAR_RANGE := 2020-2025
 LICENSE_HEADER_IGNORES := \/testdata enterprise
-BANDEPS_CONFIG := etc/bandeps/bandeps.yaml
-BUFPRIVATEUSAGE_PKGS := ./private/...
+BUFPRIVATEUSAGE_PKGS := ./internal/...
 PROTOVALIDATE_VERSION := v1.1.0
 # Comment out to use released buf
 #BUF_GO_INSTALL_PATH := ./cmd/buf
@@ -74,20 +72,20 @@ installtest:: $(PROTOC) $(PROTOC_GEN_GO)
 
 .PHONY: godata
 godata: installwkt-go-data installbuf-legacyfederation-go-data $(PROTOC)
-	rm -rf private/gen/data/datawkt
-	mkdir -p private/gen/data/datawkt
-	wkt-go-data "$(CACHE_INCLUDE)" --package datawkt --protobuf-version "$(PROTOC_VERSION)" > private/gen/data/datawkt/datawkt.gen.go
+	rm -rf internal/gen/data/datawkt
+	mkdir -p internal/gen/data/datawkt
+	wkt-go-data "$(CACHE_INCLUDE)" --package datawkt --protobuf-version "$(PROTOC_VERSION)" > internal/gen/data/datawkt/datawkt.gen.go
 ifdef LEGACY_FEDERATION_FILE_PATH
-	rm -rf private/gen/data/datalegacyfederation
-	mkdir -p private/gen/data/datalegacyfederation
-	cat "$(LEGACY_FEDERATION_FILE_PATH)" | buf-legacyfederation-go-data --package datalegacyfederation > private/gen/data/datalegacyfederation/datalegacyfederation.gen.go
+	rm -rf internal/gen/data/datalegacyfederation
+	mkdir -p internal/gen/data/datalegacyfederation
+	cat "$(LEGACY_FEDERATION_FILE_PATH)" | buf-legacyfederation-go-data --package datalegacyfederation > internal/gen/data/datalegacyfederation/datalegacyfederation.gen.go
 endif
 
 prepostgenerate:: godata
 
 .PHONY: bufworkspacebuflocks
 bufworkspacebuflocks: installbuf-digest installbuf-new-commit-id
-	bash private/buf/bufworkspace/testdata/basic/scripts/fakebuflock.bash
+	bash internal/buf/bufworkspace/testdata/basic/scripts/fakebuflock.bash
 
 prepostgenerate:: bufworkspacebuflocks
 
@@ -95,14 +93,14 @@ bufgeneratedeps:: $(PROTOC_GEN_GO) $(PROTOC_GEN_CONNECT_GO)
 
 .PHONY: bufgeneratecleango
 bufgeneratecleango:
-	rm -rf private/gen/proto
+	rm -rf internal/gen/proto
 
 .PHONY: bufgeneratecleantestdata
 bufgeneratecleantestdata:
 	rm -rf cmd/buf/testdata/check_plugins/current/vendor/protovalidate
 	rm -rf cmd/buf/testdata/check_plugins/previous/vendor/protovalidate
-	rm -rf private/bufpkg/bufcheck/testdata/lint/protovalidate/vendor/protovalidate
-	rm -rf private/bufpkg/bufcheck/testdata/lint/protovalidate_predefines/vendor/protovalidate
+	rm -rf internal/buf/bufcheck/testdata/lint/protovalidate/vendor/protovalidate
+	rm -rf internal/buf/bufcheck/testdata/lint/protovalidate_predefines/vendor/protovalidate
 
 bufgenerateclean:: \
 	bufgeneratecleango \
@@ -123,10 +121,10 @@ bufgeneratetestdata:
 		--output cmd/buf/testdata/check_plugins/previous/vendor/protovalidate
 	$(BUF_BIN) export \
 		buf.build/bufbuild/protovalidate:$(PROTOVALIDATE_VERSION) \
-		--output private/bufpkg/bufcheck/testdata/lint/protovalidate/vendor/protovalidate
+		--output internal/buf/bufcheck/testdata/lint/protovalidate/vendor/protovalidate
 	$(BUF_BIN) export \
 		buf.build/bufbuild/protovalidate:$(PROTOVALIDATE_VERSION) \
-		--output private/bufpkg/bufcheck/testdata/lint/protovalidate_predefined/vendor/protovalidate
+		--output internal/buf/bufcheck/testdata/lint/protovalidate_predefined/vendor/protovalidate
 
 bufgeneratesteps:: \
 	bufgeneratego \
@@ -145,8 +143,8 @@ updateversion:
 ifndef VERSION
 	$(error "VERSION must be set")
 endif
-	$(SED_I) "s/Version.*=.*\"[0-9]\.[0-9][0-9]*\.[0-9][0-9]*.*\"/Version = \"$(VERSION)\"/g" private/buf/bufcli/bufcli.go
-	gofmt -s -w private/buf/bufcli/bufcli.go
+	$(SED_I) "s/Version.*=.*\"[0-9]\.[0-9][0-9]*\.[0-9][0-9]*.*\"/Version = \"$(VERSION)\"/g" internal/buf/bufcli/bufcli.go
+	gofmt -s -w internal/buf/bufcli/bufcli.go
 
 .PHONY: releasechangelog
 releasechangelog:
@@ -173,7 +171,7 @@ endif
 .PHONY: bufimageutilupdateexpectations
 bufimageutilupdateexpectations:
 	# You may need to run this after updating protoc versions
-	BUFBUILD_BUF_BUFIMAGEUTIL_SHOULD_UPDATE_EXPECTATIONS=1 go test -parallel 1 ./private/bufpkg/bufimage/bufimageutil
+	BUFBUILD_BUF_BUFIMAGEUTIL_SHOULD_UPDATE_EXPECTATIONS=1 go test -parallel 1 ./internal/buf/bufimage/bufimageutil
 
 .PHONY: checkandupdateprecommithooks
 checkandupdateprecommithooks:

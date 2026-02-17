@@ -16,8 +16,8 @@ package internal
 
 import (
 	"github.com/inovacc/omni/pkg/buf/internal/buf/buftarget"
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/normalpath"
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/storage"
+	"github.com/inovacc/omni/pkg/buf/pkg/normalpath"
+	"github.com/inovacc/omni/pkg/buf/pkg/storage"
 )
 
 var _ ReadWriteBucket = &readWriteBucket{}

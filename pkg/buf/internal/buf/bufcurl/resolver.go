@@ -18,11 +18,12 @@ import (
 	"context"
 	"log/slog"
 
-	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufimage"
-	bufmodule2 "github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufmodule"
-	"github.com/inovacc/omni/pkg/buf/internal/gen/data/datawkt"
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/protoencoding"
+	"github.com/inovacc/omni/pkg/buf/pkg/protoencoding"
 	"google.golang.org/protobuf/reflect/protoreflect"
+
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufimage"
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufmodule"
+	"github.com/inovacc/omni/pkg/buf/internal/gen/data/datawkt"
 )
 
 // Resolver is used to resolve descriptors, types, extensions, etc. Unlike
@@ -104,11 +105,11 @@ func (c *combinedResolver) ListServices() ([]protoreflect.FullName, error) {
 
 // NewWKTResolver returns a Resolver that can resolve all well-known types.
 func NewWKTResolver(ctx context.Context, logger *slog.Logger) (Resolver, error) {
-	moduleSet, err := bufmodule2.NewModuleSetBuilder(
+	moduleSet, err := bufmodule.NewModuleSetBuilder(
 		ctx,
 		logger,
-		bufmodule2.NopModuleDataProvider,
-		bufmodule2.NopCommitProvider,
+		bufmodule.NopModuleDataProvider,
+		bufmodule.NopCommitProvider,
 	).AddLocalModule(
 		datawkt.ReadBucket,
 		".",
@@ -117,7 +118,7 @@ func NewWKTResolver(ctx context.Context, logger *slog.Logger) (Resolver, error) 
 	if err != nil {
 		return nil, err
 	}
-	module := bufmodule2.ModuleSetToModuleReadBucketWithOnlyProtoFiles(moduleSet)
+	module := bufmodule.ModuleSetToModuleReadBucketWithOnlyProtoFiles(moduleSet)
 	image, err := bufimage.BuildImage(
 		ctx,
 		logger,

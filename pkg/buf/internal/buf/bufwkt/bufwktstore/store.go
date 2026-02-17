@@ -19,7 +19,7 @@ import (
 	"log/slog"
 
 	"github.com/inovacc/omni/pkg/buf/internal/gen/data/datawkt"
-	storage2 "github.com/inovacc/omni/pkg/buf/internal/pkg/storage"
+	storage2 "github.com/inovacc/omni/pkg/buf/pkg/storage"
 )
 
 type store struct {

@@ -21,12 +21,11 @@
 package registryv1alpha1
 
 import (
-	reflect "reflect"
-	unsafe "unsafe"
-
 	v1alpha1 "github.com/inovacc/omni/pkg/buf/internal/gen/proto/go/buf/alpha/module/v1alpha1"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+	reflect "reflect"
+	unsafe "unsafe"
 )
 
 const (
@@ -396,9 +395,7 @@ type PushManifestAndBlobsRequest_builder struct {
 	Repository string
 	// Manifest with all the module files being pushed.
 	// The content of the manifest blob is a text encoding of an ordered list of unique paths, each path encoded as:
-	//
-	//	<digest_type>:<digest>[SP][SP]<path>[LF]
-	//
+	//   <digest_type>:<digest>[SP][SP]<path>[LF]
 	// The only current supported digest type is 'shake256'. The shake256 digest consists of 64 bytes of lowercase hex
 	// encoded output of SHAKE256. See buf.alpha.module.v1alpha1.Digest for more details.
 	Manifest *v1alpha1.Blob
@@ -528,8 +525,8 @@ const file_buf_alpha_registry_v1alpha1_push_proto_rawDesc = "" +
 	"\x10local_module_pin\x18\x01 \x01(\v2+.buf.alpha.registry.v1alpha1.LocalModulePinR\x0elocalModulePin2\x82\x02\n" +
 	"\vPushService\x12`\n" +
 	"\x04Push\x12(.buf.alpha.registry.v1alpha1.PushRequest\x1a).buf.alpha.registry.v1alpha1.PushResponse\"\x03\x90\x02\x02\x12\x90\x01\n" +
-	"\x14PushManifestAndBlobs\x128.buf.alpha.registry.v1alpha1.PushManifestAndBlobsRequest\x1a9.buf.alpha.registry.v1alpha1.PushManifestAndBlobsResponse\"\x03\x90\x02\x02B\x96\x02\n" +
-	"\x1fcom.buf.alpha.registry.v1alpha1B\tPushProtoP\x01ZYgithub.com/bufbuild/buf/private/gen/proto/go/buf/alpha/registry/v1alpha1;registryv1alpha1\xa2\x02\x03BAR\xaa\x02\x1bBuf.Alpha.Registry.V1alpha1\xca\x02\x1bBuf\\Alpha\\Registry\\V1alpha1\xe2\x02'Buf\\Alpha\\Registry\\V1alpha1\\GPBMetadata\xea\x02\x1eBuf::Alpha::Registry::V1alpha1b\x06proto3"
+	"\x14PushManifestAndBlobs\x128.buf.alpha.registry.v1alpha1.PushManifestAndBlobsRequest\x1a9.buf.alpha.registry.v1alpha1.PushManifestAndBlobsResponse\"\x03\x90\x02\x02B\x97\x02\n" +
+	"\x1fcom.buf.alpha.registry.v1alpha1B\tPushProtoP\x01ZZgithub.com/bufbuild/buf/internal/gen/proto/go/buf/alpha/registry/v1alpha1;registryv1alpha1\xa2\x02\x03BAR\xaa\x02\x1bBuf.Alpha.Registry.V1alpha1\xca\x02\x1bBuf\\Alpha\\Registry\\V1alpha1\xe2\x02'Buf\\Alpha\\Registry\\V1alpha1\\GPBMetadata\xea\x02\x1eBuf::Alpha::Registry::V1alpha1b\x06proto3"
 
 var file_buf_alpha_registry_v1alpha1_push_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
 var file_buf_alpha_registry_v1alpha1_push_proto_goTypes = []any{

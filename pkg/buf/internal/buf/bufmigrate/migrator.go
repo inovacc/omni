@@ -25,29 +25,30 @@ import (
 	"sort"
 	"strings"
 
-	"buf.build/go/bufplugin/check"
+	normalpath2 "github.com/inovacc/omni/pkg/buf/pkg/normalpath"
+	"github.com/inovacc/omni/pkg/buf/pkg/standard/xslices"
+	storage2 "github.com/inovacc/omni/pkg/buf/pkg/storage"
+	"github.com/inovacc/omni/pkg/buf/pkg/storage/storagemem"
 	"github.com/google/uuid"
-	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufcheck"
-	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufcheck/bufcheckserver"
-	bufconfig2 "github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufconfig"
-	bufmodule2 "github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufmodule"
-	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufparse"
-	normalpath2 "github.com/inovacc/omni/pkg/buf/internal/pkg/normalpath"
-	storage2 "github.com/inovacc/omni/pkg/buf/internal/pkg/storage"
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/storage/storagemem"
-	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
+
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufcheck"
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufcheck/bufcheckserver"
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufconfig"
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufmodule"
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufparse"
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufplugin/check"
 )
 
 type migrator struct {
 	logger            *slog.Logger
-	moduleKeyProvider bufmodule2.ModuleKeyProvider
-	commitProvider    bufmodule2.CommitProvider
+	moduleKeyProvider bufmodule.ModuleKeyProvider
+	commitProvider    bufmodule.CommitProvider
 }
 
 func newMigrator(
 	logger *slog.Logger,
-	moduleKeyProvider bufmodule2.ModuleKeyProvider,
-	commitProvider bufmodule2.CommitProvider,
+	moduleKeyProvider bufmodule.ModuleKeyProvider,
+	commitProvider bufmodule.CommitProvider,
 ) *migrator {
 	return &migrator{
 		logger:            logger,
@@ -170,7 +171,7 @@ func (m *migrator) migrate(ctx context.Context, bucket storage2.WriteBucket, mig
 	}
 	for path, migratedBufGenYAMLFile := range migrateBuilder.pathToMigratedBufGenYAMLFile {
 		if err := storage2.ForWriteObject(ctx, bucket, path, func(writeObject storage2.WriteObject) error {
-			return bufconfig2.WriteBufGenYAMLFile(writeObject, migratedBufGenYAMLFile)
+			return bufconfig.WriteBufGenYAMLFile(writeObject, migratedBufGenYAMLFile)
 		}); err != nil {
 			return err
 		}
@@ -182,11 +183,11 @@ func (m *migrator) migrate(ctx context.Context, bucket storage2.WriteBucket, mig
 		if err != nil {
 			return err
 		}
-		if err := bufconfig2.PutBufYAMLFileForPrefix(ctx, bucket, migrateBuilder.destinationDirPath, migratedBufYAMLFile); err != nil {
+		if err := bufconfig.PutBufYAMLFileForPrefix(ctx, bucket, migrateBuilder.destinationDirPath, migratedBufYAMLFile); err != nil {
 			return err
 		}
 		if migratedBufLockFile != nil {
-			if err := bufconfig2.PutBufLockFileForPrefix(ctx, bucket, migrateBuilder.destinationDirPath, migratedBufLockFile); err != nil {
+			if err := bufconfig.PutBufLockFileForPrefix(ctx, bucket, migrateBuilder.destinationDirPath, migratedBufLockFile); err != nil {
 				return err
 			}
 		}
@@ -240,7 +241,7 @@ func (m *migrator) getOriginalAndAddedFileBuckets(
 		if err != nil {
 			return nil, nil, err
 		}
-		migratedBufYAMLFilePath := normalpath2.Join(migrateBuilder.destinationDirPath, bufconfig2.DefaultBufYAMLFileName)
+		migratedBufYAMLFilePath := normalpath2.Join(migrateBuilder.destinationDirPath, bufconfig.DefaultBufYAMLFileName)
 		if err := storage2.CopyPath(
 			ctx,
 			migrateBuilder.bucket,
@@ -259,11 +260,11 @@ func (m *migrator) getOriginalAndAddedFileBuckets(
 		defer func() {
 			retErr = errors.Join(retErr, writeObjectCloser.Close())
 		}()
-		if err := bufconfig2.WriteBufYAMLFile(writeObjectCloser, migratedBufYAMLFile); err != nil {
+		if err := bufconfig.WriteBufYAMLFile(writeObjectCloser, migratedBufYAMLFile); err != nil {
 			return nil, nil, err
 		}
 		if migratedBufLockFile != nil {
-			migratedBufLockFilePath := normalpath2.Join(migrateBuilder.destinationDirPath, bufconfig2.DefaultBufLockFileName)
+			migratedBufLockFilePath := normalpath2.Join(migrateBuilder.destinationDirPath, bufconfig.DefaultBufLockFileName)
 			if err := storage2.CopyPath(
 				ctx,
 				migrateBuilder.bucket,
@@ -282,7 +283,7 @@ func (m *migrator) getOriginalAndAddedFileBuckets(
 			defer func() {
 				retErr = errors.Join(retErr, writeObjectCloser.Close())
 			}()
-			if err := bufconfig2.WriteBufLockFile(writeObjectCloser, migratedBufLockFile); err != nil {
+			if err := bufconfig.WriteBufLockFile(writeObjectCloser, migratedBufLockFile); err != nil {
 				return nil, nil, err
 			}
 		}
@@ -306,7 +307,7 @@ func (m *migrator) getOriginalAndAddedFileBuckets(
 		defer func() {
 			retErr = errors.Join(retErr, writeObjectCloser.Close())
 		}()
-		if err := bufconfig2.WriteBufGenYAMLFile(writeObjectCloser, migratedBufGenYAMLFile); err != nil {
+		if err := bufconfig.WriteBufGenYAMLFile(writeObjectCloser, migratedBufGenYAMLFile); err != nil {
 			return nil, nil, err
 		}
 	}
@@ -318,7 +319,7 @@ func (m *migrator) getOriginalAndAddedFileBuckets(
 func (m *migrator) buildBufYAMLAndBufLockFiles(
 	ctx context.Context,
 	migrateBuilder *migrateBuilder,
-) (bufconfig2.BufYAMLFile, bufconfig2.BufLockFile, error) {
+) (bufconfig.BufYAMLFile, bufconfig.BufLockFile, error) {
 	// module full name --> the list of declared dependencies that are this module.
 	depModuleToDeclaredRefs := make(map[string][]bufparse.Ref)
 	for _, declaredRef := range migrateBuilder.configuredDepModuleRefs {
@@ -330,7 +331,7 @@ func (m *migrator) buildBufYAMLAndBufLockFiles(
 		depModuleToDeclaredRefs[moduleFullName] = append(depModuleToDeclaredRefs[moduleFullName], declaredRef)
 	}
 	// module full name --> the list of lock entries that are this module.
-	depModuleToLockEntries := make(map[string][]bufmodule2.ModuleKey)
+	depModuleToLockEntries := make(map[string][]bufmodule.ModuleKey)
 	for _, lockEntry := range migrateBuilder.depModuleKeys {
 		moduleFullName := lockEntry.FullName().String()
 		// If a declared dependency also shows up in the workspace, it's not a dependency.
@@ -361,7 +362,7 @@ func (m *migrator) buildBufYAMLAndBufLockFiles(
 		}
 	}
 	for depModule, lockEntries := range depModuleToLockEntries {
-		commitIDToKey := make(map[uuid.UUID]bufmodule2.ModuleKey)
+		commitIDToKey := make(map[uuid.UUID]bufmodule.ModuleKey)
 		for _, lockEntry := range lockEntries {
 			// There may be duplicates, we ignore this. They should be the same.
 			// We could check,
@@ -378,8 +379,8 @@ func (m *migrator) buildBufYAMLAndBufLockFiles(
 			// depModuleRefs is guaranteed to have length 1, because areDependenciesResolved is true.
 			resolvedDeclaredRefs = append(resolvedDeclaredRefs, depModuleRefs...)
 		}
-		bufYAML, err := bufconfig2.NewBufYAMLFile(
-			bufconfig2.FileVersionV2,
+		bufYAML, err := bufconfig.NewBufYAMLFile(
+			bufconfig.FileVersionV2,
 			migrateBuilder.moduleConfigs,
 			// TODO: If we ever need to migrate from a v2 to v3, we will need to handle PluginConfigs and PolicyConfigs
 			nil,
@@ -389,18 +390,18 @@ func (m *migrator) buildBufYAMLAndBufLockFiles(
 		if err != nil {
 			return nil, nil, err
 		}
-		resolvedLockEntries := make([]bufmodule2.ModuleKey, 0, len(depModuleToLockEntries))
+		resolvedLockEntries := make([]bufmodule.ModuleKey, 0, len(depModuleToLockEntries))
 		for _, lockEntry := range depModuleToLockEntries {
 			resolvedLockEntries = append(resolvedLockEntries, lockEntry...)
 		}
-		var bufLock bufconfig2.BufLockFile
+		var bufLock bufconfig.BufLockFile
 		if migrateBuilder.hasSeenBufLockFile {
 			resolvedLockEntries, err := m.upgradeModuleKeysToB5(ctx, resolvedLockEntries)
 			if err != nil {
 				return nil, nil, err
 			}
-			bufLock, err = bufconfig2.NewBufLockFile(
-				bufconfig2.FileVersionV2,
+			bufLock, err = bufconfig.NewBufLockFile(
+				bufconfig.FileVersionV2,
 				resolvedLockEntries,
 				nil, // Plugins are not supported in v1.
 				nil, // Policies are not supported in v1.
@@ -430,8 +431,8 @@ func (m *migrator) buildBufYAMLAndBufLockFiles(
 	if err != nil {
 		return nil, nil, err
 	}
-	bufYAML, err := bufconfig2.NewBufYAMLFile(
-		bufconfig2.FileVersionV2,
+	bufYAML, err := bufconfig.NewBufYAMLFile(
+		bufconfig.FileVersionV2,
 		migrateBuilder.moduleConfigs,
 		// TODO: If we ever need to migrate from a v2 to v3, we will need to handle PluginConfigs and PolicyConfigs
 		nil,
@@ -441,14 +442,14 @@ func (m *migrator) buildBufYAMLAndBufLockFiles(
 	if err != nil {
 		return nil, nil, err
 	}
-	var bufLock bufconfig2.BufLockFile
+	var bufLock bufconfig.BufLockFile
 	if migrateBuilder.hasSeenBufLockFile {
 		resolvedDepModuleKeys, err := m.upgradeModuleKeysToB5(ctx, resolvedDepModuleKeys)
 		if err != nil {
 			return nil, nil, err
 		}
-		bufLock, err = bufconfig2.NewBufLockFile(
-			bufconfig2.FileVersionV2,
+		bufLock, err = bufconfig.NewBufLockFile(
+			bufconfig.FileVersionV2,
 			resolvedDepModuleKeys,
 			nil, // Plugins are not supported in v1.
 			nil, // Policies are not supported in v1.
@@ -464,7 +465,7 @@ func (m *migrator) buildBufYAMLAndBufLockFiles(
 func (m *migrator) getModuleToRefToCommit(
 	ctx context.Context,
 	moduleRefs []bufparse.Ref,
-) (map[string]map[string]bufmodule2.Commit, error) {
+) (map[string]map[string]bufmodule.Commit, error) {
 	// The module refs that are collected by migrateBuilder is across all modules being
 	// migrated, so there may be duplicates. ModuleKeyProvider errors on duplicate module
 	// refs because it is expensive to make multiple calls to resolve the same module ref,
@@ -473,7 +474,7 @@ func (m *migrator) getModuleToRefToCommit(
 		moduleRefs,
 		func(moduleRef bufparse.Ref) string { return moduleRef.String() },
 	)
-	moduleKeys, err := m.moduleKeyProvider.GetModuleKeysForModuleRefs(ctx, moduleRefs, bufmodule2.DigestTypeB5)
+	moduleKeys, err := m.moduleKeyProvider.GetModuleKeysForModuleRefs(ctx, moduleRefs, bufmodule.DigestTypeB5)
 	if err != nil {
 		return nil, err
 	}
@@ -481,7 +482,7 @@ func (m *migrator) getModuleToRefToCommit(
 	if err != nil {
 		return nil, err
 	}
-	moduleToRefToCommit := make(map[string]map[string]bufmodule2.Commit)
+	moduleToRefToCommit := make(map[string]map[string]bufmodule.Commit)
 	for i, moduleRef := range moduleRefs {
 		if moduleRef.Ref() == "" {
 			continue
@@ -492,7 +493,7 @@ func (m *migrator) getModuleToRefToCommit(
 
 		moduleFullName := moduleRef.FullName()
 		if moduleToRefToCommit[moduleFullName.String()] == nil {
-			moduleToRefToCommit[moduleFullName.String()] = make(map[string]bufmodule2.Commit)
+			moduleToRefToCommit[moduleFullName.String()] = make(map[string]bufmodule.Commit)
 		}
 		moduleToRefToCommit[moduleFullName.String()][moduleRef.Ref()] = commit
 	}
@@ -501,21 +502,21 @@ func (m *migrator) getModuleToRefToCommit(
 
 func (m *migrator) getCommitIDToCommit(
 	ctx context.Context,
-	moduleKeys []bufmodule2.ModuleKey,
-) (map[uuid.UUID]bufmodule2.Commit, error) {
+	moduleKeys []bufmodule.ModuleKey,
+) (map[uuid.UUID]bufmodule.Commit, error) {
 	// The module keys that are collected by migrateBuilder is across all modules being
 	// migrated, so there may be duplicates. CommitProvider errors on duplicate module
 	// keys because it is expensive to make multiple calls to resolve the same module key,
 	// so we deduplicate the module keys we are passing here.
 	moduleKeys = xslices.DeduplicateAny(
 		moduleKeys,
-		func(moduleKey bufmodule2.ModuleKey) string { return moduleKey.String() },
+		func(moduleKey bufmodule.ModuleKey) string { return moduleKey.String() },
 	)
 	commits, err := m.commitProvider.GetCommitsForModuleKeys(ctx, moduleKeys)
 	if err != nil {
 		return nil, err
 	}
-	commitIDToCommit := make(map[uuid.UUID]bufmodule2.Commit, len(commits))
+	commitIDToCommit := make(map[uuid.UUID]bufmodule.Commit, len(commits))
 	for _, commit := range commits {
 		// We don't know if these are unique, so we do not use xslices.ToUniqueValuesMapError.
 		commitIDToCommit[commit.ModuleKey().CommitID()] = commit
@@ -525,18 +526,18 @@ func (m *migrator) getCommitIDToCommit(
 
 func (m *migrator) upgradeModuleKeysToB5(
 	ctx context.Context,
-	moduleKeys []bufmodule2.ModuleKey,
-) ([]bufmodule2.ModuleKey, error) {
+	moduleKeys []bufmodule.ModuleKey,
+) ([]bufmodule.ModuleKey, error) {
 	moduleKeys = slices.Clone(moduleKeys)
 
 	b4IndexedModuleKeys, err := xslices.FilterError(
 		xslices.ToIndexed(moduleKeys),
-		func(indexedModuleKey xslices.Indexed[bufmodule2.ModuleKey]) (bool, error) {
+		func(indexedModuleKey xslices.Indexed[bufmodule.ModuleKey]) (bool, error) {
 			digest, err := indexedModuleKey.Value.Digest()
 			if err != nil {
 				return false, err
 			}
-			return digest.Type() == bufmodule2.DigestTypeB4, nil
+			return digest.Type() == bufmodule.DigestTypeB4, nil
 		},
 	)
 	if err != nil {
@@ -549,11 +550,11 @@ func (m *migrator) upgradeModuleKeysToB5(
 
 	commitKeys, err := xslices.MapError(
 		b4IndexedModuleKeys,
-		func(indexedModuleKey xslices.Indexed[bufmodule2.ModuleKey]) (bufmodule2.CommitKey, error) {
-			return bufmodule2.NewCommitKey(
+		func(indexedModuleKey xslices.Indexed[bufmodule.ModuleKey]) (bufmodule.CommitKey, error) {
+			return bufmodule.NewCommitKey(
 				indexedModuleKey.Value.FullName().Registry(),
 				indexedModuleKey.Value.CommitID(),
-				bufmodule2.DigestTypeB5,
+				bufmodule.DigestTypeB5,
 			)
 		},
 	)
@@ -568,7 +569,7 @@ func (m *migrator) upgradeModuleKeysToB5(
 		// The index into moduleKeys.
 		moduleKeyIndex := b4IndexedModuleKeys[i].Index
 		existingModuleKey := moduleKeys[moduleKeyIndex]
-		newModuleKey, err := bufmodule2.NewModuleKey(
+		newModuleKey, err := bufmodule.NewModuleKey(
 			existingModuleKey.FullName(),
 			existingModuleKey.CommitID(),
 			commit.ModuleKey().Digest,
@@ -582,11 +583,11 @@ func (m *migrator) upgradeModuleKeysToB5(
 }
 
 func resolvedDeclaredAndLockedDependencies(
-	moduleToRefToCommit map[string]map[string]bufmodule2.Commit,
-	commitIDToCommit map[uuid.UUID]bufmodule2.Commit,
+	moduleToRefToCommit map[string]map[string]bufmodule.Commit,
+	commitIDToCommit map[uuid.UUID]bufmodule.Commit,
 	moduleFullNameToDeclaredRefs map[string][]bufparse.Ref,
-	moduleFullNameToLockKeys map[string][]bufmodule2.ModuleKey,
-) ([]bufparse.Ref, []bufmodule2.ModuleKey, error) {
+	moduleFullNameToLockKeys map[string][]bufmodule.ModuleKey,
+) ([]bufparse.Ref, []bufmodule.ModuleKey, error) {
 	depFullNameToResolvedRef := make(map[string]bufparse.Ref)
 	for moduleFullName, refs := range moduleFullNameToDeclaredRefs {
 		var errs []error
@@ -608,7 +609,7 @@ func resolvedDeclaredAndLockedDependencies(
 		}
 		depFullNameToResolvedRef[moduleFullName] = refs[0]
 	}
-	resolvedDepModuleKeys := make([]bufmodule2.ModuleKey, 0, len(moduleFullNameToLockKeys))
+	resolvedDepModuleKeys := make([]bufmodule.ModuleKey, 0, len(moduleFullNameToLockKeys))
 	for moduleFullName, lockKeys := range moduleFullNameToLockKeys {
 		resolvedRef, ok := depFullNameToResolvedRef[moduleFullName]
 		if ok && resolvedRef.Ref() != "" {
@@ -650,8 +651,8 @@ func resolvedDeclaredAndLockedDependencies(
 func equivalentLintConfigInV2(
 	ctx context.Context,
 	logger *slog.Logger,
-	lintConfig bufconfig2.LintConfig,
-) (bufconfig2.LintConfig, error) {
+	lintConfig bufconfig.LintConfig,
+) (bufconfig.LintConfig, error) {
 	equivalentCheckConfigV2, err := equivalentCheckConfigInV2(
 		ctx,
 		logger,
@@ -661,7 +662,7 @@ func equivalentLintConfigInV2(
 	if err != nil {
 		return nil, err
 	}
-	return bufconfig2.NewLintConfig(
+	return bufconfig.NewLintConfig(
 		equivalentCheckConfigV2,
 		lintConfig.EnumZeroValueSuffix(),
 		lintConfig.RPCAllowSameRequestResponse(),
@@ -675,8 +676,8 @@ func equivalentLintConfigInV2(
 func equivalentBreakingConfigInV2(
 	ctx context.Context,
 	logger *slog.Logger,
-	breakingConfig bufconfig2.BreakingConfig,
-) (bufconfig2.BreakingConfig, error) {
+	breakingConfig bufconfig.BreakingConfig,
+) (bufconfig.BreakingConfig, error) {
 	equivalentCheckConfigV2, err := equivalentCheckConfigInV2(
 		ctx,
 		logger,
@@ -686,7 +687,7 @@ func equivalentBreakingConfigInV2(
 	if err != nil {
 		return nil, err
 	}
-	return bufconfig2.NewBreakingConfig(
+	return bufconfig.NewBreakingConfig(
 		equivalentCheckConfigV2,
 		breakingConfig.IgnoreUnstablePackages(),
 	), nil
@@ -698,8 +699,8 @@ func equivalentCheckConfigInV2(
 	ctx context.Context,
 	logger *slog.Logger,
 	ruleType check.RuleType,
-	checkConfig bufconfig2.CheckConfig,
-) (bufconfig2.CheckConfig, error) {
+	checkConfig bufconfig.CheckConfig,
+) (bufconfig.CheckConfig, error) {
 	// No need for custom lint/breaking plugins since there's no plugins to migrate from <=v1.
 	// TODO: If we ever need v3, then we will have to deal with this.
 	client, err := bufcheck.NewClient(logger)
@@ -724,8 +725,8 @@ func equivalentCheckConfigInV2(
 
 	// First create a check config with the exact same UseIDsAndCategories. This
 	// is a simple translation. It may or may not be equivalent to the given check config.
-	simplyTranslatedCheckConfig, err := bufconfig2.NewEnabledCheckConfig(
-		bufconfig2.FileVersionV2,
+	simplyTranslatedCheckConfig, err := bufconfig.NewEnabledCheckConfig(
+		bufconfig.FileVersionV2,
 		undeprecateSlice(checkConfig.UseIDsAndCategories(), deprecations),
 		undeprecateSlice(checkConfig.ExceptIDsAndCategories(), deprecations),
 		checkConfig.IgnorePaths(),
@@ -791,8 +792,8 @@ func equivalentCheckConfigInV2(
 			return ok
 		},
 	)
-	return bufconfig2.NewEnabledCheckConfig(
-		bufconfig2.FileVersionV2,
+	return bufconfig.NewEnabledCheckConfig(
+		bufconfig.FileVersionV2,
 		useIDsAndCategories,
 		exceptIDsAndCategories,
 		simplyTranslatedCheckConfig.IgnorePaths(),

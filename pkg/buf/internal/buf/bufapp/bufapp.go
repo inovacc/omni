@@ -18,8 +18,8 @@ import (
 	"crypto/tls"
 	"fmt"
 
-	"github.com/inovacc/omni/pkg/buf/internal/app/appext"
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/cert/certclient"
+	"github.com/inovacc/omni/pkg/buf/pkg/app/appext"
+	"github.com/inovacc/omni/pkg/buf/pkg/cert/certclient"
 )
 
 const currentVersion = "v1"

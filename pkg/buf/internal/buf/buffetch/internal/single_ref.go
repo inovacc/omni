@@ -17,8 +17,8 @@ package internal
 import (
 	"strings"
 
-	"github.com/inovacc/omni/pkg/buf/internal/app"
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/normalpath"
+	"github.com/inovacc/omni/pkg/buf/pkg/app"
+	"github.com/inovacc/omni/pkg/buf/pkg/normalpath"
 )
 
 var (

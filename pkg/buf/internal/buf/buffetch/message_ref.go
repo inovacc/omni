@@ -15,20 +15,20 @@
 package buffetch
 
 import (
-	internal2 "github.com/inovacc/omni/pkg/buf/internal/buf/buffetch/internal"
+	"github.com/inovacc/omni/pkg/buf/internal/buf/buffetch/internal"
 )
 
 var _ MessageRef = &messageRef{}
 
 type messageRef struct {
-	singleRef       internal2.SingleRef
+	singleRef       internal.SingleRef
 	useProtoNames   bool
 	useEnumNumbers  bool
 	messageEncoding MessageEncoding
 }
 
 func newMessageRef(
-	singleRef internal2.SingleRef,
+	singleRef internal.SingleRef,
 	messageEncoding MessageEncoding,
 ) (*messageRef, error) {
 	useProtoNames, err := getTrueOrFalseForSingleRef(singleRef, useProtoNamesKey)
@@ -64,18 +64,18 @@ func (r *messageRef) UseEnumNumbers() bool {
 }
 
 func (r *messageRef) IsNull() bool {
-	return r.singleRef.FileScheme() == internal2.FileSchemeNull
+	return r.singleRef.FileScheme() == internal.FileSchemeNull
 }
 
-func (r *messageRef) internalRef() internal2.Ref {
+func (r *messageRef) internalRef() internal.Ref {
 	return r.singleRef
 }
 
-func (r *messageRef) internalSingleRef() internal2.SingleRef {
+func (r *messageRef) internalSingleRef() internal.SingleRef {
 	return r.singleRef
 }
 
-func getTrueOrFalseForSingleRef(singleRef internal2.SingleRef, key string) (bool, error) {
+func getTrueOrFalseForSingleRef(singleRef internal.SingleRef, key string) (bool, error) {
 	value, ok := singleRef.CustomOptionValue(key)
 	if !ok {
 		return false, nil
@@ -86,6 +86,6 @@ func getTrueOrFalseForSingleRef(singleRef internal2.SingleRef, key string) (bool
 	case "false":
 		return false, nil
 	default:
-		return false, internal2.NewOptionsInvalidValueForKeyError(key, value)
+		return false, internal.NewOptionsInvalidValueForKeyError(key, value)
 	}
 }

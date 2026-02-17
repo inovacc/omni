@@ -22,14 +22,15 @@ import (
 	"iter"
 	"log/slog"
 
-	"github.com/inovacc/omni/pkg/buf/internal/buf/bufworkspace"
-	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufcheck"
-	bufmodule2 "github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufmodule"
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/normalpath"
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/storage"
-	"github.com/inovacc/omni/pkg/buf/internal/standard/xlog/xslog"
+	"github.com/inovacc/omni/pkg/buf/pkg/normalpath"
+	"github.com/inovacc/omni/pkg/buf/pkg/standard/xlog/xslog"
+	"github.com/inovacc/omni/pkg/buf/pkg/storage"
 	"go.lsp.dev/protocol"
 	"go.lsp.dev/uri"
+
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufcheck"
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufmodule"
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufworkspace"
 )
 
 // errUnresolvableWorkspace is an unsupported workspace error.
@@ -133,7 +134,7 @@ type workspace struct {
 	refCount           int
 	workspaceURI       protocol.URI // File that created this workspace.
 	workspace          bufworkspace.Workspace
-	fileNameToFileInfo map[string]bufmodule2.FileInfo
+	fileNameToFileInfo map[string]bufmodule.FileInfo
 	pathToFile         map[string]*file
 	checkClient        bufcheck.Client
 }
@@ -162,10 +163,10 @@ func (w *workspace) Refresh(ctx context.Context) error {
 		w.lsp.logger.Error("workspace: get workspace", slog.String("file", fileName), xslog.ErrorAttr(err))
 		return err
 	}
-	fileNameToFileInfo := make(map[string]bufmodule2.FileInfo)
+	fileNameToFileInfo := make(map[string]bufmodule.FileInfo)
 	for _, module := range bufWorkspace.Modules() {
-		if err := module.WalkFileInfos(ctx, func(fileInfo bufmodule2.FileInfo) error {
-			if fileInfo.FileType() != bufmodule2.FileTypeProto {
+		if err := module.WalkFileInfos(ctx, func(fileInfo bufmodule.FileInfo) error {
+			if fileInfo.FileType() != bufmodule.FileTypeProto {
 				return nil
 			}
 			fileNameToFileInfo[fileInfo.LocalPath()] = fileInfo
@@ -189,8 +190,8 @@ func (w *workspace) Refresh(ctx context.Context) error {
 }
 
 // FileInfo returns an iterator over the files in the workspace.
-func (w *workspace) FileInfo() iter.Seq[bufmodule2.FileInfo] {
-	return func(yield func(bufmodule2.FileInfo) bool) {
+func (w *workspace) FileInfo() iter.Seq[bufmodule.FileInfo] {
+	return func(yield func(bufmodule.FileInfo) bool) {
 		if w == nil {
 			return
 		}
@@ -211,7 +212,7 @@ func (w *workspace) Workspace() bufworkspace.Workspace {
 }
 
 // GetModule resolves the Module for the protocol URI.
-func (w *workspace) GetModule(uri protocol.URI) bufmodule2.Module {
+func (w *workspace) GetModule(uri protocol.URI) bufmodule.Module {
 	if w == nil {
 		return nil
 	}

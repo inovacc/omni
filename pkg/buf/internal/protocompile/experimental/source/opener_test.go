@@ -17,7 +17,6 @@ package source_test
 import (
 	"io/fs"
 	"os"
-	"runtime"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -34,11 +33,7 @@ func TestFS(t *testing.T) {
 
 	file, err := opener.Open("testdata/hello.txt")
 	require.NoError(t, err)
-	expected := "hello!\n"
-	if runtime.GOOS == "windows" {
-		expected = "hello!\r\n"
-	}
-	assert.Equal(t, expected, file.Text())
+	assert.Equal(t, "hello!\n", file.Text())
 
 	_, err = opener.Open("missing.txt")
 	require.ErrorIs(t, err, fs.ErrNotExist)
@@ -75,11 +70,7 @@ func TestOpeners(t *testing.T) {
 
 	file, err = opener.Open("testdata/hello.txt")
 	require.NoError(t, err)
-	expectedHello := "hello!\n"
-	if runtime.GOOS == "windows" {
-		expectedHello = "hello!\r\n"
-	}
-	assert.Equal(t, expectedHello, file.Text())
+	assert.Equal(t, "hello!\n", file.Text())
 
 	_, err = opener.Open("missing.txt")
 	require.ErrorIs(t, err, fs.ErrNotExist)

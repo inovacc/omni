@@ -24,7 +24,6 @@ func First[T any](seq iter.Seq[T]) (v T, ok bool) {
 		ok = true
 		break
 	}
-
 	return v, ok
 }
 
@@ -34,7 +33,6 @@ func First2[K, V any](seq iter.Seq2[K, V]) (k K, v V, ok bool) {
 		ok = true
 		break
 	}
-
 	return k, v, ok
 }
 
@@ -43,7 +41,6 @@ func Last[T any](seq iter.Seq[T]) (v T, ok bool) {
 	for v = range seq {
 		ok = true
 	}
-
 	return v, ok
 }
 
@@ -52,7 +49,6 @@ func Last2[K, V any](seq iter.Seq2[K, V]) (k K, v V, ok bool) {
 	for k, v = range seq {
 		ok = true
 	}
-
 	return k, v, ok
 }
 
@@ -65,11 +61,9 @@ func OnlyOne[T any](seq iter.Seq[T]) (v T, ok bool) {
 			// than one element.
 			return z, false
 		}
-
 		v = x
 		ok = true
 	}
-
 	return v, ok
 }
 
@@ -83,29 +77,21 @@ func Find[T any](seq iter.Seq[T], p func(T) bool) (int, T) {
 			return i, x
 		}
 	}
-
 	var z T
-
 	return -1, z
 }
 
 // Find2 is like [Find] but for two-element iterators.
 func Find2[T, U any](seq iter.Seq2[T, U], p func(T, U) bool) (int, T, U) {
 	var i int
-
 	for x1, x2 := range seq {
 		if p(x1, x2) {
 			return i, x1, x2
 		}
-
 		i++
 	}
-
-	var (
-		z1 T
-		z2 U
-	)
-
+	var z1 T
+	var z2 U
 	return -1, z1, z2
 }
 

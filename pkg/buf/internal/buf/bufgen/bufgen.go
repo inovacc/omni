@@ -23,11 +23,11 @@ import (
 	"log/slog"
 	"strconv"
 
-	"github.com/inovacc/omni/pkg/buf/internal/app"
-	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufconfig"
-	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufimage"
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/connectclient"
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/storage/storageos"
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufconfig"
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufimage"
+	"github.com/inovacc/omni/pkg/buf/pkg/app"
+	"github.com/inovacc/omni/pkg/buf/pkg/connectclient"
+	"github.com/inovacc/omni/pkg/buf/pkg/storage/storageos"
 )
 
 const (

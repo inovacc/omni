@@ -19,7 +19,6 @@ import (
 	"fmt"
 	"os"
 	"regexp"
-	"runtime"
 	"strconv"
 	"strings"
 	"testing"
@@ -37,9 +36,6 @@ import (
 )
 
 func TestSourceCodeInfo(t *testing.T) {
-	if runtime.GOOS == "windows" {
-		t.Skip("Skipped on Windows: protoset files have Unix line endings which affect span positions")
-	}
 	t.Parallel()
 	compiler := protocompile.Compiler{
 		Resolver: protocompile.WithStandardImports(&protocompile.SourceResolver{
@@ -164,9 +160,6 @@ func fixupProtocSourceCodeInfo(info *descriptorpb.SourceCodeInfo) {
 }
 
 func TestSourceCodeInfoOptions(t *testing.T) {
-	if runtime.GOOS == "windows" {
-		t.Skip("Skipped on Windows: golden files have Unix line endings which affect span positions")
-	}
 	t.Parallel()
 
 	regenerateGoldenOutputFile := os.Getenv("PROTOCOMPILE_REFRESH") != ""
@@ -226,10 +219,7 @@ func TestSourceCodeInfoOptions(t *testing.T) {
 
 			goldenOutput, err := os.ReadFile(fmt.Sprintf("testdata/%s.%s.txt", baseName, testCase.name))
 			require.NoError(t, err)
-			// Normalize line endings for cross-platform compatibility
-			expectedOutput := strings.ReplaceAll(string(goldenOutput), "\r\n", "\n")
-			actualOutput := strings.ReplaceAll(output, "\r\n", "\n")
-			diff := cmp.Diff(expectedOutput, actualOutput)
+			diff := cmp.Diff(string(goldenOutput), output)
 			assert.Empty(t, diff, "source code info mismatch (-want +got):\n%v", diff)
 		})
 	}

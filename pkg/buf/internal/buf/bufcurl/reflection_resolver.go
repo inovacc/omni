@@ -25,15 +25,16 @@ import (
 	"sync"
 
 	"connectrpc.com/connect"
-	"github.com/inovacc/omni/pkg/buf/internal/gen/proto/go/grpc/reflection/v1"
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/protoencoding"
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/verbose"
+	"github.com/inovacc/omni/pkg/buf/pkg/protoencoding"
+	"github.com/inovacc/omni/pkg/buf/pkg/verbose"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protodesc"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
 	"google.golang.org/protobuf/types/descriptorpb"
 	"google.golang.org/protobuf/types/dynamicpb"
+
+	reflectionv1 "github.com/inovacc/omni/pkg/buf/internal/gen/proto/go/grpc/reflection/v1"
 )
 
 const (

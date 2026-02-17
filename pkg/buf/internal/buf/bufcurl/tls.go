@@ -22,7 +22,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/verbose"
+	"github.com/inovacc/omni/pkg/buf/pkg/verbose"
 )
 
 // TLSSettings contains settings related to creating a TLS client.

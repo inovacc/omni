@@ -1,9 +1,9 @@
 version: v1
-managed:  
+managed:
   enabled: true
   java_package_prefix:
     default: "org"
-    except: 
+    except:
       - someremote.com/owner/repo
 plugins:
   - plugin: someremote.com/owner/myplugin

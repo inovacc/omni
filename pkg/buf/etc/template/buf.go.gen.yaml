@@ -3,15 +3,15 @@ managed:
   enabled: true
   override:
     - file_option: go_package_prefix
-      value: github.com/bufbuild/buf/private/gen/proto/go
+      value: github.com/bufbuild/buf/internal/gen/proto/go
 plugins:
   - local: protoc-gen-go
-    out: private/gen/proto/go
+    out: internal/gen/proto/go
     opt:
       - paths=source_relative
       - default_api_level=API_OPAQUE
-      - Mgoogle/protobuf/cpp_features.proto=github.com/bufbuild/buf/private/gen/proto/go/google/protobuf
-      - Mgoogle/protobuf/java_features.proto=github.com/bufbuild/buf/private/gen/proto/go/google/protobuf
+      - Mgoogle/protobuf/cpp_features.proto=github.com/bufbuild/buf/internal/gen/proto/go/google/protobuf
+      - Mgoogle/protobuf/java_features.proto=github.com/bufbuild/buf/internal/gen/proto/go/google/protobuf
 inputs:
   - directory: proto
   - module: buf.build/grpc/grpc
@@ -19,5 +19,5 @@ inputs:
       - grpc.reflection.v1.ServerReflection
   - module: buf.build/protocolbuffers/wellknowntypes:v31.1
     paths:
-     - google/protobuf/cpp_features.proto
-     - google/protobuf/java_features.proto
+      - google/protobuf/cpp_features.proto
+      - google/protobuf/java_features.proto

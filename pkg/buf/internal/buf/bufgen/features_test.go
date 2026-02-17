@@ -21,13 +21,14 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
-	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufconfig"
-	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufimage"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/descriptorpb"
 	"google.golang.org/protobuf/types/pluginpb"
+
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufconfig"
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufimage"
 )
 
 func TestComputeRequiredFeatures(t *testing.T) {

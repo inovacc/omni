@@ -1,7 +1,0 @@
-syntax = "proto3";
-package a;
-import "b.proto";
-import "c.proto";
-message A{
-	b.B b = 1;
-}

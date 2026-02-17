@@ -21,11 +21,10 @@
 package breakingv1
 
 import (
-	reflect "reflect"
-	unsafe "unsafe"
-
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+	reflect "reflect"
+	unsafe "unsafe"
 )
 
 const (
@@ -164,10 +163,9 @@ type Config_builder struct {
 	IgnoreIdPaths []*IDPaths
 	// ignore_unstable_packages ignores packages with a last component that is one of the unstable forms recognised
 	// by the PACKAGE_VERSION_SUFFIX:
-	//
-	//	v\d+test.*
-	//	v\d+(alpha|beta)\d+
-	//	v\d+p\d+(alpha|beta)\d+
+	//   v\d+test.*
+	//   v\d+(alpha|beta)\d+
+	//   v\d+p\d+(alpha|beta)\d+
 	IgnoreUnstablePackages bool
 }
 
@@ -271,8 +269,8 @@ const file_buf_alpha_breaking_v1_config_proto_rawDesc = "" +
 	"\x18ignore_unstable_packages\x18\x06 \x01(\bR\x16ignoreUnstablePackages\"/\n" +
 	"\aIDPaths\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x14\n" +
-	"\x05paths\x18\x02 \x03(\tR\x05pathsB\xee\x01\n" +
-	"\x19com.buf.alpha.breaking.v1B\vConfigProtoP\x01ZMgithub.com/bufbuild/buf/private/gen/proto/go/buf/alpha/breaking/v1;breakingv1\xa2\x02\x03BAB\xaa\x02\x15Buf.Alpha.Breaking.V1\xca\x02\x15Buf\\Alpha\\Breaking\\V1\xe2\x02!Buf\\Alpha\\Breaking\\V1\\GPBMetadata\xea\x02\x18Buf::Alpha::Breaking::V1b\x06proto3"
+	"\x05paths\x18\x02 \x03(\tR\x05pathsB\xef\x01\n" +
+	"\x19com.buf.alpha.breaking.v1B\vConfigProtoP\x01ZNgithub.com/bufbuild/buf/internal/gen/proto/go/buf/alpha/breaking/v1;breakingv1\xa2\x02\x03BAB\xaa\x02\x15Buf.Alpha.Breaking.V1\xca\x02\x15Buf\\Alpha\\Breaking\\V1\xe2\x02!Buf\\Alpha\\Breaking\\V1\\GPBMetadata\xea\x02\x18Buf::Alpha::Breaking::V1b\x06proto3"
 
 var file_buf_alpha_breaking_v1_config_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
 var file_buf_alpha_breaking_v1_config_proto_goTypes = []any{

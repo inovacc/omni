@@ -19,12 +19,13 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/inovacc/omni/pkg/buf/internal/buf/bufformat"
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/storage"
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/storage/storageos"
+	"github.com/inovacc/omni/pkg/buf/pkg/storage"
+	"github.com/inovacc/omni/pkg/buf/pkg/storage/storageos"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.lsp.dev/protocol"
+
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufformat"
 )
 
 func TestFormatting(t *testing.T) {

@@ -1,4 +1,4 @@
-message Foo { /* C-style comment in the middle */ }
+message Foo {/* C-style comment in the middle */}
 
 message Bar {
   // Normal comment in the middle
@@ -6,5 +6,5 @@ message Bar {
 
 message Baz {
 
-// Body comment.
+  // Body comment.
 }

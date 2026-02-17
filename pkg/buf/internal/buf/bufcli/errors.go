@@ -19,7 +19,8 @@ import (
 	"fmt"
 
 	"connectrpc.com/connect"
-	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufparse"
+
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufparse"
 )
 
 var (

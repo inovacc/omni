@@ -21,18 +21,19 @@ import (
 	"io/fs"
 	"testing"
 
-	buftarget2 "github.com/inovacc/omni/pkg/buf/internal/buf/buftarget"
-	bufmodule2 "github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufmodule"
-	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufmodule/bufmoduletesting"
-	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufplugin"
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/dag/dagtest"
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/normalpath"
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/slogtestext"
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/storage/storageos"
-	"github.com/inovacc/omni/pkg/buf/internal/standard/xio"
-	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
-	"github.com/inovacc/omni/pkg/buf/internal/standard/xstrings"
+	"github.com/inovacc/omni/pkg/buf/pkg/dag/dagtest"
+	"github.com/inovacc/omni/pkg/buf/pkg/normalpath"
+	"github.com/inovacc/omni/pkg/buf/pkg/slogtestext"
+	"github.com/inovacc/omni/pkg/buf/pkg/standard/xio"
+	"github.com/inovacc/omni/pkg/buf/pkg/standard/xslices"
+	"github.com/inovacc/omni/pkg/buf/pkg/standard/xstrings"
+	"github.com/inovacc/omni/pkg/buf/pkg/storage/storageos"
 	"github.com/stretchr/testify/require"
+
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufmodule"
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufmodule/bufmoduletesting"
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufplugin"
+	"github.com/inovacc/omni/pkg/buf/internal/buf/buftarget"
 )
 
 func TestBasicV1(t *testing.T) {
@@ -65,14 +66,14 @@ func testBasic(t *testing.T, subDirPath string, isV2 bool) {
 	bucket, err := storageosProvider.NewReadWriteBucket(normalpath.Join("testdata/basic", subDirPath))
 	require.NoError(t, err)
 
-	bucketTargeting, err := buftarget2.NewBucketTargeting(
+	bucketTargeting, err := buftarget.NewBucketTargeting(
 		ctx,
 		slogtestext.NewLogger(t),
 		bucket,
 		"finance/portfolio/proto",
 		nil,
 		nil,
-		buftarget2.TerminateAtControllingWorkspace,
+		buftarget.TerminateAtControllingWorkspace,
 	)
 	require.NotNil(t, bucketTargeting.ControllingWorkspace())
 	require.Equal(t, ".", bucketTargeting.ControllingWorkspace().Path())
@@ -91,7 +92,7 @@ func testBasic(t *testing.T, subDirPath string, isV2 bool) {
 	module = workspace.GetModuleForOpaqueID("finance/portfolio/proto")
 	require.NotNil(t, module)
 	require.True(t, module.IsTarget())
-	graph, err := bufmodule2.ModuleSetToDAG(workspace)
+	graph, err := bufmodule.ModuleSetToDAG(workspace)
 	require.NoError(t, err)
 	dagtest.RequireGraphEqual(
 		t,
@@ -128,9 +129,9 @@ func testBasic(t *testing.T, subDirPath string, isV2 bool) {
 			},
 		},
 		graph,
-		bufmodule2.Module.OpaqueID,
+		bufmodule.Module.OpaqueID,
 	)
-	graphRemoteOnly, err := bufmodule2.ModuleSetToDAG(workspace, bufmodule2.ModuleSetToDAGWithRemoteOnly())
+	graphRemoteOnly, err := bufmodule.ModuleSetToDAG(workspace, bufmodule.ModuleSetToDAGWithRemoteOnly())
 	require.NoError(t, err)
 	dagtest.RequireGraphEqual(
 		t,
@@ -146,7 +147,7 @@ func testBasic(t *testing.T, subDirPath string, isV2 bool) {
 			},
 		},
 		graphRemoteOnly,
-		bufmodule2.Module.OpaqueID,
+		bufmodule.Module.OpaqueID,
 	)
 	module = workspace.GetModuleForOpaqueID("buf.testing/acme/bond")
 	require.NotNil(t, module)
@@ -159,14 +160,14 @@ func testBasic(t *testing.T, subDirPath string, isV2 bool) {
 
 	testLicenseAndDoc(t, ctx, workspace, isV2)
 
-	bucketTargeting, err = buftarget2.NewBucketTargeting(
+	bucketTargeting, err = buftarget.NewBucketTargeting(
 		ctx,
 		slogtestext.NewLogger(t),
 		bucket,
 		"common/money/proto",
 		[]string{"common/money/proto/acme/money/v1/currency_code.proto"},
 		nil,
-		buftarget2.TerminateAtControllingWorkspace,
+		buftarget.TerminateAtControllingWorkspace,
 	)
 	require.NoError(t, err)
 	require.NotNil(t, bucketTargeting.ControllingWorkspace())
@@ -217,14 +218,14 @@ func TestUnusedDep(t *testing.T) {
 	storageosProvider := storageos.NewProvider()
 	bucket, err := storageosProvider.NewReadWriteBucket("testdata/basic/workspace_unused_dep")
 	require.NoError(t, err)
-	bucketTargeting, err := buftarget2.NewBucketTargeting(
+	bucketTargeting, err := buftarget.NewBucketTargeting(
 		ctx,
 		slogtestext.NewLogger(t),
 		bucket,
 		".",
 		nil,
 		nil,
-		buftarget2.TerminateAtControllingWorkspace,
+		buftarget.TerminateAtControllingWorkspace,
 	)
 	require.NoError(t, err)
 	require.NotNil(t, bucketTargeting.ControllingWorkspace())
@@ -267,14 +268,14 @@ func TestDuplicatePath(t *testing.T) {
 	storageosProvider := storageos.NewProvider()
 	bucket, err := storageosProvider.NewReadWriteBucket("testdata/basic/workspacev2_duplicate_path")
 	require.NoError(t, err)
-	bucketTargeting, err := buftarget2.NewBucketTargeting(
+	bucketTargeting, err := buftarget.NewBucketTargeting(
 		ctx,
 		slogtestext.NewLogger(t),
 		bucket,
 		".",
 		nil,
 		nil,
-		buftarget2.TerminateAtControllingWorkspace,
+		buftarget.TerminateAtControllingWorkspace,
 	)
 	require.NoError(t, err)
 	require.NotNil(t, bucketTargeting.ControllingWorkspace())
@@ -327,9 +328,9 @@ func testNewWorkspaceProvider(t *testing.T, testModuleDatas ...bufmoduletesting.
 	)
 }
 
-func requireModuleContainFileNames(t *testing.T, module bufmodule2.Module, expectedFileNames ...string) {
+func requireModuleContainFileNames(t *testing.T, module bufmodule.Module, expectedFileNames ...string) {
 	fileNamesToBeSeen := xslices.ToStructMap(expectedFileNames)
-	require.NoError(t, module.WalkFileInfos(context.Background(), func(fi bufmodule2.FileInfo) error {
+	require.NoError(t, module.WalkFileInfos(context.Background(), func(fi bufmodule.FileInfo) error {
 		path := fi.Path()
 		if _, ok := fileNamesToBeSeen[path]; !ok {
 			return fmt.Errorf("module has unexpected file: %s", path)
@@ -343,7 +344,7 @@ func requireModuleContainFileNames(t *testing.T, module bufmodule2.Module, expec
 func requireModuleFileContent(
 	t *testing.T,
 	ctx context.Context,
-	module bufmodule2.Module,
+	module bufmodule.Module,
 	path string,
 	expectedContent string,
 ) {

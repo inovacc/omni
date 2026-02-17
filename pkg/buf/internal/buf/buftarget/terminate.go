@@ -20,9 +20,9 @@ import (
 	"fmt"
 	"io/fs"
 
-	bufconfig2 "github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufconfig"
-	normalpath2 "github.com/inovacc/omni/pkg/buf/internal/pkg/normalpath"
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/storage"
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufconfig"
+	normalpath2 "github.com/inovacc/omni/pkg/buf/pkg/normalpath"
+	"github.com/inovacc/omni/pkg/buf/pkg/storage"
 )
 
 // TerminateFunc is a termination function.
@@ -63,12 +63,12 @@ func terminateAtControllingWorkspace(
 	prefix string,
 	originalInputPath string,
 ) (ControllingWorkspace, error) {
-	bufWorkYAMLFile, err := bufconfig2.GetBufWorkYAMLFileForPrefix(ctx, bucket, prefix)
+	bufWorkYAMLFile, err := bufconfig.GetBufWorkYAMLFileForPrefix(ctx, bucket, prefix)
 	if err != nil && !errors.Is(err, fs.ErrNotExist) {
 		return nil, err
 	}
 	bufWorkYAMLExists := err == nil
-	bufYAMLFile, err := bufconfig2.GetBufYAMLFileForPrefix(ctx, bucket, prefix)
+	bufYAMLFile, err := bufconfig.GetBufYAMLFileForPrefix(ctx, bucket, prefix)
 	if err != nil && !errors.Is(err, fs.ErrNotExist) {
 		return nil, err
 	}
@@ -81,7 +81,7 @@ func terminateAtControllingWorkspace(
 	if err != nil {
 		return nil, err
 	}
-	if bufYAMLExists && bufYAMLFile.FileVersion() == bufconfig2.FileVersionV2 {
+	if bufYAMLExists && bufYAMLFile.FileVersion() == bufconfig.FileVersionV2 {
 		// A input directory with a v2 buf.yaml is the controlling workspace for itself.
 		if prefix == originalInputPath {
 			return newControllingWorkspace(prefix, nil, bufYAMLFile), nil
@@ -135,11 +135,11 @@ func terminateAtV1Module(
 	prefix string,
 	originalInputPath string,
 ) (ControllingWorkspace, error) {
-	bufYAMLFile, err := bufconfig2.GetBufYAMLFileForPrefix(ctx, bucket, prefix)
+	bufYAMLFile, err := bufconfig.GetBufYAMLFileForPrefix(ctx, bucket, prefix)
 	if err != nil && !errors.Is(err, fs.ErrNotExist) {
 		return nil, err
 	}
-	if err == nil && bufYAMLFile.FileVersion() == bufconfig2.FileVersionV1 {
+	if err == nil && bufYAMLFile.FileVersion() == bufconfig.FileVersionV1 {
 		return newControllingWorkspace(prefix, nil, bufYAMLFile), nil
 	}
 	return nil, nil

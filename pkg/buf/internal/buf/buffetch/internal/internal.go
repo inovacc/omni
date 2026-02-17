@@ -22,15 +22,15 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/inovacc/omni/pkg/buf/internal/app"
-	buftarget2 "github.com/inovacc/omni/pkg/buf/internal/buf/buftarget"
-	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufconfig"
-	bufmodule2 "github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufmodule"
-	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufparse"
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/git"
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/httpauth"
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/storage"
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/storage/storageos"
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufconfig"
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufmodule"
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufparse"
+	"github.com/inovacc/omni/pkg/buf/internal/buf/buftarget"
+	"github.com/inovacc/omni/pkg/buf/pkg/app"
+	"github.com/inovacc/omni/pkg/buf/pkg/git"
+	"github.com/inovacc/omni/pkg/buf/pkg/httpauth"
+	"github.com/inovacc/omni/pkg/buf/pkg/storage"
+	"github.com/inovacc/omni/pkg/buf/pkg/storage/storageos"
 )
 
 const (
@@ -449,21 +449,21 @@ type Reader interface {
 		container app.EnvStdinContainer,
 		bucketRef BucketRef,
 		options ...GetReadBucketCloserOption,
-	) (ReadBucketCloser, buftarget2.BucketTargeting, error)
+	) (ReadBucketCloser, buftarget.BucketTargeting, error)
 	// GetReadWriteBucket gets the bucket.
 	GetReadWriteBucket(
 		ctx context.Context,
 		container app.EnvStdinContainer,
 		dirRef DirRef,
 		options ...GetReadWriteBucketOption,
-	) (ReadWriteBucket, buftarget2.BucketTargeting, error)
+	) (ReadWriteBucket, buftarget.BucketTargeting, error)
 	// GetModuleKey gets the ModuleKey.
 	GetModuleKey(
 		ctx context.Context,
 		container app.EnvStdinContainer,
 		moduleRef ModuleRef,
 		options ...GetModuleOption,
-	) (bufmodule2.ModuleKey, error)
+	) (bufmodule.ModuleKey, error)
 }
 
 // NewReader returns a new Reader.
@@ -756,7 +756,7 @@ func WithReaderGit(gitCloner git.Cloner) ReaderOption {
 
 // WithReaderModule enables modules.
 func WithReaderModule(
-	moduleKeyProvider bufmodule2.ModuleKeyProvider,
+	moduleKeyProvider bufmodule.ModuleKeyProvider,
 ) ReaderOption {
 	return func(reader *reader) {
 		reader.moduleEnabled = true
@@ -835,7 +835,7 @@ func WithGetReadBucketCloserCopyToInMemory() GetReadBucketCloserOption {
 // See bufconfig.TerminateAtControllingWorkspace, which is the only thing that uses this.
 // This is used by both non-ProtoFileRefs to find the controlling workspace, AND ProtoFileRefs
 // to find the controlling workspace of an enclosing module or workspace.
-func WithGetReadBucketCloserTerminateFunc(terminateFunc buftarget2.TerminateFunc) GetReadBucketCloserOption {
+func WithGetReadBucketCloserTerminateFunc(terminateFunc buftarget.TerminateFunc) GetReadBucketCloserOption {
 	return func(getReadBucketCloserOptions *getReadBucketCloserOptions) {
 		getReadBucketCloserOptions.terminateFunc = terminateFunc
 	}
@@ -865,7 +865,7 @@ type GetReadWriteBucketOption func(*getReadWriteBucketOptions)
 // See bufconfig.TerminateAtControllingWorkspace, which is the only thing that uses this.
 // This is used by both non-ProtoFileRefs to find the controlling workspace, AND ProtoFileRefs
 // to find the controlling workspace of an enclosing module or workspace.
-func WithGetReadWriteBucketTerminateFunc(terminateFunc buftarget2.TerminateFunc) GetReadWriteBucketOption {
+func WithGetReadWriteBucketTerminateFunc(terminateFunc buftarget.TerminateFunc) GetReadWriteBucketOption {
 	return func(getReadWriteBucketOptions *getReadWriteBucketOptions) {
 		getReadWriteBucketOptions.terminateFunc = terminateFunc
 	}

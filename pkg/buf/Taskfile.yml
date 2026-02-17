@@ -1,0 +1,481 @@
+version: 3
+
+vars:
+  MAIN_PACKAGE: .
+  BUILD_DIR: bin
+  BINARY_NAME: omni
+  COVERAGE_FILE: coverage.out
+
+tasks:
+  # === INFORMATION ===
+  default:
+    desc: List all available tasks
+    cmds:
+      - task --list
+
+  # === CODE GENERATION ===
+  generate:
+    desc: Generate documentation and command tree
+    cmds:
+      - go generate ./...
+
+  # === BUILD TASKS ===
+  build:
+    desc: Build the application
+    deps: [ generate ]
+    cmds:
+      - cmd: mkdir -p {{.BUILD_DIR}}
+        platforms: [ linux, darwin ]
+      - cmd: if not exist {{.BUILD_DIR}} mkdir {{.BUILD_DIR}}
+        platforms: [ windows ]
+      - cmd: go build -ldflags="-s -w" -o {{.BUILD_DIR}}/{{.BINARY_NAME}} {{.MAIN_PACKAGE}}
+        platforms: [ linux, darwin ]
+      - cmd: go build -ldflags="-s -w" -o {{.BUILD_DIR}}\{{.BINARY_NAME}}.exe {{.MAIN_PACKAGE}}
+        platforms: [ windows ]
+
+  build:all:
+    desc: Build for all platforms (Linux, Windows)
+    deps: [ generate ]
+    cmds:
+      - cmd: mkdir -p {{.BUILD_DIR}}
+        platforms: [ linux, darwin ]
+      - cmd: if not exist {{.BUILD_DIR}} mkdir {{.BUILD_DIR}}
+        platforms: [ windows ]
+      - cmd: GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -ldflags="-s -w" -o {{.BUILD_DIR}}/{{.BINARY_NAME}}-linux-amd64 {{.MAIN_PACKAGE}}
+        platforms: [ linux, darwin ]
+      - cmd: set GOOS=linux&& set GOARCH=amd64&& set CGO_ENABLED=0&& go build -ldflags="-s -w" -o {{.BUILD_DIR}}\{{.BINARY_NAME}}-linux-amd64 {{.MAIN_PACKAGE}}
+        platforms: [ windows ]
+      - cmd: GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -ldflags="-s -w" -o {{.BUILD_DIR}}/{{.BINARY_NAME}}-windows-amd64.exe {{.MAIN_PACKAGE}}
+        platforms: [ linux, darwin ]
+      - cmd: set GOOS=windows&& set GOARCH=amd64&& set CGO_ENABLED=0&& go build -ldflags="-s -w" -o {{.BUILD_DIR}}\{{.BINARY_NAME}}-windows-amd64.exe {{.MAIN_PACKAGE}}
+        platforms: [ windows ]
+
+  install:
+    desc: Install omni to $GOPATH/bin
+    cmds:
+      - go install -ldflags="-s -w" {{.MAIN_PACKAGE}}
+
+  # === TEST TASKS ===
+  test:
+    desc: Run all tests with coverage
+    cmds:
+      - go test -v -race -coverprofile={{.COVERAGE_FILE}} ./...
+
+  test:coverage:
+    desc: Generate HTML coverage report
+    deps: [ test ]
+    cmds:
+      - go tool cover -html={{.COVERAGE_FILE}} -o coverage.html
+      - echo "Coverage report generated at coverage.html"
+
+  test:cover:
+    desc: Run tests and show coverage percentage
+    cmds:
+      - go test -coverprofile={{.COVERAGE_FILE}} ./...
+      - cmd: go tool cover -func={{.COVERAGE_FILE}} | findstr "total:"
+        platforms: [ windows ]
+      - cmd: go tool cover -func={{.COVERAGE_FILE}} | grep "total:"
+        platforms: [ linux, darwin ]
+
+  test:unit:
+    desc: Run unit tests only (skip integration)
+    cmds:
+      - go test -v -short ./...
+
+  test:integration:
+    desc: Run integration tests
+    deps: [ build ]
+    cmds:
+      - go test -v -race ./tests/...
+
+  test:blackbox:
+    desc: Run black-box tests against compiled binary
+    deps: [ build ]
+    cmds:
+      - python testing/run_all.py
+    env:
+      OMNI_BIN: ./bin/omni
+
+  test:blackbox:verbose:
+    desc: Run black-box tests with verbose output
+    deps: [ build ]
+    cmds:
+      - python testing/run_all.py --verbose
+    env:
+      OMNI_BIN: ./bin/omni
+
+  test:blackbox:category:
+    desc: Run specific black-box test script (use SCRIPT=test_archive)
+    deps: [ build ]
+    vars:
+      SCRIPT: '{{.SCRIPT | default "test_file_ops"}}'
+    cmds:
+      - python testing/scripts/{{.SCRIPT}}.py
+    env:
+      OMNI_BIN: ./bin/omni
+
+  test:blackbox:filter:
+    desc: Run filtered black-box tests (use FILTER env var)
+    deps: [ build ]
+    vars:
+      FILTER: '{{.FILTER | default ""}}'
+    cmds:
+      - python testing/run_all.py --filter "{{.FILTER}}"
+    env:
+      OMNI_BIN: ./bin/omni
+
+  test:equivalence:
+    desc: Compare omni output against public/commercial equivalents (rg/grep/sort)
+    deps: [ build ]
+    cmds:
+      - python testing/scripts/test_equivalence.py
+    env:
+      OMNI_BIN: ./bin/omni
+
+  test:golden:
+    desc: Run golden master tests (verify outputs match snapshots)
+    deps: [ build ]
+    cmds:
+      - python testing/scripts/test_golden.py
+    env:
+      OMNI_BIN: ./bin/omni
+
+  test:golden:update:
+    desc: Update all golden master snapshots
+    deps: [ build ]
+    cmds:
+      - python testing/scripts/test_golden.py --update
+    env:
+      OMNI_BIN: ./bin/omni
+
+  test:golden:check:
+    desc: Verify all golden files exist (CI check)
+    deps: [ build ]
+    cmds:
+      - python testing/scripts/test_golden.py --check
+    env:
+      OMNI_BIN: ./bin/omni
+
+  # === GOLDEN MASTER TESTING (tools/golden/) ===
+  golden:record:
+    desc: Record golden master baselines
+    deps: [ build ]
+    dir: tools/golden
+    env:
+      PYTHONPATH: src
+      OMNI_BIN: '{{.USER_WORKING_DIR}}/bin/omni'
+    cmds:
+      - python -m golden --binary ../../bin/omni record
+
+  golden:compare:
+    desc: Compare current output against golden masters
+    deps: [ build ]
+    dir: tools/golden
+    env:
+      PYTHONPATH: src
+      OMNI_BIN: '{{.USER_WORKING_DIR}}/bin/omni'
+    cmds:
+      - python -m golden --binary ../../bin/omni compare
+
+  golden:list:
+    desc: List golden master test cases
+    dir: tools/golden
+    env:
+      PYTHONPATH: src
+    cmds:
+      - python -m golden list
+
+  golden:map:
+    desc: Generate test map as JSON
+    dir: tools/golden
+    env:
+      PYTHONPATH: src
+    cmds:
+      - python -m golden map --output test-map.json
+
+  golden:map:table:
+    desc: Print test map as human-readable table
+    dir: tools/golden
+    env:
+      PYTHONPATH: src
+    cmds:
+      - python -m golden map --format table
+
+  golden:docker:build:
+    desc: Build golden master Docker image
+    env:
+      DOCKER_BUILDKIT: "1"
+    cmds:
+      - docker build -f tools/golden/Dockerfile -t omni-golden .
+
+  golden:docker:record:
+    desc: Record golden masters via Docker
+    deps: [ golden:docker:build ]
+    cmds:
+      - docker run --rm -v "{{.USER_WORKING_DIR}}/tools/golden/golden_masters:/output" omni-golden --golden-dir /output record
+
+  golden:docker:compare:
+    desc: Compare golden masters via Docker
+    deps: [ golden:docker:build ]
+    cmds:
+      - docker run --rm -v "{{.USER_WORKING_DIR}}/tools/golden/golden_masters:/output" omni-golden --golden-dir /output compare
+
+  test:e2e:
+    desc: Run all end-to-end tests (integration + blackbox)
+    deps: [ build ]
+    cmds:
+      - task: test:integration
+      - task: test:blackbox
+
+  test:benchmark:
+    desc: Run benchmarks comparing omni vs native Linux commands
+    deps: [ build ]
+    cmds:
+      - python testing/benchmark.py
+    env:
+      OMNI_BIN: ./omni
+
+  test:bench:go:
+    desc: Run Go micro-benchmarks
+    cmds:
+      - go test -bench=. -benchmem -count=3 -timeout=10m
+        ./internal/cli/grep/ ./internal/cli/rg/ ./internal/cli/jq/
+        ./internal/cli/hash/ ./internal/cli/jsonfmt/ ./internal/cli/text/
+        ./internal/cli/find/ ./internal/cli/cat/ ./internal/cli/base/
+        ./pkg/twig/scanner/
+
+  test:bench:go:save:
+    desc: Save Go benchmark results for comparison
+    cmds:
+      - cmd: mkdir -p bench-results
+        platforms: [ linux, darwin ]
+      - cmd: if not exist bench-results mkdir bench-results
+        platforms: [ windows ]
+      - go test -bench=. -benchmem -count=5 -timeout=15m
+        ./internal/cli/grep/ ./internal/cli/rg/ ./internal/cli/jq/
+        ./internal/cli/hash/ ./internal/cli/jsonfmt/ ./internal/cli/text/
+        ./internal/cli/find/ ./internal/cli/cat/ ./internal/cli/base/
+        ./pkg/twig/scanner/ > bench-results/latest.txt
+
+  test:bench:modern:
+    desc: Run benchmarks vs modern tools (rg, fd, bat)
+    deps: [ build ]
+    cmds:
+      - python testing/benchmark_modern.py
+    env:
+      OMNI_BIN: ./bin/omni
+
+  test:bench:all:
+    desc: Run all benchmarks (Go micro + coreutils macro + modern tools)
+    deps: [ build ]
+    cmds:
+      - task: test:bench:go
+      - task: test:benchmark
+      - task: test:bench:modern
+
+  test:all-commands:
+    desc: Run comprehensive command test script (PowerShell)
+    deps: [ build ]
+    cmds:
+      - cmd: pwsh -ExecutionPolicy Bypass -File tests/test_all_commands.ps1 -Category all
+        platforms: [ windows ]
+      - cmd: bash tests/test_all_commands.sh --category all
+        platforms: [ linux, darwin ]
+
+  test:all-commands:verbose:
+    desc: Run comprehensive command test script with verbose output
+    deps: [ build ]
+    cmds:
+      - cmd: pwsh -ExecutionPolicy Bypass -File tests/test_all_commands.ps1 -Category all -VerboseOutput
+        platforms: [ windows ]
+      - cmd: bash tests/test_all_commands.sh --category all --verbose
+        platforms: [ linux, darwin ]
+
+  test:category:
+    desc: Run tests for a specific category (use CATEGORY=name)
+    deps: [ build ]
+    vars:
+      CATEGORY: '{{.CATEGORY | default "core"}}'
+    cmds:
+      - cmd: pwsh -ExecutionPolicy Bypass -File tests/test_all_commands.ps1 -Category {{.CATEGORY}}
+        platforms: [ windows ]
+      - cmd: bash tests/test_all_commands.sh --category {{.CATEGORY}}
+        platforms: [ linux, darwin ]
+
+  git:history:purge:path:
+    desc: Rewrite git history removing PATH_TO_REMOVE (default .claude)
+    vars:
+      PATH_TO_REMOVE: '{{.PATH_TO_REMOVE | default ".claude"}}'
+    cmds:
+      - cmd: pwsh -ExecutionPolicy Bypass -File scripts/git/remove_path_from_history.ps1 -PathToRemove "{{.PATH_TO_REMOVE}}"
+        platforms: [ windows ]
+      - cmd: bash scripts/git/remove_path_from_history.sh "{{.PATH_TO_REMOVE}}"
+        platforms: [ linux, darwin ]
+
+  git:history:purge:path:push:
+    desc: Rewrite history and force-push rewritten refs
+    vars:
+      PATH_TO_REMOVE: '{{.PATH_TO_REMOVE | default ".claude"}}'
+    cmds:
+      - cmd: pwsh -ExecutionPolicy Bypass -File scripts/git/remove_path_from_history.ps1 -PathToRemove "{{.PATH_TO_REMOVE}}" -Push
+        platforms: [ windows ]
+      - cmd: PUSH=true bash scripts/git/remove_path_from_history.sh "{{.PATH_TO_REMOVE}}"
+        platforms: [ linux, darwin ]
+
+  # === CODE QUALITY ===
+  fmt:
+    desc: Format all Go code
+    cmds:
+      - go fmt ./...
+      - goimports -w .
+
+  vet:
+    desc: Run go vet static analysis
+    cmds:
+      - go vet ./...
+
+  lint:
+    desc: Run linter and auto-fix issues
+    cmds:
+      - golangci-lint run --fix ./... --timeout=5m
+
+  check:
+    desc: Run all quality checks (fmt, vet, lint, test)
+    cmds:
+      - task: fmt
+      - task: vet
+      - task: lint
+      - task: test
+
+  # === RUN TASKS ===
+  run:
+    desc: Run the application
+    deps: [ generate ]
+    cmds:
+      - go run {{.MAIN_PACKAGE}}
+
+
+
+  # === DEPENDENCY MANAGEMENT ===
+  deps:
+    desc: Download and tidy dependencies
+    cmds:
+      - go mod download
+      - go mod tidy
+      - go mod verify
+
+  deps:upgrade:
+    desc: Upgrade all dependencies to latest versions
+    cmds:
+      - go get -u ./...
+      - go mod tidy
+      - go mod verify
+
+  # === CLEANUP ===
+  clean:
+    desc: Clean build artifacts and generated files
+    cmds:
+      - cmd: rm -rf {{.BUILD_DIR}}
+        platforms: [ linux, darwin ]
+      - cmd: if exist {{.BUILD_DIR}} rd /s /q {{.BUILD_DIR}}
+        platforms: [ windows ]
+      - cmd: rm -f {{.COVERAGE_FILE}} coverage.html
+        platforms: [ linux, darwin ]
+      - cmd: if exist {{.COVERAGE_FILE}} del {{.COVERAGE_FILE}}
+        platforms: [ windows ]
+      - cmd: if exist coverage.html del coverage.html
+        platforms: [ windows ]
+
+  # === DOCUMENTATION ===
+  cmdtree:
+    desc: Display command tree visualization
+    cmds:
+      - go run scripts/cmdtree/cmdtree.go
+
+  docs:
+    desc: Generate all documentation (COMMANDS.md and cmdtree.go)
+    cmds:
+      - go run scripts/cmdtree/cmdtree.go -out-docs docs/COMMANDS.md -out-go cmd/cmdtree.go
+      - echo "Documentation generated successfully"
+
+  docs:commands:
+    desc: Generate docs/COMMANDS.md from command definitions
+    cmds:
+      - go run scripts/cmdtree/cmdtree.go -out-docs docs/COMMANDS.md
+
+  docs:cmdtree:
+    desc: Generate cmd/cmdtree.go with embedded tree
+    cmds:
+      - go run scripts/cmdtree/cmdtree.go -out-go cmd/cmdtree.go
+
+  # === DOCKER TASKS ===
+  docker:test:linux:
+    desc: Run unit tests in Linux Docker container
+    cmds:
+      - docker compose -f docker/docker-compose.test.yml run --rm linux-test
+
+  docker:test:linux:short:
+    desc: Run short unit tests in Linux Docker container
+    cmds:
+      - docker compose -f docker/docker-compose.test.yml run --rm linux-test-short
+
+  docker:test:linux:blackbox:
+    desc: Run black box tests in Linux Docker container
+    cmds:
+      - docker compose -f docker/docker-compose.test.yml run --rm linux-blackbox
+
+  docker:build:linux:
+    desc: Build Linux Docker image
+    cmds:
+      - docker compose -f docker/docker-compose.test.yml build linux-build
+
+  docker:test:windows:
+    desc: Run tests in Windows Docker container (requires Windows container mode)
+    cmds:
+      - docker build -f docker/Dockerfile.windows --target tester -t omni-windows-test .
+      - docker run --rm omni-windows-test
+
+  docker:build:windows:
+    desc: Build Windows Docker image (requires Windows container mode)
+    cmds:
+      - docker build -f docker/Dockerfile.windows --target production -t omni:windows-latest .
+
+  docker:test:windows:blackbox:
+    desc: Run black box tests in Windows Docker container (requires Windows container mode)
+    cmds:
+      - docker build -f docker/Dockerfile.windows --target blackbox-tester -t omni-windows-blackbox .
+      - docker run --rm omni-windows-blackbox
+
+  docker:test:golden:
+    desc: Run golden master tests in Linux Docker container
+    cmds:
+      - docker compose -f docker/docker-compose.test.yml run --rm linux-golden
+
+  docker:test:golden:update:
+    desc: Update golden snapshots via Linux Docker (persists to host)
+    cmds:
+      - docker compose -f docker/docker-compose.test.yml run --rm linux-golden-update
+
+  docker:test:video:
+    desc: Run video comparison tests (omni vs yt-dlp) in Docker
+    cmds:
+      - docker compose -f docker/docker-compose.test.yml run --rm video-comparison
+
+  docker:test:video:build:
+    desc: Build video test Docker image
+    cmds:
+      - docker compose -f docker/docker-compose.test.yml build video-comparison
+
+  docker:test:all:
+    desc: Run all tests (unit + blackbox) in Linux Docker
+    cmds:
+      - task: docker:test:linux:short
+      - task: docker:test:linux:blackbox
+
+  docker:test:all:full:
+    desc: Run all tests across Linux and Windows containers
+    cmds:
+      - task: docker:test:linux
+      - task: docker:test:linux:blackbox
+      - task: docker:test:windows
+      - task: docker:test:windows:blackbox

@@ -65,7 +65,6 @@ func (p Untyped) String() string {
 	if p.Nil() {
 		return "<nil>"
 	}
-
 	return fmt.Sprintf("0x%x", uint32(p))
 }
 
@@ -131,7 +130,6 @@ func (a *Arena[T]) New(value T) *T {
 	}
 
 	*last = append(*last, value)
-
 	return &(*last)[len(*last)-1]
 }
 
@@ -158,7 +156,6 @@ func (a *Arena[T]) Compress(ptr *T) Pointer[T] {
 			return Pointer[T](a.lenOfFirstNSlices(i) + idx + 1)
 		}
 	}
-
 	return 0
 }
 
@@ -174,7 +171,6 @@ func (a *Arena[T]) Deref(ptr Pointer[T]) *T {
 	}
 
 	slice, idx := a.coordinates(int(ptr) - 1)
-
 	return &a.table[slice][idx]
 }
 
@@ -213,18 +209,14 @@ func (a Arena[T]) String() string {
 		if i != 0 {
 			b.WriteRune('|')
 		}
-
 		for i, v := range slice {
 			if i != 0 {
 				b.WriteRune(' ')
 			}
-
 			fmt.Fprint(&b, v)
 		}
 	}
-
 	b.WriteRune(']')
-
 	return b.String()
 }
 

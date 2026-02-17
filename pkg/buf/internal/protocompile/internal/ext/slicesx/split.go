@@ -25,7 +25,6 @@ func Cut[S ~[]E, E comparable](s S, needle E) (before, after S, found bool) {
 	if idx == -1 {
 		return s, s[len(s):], false
 	}
-
 	return s[:idx], s[idx+1:], true
 }
 
@@ -35,7 +34,6 @@ func CutAfter[S ~[]E, E comparable](s S, needle E) (before, after S, found bool)
 	if idx == -1 {
 		return s, s[len(s):], false
 	}
-
 	return s[:idx+1], s[idx+1:], true
 }
 
@@ -45,7 +43,6 @@ func CutFunc[S ~[]E, E any](s S, p func(int, E) bool) (before, after S, found bo
 	if idx == -1 {
 		return s, s[len(s):], false
 	}
-
 	return s[:idx], s[idx+1:], true
 }
 
@@ -55,7 +52,6 @@ func CutAfterFunc[S ~[]E, E any](s S, p func(int, E) bool) (before, after S, fou
 	if idx == -1 {
 		return s, s[len(s):], false
 	}
-
 	return s[:idx+1], s[idx+1:], true
 }
 
@@ -67,11 +63,9 @@ func Split[S ~[]E, E comparable](s S, sep E) iter.Seq[S] {
 			if !yield(before) {
 				return
 			}
-
 			if !found {
 				break
 			}
-
 			s = after
 		}
 	}
@@ -85,11 +79,9 @@ func SplitAfter[S ~[]E, E comparable](s S, sep E) iter.Seq[S] {
 			if !yield(before) {
 				return
 			}
-
 			if !found {
 				break
 			}
-
 			s = after
 		}
 	}
@@ -103,11 +95,9 @@ func SplitFunc[S ~[]E, E any](s S, sep func(int, E) bool) iter.Seq[S] {
 			if !yield(before) {
 				return
 			}
-
 			if !found {
 				break
 			}
-
 			s = after
 		}
 	}
@@ -121,11 +111,9 @@ func SplitAfterFunc[S ~[]E, E any](s S, sep func(int, E) bool) iter.Seq[S] {
 			if !yield(before) {
 				return
 			}
-
 			if !found {
 				break
 			}
-
 			s = after
 		}
 	}

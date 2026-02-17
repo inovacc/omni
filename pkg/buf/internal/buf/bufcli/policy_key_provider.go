@@ -15,10 +15,10 @@
 package bufcli
 
 import (
-	"github.com/inovacc/omni/pkg/buf/internal/app/appext"
-	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufpolicy"
-	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufpolicy/bufpolicyapi"
-	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufregistryapi/bufregistryapipolicy"
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufpolicy"
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufpolicy/bufpolicyapi"
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufregistryapi/bufregistryapipolicy"
+	"github.com/inovacc/omni/pkg/buf/pkg/app/appext"
 )
 
 // NewPolicyKeyProvider returns a new PolicyKeyProvider.

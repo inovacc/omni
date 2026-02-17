@@ -62,7 +62,6 @@ func (h *Heap[K, V]) Pop() (K, V) {
 	k, v := h.pop()
 
 	h.down(0)
-
 	return k, v
 }
 
@@ -136,7 +135,6 @@ func (h *Heap[K, V]) pop() (k K, v V) {
 	end := h.Len() - 1
 	k, h.keys = h.keys[end], h.keys[:end]
 	v, h.vals = h.vals[end], h.vals[:end]
-
 	return k, v
 }
 

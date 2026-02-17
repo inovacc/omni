@@ -3,7 +3,7 @@ syntax = "proto3";
 package example.v1;
 
 // complete_builtin_toplevel
-m {}
+  m {}
 
 message User {
   string id = 1;

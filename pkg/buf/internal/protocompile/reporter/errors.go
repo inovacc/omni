@@ -44,7 +44,6 @@ func Error(span ast.SourceSpan, err error) ErrorWithPos {
 		// replace existing position with given one
 		return &errorWithSpan{SourceSpan: span, underlying: ewp.Unwrap()}
 	}
-
 	return &errorWithSpan{SourceSpan: span, underlying: err}
 }
 
@@ -56,7 +55,6 @@ func Errorf(span ast.SourceSpan, format string, args ...any) ErrorWithPos {
 
 type errorWithSpan struct {
 	ast.SourceSpan
-
 	underlying error
 }
 

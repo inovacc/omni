@@ -22,18 +22,19 @@ import (
 	"log/slog"
 	"strings"
 
-	"github.com/google/uuid"
-	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufimage"
 	"github.com/inovacc/omni/pkg/buf/internal/protocompile"
 	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/source"
 	"github.com/inovacc/omni/pkg/buf/internal/protocompile/linker"
 	"github.com/inovacc/omni/pkg/buf/internal/protocompile/parser"
 	"github.com/inovacc/omni/pkg/buf/internal/protocompile/protoutil"
 	"github.com/inovacc/omni/pkg/buf/internal/protocompile/reporter"
-	"github.com/inovacc/omni/pkg/buf/internal/standard/xlog/xslog"
-	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
+	"github.com/inovacc/omni/pkg/buf/pkg/standard/xlog/xslog"
+	"github.com/inovacc/omni/pkg/buf/pkg/standard/xslices"
+	"github.com/google/uuid"
 	"go.lsp.dev/protocol"
 	"google.golang.org/protobuf/reflect/protoreflect"
+
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufimage"
 )
 
 // fileOpener is a type that opens files as they are named in the import

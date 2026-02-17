@@ -3,7 +3,6 @@ syntax = "proto2";
 message Foo {
 
 
-
   // The newline is not preserved between the message
   // and the first element if there aren't any trailing
   // comments on the '{'.
@@ -16,5 +15,5 @@ message Foo {
 
   repeated int64 values = 2;
 
-// Leading comment on '}'.
+  // Leading comment on '}'.
 }

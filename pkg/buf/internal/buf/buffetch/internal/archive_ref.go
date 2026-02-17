@@ -15,7 +15,7 @@
 package internal
 
 import (
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/normalpath"
+	"github.com/inovacc/omni/pkg/buf/pkg/normalpath"
 )
 
 var (

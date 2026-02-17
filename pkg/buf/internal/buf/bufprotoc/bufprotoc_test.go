@@ -18,8 +18,8 @@ import (
 	"context"
 	"testing"
 
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/slogtestext"
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/storage/storageos"
+	"github.com/inovacc/omni/pkg/buf/pkg/slogtestext"
+	"github.com/inovacc/omni/pkg/buf/pkg/storage/storageos"
 	"github.com/stretchr/testify/require"
 )
 

@@ -45,7 +45,6 @@ func NewQueue[E any](capacity int) *Queue[E] {
 
 	// Buffer length must be capacity + 1 (one slot kept empty) and power of 2.
 	bufLen := int(bitsx.MakePowerOfTwo(uint(capacity + 1)))
-
 	return &Queue[E]{buf: make([]E, bufLen)}
 }
 
@@ -78,7 +77,6 @@ func (r *Queue[E]) Cap() int {
 	if len(r.buf) == 0 {
 		return 0
 	}
-
 	return len(r.buf) - 1
 }
 
@@ -98,7 +96,6 @@ func (r *Queue[E]) Front() *E {
 	if r.start == r.end {
 		return nil
 	}
-
 	return &r.buf[r.start]
 }
 
@@ -107,7 +104,6 @@ func (r *Queue[E]) Back() *E {
 	if r.start == r.end {
 		return nil
 	}
-
 	return &r.buf[(r.end-1)&(len(r.buf)-1)]
 }
 
@@ -117,7 +113,6 @@ func (r *Queue[E]) PushFront(v ...E) {
 
 	end := r.start
 	start := end - len(v)
-
 	r.start = start & (len(r.buf) - 1)
 	if start < r.start {
 		// We overflowed, so we need to do two copies.
@@ -134,7 +129,6 @@ func (r *Queue[E]) PushBack(v ...E) {
 
 	start := r.end
 	end := start + len(v)
-
 	r.end = end & (len(r.buf) - 1)
 	if r.end < end {
 		// We overflowed, so we need to do two copies.
@@ -151,11 +145,9 @@ func (r *Queue[E]) PopFront() (E, bool) {
 		var z E
 		return z, false
 	}
-
 	v, _ := Take(r.buf, r.start)
 	r.start++
 	r.start &= len(r.buf) - 1
-
 	return v, true
 }
 
@@ -165,10 +157,8 @@ func (r *Queue[E]) PopBack() (E, bool) {
 		var z E
 		return z, false
 	}
-
 	r.end--
 	r.end &= len(r.buf) - 1
-
 	return Take(r.buf, r.end)
 }
 
@@ -181,16 +171,13 @@ func (r *Queue[E]) Values() iter.Seq[E] {
 					return
 				}
 			}
-
 			return
 		}
-
 		for _, v := range r.buf[r.start:] {
 			if !yield(v) {
 				return
 			}
 		}
-
 		for _, v := range r.buf[:r.end] {
 			if !yield(v) {
 				return
@@ -216,17 +203,13 @@ func (r Queue[E]) Format(out fmt.State, verb rune) {
 					fmt.Fprint(out, " ")
 				}
 			}
-
 			if i == r.start {
 				fmt.Fprint(out, ">")
-
 				if i == r.end {
 					fmt.Fprint(out, "< ")
 				}
 			}
-
 			fmt.Fprintf(out, fmt.FormatString(out, verb), v)
-
 			if r.start != r.end && i == r.end-1 {
 				fmt.Fprint(out, "<")
 			}
@@ -240,7 +223,6 @@ func (r Queue[E]) Format(out fmt.State, verb rune) {
 					fmt.Fprint(out, " ")
 				}
 			}
-
 			fmt.Fprintf(out, fmt.FormatString(out, verb), v)
 		}
 	}
@@ -261,9 +243,7 @@ func (r *Queue[_]) Clear() {
 
 func (r *Queue[E]) resize(n int) {
 	var count int
-
 	old := r.buf
-
 	r.buf = make([]E, n)
 	if r.start > r.end {
 		count = copy(r.buf, old[r.start:])
@@ -271,7 +251,6 @@ func (r *Queue[E]) resize(n int) {
 	} else {
 		count = copy(r.buf, old[r.start:r.end])
 	}
-
 	r.start = 0
 	r.end = count
 }

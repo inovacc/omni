@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-service Foo { /* C-style comment in the middle */ }
+service Foo {/* C-style comment in the middle */}
 
 service Bar {
   // Normal comment in the middle
@@ -8,5 +8,5 @@ service Bar {
 
 service Baz {
 
-// Body comment.
+  // Body comment.
 }

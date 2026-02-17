@@ -27,10 +27,10 @@ import (
 	"sync"
 
 	"connectrpc.com/connect"
-	"github.com/inovacc/omni/pkg/buf/internal/app"
-	"github.com/inovacc/omni/pkg/buf/internal/app/appext"
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/protoencoding"
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/verbose"
+	"github.com/inovacc/omni/pkg/buf/pkg/app"
+	"github.com/inovacc/omni/pkg/buf/pkg/app/appext"
+	"github.com/inovacc/omni/pkg/buf/pkg/protoencoding"
+	"github.com/inovacc/omni/pkg/buf/pkg/verbose"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/types/dynamicpb"
@@ -423,8 +423,8 @@ func (s *singleEmptyMessageProvider) next(_ proto.Message) error {
 
 type streamMessageProvider struct {
 	name string
-	dec  *json.Decoder
-	res  protoencoding.Resolver
+	dec *json.Decoder
+	res protoencoding.Resolver
 }
 
 func (s *streamMessageProvider) next(msg proto.Message) error {

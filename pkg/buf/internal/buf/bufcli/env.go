@@ -18,9 +18,9 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/inovacc/omni/pkg/buf/internal/app/appext"
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/git"
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/httpauth"
+	"github.com/inovacc/omni/pkg/buf/pkg/app/appext"
+	"github.com/inovacc/omni/pkg/buf/pkg/git"
+	"github.com/inovacc/omni/pkg/buf/pkg/httpauth"
 )
 
 const (
@@ -31,6 +31,11 @@ const (
 
 	alphaSuppressWarningsEnvKey = "BUF_ALPHA_SUPPRESS_WARNINGS"
 	betaSuppressWarningsEnvKey  = "BUF_BETA_SUPPRESS_WARNINGS"
+
+	// OfflineModeEnvKey is the environment variable to enable offline mode.
+	// When set to "1" or "true", buf will only use cached dependencies and
+	// will not attempt to connect to the network for modules or plugins.
+	OfflineModeEnvKey = "BUF_OFFLINE"
 
 	// This is actually much slower with how it is currently implemented if you use --path.
 	// Example: Build a repo with 1000 .proto files, but filter to a single path. As this is
@@ -83,4 +88,21 @@ func WarnBetaCommand(_ context.Context, container appext.Container) {
 	if container.Env(betaSuppressWarningsEnvKey) == "" {
 		container.Logger().Warn("This command is in beta. It is unstable and likely to change. To suppress this warning, set " + betaSuppressWarningsEnvKey + "=1")
 	}
+}
+
+// IsOfflineMode returns true if offline mode is enabled via the BUF_OFFLINE
+// environment variable.
+//
+// When offline mode is enabled, buf will only use locally cached dependencies
+// and will not attempt to connect to the network for modules or plugins.
+// If a required dependency is not in cache, an error will be returned.
+//
+// To enable offline mode, set BUF_OFFLINE=1 or BUF_OFFLINE=true.
+func IsOfflineMode(container appext.Container) bool {
+	return isOfflineModeValue(container.Env(OfflineModeEnvKey))
+}
+
+// isOfflineModeValue checks if the given string value represents offline mode enabled.
+func isOfflineModeValue(value string) bool {
+	return value == "1" || value == "true"
 }

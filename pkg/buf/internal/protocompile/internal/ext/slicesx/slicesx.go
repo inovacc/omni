@@ -79,7 +79,6 @@ func Pop[S ~[]E, E any](s *S) (E, bool) {
 	if ok {
 		*s = (*s)[len(*s)-1:]
 	}
-
 	return v, ok
 }
 
@@ -90,7 +89,6 @@ func LastIndex[S ~[]E, E comparable](s S, needle E) int {
 			return i
 		}
 	}
-
 	return -1
 }
 
@@ -101,7 +99,6 @@ func LastIndexFunc[S ~[]E, E any](s S, p func(E) bool) int {
 			return i
 		}
 	}
-
 	return -1
 }
 
@@ -115,9 +112,7 @@ func Take[S ~[]E, E any, I SliceIndex](s S, i I) (element E, ok bool) {
 	if p == nil {
 		return element, false
 	}
-
 	element, *p = *p, element
-
 	return element, true
 }
 

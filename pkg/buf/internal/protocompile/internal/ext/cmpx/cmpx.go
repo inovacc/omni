@@ -57,7 +57,6 @@ func Join[T any](cmps ...Ordering[T]) Ordering[T] {
 				return n
 			}
 		}
-
 		return Equal
 	}
 }
@@ -72,7 +71,6 @@ func Map[T any, U any](f func(T) U, cmps ...Ordering[U]) Ordering[T] {
 				return n
 			}
 		}
-
 		return Equal
 	}
 }
@@ -90,11 +88,9 @@ func Bool[B ~bool](a, b B) Result {
 	if a {
 		ai = 1
 	}
-
 	if b {
 		bi = 1
 	}
-
 	return cmp.Compare(ai, bi)
 }
 
@@ -119,7 +115,6 @@ func Any(a, b any) Result {
 	rb := reflect.ValueOf(b)
 
 	type kind int
-
 	const (
 		kBool kind = 1 << iota
 		kInt
@@ -163,14 +158,12 @@ func Any(a, b any) Result {
 			if v > math.MaxInt64 {
 				return Less
 			}
-
 			return cmp.Compare(ra.Int(), int64(v))
 		} else {
 			v := ra.Uint()
 			if v > math.MaxInt64 {
 				return Greater
 			}
-
 			return cmp.Compare(int64(v), rb.Int())
 		}
 

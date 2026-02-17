@@ -22,28 +22,28 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/inovacc/omni/pkg/buf/internal/app/appext"
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufmodule"
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufmodule/bufmoduleapi"
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufmodule/bufmodulecache"
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufmodule/bufmodulestore"
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufplugin"
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufplugin/bufpluginapi"
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufplugin/bufplugincache"
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufplugin/bufpluginstore"
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufpolicy"
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufpolicy/bufpolicyapi"
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufpolicy/bufpolicycache"
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufpolicy/bufpolicystore"
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufregistryapi/bufregistryapimodule"
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufregistryapi/bufregistryapiowner"
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufregistryapi/bufregistryapiplugin"
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufregistryapi/bufregistryapipolicy"
 	"github.com/inovacc/omni/pkg/buf/internal/buf/bufwkt/bufwktstore"
-	bufmodule2 "github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufmodule"
-	bufmoduleapi2 "github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufmodule/bufmoduleapi"
-	bufmodulecache2 "github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufmodule/bufmodulecache"
-	bufmodulestore2 "github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufmodule/bufmodulestore"
-	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufplugin"
-	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufplugin/bufpluginapi"
-	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufplugin/bufplugincache"
-	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufplugin/bufpluginstore"
-	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufpolicy"
-	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufpolicy/bufpolicyapi"
-	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufpolicy/bufpolicycache"
-	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufpolicy/bufpolicystore"
-	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufregistryapi/bufregistryapimodule"
-	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufregistryapi/bufregistryapiowner"
-	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufregistryapi/bufregistryapiplugin"
-	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufregistryapi/bufregistryapipolicy"
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/filelock"
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/normalpath"
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/storage/storageos"
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/wasm"
+	"github.com/inovacc/omni/pkg/buf/pkg/app/appext"
+	"github.com/inovacc/omni/pkg/buf/pkg/filelock"
+	"github.com/inovacc/omni/pkg/buf/pkg/normalpath"
+	"github.com/inovacc/omni/pkg/buf/pkg/storage/storageos"
+	"github.com/inovacc/omni/pkg/buf/pkg/wasm"
 )
 
 var (
@@ -136,68 +136,110 @@ var (
 
 // NewModuleDataProvider returns a new ModuleDataProvider while creating the
 // required cache directories.
-func NewModuleDataProvider(container appext.Container) (bufmodule2.ModuleDataProvider, error) {
-	clientConfig, err := NewConnectClientConfig(container)
+//
+// This provider operates in offline-only mode. It serves data from the local
+// cache and returns an error on cache miss instead of fetching from the network.
+func NewModuleDataProvider(container appext.Container) (bufmodule.ModuleDataProvider, error) {
+	if err := createCacheDir(container.CacheDirPath(), v3CacheModuleRelDirPath); err != nil {
+		return nil, err
+	}
+	fullCacheDirPath := normalpath.Join(container.CacheDirPath(), v3CacheModuleRelDirPath)
+	storageosProvider := storageos.NewProvider()
+	cacheBucket, err := storageosProvider.NewReadWriteBucket(fullCacheDirPath)
 	if err != nil {
 		return nil, err
 	}
-	return newModuleDataProvider(
-		container,
-		bufregistryapimodule.NewClientProvider(
-			clientConfig,
+	if err := createCacheDir(container.CacheDirPath(), v3CacheModuleLockRelDirPath); err != nil {
+		return nil, err
+	}
+	filelocker, err := filelock.NewLocker(normalpath.Join(container.CacheDirPath(), v3CacheModuleLockRelDirPath))
+	if err != nil {
+		return nil, err
+	}
+	return bufmodulecache.NewModuleDataProvider(
+		container.Logger(),
+		offlineModuleDataProvider{},
+		bufmodulestore.NewModuleDataStore(
+			container.Logger(),
+			cacheBucket,
+			filelocker,
 		),
-		bufregistryapiowner.NewClientProvider(
-			clientConfig,
-		),
-	)
+	), nil
 }
 
 // NewCommitProvider returns a new CommitProvider while creating the
 // required cache directories.
-func NewCommitProvider(container appext.Container) (bufmodule2.CommitProvider, error) {
-	clientConfig, err := NewConnectClientConfig(container)
+//
+// This provider operates in offline-only mode. It serves data from the local
+// cache and returns an error on cache miss instead of fetching from the network.
+func NewCommitProvider(container appext.Container) (bufmodule.CommitProvider, error) {
+	if err := createCacheDir(container.CacheDirPath(), v3CacheCommitsRelDirPath); err != nil {
+		return nil, err
+	}
+	fullCacheDirPath := normalpath.Join(container.CacheDirPath(), v3CacheCommitsRelDirPath)
+	storageosProvider := storageos.NewProvider()
+	cacheBucket, err := storageosProvider.NewReadWriteBucket(fullCacheDirPath)
 	if err != nil {
 		return nil, err
 	}
-	return newCommitProvider(
-		container,
-		bufregistryapimodule.NewClientProvider(
-			clientConfig,
+	return bufmodulecache.NewCommitProvider(
+		container.Logger(),
+		offlineCommitProvider{},
+		bufmodulestore.NewCommitStore(
+			container.Logger(),
+			cacheBucket,
 		),
-		bufregistryapiowner.NewClientProvider(
-			clientConfig,
-		),
-	)
+	), nil
 }
 
 // NewPluginDataProvider returns a new PluginDataProvider while creating the
 // required cache directories.
+//
+// This provider operates in offline-only mode. It serves data from the local
+// cache and returns an error on cache miss instead of fetching from the network.
 func NewPluginDataProvider(container appext.Container) (bufplugin.PluginDataProvider, error) {
-	clientConfig, err := NewConnectClientConfig(container)
+	if err := createCacheDir(container.CacheDirPath(), v3CachePluginRelDirPath); err != nil {
+		return nil, err
+	}
+	fullCacheDirPath := normalpath.Join(container.CacheDirPath(), v3CachePluginRelDirPath)
+	storageosProvider := storageos.NewProvider()
+	cacheBucket, err := storageosProvider.NewReadWriteBucket(fullCacheDirPath)
 	if err != nil {
 		return nil, err
 	}
-	return newPluginDataProvider(
-		container,
-		bufregistryapiplugin.NewClientProvider(
-			clientConfig,
+	return bufplugincache.NewPluginDataProvider(
+		container.Logger(),
+		offlinePluginDataProvider{},
+		bufpluginstore.NewPluginDataStore(
+			container.Logger(),
+			cacheBucket,
 		),
-	)
+	), nil
 }
 
 // NewPolicyDataProvider returns a new PolicyDataProvider while creating the
 // required cache directories.
+//
+// This provider operates in offline-only mode. It serves data from the local
+// cache and returns an error on cache miss instead of fetching from the network.
 func NewPolicyDataProvider(container appext.Container) (bufpolicy.PolicyDataProvider, error) {
-	clientConfig, err := NewConnectClientConfig(container)
+	if err := createCacheDir(container.CacheDirPath(), v3CachePolicyRelDirPath); err != nil {
+		return nil, err
+	}
+	fullCacheDirPath := normalpath.Join(container.CacheDirPath(), v3CachePolicyRelDirPath)
+	storageosProvider := storageos.NewProvider()
+	cacheBucket, err := storageosProvider.NewReadWriteBucket(fullCacheDirPath)
 	if err != nil {
 		return nil, err
 	}
-	return newPolicyDataProvider(
-		container,
-		bufregistryapipolicy.NewClientProvider(
-			clientConfig,
+	return bufpolicycache.NewPolicyDataProvider(
+		container.Logger(),
+		offlinePolicyDataProvider{},
+		bufpolicystore.NewPolicyDataStore(
+			container.Logger(),
+			cacheBucket,
 		),
-	)
+	), nil
 }
 
 // NewWasmRuntime returns a new Wasm runtime while creating the required cache
@@ -239,12 +281,12 @@ func newModuleDataProvider(
 	container appext.Container,
 	moduleClientProvider bufregistryapimodule.ClientProvider,
 	ownerClientProvider bufregistryapiowner.ClientProvider,
-) (bufmodule2.ModuleDataProvider, error) {
+) (bufmodule.ModuleDataProvider, error) {
 	if err := createCacheDir(container.CacheDirPath(), v3CacheModuleRelDirPath); err != nil {
 		return nil, err
 	}
 	fullCacheDirPath := normalpath.Join(container.CacheDirPath(), v3CacheModuleRelDirPath)
-	delegateModuleDataProvider := bufmoduleapi2.NewModuleDataProvider(
+	delegateModuleDataProvider := bufmoduleapi.NewModuleDataProvider(
 		container.Logger(),
 		moduleClientProvider,
 		newGraphProvider(container, moduleClientProvider, ownerClientProvider),
@@ -262,10 +304,10 @@ func newModuleDataProvider(
 	if err != nil {
 		return nil, err
 	}
-	return bufmodulecache2.NewModuleDataProvider(
+	return bufmodulecache.NewModuleDataProvider(
 		container.Logger(),
 		delegateModuleDataProvider,
-		bufmodulestore2.NewModuleDataStore(
+		bufmodulestore.NewModuleDataStore(
 			container.Logger(),
 			cacheBucket,
 			filelocker,
@@ -277,22 +319,22 @@ func newCommitProvider(
 	container appext.Container,
 	moduleClientProvider bufregistryapimodule.ClientProvider,
 	ownerClientProvider bufregistryapiowner.ClientProvider,
-) (bufmodule2.CommitProvider, error) {
+) (bufmodule.CommitProvider, error) {
 	if err := createCacheDir(container.CacheDirPath(), v3CacheCommitsRelDirPath); err != nil {
 		return nil, err
 	}
 	fullCacheDirPath := normalpath.Join(container.CacheDirPath(), v3CacheCommitsRelDirPath)
-	delegateReader := bufmoduleapi2.NewCommitProvider(container.Logger(), moduleClientProvider, ownerClientProvider)
+	delegateReader := bufmoduleapi.NewCommitProvider(container.Logger(), moduleClientProvider, ownerClientProvider)
 	// No symlinks.
 	storageosProvider := storageos.NewProvider()
 	cacheBucket, err := storageosProvider.NewReadWriteBucket(fullCacheDirPath)
 	if err != nil {
 		return nil, err
 	}
-	return bufmodulecache2.NewCommitProvider(
+	return bufmodulecache.NewCommitProvider(
 		container.Logger(),
 		delegateReader,
-		bufmodulestore2.NewCommitStore(
+		bufmodulestore.NewCommitStore(
 			container.Logger(),
 			cacheBucket,
 		),

@@ -20,13 +20,13 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/inovacc/omni/pkg/buf/internal/app"
 	"github.com/inovacc/omni/pkg/buf/internal/buf/buffetch/internal"
-	buftarget2 "github.com/inovacc/omni/pkg/buf/internal/buf/buftarget"
-	bufmodule2 "github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufmodule"
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/git"
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/httpauth"
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/storage/storageos"
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufmodule"
+	"github.com/inovacc/omni/pkg/buf/internal/buf/buftarget"
+	"github.com/inovacc/omni/pkg/buf/pkg/app"
+	"github.com/inovacc/omni/pkg/buf/pkg/git"
+	"github.com/inovacc/omni/pkg/buf/pkg/httpauth"
+	"github.com/inovacc/omni/pkg/buf/pkg/storage/storageos"
 )
 
 type reader struct {
@@ -39,7 +39,7 @@ func newReader(
 	httpClient *http.Client,
 	httpAuthenticator httpauth.Authenticator,
 	gitCloner git.Cloner,
-	moduleKeyProvider bufmodule2.ModuleKeyProvider,
+	moduleKeyProvider bufmodule.ModuleKeyProvider,
 ) *reader {
 	return &reader{
 		internalReader: internal.NewReader(
@@ -122,7 +122,7 @@ func newDirReader(
 func newModuleFetcher(
 	logger *slog.Logger,
 	storageosProvider storageos.Provider,
-	moduleKeyProvider bufmodule2.ModuleKeyProvider,
+	moduleKeyProvider bufmodule.ModuleKeyProvider,
 ) *reader {
 	return &reader{
 		internalReader: internal.NewReader(
@@ -148,7 +148,7 @@ func (a *reader) GetSourceReadBucketCloser(
 	container app.EnvStdinContainer,
 	sourceRef SourceRef,
 	options ...GetReadBucketCloserOption,
-) (ReadBucketCloser, buftarget2.BucketTargeting, error) {
+) (ReadBucketCloser, buftarget.BucketTargeting, error) {
 	getReadBucketCloserOptions := newGetReadBucketCloserOptions()
 	for _, option := range options {
 		option(getReadBucketCloserOptions)
@@ -157,7 +157,7 @@ func (a *reader) GetSourceReadBucketCloser(
 	if !getReadBucketCloserOptions.noSearch {
 		internalGetReadBucketCloserOptions = append(
 			internalGetReadBucketCloserOptions,
-			internal.WithGetReadBucketCloserTerminateFunc(buftarget2.TerminateAtControllingWorkspace),
+			internal.WithGetReadBucketCloserTerminateFunc(buftarget.TerminateAtControllingWorkspace),
 		)
 	}
 	if getReadBucketCloserOptions.copyToInMemory {
@@ -187,7 +187,7 @@ func (a *reader) GetDirReadWriteBucket(
 	container app.EnvStdinContainer,
 	dirRef DirRef,
 	options ...GetReadWriteBucketOption,
-) (ReadWriteBucket, buftarget2.BucketTargeting, error) {
+) (ReadWriteBucket, buftarget.BucketTargeting, error) {
 	getReadWriteBucketOptions := newGetReadWriteBucketOptions()
 	for _, option := range options {
 		option(getReadWriteBucketOptions)
@@ -196,7 +196,7 @@ func (a *reader) GetDirReadWriteBucket(
 	if !getReadWriteBucketOptions.noSearch {
 		internalGetReadWriteBucketOptions = append(
 			internalGetReadWriteBucketOptions,
-			internal.WithGetReadWriteBucketTerminateFunc(buftarget2.TerminateAtControllingWorkspace),
+			internal.WithGetReadWriteBucketTerminateFunc(buftarget.TerminateAtControllingWorkspace),
 		)
 	}
 	internalGetReadWriteBucketOptions = append(
@@ -219,6 +219,6 @@ func (a *reader) GetModuleKey(
 	ctx context.Context,
 	container app.EnvStdinContainer,
 	moduleRef ModuleRef,
-) (bufmodule2.ModuleKey, error) {
+) (bufmodule.ModuleKey, error) {
 	return a.internalReader.GetModuleKey(ctx, container, moduleRef.internalModuleRef())
 }

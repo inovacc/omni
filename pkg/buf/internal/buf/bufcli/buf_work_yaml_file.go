@@ -17,7 +17,7 @@ package bufcli
 import (
 	"context"
 
-	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufconfig"
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufconfig"
 )
 
 // GetBufWorkYAMLFileForDirPath gets the buf.work.yaml file for the directory path.

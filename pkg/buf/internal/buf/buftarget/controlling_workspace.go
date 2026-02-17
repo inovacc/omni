@@ -15,7 +15,7 @@
 package buftarget
 
 import (
-	bufconfig2 "github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufconfig"
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufconfig"
 )
 
 // ControllingWorkspace is the information for the ControllingWorkspace.
@@ -26,10 +26,10 @@ type ControllingWorkspace interface {
 	Path() string
 	// Returns a buf.work.yaml file that was found for the controlling workspace.
 	// This is empty if we are returning a buf.yaml.
-	BufWorkYAMLFile() bufconfig2.BufWorkYAMLFile
+	BufWorkYAMLFile() bufconfig.BufWorkYAMLFile
 	// Returns a buf.yaml that was found for the controlling workspace.
 	// This is empty if we are returning a buf.work.yaml.
-	BufYAMLFile() bufconfig2.BufYAMLFile
+	BufYAMLFile() bufconfig.BufYAMLFile
 
 	isControllingWorkspace()
 }
@@ -38,8 +38,8 @@ type ControllingWorkspace interface {
 // located and a workspace configuration file for the controlling workspace.
 func NewControllingWorkspace(
 	path string,
-	bufWorkYAMLFile bufconfig2.BufWorkYAMLFile,
-	bufYAMLFile bufconfig2.BufYAMLFile,
+	bufWorkYAMLFile bufconfig.BufWorkYAMLFile,
+	bufYAMLFile bufconfig.BufYAMLFile,
 ) ControllingWorkspace {
 	return newControllingWorkspace(path, bufWorkYAMLFile, bufYAMLFile)
 }
@@ -50,14 +50,14 @@ var _ ControllingWorkspace = &controllingWorkspace{}
 
 type controllingWorkspace struct {
 	path            string
-	bufWorkYAMLFile bufconfig2.BufWorkYAMLFile
-	bufYAMLFile     bufconfig2.BufYAMLFile
+	bufWorkYAMLFile bufconfig.BufWorkYAMLFile
+	bufYAMLFile     bufconfig.BufYAMLFile
 }
 
 func newControllingWorkspace(
 	path string,
-	bufWorkYAMLFile bufconfig2.BufWorkYAMLFile,
-	bufYAMLFile bufconfig2.BufYAMLFile,
+	bufWorkYAMLFile bufconfig.BufWorkYAMLFile,
+	bufYAMLFile bufconfig.BufYAMLFile,
 ) ControllingWorkspace {
 	return &controllingWorkspace{
 		path:            path,
@@ -70,11 +70,11 @@ func (c *controllingWorkspace) Path() string {
 	return c.path
 }
 
-func (c *controllingWorkspace) BufWorkYAMLFile() bufconfig2.BufWorkYAMLFile {
+func (c *controllingWorkspace) BufWorkYAMLFile() bufconfig.BufWorkYAMLFile {
 	return c.bufWorkYAMLFile
 }
 
-func (c *controllingWorkspace) BufYAMLFile() bufconfig2.BufYAMLFile {
+func (c *controllingWorkspace) BufYAMLFile() bufconfig.BufYAMLFile {
 	return c.bufYAMLFile
 }
 

@@ -23,7 +23,7 @@
     }
   ],
   "types": {
-    "include":[
+    "include": [
       "buf.alpha.lint.v1.IDPaths"
     ]
   }

@@ -25,17 +25,18 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"github.com/inovacc/omni/pkg/buf/internal/app/appext"
-	"github.com/inovacc/omni/pkg/buf/internal/buf/bufctl"
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/storage"
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/wasm"
 	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/incremental"
 	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/ir"
 	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/source"
-	"github.com/inovacc/omni/pkg/buf/internal/standard/xlog/xslog"
+	"github.com/inovacc/omni/pkg/buf/pkg/app/appext"
+	"github.com/inovacc/omni/pkg/buf/pkg/standard/xlog/xslog"
+	"github.com/inovacc/omni/pkg/buf/pkg/storage"
+	"github.com/inovacc/omni/pkg/buf/pkg/wasm"
 	"go.lsp.dev/jsonrpc2"
 	"go.lsp.dev/protocol"
 	"go.uber.org/zap"
+
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufctl"
 )
 
 // Serve spawns a new LSP server, listening on the given stream.
@@ -106,15 +107,15 @@ type lsp struct {
 
 	logger           *slog.Logger
 	bufVersion       string // buf version, set at server creation
-	controller       bufctl.Controller
-	wasmRuntime      wasm.Runtime
-	fileManager      *fileManager
+	controller  bufctl.Controller
+	wasmRuntime wasm.Runtime
+	fileManager *fileManager
 	workspaceManager *workspaceManager
 	queryExecutor    *incremental.Executor
 	opener           source.Map
-	irSession        *ir.Session
-	wktBucket        storage.ReadBucket
-	shutdown         bool
+	irSession   *ir.Session
+	wktBucket   storage.ReadBucket
+	shutdown    bool
 
 	lock sync.Mutex
 

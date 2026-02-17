@@ -116,7 +116,6 @@ func (s SliceInserter[T, _]) Len() int {
 	if s.Slice == nil {
 		return 0
 	}
-
 	return len(*s.Slice)
 }
 
@@ -211,7 +210,6 @@ func (s SliceInserter2[T, _, _]) Len() int {
 	if s.Slice1 == nil {
 		return 0
 	}
-
 	return len(*s.Slice1)
 }
 

@@ -19,9 +19,9 @@ import (
 	"errors"
 	"io/fs"
 
-	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufconfig"
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/storage"
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/storage/storageos"
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufconfig"
+	"github.com/inovacc/omni/pkg/buf/pkg/storage"
+	"github.com/inovacc/omni/pkg/buf/pkg/storage/storageos"
 )
 
 // GetBufYAMLFileForDirPathOrOverride get the buf.yaml file for either the usually-flag-based

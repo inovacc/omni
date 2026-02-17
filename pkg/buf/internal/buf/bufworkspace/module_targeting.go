@@ -18,10 +18,10 @@ import (
 	"fmt"
 
 	"github.com/inovacc/omni/pkg/buf/internal/buf/buftarget"
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/normalpath"
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/syserror"
-	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
-	"github.com/inovacc/omni/pkg/buf/internal/standard/xstrings"
+	"github.com/inovacc/omni/pkg/buf/pkg/normalpath"
+	"github.com/inovacc/omni/pkg/buf/pkg/standard/xslices"
+	"github.com/inovacc/omni/pkg/buf/pkg/standard/xstrings"
+	"github.com/inovacc/omni/pkg/buf/pkg/syserror"
 )
 
 type moduleTargeting struct {

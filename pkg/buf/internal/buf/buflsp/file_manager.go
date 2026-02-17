@@ -19,7 +19,7 @@ package buflsp
 import (
 	"context"
 
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/refcount"
+	"github.com/inovacc/omni/pkg/buf/pkg/refcount"
 	"go.lsp.dev/protocol"
 )
 

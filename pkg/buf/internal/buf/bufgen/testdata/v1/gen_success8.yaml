@@ -1,5 +1,5 @@
 version: v1
-managed:  
+managed:
   enabled: true
   csharp_namespace:
     except:

@@ -20,11 +20,11 @@ import (
 	"io"
 	"log/slog"
 
-	bufconfig2 "github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufconfig"
-	bufmodule2 "github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufmodule"
-	normalpath2 "github.com/inovacc/omni/pkg/buf/internal/pkg/normalpath"
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/storage"
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/syserror"
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufconfig"
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufmodule"
+	normalpath2 "github.com/inovacc/omni/pkg/buf/pkg/normalpath"
+	"github.com/inovacc/omni/pkg/buf/pkg/storage"
+	"github.com/inovacc/omni/pkg/buf/pkg/syserror"
 )
 
 // Migrator migrates buf configuration files.
@@ -76,8 +76,8 @@ type Migrator interface {
 // NewMigrator returns a new Migrator.
 func NewMigrator(
 	logger *slog.Logger,
-	moduleKeyProvider bufmodule2.ModuleKeyProvider,
-	commitProvider bufmodule2.CommitProvider,
+	moduleKeyProvider bufmodule.ModuleKeyProvider,
+	commitProvider bufmodule.CommitProvider,
 ) Migrator {
 	return newMigrator(
 		logger,
@@ -137,10 +137,10 @@ func getWorkspaceModuleBufGenYAMLPaths(
 		ignoreDirPathMap[ignoreDirPath] = struct{}{}
 	}
 	var dirPath string
-	if err := bufconfig2.WalkFileInfos(
+	if err := bufconfig.WalkFileInfos(
 		ctx,
 		bucket,
-		func(path string, fileInfo bufconfig2.FileInfo) error {
+		func(path string, fileInfo bufconfig.FileInfo) error {
 			dirPath = normalpath2.Dir(path)
 			if len(ignoreDirPathMap) > 0 {
 				if normalpath2.MapHasEqualOrContainingPath(ignoreDirPathMap, dirPath, normalpath2.Relative) {
@@ -150,39 +150,39 @@ func getWorkspaceModuleBufGenYAMLPaths(
 			fileType := fileInfo.FileType()
 			fileVersion := fileInfo.FileVersion()
 			switch fileType {
-			case bufconfig2.FileTypeBufYAML:
+			case bufconfig.FileTypeBufYAML:
 				switch fileVersion {
-				case bufconfig2.FileVersionV1Beta1, bufconfig2.FileVersionV1:
+				case bufconfig.FileVersionV1Beta1, bufconfig.FileVersionV1:
 					moduleDirPaths = append(moduleDirPaths, dirPath)
 					return nil
-				case bufconfig2.FileVersionV2:
+				case bufconfig.FileVersionV2:
 					// ignore
 					return nil
 				default:
 					return syserror.Newf("unknown FileVersion: %v", fileVersion)
 				}
-			case bufconfig2.FileTypeBufGenYAML:
+			case bufconfig.FileTypeBufGenYAML:
 				switch fileVersion {
-				case bufconfig2.FileVersionV1Beta1, bufconfig2.FileVersionV1:
+				case bufconfig.FileVersionV1Beta1, bufconfig.FileVersionV1:
 					bufGenYAMLFilePaths = append(bufGenYAMLFilePaths, path)
 					return nil
-				case bufconfig2.FileVersionV2:
+				case bufconfig.FileVersionV2:
 					// ignore
 					return nil
 				default:
 					return syserror.Newf("unknown FileVersion: %v", fileVersion)
 				}
-			case bufconfig2.FileTypeBufWorkYAML:
+			case bufconfig.FileTypeBufWorkYAML:
 				switch fileVersion {
-				case bufconfig2.FileVersionV1Beta1, bufconfig2.FileVersionV1:
+				case bufconfig.FileVersionV1Beta1, bufconfig.FileVersionV1:
 					workspaceDirPaths = append(workspaceDirPaths, dirPath)
 					return nil
-				case bufconfig2.FileVersionV2:
+				case bufconfig.FileVersionV2:
 					return syserror.Newf("invalid FileVersion for %q: %v", path, fileVersion)
 				default:
 					return syserror.Newf("unknown FileVersion: %v", fileVersion)
 				}
-			case bufconfig2.FileTypeBufLock:
+			case bufconfig.FileTypeBufLock:
 				// ignore
 				return nil
 			default:

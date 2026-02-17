@@ -27,7 +27,7 @@ import (
 	"sync/atomic"
 
 	"connectrpc.com/connect"
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/verbose"
+	"github.com/inovacc/omni/pkg/buf/pkg/verbose"
 )
 
 type skipUploadFinishedMessageKey struct{}

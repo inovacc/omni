@@ -22,15 +22,15 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/inovacc/omni/pkg/buf/internal/app"
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufconfig"
 	"github.com/inovacc/omni/pkg/buf/internal/buf/buffetch/internal"
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufmodule"
 	"github.com/inovacc/omni/pkg/buf/internal/buf/buftarget"
-	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufconfig"
-	bufmodule2 "github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufmodule"
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/git"
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/httpauth"
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/storage/storageos"
-	"github.com/inovacc/omni/pkg/buf/internal/standard/xstrings"
+	"github.com/inovacc/omni/pkg/buf/pkg/app"
+	"github.com/inovacc/omni/pkg/buf/pkg/git"
+	"github.com/inovacc/omni/pkg/buf/pkg/httpauth"
+	"github.com/inovacc/omni/pkg/buf/pkg/standard/xstrings"
+	"github.com/inovacc/omni/pkg/buf/pkg/storage/storageos"
 )
 
 const (
@@ -410,7 +410,7 @@ type ModuleFetcher interface {
 		ctx context.Context,
 		container app.EnvStdinContainer,
 		moduleRef ModuleRef,
-	) (bufmodule2.ModuleKey, error)
+	) (bufmodule.ModuleKey, error)
 }
 
 // Reader is a reader for Buf.
@@ -428,7 +428,7 @@ func NewReader(
 	httpClient *http.Client,
 	httpAuthenticator httpauth.Authenticator,
 	gitCloner git.Cloner,
-	moduleKeyProvider bufmodule2.ModuleKeyProvider,
+	moduleKeyProvider bufmodule.ModuleKeyProvider,
 ) Reader {
 	return newReader(
 		logger,
@@ -489,7 +489,7 @@ func NewDirReader(
 func NewModuleFetcher(
 	logger *slog.Logger,
 	storageosProvider storageos.Provider,
-	moduleKeyProvider bufmodule2.ModuleKeyProvider,
+	moduleKeyProvider bufmodule.ModuleKeyProvider,
 ) ModuleFetcher {
 	return newModuleFetcher(
 		logger,

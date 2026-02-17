@@ -18,9 +18,9 @@ import (
 	"context"
 	"log/slog"
 
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufconfig"
 	"github.com/inovacc/omni/pkg/buf/internal/buf/buftarget"
-	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufconfig"
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/storage"
+	"github.com/inovacc/omni/pkg/buf/pkg/storage"
 )
 
 // WorkspaceDepManagerProvider provides WorkspaceDepManagers.

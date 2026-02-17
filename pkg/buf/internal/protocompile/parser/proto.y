@@ -7,7 +7,7 @@ import (
 	"math"
 	"strings"
 
-	"github.com/inovacc/omni/pkg/buf/internal/protocompile/ast"
+	"github.com/bufbuild/protocompile/ast"
 )
 
 %}

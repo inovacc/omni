@@ -18,10 +18,11 @@ import (
 	"context"
 	"log/slog"
 
-	"github.com/inovacc/omni/pkg/buf/internal/app"
-	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufprotoplugin"
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/storage/storageos"
+	"github.com/inovacc/omni/pkg/buf/pkg/app"
+	"github.com/inovacc/omni/pkg/buf/pkg/storage/storageos"
 	"google.golang.org/protobuf/types/pluginpb"
+
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufprotoplugin"
 )
 
 type generator struct {

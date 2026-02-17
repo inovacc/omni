@@ -132,12 +132,9 @@ func TestRunLintNoProtoFiles(t *testing.T) {
 	opts := LintOptions{}
 
 	err := RunLint(&buf, tmpDir, opts)
-	if err != nil {
-		t.Errorf("RunLint() with no proto files should not error: %v", err)
-	}
-
-	if !strings.Contains(buf.String(), "No proto files found") {
-		t.Errorf("RunLint() should indicate no proto files found")
+	// Real buf engine returns an error for empty modules (no .proto files).
+	if err == nil {
+		t.Error("RunLint() with no proto files should return an error")
 	}
 }
 
@@ -163,8 +160,9 @@ message User {
 	_ = RunLint(&buf, tmpDir, opts)
 
 	output := buf.String()
-	if !strings.Contains(output, `"rule"`) {
-		t.Errorf("RunLint() JSON output should contain rule field:\n%s", output)
+	// Real buf uses "type" for the rule identifier in JSON output.
+	if !strings.Contains(output, `"type"`) {
+		t.Errorf("RunLint() JSON output should contain type field:\n%s", output)
 	}
 }
 

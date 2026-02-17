@@ -19,22 +19,22 @@ import (
 	"errors"
 	"io"
 
-	bufmodule2 "github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufmodule"
-	storage2 "github.com/inovacc/omni/pkg/buf/internal/pkg/storage"
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/storage/storagemem"
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/thread"
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufmodule"
 	"github.com/inovacc/omni/pkg/buf/internal/protocompile/ast"
 	"github.com/inovacc/omni/pkg/buf/internal/protocompile/parser"
 	"github.com/inovacc/omni/pkg/buf/internal/protocompile/reporter"
+	"github.com/inovacc/omni/pkg/buf/pkg/thread"
+	storage2 "github.com/inovacc/omni/pkg/buf/pkg/storage"
+	"github.com/inovacc/omni/pkg/buf/pkg/storage/storagemem"
 )
 
 // FormatModuleSet formats and writes the target files into a read bucket.
-func FormatModuleSet(ctx context.Context, moduleSet bufmodule2.ModuleSet) (_ storage2.ReadBucket, retErr error) {
+func FormatModuleSet(ctx context.Context, moduleSet bufmodule.ModuleSet) (_ storage2.ReadBucket, retErr error) {
 	return FormatBucket(
 		ctx,
-		bufmodule2.ModuleReadBucketToStorageReadBucket(
-			bufmodule2.ModuleReadBucketWithOnlyTargetFiles(
-				bufmodule2.ModuleSetToModuleReadBucketWithOnlyProtoFilesForTargetModules(moduleSet),
+		bufmodule.ModuleReadBucketToStorageReadBucket(
+			bufmodule.ModuleReadBucketWithOnlyTargetFiles(
+				bufmodule.ModuleSetToModuleReadBucketWithOnlyProtoFilesForTargetModules(moduleSet),
 			),
 		),
 	)

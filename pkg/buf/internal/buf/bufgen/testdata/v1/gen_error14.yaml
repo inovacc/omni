@@ -1,5 +1,5 @@
 version: v1
-managed:  
+managed:
   objc_class_prefix:
     default: default
     except:

@@ -8,7 +8,7 @@ extend Foo {
   // Trailing comment on '{'.
 
   // Leading comment on value.
-  optional string value = 2 [ 
+  optional string value = 2 [
     deprecated = true
   ]; // Trailing comment on value.
 
@@ -20,7 +20,7 @@ extend Foo {
     optional int64 five = 5;
   } // Trailing comment on Additional.
 
-// Leading comment on '}'.
+  // Leading comment on '}'.
 } // Trailing comment on '}'.
 // Another trailing comment on '}'.
 

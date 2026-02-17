@@ -18,8 +18,8 @@ import (
 	"context"
 	"log/slog"
 
-	normalpath2 "github.com/inovacc/omni/pkg/buf/internal/pkg/normalpath"
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/storage"
+	normalpath2 "github.com/inovacc/omni/pkg/buf/pkg/normalpath"
+	"github.com/inovacc/omni/pkg/buf/pkg/storage"
 )
 
 // BucketTargeting provides targeting information for the bucket based on any controlling

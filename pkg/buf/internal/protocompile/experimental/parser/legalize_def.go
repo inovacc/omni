@@ -19,7 +19,6 @@ import (
 
 	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/ast"
 	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/ast/syntax"
-	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/internal/erredition"
 	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/internal/errtoken"
 	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/internal/taxa"
 	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/report"
@@ -119,15 +118,13 @@ func legalizeTypeDefLike(p *parser, what taxa.Noun, def ast.DeclDef) {
 		isType := what == taxa.Message || what == taxa.Enum
 
 		if isType && mod.Prefix().IsTypeModifier() {
-			if p.syntax < syntax.Edition2024 {
-				p.Error(erredition.TooOld{
-					Current: p.syntax,
-					Decl:    p.syntaxNode,
-					Intro:   syntax.Edition2024,
-					What:    mod.Prefix(),
-					Where:   mod.PrefixToken(),
-				})
-			}
+			p.Error(errRequiresEdition{
+				edition: syntax.Edition2024,
+				node:    mod.PrefixToken(),
+				decl:    p.syntaxNode,
+
+				unimplemented: p.syntax >= syntax.Edition2024,
+			})
 			continue
 		}
 

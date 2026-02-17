@@ -1,10 +1,10 @@
-// Copyright 2020-2025 Buf Technologies, Inc.
+// Copyright 2016 The gRPC Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-//      http://www.apache.org/licenses/LICENSE-2.0
+//     http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
@@ -28,11 +28,10 @@
 package reflectionv1
 
 import (
-	reflect "reflect"
-	unsafe "unsafe"
-
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+	reflect "reflect"
+	unsafe "unsafe"
 )
 
 const (
@@ -1150,8 +1149,8 @@ const file_grpc_reflection_v1_reflection_proto_rawDesc = "" +
 	"error_code\x18\x01 \x01(\x05R\terrorCode\x12#\n" +
 	"\rerror_message\x18\x02 \x01(\tR\ferrorMessage2\x89\x01\n" +
 	"\x10ServerReflection\x12u\n" +
-	"\x14ServerReflectionInfo\x12+.grpc.reflection.v1.ServerReflectionRequest\x1a,.grpc.reflection.v1.ServerReflectionResponse(\x010\x01B\xe1\x01\n" +
-	"\x16com.grpc.reflection.v1B\x0fReflectionProtoP\x01ZLgithub.com/bufbuild/buf/private/gen/proto/go/grpc/reflection/v1;reflectionv1\xa2\x02\x03GRX\xaa\x02\x12Grpc.Reflection.V1\xca\x02\x12Grpc\\Reflection\\V1\xe2\x02\x1eGrpc\\Reflection\\V1\\GPBMetadata\xea\x02\x14Grpc::Reflection::V1b\x06proto3"
+	"\x14ServerReflectionInfo\x12+.grpc.reflection.v1.ServerReflectionRequest\x1a,.grpc.reflection.v1.ServerReflectionResponse(\x010\x01B\xe2\x01\n" +
+	"\x16com.grpc.reflection.v1B\x0fReflectionProtoP\x01ZMgithub.com/bufbuild/buf/internal/gen/proto/go/grpc/reflection/v1;reflectionv1\xa2\x02\x03GRX\xaa\x02\x12Grpc.Reflection.V1\xca\x02\x12Grpc\\Reflection\\V1\xe2\x02\x1eGrpc\\Reflection\\V1\\GPBMetadata\xea\x02\x14Grpc::Reflection::V1b\x06proto3"
 
 var file_grpc_reflection_v1_reflection_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
 var file_grpc_reflection_v1_reflection_proto_goTypes = []any{

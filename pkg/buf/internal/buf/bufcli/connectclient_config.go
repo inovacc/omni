@@ -17,28 +17,29 @@ package bufcli
 import (
 	"connectrpc.com/connect"
 	otelconnect "connectrpc.com/otelconnect"
-	"github.com/inovacc/omni/pkg/buf/internal/app/appext"
+	"github.com/inovacc/omni/pkg/buf/pkg/app/appext"
+	"github.com/inovacc/omni/pkg/buf/pkg/connectclient"
+	"github.com/inovacc/omni/pkg/buf/pkg/netrc"
+	"github.com/inovacc/omni/pkg/buf/pkg/transport/http/httpclient"
+
 	"github.com/inovacc/omni/pkg/buf/internal/buf/bufapp"
-	bufconnect2 "github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufconnect"
-	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/buftransport"
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/connectclient"
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/netrc"
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/transport/http/httpclient"
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufconnect"
+	"github.com/inovacc/omni/pkg/buf/internal/buf/buftransport"
 )
 
 // NewConnectClientConfig creates a new connect.ClientConfig which uses a token reader to look
 // up the token in the container or in netrc based on the address of each individual client.
 // It is then set in the header of all outgoing requests from clients created using this config.
 func NewConnectClientConfig(container appext.Container) (*connectclient.Config, error) {
-	envTokenProvider, err := bufconnect2.NewTokenProviderFromContainer(container)
+	envTokenProvider, err := bufconnect.NewTokenProviderFromContainer(container)
 	if err != nil {
 		return nil, err
 	}
-	netrcTokenProvider := bufconnect2.NewNetrcTokenProvider(container, netrc.GetMachineForName)
+	netrcTokenProvider := bufconnect.NewNetrcTokenProvider(container, netrc.GetMachineForName)
 	return newConnectClientConfigWithOptions(
 		container,
 		connectclient.WithAuthInterceptorProvider(
-			bufconnect2.NewAuthorizationInterceptorProvider(envTokenProvider, netrcTokenProvider),
+			bufconnect.NewAuthorizationInterceptorProvider(envTokenProvider, netrcTokenProvider),
 		),
 	)
 }
@@ -46,14 +47,14 @@ func NewConnectClientConfig(container appext.Container) (*connectclient.Config, 
 // NewConnectClientConfigWithToken creates a new connect.ClientConfig with a given token. The provided token is
 // set in the header of all outgoing requests from this provider
 func NewConnectClientConfigWithToken(container appext.Container, token string) (*connectclient.Config, error) {
-	tokenProvider, err := bufconnect2.NewTokenProviderFromString(token)
+	tokenProvider, err := bufconnect.NewTokenProviderFromString(token)
 	if err != nil {
 		return nil, err
 	}
 	return newConnectClientConfigWithOptions(
 		container,
 		connectclient.WithAuthInterceptorProvider(
-			bufconnect2.NewAuthorizationInterceptorProvider(tokenProvider),
+			bufconnect.NewAuthorizationInterceptorProvider(tokenProvider),
 		),
 	)
 }
@@ -64,12 +65,10 @@ func newConnectClientConfigWithOptions(container appext.Container, opts ...conne
 	if err != nil {
 		return nil, err
 	}
-	// TODO: Re-enable otelconnect once type compatibility is resolved
-	// otelconnectInterceptor, err := otelconnect.NewInterceptor()
-	// if err != nil {
-	// 	return nil, err
-	// }
-	_ = otelconnect.NewInterceptor // Silence unused import
+	otelconnectInterceptor, err := otelconnect.NewInterceptor()
+	if err != nil {
+		return nil, err
+	}
 	client := httpclient.NewClient(config.TLS)
 	options := []connectclient.ConfigOption{
 		connectclient.WithAddressMapper(func(address string) string {
@@ -80,11 +79,11 @@ func newConnectClientConfigWithOptions(container appext.Container, opts ...conne
 		}),
 		connectclient.WithInterceptors(
 			[]connect.Interceptor{
-				bufconnect2.NewAugmentedConnectErrorInterceptor(),
-				bufconnect2.NewSetCLIVersionInterceptor(Version),
-				bufconnect2.NewCLIWarningInterceptor(container),
-				bufconnect2.NewDebugLoggingInterceptor(container),
-				// otelconnectInterceptor, // Disabled due to type mismatch with internal/connect
+				bufconnect.NewAugmentedConnectErrorInterceptor(),
+				bufconnect.NewSetCLIVersionInterceptor(Version),
+				bufconnect.NewCLIWarningInterceptor(container),
+				bufconnect.NewDebugLoggingInterceptor(container),
+				otelconnectInterceptor,
 			},
 		),
 	}

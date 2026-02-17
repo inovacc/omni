@@ -15,26 +15,26 @@
 package bufcli
 
 import (
-	"github.com/inovacc/omni/pkg/buf/internal/app/appext"
-	bufctl2 "github.com/inovacc/omni/pkg/buf/internal/buf/bufctl"
-	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufmodule/bufmoduleapi"
-	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufplugin/bufpluginapi"
-	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufpolicy/bufpolicyapi"
-	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufregistryapi/bufregistryapimodule"
-	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufregistryapi/bufregistryapiowner"
-	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufregistryapi/bufregistryapiplugin"
-	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufregistryapi/bufregistryapipolicy"
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufctl"
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufmodule/bufmoduleapi"
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufplugin/bufpluginapi"
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufpolicy/bufpolicyapi"
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufregistryapi/bufregistryapimodule"
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufregistryapi/bufregistryapiowner"
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufregistryapi/bufregistryapiplugin"
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufregistryapi/bufregistryapipolicy"
+	"github.com/inovacc/omni/pkg/buf/pkg/app/appext"
 )
 
 // NewController returns a new Controller.
 func NewController(
 	container appext.Container,
-	options ...bufctl2.ControllerOption,
-) (bufctl2.Controller, error) {
+	options ...bufctl.ControllerOption,
+) (bufctl.Controller, error) {
 	if container.Env(copyToInMemoryEnvKey) != "" {
 		options = append(
 			options,
-			bufctl2.WithCopyToInMemory(),
+			bufctl.WithCopyToInMemory(),
 		)
 	}
 	clientConfig, err := NewConnectClientConfig(container)
@@ -65,7 +65,7 @@ func NewController(
 	if err != nil {
 		return nil, err
 	}
-	return bufctl2.NewController(
+	return bufctl.NewController(
 		container.Logger(),
 		container,
 		newGraphProvider(container, moduleClientProvider, ownerClientProvider),

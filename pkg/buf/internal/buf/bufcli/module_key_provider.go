@@ -15,10 +15,10 @@
 package bufcli
 
 import (
-	"github.com/inovacc/omni/pkg/buf/internal/app/appext"
-	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufmodule"
-	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufmodule/bufmoduleapi"
-	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufregistryapi/bufregistryapimodule"
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufmodule"
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufmodule/bufmoduleapi"
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufregistryapi/bufregistryapimodule"
+	"github.com/inovacc/omni/pkg/buf/pkg/app/appext"
 )
 
 // NewModuleKeyProvider returns a new ModuleKeyProvider.

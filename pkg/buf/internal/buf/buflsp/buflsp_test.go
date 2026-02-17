@@ -22,32 +22,33 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/inovacc/omni/pkg/buf/internal/app"
-	"github.com/inovacc/omni/pkg/buf/internal/app/appext"
-	"github.com/inovacc/omni/pkg/buf/internal/buf/bufctl"
-	"github.com/inovacc/omni/pkg/buf/internal/buf/buflsp"
-	"github.com/inovacc/omni/pkg/buf/internal/buf/bufwkt/bufwktstore"
-	bufmodule2 "github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufmodule"
-	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufparse"
-	bufplugin2 "github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufplugin"
-	bufpolicy2 "github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufpolicy"
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/git"
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/httpauth"
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/slogtestext"
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/storage/storageos"
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/wasm"
 	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/incremental"
+	"github.com/inovacc/omni/pkg/buf/pkg/app"
+	appext2 "github.com/inovacc/omni/pkg/buf/pkg/app/appext"
+	"github.com/inovacc/omni/pkg/buf/pkg/git"
+	"github.com/inovacc/omni/pkg/buf/pkg/httpauth"
+	"github.com/inovacc/omni/pkg/buf/pkg/slogtestext"
+	"github.com/inovacc/omni/pkg/buf/pkg/storage/storageos"
+	"github.com/inovacc/omni/pkg/buf/pkg/wasm"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.lsp.dev/jsonrpc2"
 	"go.lsp.dev/protocol"
 	"go.lsp.dev/uri"
+
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufctl"
+	"github.com/inovacc/omni/pkg/buf/internal/buf/buflsp"
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufmodule"
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufparse"
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufplugin"
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufpolicy"
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufwkt/bufwktstore"
 )
 
 // nopModuleKeyProvider is a no-op implementation of ModuleKeyProvider for testing
 type nopModuleKeyProvider struct{}
 
-func (nopModuleKeyProvider) GetModuleKeysForModuleRefs(context.Context, []bufparse.Ref, bufmodule2.DigestType) ([]bufmodule2.ModuleKey, error) {
+func (nopModuleKeyProvider) GetModuleKeysForModuleRefs(context.Context, []bufparse.Ref, bufmodule.DigestType) ([]bufmodule.ModuleKey, error) {
 	return nil, os.ErrNotExist
 }
 
@@ -61,22 +62,22 @@ func setupLSPServer(
 
 	ctx := t.Context()
 
-	logger := slogtestext.NewLogger(t, slogtestext.WithLogLevel(appext.LogLevelInfo))
+	logger := slogtestext.NewLogger(t, slogtestext.WithLogLevel(appext2.LogLevelInfo))
 
 	appContainer, err := app.NewContainerForOS()
 	require.NoError(t, err)
 
-	nameContainer, err := appext.NewNameContainer(appContainer, "buf-test")
+	nameContainer, err := appext2.NewNameContainer(appContainer, "buf-test")
 	require.NoError(t, err)
-	appextContainer := appext.NewContainer(nameContainer, logger)
+	appextContainer := appext2.NewContainer(nameContainer, logger)
 
-	graphProvider := bufmodule2.NopGraphProvider
-	moduleDataProvider := bufmodule2.NopModuleDataProvider
-	commitProvider := bufmodule2.NopCommitProvider
-	pluginKeyProvider := bufplugin2.NopPluginKeyProvider
-	pluginDataProvider := bufplugin2.NopPluginDataProvider
-	policyKeyProvider := bufpolicy2.NopPolicyKeyProvider
-	policyDataProvider := bufpolicy2.NopPolicyDataProvider
+	graphProvider := bufmodule.NopGraphProvider
+	moduleDataProvider := bufmodule.NopModuleDataProvider
+	commitProvider := bufmodule.NopCommitProvider
+	pluginKeyProvider := bufplugin.NopPluginKeyProvider
+	pluginDataProvider := bufplugin.NopPluginDataProvider
+	policyKeyProvider := bufpolicy.NopPolicyKeyProvider
+	policyDataProvider := bufpolicy.NopPolicyDataProvider
 
 	tmpDir := t.TempDir()
 	storageBucket, err := storageos.NewProvider().NewReadWriteBucket(tmpDir)

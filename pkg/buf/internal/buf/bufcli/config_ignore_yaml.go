@@ -19,7 +19,7 @@ import (
 	"io"
 	"sort"
 
-	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufanalysis"
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufanalysis"
 )
 
 // AllLintFormatStrings are all format strings for lint.

@@ -17,7 +17,6 @@ package ir
 import (
 	"fmt"
 	"reflect"
-	"strings"
 
 	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/id"
 	"github.com/inovacc/omni/pkg/buf/internal/protocompile/internal/arena"
@@ -44,7 +43,6 @@ type builtins struct {
 	MethodOptions    Member
 
 	JavaUTF8             Member
-	JavaMultipleFiles    Member
 	OptimizeFor          Member
 	MapEntry             Member
 	Packed               Member
@@ -79,16 +77,14 @@ type builtins struct {
 	EditionSupportWarning    Member
 	EditionSupportRemoved    Member
 
-	FeatureSet         Type
-	FeaturePresence    Member
-	FeatureEnumType    Member
-	FeaturePacked      Member
-	FeatureUTF8        Member
-	FeatureGroup       Member
-	FeatureEnum        Member
-	FeatureJSON        Member
-	FeatureVisibility  Member `builtin:"optional"`
-	FeatureNamingStyle Member `builtin:"optional"`
+	FeatureSet      Type
+	FeaturePresence Member
+	FeatureEnumType Member
+	FeaturePacked   Member
+	FeatureUTF8     Member
+	FeatureGroup    Member
+	FeatureEnum     Member
+	FeatureJSON     Member
 
 	FileFeatures      Member
 	MessageFeatures   Member
@@ -117,19 +113,18 @@ type builtinIDs struct {
 	ServiceOptions   intern.ID `intern:"google.protobuf.ServiceDescriptorProto.options"`
 	MethodOptions    intern.ID `intern:"google.protobuf.MethodDescriptorProto.options"`
 
-	JavaUTF8          intern.ID `intern:"google.protobuf.FileOptions.java_string_check_utf8"`
-	JavaMultipleFiles intern.ID `intern:"google.protobuf.FileOptions.java_multiple_files"`
-	OptimizeFor       intern.ID `intern:"google.protobuf.FileOptions.optimize_for"`
-	MapEntry          intern.ID `intern:"google.protobuf.MessageOptions.map_entry"`
-	MessageSet        intern.ID `intern:"google.protobuf.MessageOptions.message_set_wire_format"`
-	Packed            intern.ID `intern:"google.protobuf.FieldOptions.packed"`
-	OptionTargets     intern.ID `intern:"google.protobuf.FieldOptions.targets"`
-	CType             intern.ID `intern:"google.protobuf.FieldOptions.ctype"`
-	JSType            intern.ID `intern:"google.protobuf.FieldOptions.jstype"`
-	Lazy              intern.ID `intern:"google.protobuf.FieldOptions.lazy"`
-	UnverifiedLazy    intern.ID `intern:"google.protobuf.FieldOptions.unverified_lazy"`
-	AllowAlias        intern.ID `intern:"google.protobuf.EnumOptions.allow_alias"`
-	JSONName          intern.ID `intern:"google.protobuf.FieldDescriptorProto.json_name"`
+	JavaUTF8       intern.ID `intern:"google.protobuf.FileOptions.java_string_check_utf8"`
+	OptimizeFor    intern.ID `intern:"google.protobuf.FileOptions.optimize_for"`
+	MapEntry       intern.ID `intern:"google.protobuf.MessageOptions.map_entry"`
+	MessageSet     intern.ID `intern:"google.protobuf.MessageOptions.message_set_wire_format"`
+	Packed         intern.ID `intern:"google.protobuf.FieldOptions.packed"`
+	OptionTargets  intern.ID `intern:"google.protobuf.FieldOptions.targets"`
+	CType          intern.ID `intern:"google.protobuf.FieldOptions.ctype"`
+	JSType         intern.ID `intern:"google.protobuf.FieldOptions.jstype"`
+	Lazy           intern.ID `intern:"google.protobuf.FieldOptions.lazy"`
+	UnverifiedLazy intern.ID `intern:"google.protobuf.FieldOptions.unverified_lazy"`
+	AllowAlias     intern.ID `intern:"google.protobuf.EnumOptions.allow_alias"`
+	JSONName       intern.ID `intern:"google.protobuf.FieldDescriptorProto.json_name"`
 
 	ExtnDecls        intern.ID `intern:"google.protobuf.ExtensionRangeOptions.declaration"`
 	ExtnVerification intern.ID `intern:"google.protobuf.ExtensionRangeOptions.verification"`
@@ -167,16 +162,14 @@ type builtinIDs struct {
 	EditionSupportWarning    intern.ID `intern:"google.protobuf.FieldOptions.FeatureSupport.deprecation_warning"`
 	EditionSupportRemoved    intern.ID `intern:"google.protobuf.FieldOptions.FeatureSupport.edition_removed"`
 
-	FeatureSet         intern.ID `intern:"google.protobuf.FeatureSet"`
-	FeaturePresence    intern.ID `intern:"google.protobuf.FeatureSet.field_presence"`
-	FeatureEnumType    intern.ID `intern:"google.protobuf.FeatureSet.enum_type"`
-	FeaturePacked      intern.ID `intern:"google.protobuf.FeatureSet.repeated_field_encoding"`
-	FeatureUTF8        intern.ID `intern:"google.protobuf.FeatureSet.utf8_validation"`
-	FeatureGroup       intern.ID `intern:"google.protobuf.FeatureSet.message_encoding"`
-	FeatureEnum        intern.ID `intern:"google.protobuf.FeatureSet.enum_type"`
-	FeatureJSON        intern.ID `intern:"google.protobuf.FeatureSet.json_format"`
-	FeatureVisibility  intern.ID `intern:"google.protobuf.FeatureSet.default_symbol_visibility"`
-	FeatureNamingStyle intern.ID `intern:"google.protobuf.FeatureSet.enforce_naming_style"`
+	FeatureSet      intern.ID `intern:"google.protobuf.FeatureSet"`
+	FeaturePresence intern.ID `intern:"google.protobuf.FeatureSet.field_presence"`
+	FeatureEnumType intern.ID `intern:"google.protobuf.FeatureSet.enum_type"`
+	FeaturePacked   intern.ID `intern:"google.protobuf.FeatureSet.repeated_field_encoding"`
+	FeatureUTF8     intern.ID `intern:"google.protobuf.FeatureSet.utf8_validation"`
+	FeatureGroup    intern.ID `intern:"google.protobuf.FeatureSet.message_encoding"`
+	FeatureEnum     intern.ID `intern:"google.protobuf.FeatureSet.enum_type"`
+	FeatureJSON     intern.ID `intern:"google.protobuf.FeatureSet.json_format"`
 
 	FileFeatures      intern.ID `intern:"google.protobuf.FileOptions.features"`
 	MessageFeatures   intern.ID `intern:"google.protobuf.MessageOptions.features"`
@@ -214,23 +207,11 @@ func resolveBuiltins(file *File) {
 	ids := reflect.ValueOf(file.session.builtins)
 	for i := range v.NumField() {
 		field := v.Field(i)
-		tyField := v.Type().Field(i)
-		id := ids.FieldByName(tyField.Name).Interface().(intern.ID) //nolint:errcheck
+		id := ids.FieldByName(v.Type().Field(i).Name).Interface().(intern.ID) //nolint:errcheck
 		kind := kinds[field.Type()]
-
-		var optional bool
-		for option := range strings.SplitSeq(tyField.Tag.Get("builtin"), ",") {
-			if option == "optional" {
-				optional = true
-			}
-		}
 
 		ref := file.exported.lookup(file, id)
 		sym := GetRef(file, ref)
-		if sym.IsZero() && optional {
-			continue
-		}
-
 		if sym.Kind() != kind.kind {
 			panic(fmt.Errorf(
 				"missing descriptor.proto symbol: %s `%s`; got kind %s",

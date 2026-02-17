@@ -15,12 +15,13 @@
 package buflsp
 
 import (
-	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufconnect"
-	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufmodule"
 	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/ast"
 	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/source"
 	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/token"
 	"go.lsp.dev/protocol"
+
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufconnect"
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufmodule"
 )
 
 const (

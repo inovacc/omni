@@ -27,8 +27,6 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufconnect"
-	bufmodule2 "github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufmodule"
 	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/ast"
 	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/ast/predeclared"
 	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/ir"
@@ -37,6 +35,9 @@ import (
 	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/token/keyword"
 	"go.lsp.dev/protocol"
 	"google.golang.org/protobuf/encoding/protowire"
+
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufconnect"
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufmodule"
 )
 
 // symbol represents a named symbol inside of a [file].
@@ -598,11 +599,11 @@ func (s *symbol) getDocsFromComments() string {
 			hasAnchor = isExtension
 		}
 
-		var module bufmodule2.Module
+		var module bufmodule.Module
 		var bsrHost string
 		if s.def.file.IsWKT() {
 			bsrHost = bufconnect.DefaultRemote + "/protocolbuffers/wellknowntypes"
-		} else if fileInfo, ok := s.def.file.objectInfo.(bufmodule2.FileInfo); ok {
+		} else if fileInfo, ok := s.def.file.objectInfo.(bufmodule.FileInfo); ok {
 			module = fileInfo.Module()
 			bsrHost = module.FullName().String()
 		}

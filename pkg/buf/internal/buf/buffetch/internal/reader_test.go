@@ -19,14 +19,15 @@ import (
 	"path/filepath"
 	"testing"
 
-	buftarget2 "github.com/inovacc/omni/pkg/buf/internal/buf/buftarget"
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/normalpath"
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/osext"
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/slogtestext"
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/storage"
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/storage/storageos"
+	"github.com/inovacc/omni/pkg/buf/pkg/normalpath"
+	"github.com/inovacc/omni/pkg/buf/pkg/osext"
+	"github.com/inovacc/omni/pkg/buf/pkg/slogtestext"
+	"github.com/inovacc/omni/pkg/buf/pkg/storage"
+	"github.com/inovacc/omni/pkg/buf/pkg/storage/storageos"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/inovacc/omni/pkg/buf/internal/buf/buftarget"
 )
 
 func TestGetReadBucketCloserForBucketNoTerminateFileName(t *testing.T) {
@@ -440,18 +441,18 @@ func TestGetReadBucketCloserForOSProtoFileNoBufYAMLAbsPwd(t *testing.T) {
 	require.NoError(t, readBucketCloser.Close())
 }
 
-func testNewTerminateAtFileNamesFunc(terminateFileNames ...string) buftarget2.TerminateFunc {
-	return buftarget2.TerminateFunc(
+func testNewTerminateAtFileNamesFunc(terminateFileNames ...string) buftarget.TerminateFunc {
+	return buftarget.TerminateFunc(
 		func(
 			ctx context.Context,
 			bucket storage.ReadBucket,
 			prefix string,
 			inputDir string,
-		) (buftarget2.ControllingWorkspace, error) {
+		) (buftarget.ControllingWorkspace, error) {
 			for _, terminateFileName := range terminateFileNames {
 				// We do not test for config file logic here, so it is fine to return empty configs.
 				if _, err := bucket.Stat(ctx, normalpath.Join(prefix, terminateFileName)); err == nil {
-					return buftarget2.NewControllingWorkspace(prefix, nil, nil), nil
+					return buftarget.NewControllingWorkspace(prefix, nil, nil), nil
 				}
 			}
 			return nil, nil

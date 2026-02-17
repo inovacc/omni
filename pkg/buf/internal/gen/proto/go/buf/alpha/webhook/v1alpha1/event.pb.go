@@ -21,13 +21,12 @@
 package webhookv1alpha1
 
 import (
-	reflect "reflect"
-	unsafe "unsafe"
-
-	"github.com/inovacc/omni/pkg/buf/internal/gen/proto/go/buf/alpha/registry/v1alpha1"
+	v1alpha1 "github.com/inovacc/omni/pkg/buf/internal/gen/proto/go/buf/alpha/registry/v1alpha1"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
+	reflect "reflect"
+	unsafe "unsafe"
 )
 
 const (
@@ -40,9 +39,9 @@ const (
 // EventRequest is the request payload that will be sent to the customer
 // that is subscribed to webhook events in the BSR.
 type EventRequest struct {
-	state              protoimpl.MessageState        `protogen:"opaque.v1"`
-	xxx_hidden_Event   registryv1alpha1.WebhookEvent `protobuf:"varint,1,opt,name=event,proto3,enum=buf.alpha.registry.v1alpha1.WebhookEvent"`
-	xxx_hidden_Payload *EventPayload                 `protobuf:"bytes,2,opt,name=payload,proto3"`
+	state              protoimpl.MessageState `protogen:"opaque.v1"`
+	xxx_hidden_Event   v1alpha1.WebhookEvent  `protobuf:"varint,1,opt,name=event,proto3,enum=buf.alpha.registry.v1alpha1.WebhookEvent"`
+	xxx_hidden_Payload *EventPayload          `protobuf:"bytes,2,opt,name=payload,proto3"`
 	unknownFields      protoimpl.UnknownFields
 	sizeCache          protoimpl.SizeCache
 }
@@ -72,11 +71,11 @@ func (x *EventRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-func (x *EventRequest) GetEvent() registryv1alpha1.WebhookEvent {
+func (x *EventRequest) GetEvent() v1alpha1.WebhookEvent {
 	if x != nil {
 		return x.xxx_hidden_Event
 	}
-	return registryv1alpha1.WebhookEvent(0)
+	return v1alpha1.WebhookEvent(0)
 }
 
 func (x *EventRequest) GetPayload() *EventPayload {
@@ -86,7 +85,7 @@ func (x *EventRequest) GetPayload() *EventPayload {
 	return nil
 }
 
-func (x *EventRequest) SetEvent(v registryv1alpha1.WebhookEvent) {
+func (x *EventRequest) SetEvent(v v1alpha1.WebhookEvent) {
 	x.xxx_hidden_Event = v
 }
 
@@ -110,7 +109,7 @@ type EventRequest_builder struct {
 
 	// The webhook event that was triggered. This event is the same one that is
 	// registered when creating a webhook in the BSR.
-	Event registryv1alpha1.WebhookEvent
+	Event v1alpha1.WebhookEvent
 	// The event payload of the event was triggered.
 	Payload *EventPayload
 }
@@ -299,10 +298,10 @@ func (b0 EventResponse_builder) Build() *EventResponse {
 
 // Payload for the event WEBHOOK_EVENT_REPOSITORY_PUSH.
 type RepositoryPushEvent struct {
-	state                       protoimpl.MessageState             `protogen:"opaque.v1"`
-	xxx_hidden_EventTime        *timestamppb.Timestamp             `protobuf:"bytes,1,opt,name=event_time,json=eventTime,proto3"`
-	xxx_hidden_RepositoryCommit *registryv1alpha1.RepositoryCommit `protobuf:"bytes,2,opt,name=repository_commit,json=repositoryCommit,proto3"`
-	xxx_hidden_Repository       *registryv1alpha1.Repository       `protobuf:"bytes,3,opt,name=repository,proto3"`
+	state                       protoimpl.MessageState     `protogen:"opaque.v1"`
+	xxx_hidden_EventTime        *timestamppb.Timestamp     `protobuf:"bytes,1,opt,name=event_time,json=eventTime,proto3"`
+	xxx_hidden_RepositoryCommit *v1alpha1.RepositoryCommit `protobuf:"bytes,2,opt,name=repository_commit,json=repositoryCommit,proto3"`
+	xxx_hidden_Repository       *v1alpha1.Repository       `protobuf:"bytes,3,opt,name=repository,proto3"`
 	unknownFields               protoimpl.UnknownFields
 	sizeCache                   protoimpl.SizeCache
 }
@@ -339,14 +338,14 @@ func (x *RepositoryPushEvent) GetEventTime() *timestamppb.Timestamp {
 	return nil
 }
 
-func (x *RepositoryPushEvent) GetRepositoryCommit() *registryv1alpha1.RepositoryCommit {
+func (x *RepositoryPushEvent) GetRepositoryCommit() *v1alpha1.RepositoryCommit {
 	if x != nil {
 		return x.xxx_hidden_RepositoryCommit
 	}
 	return nil
 }
 
-func (x *RepositoryPushEvent) GetRepository() *registryv1alpha1.Repository {
+func (x *RepositoryPushEvent) GetRepository() *v1alpha1.Repository {
 	if x != nil {
 		return x.xxx_hidden_Repository
 	}
@@ -357,11 +356,11 @@ func (x *RepositoryPushEvent) SetEventTime(v *timestamppb.Timestamp) {
 	x.xxx_hidden_EventTime = v
 }
 
-func (x *RepositoryPushEvent) SetRepositoryCommit(v *registryv1alpha1.RepositoryCommit) {
+func (x *RepositoryPushEvent) SetRepositoryCommit(v *v1alpha1.RepositoryCommit) {
 	x.xxx_hidden_RepositoryCommit = v
 }
 
-func (x *RepositoryPushEvent) SetRepository(v *registryv1alpha1.Repository) {
+func (x *RepositoryPushEvent) SetRepository(v *v1alpha1.Repository) {
 	x.xxx_hidden_Repository = v
 }
 
@@ -404,9 +403,9 @@ type RepositoryPushEvent_builder struct {
 	// The timestamp of the commit push.
 	EventTime *timestamppb.Timestamp
 	// The repository commit that was pushed.
-	RepositoryCommit *registryv1alpha1.RepositoryCommit
+	RepositoryCommit *v1alpha1.RepositoryCommit
 	// The repository that was pushed.
-	Repository *registryv1alpha1.Repository
+	Repository *v1alpha1.Repository
 }
 
 func (b0 RepositoryPushEvent_builder) Build() *RepositoryPushEvent {
@@ -439,20 +438,20 @@ const file_buf_alpha_webhook_v1alpha1_event_proto_rawDesc = "" +
 	"repository\x18\x03 \x01(\v2'.buf.alpha.registry.v1alpha1.RepositoryR\n" +
 	"repository2l\n" +
 	"\fEventService\x12\\\n" +
-	"\x05Event\x12(.buf.alpha.webhook.v1alpha1.EventRequest\x1a).buf.alpha.webhook.v1alpha1.EventResponseB\x90\x02\n" +
+	"\x05Event\x12(.buf.alpha.webhook.v1alpha1.EventRequest\x1a).buf.alpha.webhook.v1alpha1.EventResponseB\x91\x02\n" +
 	"\x1ecom.buf.alpha.webhook.v1alpha1B\n" +
-	"EventProtoP\x01ZWgithub.com/bufbuild/buf/private/gen/proto/go/buf/alpha/webhook/v1alpha1;webhookv1alpha1\xa2\x02\x03BAW\xaa\x02\x1aBuf.Alpha.Webhook.V1alpha1\xca\x02\x1aBuf\\Alpha\\Webhook\\V1alpha1\xe2\x02&Buf\\Alpha\\Webhook\\V1alpha1\\GPBMetadata\xea\x02\x1dBuf::Alpha::Webhook::V1alpha1b\x06proto3"
+	"EventProtoP\x01ZXgithub.com/bufbuild/buf/internal/gen/proto/go/buf/alpha/webhook/v1alpha1;webhookv1alpha1\xa2\x02\x03BAW\xaa\x02\x1aBuf.Alpha.Webhook.V1alpha1\xca\x02\x1aBuf\\Alpha\\Webhook\\V1alpha1\xe2\x02&Buf\\Alpha\\Webhook\\V1alpha1\\GPBMetadata\xea\x02\x1dBuf::Alpha::Webhook::V1alpha1b\x06proto3"
 
 var file_buf_alpha_webhook_v1alpha1_event_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
 var file_buf_alpha_webhook_v1alpha1_event_proto_goTypes = []any{
-	(*EventRequest)(nil),                      // 0: buf.alpha.webhook.v1alpha1.EventRequest
-	(*EventPayload)(nil),                      // 1: buf.alpha.webhook.v1alpha1.EventPayload
-	(*EventResponse)(nil),                     // 2: buf.alpha.webhook.v1alpha1.EventResponse
-	(*RepositoryPushEvent)(nil),               // 3: buf.alpha.webhook.v1alpha1.RepositoryPushEvent
-	(registryv1alpha1.WebhookEvent)(0),        // 4: buf.alpha.registry.v1alpha1.WebhookEvent
-	(*timestamppb.Timestamp)(nil),             // 5: google.protobuf.Timestamp
-	(*registryv1alpha1.RepositoryCommit)(nil), // 6: buf.alpha.registry.v1alpha1.RepositoryCommit
-	(*registryv1alpha1.Repository)(nil),       // 7: buf.alpha.registry.v1alpha1.Repository
+	(*EventRequest)(nil),              // 0: buf.alpha.webhook.v1alpha1.EventRequest
+	(*EventPayload)(nil),              // 1: buf.alpha.webhook.v1alpha1.EventPayload
+	(*EventResponse)(nil),             // 2: buf.alpha.webhook.v1alpha1.EventResponse
+	(*RepositoryPushEvent)(nil),       // 3: buf.alpha.webhook.v1alpha1.RepositoryPushEvent
+	(v1alpha1.WebhookEvent)(0),        // 4: buf.alpha.registry.v1alpha1.WebhookEvent
+	(*timestamppb.Timestamp)(nil),     // 5: google.protobuf.Timestamp
+	(*v1alpha1.RepositoryCommit)(nil), // 6: buf.alpha.registry.v1alpha1.RepositoryCommit
+	(*v1alpha1.Repository)(nil),       // 7: buf.alpha.registry.v1alpha1.Repository
 }
 var file_buf_alpha_webhook_v1alpha1_event_proto_depIdxs = []int32{
 	4, // 0: buf.alpha.webhook.v1alpha1.EventRequest.event:type_name -> buf.alpha.registry.v1alpha1.WebhookEvent

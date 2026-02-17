@@ -15,9 +15,9 @@
 package bufctl
 
 import (
-	bufconfig2 "github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufconfig"
-	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufimage"
-	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufparse"
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufconfig"
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufimage"
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufparse"
 )
 
 type imageWithConfig struct {
@@ -25,20 +25,20 @@ type imageWithConfig struct {
 
 	moduleFullName bufparse.FullName
 	moduleOpaqueID string
-	lintConfig     bufconfig2.LintConfig
-	breakingConfig bufconfig2.BreakingConfig
-	pluginConfigs  []bufconfig2.PluginConfig
-	policyConfigs  []bufconfig2.PolicyConfig
+	lintConfig     bufconfig.LintConfig
+	breakingConfig bufconfig.BreakingConfig
+	pluginConfigs  []bufconfig.PluginConfig
+	policyConfigs  []bufconfig.PolicyConfig
 }
 
 func newImageWithConfig(
 	image bufimage.Image,
 	moduleFullName bufparse.FullName,
 	moduleOpaqueID string,
-	lintConfig bufconfig2.LintConfig,
-	breakingConfig bufconfig2.BreakingConfig,
-	pluginConfigs []bufconfig2.PluginConfig,
-	policyConfigs []bufconfig2.PolicyConfig,
+	lintConfig bufconfig.LintConfig,
+	breakingConfig bufconfig.BreakingConfig,
+	pluginConfigs []bufconfig.PluginConfig,
+	policyConfigs []bufconfig.PolicyConfig,
 ) *imageWithConfig {
 	return &imageWithConfig{
 		Image:          image,
@@ -59,19 +59,19 @@ func (i *imageWithConfig) ModuleOpaqueID() string {
 	return i.moduleOpaqueID
 }
 
-func (i *imageWithConfig) LintConfig() bufconfig2.LintConfig {
+func (i *imageWithConfig) LintConfig() bufconfig.LintConfig {
 	return i.lintConfig
 }
 
-func (i *imageWithConfig) BreakingConfig() bufconfig2.BreakingConfig {
+func (i *imageWithConfig) BreakingConfig() bufconfig.BreakingConfig {
 	return i.breakingConfig
 }
 
-func (i *imageWithConfig) PluginConfigs() []bufconfig2.PluginConfig {
+func (i *imageWithConfig) PluginConfigs() []bufconfig.PluginConfig {
 	return i.pluginConfigs
 }
 
-func (i *imageWithConfig) PolicyConfigs() []bufconfig2.PolicyConfig {
+func (i *imageWithConfig) PolicyConfigs() []bufconfig.PolicyConfig {
 	return i.policyConfigs
 }
 

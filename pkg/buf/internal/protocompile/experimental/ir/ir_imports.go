@@ -26,15 +26,12 @@ import (
 
 // Import is an import in a [File].
 type Import struct {
-	*File // The file that is imported.
-
-	// The kind of import this is.
-	Public, Weak, Option bool
-
-	Direct  bool           // Whether this is a direct or transitive import.
-	Visible bool           // Whether this import's symbols are visible in the current file.
-	Used    bool           // Whether this import has been marked as used.
-	Decl    ast.DeclImport // The import declaration.
+	*File                       // The file that is imported.
+	Public, Weak bool           // The kind of import this is.
+	Direct       bool           // Whether this is a direct or transitive import.
+	Visible      bool           // Whether this import's symbols are visible in the current file.
+	Used         bool           // Whether this import has been marked as used.
+	Decl         ast.DeclImport // The import declaration.
 }
 
 // imports is a data structure for compactly classifying the transitive imports
@@ -103,23 +100,27 @@ type imports struct {
 	//
 	// There is a test in ir_imports_test.go that validates this behavior. So
 	// much pain for a little-used feature...
-	publicEnd, importEnd, transPublicEnd uint32
+	publicEnd, weakEnd, importEnd, transPublicEnd uint32
 }
 
 // imported wraps an imported [File] and the import statement declaration [ast.DeclImport].
 type imported struct {
 	file          *File
 	decl          ast.DeclImport
-	weak, option  bool
 	visible, used bool
 }
 
 // AddDirect appends a direct import to this imports table.
 func (i *imports) AddDirect(imp Import) {
-	if imp.Public {
+	switch {
+	case imp.Public:
 		i.Insert(imp, int(i.publicEnd), true)
 		i.publicEnd++
-	} else {
+		i.weakEnd++
+	case imp.Weak:
+		i.Insert(imp, int(i.weakEnd), true)
+		i.weakEnd++
+	default:
 		i.Insert(imp, int(i.importEnd), true)
 	}
 
@@ -132,15 +133,9 @@ func (i *imports) AddDirect(imp Import) {
 //
 // Must only be called once, after all direct imports are added.
 func (i *imports) Recurse(dedup intern.Map[ast.DeclImport]) {
-	for k, file := range seq.All(i.Directs()) {
+	for _, file := range seq.All(i.Directs()) {
 		for imp := range seq.Values(file.TransitiveImports()) {
 			if !mapsx.AddZero(dedup, imp.InternedPath()) {
-				// If imp is public, but file is already present, we need to
-				// treat this import as non-option, because this overrides it.
-				if imp.Public {
-					i.files[k].option = false
-				}
-
 				continue
 			}
 
@@ -184,8 +179,6 @@ func (i *imports) Insert(imp Import, pos int, visible bool) {
 	i.files = slices.Insert(i.files, pos, imported{
 		file:    imp.File,
 		decl:    imp.Decl,
-		weak:    imp.Weak,
-		option:  imp.Option,
 		visible: visible,
 	})
 }
@@ -221,8 +214,7 @@ func (i *imports) Directs() seq.Indexer[Import] {
 			return Import{
 				File:    imported.file,
 				Public:  public,
-				Weak:    imported.weak,
-				Option:  imported.option,
+				Weak:    !public && n < i.weakEnd,
 				Direct:  true,
 				Visible: true,
 				Decl:    imported.decl,
@@ -236,7 +228,7 @@ func (i *imports) Directs() seq.Indexer[Import] {
 
 // Transitive returns an indexer over the Transitive imports.
 //
-// This function does not report whether those imports are weak, option, or used.
+// This function does not report whether those imports are weak or used.
 func (i *imports) Transitive() seq.Indexer[Import] {
 	var slice []imported
 	if i != nil {

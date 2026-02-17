@@ -29,9 +29,15 @@ func WithDisableSymlinks(disableSymlinks bool) ControllerOption {
 }
 
 // WithFileAnnotationErrorFormat returns a new ControllerOption that sets the FileAnnotation format.
-func WithFileAnnotationErrorFormat(fileAnnotationErrorFormat string) ControllerOption {
+//
+// The flagName is the CLI flag name used to set this format (e.g. "error-format"),
+// used in error messages when the format is invalid.
+func WithFileAnnotationErrorFormat(fileAnnotationErrorFormat string, flagName string) ControllerOption {
 	return func(controller *controller) {
 		controller.fileAnnotationErrorFormat = fileAnnotationErrorFormat
+		if flagName != "" {
+			controller.fileAnnotationErrorFormatFlagName = flagName
+		}
 	}
 }
 
@@ -49,55 +55,25 @@ func WithCopyToInMemory() ControllerOption {
 	}
 }
 
-// FunctionOption is an option for a function in a Controller.
-//
-// TODO FUTURE: split up to per-function.
-type FunctionOption func(*functionOptions)
+// WorkspaceOption is an option for workspace operations (GetWorkspace, GetWorkspaceDepManager).
+type WorkspaceOption func(*workspaceOptions)
 
-// WithTargetPaths returns a new FunctionOption that  sets the target paths.
-func WithTargetPaths(targetPaths []string, targetExcludePaths []string) FunctionOption {
-	return func(functionOptions *functionOptions) {
-		functionOptions.targetPaths = targetPaths
-		functionOptions.targetExcludePaths = targetExcludePaths
+// WithTargetPaths returns a new WorkspaceOption that sets the target paths and their
+// corresponding CLI flag names for error messages.
+func WithTargetPaths(targetPaths []string, targetExcludePaths []string, pathFlagName string, excludePathFlagName string) WorkspaceOption {
+	return func(workspaceOptions *workspaceOptions) {
+		workspaceOptions.targetPaths = targetPaths
+		workspaceOptions.targetExcludePaths = targetExcludePaths
+		if pathFlagName != "" {
+			workspaceOptions.pathFlagName = pathFlagName
+		}
+		if excludePathFlagName != "" {
+			workspaceOptions.excludePathFlagName = excludePathFlagName
+		}
 	}
 }
 
-// WithImageExcludeSourceInfo returns a new FunctionOption that excludes source code info.
-func WithImageExcludeSourceInfo(imageExcludeSourceInfo bool) FunctionOption {
-	return func(functionOptions *functionOptions) {
-		functionOptions.imageExcludeSourceInfo = imageExcludeSourceInfo
-	}
-}
-
-// WithImageExcludeImports returns a new FunctionOption that excludes imports.
-func WithImageExcludeImports(imageExcludeImports bool) FunctionOption {
-	return func(functionOptions *functionOptions) {
-		functionOptions.imageExcludeImports = imageExcludeImports
-	}
-}
-
-// WithImageIncludeTypes returns a new FunctionOption that includes the given types.
-func WithImageIncludeTypes(imageTypes []string) FunctionOption {
-	return func(functionOptions *functionOptions) {
-		functionOptions.imageIncludeTypes = imageTypes
-	}
-}
-
-// WithImageExcludeTypes returns a new FunctionOption that excludes the given types.
-func WithImageExcludeTypes(imageExcludeTypes []string) FunctionOption {
-	return func(functionOptions *functionOptions) {
-		functionOptions.imageExcludeTypes = imageExcludeTypes
-	}
-}
-
-// WithImageAsFileDescriptorSet returns a new FunctionOption that returns the image as a FileDescriptorSet.
-func WithImageAsFileDescriptorSet(imageAsFileDescriptorSet bool) FunctionOption {
-	return func(functionOptions *functionOptions) {
-		functionOptions.imageAsFileDescriptorSet = imageAsFileDescriptorSet
-	}
-}
-
-// WithConfigOverride applies the config override.
+// WithConfigOverride applies the config override for workspace operations.
 //
 // This flag will only work if no buf.work.yaml is detected, and the buf.yaml is a
 // v1beta1 buf.yaml, v1 buf.yaml, or no buf.yaml. This flag will not work if a buf.work.yaml
@@ -115,58 +91,126 @@ func WithImageAsFileDescriptorSet(imageAsFileDescriptorSet bool) FunctionOption 
 //
 // Current commands that use this: build, breaking, lint, generate, format,
 // export, ls-breaking-rules, ls-lint-rules.
-func WithConfigOverride(configOverride string) FunctionOption {
-	return func(functionOptions *functionOptions) {
-		functionOptions.configOverride = configOverride
+func WithConfigOverride(configOverride string) WorkspaceOption {
+	return func(workspaceOptions *workspaceOptions) {
+		workspaceOptions.configOverride = configOverride
 	}
 }
 
-// WithIgnoreAndDisallowV1BufWorkYAMLs returns a new FunctionOption that says
+// WithIgnoreAndDisallowV1BufWorkYAMLs returns a new WorkspaceOption that says
 // to ignore dependencies from buf.work.yamls at the root of the bucket, and to also
 // disallow directories with buf.work.yamls to be directly targeted.
 //
 // See bufworkspace.WithIgnoreAndDisallowV1BufWorkYAMLs for more details.
-func WithIgnoreAndDisallowV1BufWorkYAMLs() FunctionOption {
-	return func(functionOptions *functionOptions) {
-		functionOptions.ignoreAndDisallowV1BufWorkYAMLs = true
+func WithIgnoreAndDisallowV1BufWorkYAMLs() WorkspaceOption {
+	return func(workspaceOptions *workspaceOptions) {
+		workspaceOptions.ignoreAndDisallowV1BufWorkYAMLs = true
 	}
 }
 
-// WithMessageValidation returns a new FunctionOption that says to validate the
+// ImageOption is an option for image operations (GetImage, GetImageForInputConfig,
+// GetImageForWorkspace, GetTargetImageWithConfigsAndCheckClient, GetImportableImageFileInfos,
+// PutImage).
+type ImageOption func(*imageOptions)
+
+// WithImageTargetPaths returns a new ImageOption that sets the target paths and their
+// corresponding CLI flag names for error messages.
+func WithImageTargetPaths(targetPaths []string, targetExcludePaths []string, pathFlagName string, excludePathFlagName string) ImageOption {
+	return func(imageOptions *imageOptions) {
+		imageOptions.targetPaths = targetPaths
+		imageOptions.targetExcludePaths = targetExcludePaths
+		if pathFlagName != "" {
+			imageOptions.pathFlagName = pathFlagName
+		}
+		if excludePathFlagName != "" {
+			imageOptions.excludePathFlagName = excludePathFlagName
+		}
+	}
+}
+
+// WithImageConfigOverride applies the config override for image operations.
+//
+// See WithConfigOverride for details on behavior.
+//
+// *** DO NOT USE THIS OUTSIDE OF THE CLI AND/OR IF YOU DON'T UNDERSTAND IT. ***
+// *** DO NOT ADD THIS TO ANY NEW COMMANDS. ***
+func WithImageConfigOverride(configOverride string) ImageOption {
+	return func(imageOptions *imageOptions) {
+		imageOptions.configOverride = configOverride
+	}
+}
+
+// WithImageExcludeSourceInfo returns a new ImageOption that excludes source code info.
+func WithImageExcludeSourceInfo(imageExcludeSourceInfo bool) ImageOption {
+	return func(imageOptions *imageOptions) {
+		imageOptions.imageExcludeSourceInfo = imageExcludeSourceInfo
+	}
+}
+
+// WithImageExcludeImports returns a new ImageOption that excludes imports.
+func WithImageExcludeImports(imageExcludeImports bool) ImageOption {
+	return func(imageOptions *imageOptions) {
+		imageOptions.imageExcludeImports = imageExcludeImports
+	}
+}
+
+// WithImageIncludeTypes returns a new ImageOption that includes the given types.
+func WithImageIncludeTypes(imageTypes []string) ImageOption {
+	return func(imageOptions *imageOptions) {
+		imageOptions.imageIncludeTypes = imageTypes
+	}
+}
+
+// WithImageExcludeTypes returns a new ImageOption that excludes the given types.
+func WithImageExcludeTypes(imageExcludeTypes []string) ImageOption {
+	return func(imageOptions *imageOptions) {
+		imageOptions.imageExcludeTypes = imageExcludeTypes
+	}
+}
+
+// WithImageAsFileDescriptorSet returns a new ImageOption that returns the image as a FileDescriptorSet.
+func WithImageAsFileDescriptorSet(imageAsFileDescriptorSet bool) ImageOption {
+	return func(imageOptions *imageOptions) {
+		imageOptions.imageAsFileDescriptorSet = imageAsFileDescriptorSet
+	}
+}
+
+// MessageOption is an option for message operations (GetMessage, PutMessage).
+type MessageOption func(*messageOptions)
+
+// WithMessageValidation returns a new MessageOption that says to validate the
 // message as it is being read.
 //
 // We want to do this as part of the read/unmarshal, as protoyaml has specific logic
 // on unmarshal that will pretty print validations.
-func WithMessageValidation() FunctionOption {
-	return func(functionOptions *functionOptions) {
-		functionOptions.messageValidation = true
+func WithMessageValidation() MessageOption {
+	return func(messageOptions *messageOptions) {
+		messageOptions.messageValidation = true
 	}
 }
 
 // *** PRIVATE ***
 
-type functionOptions struct {
+type workspaceOptions struct {
 	copyToInMemory bool
 
 	targetPaths                     []string
 	targetExcludePaths              []string
-	imageExcludeSourceInfo          bool
-	imageExcludeImports             bool
-	imageIncludeTypes               []string
-	imageExcludeTypes               []string
-	imageAsFileDescriptorSet        bool
+	pathFlagName                    string
+	excludePathFlagName             string
 	configOverride                  string
 	ignoreAndDisallowV1BufWorkYAMLs bool
-	messageValidation               bool
 }
 
-func newFunctionOptions(controller *controller) *functionOptions {
-	return &functionOptions{
-		copyToInMemory: controller.copyToInMemory,
+func newWorkspaceOptions(controller *controller) *workspaceOptions {
+	return &workspaceOptions{
+		copyToInMemory:  controller.copyToInMemory,
+		pathFlagName:    "path",
+		excludePathFlagName: "exclude-path",
 	}
 }
 
-func (f *functionOptions) getGetReadBucketCloserOptions() []buffetch.GetReadBucketCloserOption {
+func (f *workspaceOptions) getGetReadBucketCloserOptions() []buffetch.GetReadBucketCloserOption {
 	var getReadBucketCloserOptions []buffetch.GetReadBucketCloserOption
 	if f.copyToInMemory {
 		getReadBucketCloserOptions = append(
@@ -203,7 +247,7 @@ func (f *functionOptions) getGetReadBucketCloserOptions() []buffetch.GetReadBuck
 	return getReadBucketCloserOptions
 }
 
-func (f *functionOptions) getGetReadWriteBucketOptions() []buffetch.GetReadWriteBucketOption {
+func (f *workspaceOptions) getGetReadWriteBucketOptions() []buffetch.GetReadWriteBucketOption {
 	if f.configOverride != "" {
 		// If we have a config override, we do not search for buf.yamls or buf.work.yamls,
 		// instead acting as if the config override was the only configuration file available.
@@ -218,4 +262,28 @@ func (f *functionOptions) getGetReadWriteBucketOptions() []buffetch.GetReadWrite
 		}
 	}
 	return nil
+}
+
+type imageOptions struct {
+	workspaceOptions
+
+	imageExcludeSourceInfo   bool
+	imageExcludeImports      bool
+	imageIncludeTypes        []string
+	imageExcludeTypes        []string
+	imageAsFileDescriptorSet bool
+}
+
+func newImageOptions(controller *controller) *imageOptions {
+	return &imageOptions{
+		workspaceOptions: *newWorkspaceOptions(controller),
+	}
+}
+
+type messageOptions struct {
+	messageValidation bool
+}
+
+func newMessageOptions() *messageOptions {
+	return &messageOptions{}
 }

@@ -21,19 +21,20 @@ import (
 	"io/fs"
 	"log/slog"
 
+	"github.com/inovacc/omni/pkg/buf/pkg/normalpath"
+	"github.com/inovacc/omni/pkg/buf/pkg/standard/xlog/xslog"
+	"github.com/inovacc/omni/pkg/buf/pkg/standard/xslices"
+	"github.com/inovacc/omni/pkg/buf/pkg/standard/xstrings"
+	"github.com/inovacc/omni/pkg/buf/pkg/storage"
+	"github.com/inovacc/omni/pkg/buf/pkg/syserror"
 	"github.com/google/uuid"
+
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufconfig"
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufmodule"
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufparse"
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufplugin"
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufpolicy"
 	"github.com/inovacc/omni/pkg/buf/internal/buf/buftarget"
-	bufconfig2 "github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufconfig"
-	bufmodule2 "github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufmodule"
-	bufparse2 "github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufparse"
-	bufplugin2 "github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufplugin"
-	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufpolicy"
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/normalpath"
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/storage"
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/syserror"
-	"github.com/inovacc/omni/pkg/buf/internal/standard/xlog/xslog"
-	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
-	"github.com/inovacc/omni/pkg/buf/internal/standard/xstrings"
 )
 
 // WorkspaceProvider provides Workspaces and UpdateableWorkspaces.
@@ -68,7 +69,7 @@ type WorkspaceProvider interface {
 	// associated configuration.
 	GetWorkspaceForModuleKey(
 		ctx context.Context,
-		moduleKey bufmodule2.ModuleKey,
+		moduleKey bufmodule.ModuleKey,
 		options ...WorkspaceModuleKeyOption,
 	) (Workspace, error)
 }
@@ -76,10 +77,10 @@ type WorkspaceProvider interface {
 // NewWorkspaceProvider returns a new WorkspaceProvider.
 func NewWorkspaceProvider(
 	logger *slog.Logger,
-	graphProvider bufmodule2.GraphProvider,
-	moduleDataProvider bufmodule2.ModuleDataProvider,
-	commitProvider bufmodule2.CommitProvider,
-	pluginKeyProvider bufplugin2.PluginKeyProvider,
+	graphProvider bufmodule.GraphProvider,
+	moduleDataProvider bufmodule.ModuleDataProvider,
+	commitProvider bufmodule.CommitProvider,
+	pluginKeyProvider bufplugin.PluginKeyProvider,
 ) WorkspaceProvider {
 	return newWorkspaceProvider(
 		logger,
@@ -94,21 +95,21 @@ func NewWorkspaceProvider(
 
 type workspaceProvider struct {
 	logger             *slog.Logger
-	graphProvider      bufmodule2.GraphProvider
-	moduleDataProvider bufmodule2.ModuleDataProvider
-	commitProvider     bufmodule2.CommitProvider
+	graphProvider      bufmodule.GraphProvider
+	moduleDataProvider bufmodule.ModuleDataProvider
+	commitProvider     bufmodule.CommitProvider
 
 	// pluginKeyProvider is only used for getting remote plugin keys for a single module
 	// when an override is specified.
-	pluginKeyProvider bufplugin2.PluginKeyProvider
+	pluginKeyProvider bufplugin.PluginKeyProvider
 }
 
 func newWorkspaceProvider(
 	logger *slog.Logger,
-	graphProvider bufmodule2.GraphProvider,
-	moduleDataProvider bufmodule2.ModuleDataProvider,
-	commitProvider bufmodule2.CommitProvider,
-	pluginKeyProvider bufplugin2.PluginKeyProvider,
+	graphProvider bufmodule.GraphProvider,
+	moduleDataProvider bufmodule.ModuleDataProvider,
+	commitProvider bufmodule.CommitProvider,
+	pluginKeyProvider bufplugin.PluginKeyProvider,
 ) *workspaceProvider {
 	return &workspaceProvider{
 		logger:             logger,
@@ -121,7 +122,7 @@ func newWorkspaceProvider(
 
 func (w *workspaceProvider) GetWorkspaceForModuleKey(
 	ctx context.Context,
-	moduleKey bufmodule2.ModuleKey,
+	moduleKey bufmodule.ModuleKey,
 	options ...WorkspaceModuleKeyOption,
 ) (Workspace, error) {
 	defer xslog.DebugProfile(w.logger)()
@@ -143,16 +144,16 @@ func (w *workspaceProvider) GetWorkspaceForModuleKey(
 	// but given the presence of ignore_only, we don't want to apply configOverride to
 	// non-target modules as the config override might have file paths, and we won't
 	// lint or breaking change detect against non-target modules anyways.
-	targetModuleConfig := bufconfig2.DefaultModuleConfigV1
+	targetModuleConfig := bufconfig.DefaultModuleConfigV1
 	// By default, there will be no plugin configs, however, similar to the lint and breaking
 	// configs, there may be an override, in which case, we need to populate the plugin configs
 	// from the override. Any remote plugin refs will be resolved by the pluginKeyProvider.
 	var (
-		pluginConfigs    []bufconfig2.PluginConfig
-		remotePluginKeys []bufplugin2.PluginKey
+		pluginConfigs    []bufconfig.PluginConfig
+		remotePluginKeys []bufplugin.PluginKey
 	)
 	if config.configOverride != "" {
-		bufYAMLFile, err := bufconfig2.GetBufYAMLFileForOverride(config.configOverride)
+		bufYAMLFile, err := bufconfig.GetBufYAMLFileForOverride(config.configOverride)
 		if err != nil {
 			return nil, err
 		}
@@ -176,22 +177,22 @@ func (w *workspaceProvider) GetWorkspaceForModuleKey(
 				if moduleFullName == nil {
 					continue
 				}
-				if bufparse2.FullNameEqual(moduleFullName, moduleKey.FullName()) {
+				if bufparse.FullNameEqual(moduleFullName, moduleKey.FullName()) {
 					targetModuleConfig = moduleConfig
 					// We know that the ModuleConfigs are unique by FullName.
 					break
 				}
 			}
 		}
-		if bufYAMLFile.FileVersion() == bufconfig2.FileVersionV2 {
+		if bufYAMLFile.FileVersion() == bufconfig.FileVersionV2 {
 			pluginConfigs = bufYAMLFile.PluginConfigs()
 			// To support remote plugins when using a config override, we need to resolve the remote
 			// Refs to PluginKeys. We use the pluginKeyProvider to resolve any remote plugin Refs.
 			remotePluginRefs := xslices.Filter(
-				xslices.Map(pluginConfigs, func(pluginConfig bufconfig2.PluginConfig) bufparse2.Ref {
+				xslices.Map(pluginConfigs, func(pluginConfig bufconfig.PluginConfig) bufparse.Ref {
 					return pluginConfig.Ref()
 				}),
-				func(ref bufparse2.Ref) bool {
+				func(ref bufparse.Ref) bool {
 					return ref != nil
 				},
 			)
@@ -200,7 +201,7 @@ func (w *workspaceProvider) GetWorkspaceForModuleKey(
 				remotePluginKeys, err = w.pluginKeyProvider.GetPluginKeysForPluginRefs(
 					ctx,
 					remotePluginRefs,
-					bufplugin2.DigestTypeP1,
+					bufplugin.DigestTypeP1,
 				)
 				if err != nil {
 					return nil, err
@@ -216,14 +217,14 @@ func (w *workspaceProvider) GetWorkspaceForModuleKey(
 		}
 	}
 
-	moduleSet, err := bufmodule2.NewModuleSetForRemoteModule(
+	moduleSet, err := bufmodule.NewModuleSetForRemoteModule(
 		ctx,
 		w.logger,
 		w.graphProvider,
 		w.moduleDataProvider,
 		w.commitProvider,
 		moduleKey,
-		bufmodule2.RemoteModuleWithTargetPaths(
+		bufmodule.RemoteModuleWithTargetPaths(
 			config.targetPaths,
 			config.targetExcludePaths,
 		),
@@ -232,17 +233,17 @@ func (w *workspaceProvider) GetWorkspaceForModuleKey(
 		return nil, err
 	}
 
-	opaqueIDToLintConfig := make(map[string]bufconfig2.LintConfig)
-	opaqueIDToBreakingConfig := make(map[string]bufconfig2.BreakingConfig)
+	opaqueIDToLintConfig := make(map[string]bufconfig.LintConfig)
+	opaqueIDToBreakingConfig := make(map[string]bufconfig.BreakingConfig)
 	for _, module := range moduleSet.Modules() {
-		if bufparse2.FullNameEqual(module.FullName(), moduleKey.FullName()) {
+		if bufparse.FullNameEqual(module.FullName(), moduleKey.FullName()) {
 			// Set the lint and breaking config for the single targeted Module.
 			opaqueIDToLintConfig[module.OpaqueID()] = targetModuleConfig.LintConfig()
 			opaqueIDToBreakingConfig[module.OpaqueID()] = targetModuleConfig.BreakingConfig()
 		} else {
 			// For all non-targets, set the default lint and breaking config.
-			opaqueIDToLintConfig[module.OpaqueID()] = bufconfig2.DefaultLintConfigV1
-			opaqueIDToBreakingConfig[module.OpaqueID()] = bufconfig2.DefaultBreakingConfigV1
+			opaqueIDToLintConfig[module.OpaqueID()] = bufconfig.DefaultLintConfigV1
+			opaqueIDToBreakingConfig[module.OpaqueID()] = bufconfig.DefaultBreakingConfigV1
 		}
 	}
 	return newWorkspace(
@@ -269,9 +270,9 @@ func (w *workspaceProvider) getWorkspaceTargetingForBucket(
 	if err != nil {
 		return nil, err
 	}
-	var overrideBufYAMLFile bufconfig2.BufYAMLFile
+	var overrideBufYAMLFile bufconfig.BufYAMLFile
 	if config.configOverride != "" {
-		overrideBufYAMLFile, err = bufconfig2.GetBufYAMLFileForOverride(config.configOverride)
+		overrideBufYAMLFile, err = bufconfig.GetBufYAMLFileForOverride(config.configOverride)
 		if err != nil {
 			return nil, err
 		}
@@ -322,21 +323,21 @@ func (w *workspaceProvider) getWorkspaceForBucketAndModuleDirPathsV1Beta1OrV1(
 	bucket storage.ReadBucket,
 	v1WorkspaceTargeting *v1Targeting,
 ) (*workspace, error) {
-	moduleSetBuilder := bufmodule2.NewModuleSetBuilder(ctx, w.logger, w.moduleDataProvider, w.commitProvider)
+	moduleSetBuilder := bufmodule.NewModuleSetBuilder(ctx, w.logger, w.moduleDataProvider, w.commitProvider)
 	for _, moduleBucketAndTargeting := range v1WorkspaceTargeting.moduleBucketsAndTargeting {
 		mappedModuleBucket := moduleBucketAndTargeting.bucket
 		moduleTargeting := moduleBucketAndTargeting.moduleTargeting
-		bufLockFile, err := bufconfig2.GetBufLockFileForPrefix(
+		bufLockFile, err := bufconfig.GetBufLockFileForPrefix(
 			ctx,
 			bucket, // Need to use the non-mapped bucket since the mapped bucket excludes the buf.lock
 			moduleTargeting.moduleDirPath,
-			bufconfig2.BufLockFileWithDigestResolver(
-				func(ctx context.Context, remote string, commitID uuid.UUID) (bufmodule2.Digest, error) {
-					commitKey, err := bufmodule2.NewCommitKey(remote, commitID, bufmodule2.DigestTypeB4)
+			bufconfig.BufLockFileWithDigestResolver(
+				func(ctx context.Context, remote string, commitID uuid.UUID) (bufmodule.Digest, error) {
+					commitKey, err := bufmodule.NewCommitKey(remote, commitID, bufmodule.DigestTypeB4)
 					if err != nil {
 						return nil, err
 					}
-					commits, err := w.commitProvider.GetCommitsForCommitKeys(ctx, []bufmodule2.CommitKey{commitKey})
+					commits, err := w.commitProvider.GetCommitsForCommitKeys(ctx, []bufmodule.CommitKey{commitKey})
 					if err != nil {
 						return nil, err
 					}
@@ -350,8 +351,8 @@ func (w *workspaceProvider) getWorkspaceForBucketAndModuleDirPathsV1Beta1OrV1(
 			}
 		} else {
 			switch fileVersion := bufLockFile.FileVersion(); fileVersion {
-			case bufconfig2.FileVersionV1Beta1, bufconfig2.FileVersionV1:
-			case bufconfig2.FileVersionV2:
+			case bufconfig.FileVersionV1Beta1, bufconfig.FileVersionV1:
+			case bufconfig.FileVersionV2:
 				return nil, errors.New("got a v2 buf.lock file for a v1 buf.yaml - this is not allowed, run buf mod update to update your buf.lock file")
 			default:
 				return nil, syserror.Newf("unknown FileVersion: %v", fileVersion)
@@ -365,13 +366,13 @@ func (w *workspaceProvider) getWorkspaceForBucketAndModuleDirPathsV1Beta1OrV1(
 				)
 			}
 		}
-		v1BufYAMLObjectData, err := bufconfig2.GetBufYAMLV1Beta1OrV1ObjectDataForPrefix(ctx, bucket, moduleTargeting.moduleDirPath)
+		v1BufYAMLObjectData, err := bufconfig.GetBufYAMLV1Beta1OrV1ObjectDataForPrefix(ctx, bucket, moduleTargeting.moduleDirPath)
 		if err != nil {
 			if !errors.Is(err, fs.ErrNotExist) {
 				return nil, err
 			}
 		}
-		v1BufLockObjectData, err := bufconfig2.GetBufLockV1Beta1OrV1ObjectDataForPrefix(ctx, bucket, moduleTargeting.moduleDirPath)
+		v1BufLockObjectData, err := bufconfig.GetBufLockV1Beta1OrV1ObjectDataForPrefix(ctx, bucket, moduleTargeting.moduleDirPath)
 		if err != nil {
 			if !errors.Is(err, fs.ErrNotExist) {
 				return nil, err
@@ -390,18 +391,18 @@ func (w *workspaceProvider) getWorkspaceForBucketAndModuleDirPathsV1Beta1OrV1(
 			mappedModuleBucket,
 			moduleBucketAndTargeting.bucketID,
 			moduleTargeting.isTargetModule,
-			bufmodule2.LocalModuleWithFullName(moduleConfig.FullName()),
-			bufmodule2.LocalModuleWithTargetPaths(
+			bufmodule.LocalModuleWithFullName(moduleConfig.FullName()),
+			bufmodule.LocalModuleWithTargetPaths(
 				moduleTargeting.moduleTargetPaths,
 				moduleTargeting.moduleTargetExcludePaths,
 			),
-			bufmodule2.LocalModuleWithProtoFileTargetPath(
+			bufmodule.LocalModuleWithProtoFileTargetPath(
 				moduleTargeting.moduleProtoFileTargetPath,
 				moduleTargeting.includePackageFiles,
 			),
-			bufmodule2.LocalModuleWithV1Beta1OrV1BufYAMLObjectData(v1BufYAMLObjectData),
-			bufmodule2.LocalModuleWithV1Beta1OrV1BufLockObjectData(v1BufLockObjectData),
-			bufmodule2.LocalModuleWithDescription(
+			bufmodule.LocalModuleWithV1Beta1OrV1BufYAMLObjectData(v1BufYAMLObjectData),
+			bufmodule.LocalModuleWithV1Beta1OrV1BufLockObjectData(v1BufLockObjectData),
+			bufmodule.LocalModuleWithDescription(
 				getLocalModuleDescription(
 					// See comments on getLocalModuleDescription.
 					moduleBucketAndTargeting.bucketID,
@@ -432,13 +433,13 @@ func (w *workspaceProvider) getWorkspaceForBucketBufYAMLV2(
 	bucket storage.ReadBucket,
 	v2Targeting *v2Targeting,
 ) (*workspace, error) {
-	moduleSetBuilder := bufmodule2.NewModuleSetBuilder(ctx, w.logger, w.moduleDataProvider, w.commitProvider)
+	moduleSetBuilder := bufmodule.NewModuleSetBuilder(ctx, w.logger, w.moduleDataProvider, w.commitProvider)
 	var (
-		remotePluginKeys             []bufplugin2.PluginKey
+		remotePluginKeys             []bufplugin.PluginKey
 		remotePolicyKeys             []bufpolicy.PolicyKey
-		policyNameToRemotePluginKeys map[string][]bufplugin2.PluginKey
+		policyNameToRemotePluginKeys map[string][]bufplugin.PluginKey
 	)
-	bufLockFile, err := bufconfig2.GetBufLockFileForPrefix(
+	bufLockFile, err := bufconfig.GetBufLockFileForPrefix(
 		ctx,
 		bucket,
 		// buf.lock files live next to the buf.yaml
@@ -452,9 +453,9 @@ func (w *workspaceProvider) getWorkspaceForBucketBufYAMLV2(
 		}
 	} else {
 		switch fileVersion := bufLockFile.FileVersion(); fileVersion {
-		case bufconfig2.FileVersionV1Beta1, bufconfig2.FileVersionV1:
+		case bufconfig.FileVersionV1Beta1, bufconfig.FileVersionV1:
 			return nil, fmt.Errorf("got a %s buf.lock file for a v2 buf.yaml", bufLockFile.FileVersion().String())
-		case bufconfig2.FileVersionV2:
+		case bufconfig.FileVersionV2:
 		default:
 			return nil, syserror.Newf("unknown FileVersion: %v", fileVersion)
 		}
@@ -506,16 +507,16 @@ func (w *workspaceProvider) getWorkspaceForBucketBufYAMLV2(
 			mappedModuleBucket,
 			moduleBucketAndTargeting.bucketID,
 			moduleTargeting.isTargetModule,
-			bufmodule2.LocalModuleWithFullName(moduleConfig.FullName()),
-			bufmodule2.LocalModuleWithTargetPaths(
+			bufmodule.LocalModuleWithFullName(moduleConfig.FullName()),
+			bufmodule.LocalModuleWithTargetPaths(
 				moduleTargeting.moduleTargetPaths,
 				moduleTargeting.moduleTargetExcludePaths,
 			),
-			bufmodule2.LocalModuleWithProtoFileTargetPath(
+			bufmodule.LocalModuleWithProtoFileTargetPath(
 				moduleTargeting.moduleProtoFileTargetPath,
 				moduleTargeting.includePackageFiles,
 			),
-			bufmodule2.LocalModuleWithDescription(moduleDescription),
+			bufmodule.LocalModuleWithDescription(moduleDescription),
 		)
 	}
 	moduleSet, err := moduleSetBuilder.Build()
@@ -537,19 +538,19 @@ func (w *workspaceProvider) getWorkspaceForBucketBufYAMLV2(
 
 // only use for workspaces created from buckets
 func (w *workspaceProvider) getWorkspaceForBucketModuleSet(
-	moduleSet bufmodule2.ModuleSet,
-	bucketIDToModuleConfig map[string]bufconfig2.ModuleConfig,
-	pluginConfigs []bufconfig2.PluginConfig,
-	remotePluginKeys []bufplugin2.PluginKey,
-	policyConfigs []bufconfig2.PolicyConfig,
+	moduleSet bufmodule.ModuleSet,
+	bucketIDToModuleConfig map[string]bufconfig.ModuleConfig,
+	pluginConfigs []bufconfig.PluginConfig,
+	remotePluginKeys []bufplugin.PluginKey,
+	policyConfigs []bufconfig.PolicyConfig,
 	remotePolicyKeys []bufpolicy.PolicyKey,
-	policyNameToRemotePluginKeys map[string][]bufplugin2.PluginKey,
+	policyNameToRemotePluginKeys map[string][]bufplugin.PluginKey,
 	// Expected to already be unique by FullName.
-	configuredDepModuleRefs []bufparse2.Ref,
+	configuredDepModuleRefs []bufparse.Ref,
 	isV2 bool,
 ) (*workspace, error) {
-	opaqueIDToLintConfig := make(map[string]bufconfig2.LintConfig)
-	opaqueIDToBreakingConfig := make(map[string]bufconfig2.BreakingConfig)
+	opaqueIDToLintConfig := make(map[string]bufconfig.LintConfig)
+	opaqueIDToBreakingConfig := make(map[string]bufconfig.BreakingConfig)
 	for _, module := range moduleSet.Modules() {
 		if bucketID := module.BucketID(); bucketID != "" {
 			moduleConfig, ok := bucketIDToModuleConfig[bucketID]
@@ -560,8 +561,8 @@ func (w *workspaceProvider) getWorkspaceForBucketModuleSet(
 			opaqueIDToLintConfig[module.OpaqueID()] = moduleConfig.LintConfig()
 			opaqueIDToBreakingConfig[module.OpaqueID()] = moduleConfig.BreakingConfig()
 		} else {
-			opaqueIDToLintConfig[module.OpaqueID()] = bufconfig2.DefaultLintConfigV1
-			opaqueIDToBreakingConfig[module.OpaqueID()] = bufconfig2.DefaultBreakingConfigV1
+			opaqueIDToLintConfig[module.OpaqueID()] = bufconfig.DefaultLintConfigV1
+			opaqueIDToBreakingConfig[module.OpaqueID()] = bufconfig.DefaultBreakingConfigV1
 		}
 	}
 	return newWorkspace(
@@ -587,7 +588,7 @@ func (w *workspaceProvider) getWorkspaceForBucketModuleSet(
 // We edit bucketIDs in v2 to include an index since directories can be overlapping.
 // We would want to use moduleConfig.DirPath() everywhere, but it is always "." in
 // v1/v1beta1, and it's not a good description.
-func getLocalModuleDescription(pathDescription string, moduleConfig bufconfig2.ModuleConfig) string {
+func getLocalModuleDescription(pathDescription string, moduleConfig bufconfig.ModuleConfig) string {
 	description := fmt.Sprintf("path: %q", pathDescription)
 	moduleDirPath := moduleConfig.DirPath()
 	relIncludePaths := moduleConfig.RootToIncludes()["."]

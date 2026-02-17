@@ -69,7 +69,6 @@ func (r reporterFuncs) Error(err ErrorWithPos) error {
 	if r.errs == nil {
 		return err
 	}
-
 	return r.errs(err)
 }
 
@@ -97,7 +96,6 @@ func NewHandler(rep Reporter) *Handler {
 	if rep == nil {
 		rep = NewReporter(nil, nil)
 	}
-
 	return &Handler{reporter: rep}
 }
 
@@ -128,13 +126,10 @@ func (h *Handler) HandleError(err error) error {
 		// update child state
 		h.mu.Lock()
 		defer h.mu.Unlock()
-
 		if isErrWithPos {
 			h.errsReported = true
 		}
-
 		h.err = err
-
 		return err
 	}
 
@@ -144,14 +139,11 @@ func (h *Handler) HandleError(err error) error {
 	if h.err != nil {
 		return h.err
 	}
-
 	if ewp, ok := err.(ErrorWithPos); ok {
 		h.errsReported = true
 		err = h.reporter.Error(ewp)
 	}
-
 	h.err = err
-
 	return err
 }
 
@@ -213,7 +205,6 @@ func (h *Handler) Error() error {
 	if h.errsReported && h.err == nil {
 		return ErrInvalidSource
 	}
-
 	return h.err
 }
 

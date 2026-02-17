@@ -20,7 +20,7 @@ import (
 	"encoding/hex"
 	"strings"
 
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/shake256"
+	"github.com/inovacc/omni/pkg/buf/pkg/shake256"
 )
 
 var (

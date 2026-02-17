@@ -34,7 +34,6 @@ func Rune[I slicesx.SliceIndex](s string, idx I) (rune, bool) {
 	if !slicesx.BoundsCheck(idx, len(s)) {
 		return 0, false
 	}
-
 	r, n := utf8.DecodeRuneInString(s[idx:])
 	if r == utf8.RuneError && n < 2 {
 		// The success conditions for DecodeRune are kind of subtle; this makes
@@ -42,7 +41,6 @@ func Rune[I slicesx.SliceIndex](s string, idx I) (rune, bool) {
 		// Go did not chose to make this easier to inspect.
 		return -1, false
 	}
-
 	return r, true
 }
 
@@ -61,7 +59,6 @@ func PrevRune[I slicesx.SliceIndex](s string, idx I) (rune, bool) {
 		// Go did not chose to make this easier to inspect.
 		return -1, false
 	}
-
 	return r, true
 }
 
@@ -97,7 +94,6 @@ func EveryFunc(s string, p func(rune) bool) bool {
 		if r == -1 {
 			r = unicode.ReplacementChar
 		}
-
 		return r
 	}), p)
 }
@@ -113,15 +109,12 @@ func Runes(s string) iter.Seq2[int, rune] {
 			if n == 0 {
 				return
 			}
-
 			if r == utf8.RuneError && n < 2 {
 				r = -1
 			}
-
 			if !yield(orig-len(s), r) {
 				return
 			}
-
 			s = s[n:]
 		}
 	}
@@ -145,12 +138,10 @@ func Bytes(s string) iter.Seq[byte] {
 // Remove in go 1.24.
 func Split[Sep string | rune](s string, sep Sep) iter.Seq[string] {
 	r := string(sep)
-
 	return func(yield func(string) bool) {
 		for {
 			chunk, rest, found := strings.Cut(s, r)
 			s = rest
-
 			if !yield(chunk) || !found {
 				return
 			}
@@ -171,7 +162,6 @@ func CutLast(s, sep string) (before, after string, found bool) {
 	if i := strings.LastIndex(s, sep); i >= 0 {
 		return s[:i], s[i+len(sep):], true
 	}
-
 	return "", s, false
 }
 
@@ -183,11 +173,8 @@ func CutLast(s, sep string) (before, after string, found bool) {
 // Will never yield an empty string.
 func PartitionKey[K comparable](s string, key func(rune) K) iter.Seq2[int, string] {
 	return func(yield func(int, string) bool) {
-		var (
-			start int
-			prev  K
-		)
-
+		var start int
+		var prev K
 		for i, r := range s {
 			next := key(r)
 			if i == 0 {

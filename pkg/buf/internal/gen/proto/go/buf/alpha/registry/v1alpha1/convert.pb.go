@@ -21,12 +21,11 @@
 package registryv1alpha1
 
 import (
-	reflect "reflect"
-	unsafe "unsafe"
-
 	v1 "github.com/inovacc/omni/pkg/buf/internal/gen/proto/go/buf/alpha/image/v1"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+	reflect "reflect"
+	unsafe "unsafe"
 )
 
 const (
@@ -292,8 +291,8 @@ const file_buf_alpha_registry_v1alpha1_convert_proto_rawDesc = "" +
 	"\x12CONVERT_FORMAT_BIN\x10\x01\x12\x17\n" +
 	"\x13CONVERT_FORMAT_JSON\x10\x022v\n" +
 	"\x0eConvertService\x12d\n" +
-	"\aConvert\x12+.buf.alpha.registry.v1alpha1.ConvertRequest\x1a,.buf.alpha.registry.v1alpha1.ConvertResponseB\x99\x02\n" +
-	"\x1fcom.buf.alpha.registry.v1alpha1B\fConvertProtoP\x01ZYgithub.com/bufbuild/buf/private/gen/proto/go/buf/alpha/registry/v1alpha1;registryv1alpha1\xa2\x02\x03BAR\xaa\x02\x1bBuf.Alpha.Registry.V1alpha1\xca\x02\x1bBuf\\Alpha\\Registry\\V1alpha1\xe2\x02'Buf\\Alpha\\Registry\\V1alpha1\\GPBMetadata\xea\x02\x1eBuf::Alpha::Registry::V1alpha1b\x06proto3"
+	"\aConvert\x12+.buf.alpha.registry.v1alpha1.ConvertRequest\x1a,.buf.alpha.registry.v1alpha1.ConvertResponseB\x9a\x02\n" +
+	"\x1fcom.buf.alpha.registry.v1alpha1B\fConvertProtoP\x01ZZgithub.com/bufbuild/buf/internal/gen/proto/go/buf/alpha/registry/v1alpha1;registryv1alpha1\xa2\x02\x03BAR\xaa\x02\x1bBuf.Alpha.Registry.V1alpha1\xca\x02\x1bBuf\\Alpha\\Registry\\V1alpha1\xe2\x02'Buf\\Alpha\\Registry\\V1alpha1\\GPBMetadata\xea\x02\x1eBuf::Alpha::Registry::V1alpha1b\x06proto3"
 
 var file_buf_alpha_registry_v1alpha1_convert_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
 var file_buf_alpha_registry_v1alpha1_convert_proto_msgTypes = make([]protoimpl.MessageInfo, 2)

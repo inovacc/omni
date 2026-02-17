@@ -5,6 +5,8 @@ import (
 	"io"
 	"os"
 	"strings"
+
+	"github.com/inovacc/omni/pkg/buf/pkg/bufapi"
 )
 
 // RunFormat formats proto files
@@ -61,223 +63,15 @@ func RunFormat(w io.Writer, dir string, opts FormatOptions) error {
 	return nil
 }
 
-// FormatProto formats a proto file content
+// FormatProto formats a proto file content using the real buf formatter.
+// Falls back to a simple cleanup if the protocompile parser fails.
 func FormatProto(source string) string {
-	lexer := NewLexer(source)
-	tokens := lexer.Tokenize()
-
-	return formatTokens(tokens)
-}
-
-func formatTokens(tokens []Token) string {
-	var result strings.Builder
-
-	indent := 0
-	atLineStart := true
-	lastTokenType := TokenEOF
-	lastValue := ""
-
-	for i, token := range tokens {
-		// Skip EOF
-		if token.Type == TokenEOF {
-			break
-		}
-
-		// Handle indentation changes
-		if token.Type == TokenSymbol {
-			if token.Value == "{" {
-				// Write opening brace
-				if !atLineStart && needsSpaceBefore(lastTokenType, lastValue, token) {
-					result.WriteString(" ")
-				}
-
-				result.WriteString("{")
-				result.WriteString("\n")
-
-				indent++
-				atLineStart = true
-				lastTokenType = token.Type
-				lastValue = token.Value
-
-				continue
-			}
-
-			if token.Value == "}" {
-				// Dedent before closing brace
-				indent--
-
-				if indent < 0 {
-					indent = 0
-				}
-
-				if !atLineStart {
-					result.WriteString("\n")
-				}
-
-				writeIndent(&result, indent)
-				result.WriteString("}")
-
-				// Check if next non-whitespace token is newline or EOF
-				nextNonWS := findNextNonWhitespace(tokens, i+1)
-				if nextNonWS != nil && nextNonWS.Type != TokenNewline && nextNonWS.Type != TokenEOF {
-					result.WriteString("\n")
-				}
-
-				atLineStart = false
-				lastTokenType = token.Type
-				lastValue = token.Value
-
-				continue
-			}
-		}
-
-		// Handle newlines
-		if token.Type == TokenNewline {
-			if !atLineStart {
-				result.WriteString("\n")
-
-				atLineStart = true
-			}
-
-			lastTokenType = token.Type
-			lastValue = token.Value
-
-			continue
-		}
-
-		// Skip extra whitespace
-		if token.Type == TokenWhitespace {
-			lastTokenType = token.Type
-			lastValue = token.Value
-
-			continue
-		}
-
-		// Handle comments
-		if token.Type == TokenComment {
-			if atLineStart {
-				writeIndent(&result, indent)
-			} else {
-				result.WriteString(" ")
-			}
-
-			result.WriteString(token.Value)
-			result.WriteString("\n")
-
-			atLineStart = true
-			lastTokenType = token.Type
-			lastValue = token.Value
-
-			continue
-		}
-
-		// Write indentation at line start
-		if atLineStart {
-			writeIndent(&result, indent)
-
-			atLineStart = false
-		} else if needsSpaceBefore(lastTokenType, lastValue, token) {
-			result.WriteString(" ")
-		}
-
-		// Handle semicolons - add newline after
-		if token.Type == TokenSymbol && token.Value == ";" {
-			result.WriteString(";")
-			result.WriteString("\n")
-
-			atLineStart = true
-			lastTokenType = token.Type
-			lastValue = token.Value
-
-			continue
-		}
-
-		// Write token value
-		if token.Type == TokenString {
-			result.WriteString("\"")
-			result.WriteString(token.Value)
-			result.WriteString("\"")
-		} else {
-			result.WriteString(token.Value)
-		}
-
-		lastTokenType = token.Type
-		lastValue = token.Value
+	formatted, err := bufapi.FormatProto("input.proto", source)
+	if err != nil {
+		// Fallback: return source with cleaned-up blank lines
+		return cleanupBlankLines(source)
 	}
-
-	// Ensure file ends with newline
-	formatted := result.String()
-	if !strings.HasSuffix(formatted, "\n") {
-		formatted += "\n"
-	}
-
-	// Clean up multiple blank lines
-	formatted = cleanupBlankLines(formatted)
-
 	return formatted
-}
-
-func writeIndent(w *strings.Builder, indent int) {
-	for range indent {
-		w.WriteString("  ")
-	}
-}
-
-func needsSpaceBefore(lastType TokenType, lastValue string, current Token) bool {
-	// No space after opening symbols
-	if lastValue == "(" || lastValue == "[" || lastValue == "<" {
-		return false
-	}
-
-	// No space before closing symbols
-	if current.Value == ")" || current.Value == "]" || current.Value == ">" {
-		return false
-	}
-
-	// No space before/after dots
-	if lastValue == "." || current.Value == "." {
-		return false
-	}
-
-	// No space before comma, semicolon
-	if current.Value == "," || current.Value == ";" {
-		return false
-	}
-
-	// No space after comma in declarations
-	if lastValue == "," {
-		return true
-	}
-
-	// Space before = and after =
-	if current.Value == "=" || lastValue == "=" {
-		return true
-	}
-
-	// Space between keywords and identifiers
-	if lastType == TokenKeyword || lastType == TokenIdent {
-		if current.Type == TokenKeyword || current.Type == TokenIdent ||
-			current.Type == TokenNumber || current.Type == TokenString {
-			return true
-		}
-	}
-
-	// Space between number and identifier
-	if lastType == TokenNumber && current.Type == TokenIdent {
-		return true
-	}
-
-	return false
-}
-
-func findNextNonWhitespace(tokens []Token, start int) *Token {
-	for i := start; i < len(tokens); i++ {
-		if tokens[i].Type != TokenWhitespace {
-			return &tokens[i]
-		}
-	}
-
-	return nil
 }
 
 func cleanupBlankLines(s string) string {

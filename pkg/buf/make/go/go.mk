@@ -3,7 +3,6 @@
 # Must be set
 $(call _assert_var,MAKEGO)
 $(call _conditional_include,$(MAKEGO)/base.mk)
-$(call _conditional_include,$(MAKEGO)/dep_bandeps.mk)
 $(call _conditional_include,$(MAKEGO)/dep_bufstyle.mk)
 $(call _conditional_include,$(MAKEGO)/dep_bufprivateusage.mk)
 $(call _conditional_include,$(MAKEGO)/dep_godoclint.mk)
@@ -42,9 +41,6 @@ SKIP_GOVULNCHECK ?=
 DISALLOW_NOLINT ?=
 # Settable
 BUFPRIVATEUSAGE_PKGS ?=
-# Settable
-BANDEPS_CONFIG ?=
-
 # Runtime
 GOPKGS ?= $(GO_ALL_REPO_PKGS)
 # Runtime
@@ -174,14 +170,6 @@ postlint::
 
 .PHONY: postlonglint
 postlonglint::
-
-ifneq ($(BANDEPS_CONFIG),)
-.PHONY: bandeps
-bandeps: $(BANDEPS)
-	bandeps -f $(BANDEPS_CONFIG)
-
-postlonglint:: bandeps
-endif
 
 .PHONY: shortlint
 shortlint: ## Run all linters but exclude long-running linters.

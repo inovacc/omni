@@ -19,7 +19,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/netext"
+	"github.com/inovacc/omni/pkg/buf/pkg/netext"
 )
 
 // ModuleOwner represents a module owner, consisting of a registry and owner.

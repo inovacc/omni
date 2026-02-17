@@ -32,7 +32,6 @@ func DedupKey[S ~[]E, E any, K comparable](
 
 	i := 0 // Index to write the next value at.
 	j := 0 // Index of prev.
-
 	prev := key(s[0])
 	for k := 1; k < len(s); k++ {
 		next := key(s[k])
@@ -47,6 +46,5 @@ func DedupKey[S ~[]E, E any, K comparable](
 	}
 
 	s[i] = choose(s[j:])
-
 	return s[:i+1]
 }

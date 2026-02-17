@@ -15,7 +15,7 @@ LICENSE_HEADER_VERSION ?= $(BUF_VERSION)
 LICENSE_HEADER := $(CACHE_VERSIONS)/license-header/$(LICENSE_HEADER_VERSION)
 $(LICENSE_HEADER):
 	@rm -f $(CACHE_BIN)/license-header
-	GOBIN=$(CACHE_BIN) go install github.com/bufbuild/buf/private/pkg/licenseheader/cmd/license-header@$(LICENSE_HEADER_VERSION)
+	GOBIN=$(CACHE_BIN) go install github.com/bufbuild/buf/internal/pkg/licenseheader/cmd/license-header@$(LICENSE_HEADER_VERSION)
 	@rm -rf $(dir $(LICENSE_HEADER))
 	@mkdir -p $(dir $(LICENSE_HEADER))
 	@touch $(LICENSE_HEADER)

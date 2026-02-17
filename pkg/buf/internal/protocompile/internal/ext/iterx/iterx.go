@@ -26,7 +26,6 @@ func Empty[T any](seq iter.Seq[T]) bool {
 	for range seq {
 		return false
 	}
-
 	return true
 }
 
@@ -35,7 +34,6 @@ func Empty2[T, U any](seq iter.Seq2[T, U]) bool {
 	for range seq {
 		return false
 	}
-
 	return true
 }
 
@@ -46,7 +44,6 @@ func Take[T any](seq iter.Seq[T], n int) iter.Seq[T] {
 			if n == 0 || !yield(v) {
 				return
 			}
-
 			n--
 		}
 	}
@@ -56,7 +53,6 @@ func Take[T any](seq iter.Seq[T], n int) iter.Seq[T] {
 // step.
 func Enumerate[T any](seq iter.Seq[T]) iter.Seq2[int, T] {
 	var i int
-
 	return Map1To2(seq, func(v T) (int, T) {
 		i++
 		return i - 1, v
@@ -69,7 +65,6 @@ func Strings[T any](seq iter.Seq[T]) iter.Seq[string] {
 		if s, ok := any(v).(string); ok {
 			return s // Avoid dumb copies.
 		}
-
 		return fmt.Sprint(v)
 	})
 }

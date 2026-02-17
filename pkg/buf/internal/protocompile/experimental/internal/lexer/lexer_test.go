@@ -19,7 +19,6 @@ import (
 	"bytes"
 	"fmt"
 	"regexp"
-	"runtime"
 	"slices"
 	"strconv"
 	"strings"
@@ -107,9 +106,6 @@ func (c *Config) Parse(t *testing.T, text string) {
 }
 
 func TestLexer(t *testing.T) {
-	if runtime.GOOS == "windows" {
-		t.Skip("Skipped on Windows: golden files have Unix line endings affecting byte offsets")
-	}
 	t.Parallel()
 
 	corpus := golden.Corpus{

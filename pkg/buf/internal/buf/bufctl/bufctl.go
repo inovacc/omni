@@ -15,7 +15,7 @@
 package bufctl
 
 import (
-	"github.com/inovacc/omni/pkg/buf/internal/app"
+	"github.com/inovacc/omni/pkg/buf/pkg/app"
 )
 
 const (

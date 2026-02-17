@@ -27,10 +27,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufanalysis"
-	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufcheck"
-	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufmodule"
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/storage"
 	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/ast"
 	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/ast/predeclared"
 	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/incremental"
@@ -39,9 +35,14 @@ import (
 	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/report"
 	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/seq"
 	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/source"
-	"github.com/inovacc/omni/pkg/buf/internal/standard/xlog/xslog"
-	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
+	"github.com/inovacc/omni/pkg/buf/pkg/standard/xlog/xslog"
+	"github.com/inovacc/omni/pkg/buf/pkg/standard/xslices"
+	"github.com/inovacc/omni/pkg/buf/pkg/storage"
 	"go.lsp.dev/protocol"
+
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufanalysis"
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufcheck"
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufmodule"
 )
 
 // file is a file that has been opened by the client.
@@ -851,7 +852,7 @@ func getKindForMapType(typeAST ast.TypeAny, mapField ir.Member, isKey bool) (kin
 func (f *file) importToSymbol(imp ir.Import) *symbol {
 	return &symbol{
 		file: f,
-		span: imp.Decl.ImportPath().Span(),
+		span: imp.Decl.Span(),
 		kind: &imported{
 			file: f.workspace.PathToFile()[imp.File.Path()],
 		},

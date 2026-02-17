@@ -21,11 +21,11 @@ import (
 	"log/slog"
 	"path/filepath"
 
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/protoencoding"
-	"github.com/inovacc/omni/pkg/buf/internal/protoplugin"
-	"github.com/inovacc/omni/pkg/buf/internal/standard/xio"
-	"github.com/inovacc/omni/pkg/buf/internal/standard/xlog/xslog"
-	"github.com/inovacc/omni/pkg/buf/internal/standard/xos/xexec"
+	"github.com/inovacc/omni/pkg/buf/pkg/protoencoding"
+	"github.com/inovacc/omni/pkg/buf/pkg/standard/xio"
+	"github.com/inovacc/omni/pkg/buf/pkg/standard/xlog/xslog"
+	"github.com/inovacc/omni/pkg/buf/pkg/standard/xos/xexec"
+	"github.com/bufbuild/protoplugin"
 	"google.golang.org/protobuf/types/pluginpb"
 )
 

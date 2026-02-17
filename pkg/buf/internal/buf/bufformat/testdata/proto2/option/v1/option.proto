@@ -13,7 +13,7 @@ message Foo {
     // Leading comment on extension_range_option.
     (custom.extension_range_option) = true
 
-  // Leading comment on ']'.
+    // Leading comment on ']'.
   ];
 
   // Leading comment on deprecated.
@@ -31,7 +31,7 @@ message Foo {
     // Leading comment on deprecated.
     deprecated = true
   ]; // Trailing comment on ';'.
-  optional group Another =  2 [
+  optional group Another = 2 [
     // Trailing comment on '['.
 
     // Leading comment on deprecated.
@@ -49,11 +49,11 @@ message Foo {
     ];
     // Leading comment on two.
     required string two = 4 [
-      (custom.field_value_thing) = { }
+      (custom.field_value_thing) = {}
     ];
     // Leading comment on three.
     required string three = 5 [
-      (custom.field_value_thing) = { /* Empty message literal */ }
+      (custom.field_value_thing) = {/* Empty message literal */}
     ];
     // Leading comment on four.
     required string four = 6 [
@@ -67,7 +67,7 @@ message Foo {
       (custom.field_value_thing) = {
         // Trailing comment on '{'.
 
-      // Leading comment on '}'.
+        // Leading comment on '}'.
       }
     ];
   }

@@ -19,8 +19,8 @@ import (
 	"io"
 	"log/slog"
 
-	"github.com/inovacc/omni/pkg/buf/internal/app"
 	"github.com/inovacc/omni/pkg/buf/internal/buf/buffetch/internal"
+	"github.com/inovacc/omni/pkg/buf/pkg/app"
 )
 
 type protoFileWriter struct {

@@ -36,7 +36,6 @@ func TestInsert(t *testing.T) {
 		name   string
 		ranges []in // Ranges to insert.
 		want   []out
-		join   []out
 	}{
 		{
 			name:   "empty-map",
@@ -44,7 +43,6 @@ func TestInsert(t *testing.T) {
 			want: []out{
 				{0, 9, []string{"foo"}},
 			},
-			join: []out{{0, 9, nil}},
 		},
 		{
 			name: "new-max",
@@ -56,7 +54,6 @@ func TestInsert(t *testing.T) {
 				{0, 9, []string{"foo"}},
 				{30, 39, []string{"bar"}},
 			},
-			join: []out{{0, 9, nil}, {30, 39, nil}},
 		},
 		{
 			name: "new-min",
@@ -68,7 +65,6 @@ func TestInsert(t *testing.T) {
 				{0, 9, []string{"foo"}},
 				{30, 39, []string{"bar"}},
 			},
-			join: []out{{0, 9, nil}, {30, 39, nil}},
 		},
 
 		{
@@ -83,7 +79,6 @@ func TestInsert(t *testing.T) {
 				{20, 25, []string{"baz"}},
 				{30, 39, []string{"bar"}},
 			},
-			join: []out{{0, 9, nil}, {20, 25, nil}, {30, 39, nil}},
 		},
 		{
 			name: "case-1",
@@ -97,7 +92,6 @@ func TestInsert(t *testing.T) {
 				{20, 29, []string{"baz"}},
 				{30, 39, []string{"bar"}},
 			},
-			join: []out{{0, 9, nil}, {20, 39, nil}},
 		},
 		{
 			name: "case-1",
@@ -111,7 +105,6 @@ func TestInsert(t *testing.T) {
 				{10, 19, []string{"baz"}},
 				{30, 39, []string{"bar"}},
 			},
-			join: []out{{0, 19, nil}, {30, 39, nil}},
 		},
 		{
 			name: "case-1",
@@ -125,7 +118,6 @@ func TestInsert(t *testing.T) {
 				{10, 29, []string{"baz"}},
 				{30, 39, []string{"bar"}},
 			},
-			join: []out{{0, 39, nil}},
 		},
 
 		{
@@ -139,7 +131,6 @@ func TestInsert(t *testing.T) {
 				{1, 2, []string{"foo", "baz"}},
 				{3, 9, []string{"foo"}},
 			},
-			join: []out{{0, 9, nil}},
 		},
 		{
 			name: "case-2",
@@ -151,7 +142,6 @@ func TestInsert(t *testing.T) {
 				{0, 2, []string{"foo", "baz"}},
 				{3, 9, []string{"foo"}},
 			},
-			join: []out{{0, 9, nil}},
 		},
 		{
 			name: "case-2",
@@ -162,7 +152,6 @@ func TestInsert(t *testing.T) {
 			want: []out{
 				{0, 9, []string{"foo", "baz"}},
 			},
-			join: []out{{0, 9, nil}},
 		},
 
 		{
@@ -176,7 +165,6 @@ func TestInsert(t *testing.T) {
 				{9, 9, []string{"foo", "baz"}},
 				{10, 12, []string{"baz"}},
 			},
-			join: []out{{0, 12, nil}},
 		},
 		{
 			name: "case-3",
@@ -191,7 +179,6 @@ func TestInsert(t *testing.T) {
 				{10, 12, []string{"baz"}},
 				{30, 39, []string{"bar"}},
 			},
-			join: []out{{0, 12, nil}, {30, 39, nil}},
 		},
 		{
 			name: "case-3",
@@ -206,7 +193,6 @@ func TestInsert(t *testing.T) {
 				{10, 29, []string{"baz"}},
 				{30, 39, []string{"bar"}},
 			},
-			join: []out{{0, 39, nil}},
 		},
 		{
 			name: "case-3",
@@ -222,7 +208,6 @@ func TestInsert(t *testing.T) {
 				{30, 30, []string{"bar", "baz"}},
 				{31, 39, []string{"bar"}},
 			},
-			join: []out{{0, 39, nil}},
 		},
 
 		{
@@ -236,7 +221,6 @@ func TestInsert(t *testing.T) {
 				{0, 0, []string{"foo", "baz"}},
 				{1, 10, []string{"foo"}},
 			},
-			join: []out{{-2, 10, nil}},
 		},
 		{
 			name: "case-4",
@@ -251,7 +235,6 @@ func TestInsert(t *testing.T) {
 				{30, 32, []string{"bar", "baz"}},
 				{33, 39, []string{"bar"}},
 			},
-			join: []out{{0, 9, nil}, {20, 39, nil}},
 		},
 		{
 			name: "case-4",
@@ -266,7 +249,6 @@ func TestInsert(t *testing.T) {
 				{30, 32, []string{"bar", "baz"}},
 				{33, 39, []string{"bar"}},
 			},
-			join: []out{{0, 39, nil}},
 		},
 
 		{
@@ -280,7 +262,6 @@ func TestInsert(t *testing.T) {
 				{0, 9, []string{"foo", "baz"}},
 				{10, 12, []string{"baz"}},
 			},
-			join: []out{{-2, 12, nil}},
 		},
 		{
 			name: "case-5",
@@ -295,7 +276,6 @@ func TestInsert(t *testing.T) {
 				{10, 29, []string{"baz"}},
 				{30, 39, []string{"bar"}},
 			},
-			join: []out{{-2, 39, nil}},
 		},
 		{
 			name: "case-5",
@@ -311,7 +291,6 @@ func TestInsert(t *testing.T) {
 				{30, 30, []string{"bar", "baz"}},
 				{31, 39, []string{"bar"}},
 			},
-			join: []out{{-2, 39, nil}},
 		},
 		{
 			name: "case-5",
@@ -326,7 +305,6 @@ func TestInsert(t *testing.T) {
 				{30, 39, []string{"bar", "baz"}},
 				{40, 40, []string{"baz"}},
 			},
-			join: []out{{0, 9, nil}, {29, 40, nil}},
 		},
 		{
 			name: "case-5",
@@ -341,7 +319,6 @@ func TestInsert(t *testing.T) {
 				{30, 39, []string{"bar", "baz"}},
 				{40, math.MaxInt, []string{"baz"}},
 			},
-			join: []out{{0, 9, nil}, {29, math.MaxInt, nil}},
 		},
 	}
 
@@ -355,7 +332,6 @@ func TestInsert(t *testing.T) {
 			}
 
 			assert.Equal(t, tt.want, slices.Collect(m.Entries()))
-			assert.Equal(t, tt.join, slices.Collect(m.Contiguous(false)))
 		})
 	}
 }

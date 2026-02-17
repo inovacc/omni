@@ -39,7 +39,7 @@ option (list) = {
       // Leading comment on values key.
       values: [
         // Trailing comment on '['.
-    
+
         // Leading comment on '-44'.
         -44, // Trailing on '-44'.
         // Leading on '45'.

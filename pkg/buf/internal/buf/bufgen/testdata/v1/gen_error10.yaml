@@ -1,5 +1,5 @@
 version: v1
-managed:  
+managed:
   enabled: true
   optimize_for:
     # missing default

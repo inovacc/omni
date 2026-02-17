@@ -54,11 +54,9 @@ func (id ID) String() string {
 	if id == 0 {
 		return `intern.ID("")`
 	}
-
 	if id < 0 {
 		return fmt.Sprintf("intern.ID(%q)", decodeChar6(id))
 	}
-
 	return fmt.Sprintf("intern.ID(%d)", int(id))
 }
 
@@ -151,7 +149,6 @@ func (t *Table) internSlow(s string) ID {
 	if t.index == nil {
 		t.index = make(map[string]ID)
 	}
-
 	t.index[s] = id
 
 	return id
@@ -226,7 +223,6 @@ func (t *Table) Preload(ids any) {
 func (t *Table) getSlow(id ID) string {
 	t.mu.RLock()
 	defer t.mu.RUnlock()
-
 	return t.table[int(id)-1]
 }
 
@@ -245,9 +241,7 @@ func (s Set) Contains(table *Table, key string) bool {
 	if !ok {
 		return false
 	}
-
 	_, ok = s[k]
-
 	return ok
 }
 
@@ -259,12 +253,10 @@ func (s Set) AddID(id ID) (inserted bool) {
 // Add adds a string to s, and returns whether it was added.
 func (s Set) Add(table *Table, key string) (inserted bool) {
 	k := table.Intern(key)
-
 	_, ok := s[k]
 	if !ok {
 		s[k] = struct{}{}
 	}
-
 	return !ok
 }
 
@@ -278,9 +270,7 @@ func (m Map[T]) Get(table *Table, key string) (T, bool) {
 		var z T
 		return z, false
 	}
-
 	v, ok := m[k]
-
 	return v, ok
 }
 

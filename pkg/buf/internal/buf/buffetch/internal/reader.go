@@ -26,23 +26,24 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/inovacc/omni/pkg/buf/internal/app"
-	buftarget2 "github.com/inovacc/omni/pkg/buf/internal/buf/buftarget"
-	bufmodule2 "github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufmodule"
-	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufparse"
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/git"
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/httpauth"
-	normalpath2 "github.com/inovacc/omni/pkg/buf/internal/pkg/normalpath"
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/osext"
-	storage2 "github.com/inovacc/omni/pkg/buf/internal/pkg/storage"
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/storage/storagearchive"
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/storage/storagemem"
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/storage/storageos"
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/syserror"
-	"github.com/inovacc/omni/pkg/buf/internal/standard/xio"
-	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
+	"github.com/inovacc/omni/pkg/buf/pkg/app"
+	"github.com/inovacc/omni/pkg/buf/pkg/git"
+	"github.com/inovacc/omni/pkg/buf/pkg/httpauth"
+	normalpath2 "github.com/inovacc/omni/pkg/buf/pkg/normalpath"
+	"github.com/inovacc/omni/pkg/buf/pkg/osext"
+	"github.com/inovacc/omni/pkg/buf/pkg/standard/xio"
+	"github.com/inovacc/omni/pkg/buf/pkg/standard/xslices"
+	storage2 "github.com/inovacc/omni/pkg/buf/pkg/storage"
+	"github.com/inovacc/omni/pkg/buf/pkg/storage/storagearchive"
+	"github.com/inovacc/omni/pkg/buf/pkg/storage/storagemem"
+	"github.com/inovacc/omni/pkg/buf/pkg/storage/storageos"
+	"github.com/inovacc/omni/pkg/buf/pkg/syserror"
 	"github.com/klauspost/compress/zstd"
 	"github.com/klauspost/pgzip"
+
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufmodule"
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufparse"
+	"github.com/inovacc/omni/pkg/buf/internal/buf/buftarget"
 )
 
 type reader struct {
@@ -60,7 +61,7 @@ type reader struct {
 	gitCloner  git.Cloner
 
 	moduleEnabled     bool
-	moduleKeyProvider bufmodule2.ModuleKeyProvider
+	moduleKeyProvider bufmodule.ModuleKeyProvider
 }
 
 func newReader(
@@ -113,7 +114,7 @@ func (r *reader) GetReadBucketCloser(
 	container app.EnvStdinContainer,
 	bucketRef BucketRef,
 	options ...GetReadBucketCloserOption,
-) (retReadBucketCloser ReadBucketCloser, _ buftarget2.BucketTargeting, retErr error) {
+) (retReadBucketCloser ReadBucketCloser, _ buftarget.BucketTargeting, retErr error) {
 	getReadBucketCloserOptions := newGetReadBucketCloserOptions()
 	for _, option := range options {
 		option(getReadBucketCloserOptions)
@@ -184,7 +185,7 @@ func (r *reader) GetReadWriteBucket(
 	container app.EnvStdinContainer,
 	dirRef DirRef,
 	options ...GetReadWriteBucketOption,
-) (ReadWriteBucket, buftarget2.BucketTargeting, error) {
+) (ReadWriteBucket, buftarget.BucketTargeting, error) {
 	getReadWriteBucketOptions := newGetReadWriteBucketOptions()
 	for _, option := range options {
 		option(getReadWriteBucketOptions)
@@ -204,7 +205,7 @@ func (r *reader) GetModuleKey(
 	container app.EnvStdinContainer,
 	moduleRef ModuleRef,
 	_ ...GetModuleOption,
-) (bufmodule2.ModuleKey, error) {
+) (bufmodule.ModuleKey, error) {
 	switch t := moduleRef.(type) {
 	case ModuleRef:
 		return r.getModuleKey(
@@ -243,8 +244,8 @@ func (r *reader) getArchiveBucket(
 	archiveRef ArchiveRef,
 	targetPaths []string,
 	targetExcludePaths []string,
-	terminateFunc buftarget2.TerminateFunc,
-) (ReadBucketCloser, buftarget2.BucketTargeting, error) {
+	terminateFunc buftarget.TerminateFunc,
+) (ReadBucketCloser, buftarget.BucketTargeting, error) {
 	readCloser, size, err := r.getFileReadCloserAndSize(ctx, container, archiveRef, false)
 	if err != nil {
 		return nil, nil, err
@@ -308,8 +309,8 @@ func (r *reader) getDirBucket(
 	dirRef DirRef,
 	targetPaths []string,
 	targetExcludePaths []string,
-	terminateFunc buftarget2.TerminateFunc,
-) (ReadWriteBucket, buftarget2.BucketTargeting, error) {
+	terminateFunc buftarget.TerminateFunc,
+) (ReadWriteBucket, buftarget.BucketTargeting, error) {
 	if !r.localEnabled {
 		return nil, nil, NewReadLocalDisabledError()
 	}
@@ -328,8 +329,8 @@ func (r *reader) getProtoFileBucket(
 	ctx context.Context,
 	container app.EnvStdinContainer,
 	protoFileRef ProtoFileRef,
-	terminateFunc buftarget2.TerminateFunc,
-) (ReadBucketCloser, buftarget2.BucketTargeting, error) {
+	terminateFunc buftarget.TerminateFunc,
+) (ReadBucketCloser, buftarget.BucketTargeting, error) {
 	if !r.localEnabled {
 		return nil, nil, NewReadLocalDisabledError()
 	}
@@ -348,8 +349,8 @@ func (r *reader) getGitBucket(
 	gitRef GitRef,
 	targetPaths []string,
 	targetExcludePaths []string,
-	terminateFunc buftarget2.TerminateFunc,
-) (ReadBucketCloser, buftarget2.BucketTargeting, error) {
+	terminateFunc buftarget.TerminateFunc,
+) (ReadBucketCloser, buftarget.BucketTargeting, error) {
 	if !r.gitEnabled {
 		return nil, nil, NewReadGitDisabledError()
 	}
@@ -391,7 +392,7 @@ func (r *reader) getModuleKey(
 	ctx context.Context,
 	container app.EnvStdinContainer,
 	moduleRef ModuleRef,
-) (bufmodule2.ModuleKey, error) {
+) (bufmodule.ModuleKey, error) {
 	if !r.moduleEnabled {
 		return nil, NewReadModuleDisabledError()
 	}
@@ -401,7 +402,7 @@ func (r *reader) getModuleKey(
 	moduleKeys, err := r.moduleKeyProvider.GetModuleKeysForModuleRefs(
 		ctx,
 		[]bufparse.Ref{moduleRef.ModuleRef()},
-		bufmodule2.DigestTypeB5,
+		bufmodule.DigestTypeB5,
 	)
 	if err != nil {
 		return nil, err
@@ -570,8 +571,8 @@ func getReadBucketCloserForBucket(
 	inputSubDirPath string,
 	targetPaths []string,
 	targetExcludePaths []string,
-	terminateFunc buftarget2.TerminateFunc,
-) (ReadBucketCloser, buftarget2.BucketTargeting, error) {
+	terminateFunc buftarget.TerminateFunc,
+) (ReadBucketCloser, buftarget.BucketTargeting, error) {
 	if err := validatePaths(inputSubDirPath, targetPaths, targetExcludePaths); err != nil {
 		return nil, nil, err
 	}
@@ -584,7 +585,7 @@ func getReadBucketCloserForBucket(
 		targetPaths,
 		targetExcludePaths,
 	)
-	bucketTargeting, err := buftarget2.NewBucketTargeting(
+	bucketTargeting, err := buftarget.NewBucketTargeting(
 		ctx,
 		logger,
 		inputBucket,
@@ -630,8 +631,8 @@ func getReadWriteBucketForOS(
 	inputDirPath string,
 	targetPaths []string,
 	targetExcludePaths []string,
-	terminateFunc buftarget2.TerminateFunc,
-) (ReadWriteBucket, buftarget2.BucketTargeting, error) {
+	terminateFunc buftarget.TerminateFunc,
+) (ReadWriteBucket, buftarget.BucketTargeting, error) {
 	fsRoot, fsRootInputSubDirPath, err := fsRootAndFSRelPathForPath(inputDirPath)
 	if err != nil {
 		return nil, nil, err
@@ -659,7 +660,7 @@ func getReadWriteBucketForOS(
 	if err != nil {
 		return nil, nil, err
 	}
-	osRootBucketTargeting, err := buftarget2.NewBucketTargeting(
+	osRootBucketTargeting, err := buftarget.NewBucketTargeting(
 		ctx,
 		logger,
 		osRootBucket,
@@ -787,7 +788,7 @@ func getReadWriteBucketForOS(
 	if err != nil {
 		return nil, nil, err
 	}
-	bucketTargeting, err := buftarget2.NewBucketTargeting(
+	bucketTargeting, err := buftarget.NewBucketTargeting(
 		ctx,
 		logger,
 		bucket,
@@ -809,8 +810,8 @@ func getReadBucketCloserForOSProtoFile(
 	logger *slog.Logger,
 	storageosProvider storageos.Provider,
 	protoFilePath string,
-	terminateFunc buftarget2.TerminateFunc,
-) (ReadBucketCloser, buftarget2.BucketTargeting, error) {
+	terminateFunc buftarget.TerminateFunc,
+) (ReadBucketCloser, buftarget.BucketTargeting, error) {
 	// For proto file refs, we treat the input directory as the directory of
 	// the file and the file as a target path.
 	// No other target paths and target exclude paths are supported with
@@ -948,7 +949,7 @@ func newGetFileOptions() *getFileOptions {
 }
 
 type getReadBucketCloserOptions struct {
-	terminateFunc      buftarget2.TerminateFunc
+	terminateFunc      buftarget.TerminateFunc
 	copyToInMemory     bool
 	targetPaths        []string
 	targetExcludePaths []string
@@ -959,7 +960,7 @@ func newGetReadBucketCloserOptions() *getReadBucketCloserOptions {
 }
 
 type getReadWriteBucketOptions struct {
-	terminateFunc      buftarget2.TerminateFunc
+	terminateFunc      buftarget.TerminateFunc
 	targetPaths        []string
 	targetExcludePaths []string
 }

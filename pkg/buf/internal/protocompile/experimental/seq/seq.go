@@ -117,6 +117,5 @@ func ToSlice[T any](seq Indexer[T]) []T {
 	for i := range out {
 		out[i] = seq.At(i)
 	}
-
 	return out
 }

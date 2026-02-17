@@ -25,18 +25,19 @@ import (
 	"strings"
 	"time"
 
-	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufparse"
-	modulev1 "github.com/inovacc/omni/pkg/buf/internal/gen/bufbuild/registry/protocolbuffers/go/buf/registry/module/v1"
-	ownerv1 "github.com/inovacc/omni/pkg/buf/internal/gen/bufbuild/registry/protocolbuffers/go/buf/registry/owner/v1"
-	pluginv1beta1 "github.com/inovacc/omni/pkg/buf/internal/gen/bufbuild/registry/protocolbuffers/go/buf/registry/plugin/v1beta1"
-	policyv1beta1 "github.com/inovacc/omni/pkg/buf/internal/gen/bufbuild/registry/protocolbuffers/go/buf/registry/policy/v1beta1"
-	registryv1alpha2 "github.com/inovacc/omni/pkg/buf/internal/gen/proto/go/buf/alpha/registry/v1alpha1"
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/protoencoding"
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/protostat"
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/syserror"
-	"github.com/inovacc/omni/pkg/buf/internal/standard/xstrings"
+	"github.com/inovacc/omni/pkg/buf/pkg/protoencoding"
+	"github.com/inovacc/omni/pkg/buf/pkg/protostat"
+	"github.com/inovacc/omni/pkg/buf/pkg/standard/xstrings"
+	"github.com/inovacc/omni/pkg/buf/pkg/syserror"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/timestamppb"
+
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufparse"
+	registryv1alpha1 "github.com/inovacc/omni/pkg/buf/internal/gen/proto/go/buf/alpha/registry/v1alpha1"
+	modulev1 "github.com/inovacc/omni/pkg/buf/internal/gen/proto/go/buf/registry/module/v1"
+	ownerv1 "github.com/inovacc/omni/pkg/buf/internal/gen/proto/go/buf/registry/owner/v1"
+	pluginv1beta1 "github.com/inovacc/omni/pkg/buf/internal/gen/proto/go/buf/registry/plugin/v1beta1"
+	policyv1beta1 "github.com/inovacc/omni/pkg/buf/internal/gen/proto/go/buf/registry/policy/v1beta1"
 )
 
 const (
@@ -290,7 +291,7 @@ func NewPolicyEntity(policy *policyv1beta1.Policy, policyFullName bufparse.FullN
 }
 
 // NewUserEntity returns a new user entity to print.
-func NewUserEntity(user *registryv1alpha2.User) Entity {
+func NewUserEntity(user *registryv1alpha1.User) Entity {
 	return outputUser{
 		Username: user.GetUsername(),
 		// We use the Username as the full name for the user when printing.
@@ -300,8 +301,8 @@ func NewUserEntity(user *registryv1alpha2.User) Entity {
 
 // CuratedPluginPrinter is a printer for curated plugins.
 type CuratedPluginPrinter interface {
-	PrintCuratedPlugin(ctx context.Context, format Format, plugin *registryv1alpha2.CuratedPlugin) error
-	PrintCuratedPlugins(ctx context.Context, format Format, nextPageToken string, plugins ...*registryv1alpha2.CuratedPlugin) error
+	PrintCuratedPlugin(ctx context.Context, format Format, plugin *registryv1alpha1.CuratedPlugin) error
+	PrintCuratedPlugins(ctx context.Context, format Format, nextPageToken string, plugins ...*registryv1alpha1.CuratedPlugin) error
 }
 
 // NewCuratedPluginPrinter returns a new CuratedPluginPrinter.
@@ -313,7 +314,7 @@ func NewCuratedPluginPrinter(writer io.Writer) CuratedPluginPrinter {
 //
 // TODO: update to same format as other printers.
 type TokenPrinter interface {
-	PrintTokens(ctx context.Context, tokens ...*registryv1alpha2.Token) error
+	PrintTokens(ctx context.Context, tokens ...*registryv1alpha1.Token) error
 }
 
 // NewTokenPrinter returns a new TokenPrinter.
@@ -342,7 +343,7 @@ func NewStatsPrinter(writer io.Writer) StatsPrinter {
 
 // SDKInfoPrinter is a printer for SDK info.
 type SDKInfoPrinter interface {
-	PrintSDKInfo(ctx context.Context, format Format, sdkInfo *registryv1alpha2.GetSDKInfoResponse) error
+	PrintSDKInfo(ctx context.Context, format Format, sdkInfo *registryv1alpha1.GetSDKInfoResponse) error
 }
 
 // NewSDKInfoPrinter returns a new SDKInfoPrinter.

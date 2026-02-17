@@ -19,7 +19,7 @@ import (
 	"io"
 	"strings"
 
-	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufcheck"
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufcheck"
 )
 
 // AllRuleFormatStrings is all rule format strings.

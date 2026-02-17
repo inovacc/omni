@@ -18,7 +18,7 @@ import (
 	"context"
 	"log/slog"
 
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/storage"
+	"github.com/inovacc/omni/pkg/buf/pkg/storage"
 )
 
 // Store provides disk-backed WKT buckets.

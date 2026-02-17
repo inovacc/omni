@@ -26,7 +26,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/normalpath"
 	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/ast"
 	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/ast/syntax"
 	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/id"
@@ -35,6 +34,7 @@ import (
 	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/source"
 	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/token"
 	"github.com/inovacc/omni/pkg/buf/internal/protocompile/experimental/token/keyword"
+	"github.com/inovacc/omni/pkg/buf/pkg/normalpath"
 	"go.lsp.dev/protocol"
 	"google.golang.org/protobuf/encoding/protowire"
 )

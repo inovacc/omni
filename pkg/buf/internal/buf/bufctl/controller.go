@@ -25,35 +25,36 @@ import (
 	"slices"
 	"sort"
 
-	"buf.build/go/protovalidate"
-	"buf.build/go/protoyaml"
-	"github.com/inovacc/omni/pkg/buf/internal/app"
-	"github.com/inovacc/omni/pkg/buf/internal/app/appcmd"
-	"github.com/inovacc/omni/pkg/buf/internal/buf/buffetch"
-	"github.com/inovacc/omni/pkg/buf/internal/buf/bufwkt/bufwktstore"
-	bufworkspace2 "github.com/inovacc/omni/pkg/buf/internal/buf/bufworkspace"
-	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufanalysis"
-	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufcheck"
-	bufconfig2 "github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufconfig"
-	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufimage"
-	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufimage/bufimageutil"
-	bufmodule2 "github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufmodule"
-	bufparse2 "github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufparse"
-	bufplugin2 "github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufplugin"
-	bufpolicy2 "github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufpolicy"
-	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufreflect"
-	"github.com/inovacc/omni/pkg/buf/internal/gen/data/datawkt"
-	"github.com/inovacc/omni/pkg/buf/internal/gen/proto/go/buf/alpha/image/v1"
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/git"
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/httpauth"
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/normalpath"
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/protoencoding"
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/storage/storageos"
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/syserror"
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/wasm"
-	"github.com/inovacc/omni/pkg/buf/internal/standard/xio"
-	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
+	"github.com/inovacc/omni/pkg/buf/pkg/app"
+	"github.com/inovacc/omni/pkg/buf/pkg/app/appcmd"
+	"github.com/inovacc/omni/pkg/buf/pkg/git"
+	"github.com/inovacc/omni/pkg/buf/pkg/httpauth"
+	"github.com/inovacc/omni/pkg/buf/pkg/normalpath"
+	"github.com/inovacc/omni/pkg/buf/pkg/protoencoding"
+	"github.com/inovacc/omni/pkg/buf/pkg/protovalidate"
+	"github.com/inovacc/omni/pkg/buf/pkg/protoyaml"
+	"github.com/inovacc/omni/pkg/buf/pkg/standard/xio"
+	"github.com/inovacc/omni/pkg/buf/pkg/standard/xslices"
+	"github.com/inovacc/omni/pkg/buf/pkg/storage/storageos"
+	"github.com/inovacc/omni/pkg/buf/pkg/syserror"
+	"github.com/inovacc/omni/pkg/buf/pkg/wasm"
 	"google.golang.org/protobuf/proto"
+
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufanalysis"
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufcheck"
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufconfig"
+	"github.com/inovacc/omni/pkg/buf/internal/buf/buffetch"
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufimage"
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufimage/bufimageutil"
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufmodule"
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufparse"
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufplugin"
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufpolicy"
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufreflect"
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufwkt/bufwktstore"
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufworkspace"
+	"github.com/inovacc/omni/pkg/buf/internal/gen/data/datawkt"
+	imagev1 "github.com/inovacc/omni/pkg/buf/internal/gen/proto/go/buf/alpha/image/v1"
 )
 
 // ImageWithConfig pairs an Image with its corresponding [bufmodule.Module] full name
@@ -61,12 +62,12 @@ import (
 type ImageWithConfig interface {
 	bufimage.Image
 
-	ModuleFullName() bufparse2.FullName
+	ModuleFullName() bufparse.FullName
 	ModuleOpaqueID() string
-	LintConfig() bufconfig2.LintConfig
-	BreakingConfig() bufconfig2.BreakingConfig
-	PluginConfigs() []bufconfig2.PluginConfig
-	PolicyConfigs() []bufconfig2.PolicyConfig
+	LintConfig() bufconfig.LintConfig
+	BreakingConfig() bufconfig.BreakingConfig
+	PluginConfigs() []bufconfig.PluginConfig
+	PolicyConfigs() []bufconfig.PolicyConfig
 
 	isImageWithConfig()
 }
@@ -76,27 +77,27 @@ type Controller interface {
 	GetWorkspace(
 		ctx context.Context,
 		sourceOrModuleInput string,
-		options ...FunctionOption,
-	) (bufworkspace2.Workspace, error)
+		options ...WorkspaceOption,
+	) (bufworkspace.Workspace, error)
 	GetWorkspaceDepManager(
 		ctx context.Context,
 		dirPath string,
-		options ...FunctionOption,
-	) (bufworkspace2.WorkspaceDepManager, error)
+		options ...WorkspaceOption,
+	) (bufworkspace.WorkspaceDepManager, error)
 	GetImage(
 		ctx context.Context,
 		input string,
-		options ...FunctionOption,
+		options ...ImageOption,
 	) (bufimage.Image, error)
 	GetImageForInputConfig(
 		ctx context.Context,
-		inputConfig bufconfig2.InputConfig,
-		options ...FunctionOption,
+		inputConfig bufconfig.InputConfig,
+		options ...ImageOption,
 	) (bufimage.Image, error)
 	GetImageForWorkspace(
 		ctx context.Context,
-		workspace bufworkspace2.Workspace,
-		options ...FunctionOption,
+		workspace bufworkspace.Workspace,
+		options ...ImageOption,
 	) (bufimage.Image, error)
 	// GetTargetImageWithConfigsAndCheckClient gets the target ImageWithConfigs
 	// with a configured bufcheck Client.
@@ -109,7 +110,7 @@ type Controller interface {
 		ctx context.Context,
 		input string,
 		wasmRuntime wasm.Runtime,
-		options ...FunctionOption,
+		options ...ImageOption,
 	) ([]ImageWithConfig, bufcheck.Client, error)
 	// GetImportableImageFileInfos gets the importable .proto FileInfos for the given input.
 	//
@@ -121,13 +122,13 @@ type Controller interface {
 	GetImportableImageFileInfos(
 		ctx context.Context,
 		input string,
-		options ...FunctionOption,
+		options ...ImageOption,
 	) ([]bufimage.ImageFileInfo, error)
 	PutImage(
 		ctx context.Context,
 		imageOutput string,
 		image bufimage.Image,
-		options ...FunctionOption,
+		options ...ImageOption,
 	) error
 	GetMessage(
 		ctx context.Context,
@@ -135,7 +136,7 @@ type Controller interface {
 		messageInput string,
 		typeName string,
 		defaultMessageEncoding buffetch.MessageEncoding,
-		options ...FunctionOption,
+		options ...MessageOption,
 	) (proto.Message, buffetch.MessageEncoding, error)
 	PutMessage(
 		ctx context.Context,
@@ -143,7 +144,7 @@ type Controller interface {
 		messageOutput string,
 		message proto.Message,
 		defaultMessageEncoding buffetch.MessageEncoding,
-		options ...FunctionOption,
+		options ...MessageOption,
 	) error
 	// GetCheckClientForWorkspace returns a new bufcheck Client for the given Workspace.
 	//
@@ -152,7 +153,7 @@ type Controller interface {
 	// Wasm plugins.
 	GetCheckClientForWorkspace(
 		ctx context.Context,
-		workspace bufworkspace2.Workspace,
+		workspace bufworkspace.Workspace,
 		wasmRuntime wasm.Runtime,
 	) (bufcheck.Client, error)
 }
@@ -161,14 +162,14 @@ type Controller interface {
 func NewController(
 	logger *slog.Logger,
 	container app.EnvStdioContainer,
-	graphProvider bufmodule2.GraphProvider,
-	moduleKeyProvider bufmodule2.ModuleKeyProvider,
-	moduleDataProvider bufmodule2.ModuleDataProvider,
-	commitProvider bufmodule2.CommitProvider,
-	pluginKeyProvider bufplugin2.PluginKeyProvider,
-	pluginDataProvider bufplugin2.PluginDataProvider,
-	policyKeyProvider bufpolicy2.PolicyKeyProvider,
-	policyDataProvider bufpolicy2.PolicyDataProvider,
+	graphProvider bufmodule.GraphProvider,
+	moduleKeyProvider bufmodule.ModuleKeyProvider,
+	moduleDataProvider bufmodule.ModuleDataProvider,
+	commitProvider bufmodule.CommitProvider,
+	pluginKeyProvider bufplugin.PluginKeyProvider,
+	pluginDataProvider bufplugin.PluginDataProvider,
+	policyKeyProvider bufpolicy.PolicyKeyProvider,
+	policyDataProvider bufpolicy.PolicyDataProvider,
 	wktStore bufwktstore.Store,
 	httpClient *http.Client,
 	httpauthAuthenticator httpauth.Authenticator,
@@ -204,39 +205,40 @@ func NewController(
 type controller struct {
 	logger             *slog.Logger
 	container          app.EnvStdioContainer
-	moduleDataProvider bufmodule2.ModuleDataProvider
-	graphProvider      bufmodule2.GraphProvider
-	commitProvider     bufmodule2.CommitProvider
-	pluginKeyProvider  bufplugin2.PluginKeyProvider
-	pluginDataProvider bufplugin2.PluginDataProvider
-	policyKeyProvider  bufpolicy2.PolicyKeyProvider
-	policyDataProvider bufpolicy2.PolicyDataProvider
+	moduleDataProvider bufmodule.ModuleDataProvider
+	graphProvider      bufmodule.GraphProvider
+	commitProvider     bufmodule.CommitProvider
+	pluginKeyProvider  bufplugin.PluginKeyProvider
+	pluginDataProvider bufplugin.PluginDataProvider
+	policyKeyProvider  bufpolicy.PolicyKeyProvider
+	policyDataProvider bufpolicy.PolicyDataProvider
 	wktStore           bufwktstore.Store
 
-	disableSymlinks           bool
-	fileAnnotationErrorFormat string
-	fileAnnotationsToStdout   bool
-	copyToInMemory            bool
+	disableSymlinks                    bool
+	fileAnnotationErrorFormat          string
+	fileAnnotationErrorFormatFlagName  string
+	fileAnnotationsToStdout            bool
+	copyToInMemory                     bool
 
-	storageosProvider           storageos.Provider
-	buffetchRefParser           buffetch.RefParser
+	storageosProvider storageos.Provider
+	buffetchRefParser buffetch.RefParser
 	buffetchReader              buffetch.Reader
 	buffetchWriter              buffetch.Writer
-	workspaceProvider           bufworkspace2.WorkspaceProvider
-	workspaceDepManagerProvider bufworkspace2.WorkspaceDepManagerProvider
+	workspaceProvider           bufworkspace.WorkspaceProvider
+	workspaceDepManagerProvider bufworkspace.WorkspaceDepManagerProvider
 }
 
 func newController(
 	logger *slog.Logger,
 	container app.EnvStdioContainer,
-	graphProvider bufmodule2.GraphProvider,
-	moduleKeyProvider bufmodule2.ModuleKeyProvider,
-	moduleDataProvider bufmodule2.ModuleDataProvider,
-	commitProvider bufmodule2.CommitProvider,
-	pluginKeyProvider bufplugin2.PluginKeyProvider,
-	pluginDataProvider bufplugin2.PluginDataProvider,
-	policyKeyProvider bufpolicy2.PolicyKeyProvider,
-	policyDataProvider bufpolicy2.PolicyDataProvider,
+	graphProvider bufmodule.GraphProvider,
+	moduleKeyProvider bufmodule.ModuleKeyProvider,
+	moduleDataProvider bufmodule.ModuleDataProvider,
+	commitProvider bufmodule.CommitProvider,
+	pluginKeyProvider bufplugin.PluginKeyProvider,
+	pluginDataProvider bufplugin.PluginDataProvider,
+	policyKeyProvider bufpolicy.PolicyKeyProvider,
+	policyDataProvider bufpolicy.PolicyDataProvider,
 	wktStore bufwktstore.Store,
 	httpClient *http.Client,
 	httpauthAuthenticator httpauth.Authenticator,
@@ -258,7 +260,7 @@ func newController(
 	for _, option := range options {
 		option(controller)
 	}
-	if err := validateFileAnnotationErrorFormat(controller.fileAnnotationErrorFormat); err != nil {
+	if err := validateFileAnnotationErrorFormat(controller.fileAnnotationErrorFormat, controller.fileAnnotationErrorFormatFlagName); err != nil {
 		return nil, err
 	}
 	controller.storageosProvider = newStorageosProvider(controller.disableSymlinks)
@@ -276,14 +278,14 @@ func newController(
 		moduleKeyProvider,
 	)
 	controller.buffetchWriter = buffetch.NewWriter(logger)
-	controller.workspaceProvider = bufworkspace2.NewWorkspaceProvider(
+	controller.workspaceProvider = bufworkspace.NewWorkspaceProvider(
 		logger,
 		graphProvider,
 		moduleDataProvider,
 		commitProvider,
 		pluginKeyProvider,
 	)
-	controller.workspaceDepManagerProvider = bufworkspace2.NewWorkspaceDepManagerProvider(
+	controller.workspaceDepManagerProvider = bufworkspace.NewWorkspaceDepManagerProvider(
 		logger,
 	)
 	return controller, nil
@@ -292,12 +294,12 @@ func newController(
 func (c *controller) GetWorkspace(
 	ctx context.Context,
 	sourceOrModuleInput string,
-	options ...FunctionOption,
-) (_ bufworkspace2.Workspace, retErr error) {
+	options ...WorkspaceOption,
+) (_ bufworkspace.Workspace, retErr error) {
 	defer c.handleFileAnnotationSetRetError(&retErr)
-	functionOptions := newFunctionOptions(c)
+	workspaceOptions := newWorkspaceOptions(c)
 	for _, option := range options {
-		option(functionOptions)
+		option(workspaceOptions)
 	}
 	sourceOrModuleRef, err := c.buffetchRefParser.GetSourceOrModuleRef(ctx, sourceOrModuleInput)
 	if err != nil {
@@ -305,11 +307,11 @@ func (c *controller) GetWorkspace(
 	}
 	switch t := sourceOrModuleRef.(type) {
 	case buffetch.ProtoFileRef:
-		return c.getWorkspaceForProtoFileRef(ctx, t, functionOptions)
+		return c.getWorkspaceForProtoFileRef(ctx, t, workspaceOptions)
 	case buffetch.SourceRef:
-		return c.getWorkspaceForSourceRef(ctx, t, functionOptions)
+		return c.getWorkspaceForSourceRef(ctx, t, workspaceOptions)
 	case buffetch.ModuleRef:
-		return c.getWorkspaceForModuleRef(ctx, t, functionOptions)
+		return c.getWorkspaceForModuleRef(ctx, t, workspaceOptions)
 	default:
 		// This is a system error.
 		return nil, syserror.Newf("invalid SourceOrModuleRef: %T", sourceOrModuleRef)
@@ -319,93 +321,93 @@ func (c *controller) GetWorkspace(
 func (c *controller) GetWorkspaceDepManager(
 	ctx context.Context,
 	dirPath string,
-	options ...FunctionOption,
-) (_ bufworkspace2.WorkspaceDepManager, retErr error) {
+	options ...WorkspaceOption,
+) (_ bufworkspace.WorkspaceDepManager, retErr error) {
 	defer c.handleFileAnnotationSetRetError(&retErr)
-	functionOptions := newFunctionOptions(c)
+	workspaceOptions := newWorkspaceOptions(c)
 	for _, option := range options {
-		option(functionOptions)
+		option(workspaceOptions)
 	}
 	dirRef, err := c.buffetchRefParser.GetDirRef(ctx, dirPath)
 	if err != nil {
 		return nil, err
 	}
-	return c.getWorkspaceDepManagerForDirRef(ctx, dirRef, functionOptions)
+	return c.getWorkspaceDepManagerForDirRef(ctx, dirRef, workspaceOptions)
 }
 
 func (c *controller) GetImage(
 	ctx context.Context,
 	input string,
-	options ...FunctionOption,
+	options ...ImageOption,
 ) (_ bufimage.Image, retErr error) {
 	defer c.handleFileAnnotationSetRetError(&retErr)
-	functionOptions := newFunctionOptions(c)
+	imageOptions := newImageOptions(c)
 	for _, option := range options {
-		option(functionOptions)
+		option(imageOptions)
 	}
-	return c.getImage(ctx, input, functionOptions)
+	return c.getImage(ctx, input, imageOptions)
 }
 
 func (c *controller) GetImageForInputConfig(
 	ctx context.Context,
-	inputConfig bufconfig2.InputConfig,
-	options ...FunctionOption,
+	inputConfig bufconfig.InputConfig,
+	options ...ImageOption,
 ) (_ bufimage.Image, retErr error) {
 	defer c.handleFileAnnotationSetRetError(&retErr)
-	functionOptions := newFunctionOptions(c)
+	imageOptions := newImageOptions(c)
 	for _, option := range options {
-		option(functionOptions)
+		option(imageOptions)
 	}
-	return c.getImageForInputConfig(ctx, inputConfig, functionOptions)
+	return c.getImageForInputConfig(ctx, inputConfig, imageOptions)
 }
 
 func (c *controller) GetImageForWorkspace(
 	ctx context.Context,
-	workspace bufworkspace2.Workspace,
-	options ...FunctionOption,
+	workspace bufworkspace.Workspace,
+	options ...ImageOption,
 ) (_ bufimage.Image, retErr error) {
 	defer c.handleFileAnnotationSetRetError(&retErr)
-	functionOptions := newFunctionOptions(c)
+	imageOptions := newImageOptions(c)
 	for _, option := range options {
-		option(functionOptions)
+		option(imageOptions)
 	}
-	return c.getImageForWorkspace(ctx, workspace, functionOptions)
+	return c.getImageForWorkspace(ctx, workspace, imageOptions)
 }
 
 func (c *controller) GetTargetImageWithConfigsAndCheckClient(
 	ctx context.Context,
 	input string,
 	wasmRuntime wasm.Runtime,
-	options ...FunctionOption,
+	options ...ImageOption,
 ) (_ []ImageWithConfig, _ bufcheck.Client, retErr error) {
 	defer c.handleFileAnnotationSetRetError(&retErr)
-	functionOptions := newFunctionOptions(c)
+	imageOptions := newImageOptions(c)
 	for _, option := range options {
-		option(functionOptions)
+		option(imageOptions)
 	}
 	ref, err := c.buffetchRefParser.GetRef(ctx, input)
 	if err != nil {
 		return nil, nil, err
 	}
-	var workspace bufworkspace2.Workspace
+	var workspace bufworkspace.Workspace
 	switch t := ref.(type) {
 	case buffetch.ProtoFileRef:
-		workspace, err = c.getWorkspaceForProtoFileRef(ctx, t, functionOptions)
+		workspace, err = c.getWorkspaceForProtoFileRef(ctx, t, &imageOptions.workspaceOptions)
 		if err != nil {
 			return nil, nil, err
 		}
 	case buffetch.SourceRef:
-		workspace, err = c.getWorkspaceForSourceRef(ctx, t, functionOptions)
+		workspace, err = c.getWorkspaceForSourceRef(ctx, t, &imageOptions.workspaceOptions)
 		if err != nil {
 			return nil, nil, err
 		}
 	case buffetch.ModuleRef:
-		workspace, err = c.getWorkspaceForModuleRef(ctx, t, functionOptions)
+		workspace, err = c.getWorkspaceForModuleRef(ctx, t, &imageOptions.workspaceOptions)
 		if err != nil {
 			return nil, nil, err
 		}
 	case buffetch.MessageRef:
-		image, err := c.getImageForMessageRef(ctx, t, functionOptions)
+		image, err := c.getImageForMessageRef(ctx, t, imageOptions)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -416,21 +418,21 @@ func (c *controller) GetTargetImageWithConfigsAndCheckClient(
 		if err != nil {
 			return nil, nil, err
 		}
-		lintConfig := bufconfig2.DefaultLintConfigV1
-		breakingConfig := bufconfig2.DefaultBreakingConfigV1
+		lintConfig := bufconfig.DefaultLintConfigV1
+		breakingConfig := bufconfig.DefaultBreakingConfigV1
 		var (
-			pluginConfigs            []bufconfig2.PluginConfig
-			policyConfigs            []bufconfig2.PolicyConfig
-			pluginKeyProvider        = bufplugin2.NopPluginKeyProvider
-			policyKeyProvider        = bufpolicy2.NopPolicyKeyProvider
-			policyPluginKeyProvider  = bufpolicy2.NopPolicyPluginKeyProvider
-			policyPluginDataProvider = bufpolicy2.NopPolicyPluginDataProvider
+			pluginConfigs            []bufconfig.PluginConfig
+			policyConfigs            []bufconfig.PolicyConfig
+			pluginKeyProvider        = bufplugin.NopPluginKeyProvider
+			policyKeyProvider        = bufpolicy.NopPolicyKeyProvider
+			policyPluginKeyProvider  = bufpolicy.NopPolicyPluginKeyProvider
+			policyPluginDataProvider = bufpolicy.NopPolicyPluginDataProvider
 		)
-		bufYAMLFile, err := bufconfig2.GetBufYAMLFileForPrefixOrOverride(
+		bufYAMLFile, err := bufconfig.GetBufYAMLFileForPrefixOrOverride(
 			ctx,
 			bucket,
 			".",
-			functionOptions.configOverride,
+			imageOptions.configOverride,
 		)
 		if err != nil {
 			if !errors.Is(err, fs.ErrNotExist) {
@@ -441,20 +443,20 @@ func (c *controller) GetTargetImageWithConfigsAndCheckClient(
 		} else {
 			if topLevelLintConfig := bufYAMLFile.TopLevelLintConfig(); topLevelLintConfig == nil {
 				// Ensure that this is a v2 config
-				if fileVersion := bufYAMLFile.FileVersion(); fileVersion != bufconfig2.FileVersionV2 {
+				if fileVersion := bufYAMLFile.FileVersion(); fileVersion != bufconfig.FileVersionV2 {
 					return nil, nil, syserror.Newf("non-v2 version with no top-level lint config: %s", fileVersion)
 				}
 				// v2 config without a top-level lint config, use v2 default
-				lintConfig = bufconfig2.DefaultLintConfigV2
+				lintConfig = bufconfig.DefaultLintConfigV2
 			} else {
 				lintConfig = topLevelLintConfig
 			}
 			if topLevelBreakingConfig := bufYAMLFile.TopLevelBreakingConfig(); topLevelBreakingConfig == nil {
-				if fileVersion := bufYAMLFile.FileVersion(); fileVersion != bufconfig2.FileVersionV2 {
+				if fileVersion := bufYAMLFile.FileVersion(); fileVersion != bufconfig.FileVersionV2 {
 					return nil, nil, syserror.Newf("non-v2 version with no top-level breaking config: %s", fileVersion)
 				}
 				// v2 config without a top-level breaking config, use v2 default
-				breakingConfig = bufconfig2.DefaultBreakingConfigV2
+				breakingConfig = bufconfig.DefaultBreakingConfigV2
 			} else {
 				breakingConfig = topLevelBreakingConfig
 			}
@@ -467,18 +469,18 @@ func (c *controller) GetTargetImageWithConfigsAndCheckClient(
 			// to resolve the PluginKeys. No buf.lock is required.
 			// If the buf.yaml file is not found, the bufplugin.NopPluginKeyProvider is returned.
 			// If the buf.lock file is not found, the bufplugin.NopPluginKeyProvider is returned.
-			if functionOptions.configOverride != "" {
+			if imageOptions.configOverride != "" {
 				// To support remote plugins in the override, we need to resolve the remote
 				// Refs to PluginKeys. A buf.lock file is not required for this operation.
 				// We use the BSR to resolve any remote plugin Refs.
 				pluginKeyProvider = c.pluginKeyProvider
-			} else if bufYAMLFile.FileVersion() == bufconfig2.FileVersionV2 {
+			} else if bufYAMLFile.FileVersion() == bufconfig.FileVersionV2 {
 				var (
-					remotePluginKeys             []bufplugin2.PluginKey
-					remotePolicyKeys             []bufpolicy2.PolicyKey
-					policyNameToRemotePluginKeys map[string][]bufplugin2.PluginKey
+					remotePluginKeys             []bufplugin.PluginKey
+					remotePolicyKeys             []bufpolicy.PolicyKey
+					policyNameToRemotePluginKeys map[string][]bufplugin.PluginKey
 				)
-				if bufLockFile, err := bufconfig2.GetBufLockFileForPrefix(
+				if bufLockFile, err := bufconfig.GetBufLockFileForPrefix(
 					ctx,
 					bucket,
 					// buf.lock files live next to the buf.yaml
@@ -559,7 +561,7 @@ func (c *controller) GetTargetImageWithConfigsAndCheckClient(
 		// This is a system error.
 		return nil, nil, syserror.Newf("invalid Ref: %T", ref)
 	}
-	targetImageWithConfigs, err := c.buildTargetImageWithConfigs(ctx, workspace, functionOptions)
+	targetImageWithConfigs, err := c.buildTargetImageWithConfigs(ctx, workspace, imageOptions)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -573,17 +575,17 @@ func (c *controller) GetTargetImageWithConfigsAndCheckClient(
 func (c *controller) GetImportableImageFileInfos(
 	ctx context.Context,
 	input string,
-	options ...FunctionOption,
+	options ...ImageOption,
 ) (_ []bufimage.ImageFileInfo, retErr error) {
 	defer c.handleFileAnnotationSetRetError(&retErr)
-	functionOptions := newFunctionOptions(c)
+	imageOptions := newImageOptions(c)
 	for _, option := range options {
-		option(functionOptions)
+		option(imageOptions)
 	}
 	// We never care about SourceCodeInfo here.
-	functionOptions.imageExcludeSourceInfo = true
+	imageOptions.imageExcludeSourceInfo = true
 	// We always want to include imports for images.
-	functionOptions.imageExcludeImports = false
+	imageOptions.imageExcludeImports = false
 
 	ref, err := c.buffetchRefParser.GetRef(ctx, input)
 	if err != nil {
@@ -597,7 +599,7 @@ func (c *controller) GetImportableImageFileInfos(
 	wktBucket := datawkt.ReadBucket
 	switch t := ref.(type) {
 	case buffetch.ProtoFileRef:
-		workspace, err := c.getWorkspaceForProtoFileRef(ctx, t, functionOptions)
+		workspace, err := c.getWorkspaceForProtoFileRef(ctx, t, &imageOptions.workspaceOptions)
 		if err != nil {
 			return nil, err
 		}
@@ -610,7 +612,7 @@ func (c *controller) GetImportableImageFileInfos(
 			return nil, err
 		}
 	case buffetch.SourceRef:
-		workspace, err := c.getWorkspaceForSourceRef(ctx, t, functionOptions)
+		workspace, err := c.getWorkspaceForSourceRef(ctx, t, &imageOptions.workspaceOptions)
 		if err != nil {
 			return nil, err
 		}
@@ -623,7 +625,7 @@ func (c *controller) GetImportableImageFileInfos(
 			return nil, err
 		}
 	case buffetch.ModuleRef:
-		workspace, err := c.getWorkspaceForModuleRef(ctx, t, functionOptions)
+		workspace, err := c.getWorkspaceForModuleRef(ctx, t, &imageOptions.workspaceOptions)
 		if err != nil {
 			return nil, err
 		}
@@ -636,7 +638,7 @@ func (c *controller) GetImportableImageFileInfos(
 			return nil, err
 		}
 	case buffetch.MessageRef:
-		image, err := c.getImageForMessageRef(ctx, t, functionOptions)
+		image, err := c.getImageForMessageRef(ctx, t, imageOptions)
 		if err != nil {
 			return nil, err
 		}
@@ -670,12 +672,12 @@ func (c *controller) PutImage(
 	ctx context.Context,
 	imageOutput string,
 	image bufimage.Image,
-	options ...FunctionOption,
+	options ...ImageOption,
 ) (retErr error) {
 	defer c.handleFileAnnotationSetRetError(&retErr)
-	functionOptions := newFunctionOptions(c)
+	imageOptions := newImageOptions(c)
 	for _, option := range options {
-		option(functionOptions)
+		option(imageOptions)
 	}
 	// Must be messageRefParser NOT c.buffetchRefParser as a NewMessageRefParser
 	// defaults to a defaultMessageEncoding and not dir.
@@ -692,12 +694,12 @@ func (c *controller) PutImage(
 	if err != nil {
 		return err
 	}
-	putImage, err := filterImage(image, functionOptions, false)
+	putImage, err := filterImage(image, imageOptions, false)
 	if err != nil {
 		return err
 	}
 	var putMessage proto.Message
-	if functionOptions.imageAsFileDescriptorSet {
+	if imageOptions.imageAsFileDescriptorSet {
 		putMessage = bufimage.ImageToFileDescriptorSet(putImage)
 	} else {
 		putMessage, err = bufimage.ImageToProtoImage(putImage)
@@ -726,12 +728,12 @@ func (c *controller) GetMessage(
 	messageInput string,
 	typeName string,
 	defaultMessageEncoding buffetch.MessageEncoding,
-	options ...FunctionOption,
+	options ...MessageOption,
 ) (_ proto.Message, _ buffetch.MessageEncoding, retErr error) {
 	defer c.handleFileAnnotationSetRetError(&retErr)
-	functionOptions := newFunctionOptions(c)
+	messageOptions := newMessageOptions()
 	for _, option := range options {
-		option(functionOptions)
+		option(messageOptions)
 	}
 	// Must be messageRefParser NOT c.buffetchRefParser as a NewMessageRefParser
 	// defaults to a defaultMessageEncoding and not dir.
@@ -750,7 +752,7 @@ func (c *controller) GetMessage(
 		return nil, messageEncoding, nil
 	}
 	var validator protoyaml.Validator
-	if functionOptions.messageValidation {
+	if messageOptions.messageValidation {
 		protovalidateValidator, err := protovalidate.New()
 		if err != nil {
 			return nil, 0, err
@@ -806,13 +808,9 @@ func (c *controller) PutMessage(
 	messageOutput string,
 	message proto.Message,
 	defaultMessageEncoding buffetch.MessageEncoding,
-	options ...FunctionOption,
+	options ...MessageOption,
 ) (retErr error) {
 	defer c.handleFileAnnotationSetRetError(&retErr)
-	functionOptions := newFunctionOptions(c)
-	for _, option := range options {
-		option(functionOptions)
-	}
 	// Must be messageRefParser NOT c.buffetchRefParser as a NewMessageRefParser
 	// defaults to a defaultMessageEncoding and not dir.
 	messageRefParser := buffetch.NewMessageRefParser(
@@ -846,7 +844,7 @@ func (c *controller) PutMessage(
 
 func (c *controller) GetCheckClientForWorkspace(
 	ctx context.Context,
-	workspace bufworkspace2.Workspace,
+	workspace bufworkspace.Workspace,
 	wasmRuntime wasm.Runtime,
 ) (_ bufcheck.Client, retErr error) {
 	pluginKeyProvider, err := newStaticPluginKeyProviderForPluginConfigs(
@@ -901,53 +899,53 @@ func (c *controller) GetCheckClientForWorkspace(
 func (c *controller) getImage(
 	ctx context.Context,
 	input string,
-	functionOptions *functionOptions,
+	imageOptions *imageOptions,
 ) (bufimage.Image, error) {
 	ref, err := c.buffetchRefParser.GetRef(ctx, input)
 	if err != nil {
 		return nil, err
 	}
-	return c.getImageForRef(ctx, ref, functionOptions)
+	return c.getImageForRef(ctx, ref, imageOptions)
 }
 
 func (c *controller) getImageForInputConfig(
 	ctx context.Context,
-	inputConfig bufconfig2.InputConfig,
-	functionOptions *functionOptions,
+	inputConfig bufconfig.InputConfig,
+	imageOptions *imageOptions,
 ) (bufimage.Image, error) {
 	ref, err := c.buffetchRefParser.GetRefForInputConfig(ctx, inputConfig)
 	if err != nil {
 		return nil, err
 	}
-	return c.getImageForRef(ctx, ref, functionOptions)
+	return c.getImageForRef(ctx, ref, imageOptions)
 }
 
 func (c *controller) getImageForRef(
 	ctx context.Context,
 	ref buffetch.Ref,
-	functionOptions *functionOptions,
+	imageOptions *imageOptions,
 ) (bufimage.Image, error) {
 	switch t := ref.(type) {
 	case buffetch.ProtoFileRef:
-		workspace, err := c.getWorkspaceForProtoFileRef(ctx, t, functionOptions)
+		workspace, err := c.getWorkspaceForProtoFileRef(ctx, t, &imageOptions.workspaceOptions)
 		if err != nil {
 			return nil, err
 		}
-		return c.getImageForWorkspace(ctx, workspace, functionOptions)
+		return c.getImageForWorkspace(ctx, workspace, imageOptions)
 	case buffetch.SourceRef:
-		workspace, err := c.getWorkspaceForSourceRef(ctx, t, functionOptions)
+		workspace, err := c.getWorkspaceForSourceRef(ctx, t, &imageOptions.workspaceOptions)
 		if err != nil {
 			return nil, err
 		}
-		return c.getImageForWorkspace(ctx, workspace, functionOptions)
+		return c.getImageForWorkspace(ctx, workspace, imageOptions)
 	case buffetch.ModuleRef:
-		workspace, err := c.getWorkspaceForModuleRef(ctx, t, functionOptions)
+		workspace, err := c.getWorkspaceForModuleRef(ctx, t, &imageOptions.workspaceOptions)
 		if err != nil {
 			return nil, err
 		}
-		return c.getImageForWorkspace(ctx, workspace, functionOptions)
+		return c.getImageForWorkspace(ctx, workspace, imageOptions)
 	case buffetch.MessageRef:
-		return c.getImageForMessageRef(ctx, t, functionOptions)
+		return c.getImageForMessageRef(ctx, t, imageOptions)
 	default:
 		// This is a system error.
 		return nil, syserror.Newf("invalid Ref: %T", ref)
@@ -956,13 +954,13 @@ func (c *controller) getImageForRef(
 
 func (c *controller) getImageForWorkspace(
 	ctx context.Context,
-	workspace bufworkspace2.Workspace,
-	functionOptions *functionOptions,
+	workspace bufworkspace.Workspace,
+	imageOptions *imageOptions,
 ) (bufimage.Image, error) {
 	image, err := c.buildImage(
 		ctx,
-		bufmodule2.ModuleSetToModuleReadBucketWithOnlyProtoFiles(workspace),
-		functionOptions,
+		bufmodule.ModuleSetToModuleReadBucketWithOnlyProtoFiles(workspace),
+		imageOptions,
 	)
 	if err != nil {
 		return nil, err
@@ -976,27 +974,25 @@ func (c *controller) getImageForWorkspace(
 func (c *controller) getWorkspaceForProtoFileRef(
 	ctx context.Context,
 	protoFileRef buffetch.ProtoFileRef,
-	functionOptions *functionOptions,
-) (_ bufworkspace2.Workspace, retErr error) {
-	if len(functionOptions.targetPaths) > 0 {
+	workspaceOptions *workspaceOptions,
+) (_ bufworkspace.Workspace, retErr error) {
+	if len(workspaceOptions.targetPaths) > 0 {
 		// Even though we didn't have an explicit error case, this never actually worked
 		// properly in the pre-refactor buf CLI. We're going to call it unusable and this
 		// not a breaking change - if anything, this is a bug fix.
-		// TODO FUTURE: Feed flag names through to here.
-		return nil, fmt.Errorf("--path is not valid for use with .proto file references")
+		return nil, fmt.Errorf("--%s is not valid for use with .proto file references", workspaceOptions.pathFlagName)
 	}
-	if len(functionOptions.targetExcludePaths) > 0 {
+	if len(workspaceOptions.targetExcludePaths) > 0 {
 		// Even though we didn't have an explicit error case, this never actually worked
 		// properly in the pre-refactor buf CLI. We're going to call it unusable and this
 		// not a breaking change - if anything, this is a bug fix.
-		// TODO FUTURE: Feed flag names through to here.
-		return nil, fmt.Errorf("--exclude-path is not valid for use with .proto file references")
+		return nil, fmt.Errorf("--%s is not valid for use with .proto file references", workspaceOptions.excludePathFlagName)
 	}
 	readBucketCloser, bucketTargeting, err := c.buffetchReader.GetSourceReadBucketCloser(
 		ctx,
 		c.container,
 		protoFileRef,
-		functionOptions.getGetReadBucketCloserOptions()...,
+		workspaceOptions.getGetReadBucketCloserOptions()...,
 	)
 	if err != nil {
 		return nil, err
@@ -1004,19 +1000,19 @@ func (c *controller) getWorkspaceForProtoFileRef(
 	defer func() {
 		retErr = errors.Join(retErr, readBucketCloser.Close())
 	}()
-	options := []bufworkspace2.WorkspaceBucketOption{
-		bufworkspace2.WithProtoFileTargetPath(
+	options := []bufworkspace.WorkspaceBucketOption{
+		bufworkspace.WithProtoFileTargetPath(
 			protoFileRef.ProtoFilePath(),
 			protoFileRef.IncludePackageFiles(),
 		),
-		bufworkspace2.WithConfigOverride(
-			functionOptions.configOverride,
+		bufworkspace.WithConfigOverride(
+			workspaceOptions.configOverride,
 		),
 	}
-	if functionOptions.ignoreAndDisallowV1BufWorkYAMLs {
+	if workspaceOptions.ignoreAndDisallowV1BufWorkYAMLs {
 		options = append(
 			options,
-			bufworkspace2.WithIgnoreAndDisallowV1BufWorkYAMLs(),
+			bufworkspace.WithIgnoreAndDisallowV1BufWorkYAMLs(),
 		)
 	}
 	return c.workspaceProvider.GetWorkspaceForBucket(
@@ -1030,13 +1026,13 @@ func (c *controller) getWorkspaceForProtoFileRef(
 func (c *controller) getWorkspaceForSourceRef(
 	ctx context.Context,
 	sourceRef buffetch.SourceRef,
-	functionOptions *functionOptions,
-) (_ bufworkspace2.Workspace, retErr error) {
+	workspaceOptions *workspaceOptions,
+) (_ bufworkspace.Workspace, retErr error) {
 	readBucketCloser, bucketTargeting, err := c.buffetchReader.GetSourceReadBucketCloser(
 		ctx,
 		c.container,
 		sourceRef,
-		functionOptions.getGetReadBucketCloserOptions()...,
+		workspaceOptions.getGetReadBucketCloserOptions()...,
 	)
 	if err != nil {
 		return nil, err
@@ -1044,15 +1040,15 @@ func (c *controller) getWorkspaceForSourceRef(
 	defer func() {
 		retErr = errors.Join(retErr, readBucketCloser.Close())
 	}()
-	options := []bufworkspace2.WorkspaceBucketOption{
-		bufworkspace2.WithConfigOverride(
-			functionOptions.configOverride,
+	options := []bufworkspace.WorkspaceBucketOption{
+		bufworkspace.WithConfigOverride(
+			workspaceOptions.configOverride,
 		),
 	}
-	if functionOptions.ignoreAndDisallowV1BufWorkYAMLs {
+	if workspaceOptions.ignoreAndDisallowV1BufWorkYAMLs {
 		options = append(
 			options,
-			bufworkspace2.WithIgnoreAndDisallowV1BufWorkYAMLs(),
+			bufworkspace.WithIgnoreAndDisallowV1BufWorkYAMLs(),
 		)
 	}
 	return c.workspaceProvider.GetWorkspaceForBucket(
@@ -1066,19 +1062,18 @@ func (c *controller) getWorkspaceForSourceRef(
 func (c *controller) getWorkspaceDepManagerForDirRef(
 	ctx context.Context,
 	dirRef buffetch.DirRef,
-	functionOptions *functionOptions,
-) (_ bufworkspace2.WorkspaceDepManager, retErr error) {
+	workspaceOptions *workspaceOptions,
+) (_ bufworkspace.WorkspaceDepManager, retErr error) {
 	readWriteBucket, bucketTargeting, err := c.buffetchReader.GetDirReadWriteBucket(
 		ctx,
 		c.container,
 		dirRef,
-		functionOptions.getGetReadWriteBucketOptions()...,
+		workspaceOptions.getGetReadWriteBucketOptions()...,
 	)
 	if err != nil {
 		return nil, err
 	}
-	// WE DO NOT USE PATHS/EXCLUDE PATHS.
-	// When we refactor functionOptions, we need to make sure we only include what we can pass to WorkspaceDepManager.
+	// Paths/exclude paths are not applicable to WorkspaceDepManager.
 	return c.workspaceDepManagerProvider.GetWorkspaceDepManager(
 		ctx,
 		readWriteBucket,
@@ -1089,8 +1084,8 @@ func (c *controller) getWorkspaceDepManagerForDirRef(
 func (c *controller) getWorkspaceForModuleRef(
 	ctx context.Context,
 	moduleRef buffetch.ModuleRef,
-	functionOptions *functionOptions,
-) (bufworkspace2.Workspace, error) {
+	workspaceOptions *workspaceOptions,
+) (bufworkspace.Workspace, error) {
 	moduleKey, err := c.buffetchReader.GetModuleKey(ctx, c.container, moduleRef)
 	if err != nil {
 		return nil, err
@@ -1098,12 +1093,12 @@ func (c *controller) getWorkspaceForModuleRef(
 	return c.workspaceProvider.GetWorkspaceForModuleKey(
 		ctx,
 		moduleKey,
-		bufworkspace2.WithTargetPaths(
-			functionOptions.targetPaths,
-			functionOptions.targetExcludePaths,
+		bufworkspace.WithTargetPaths(
+			workspaceOptions.targetPaths,
+			workspaceOptions.targetExcludePaths,
 		),
-		bufworkspace2.WithConfigOverride(
-			functionOptions.configOverride,
+		bufworkspace.WithConfigOverride(
+			workspaceOptions.configOverride,
 		),
 	)
 }
@@ -1111,7 +1106,7 @@ func (c *controller) getWorkspaceForModuleRef(
 func (c *controller) getImageForMessageRef(
 	ctx context.Context,
 	messageRef buffetch.MessageRef,
-	functionOptions *functionOptions,
+	imageOptions *imageOptions,
 ) (_ bufimage.Image, retErr error) {
 	readCloser, err := c.buffetchReader.GetMessageFile(ctx, c.container, messageRef)
 	if err != nil {
@@ -1171,7 +1166,7 @@ func (c *controller) getImageForMessageRef(
 		return nil, syserror.Newf("unknown MessageEncoding: %v", messageEncoding)
 	}
 
-	if functionOptions.imageExcludeSourceInfo {
+	if imageOptions.imageExcludeSourceInfo {
 		for _, fileDescriptorProto := range protoImage.GetFile() {
 			fileDescriptorProto.ClearSourceCodeInfo()
 		}
@@ -1181,16 +1176,16 @@ func (c *controller) getImageForMessageRef(
 	if err != nil {
 		return nil, err
 	}
-	return filterImage(image, functionOptions, false)
+	return filterImage(image, imageOptions, false)
 }
 
 func (c *controller) buildImage(
 	ctx context.Context,
-	moduleReadBucket bufmodule2.ModuleReadBucket,
-	functionOptions *functionOptions,
+	moduleReadBucket bufmodule.ModuleReadBucket,
+	imageOptions *imageOptions,
 ) (bufimage.Image, error) {
 	var options []bufimage.BuildImageOption
-	if functionOptions.imageExcludeSourceInfo {
+	if imageOptions.imageExcludeSourceInfo {
 		options = append(options, bufimage.WithExcludeSourceCodeInfo())
 	}
 	image, err := bufimage.BuildImage(
@@ -1202,17 +1197,17 @@ func (c *controller) buildImage(
 	if err != nil {
 		return nil, err
 	}
-	return filterImage(image, functionOptions, true)
+	return filterImage(image, imageOptions, true)
 }
 
 // buildTargetImageWithConfigs builds an image for each module in the workspace.
 // This is used to associate LintConfig and BreakingConfig on a per-module basis.
 func (c *controller) buildTargetImageWithConfigs(
 	ctx context.Context,
-	workspace bufworkspace2.Workspace,
-	functionOptions *functionOptions,
+	workspace bufworkspace.Workspace,
+	imageOptions *imageOptions,
 ) ([]ImageWithConfig, error) {
-	modules := bufmodule2.ModuleSetTargetModules(workspace)
+	modules := bufmodule.ModuleSetTargetModules(workspace)
 	imageWithConfigs := make([]ImageWithConfig, 0, len(modules))
 	for _, module := range modules {
 		c.logger.DebugContext(
@@ -1233,8 +1228,8 @@ func (c *controller) buildTargetImageWithConfigs(
 		// the workspace. Targeting the module does not remove non-related modules.
 		// Build image will use the target info to build the image for the specific
 		// module. Non-targeted modules will not be included in the image.
-		moduleReadBucket := bufmodule2.ModuleSetToModuleReadBucketWithOnlyProtoFiles(moduleSet)
-		targetFileInfos, err := bufmodule2.GetTargetFileInfos(ctx, moduleReadBucket)
+		moduleReadBucket := bufmodule.ModuleSetToModuleReadBucketWithOnlyProtoFiles(moduleSet)
+		targetFileInfos, err := bufmodule.GetTargetFileInfos(ctx, moduleReadBucket)
 		if err != nil {
 			return nil, err
 		}
@@ -1248,7 +1243,7 @@ func (c *controller) buildTargetImageWithConfigs(
 		image, err := c.buildImage(
 			ctx,
 			moduleReadBucket,
-			functionOptions,
+			imageOptions,
 		)
 		if err != nil {
 			return nil, err
@@ -1272,7 +1267,7 @@ func (c *controller) buildTargetImageWithConfigs(
 	if len(imageWithConfigs) == 0 {
 		// If we had no target modules, or no target files within the modules after path filtering, this is an error.
 		// We could have a better user error than this. This gets back to the lack of allowNotExist.
-		return nil, bufmodule2.ErrNoTargetProtoFiles
+		return nil, bufmodule.ErrNoTargetProtoFiles
 	}
 	return imageWithConfigs, nil
 }
@@ -1283,13 +1278,13 @@ func (c *controller) buildTargetImageWithConfigs(
 // If all the Modules in the Workspace are remote Modules, no warnings are printed.
 func (c *controller) warnUnconfiguredTransitiveImports(
 	ctx context.Context,
-	workspace bufworkspace2.Workspace,
+	workspace bufworkspace.Workspace,
 	image bufimage.Image,
 ) error {
 	// First, figure out if we have a local module. If we don't, just return - the Workspace
 	// was purely built from remote Modules, and therefore buf.yaml configured dependencies
 	// do not apply.
-	if xslices.Count(workspace.Modules(), bufmodule2.Module.IsLocal) == 0 {
+	if xslices.Count(workspace.Modules(), bufmodule.Module.IsLocal) == 0 {
 		return nil
 	}
 	// Construct a struct map of all the FullName strings of the configured buf.yaml
@@ -1297,7 +1292,7 @@ func (c *controller) warnUnconfiguredTransitiveImports(
 	// for non-imports in the Image.
 	configuredFullNameStrings, err := xslices.MapError(
 		workspace.ConfiguredDepModuleRefs(),
-		func(moduleRef bufparse2.Ref) (string, error) {
+		func(moduleRef bufparse.Ref) (string, error) {
 			moduleFullName := moduleRef.FullName()
 			if moduleFullName == nil {
 				return "", syserror.New("FullName nil on ModuleRef")
@@ -1309,7 +1304,7 @@ func (c *controller) warnUnconfiguredTransitiveImports(
 		return err
 	}
 	configuredFullNameStringMap := xslices.ToStructMap(configuredFullNameStrings)
-	for _, localModule := range bufmodule2.ModuleSetLocalModules(workspace) {
+	for _, localModule := range bufmodule.ModuleSetLocalModules(workspace) {
 		if moduleFullName := localModule.FullName(); moduleFullName != nil {
 			configuredFullNameStringMap[moduleFullName.String()] = struct{}{}
 		}
@@ -1389,18 +1384,18 @@ func (v yamlValidator) Validate(msg proto.Message) error {
 	return v.protovalidateValidator.Validate(msg)
 }
 
-func getImageFileInfosForModuleSet(ctx context.Context, moduleSet bufmodule2.ModuleSet) ([]bufimage.ImageFileInfo, error) {
+func getImageFileInfosForModuleSet(ctx context.Context, moduleSet bufmodule.ModuleSet) ([]bufimage.ImageFileInfo, error) {
 	// Sorted.
-	fileInfos, err := bufmodule2.GetFileInfos(
+	fileInfos, err := bufmodule.GetFileInfos(
 		ctx,
-		bufmodule2.ModuleSetToModuleReadBucketWithOnlyProtoFiles(moduleSet),
+		bufmodule.ModuleSetToModuleReadBucketWithOnlyProtoFiles(moduleSet),
 	)
 	if err != nil {
 		return nil, err
 	}
 	return xslices.Map(
 		fileInfos,
-		func(fileInfo bufmodule2.FileInfo) bufimage.ImageFileInfo {
+		func(fileInfo bufmodule.FileInfo) bufimage.ImageFileInfo {
 			return bufimage.ImageFileInfoForModuleFileInfo(fileInfo)
 		},
 	), nil
@@ -1419,19 +1414,18 @@ func bootstrapResolver(
 
 // WE DO NOT FILTER IF WE ALREADY FILTERED ON BUILDING OF A WORKSPACE
 // Also, paths are still external paths at this point if this came from a workspace
-// TODO FUTURE: redo functionOptions, this is a mess
 func filterImage(
 	image bufimage.Image,
-	functionOptions *functionOptions,
+	imageOptions *imageOptions,
 	imageCameFromAWorkspace bool,
 ) (bufimage.Image, error) {
 	newImage := image
 	var err error
-	if functionOptions.imageExcludeImports {
+	if imageOptions.imageExcludeImports {
 		newImage = bufimage.ImageWithoutImports(newImage)
 	}
-	includeTypes := functionOptions.imageIncludeTypes
-	excludeTypes := functionOptions.imageExcludeTypes
+	includeTypes := imageOptions.imageIncludeTypes
+	excludeTypes := imageOptions.imageExcludeTypes
 	if len(includeTypes) > 0 || len(excludeTypes) > 0 {
 		newImage, err = bufimageutil.FilterImage(
 			newImage,
@@ -1444,15 +1438,15 @@ func filterImage(
 		}
 	}
 	if !imageCameFromAWorkspace {
-		if len(functionOptions.targetPaths) > 0 || len(functionOptions.targetExcludePaths) > 0 {
+		if len(imageOptions.targetPaths) > 0 || len(imageOptions.targetExcludePaths) > 0 {
 			// bufimage expects normalized paths, so we need to normalize the paths
-			// from functionOptions before passing them through.
-			normalizedTargetPaths := make([]string, 0, len(functionOptions.targetPaths))
-			normalizedExcludePaths := make([]string, 0, len(functionOptions.targetExcludePaths))
-			for _, targetPath := range functionOptions.targetPaths {
+			// from imageOptions before passing them through.
+			normalizedTargetPaths := make([]string, 0, len(imageOptions.targetPaths))
+			normalizedExcludePaths := make([]string, 0, len(imageOptions.targetExcludePaths))
+			for _, targetPath := range imageOptions.targetPaths {
 				normalizedTargetPaths = append(normalizedTargetPaths, normalpath.Normalize(targetPath))
 			}
-			for _, excludePath := range functionOptions.targetExcludePaths {
+			for _, excludePath := range imageOptions.targetExcludePaths {
 				normalizedExcludePaths = append(normalizedExcludePaths, normalpath.Normalize(excludePath))
 			}
 			// TODO FUTURE: allowNotExist? Also, does this affect lint or breaking?
@@ -1540,16 +1534,17 @@ func newYAMLMarshaler(
 	return protoencoding.NewYAMLMarshaler(resolver, yamlMarshalerOptions...)
 }
 
-func validateFileAnnotationErrorFormat(fileAnnotationErrorFormat string) error {
+func validateFileAnnotationErrorFormat(fileAnnotationErrorFormat string, flagName string) error {
 	if fileAnnotationErrorFormat == "" {
 		return nil
 	}
 	if slices.Contains(bufanalysis.AllFormatStrings, fileAnnotationErrorFormat) {
 		return nil
 	}
-	// TODO FUTURE: get standard flag names and bindings into this package.
-	fileAnnotationErrorFormatFlagName := "error-format"
-	return appcmd.NewInvalidArgumentErrorf("--%s: invalid format: %q", fileAnnotationErrorFormatFlagName, fileAnnotationErrorFormat)
+	if flagName == "" {
+		flagName = "error-format"
+	}
+	return appcmd.NewInvalidArgumentErrorf("--%s: invalid format: %q", flagName, fileAnnotationErrorFormat)
 }
 
 // newStaticPluginKeyProvider creates a new PluginKeyProvider for the set of PluginKeys.
@@ -1558,11 +1553,11 @@ func validateFileAnnotationErrorFormat(fileAnnotationErrorFormat string) error {
 // and does not change. PluginConfigs are validated to ensure that all remote
 // PluginConfigs are pinned in the buf.lock file.
 func newStaticPluginKeyProviderForPluginConfigs(
-	pluginConfigs []bufconfig2.PluginConfig,
-	pluginKeys []bufplugin2.PluginKey,
-) (_ bufplugin2.PluginKeyProvider, retErr error) {
+	pluginConfigs []bufconfig.PluginConfig,
+	pluginKeys []bufplugin.PluginKey,
+) (_ bufplugin.PluginKeyProvider, retErr error) {
 	// Validate that all remote PluginConfigs are present in the buf.lock file.
-	pluginKeysByFullName, err := xslices.ToUniqueValuesMap(pluginKeys, func(pluginKey bufplugin2.PluginKey) string {
+	pluginKeysByFullName, err := xslices.ToUniqueValuesMap(pluginKeys, func(pluginKey bufplugin.PluginKey) string {
 		return pluginKey.FullName().String()
 	})
 	if err != nil {
@@ -1570,10 +1565,10 @@ func newStaticPluginKeyProviderForPluginConfigs(
 	}
 	// Remote PluginConfig Refs are any PluginConfigs that have a Ref.
 	remotePluginRefs := xslices.Filter(
-		xslices.Map(pluginConfigs, func(pluginConfig bufconfig2.PluginConfig) bufparse2.Ref {
+		xslices.Map(pluginConfigs, func(pluginConfig bufconfig.PluginConfig) bufparse.Ref {
 			return pluginConfig.Ref()
 		}),
-		func(pluginRef bufparse2.Ref) bool {
+		func(pluginRef bufparse.Ref) bool {
 			return pluginRef != nil
 		},
 	)
@@ -1582,7 +1577,7 @@ func newStaticPluginKeyProviderForPluginConfigs(
 			return nil, fmt.Errorf(`remote plugin %q is not in the buf.lock file, use "buf plugin update" to pin remote refs`, remotePluginRef)
 		}
 	}
-	return bufplugin2.NewStaticPluginKeyProvider(pluginKeys)
+	return bufplugin.NewStaticPluginKeyProvider(pluginKeys)
 }
 
 // newStaticPolicyKeyProvider creates a new PolicyKeyProvider for the set of PolicyKeys.
@@ -1591,11 +1586,11 @@ func newStaticPluginKeyProviderForPluginConfigs(
 // and does not change. PolicyConfigs are validated to ensure that all remote
 // PolicyConfigs are pinned in the buf.lock file.
 func newStaticPolicyKeyProviderForPolicyConfigs(
-	policyConfigs []bufconfig2.PolicyConfig,
-	policyKeys []bufpolicy2.PolicyKey,
-) (_ bufpolicy2.PolicyKeyProvider, retErr error) {
+	policyConfigs []bufconfig.PolicyConfig,
+	policyKeys []bufpolicy.PolicyKey,
+) (_ bufpolicy.PolicyKeyProvider, retErr error) {
 	// Validate that all remote PolicyConfigs are present in the buf.lock file.
-	policyKeysByFullName, err := xslices.ToUniqueValuesMap(policyKeys, func(policyKey bufpolicy2.PolicyKey) string {
+	policyKeysByFullName, err := xslices.ToUniqueValuesMap(policyKeys, func(policyKey bufpolicy.PolicyKey) string {
 		return policyKey.FullName().String()
 	})
 	if err != nil {
@@ -1603,10 +1598,10 @@ func newStaticPolicyKeyProviderForPolicyConfigs(
 	}
 	// Remote PolicyConfig Refs are any PolicyConfigs that have a Ref.
 	remotePolicyRefs := xslices.Filter(
-		xslices.Map(policyConfigs, func(policyConfig bufconfig2.PolicyConfig) bufparse2.Ref {
+		xslices.Map(policyConfigs, func(policyConfig bufconfig.PolicyConfig) bufparse.Ref {
 			return policyConfig.Ref()
 		}),
-		func(policyRef bufparse2.Ref) bool {
+		func(policyRef bufparse.Ref) bool {
 			return policyRef != nil
 		},
 	)
@@ -1615,15 +1610,15 @@ func newStaticPolicyKeyProviderForPolicyConfigs(
 			return nil, fmt.Errorf(`remote policy %q is not in the buf.lock file, use "buf policy update" to pin remote refs`, remotePolicyRef)
 		}
 	}
-	return bufpolicy2.NewStaticPolicyKeyProvider(policyKeys)
+	return bufpolicy.NewStaticPolicyKeyProvider(policyKeys)
 }
 
 // newStaticPolicyPluginKeyProviderForPolicyConfigs creates a new PolicyPluginKeyProvider for the set of PolicyConfigs.
 func newStaticPolicyPluginKeyProviderForPolicyConfigs(
-	policyConfigs []bufconfig2.PolicyConfig,
-	policyNameToRemotePluginKeys map[string][]bufplugin2.PluginKey,
-) (bufpolicy2.PolicyPluginKeyProvider, error) {
-	policyNames, err := xslices.ToUniqueValuesMap(policyConfigs, func(policyConfig bufconfig2.PolicyConfig) string {
+	policyConfigs []bufconfig.PolicyConfig,
+	policyNameToRemotePluginKeys map[string][]bufplugin.PluginKey,
+) (bufpolicy.PolicyPluginKeyProvider, error) {
+	policyNames, err := xslices.ToUniqueValuesMap(policyConfigs, func(policyConfig bufconfig.PolicyConfig) string {
 		policyName := policyConfig.Name()
 		if policyConfig.Ref() != nil {
 			// Remote policies are required to be referenced by their full name.
@@ -1638,7 +1633,7 @@ func newStaticPolicyPluginKeyProviderForPolicyConfigs(
 	// We do not validate that all remote PolicyConfig plugins are present in the buf.lock file.
 	// This would require loading the PolicyConfig data. Check is defered to the runtime.
 	for policyName, remotePluginKeys := range policyNameToRemotePluginKeys {
-		_, err := xslices.ToUniqueValuesMap(remotePluginKeys, func(pluginKey bufplugin2.PluginKey) string {
+		_, err := xslices.ToUniqueValuesMap(remotePluginKeys, func(pluginKey bufplugin.PluginKey) string {
 			return pluginKey.FullName().String()
 		})
 		if err != nil {
@@ -1648,17 +1643,17 @@ func newStaticPolicyPluginKeyProviderForPolicyConfigs(
 			return nil, fmt.Errorf("remote plugins configured for unknown policy %q", policyName)
 		}
 	}
-	return bufpolicy2.NewStaticPolicyPluginKeyProvider(policyNameToRemotePluginKeys)
+	return bufpolicy.NewStaticPolicyPluginKeyProvider(policyNameToRemotePluginKeys)
 }
 
 // newStaticPolicyPluginDataProviderForPolicyConfigs creates a new PolicyPluginKeyProvider for the set of PolicyConfigs.
 //
 // The pluginDataProvider is shared across all policies.
 func newStaticPolicyPluginDataProviderForPolicyConfigs(
-	pluginDataProvider bufplugin2.PluginDataProvider,
-	policyConfigs []bufconfig2.PolicyConfig,
-) (bufpolicy2.PolicyPluginDataProvider, error) {
-	policyNameToPluginDataProvider := make(map[string]bufplugin2.PluginDataProvider)
+	pluginDataProvider bufplugin.PluginDataProvider,
+	policyConfigs []bufconfig.PolicyConfig,
+) (bufpolicy.PolicyPluginDataProvider, error) {
+	policyNameToPluginDataProvider := make(map[string]bufplugin.PluginDataProvider)
 	for _, policyConfig := range policyConfigs {
 		policyName := policyConfig.Name()
 		if _, ok := policyNameToPluginDataProvider[policyName]; ok {
@@ -1667,5 +1662,5 @@ func newStaticPolicyPluginDataProviderForPolicyConfigs(
 		// We use the same pluginDataProvider for all policies.
 		policyNameToPluginDataProvider[policyName] = pluginDataProvider
 	}
-	return bufpolicy2.NewStaticPolicyPluginDataProvider(policyNameToPluginDataProvider)
+	return bufpolicy.NewStaticPolicyPluginDataProvider(policyNameToPluginDataProvider)
 }

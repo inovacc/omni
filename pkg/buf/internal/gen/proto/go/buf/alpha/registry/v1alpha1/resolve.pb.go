@@ -21,13 +21,12 @@
 package registryv1alpha1
 
 import (
-	reflect "reflect"
-	unsafe "unsafe"
-
 	v1alpha1 "github.com/inovacc/omni/pkg/buf/internal/gen/proto/go/buf/alpha/module/v1alpha1"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
+	reflect "reflect"
+	unsafe "unsafe"
 )
 
 const (
@@ -155,11 +154,11 @@ type GetModulePinsRequest_builder struct {
 	// identities of the dependencies they want to update in module_references.
 	//
 	// When resolving, if a client supplied module pin is:
-	//   - in the transitive closure of pins resolved from the module_references,
-	//     the client supplied module pin will be an extra candidate for tie
-	//     breaking.
-	//   - NOT in the in the transitive closure of pins resolved from the
-	//     module_references, it will be returned as is.
+	// - in the transitive closure of pins resolved from the module_references,
+	//   the client supplied module pin will be an extra candidate for tie
+	//   breaking.
+	// - NOT in the in the transitive closure of pins resolved from the
+	//   module_references, it will be returned as is.
 	CurrentModulePins []*v1alpha1.ModulePin
 }
 
@@ -2360,8 +2359,8 @@ const file_buf_alpha_registry_v1alpha1_resolve_proto_rawDesc = "" +
 	"\x0fGetNugetVersion\x123.buf.alpha.registry.v1alpha1.GetNugetVersionRequest\x1a4.buf.alpha.registry.v1alpha1.GetNugetVersionResponse\"\x03\x90\x02\x01\x12\x81\x01\n" +
 	"\x0fGetCmakeVersion\x123.buf.alpha.registry.v1alpha1.GetCmakeVersionRequest\x1a4.buf.alpha.registry.v1alpha1.GetCmakeVersionResponse\"\x03\x90\x02\x012\xa2\x01\n" +
 	"\x13LocalResolveService\x12\x8a\x01\n" +
-	"\x12GetLocalModulePins\x126.buf.alpha.registry.v1alpha1.GetLocalModulePinsRequest\x1a7.buf.alpha.registry.v1alpha1.GetLocalModulePinsResponse\"\x03\x90\x02\x01B\x99\x02\n" +
-	"\x1fcom.buf.alpha.registry.v1alpha1B\fResolveProtoP\x01ZYgithub.com/bufbuild/buf/private/gen/proto/go/buf/alpha/registry/v1alpha1;registryv1alpha1\xa2\x02\x03BAR\xaa\x02\x1bBuf.Alpha.Registry.V1alpha1\xca\x02\x1bBuf\\Alpha\\Registry\\V1alpha1\xe2\x02'Buf\\Alpha\\Registry\\V1alpha1\\GPBMetadata\xea\x02\x1eBuf::Alpha::Registry::V1alpha1b\x06proto3"
+	"\x12GetLocalModulePins\x126.buf.alpha.registry.v1alpha1.GetLocalModulePinsRequest\x1a7.buf.alpha.registry.v1alpha1.GetLocalModulePinsResponse\"\x03\x90\x02\x01B\x9a\x02\n" +
+	"\x1fcom.buf.alpha.registry.v1alpha1B\fResolveProtoP\x01ZZgithub.com/bufbuild/buf/internal/gen/proto/go/buf/alpha/registry/v1alpha1;registryv1alpha1\xa2\x02\x03BAR\xaa\x02\x1bBuf.Alpha.Registry.V1alpha1\xca\x02\x1bBuf\\Alpha\\Registry\\V1alpha1\xe2\x02'Buf\\Alpha\\Registry\\V1alpha1\\GPBMetadata\xea\x02\x1eBuf::Alpha::Registry::V1alpha1b\x06proto3"
 
 var file_buf_alpha_registry_v1alpha1_resolve_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
 var file_buf_alpha_registry_v1alpha1_resolve_proto_msgTypes = make([]protoimpl.MessageInfo, 26)

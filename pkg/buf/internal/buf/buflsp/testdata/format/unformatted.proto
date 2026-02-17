@@ -4,24 +4,24 @@ package example.v1;
 
 
 message Product {
-    string name = 1;
-       uint32 price = 2;
+  string name = 1;
+  uint32 price = 2;
   repeated string tags = 3;
 }
 
 enum Status {
   STATUS_UNSPECIFIED = 0;
-    STATUS_ACTIVE = 1;
-      STATUS_INACTIVE = 2;
+  STATUS_ACTIVE = 1;
+  STATUS_INACTIVE = 2;
 }
 
 service ProductService {
-    rpc GetProduct(GetProductRequest) returns (GetProductResponse);
+  rpc GetProduct(GetProductRequest) returns (GetProductResponse);
   rpc ListProducts(ListProductsRequest) returns   (ListProductsResponse);
 }
 
 message GetProductRequest {
-      string id = 1;
+  string id = 1;
 }
 
 message GetProductResponse{
@@ -29,11 +29,11 @@ message GetProductResponse{
 }
 
 message ListProductsRequest {
-    uint32 page_size = 1;
+  uint32 page_size = 1;
   string page_token = 2;
 }
 
 message ListProductsResponse {
-repeated Product products = 1;
-    string next_page_token = 2;
+  repeated Product products = 1;
+  string next_page_token = 2;
 }

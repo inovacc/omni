@@ -21,11 +21,10 @@
 package registryv1alpha1
 
 import (
-	reflect "reflect"
-	unsafe "unsafe"
-
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+	reflect "reflect"
+	unsafe "unsafe"
 )
 
 const (
@@ -309,8 +308,8 @@ const file_buf_alpha_registry_v1alpha1_role_proto_rawDesc = "" +
 	"\x14RepositoryRoleSource\x12&\n" +
 	"\"REPOSITORY_ROLE_SOURCE_UNSPECIFIED\x10\x00\x12!\n" +
 	"\x1dREPOSITORY_ROLE_SOURCE_DIRECT\x10\x01\x12$\n" +
-	" REPOSITORY_ROLE_SOURCE_IDP_GROUP\x10\x02B\x96\x02\n" +
-	"\x1fcom.buf.alpha.registry.v1alpha1B\tRoleProtoP\x01ZYgithub.com/bufbuild/buf/private/gen/proto/go/buf/alpha/registry/v1alpha1;registryv1alpha1\xa2\x02\x03BAR\xaa\x02\x1bBuf.Alpha.Registry.V1alpha1\xca\x02\x1bBuf\\Alpha\\Registry\\V1alpha1\xe2\x02'Buf\\Alpha\\Registry\\V1alpha1\\GPBMetadata\xea\x02\x1eBuf::Alpha::Registry::V1alpha1b\x06proto3"
+	" REPOSITORY_ROLE_SOURCE_IDP_GROUP\x10\x02B\x97\x02\n" +
+	"\x1fcom.buf.alpha.registry.v1alpha1B\tRoleProtoP\x01ZZgithub.com/bufbuild/buf/internal/gen/proto/go/buf/alpha/registry/v1alpha1;registryv1alpha1\xa2\x02\x03BAR\xaa\x02\x1bBuf.Alpha.Registry.V1alpha1\xca\x02\x1bBuf\\Alpha\\Registry\\V1alpha1\xe2\x02'Buf\\Alpha\\Registry\\V1alpha1\\GPBMetadata\xea\x02\x1eBuf::Alpha::Registry::V1alpha1b\x06proto3"
 
 var file_buf_alpha_registry_v1alpha1_role_proto_enumTypes = make([]protoimpl.EnumInfo, 5)
 var file_buf_alpha_registry_v1alpha1_role_proto_goTypes = []any{

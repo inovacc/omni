@@ -20,12 +20,13 @@ import (
 	"strings"
 	"testing"
 
-	bufmodule2 "github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufmodule"
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/diff"
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/slogtestext"
-	storage2 "github.com/inovacc/omni/pkg/buf/internal/pkg/storage"
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/storage/storageos"
+	"github.com/inovacc/omni/pkg/buf/pkg/diff"
+	"github.com/inovacc/omni/pkg/buf/pkg/slogtestext"
+	storage2 "github.com/inovacc/omni/pkg/buf/pkg/storage"
+	"github.com/inovacc/omni/pkg/buf/pkg/storage/storageos"
 	"github.com/stretchr/testify/require"
+
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufmodule"
 )
 
 func TestFormatter(t *testing.T) {
@@ -80,7 +81,7 @@ func testFormatNoDiff(t *testing.T, path string) {
 		bucket, err := storageos.NewProvider().NewReadWriteBucket(path)
 		require.NoError(t, err)
 
-		moduleSetBuilder := bufmodule2.NewModuleSetBuilder(ctx, slogtestext.NewLogger(t), bufmodule2.NopModuleDataProvider, bufmodule2.NopCommitProvider)
+		moduleSetBuilder := bufmodule.NewModuleSetBuilder(ctx, slogtestext.NewLogger(t), bufmodule.NopModuleDataProvider, bufmodule.NopCommitProvider)
 		moduleSetBuilder.AddLocalModule(bucket, path, true)
 		moduleSet, err := moduleSetBuilder.Build()
 		require.NoError(t, err)
@@ -107,7 +108,7 @@ func testFormatNoDiff(t *testing.T, path string) {
 		}
 		assertGolden(formatBucket)
 
-		moduleSetBuilder = bufmodule2.NewModuleSetBuilder(ctx, slogtestext.NewLogger(t), bufmodule2.NopModuleDataProvider, bufmodule2.NopCommitProvider)
+		moduleSetBuilder = bufmodule.NewModuleSetBuilder(ctx, slogtestext.NewLogger(t), bufmodule.NopModuleDataProvider, bufmodule.NopCommitProvider)
 		moduleSetBuilder.AddLocalModule(formatBucket, path, true)
 		moduleSet, err = moduleSetBuilder.Build()
 		require.NoError(t, err)
@@ -122,7 +123,7 @@ func testFormatError(t *testing.T, path string, errContains string) {
 		ctx := context.Background()
 		bucket, err := storageos.NewProvider().NewReadWriteBucket(path)
 		require.NoError(t, err)
-		moduleSetBuilder := bufmodule2.NewModuleSetBuilder(ctx, slogtestext.NewLogger(t), bufmodule2.NopModuleDataProvider, bufmodule2.NopCommitProvider)
+		moduleSetBuilder := bufmodule.NewModuleSetBuilder(ctx, slogtestext.NewLogger(t), bufmodule.NopModuleDataProvider, bufmodule.NopCommitProvider)
 		moduleSetBuilder.AddLocalModule(bucket, path, true)
 		moduleSet, err := moduleSetBuilder.Build()
 		require.NoError(t, err)

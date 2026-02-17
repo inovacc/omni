@@ -18,7 +18,7 @@ import (
 	"context"
 	"io"
 
-	"github.com/inovacc/omni/pkg/buf/internal/gen/proto/go/buf/alpha/registry/v1alpha1"
+	registryv1alpha1 "github.com/inovacc/omni/pkg/buf/internal/gen/proto/go/buf/alpha/registry/v1alpha1"
 )
 
 type tokenJSONPrinter struct {

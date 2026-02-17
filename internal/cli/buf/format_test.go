@@ -248,26 +248,3 @@ func TestCleanupBlankLines(t *testing.T) {
 	}
 }
 
-func TestNeedsSpaceBefore(t *testing.T) {
-	tests := []struct {
-		lastType  TokenType
-		lastValue string
-		current   Token
-		want      bool
-	}{
-		{TokenIdent, "message", Token{Type: TokenIdent, Value: "User"}, true},
-		{TokenSymbol, "(", Token{Type: TokenIdent, Value: "Request"}, false},
-		{TokenIdent, "string", Token{Type: TokenSymbol, Value: ")"}, false},
-		{TokenIdent, "name", Token{Type: TokenSymbol, Value: "="}, true},
-		{TokenSymbol, "=", Token{Type: TokenNumber, Value: "1"}, true},
-		{TokenNumber, "1", Token{Type: TokenSymbol, Value: ";"}, false},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.lastValue+"->"+tt.current.Value, func(t *testing.T) {
-			if got := needsSpaceBefore(tt.lastType, tt.lastValue, tt.current); got != tt.want {
-				t.Errorf("needsSpaceBefore() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}

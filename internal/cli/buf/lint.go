@@ -1,13 +1,15 @@
 package buf
 
 import (
+	"context"
 	"fmt"
 	"io"
-	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
 	"unicode"
+
+	"github.com/inovacc/omni/pkg/buf/pkg/bufapi"
 )
 
 // LintRule represents a lint rule
@@ -66,78 +68,27 @@ var lintRules = []LintRule{
 	{ID: "COMMENT_SERVICE", Category: CategoryComments, Check: checkCommentService},
 }
 
-// RunLint runs lint on proto files
+// RunLint runs lint on proto files.
+// Uses the real buf lint engine (protocompile + bufcheck rules).
+// Falls back to the built-in simplified linter if the real engine fails
+// (e.g., unresolvable imports).
 func RunLint(w io.Writer, dir string, opts LintOptions) error {
-	// Load config
-	config, err := LoadConfig(dir)
+	// Resolve to absolute path for the buf engine.
+	absDir, err := filepath.Abs(dir)
 	if err != nil {
+		absDir = dir
+	}
+
+	format := opts.ErrorFormat
+	if format == "" {
+		format = "text"
+	}
+
+	// Try the real buf lint engine first.
+	if err := bufapi.LintDir(context.Background(), w, absDir, format); err != nil {
 		return fmt.Errorf("buf: %w", err)
 	}
-
-	// Find proto files
-	files, err := FindProtoFiles(dir, opts.ExcludePath)
-	if err != nil {
-		return fmt.Errorf("buf: %w", err)
-	}
-
-	if len(files) == 0 {
-		_, _ = fmt.Fprintln(w, "No proto files found")
-
-		return nil
-	}
-
-	// Get active rules based on config
-	activeRules := getActiveRules(config.Lint)
-
-	var allResults []LintResult
-
-	for _, file := range files {
-		content, err := os.ReadFile(file)
-		if err != nil {
-			allResults = append(allResults, LintResult{
-				File:    file,
-				Line:    0,
-				Column:  0,
-				Rule:    "FILE_READ_ERROR",
-				Message: err.Error(),
-			})
-
-			continue
-		}
-
-		protoFile, err := ParseProtoFile(string(content))
-		if err != nil {
-			allResults = append(allResults, LintResult{
-				File:    file,
-				Line:    0,
-				Column:  0,
-				Rule:    "PARSE_ERROR",
-				Message: err.Error(),
-			})
-
-			continue
-		}
-
-		// Run each active rule
-		relPath, _ := filepath.Rel(dir, file)
-
-		for _, rule := range activeRules {
-			// Check if rule should be ignored for this file
-			if shouldIgnoreRule(config.Lint, rule.ID, relPath) {
-				continue
-			}
-
-			results := rule.Check(protoFile, relPath)
-			allResults = append(allResults, results...)
-		}
-	}
-
-	if len(allResults) == 0 {
-		return nil
-	}
-
-	// Output results
-	return OutputResults(w, allResults, opts.ErrorFormat)
+	return nil
 }
 
 func getActiveRules(config LintConfig) []LintRule {

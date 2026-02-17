@@ -20,7 +20,7 @@ import (
 	"io"
 
 	connect "connectrpc.com/connect"
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/protoencoding"
+	"github.com/inovacc/omni/pkg/buf/pkg/protoencoding"
 	"google.golang.org/protobuf/proto"
 )
 

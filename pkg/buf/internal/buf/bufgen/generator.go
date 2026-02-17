@@ -23,23 +23,24 @@ import (
 	"sort"
 
 	connect "connectrpc.com/connect"
-	"github.com/inovacc/omni/pkg/buf/internal/app"
-	"github.com/inovacc/omni/pkg/buf/internal/buf/bufprotopluginexec"
-	bufconfig2 "github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufconfig"
-	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufimage"
-	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufimage/bufimagemodify"
-	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufimage/bufimageutil"
-	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufprotoplugin"
-	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufprotoplugin/bufprotopluginos"
-	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufremoteplugin"
-	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufremoteplugin/bufremotepluginref"
-	"github.com/inovacc/omni/pkg/buf/internal/gen/proto/connect/buf/alpha/registry/v1alpha1/registryv1alpha1connect"
-	"github.com/inovacc/omni/pkg/buf/internal/gen/proto/go/buf/alpha/registry/v1alpha1"
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/connectclient"
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/storage/storageos"
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/thread"
-	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
+	"github.com/inovacc/omni/pkg/buf/pkg/app"
+	"github.com/inovacc/omni/pkg/buf/pkg/connectclient"
+	"github.com/inovacc/omni/pkg/buf/pkg/standard/xslices"
+	"github.com/inovacc/omni/pkg/buf/pkg/storage/storageos"
 	"google.golang.org/protobuf/types/pluginpb"
+
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufconfig"
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufimage"
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufimage/bufimagemodify"
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufimage/bufimageutil"
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufprotoplugin"
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufprotoplugin/bufprotopluginos"
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufprotopluginexec"
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufremoteplugin"
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufremoteplugin/bufremotepluginref"
+	"github.com/inovacc/omni/pkg/buf/internal/gen/proto/connect/buf/alpha/registry/v1alpha1/registryv1alpha1connect"
+	registryv1alpha1 "github.com/inovacc/omni/pkg/buf/internal/gen/proto/go/buf/alpha/registry/v1alpha1"
+	"github.com/inovacc/omni/pkg/buf/pkg/thread"
 )
 
 type generator struct {
@@ -82,7 +83,7 @@ func newGenerator(
 func (g *generator) Generate(
 	ctx context.Context,
 	container app.EnvStdioContainer,
-	config bufconfig2.GenerateConfig,
+	config bufconfig.GenerateConfig,
 	images []bufimage.Image,
 	options ...GenerateOption,
 ) error {
@@ -132,13 +133,13 @@ func (g *generator) Generate(
 func (g *generator) deleteOuts(
 	ctx context.Context,
 	baseOutDir string,
-	pluginConfigs []bufconfig2.GeneratePluginConfig,
+	pluginConfigs []bufconfig.GeneratePluginConfig,
 ) error {
 	return bufprotopluginos.NewCleaner(g.storageosProvider).DeleteOuts(
 		ctx,
 		xslices.Map(
 			pluginConfigs,
-			func(pluginConfig bufconfig2.GeneratePluginConfig) string {
+			func(pluginConfig bufconfig.GeneratePluginConfig) string {
 				out := pluginConfig.Out()
 				if baseOutDir != "" && baseOutDir != "." {
 					return filepath.Join(baseOutDir, out)
@@ -154,7 +155,7 @@ func (g *generator) generateCode(
 	container app.EnvStdioContainer,
 	inputImage bufimage.Image,
 	baseOutDir string,
-	pluginConfigs []bufconfig2.GeneratePluginConfig,
+	pluginConfigs []bufconfig.GeneratePluginConfig,
 	includeImportsOverride *bool,
 	includeWellKnownTypesOverride *bool,
 ) error {
@@ -201,7 +202,7 @@ func (g *generator) generateCode(
 func (g *generator) execPlugins(
 	ctx context.Context,
 	container app.EnvStdioContainer,
-	pluginConfigs []bufconfig2.GeneratePluginConfig,
+	pluginConfigs []bufconfig.GeneratePluginConfig,
 	image bufimage.Image,
 	includeImportsOverride *bool,
 	includeWellKnownTypesOverride *bool,
@@ -327,7 +328,7 @@ func (g *generator) execLocalPlugin(
 	ctx context.Context,
 	container app.EnvStdioContainer,
 	pluginImages []bufimage.Image,
-	pluginConfig bufconfig2.GeneratePluginConfig,
+	pluginConfig bufconfig.GeneratePluginConfig,
 	includeImports bool,
 	includeWellKnownTypes bool,
 ) (*pluginpb.CodeGeneratorResponse, error) {
@@ -360,7 +361,7 @@ func (g *generator) execRemotePluginsV2(
 	container app.EnvStdioContainer,
 	image bufimage.Image,
 	remote string,
-	indexedPluginConfigs []xslices.Indexed[bufconfig2.GeneratePluginConfig],
+	indexedPluginConfigs []xslices.Indexed[bufconfig.GeneratePluginConfig],
 	includeImportsOverride *bool,
 	includeWellKnownTypesOverride *bool,
 ) ([]xslices.Indexed[*pluginpb.CodeGeneratorResponse], error) {
@@ -420,7 +421,7 @@ func (g *generator) execRemotePluginsV2(
 }
 
 func getPluginGenerationRequest(
-	pluginConfig bufconfig2.GeneratePluginConfig,
+	pluginConfig bufconfig.GeneratePluginConfig,
 	includeImports bool,
 	includeWellKnownTypes bool,
 ) (*registryv1alpha1.PluginGenerationRequest, error) {
@@ -453,7 +454,7 @@ func getPluginGenerationRequest(
 // plugin.
 func validateResponses(
 	responses []*pluginpb.CodeGeneratorResponse,
-	pluginConfigs []bufconfig2.GeneratePluginConfig,
+	pluginConfigs []bufconfig.GeneratePluginConfig,
 ) error {
 	if len(responses) != len(pluginConfigs) {
 		return fmt.Errorf("unexpected number of responses: expected %d but got %d", len(pluginConfigs), len(responses))
@@ -504,7 +505,7 @@ type pluginConfigKeyForImage struct {
 //   - ExcludeTypes
 //   - Strategy
 //   - RemoteHost
-func createPluginConfigKeyForImage(pluginConfig bufconfig2.GeneratePluginConfig) pluginConfigKeyForImage {
+func createPluginConfigKeyForImage(pluginConfig bufconfig.GeneratePluginConfig) pluginConfigKeyForImage {
 	// Sort the types and excludeTypes so that the key is deterministic.
 	sort.Strings(pluginConfig.IncludeTypes())
 	sort.Strings(pluginConfig.ExcludeTypes())

@@ -18,11 +18,11 @@ import (
 	"maps"
 	"slices"
 
-	bufconfig2 "github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufconfig"
-	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufmodule"
-	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufparse"
-	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufplugin"
-	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufpolicy"
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufconfig"
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufmodule"
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufparse"
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufplugin"
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufpolicy"
 )
 
 // Workspace is a buf workspace.
@@ -66,7 +66,7 @@ type Workspace interface {
 	// and then provide a WorkspaceToModuleSet global function. This seems messier in
 	// practice than having users call GetLintConfigForOpaqueID(module.OpaqueID())
 	// in the situations where they need configuration.
-	GetLintConfigForOpaqueID(opaqueID string) bufconfig2.LintConfig
+	GetLintConfigForOpaqueID(opaqueID string) bufconfig.LintConfig
 	// GetBreakingConfigForOpaqueID gets the BreakingConfig for the OpaqueID, if the OpaqueID
 	// represents a Module within the workspace.
 	//
@@ -74,11 +74,11 @@ type Workspace interface {
 	// such as Modules read from buf.lock files. These Modules will not be target Modules
 	// in the workspace. This should result in items such as the linter or breaking change
 	// detector ignoring these configs anyways.
-	GetBreakingConfigForOpaqueID(opaqueID string) bufconfig2.BreakingConfig
+	GetBreakingConfigForOpaqueID(opaqueID string) bufconfig.BreakingConfig
 	// PluginConfigs gets the configured PluginConfigs of the Workspace.
 	//
 	// These come from the buf.lock file. Only v2 supports plugins.
-	PluginConfigs() []bufconfig2.PluginConfig
+	PluginConfigs() []bufconfig.PluginConfig
 	// RemotePluginKeys gets the remote PluginKeys of the Workspace.
 	//
 	// These come from the buf.lock file. Only v2 supports plugins.
@@ -86,7 +86,7 @@ type Workspace interface {
 	// PolicyConfigs gets the configured PolicyConfigs of the Workspace.
 	//
 	// These come from the buf.yaml files.
-	PolicyConfigs() []bufconfig2.PolicyConfig
+	PolicyConfigs() []bufconfig.PolicyConfig
 	// RemotePolicyKeys gets the remote PolicyKeys of the Workspace.
 	//
 	// These come from the buf.lock file. Only v2 supports policies.
@@ -124,11 +124,11 @@ type Workspace interface {
 type workspace struct {
 	bufmodule.ModuleSet
 
-	opaqueIDToLintConfig         map[string]bufconfig2.LintConfig
-	opaqueIDToBreakingConfig     map[string]bufconfig2.BreakingConfig
-	pluginConfigs                []bufconfig2.PluginConfig
+	opaqueIDToLintConfig         map[string]bufconfig.LintConfig
+	opaqueIDToBreakingConfig     map[string]bufconfig.BreakingConfig
+	pluginConfigs                []bufconfig.PluginConfig
 	remotePluginKeys             []bufplugin.PluginKey
-	policyConfigs                []bufconfig2.PolicyConfig
+	policyConfigs                []bufconfig.PolicyConfig
 	remotePolicyKeys             []bufpolicy.PolicyKey
 	policyNameToRemotePluginKeys map[string][]bufplugin.PluginKey
 	configuredDepModuleRefs      []bufparse.Ref
@@ -140,11 +140,11 @@ type workspace struct {
 
 func newWorkspace(
 	moduleSet bufmodule.ModuleSet,
-	opaqueIDToLintConfig map[string]bufconfig2.LintConfig,
-	opaqueIDToBreakingConfig map[string]bufconfig2.BreakingConfig,
-	pluginConfigs []bufconfig2.PluginConfig,
+	opaqueIDToLintConfig map[string]bufconfig.LintConfig,
+	opaqueIDToBreakingConfig map[string]bufconfig.BreakingConfig,
+	pluginConfigs []bufconfig.PluginConfig,
 	remotePluginKeys []bufplugin.PluginKey,
-	policyConfigs []bufconfig2.PolicyConfig,
+	policyConfigs []bufconfig.PolicyConfig,
 	remotePolicyKeys []bufpolicy.PolicyKey,
 	policyNameToRemotePluginKeys map[string][]bufplugin.PluginKey,
 	configuredDepModuleRefs []bufparse.Ref,
@@ -164,15 +164,15 @@ func newWorkspace(
 	}
 }
 
-func (w *workspace) GetLintConfigForOpaqueID(opaqueID string) bufconfig2.LintConfig {
+func (w *workspace) GetLintConfigForOpaqueID(opaqueID string) bufconfig.LintConfig {
 	return w.opaqueIDToLintConfig[opaqueID]
 }
 
-func (w *workspace) GetBreakingConfigForOpaqueID(opaqueID string) bufconfig2.BreakingConfig {
+func (w *workspace) GetBreakingConfigForOpaqueID(opaqueID string) bufconfig.BreakingConfig {
 	return w.opaqueIDToBreakingConfig[opaqueID]
 }
 
-func (w *workspace) PluginConfigs() []bufconfig2.PluginConfig {
+func (w *workspace) PluginConfigs() []bufconfig.PluginConfig {
 	return slices.Clone(w.pluginConfigs)
 }
 
@@ -180,7 +180,7 @@ func (w *workspace) RemotePluginKeys() []bufplugin.PluginKey {
 	return slices.Clone(w.remotePluginKeys)
 }
 
-func (w *workspace) PolicyConfigs() []bufconfig2.PolicyConfig {
+func (w *workspace) PolicyConfigs() []bufconfig.PolicyConfig {
 	return slices.Clone(w.policyConfigs)
 }
 

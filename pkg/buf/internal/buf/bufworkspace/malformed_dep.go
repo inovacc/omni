@@ -17,10 +17,10 @@ package bufworkspace
 import (
 	"sort"
 
-	bufmodule2 "github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufmodule"
-	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufparse"
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/syserror"
-	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufmodule"
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufparse"
+	"github.com/inovacc/omni/pkg/buf/pkg/standard/xslices"
+	"github.com/inovacc/omni/pkg/buf/pkg/syserror"
 )
 
 const (
@@ -57,8 +57,8 @@ type MalformedDep interface {
 func MalformedDepsForWorkspace(workspace Workspace) ([]MalformedDep, error) {
 	localFullNameStringMap := xslices.ToStructMapOmitEmpty(
 		xslices.Map(
-			bufmodule2.ModuleSetLocalModules(workspace),
-			func(module bufmodule2.Module) string {
+			bufmodule.ModuleSetLocalModules(workspace),
+			func(module bufmodule.Module) string {
 				if moduleFullName := module.FullName(); moduleFullName != nil {
 					return moduleFullName.String()
 				}
@@ -66,13 +66,13 @@ func MalformedDepsForWorkspace(workspace Workspace) ([]MalformedDep, error) {
 			},
 		),
 	)
-	remoteDeps, err := bufmodule2.RemoteDepsForModuleSet(workspace)
+	remoteDeps, err := bufmodule.RemoteDepsForModuleSet(workspace)
 	if err != nil {
 		return nil, err
 	}
 	moduleFullNameStringToRemoteDep, err := xslices.ToUniqueValuesMapError(
 		remoteDeps,
-		func(remoteDep bufmodule2.RemoteDep) (string, error) {
+		func(remoteDep bufmodule.RemoteDep) (string, error) {
 			moduleFullName := remoteDep.FullName()
 			if moduleFullName == nil {
 				return "", syserror.Newf("FullName nil on remote Module dependency %q", remoteDep.OpaqueID())

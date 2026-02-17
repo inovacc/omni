@@ -53,11 +53,8 @@ type DynSeq[T ~DynNode[T, K, C], K Kind[K], C Constraint] struct {
 
 // Inserter returns a [seq.Inserter] wrapping this [DynSeq].
 func (s *DynSeq[T, K, C]) Inserter(context C) seq.Inserter[T] {
-	var (
-		kinds *[]K
-		ids   *[]ID[T]
-	)
-
+	var kinds *[]K
+	var ids *[]ID[T]
 	if s != nil {
 		kinds = &s.kinds
 		ids = &s.ids

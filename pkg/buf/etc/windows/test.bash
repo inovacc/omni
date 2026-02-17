@@ -34,12 +34,12 @@ go install ./cmd/buf \
   ./cmd/buf/internal/command/alpha/protoc/internal/protoc-gen-insertion-point-writer \
   ./cmd/buf/internal/command/alpha/protoc/internal/protoc-gen-insertion-point-receiver \
   ./cmd/buf/internal/command/generate/internal/protoc-gen-top-level-type-names-yaml \
-  ./private/bufpkg/bufcheck/internal/cmd/buf-plugin-panic \
-  ./private/bufpkg/bufcheck/internal/cmd/buf-plugin-suffix \
-  ./private/bufpkg/bufcheck/internal/cmd/buf-plugin-protovalidate-ext \
-  ./private/bufpkg/bufcheck/internal/cmd/buf-plugin-rpc-ext \
-  ./private/bufpkg/bufcheck/internal/cmd/buf-plugin-duplicate-category \
-  ./private/bufpkg/bufcheck/internal/cmd/buf-plugin-duplicate-rule
+  ./internal/buf/bufcheck/internal/cmd/buf-plugin-panic \
+  ./internal/buf/bufcheck/internal/cmd/buf-plugin-suffix \
+  ./internal/buf/bufcheck/internal/cmd/buf-plugin-protovalidate-ext \
+  ./internal/buf/bufcheck/internal/cmd/buf-plugin-rpc-ext \
+  ./internal/buf/bufcheck/internal/cmd/buf-plugin-duplicate-category \
+  ./internal/buf/bufcheck/internal/cmd/buf-plugin-duplicate-rule
 GOOS=wasip1 GOARCH=wasm go build -o $(go env -json | jq -r .GOPATH)/bin/buf-plugin-suffix.wasm \
-  ./private/bufpkg/bufcheck/internal/cmd/buf-plugin-suffix
+  ./internal/buf/bufcheck/internal/cmd/buf-plugin-suffix
 go test ./...

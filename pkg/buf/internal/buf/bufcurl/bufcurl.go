@@ -21,7 +21,7 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/protoencoding"
+	"github.com/inovacc/omni/pkg/buf/pkg/protoencoding"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
 )

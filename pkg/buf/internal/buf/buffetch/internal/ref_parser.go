@@ -21,11 +21,11 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/inovacc/omni/pkg/buf/internal/app"
-	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufconfig"
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/git"
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/normalpath"
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/syserror"
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufconfig"
+	app2 "github.com/inovacc/omni/pkg/buf/pkg/app"
+	"github.com/inovacc/omni/pkg/buf/pkg/git"
+	"github.com/inovacc/omni/pkg/buf/pkg/normalpath"
+	"github.com/inovacc/omni/pkg/buf/pkg/syserror"
 )
 
 type refParser struct {
@@ -126,8 +126,8 @@ func (a *refParser) getRawRef(
 	for key, value := range options {
 		switch key {
 		case "format":
-			if app.IsDevNull(path) {
-				return nil, NewFormatOverrideNotAllowedForDevNullError(app.DevNullFilePath)
+			if app2.IsDevNull(path) {
+				return nil, NewFormatOverrideNotAllowedForDevNullError(app2.DevNullFilePath)
 			}
 			rawRef.Format = value
 		case "compression":

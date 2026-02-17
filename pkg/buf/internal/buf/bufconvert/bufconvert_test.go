@@ -19,12 +19,13 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
-	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufimage"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/types/descriptorpb"
+
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufimage"
 )
 
 func TestImageWithoutMessageSetWireFormatResolution(t *testing.T) {

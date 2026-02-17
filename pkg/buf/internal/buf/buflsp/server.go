@@ -22,14 +22,15 @@ import (
 	"strings"
 	"unicode/utf16"
 
-	celpv "buf.build/go/protovalidate/cel"
-	"github.com/google/cel-go/cel"
-	"github.com/inovacc/omni/pkg/buf/internal/buf/bufformat"
 	"github.com/inovacc/omni/pkg/buf/internal/protocompile/parser"
 	"github.com/inovacc/omni/pkg/buf/internal/protocompile/reporter"
-	"github.com/inovacc/omni/pkg/buf/internal/standard/xslices"
+	celpv "github.com/inovacc/omni/pkg/buf/pkg/protovalidate/cel"
+	"github.com/inovacc/omni/pkg/buf/pkg/standard/xslices"
+	"github.com/google/cel-go/cel"
 	"go.lsp.dev/protocol"
-	xurls "mvdan.cc/xurls/v2"
+	"mvdan.cc/xurls/v2"
+
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufformat"
 )
 
 const (
@@ -60,7 +61,7 @@ type server struct {
 
 // newServer creates a protocol.Server implementation out of an lsp.
 func newServer(lsp *lsp) (protocol.Server, error) {
-	httpsURLRegex, err := xurls.StrictMatchingScheme("https")
+	httpsURLRegex, err := xurls.StrictMatchingScheme("https://")
 	if err != nil {
 		return nil, fmt.Errorf("failed to create HTTPS URL regex: %w", err)
 	}
@@ -138,7 +139,6 @@ func (s *server) Initialize(
 			CodeActionProvider: &protocol.CodeActionOptions{
 				CodeActionKinds: []protocol.CodeActionKind{
 					protocol.SourceOrganizeImports,
-					protocol.RefactorRewrite,
 				},
 			},
 			CompletionProvider: &protocol.CompletionOptions{
@@ -505,11 +505,6 @@ func (s *server) CodeAction(ctx context.Context, params *protocol.CodeActionPara
 	if _, ok := codeActionSet[protocol.SourceOrganizeImports]; len(codeActionSet) == 0 || ok {
 		if organizeImportsAction := s.getOrganizeImportsCodeAction(ctx, file); organizeImportsAction != nil {
 			actions = append(actions, *organizeImportsAction)
-		}
-	}
-	if _, ok := codeActionSet[protocol.RefactorRewrite]; len(codeActionSet) == 0 || ok {
-		if deprecateAction := s.getDeprecateCodeAction(ctx, file, params); deprecateAction != nil {
-			actions = append(actions, *deprecateAction)
 		}
 	}
 	return actions, nil

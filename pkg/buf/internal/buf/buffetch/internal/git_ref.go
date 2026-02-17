@@ -17,9 +17,9 @@ package internal
 import (
 	"strings"
 
-	"github.com/inovacc/omni/pkg/buf/internal/app"
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/git"
-	normalpath2 "github.com/inovacc/omni/pkg/buf/internal/pkg/normalpath"
+	"github.com/inovacc/omni/pkg/buf/pkg/app"
+	"github.com/inovacc/omni/pkg/buf/pkg/git"
+	normalpath2 "github.com/inovacc/omni/pkg/buf/pkg/normalpath"
 )
 
 var (
@@ -37,9 +37,9 @@ var (
 type gitRef struct {
 	format            string
 	path              string
-	gitScheme         GitScheme
-	gitName           git.Name
-	depth             uint32
+	gitScheme GitScheme
+	gitName   git.Name
+	depth     uint32
 	recurseSubmodules bool
 	subDirPath        string
 	filter            string

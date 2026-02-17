@@ -19,10 +19,11 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/inovacc/omni/pkg/buf/internal/bufpkg/bufimage"
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/protoencoding"
+	"github.com/inovacc/omni/pkg/buf/pkg/protoencoding"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/types/descriptorpb"
+
+	"github.com/inovacc/omni/pkg/buf/internal/buf/bufimage"
 )
 
 // ImageWithoutMessageSetWireFormatResolution returns an image with the

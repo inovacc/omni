@@ -21,11 +21,12 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/inovacc/omni/pkg/buf/internal/app"
-	"github.com/inovacc/omni/pkg/buf/internal/buf/buffetch/internal"
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/slogtestext"
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/storage/storageos"
+	"github.com/inovacc/omni/pkg/buf/pkg/app"
+	"github.com/inovacc/omni/pkg/buf/pkg/slogtestext"
+	"github.com/inovacc/omni/pkg/buf/pkg/storage/storageos"
 	"github.com/stretchr/testify/require"
+
+	"github.com/inovacc/omni/pkg/buf/internal/buf/buffetch/internal"
 )
 
 func TestRoundTripBin(t *testing.T) {

@@ -43,14 +43,13 @@ service UserService {
 		check   func(string) bool
 	}{
 		{
-			name:    "build without output",
+			name:    "build without output writes JSON to stdout",
 			opts:    BuildOptions{},
 			wantErr: false,
 			check: func(output string) bool {
-				return strings.Contains(output, "Built 1 file(s)") &&
-					strings.Contains(output, "test.proto") &&
-					strings.Contains(output, "messages: User") &&
-					strings.Contains(output, "services: UserService")
+				// Real buf outputs a FileDescriptorSet JSON with a "file" key
+				return strings.Contains(output, "file") &&
+					strings.Contains(output, "test.proto")
 			},
 		},
 		{
@@ -120,27 +119,40 @@ message User {
 		t.Fatalf("RunBuild() error = %v", err)
 	}
 
-	// Read and parse the JSON output
+	// Read and parse the JSON output (FileDescriptorSet format)
 	content, err := os.ReadFile(outputPath)
 	if err != nil {
 		t.Fatalf("Failed to read output file: %v", err)
 	}
 
-	var image ProtoImage
-	if err := json.Unmarshal(content, &image); err != nil {
+	var fds map[string]interface{}
+	if err := json.Unmarshal(content, &fds); err != nil {
 		t.Fatalf("Failed to parse JSON output: %v", err)
 	}
 
-	if len(image.Files) != 1 {
-		t.Errorf("Image has %d files, want 1", len(image.Files))
+	// FileDescriptorSet has a "file" array
+	files, ok := fds["file"]
+	if !ok {
+		t.Fatal("JSON output missing 'file' key")
 	}
 
-	if image.Files[0].Package != "test.v1" {
-		t.Errorf("File package = %s, want test.v1", image.Files[0].Package)
+	fileList, ok := files.([]interface{})
+	if !ok {
+		t.Fatal("'file' is not an array")
 	}
 
-	if len(image.Files[0].Messages) != 1 || image.Files[0].Messages[0] != "User" {
-		t.Errorf("File messages = %v, want [User]", image.Files[0].Messages)
+	if len(fileList) != 1 {
+		t.Errorf("Image has %d files, want 1", len(fileList))
+	}
+
+	// Check the file has the right package
+	fileMap, ok := fileList[0].(map[string]interface{})
+	if !ok {
+		t.Fatal("file entry is not an object")
+	}
+
+	if pkg, ok := fileMap["package"]; !ok || pkg != "test.v1" {
+		t.Errorf("File package = %v, want test.v1", fileMap["package"])
 	}
 }
 
@@ -152,12 +164,12 @@ func TestRunBuildNoFiles(t *testing.T) {
 	opts := BuildOptions{}
 
 	err := RunBuild(&buf, tmpDir, opts)
-	if err != nil {
-		t.Errorf("RunBuild() with no files should not error: %v", err)
-	}
-
-	if !strings.Contains(buf.String(), "No proto files found") {
-		t.Error("RunBuild() should indicate no proto files found")
+	// Real buf engine errors on empty module (no .proto files).
+	if err == nil {
+		// If no error, at least check for "No proto files found" message
+		if !strings.Contains(buf.String(), "No proto files") {
+			t.Error("RunBuild() should indicate no proto files or return error")
+		}
 	}
 }
 
@@ -178,11 +190,12 @@ message { invalid }
 	var buf bytes.Buffer
 
 	opts := BuildOptions{}
-	_ = RunBuild(&buf, tmpDir, opts)
+	err = RunBuild(&buf, tmpDir, opts)
 
-	// Should report errors but still process what it can
-	output := buf.String()
-	_ = output // May or may not have errors depending on parser behavior
+	// Real buf engine should return an error for invalid proto
+	if err == nil {
+		t.Error("RunBuild() should error on invalid proto file")
+	}
 }
 
 func TestRunBreaking(t *testing.T) {
@@ -233,7 +246,7 @@ message User {
 }`,
 			wantErr:       true,
 			wantBreaking:  true,
-			checkContains: "FIELD_NO_DELETE",
+			checkContains: "was deleted",
 		},
 		{
 			name: "message deleted",
@@ -247,7 +260,7 @@ message User {
 }`,
 			wantErr:       true,
 			wantBreaking:  true,
-			checkContains: "MESSAGE_NO_DELETE",
+			checkContains: "was deleted",
 		},
 		{
 			name: "field type changed",
@@ -263,7 +276,7 @@ message User {
 }`,
 			wantErr:       true,
 			wantBreaking:  true,
-			checkContains: "FIELD_SAME_TYPE",
+			checkContains: "changed type",
 		},
 		{
 			name: "service deleted",
@@ -281,7 +294,7 @@ service TestService {
 }`,
 			wantErr:       true,
 			wantBreaking:  true,
-			checkContains: "SERVICE_NO_DELETE",
+			checkContains: "was deleted",
 		},
 		{
 			name: "file deleted",
@@ -312,12 +325,9 @@ package test;
 			}
 
 			output := buf.String()
-			hasBreaking := strings.Contains(output, "FIELD_NO_DELETE") ||
-				strings.Contains(output, "MESSAGE_NO_DELETE") ||
-				strings.Contains(output, "FIELD_SAME_TYPE") ||
-				strings.Contains(output, "SERVICE_NO_DELETE") ||
-				strings.Contains(output, "FILE_NO_DELETE") ||
-				strings.Contains(output, "RPC_NO_DELETE")
+			hasBreaking := strings.Contains(output, "was deleted") ||
+				strings.Contains(output, "changed type") ||
+				strings.Contains(output, "was removed")
 
 			if hasBreaking != tt.wantBreaking {
 				t.Errorf("RunBreaking() hasBreaking = %v, want %v\nOutput:\n%s", hasBreaking, tt.wantBreaking, output)
@@ -344,45 +354,5 @@ func TestRunBreakingMissingAgainst(t *testing.T) {
 
 	if !strings.Contains(err.Error(), "--against") {
 		t.Errorf("Error should mention --against: %v", err)
-	}
-}
-
-func TestCheckMessageFieldChanges(t *testing.T) {
-	current := []ProtoMessage{
-		{
-			Name: "User",
-			Fields: []ProtoField{
-				{Name: "id", Type: "string", Number: 1},
-			},
-		},
-	}
-
-	against := []ProtoMessage{
-		{
-			Name: "User",
-			Fields: []ProtoField{
-				{Name: "id", Type: "string", Number: 1},
-				{Name: "name", Type: "string", Number: 2},
-			},
-		},
-	}
-
-	results := checkMessageFieldChanges("test.proto", current, against)
-
-	if len(results) == 0 {
-		t.Error("checkMessageFieldChanges() should detect deleted field")
-	}
-
-	foundDelete := false
-
-	for _, r := range results {
-		if r.Rule == "FIELD_NO_DELETE" {
-			foundDelete = true
-			break
-		}
-	}
-
-	if !foundDelete {
-		t.Error("checkMessageFieldChanges() should return FIELD_NO_DELETE rule")
 	}
 }

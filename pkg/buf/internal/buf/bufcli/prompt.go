@@ -22,8 +22,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/inovacc/omni/pkg/buf/internal/app"
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/syserror"
+	"github.com/inovacc/omni/pkg/buf/pkg/app"
+	"github.com/inovacc/omni/pkg/buf/pkg/syserror"
 	"golang.org/x/term"
 )
 

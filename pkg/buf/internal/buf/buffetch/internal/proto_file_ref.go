@@ -14,7 +14,9 @@
 
 package internal
 
-import "github.com/inovacc/omni/pkg/buf/internal/app"
+import (
+	"github.com/inovacc/omni/pkg/buf/pkg/app"
+)
 
 var (
 	_ ParsedProtoFileRef = &protoFileRef{}

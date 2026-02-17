@@ -29,13 +29,14 @@ import (
 	"time"
 
 	"connectrpc.com/connect"
-	"github.com/inovacc/omni/pkg/buf/internal/gen/proto/go/buf/alpha/studio/v1alpha1"
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/protoencoding"
-	"github.com/inovacc/omni/pkg/buf/internal/pkg/slogtestext"
-	"github.com/inovacc/omni/pkg/buf/internal/standard/xlog/xslog"
+	"github.com/inovacc/omni/pkg/buf/pkg/protoencoding"
+	"github.com/inovacc/omni/pkg/buf/pkg/slogtestext"
+	"github.com/inovacc/omni/pkg/buf/pkg/standard/xlog/xslog"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/proto"
+
+	studiov1alpha1 "github.com/inovacc/omni/pkg/buf/internal/gen/proto/go/buf/alpha/studio/v1alpha1"
 )
 
 const (
