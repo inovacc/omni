@@ -1,6 +1,7 @@
 package dd
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -8,6 +9,8 @@ import (
 	"strings"
 	"time"
 	"unicode"
+
+	"github.com/inovacc/omni/internal/cli/cmderr"
 )
 
 // DdOptions configures the dd command behavior
@@ -87,6 +90,12 @@ func RunDd(w io.Writer, opts DdOptions) error {
 	} else {
 		f, err := os.Open(opts.InputFile)
 		if err != nil {
+			if errors.Is(err, os.ErrNotExist) {
+				return cmderr.Wrap(cmderr.ErrNotFound, fmt.Sprintf("dd: failed to open %q: %s", opts.InputFile, err))
+			}
+			if errors.Is(err, os.ErrPermission) {
+				return cmderr.Wrap(cmderr.ErrPermission, fmt.Sprintf("dd: failed to open %q: %s", opts.InputFile, err))
+			}
 			return fmt.Errorf("dd: failed to open %q: %w", opts.InputFile, err)
 		}
 
@@ -118,6 +127,9 @@ func RunDd(w io.Writer, opts DdOptions) error {
 
 		f, err := os.OpenFile(opts.OutputFile, flags, 0644)
 		if err != nil {
+			if errors.Is(err, os.ErrPermission) {
+				return cmderr.Wrap(cmderr.ErrPermission, fmt.Sprintf("dd: failed to open %q: %s", opts.OutputFile, err))
+			}
 			return fmt.Errorf("dd: failed to open %q: %w", opts.OutputFile, err)
 		}
 
@@ -165,7 +177,7 @@ func RunDd(w io.Writer, opts DdOptions) error {
 			for int64(len(outBuf)) >= opts.OutputBS {
 				written, werr := output.Write(outBuf[:opts.OutputBS])
 				if werr != nil {
-					return fmt.Errorf("dd: write error: %w", werr)
+					return cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("dd: write error: %s", werr))
 				}
 
 				stats.BytesWritten += int64(written)
@@ -185,7 +197,7 @@ func RunDd(w io.Writer, opts DdOptions) error {
 		}
 
 		if err != nil {
-			return fmt.Errorf("dd: read error: %w", err)
+			return cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("dd: read error: %s", err))
 		}
 	}
 
@@ -281,7 +293,7 @@ func formatDdBytes(b float64) string {
 func ParseDdSize(s string) (int64, error) {
 	s = strings.TrimSpace(s)
 	if s == "" {
-		return 0, fmt.Errorf("empty size")
+		return 0, cmderr.Wrap(cmderr.ErrInvalidInput, "dd: empty size")
 	}
 
 	// Find where the number ends
@@ -295,7 +307,7 @@ func ParseDdSize(s string) (int64, error) {
 
 	num, err := strconv.ParseInt(numStr, 10, 64)
 	if err != nil {
-		return 0, fmt.Errorf("invalid number: %s", numStr)
+		return 0, cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("dd: invalid number: %s", numStr))
 	}
 
 	var multiplier int64
@@ -318,7 +330,7 @@ func ParseDdSize(s string) (int64, error) {
 	case "GIB":
 		multiplier = 1024 * 1024 * 1024
 	default:
-		return 0, fmt.Errorf("unknown suffix: %s", suffix)
+		return 0, cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("dd: unknown suffix: %s", suffix))
 	}
 
 	return num * multiplier, nil

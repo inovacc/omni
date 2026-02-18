@@ -1,11 +1,13 @@
 package stat
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"os"
 	"time"
 
+	"github.com/inovacc/omni/internal/cli/cmderr"
 	"github.com/inovacc/omni/internal/cli/output"
 )
 
@@ -19,14 +21,17 @@ type TouchOptions struct{}
 
 func RunTouch(args []string, _ TouchOptions) error {
 	if len(args) == 0 {
-		return fmt.Errorf("touch: missing operand")
+		return cmderr.Wrap(cmderr.ErrInvalidInput, "touch: missing operand")
 	}
 
 	for _, path := range args {
 		_, err := os.Stat(path)
-		if os.IsNotExist(err) {
+		if errors.Is(err, os.ErrNotExist) {
 			f, createErr := os.Create(path)
 			if createErr != nil {
+				if errors.Is(createErr, os.ErrPermission) {
+					return cmderr.Wrap(cmderr.ErrPermission, fmt.Sprintf("touch: %s", createErr))
+				}
 				return fmt.Errorf("touch: %w", createErr)
 			}
 
@@ -54,7 +59,7 @@ type StatInfo struct {
 
 func RunStat(w io.Writer, args []string, opts StatOptions) error {
 	if len(args) == 0 {
-		return fmt.Errorf("stat: missing operand")
+		return cmderr.Wrap(cmderr.ErrInvalidInput, "stat: missing operand")
 	}
 
 	f := output.New(w, opts.OutputFormat)
@@ -65,6 +70,12 @@ func RunStat(w io.Writer, args []string, opts StatOptions) error {
 	for _, path := range args {
 		info, err := os.Stat(path)
 		if err != nil {
+			if errors.Is(err, os.ErrNotExist) {
+				return cmderr.Wrap(cmderr.ErrNotFound, fmt.Sprintf("stat: %s", err))
+			}
+			if errors.Is(err, os.ErrPermission) {
+				return cmderr.Wrap(cmderr.ErrPermission, fmt.Sprintf("stat: %s", err))
+			}
 			return fmt.Errorf("stat: %w", err)
 		}
 

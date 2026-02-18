@@ -1,8 +1,11 @@
 package mkdir
 
 import (
+	"errors"
 	"fmt"
 	"os"
+
+	"github.com/inovacc/omni/internal/cli/cmderr"
 )
 
 // Options configures the mkdir command behavior
@@ -12,7 +15,7 @@ type Options struct {
 
 func RunMkdir(args []string, opts Options) error {
 	if len(args) == 0 {
-		return fmt.Errorf("mkdir: missing operand")
+		return cmderr.Wrap(cmderr.ErrInvalidInput, "mkdir: missing operand")
 	}
 
 	for _, path := range args {
@@ -24,6 +27,12 @@ func RunMkdir(args []string, opts Options) error {
 		}
 
 		if err != nil {
+			if errors.Is(err, os.ErrPermission) {
+				return cmderr.Wrap(cmderr.ErrPermission, fmt.Sprintf("mkdir: %s", err))
+			}
+			if errors.Is(err, os.ErrExist) {
+				return cmderr.Wrap(cmderr.ErrConflict, fmt.Sprintf("mkdir: %s", err))
+			}
 			return fmt.Errorf("mkdir: %w", err)
 		}
 	}
@@ -36,12 +45,18 @@ type RmdirOptions struct{}
 
 func RunRmdir(args []string, _ RmdirOptions) error {
 	if len(args) == 0 {
-		return fmt.Errorf("rmdir: missing operand")
+		return cmderr.Wrap(cmderr.ErrInvalidInput, "rmdir: missing operand")
 	}
 
 	for _, path := range args {
 		err := os.Remove(path)
 		if err != nil {
+			if errors.Is(err, os.ErrNotExist) {
+				return cmderr.Wrap(cmderr.ErrNotFound, fmt.Sprintf("rmdir: %s", err))
+			}
+			if errors.Is(err, os.ErrPermission) {
+				return cmderr.Wrap(cmderr.ErrPermission, fmt.Sprintf("rmdir: %s", err))
+			}
 			return fmt.Errorf("rmdir: %w", err)
 		}
 	}

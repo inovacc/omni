@@ -1,10 +1,13 @@
 package ln
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"os"
 	"path/filepath"
+
+	"github.com/inovacc/omni/internal/cli/cmderr"
 )
 
 // LnOptions configures the ln command behavior
@@ -21,7 +24,7 @@ type LnOptions struct {
 // RunLn creates links between files
 func RunLn(w io.Writer, args []string, opts LnOptions) error {
 	if len(args) < 2 {
-		return fmt.Errorf("ln: missing file operand")
+		return cmderr.Wrap(cmderr.ErrInvalidInput, "ln: missing file operand")
 	}
 
 	// Handle multiple sources -> directory case
@@ -30,7 +33,7 @@ func RunLn(w io.Writer, args []string, opts LnOptions) error {
 
 		info, err := os.Stat(dest)
 		if err != nil || !info.IsDir() {
-			return fmt.Errorf("ln: target '%s' is not a directory", dest)
+			return cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("ln: target '%s' is not a directory", dest))
 		}
 
 		for _, src := range args[:len(args)-1] {
@@ -52,6 +55,9 @@ func createLink(w io.Writer, target, linkName string, opts LnOptions) error {
 	if _, err := os.Lstat(linkName); err == nil {
 		if opts.Force {
 			if err := os.Remove(linkName); err != nil {
+				if errors.Is(err, os.ErrPermission) {
+					return cmderr.Wrap(cmderr.ErrPermission, fmt.Sprintf("ln: cannot remove '%s': %s", linkName, err))
+				}
 				return fmt.Errorf("ln: cannot remove '%s': %w", linkName, err)
 			}
 		} else if opts.Backup {
@@ -60,7 +66,7 @@ func createLink(w io.Writer, target, linkName string, opts LnOptions) error {
 				return fmt.Errorf("ln: cannot backup '%s': %w", linkName, err)
 			}
 		} else {
-			return fmt.Errorf("ln: failed to create link '%s': File exists", linkName)
+			return cmderr.Wrap(cmderr.ErrConflict, fmt.Sprintf("ln: failed to create link '%s': File exists", linkName))
 		}
 	}
 
@@ -85,6 +91,9 @@ func createLink(w io.Writer, target, linkName string, opts LnOptions) error {
 	}
 
 	if err != nil {
+		if errors.Is(err, os.ErrPermission) {
+			return cmderr.Wrap(cmderr.ErrPermission, fmt.Sprintf("ln: failed to create link '%s': %s", linkName, err))
+		}
 		return fmt.Errorf("ln: failed to create link '%s': %w", linkName, err)
 	}
 

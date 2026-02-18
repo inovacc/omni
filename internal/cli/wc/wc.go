@@ -2,11 +2,13 @@ package wc
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"io"
 	"os"
 	"unicode/utf8"
 
+	"github.com/inovacc/omni/internal/cli/cmderr"
 	"github.com/inovacc/omni/internal/cli/input"
 	"github.com/inovacc/omni/internal/cli/output"
 )
@@ -43,8 +45,13 @@ func RunWC(w io.Writer, r io.Reader, args []string, opts WCOptions) error {
 
 	sources, err := input.Open(args, r)
 	if err != nil {
-		_, _ = fmt.Fprintf(os.Stderr, "wc: %v\n", err)
-		return err
+		if errors.Is(err, os.ErrNotExist) {
+			return cmderr.Wrap(cmderr.ErrNotFound, fmt.Sprintf("wc: %s", err))
+		}
+		if errors.Is(err, os.ErrPermission) {
+			return cmderr.Wrap(cmderr.ErrPermission, fmt.Sprintf("wc: %s", err))
+		}
+		return fmt.Errorf("wc: %w", err)
 	}
 	defer input.CloseAll(sources)
 

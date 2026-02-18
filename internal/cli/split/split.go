@@ -2,11 +2,14 @@ package split
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"io"
 	"os"
 	"strconv"
 	"strings"
+
+	"github.com/inovacc/omni/internal/cli/cmderr"
 )
 
 // SplitOptions configures the split command behavior
@@ -35,6 +38,12 @@ func RunSplit(w io.Writer, args []string, opts SplitOptions) error {
 	} else {
 		f, err := os.Open(args[0])
 		if err != nil {
+			if errors.Is(err, os.ErrNotExist) {
+				return cmderr.Wrap(cmderr.ErrNotFound, fmt.Sprintf("split: %s", err))
+			}
+			if errors.Is(err, os.ErrPermission) {
+				return cmderr.Wrap(cmderr.ErrPermission, fmt.Sprintf("split: %s", err))
+			}
 			return fmt.Errorf("split: %w", err)
 		}
 
@@ -112,7 +121,7 @@ func splitByLines(w io.Writer, input io.Reader, prefix string, opts SplitOptions
 func splitByBytes(w io.Writer, input io.Reader, prefix string, opts SplitOptions) error {
 	size, err := parseByteSize(opts.Bytes)
 	if err != nil {
-		return fmt.Errorf("split: invalid byte size %q", opts.Bytes)
+		return cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("split: invalid byte size %q", opts.Bytes))
 	}
 
 	buf := make([]byte, size)

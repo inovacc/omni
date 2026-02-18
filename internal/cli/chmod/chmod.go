@@ -1,6 +1,7 @@
 package chmod
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"io/fs"
@@ -8,6 +9,8 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+
+	"github.com/inovacc/omni/internal/cli/cmderr"
 )
 
 // ChmodOptions configures the chmod command behavior
@@ -22,7 +25,7 @@ type ChmodOptions struct {
 // RunChmod changes file mode bits
 func RunChmod(w io.Writer, args []string, opts ChmodOptions) error {
 	if len(args) < 2 {
-		return fmt.Errorf("chmod: missing operand")
+		return cmderr.Wrap(cmderr.ErrInvalidInput, "chmod: missing operand")
 	}
 
 	modeStr := args[0]
@@ -40,7 +43,10 @@ func RunChmod(w io.Writer, args []string, opts ChmodOptions) error {
 		// Use reference file's mode
 		info, err := os.Stat(opts.Reference)
 		if err != nil {
-			return fmt.Errorf("chmod: cannot stat '%s': %w", opts.Reference, err)
+			if errors.Is(err, os.ErrNotExist) {
+			return cmderr.Wrap(cmderr.ErrNotFound, fmt.Sprintf("chmod: cannot stat '%s': %s", opts.Reference, err))
+		}
+		return fmt.Errorf("chmod: cannot stat '%s': %w", opts.Reference, err)
 		}
 
 		newMode = info.Mode().Perm()
@@ -48,14 +54,14 @@ func RunChmod(w io.Writer, args []string, opts ChmodOptions) error {
 		// Octal mode (e.g., 755, 0644)
 		mode, err := strconv.ParseUint(modeStr, 8, 32)
 		if err != nil {
-			return fmt.Errorf("chmod: invalid mode: '%s'", modeStr)
+			return cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("chmod: invalid mode: '%s'", modeStr))
 		}
 
 		newMode = fs.FileMode(mode)
 	default:
 		// All-digit strings that aren't valid octal (e.g., "999") are invalid
 		if isAllDigits(modeStr) {
-			return fmt.Errorf("chmod: invalid mode: '%s'", modeStr)
+			return cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("chmod: invalid mode: '%s'", modeStr))
 		}
 
 		// Symbolic mode (e.g., u+x, go-w, a=rw)
@@ -65,7 +71,7 @@ func RunChmod(w io.Writer, args []string, opts ChmodOptions) error {
 
 		symbolicOp, err = parseSymbolicMode(modeStr)
 		if err != nil {
-			return fmt.Errorf("chmod: invalid mode: '%s'", modeStr)
+			return cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("chmod: invalid mode: '%s'", modeStr))
 		}
 	}
 

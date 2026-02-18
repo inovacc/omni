@@ -2,11 +2,14 @@ package gzip
 
 import (
 	"compress/gzip"
+	"errors"
 	"fmt"
 	"io"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/inovacc/omni/internal/cli/cmderr"
 )
 
 // GzipOptions configures the gzip command behavior
@@ -80,11 +83,17 @@ func gunzipReader(w io.Writer, r io.Reader) error {
 func gzipFile(w io.Writer, path string, opts GzipOptions) error {
 	// Check if already compressed
 	if strings.HasSuffix(path, ".gz") {
-		return fmt.Errorf("%s already has .gz suffix", path)
+		return cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("%s already has .gz suffix", path))
 	}
 
 	inFile, err := os.Open(path)
 	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return cmderr.Wrap(cmderr.ErrNotFound, fmt.Sprintf("gzip: %s", err))
+		}
+		if errors.Is(err, os.ErrPermission) {
+			return cmderr.Wrap(cmderr.ErrPermission, fmt.Sprintf("gzip: %s", err))
+		}
 		return err
 	}
 
@@ -103,12 +112,15 @@ func gzipFile(w io.Writer, path string, opts GzipOptions) error {
 	// Check if output exists
 	if !opts.Force {
 		if _, err := os.Stat(outPath); err == nil {
-			return fmt.Errorf("%s already exists; use -f to overwrite", outPath)
+			return cmderr.Wrap(cmderr.ErrConflict, fmt.Sprintf("%s already exists; use -f to overwrite", outPath))
 		}
 	}
 
 	outFile, err := os.Create(outPath)
 	if err != nil {
+		if errors.Is(err, os.ErrPermission) {
+			return cmderr.Wrap(cmderr.ErrPermission, fmt.Sprintf("gzip: %s", err))
+		}
 		return err
 	}
 
@@ -144,11 +156,17 @@ func gzipFile(w io.Writer, path string, opts GzipOptions) error {
 func gunzipFile(w io.Writer, path string, opts GzipOptions) error {
 	// Check if compressed
 	if !strings.HasSuffix(path, ".gz") {
-		return fmt.Errorf("%s: unknown suffix", path)
+		return cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("%s: unknown suffix", path))
 	}
 
 	inFile, err := os.Open(path)
 	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return cmderr.Wrap(cmderr.ErrNotFound, fmt.Sprintf("gunzip: %s", err))
+		}
+		if errors.Is(err, os.ErrPermission) {
+			return cmderr.Wrap(cmderr.ErrPermission, fmt.Sprintf("gunzip: %s", err))
+		}
 		return err
 	}
 
@@ -163,12 +181,15 @@ func gunzipFile(w io.Writer, path string, opts GzipOptions) error {
 	// Check if output exists
 	if !opts.Force {
 		if _, err := os.Stat(outPath); err == nil {
-			return fmt.Errorf("%s already exists; use -f to overwrite", outPath)
+			return cmderr.Wrap(cmderr.ErrConflict, fmt.Sprintf("%s already exists; use -f to overwrite", outPath))
 		}
 	}
 
 	outFile, err := os.Create(outPath)
 	if err != nil {
+		if errors.Is(err, os.ErrPermission) {
+			return cmderr.Wrap(cmderr.ErrPermission, fmt.Sprintf("gunzip: %s", err))
+		}
 		return err
 	}
 

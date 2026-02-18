@@ -1,9 +1,11 @@
 package rm
 
 import (
+	"errors"
 	"fmt"
 	"os"
 
+	"github.com/inovacc/omni/internal/cli/cmderr"
 	"github.com/inovacc/omni/internal/cli/safepath"
 )
 
@@ -20,7 +22,7 @@ func RunRm(args []string, opts RmOptions) error {
 			return nil
 		}
 
-		return fmt.Errorf("rm: missing operand")
+		return cmderr.Wrap(cmderr.ErrInvalidInput, "rm: missing operand")
 	}
 
 	// Safety check: validate all paths before any deletion
@@ -29,12 +31,12 @@ func RunRm(args []string, opts RmOptions) error {
 			result := safepath.CheckPath(path, "delete")
 			if !result.IsSafe {
 				if !opts.Force {
-					return fmt.Errorf("rm: %s\nUse --force or --no-preserve-root to override", result.Reason)
+					return cmderr.Wrap(cmderr.ErrPermission, fmt.Sprintf("rm: %s\nUse --force or --no-preserve-root to override", result.Reason))
 				}
 
 				// Even with --force, critical paths require --no-preserve-root
 				if result.Severity == safepath.SeverityCritical {
-					return fmt.Errorf("rm: %s\nUse --no-preserve-root to override critical protection", result.Reason)
+					return cmderr.Wrap(cmderr.ErrPermission, fmt.Sprintf("rm: %s\nUse --no-preserve-root to override critical protection", result.Reason))
 				}
 			}
 		}
@@ -49,10 +51,15 @@ func RunRm(args []string, opts RmOptions) error {
 		}
 
 		if err != nil {
-			if opts.Force && os.IsNotExist(err) {
+			if opts.Force && errors.Is(err, os.ErrNotExist) {
 				continue
 			}
-
+			if errors.Is(err, os.ErrNotExist) {
+				return cmderr.Wrap(cmderr.ErrNotFound, fmt.Sprintf("rm: %s", err))
+			}
+			if errors.Is(err, os.ErrPermission) {
+				return cmderr.Wrap(cmderr.ErrPermission, fmt.Sprintf("rm: %s", err))
+			}
 			return fmt.Errorf("rm: %w", err)
 		}
 	}
@@ -67,7 +74,7 @@ type RmdirOptions struct {
 
 func RunRmdir(args []string, opts RmdirOptions) error {
 	if len(args) == 0 {
-		return fmt.Errorf("rmdir: missing operand")
+		return cmderr.Wrap(cmderr.ErrInvalidInput, "rmdir: missing operand")
 	}
 
 	// Safety check: validate all paths before any deletion
@@ -75,7 +82,7 @@ func RunRmdir(args []string, opts RmdirOptions) error {
 		for _, path := range args {
 			result := safepath.CheckPath(path, "delete")
 			if !result.IsSafe {
-				return fmt.Errorf("rmdir: %s\nUse --no-preserve-root to override", result.Reason)
+				return cmderr.Wrap(cmderr.ErrPermission, fmt.Sprintf("rmdir: %s\nUse --no-preserve-root to override", result.Reason))
 			}
 		}
 	}
@@ -83,6 +90,12 @@ func RunRmdir(args []string, opts RmdirOptions) error {
 	for _, path := range args {
 		err := os.Remove(path)
 		if err != nil {
+			if errors.Is(err, os.ErrNotExist) {
+				return cmderr.Wrap(cmderr.ErrNotFound, fmt.Sprintf("rmdir: %s", err))
+			}
+			if errors.Is(err, os.ErrPermission) {
+				return cmderr.Wrap(cmderr.ErrPermission, fmt.Sprintf("rmdir: %s", err))
+			}
 			return fmt.Errorf("rmdir: %w", err)
 		}
 	}
