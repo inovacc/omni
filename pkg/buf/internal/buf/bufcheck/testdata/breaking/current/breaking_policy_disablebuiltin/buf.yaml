@@ -1,5 +1,0 @@
-version: v2
-breaking:
-  disable_builtin: true
-policies:
-  - policy: disablebuiltin.policy.yaml

@@ -1,7 +1,0 @@
-syntax = "proto2";
-
-package a;
-
-message One2 {
-  extensions 4 to max;
-}

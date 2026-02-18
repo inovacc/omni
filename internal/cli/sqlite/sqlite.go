@@ -3,6 +3,7 @@ package sqlite
 import (
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -10,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/inovacc/omni/internal/cli/cmderr"
 	"github.com/inovacc/omni/internal/logger"
 	_ "modernc.org/sqlite"
 )
@@ -69,12 +71,15 @@ type IndexInfo struct {
 func RunStats(w io.Writer, dbPath string, opts Options) error {
 	fi, err := os.Stat(dbPath)
 	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return cmderr.Wrap(cmderr.ErrNotFound, fmt.Sprintf("sqlite: %s", err))
+		}
 		return fmt.Errorf("sqlite: %w", err)
 	}
 
 	db, err := sql.Open("sqlite", dbPath+"?mode=ro")
 	if err != nil {
-		return fmt.Errorf("sqlite: %w", err)
+		return cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("sqlite: %s", err))
 	}
 
 	defer func() { _ = db.Close() }()
@@ -231,7 +236,7 @@ func RunSchema(w io.Writer, dbPath, table string, opts Options) error {
 
 	err = db.QueryRow("SELECT sql FROM sqlite_master WHERE name = ? AND sql IS NOT NULL", table).Scan(&sqlStr)
 	if err != nil {
-		return fmt.Errorf("sqlite: table %q not found", table)
+		return cmderr.Wrap(cmderr.ErrNotFound, fmt.Sprintf("sqlite: table %q not found", table))
 	}
 
 	if opts.JSON {
@@ -292,7 +297,7 @@ func RunColumns(w io.Writer, dbPath, table string, opts Options) error {
 	}
 
 	if len(columns) == 0 {
-		return fmt.Errorf("sqlite: table %q not found", table)
+		return cmderr.Wrap(cmderr.ErrNotFound, fmt.Sprintf("sqlite: table %q not found", table))
 	}
 
 	if opts.JSON {

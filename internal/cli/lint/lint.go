@@ -10,6 +10,7 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/inovacc/omni/internal/cli/cmderr"
 	"github.com/inovacc/omni/internal/cli/output"
 	"gopkg.in/yaml.v3"
 )
@@ -266,7 +267,7 @@ func RunLint(w io.Writer, args []string, opts LintOptions) error {
 	}
 
 	if exitCode != 0 {
-		return fmt.Errorf("lint found issues")
+		return cmderr.Wrap(cmderr.ErrConflict, "lint found issues")
 	}
 
 	return nil

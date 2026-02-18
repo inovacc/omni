@@ -642,7 +642,7 @@ Language              Files      Lines       Code   Comments     Blanks
 |---------|-------------|----------|--------|
 | Unified input package | `internal/cli/input` - file/stdin handling | P0 | 2-3 hrs |
 | Logger JSON export | Export logs to file/stdout in JSON | P1 | 1-2 hrs |
-| Missing tests | twig/builder, twig/parser tests | P1 | 1-2 hrs |
+| ~~Missing tests~~ | ~~twig/builder, twig/parser tests~~ | ✅ Done | — |
 | ~~Command interface~~ | ~~Define unified Command interface contract~~ | ✅ Done | — |
 
 ### Unified Input Package
@@ -786,20 +786,18 @@ func printOutput(cmd *cobra.Command, data any, format OutputFormat) error {
 
 ## Testing Strategy
 
-### Current Coverage Status (January 2026)
+### Current Coverage Status (February 2026)
 
-| Category | Packages | Coverage | Status |
-|----------|----------|----------|--------|
-| **Overall** | 86/88 packages | 97.7% | ✅ Excellent |
-| **CLI Packages** | 79/79 packages | 100% | ✅ Complete |
-| **Infrastructure** | `flags`, `logger`, `twig/*` | 85%+ | ✅ Good |
-| **No Coverage (0%)** | 2 packages (`twig/builder`, `twig/parser`) | 0% | ⚠️ Integration Only |
+| Category | Coverage | Status |
+|----------|----------|--------|
+| **Overall** | 25.8% (includes vendored buf packages) | Skewed by vendor |
+| **Omni-owned pkg/ avg** | ~75% (16 of 31 packages above 80%) | ✅ Good |
+| **Golden master tests** | 117 tests, 13 categories | ✅ Excellent |
 
 ### Test Statistics
 - **Total Test Cases:** 700+
-- **CLI Packages with Tests:** 79/79 (100%)
-- **Internal Packages with Tests:** 86/88 (97.7%)
-- **Query Logging Tests:** Comprehensive coverage for LogQuery, LogQueryResult, LogQueryWithData, QueryLogger
+- **Golden Master Tests:** 117 (13 categories including buf/protobuf)
+- **cmderr adoption:** 29/160+ commands (batches 1-3)
 
 ### Unit Tests
 - Table-driven tests for all functions
@@ -823,13 +821,15 @@ func BenchmarkSortGo(b *testing.B) {
 
 ### Golden Tests
 ```bash
-# Generate expected output
-omni ls testdata/ > testdata/ls.golden
+# Verify outputs match snapshots
+task test:golden
 
-# Compare in tests
-func TestLsGolden(t *testing.T) {
-    // Compare actual vs golden file
-}
+# After intentional output changes, regenerate snapshots
+task test:golden:update
+
+# Full-featured system with SHA-256 manifest
+task golden:compare
+task golden:record
 ```
 
 ---
@@ -963,25 +963,32 @@ Priority P2 - Specialized:
 - [x] xargs, watch, yes
 - [x] Archive operations
 
-### v0.6.0 - Ecosystem (Current)
+### v0.6.0 - Ecosystem ✅
 - [x] --json flag for most commands
-- [ ] ID generators (ksuid, ulid, uuid7, nanoid, Snowflake)
-- [ ] JSON beautify/minify
-- [ ] Enhanced jq with gojq
-- [ ] Template rendering
+- [x] ID generators (ksuid, ulid, uuid7, nanoid, Snowflake)
+- [x] JSON beautify/minify
+- [x] jq query engine
+- [x] Video download engine
 
-### v0.7.0 - Developer Productivity
-- [ ] json2struct / yaml2struct
-- [ ] cron formatter
-- [ ] Code statistics (loc)
-- [ ] Unified input package
+### v0.7.0 - Engines & Media ✅
+- [x] Pipe engine (Cobra dispatch)
+- [x] Pipeline engine (streaming io.Pipe stages)
+- [x] Video download (pure Go youtube-dl port)
+- [x] Protobuf tooling (buf lint, format, compile)
 
-### v1.0.0 - Production Ready
-- [ ] All phases complete
+### v1.5.0 - Infrastructure & Analysis (Current) ✅
+- [x] Unified Command interface contract
+- [x] cmderr error sentinels (29+ commands)
+- [x] repo analyze command
+- [x] Golden master tests (117 tests, 13 categories)
+- [x] buf format/lint upgraded with protocompile AST
+
+### v2.0.0 - Production Ready
+- [ ] cmderr adopted in all commands
 - [ ] Full documentation
-- [ ] Taskfile linter
-- [ ] Comprehensive tests
-- [ ] 95%+ test coverage
+- [ ] 80%+ overall test coverage
+- [ ] CI coverage enforcement
+- [ ] Multi-platform automated releases
 
 ---
 
@@ -2448,7 +2455,7 @@ services:
 
 ## Test Coverage
 
-**Current:** 30.9% (overall, includes vendored buf packages) | **Target:** 80%
+**Current:** 25.8% (overall, includes vendored buf packages) | **Omni-owned pkg/ avg:** ~75% | **Target:** 80%
 
 ### Omni-owned pkg/ Packages
 
@@ -2461,27 +2468,30 @@ services:
 | pkg/twig/comparer | 96.3% | Excellent |
 | pkg/textutil/diff | 95.2% | Excellent |
 | pkg/textutil | 93.7% | Excellent |
-| pkg/idgen | 91.4% | Excellent |
-| pkg/search/rg | 90.4% | Excellent |
+| pkg/video/jsinterp | 91.7% | Excellent |
+| pkg/idgen | 90.3% | Excellent |
 | pkg/hashutil | 88.5% | Good |
 | pkg/cssfmt | 87.3% | Good |
+| pkg/search/rg | 86.6% | Good |
 | pkg/cryptutil | 85.3% | Good |
 | pkg/figlet | 82.9% | Good |
-| pkg/twig/scanner | 82.4% | Good |
-| pkg/pipeline | 81.6% | Good |
+| pkg/twig/scanner | 81.9% | Good |
+| pkg/pipeline | 81.5% | Good |
 | pkg/twig/formatter | 80.4% | Good |
-| pkg/sqlfmt | 79.2% | Acceptable |
+| pkg/sqlfmt | 79.1% | Acceptable |
+| pkg/twig/parser | 79.1% | Acceptable |
+| pkg/search/grep | 77.9% | Acceptable |
 | pkg/htmlfmt | 77.9% | Acceptable |
-| pkg/search/grep | 77.4% | Acceptable |
+| pkg/video/cache | 73.3% | Acceptable |
 | pkg/jsonutil | 67.5% | Needs improvement |
+| pkg/video/nethttp | 61.8% | Needs improvement |
+| pkg/twig/builder | 58.9% | Needs improvement |
 | pkg/video/utils | 58.4% | Needs improvement |
 | pkg/video/format | 50.0% | Needs improvement |
+| pkg/video (root) | 46.0% | Needs improvement |
 | pkg/twig | 44.3% | Needs improvement |
-| pkg/video/extractor | 5.7% | No meaningful tests |
-| pkg/video (root) | 0.0% | No tests |
-| pkg/video/cache | 0.0% | No tests |
-| pkg/video/downloader | 0.0% | No tests |
-| pkg/video/jsinterp | 0.0% | No tests |
-| pkg/video/nethttp | 0.0% | No tests |
-| pkg/twig/builder | 0.0% | No tests |
-| pkg/twig/parser | 0.0% | No tests |
+| pkg/userdirs | 42.9% | Needs improvement |
+| pkg/video/extractor | 41.7% | Needs improvement |
+| pkg/video/downloader | 32.9% | Needs improvement |
+| pkg/video/extractor/youtube | 4.0% | Minimal |
+| pkg/video/extractor/generic | 0.0% | No tests |

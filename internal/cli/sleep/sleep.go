@@ -5,12 +5,14 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/inovacc/omni/internal/cli/cmderr"
 )
 
 // RunSleep pauses execution for specified duration
 func RunSleep(args []string) error {
 	if len(args) == 0 {
-		return fmt.Errorf("sleep: missing operand")
+		return cmderr.Wrap(cmderr.ErrInvalidInput, "sleep: missing operand")
 	}
 
 	var totalDuration time.Duration
@@ -18,7 +20,7 @@ func RunSleep(args []string) error {
 	for _, arg := range args {
 		d, err := parseSleepDuration(arg)
 		if err != nil {
-			return fmt.Errorf("sleep: invalid time interval %q", arg)
+			return cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("sleep: invalid time interval %q", arg))
 		}
 
 		totalDuration += d

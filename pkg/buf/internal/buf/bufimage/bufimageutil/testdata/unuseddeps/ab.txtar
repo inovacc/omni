@@ -1,5 +1,0 @@
--- a.proto --
-syntax = "proto3";
-package a;
-message A {
-}

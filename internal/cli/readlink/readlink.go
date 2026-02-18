@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/inovacc/omni/internal/cli/cmderr"
 	"github.com/inovacc/omni/internal/cli/output"
 )
 
@@ -36,7 +37,7 @@ type ReadlinkOutput struct {
 // RunReadlink prints symbolic link targets or canonical file names
 func RunReadlink(w io.Writer, args []string, opts ReadlinkOptions) error {
 	if len(args) == 0 {
-		return fmt.Errorf("readlink: missing operand")
+		return cmderr.Wrap(cmderr.ErrInvalidInput, "readlink: missing operand")
 	}
 
 	terminator := "\n"
@@ -89,7 +90,7 @@ func RunReadlink(w io.Writer, args []string, opts ReadlinkOptions) error {
 	}
 
 	if hasError {
-		return fmt.Errorf("readlink: some operations failed")
+		return cmderr.Wrap(cmderr.ErrIO, "readlink: some operations failed")
 	}
 
 	return nil

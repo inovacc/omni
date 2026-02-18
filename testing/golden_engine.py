@@ -26,6 +26,7 @@ class GoldenTestCase:
     args: list[str]
     stdin: Optional[str] = None
     fixture: Optional[str] = None  # file content for {file} placeholder
+    fixtures_dir: Optional[dict[str, str]] = None  # filename->content for {dir} placeholder
     normalizations: list[str] = field(default_factory=list)
     platform_specific: bool = False
 
@@ -97,6 +98,7 @@ class GoldenEngine:
                     stdin=test.get("stdin"),
                     fixture=test.get("fixture"),
                     normalizations=test.get("normalizations", []),
+                    fixtures_dir=test.get("fixtures_dir"),
                     platform_specific=test.get("platform_specific", False),
                 ))
         return tests
@@ -111,6 +113,17 @@ class GoldenEngine:
             temp_file = Path(self.temp_dir) / f"{test.name}.txt"
             temp_file.write_text(test.fixture, encoding="utf-8")
             args = [str(temp_file) if a == "{file}" else a for a in args]
+
+        # Handle {dir} placeholder by creating temp directory with fixture files
+        temp_fixture_dir = None
+        if test.fixtures_dir is not None:
+            temp_fixture_dir = Path(self.temp_dir) / f"{test.name}_dir"
+            temp_fixture_dir.mkdir(parents=True, exist_ok=True)
+            for filename, content in test.fixtures_dir.items():
+                fpath = temp_fixture_dir / filename
+                fpath.parent.mkdir(parents=True, exist_ok=True)
+                fpath.write_text(content, encoding="utf-8")
+            args = [str(temp_fixture_dir) if a == "{dir}" else a for a in args]
 
         cmd = [self.binary] + args
         try:
@@ -127,6 +140,8 @@ class GoldenEngine:
         finally:
             if temp_file and temp_file.exists():
                 temp_file.unlink()
+            if temp_fixture_dir and temp_fixture_dir.exists():
+                shutil.rmtree(temp_fixture_dir)
 
     def normalize(self, text: str, normalizer_names: list[str]) -> str:
         """Apply normalization chain to text. Always normalizes newlines."""

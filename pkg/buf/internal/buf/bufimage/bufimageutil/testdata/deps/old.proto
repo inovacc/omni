@@ -1,8 +1,0 @@
-syntax = "proto3";
-package old;
-
-import public "a.proto";
-import public "b.proto";
-import public "c.proto";
-
-message Old {}

@@ -2,10 +2,12 @@ package comm
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"io"
 	"os"
 
+	"github.com/inovacc/omni/internal/cli/cmderr"
 	"github.com/inovacc/omni/internal/cli/output"
 )
 
@@ -31,7 +33,7 @@ type CommResult struct {
 // RunComm compares two sorted files line by line
 func RunComm(w io.Writer, args []string, opts CommOptions) error {
 	if len(args) < 2 {
-		return fmt.Errorf("comm: missing operand")
+		return cmderr.Wrap(cmderr.ErrInvalidInput, "comm: missing operand")
 	}
 
 	file1, file2 := args[0], args[1]
@@ -44,6 +46,9 @@ func RunComm(w io.Writer, args []string, opts CommOptions) error {
 	} else {
 		f, err := os.Open(file1)
 		if err != nil {
+			if errors.Is(err, os.ErrNotExist) {
+				return cmderr.Wrap(cmderr.ErrNotFound, fmt.Sprintf("comm: %s", err))
+			}
 			return fmt.Errorf("comm: %w", err)
 		}
 
@@ -54,13 +59,16 @@ func RunComm(w io.Writer, args []string, opts CommOptions) error {
 
 	if file2 == "-" {
 		if file1 == "-" {
-			return fmt.Errorf("comm: both files cannot be stdin")
+			return cmderr.Wrap(cmderr.ErrInvalidInput, "comm: both files cannot be stdin")
 		}
 
 		r2 = os.Stdin
 	} else {
 		f, err := os.Open(file2)
 		if err != nil {
+			if errors.Is(err, os.ErrNotExist) {
+				return cmderr.Wrap(cmderr.ErrNotFound, fmt.Sprintf("comm: %s", err))
+			}
 			return fmt.Errorf("comm: %w", err)
 		}
 
@@ -113,11 +121,11 @@ func RunComm(w io.Writer, args []string, opts CommOptions) error {
 		// Check sort order if requested
 		if opts.CheckOrder && !opts.NoCheckOrder {
 			if has1 && prevLine1 != "" && line1 < prevLine1 {
-				return fmt.Errorf("comm: file 1 is not in sorted order")
+				return cmderr.Wrap(cmderr.ErrConflict, "comm: file 1 is not in sorted order")
 			}
 
 			if has2 && prevLine2 != "" && line2 < prevLine2 {
-				return fmt.Errorf("comm: file 2 is not in sorted order")
+				return cmderr.Wrap(cmderr.ErrConflict, "comm: file 2 is not in sorted order")
 			}
 		}
 

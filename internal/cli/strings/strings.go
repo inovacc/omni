@@ -1,11 +1,13 @@
 package strings
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"os"
 	"strings"
 
+	"github.com/inovacc/omni/internal/cli/cmderr"
 	"github.com/inovacc/omni/internal/cli/output"
 )
 
@@ -60,6 +62,9 @@ func RunStrings(w io.Writer, args []string, opts StringsOptions) error {
 			} else {
 				f, err := os.Open(path)
 				if err != nil {
+					if errors.Is(err, os.ErrNotExist) {
+						return cmderr.Wrap(cmderr.ErrNotFound, fmt.Sprintf("strings: %s", err))
+					}
 					return fmt.Errorf("strings: %w", err)
 				}
 

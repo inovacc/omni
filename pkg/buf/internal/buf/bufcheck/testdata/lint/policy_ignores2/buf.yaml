@@ -1,8 +1,0 @@
-version: v2
-lint:
-  disable_builtin: true
-policies:
-  - policy: policy.yaml
-    ignore:
-      - buf/bar/bar2.proto
-      - buf/foo

@@ -1,6 +1,0 @@
-syntax = "proto2";
-
-enum Type {
-  // An example of strange characters in a comment: attachment���s
-  TYPE_UNSPECIFIED = 0;
-}

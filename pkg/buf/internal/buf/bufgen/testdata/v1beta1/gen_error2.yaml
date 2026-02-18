@@ -1,4 +1,0 @@
-version: v1beta1
-managed: true
-options:
-  optimize_for: INVALID

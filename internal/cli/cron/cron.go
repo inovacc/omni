@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/inovacc/omni/internal/cli/cmderr"
 	"github.com/inovacc/omni/internal/cli/output"
 )
 
@@ -33,7 +34,7 @@ type Options struct {
 // Run parses and displays cron expression information
 func Run(w io.Writer, args []string, opts Options) error {
 	if len(args) == 0 {
-		return fmt.Errorf("cron: missing cron expression")
+		return cmderr.Wrap(cmderr.ErrInvalidInput, "cron: missing cron expression")
 	}
 
 	expr := strings.Join(args, " ")

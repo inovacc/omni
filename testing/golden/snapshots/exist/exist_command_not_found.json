@@ -1,0 +1,5 @@
+{
+  "exit_code": 1,
+  "stdout_file": "exist_command_not_found.stdout",
+  "stderr": "Error: not found\n"
+}

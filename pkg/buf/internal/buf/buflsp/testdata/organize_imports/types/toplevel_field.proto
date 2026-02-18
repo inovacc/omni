@@ -1,7 +1,0 @@
-syntax = "proto3";
-
-package example.types;
-
-message TopLevelField {
-  string value = 1;
-}

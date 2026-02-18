@@ -1,10 +1,12 @@
 package cmp
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"os"
 
+	"github.com/inovacc/omni/internal/cli/cmderr"
 	"github.com/inovacc/omni/internal/cli/output"
 )
 
@@ -43,7 +45,7 @@ const (
 // RunCmp compares two files byte by byte
 func RunCmp(w io.Writer, args []string, opts CmpOptions) (CmpResult, error) {
 	if len(args) < 2 {
-		return CmpError, fmt.Errorf("cmp: missing operand")
+		return CmpError, cmderr.Wrap(cmderr.ErrInvalidInput, "cmp: missing operand")
 	}
 
 	f := output.New(w, opts.OutputFormat)
@@ -59,6 +61,9 @@ func RunCmp(w io.Writer, args []string, opts CmpOptions) (CmpResult, error) {
 	} else {
 		f, err := os.Open(file1)
 		if err != nil {
+			if errors.Is(err, os.ErrNotExist) {
+				return CmpError, cmderr.Wrap(cmderr.ErrNotFound, fmt.Sprintf("cmp: %s: %s", file1, err))
+			}
 			return CmpError, fmt.Errorf("cmp: %s: %w", file1, err)
 		}
 
@@ -76,13 +81,16 @@ func RunCmp(w io.Writer, args []string, opts CmpOptions) (CmpResult, error) {
 
 	if file2 == "-" {
 		if file1 == "-" {
-			return CmpError, fmt.Errorf("cmp: both files cannot be stdin")
+			return CmpError, cmderr.Wrap(cmderr.ErrInvalidInput, "cmp: both files cannot be stdin")
 		}
 
 		r2 = os.Stdin
 	} else {
 		f, err := os.Open(file2)
 		if err != nil {
+			if errors.Is(err, os.ErrNotExist) {
+				return CmpError, cmderr.Wrap(cmderr.ErrNotFound, fmt.Sprintf("cmp: %s: %s", file2, err))
+			}
 			return CmpError, fmt.Errorf("cmp: %s: %w", file2, err)
 		}
 

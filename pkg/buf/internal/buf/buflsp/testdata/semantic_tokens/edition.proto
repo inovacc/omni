@@ -1,8 +1,0 @@
-edition = "2023";
-
-package test.v1;
-
-message Product {
-  string id = 1;
-  string name = 2;
-}

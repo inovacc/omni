@@ -12,6 +12,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/inovacc/omni/internal/cli/cmderr"
 	"github.com/inovacc/omni/internal/cli/output"
 	pkgrg "github.com/inovacc/omni/pkg/search/rg"
 )
@@ -137,7 +138,7 @@ var fileTypeExtensions = pkgrg.FileTypeExtensions
 // Run executes the rg command
 func Run(w io.Writer, pattern string, paths []string, opts Options) error {
 	if pattern == "" {
-		return fmt.Errorf("rg: no pattern provided")
+		return cmderr.Wrap(cmderr.ErrInvalidInput, "rg: no pattern provided")
 	}
 
 	if len(paths) == 0 {

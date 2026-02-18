@@ -2,6 +2,7 @@ package pager
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -10,6 +11,8 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+
+	"github.com/inovacc/omni/internal/cli/cmderr"
 )
 
 // PagerOptions configures the pager behavior.
@@ -78,6 +81,9 @@ func runPager(_ io.Writer, args []string, opts PagerOptions, name string) error 
 
 		file, err := os.Open(filename)
 		if err != nil {
+			if errors.Is(err, os.ErrNotExist) {
+				return cmderr.Wrap(cmderr.ErrNotFound, fmt.Sprintf("%s: %s", name, err))
+			}
 			return fmt.Errorf("%s: %w", name, err)
 		}
 

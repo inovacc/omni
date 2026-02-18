@@ -1,4 +1,0 @@
-syntax = "proto3";
-
-// buf:lint:ignore PACKAGE_DIRECTORY_MATCH
-package a;

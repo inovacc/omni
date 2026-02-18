@@ -7,6 +7,8 @@ import (
 	"os"
 	"runtime"
 	"strings"
+
+	"github.com/inovacc/omni/internal/cli/cmderr"
 )
 
 // ShellType represents a shell type for export format
@@ -226,7 +228,7 @@ func parseDotenvLine(line string) (string, string, error) {
 	// Find the = separator
 	before, after, ok := strings.Cut(line, "=")
 	if !ok {
-		return "", "", fmt.Errorf("invalid line: no '=' found")
+		return "", "", cmderr.Wrap(cmderr.ErrInvalidInput, "dotenv: invalid line: no '=' found")
 	}
 
 	key := strings.TrimSpace(before)
@@ -234,7 +236,7 @@ func parseDotenvLine(line string) (string, string, error) {
 
 	// Validate key
 	if key == "" {
-		return "", "", fmt.Errorf("empty key")
+		return "", "", cmderr.Wrap(cmderr.ErrInvalidInput, "dotenv: empty key")
 	}
 
 	// Parse value (handle quotes)

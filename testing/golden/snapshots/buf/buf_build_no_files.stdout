@@ -1,0 +1,39 @@
+Protocol buffer utilities inspired by buf.build.
+
+Subcommands:
+  lint       Lint proto files
+  format     Format proto files
+  compile    Compile proto files
+  breaking   Check for breaking changes
+  generate   Generate code from proto files
+  mod        Module management (init)
+  ls-files   List proto files
+
+Examples:
+  omni buf lint
+  omni buf format --write
+  omni buf compile -o image.bin
+  omni buf breaking --against ../v1
+  omni buf generate
+  omni buf mod init buf.build<PATH>
+
+Usage:
+  omni buf [command]
+
+Available Commands:
+  breaking    Check for breaking changes
+  compile     Compile proto files
+  format      Format proto files
+  generate    Generate code from proto files
+  lint        Lint proto files
+  ls-files    List proto files in the module
+  mod         Module management commands
+
+Flags:
+  -h, --help   help for buf
+
+Global Flags:
+      --json    output as JSON
+      --table   output as aligned table
+
+Use "omni buf [command] --help" for more information about a command.

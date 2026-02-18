@@ -3,12 +3,14 @@ package bbolt
 import (
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"os"
 	"path/filepath"
 	"strings"
 
+	"github.com/inovacc/omni/internal/cli/cmderr"
 	bolt "go.etcd.io/bbolt"
 )
 
@@ -47,7 +49,10 @@ type KeyValue struct {
 func RunStats(w io.Writer, dbPath string, opts Options) error {
 	db, err := bolt.Open(dbPath, 0600, &bolt.Options{ReadOnly: true})
 	if err != nil {
-		return fmt.Errorf("bbolt: %w", err)
+		if errors.Is(err, os.ErrNotExist) {
+			return cmderr.Wrap(cmderr.ErrNotFound, fmt.Sprintf("bbolt: %s", err))
+		}
+		return cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("bbolt: %s", err))
 	}
 
 	defer func() { _ = db.Close() }()
@@ -146,7 +151,7 @@ func RunKeys(w io.Writer, dbPath, bucket string, opts Options) error {
 	err = db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(bucket))
 		if b == nil {
-			return fmt.Errorf("bucket %q not found", bucket)
+			return cmderr.Wrap(cmderr.ErrNotFound, fmt.Sprintf("bbolt: bucket %q not found", bucket))
 		}
 
 		return b.ForEach(func(k, _ []byte) error {
@@ -187,12 +192,12 @@ func RunGet(w io.Writer, dbPath, bucket, key string, opts Options) error {
 	err = db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(bucket))
 		if b == nil {
-			return fmt.Errorf("bucket %q not found", bucket)
+			return cmderr.Wrap(cmderr.ErrNotFound, fmt.Sprintf("bbolt: bucket %q not found", bucket))
 		}
 
 		value = b.Get([]byte(key))
 		if value == nil {
-			return fmt.Errorf("key %q not found in bucket %q", key, bucket)
+			return cmderr.Wrap(cmderr.ErrNotFound, fmt.Sprintf("bbolt: key %q not found in bucket %q", key, bucket))
 		}
 
 		return nil
@@ -268,7 +273,7 @@ func RunDelete(w io.Writer, dbPath, bucket, key string, opts Options) error {
 	err = db.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(bucket))
 		if b == nil {
-			return fmt.Errorf("bucket %q not found", bucket)
+			return cmderr.Wrap(cmderr.ErrNotFound, fmt.Sprintf("bbolt: bucket %q not found", bucket))
 		}
 
 		return b.Delete([]byte(key))
@@ -306,7 +311,7 @@ func RunDump(w io.Writer, dbPath, bucket string, opts Options) error {
 	err = db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(bucket))
 		if b == nil {
-			return fmt.Errorf("bucket %q not found", bucket)
+			return cmderr.Wrap(cmderr.ErrNotFound, fmt.Sprintf("bbolt: bucket %q not found", bucket))
 		}
 
 		return b.ForEach(func(k, v []byte) error {

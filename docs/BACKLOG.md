@@ -23,10 +23,10 @@ See CLAUDE.md for the full command inventory.
 
 ### Core Infrastructure
 - [x] Unified `Command` interface contract (`internal/cli/command/` — interface, Registry, adapters)
-- [~] Consistent error model with exit codes (`cmderr` adopted in 19/155+ commands; batches 1-2 done)
+- [~] Consistent error model with exit codes (`cmderr` adopted in 29/160+ commands; batches 1-3 done)
 - [x] Add `--json` flag to remaining commands that lack it
 - [x] Unified output formatter (text/json/table)
-- [ ] cmderr rollout batch 3: remaining ~130 commands (data, compress, system, flow, cloud)
+- [ ] cmderr rollout batch 4+: remaining ~130 commands (data, compress, system, flow, cloud)
 - [ ] Migrate `pipe` command to use `command.Registry` for dispatch
 
 ---
@@ -132,11 +132,11 @@ See CLAUDE.md for the full command inventory.
 - **Packages with new tests (Feb 2026):** video/downloader (progress, fragment, selector), video/nethttp (cookies, SAPISID), video/extractor (helpers, M3U8), video/options
 
 ### Remaining
-- [ ] Tests for twig/builder and twig/parser
+- [x] Tests for twig/builder (58.9%) and twig/parser (79.1%)
 - [ ] Platform-specific tests (Windows edge cases, symlinks, permissions)
 - [ ] Large file (>1GB) handling tests
 - [ ] Benchmarks vs GNU tools (sort, grep, file operations)
-- [x] Golden tests with expected output files (104 tests, 12 categories)
+- [x] Golden tests with expected output files (117 tests, 13 categories including buf/protobuf)
 - [ ] CI coverage threshold enforcement (80%)
 
 ---

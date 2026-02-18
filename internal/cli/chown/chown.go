@@ -1,6 +1,7 @@
 package chown
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"io/fs"
@@ -9,6 +10,8 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+
+	"github.com/inovacc/omni/internal/cli/cmderr"
 )
 
 // ChownOptions configures the chown command behavior
@@ -28,7 +31,7 @@ type ChownOptions struct {
 // RunChown changes file owner and group
 func RunChown(w io.Writer, args []string, opts ChownOptions) error {
 	if len(args) < 2 {
-		return fmt.Errorf("chown: missing operand")
+		return cmderr.Wrap(cmderr.ErrInvalidInput, "chown: missing operand")
 	}
 
 	ownerGroup := args[0]
@@ -42,7 +45,7 @@ func RunChown(w io.Writer, args []string, opts ChownOptions) error {
 
 	for _, file := range files {
 		if opts.PreserveRoot && opts.Recursive && (file == "/" || filepath.Clean(file) == "/") {
-			return fmt.Errorf("chown: it is dangerous to operate recursively on '/'")
+			return cmderr.Wrap(cmderr.ErrPermission, "chown: it is dangerous to operate recursively on '/'")
 		}
 
 		if opts.Recursive {
@@ -76,6 +79,9 @@ func parseOwnerGroup(spec string, reference string) (int, int, error) {
 	if reference != "" {
 		info, err := os.Stat(reference)
 		if err != nil {
+			if errors.Is(err, os.ErrNotExist) {
+				return -1, -1, cmderr.Wrap(cmderr.ErrNotFound, fmt.Sprintf("chown: cannot stat '%s': %s", reference, err))
+			}
 			return -1, -1, fmt.Errorf("cannot stat '%s': %w", reference, err)
 		}
 
@@ -101,7 +107,7 @@ func parseOwnerGroup(spec string, reference string) (int, int, error) {
 		} else {
 			u, err := user.Lookup(owner)
 			if err != nil {
-				return -1, -1, fmt.Errorf("invalid user: '%s'", owner)
+				return -1, -1, cmderr.Wrap(cmderr.ErrNotFound, fmt.Sprintf("chown: invalid user: '%s'", owner))
 			}
 
 			uid, _ = strconv.Atoi(u.Uid)
@@ -115,7 +121,7 @@ func parseOwnerGroup(spec string, reference string) (int, int, error) {
 		} else {
 			g, err := user.LookupGroup(group)
 			if err != nil {
-				return -1, -1, fmt.Errorf("invalid group: '%s'", group)
+				return -1, -1, cmderr.Wrap(cmderr.ErrNotFound, fmt.Sprintf("chown: invalid group: '%s'", group))
 			}
 
 			gid, _ = strconv.Atoi(g.Gid)

@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/inovacc/omni/internal/cli/cmderr"
 	"github.com/inovacc/omni/internal/cli/output"
 )
 
@@ -27,7 +28,7 @@ type SeqResult struct {
 // RunSeq prints a sequence of numbers
 func RunSeq(w io.Writer, args []string, opts SeqOptions) error {
 	if len(args) == 0 {
-		return fmt.Errorf("seq: missing operand")
+		return cmderr.Wrap(cmderr.ErrInvalidInput, "seq: missing operand")
 	}
 
 	// Set defaults
@@ -67,15 +68,15 @@ func RunSeq(w io.Writer, args []string, opts SeqOptions) error {
 			last, err = strconv.ParseFloat(args[2], 64)
 		}
 	default:
-		return fmt.Errorf("seq: too many arguments")
+		return cmderr.Wrap(cmderr.ErrInvalidInput, "seq: too many arguments")
 	}
 
 	if err != nil {
-		return fmt.Errorf("seq: invalid argument")
+		return cmderr.Wrap(cmderr.ErrInvalidInput, "seq: invalid argument")
 	}
 
 	if increment == 0 {
-		return fmt.Errorf("seq: increment must not be zero")
+		return cmderr.Wrap(cmderr.ErrInvalidInput, "seq: increment must not be zero")
 	}
 
 	// Determine format

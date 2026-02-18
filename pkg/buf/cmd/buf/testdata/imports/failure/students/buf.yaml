@@ -1,6 +1,0 @@
-version: v2
-modules:
-  - name: bufbuild.test/bufbot/students
-    path: .
-deps:
-  - bufbuild.test/bufbot/people

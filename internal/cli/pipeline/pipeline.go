@@ -2,10 +2,12 @@ package pipeline
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"os"
 
+	"github.com/inovacc/omni/internal/cli/cmderr"
 	pkgpipeline "github.com/inovacc/omni/pkg/pipeline"
 )
 
@@ -18,7 +20,7 @@ type Options struct {
 // Run executes the pipeline with the given stage definitions.
 func Run(w io.Writer, r io.Reader, args []string, opts Options) error {
 	if len(args) == 0 {
-		return fmt.Errorf("pipeline: no stages provided")
+		return cmderr.Wrap(cmderr.ErrInvalidInput, "pipeline: no stages provided")
 	}
 
 	// Parse stage definitions
@@ -33,6 +35,9 @@ func Run(w io.Writer, r io.Reader, args []string, opts Options) error {
 	if opts.File != "" {
 		f, err := os.Open(opts.File)
 		if err != nil {
+			if errors.Is(err, os.ErrNotExist) {
+				return cmderr.Wrap(cmderr.ErrNotFound, fmt.Sprintf("pipeline: %s", err))
+			}
 			return fmt.Errorf("pipeline: %w", err)
 		}
 

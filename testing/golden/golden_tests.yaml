@@ -405,3 +405,130 @@ categories:
       - name: exist_env_not_found
         args: ["exist", "env", "NONEXISTENT_VAR_XYZ_12345"]
         exit_code: 1
+
+  # ===== BUF (PROTOBUF) =====
+  - name: buf
+    tests:
+      # --- buf format ---
+      - name: buf_format_simple
+        args: ["buf", "format", "{dir}"]
+        fixtures_dir:
+          test.proto: |
+            syntax = "proto3";
+            package test.v1;
+            message User {
+              string id = 1;
+              string name = 2;
+            }
+        normalizations: ["strip_path", "strip_temp_dir"]
+
+      - name: buf_format_expands_compressed
+        args: ["buf", "format", "{dir}"]
+        fixtures_dir:
+          test.proto: "syntax=\"proto3\";package test;message Msg{string id=1;}"
+        normalizations: ["strip_path", "strip_temp_dir"]
+
+      - name: buf_format_enum
+        args: ["buf", "format", "{dir}"]
+        fixtures_dir:
+          test.proto: |
+            syntax = "proto3";
+            package test.v1;
+            enum Status {
+              STATUS_UNSPECIFIED = 0;
+              STATUS_ACTIVE = 1;
+            }
+        normalizations: ["strip_path", "strip_temp_dir"]
+
+      - name: buf_format_service
+        args: ["buf", "format", "{dir}"]
+        fixtures_dir:
+          test.proto: |
+            syntax = "proto3";
+            package test.v1;
+            message Request {}
+            message Response {}
+            service TestService {
+              rpc Get(Request) returns (Response);
+            }
+        normalizations: ["strip_path", "strip_temp_dir"]
+
+      - name: buf_format_no_files
+        args: ["buf", "format", "{dir}"]
+        fixtures_dir:
+          readme.txt: "no proto files here"
+        normalizations: ["strip_path", "strip_temp_dir"]
+
+      # --- buf lint ---
+      - name: buf_lint_clean
+        args: ["buf", "lint", "{dir}"]
+        fixtures_dir:
+          user/v1/user.proto: |
+            syntax = "proto3";
+            package user.v1;
+            message User {
+              string user_id = 1;
+              string user_name = 2;
+            }
+            enum UserStatus {
+              USER_STATUS_UNSPECIFIED = 0;
+              USER_STATUS_ACTIVE = 1;
+            }
+        normalizations: ["strip_path", "strip_temp_dir"]
+
+      - name: buf_lint_violations
+        args: ["buf", "lint", "{dir}"]
+        fixtures_dir:
+          test.proto: |
+            syntax = "proto3";
+            message user {
+              string ID = 1;
+            }
+        normalizations: ["strip_path", "strip_temp_dir"]
+
+      - name: buf_lint_no_files
+        args: ["buf", "lint", "{dir}"]
+        fixtures_dir:
+          readme.txt: "no proto files"
+        normalizations: ["strip_path", "strip_temp_dir"]
+
+      # --- buf build ---
+      - name: buf_build_simple
+        args: ["buf", "build", "{dir}"]
+        fixtures_dir:
+          test.proto: |
+            syntax = "proto3";
+            package test.v1;
+            message User {
+              string id = 1;
+              string name = 2;
+            }
+        normalizations: ["strip_path", "strip_temp_dir"]
+
+      - name: buf_build_no_files
+        args: ["buf", "build", "{dir}"]
+        fixtures_dir:
+          readme.txt: "empty"
+        normalizations: ["strip_path", "strip_temp_dir"]
+
+      - name: buf_build_invalid_proto
+        args: ["buf", "build", "{dir}"]
+        fixtures_dir:
+          test.proto: |
+            syntax = "proto3";
+            package test;
+            message { invalid }
+        normalizations: ["strip_path", "strip_temp_dir"]
+
+      # --- buf breaking ---
+      - name: buf_breaking_no_changes
+        args: ["buf", "breaking", "{dir}", "--against", "{dir}"]
+        fixtures_dir:
+          test.proto: |
+            syntax = "proto3";
+            package test;
+            message User {
+              string id = 1;
+              string name = 2;
+            }
+        normalizations: ["strip_path", "strip_temp_dir"]

@@ -8,6 +8,7 @@ import (
 	"runtime"
 	"strings"
 
+	"github.com/inovacc/omni/internal/cli/cmderr"
 	"github.com/inovacc/omni/internal/cli/output"
 )
 
@@ -27,12 +28,12 @@ type WhichResult struct {
 // RunWhich locates a command
 func RunWhich(w io.Writer, args []string, opts WhichOptions) error {
 	if len(args) == 0 {
-		return fmt.Errorf("which: missing operand")
+		return cmderr.Wrap(cmderr.ErrInvalidInput, "which: missing operand")
 	}
 
 	pathEnv := os.Getenv("PATH")
 	if pathEnv == "" {
-		return fmt.Errorf("which: PATH not set")
+		return cmderr.Wrap(cmderr.ErrNotFound, "which: PATH not set")
 	}
 
 	f := output.New(w, opts.OutputFormat)
@@ -87,7 +88,7 @@ func RunWhich(w io.Writer, args []string, opts WhichOptions) error {
 	}
 
 	if exitCode != 0 {
-		return fmt.Errorf("which: no %s in PATH", args[len(args)-1])
+		return cmderr.Wrap(cmderr.ErrNotFound, fmt.Sprintf("which: no %s in PATH", args[len(args)-1]))
 	}
 
 	return nil

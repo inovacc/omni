@@ -11,6 +11,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/inovacc/omni/internal/cli/cmderr"
 	"github.com/inovacc/omni/internal/cli/output"
 )
 
@@ -493,7 +494,7 @@ func RunLoc(w io.Writer, args []string, opts Options) error {
 			return nil
 		})
 		if err != nil {
-			return fmt.Errorf("loc: %w", err)
+			return cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("loc: %s", err))
 		}
 	}
 

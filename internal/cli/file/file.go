@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/inovacc/omni/internal/cli/cmderr"
 	"github.com/inovacc/omni/internal/cli/output"
 )
 
@@ -32,7 +33,7 @@ type FileResult struct {
 // RunFile determines file type
 func RunFile(w io.Writer, args []string, opts FileOptions) error {
 	if len(args) == 0 {
-		return fmt.Errorf("file: missing file operand")
+		return cmderr.Wrap(cmderr.ErrInvalidInput, "file: missing file operand")
 	}
 
 	if opts.Separator == "" {

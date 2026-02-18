@@ -1,7 +1,0 @@
-syntax = "proto3";
-
-package example.types;
-
-message NotAtTop {
-  string value = 1;
-}

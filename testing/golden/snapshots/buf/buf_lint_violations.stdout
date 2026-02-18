@@ -1,0 +1,3 @@
+<PATH> Files must have a package defined (PACKAGE_DEFINED)
+<PATH> Field name "ID" should be lower_snake_case (FIELD_LOWER_SNAKE_CASE)
+<PATH> Message name "user" should be PascalCase (MESSAGE_PASCAL_CASE)

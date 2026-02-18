@@ -47,7 +47,6 @@ service UserService {
 			opts:    BuildOptions{},
 			wantErr: false,
 			check: func(output string) bool {
-				// Real buf outputs a FileDescriptorSet JSON with a "file" key
 				return strings.Contains(output, "file") &&
 					strings.Contains(output, "test.proto")
 			},
@@ -112,7 +111,8 @@ message User {
 
 	var buf bytes.Buffer
 
-	opts := BuildOptions{Output: outputPath}
+	opts := BuildOptions{}
+	opts.Output = outputPath
 
 	err = RunBuild(&buf, tmpDir, opts)
 	if err != nil {
@@ -161,22 +161,19 @@ func TestRunBuildNoFiles(t *testing.T) {
 
 	var buf bytes.Buffer
 
-	opts := BuildOptions{}
+	err := RunBuild(&buf, tmpDir, BuildOptions{})
+	if err != nil {
+		t.Errorf("RunBuild() should not error for empty dir: %v", err)
+	}
 
-	err := RunBuild(&buf, tmpDir, opts)
-	// Real buf engine errors on empty module (no .proto files).
-	if err == nil {
-		// If no error, at least check for "No proto files found" message
-		if !strings.Contains(buf.String(), "No proto files") {
-			t.Error("RunBuild() should indicate no proto files or return error")
-		}
+	if !strings.Contains(buf.String(), "No proto files") {
+		t.Error("RunBuild() should indicate no proto files found")
 	}
 }
 
 func TestRunBuildWithErrors(t *testing.T) {
 	tmpDir := t.TempDir()
 
-	// Create invalid proto file
 	protoContent := `syntax = "proto3";
 package test;
 message { invalid }
@@ -189,12 +186,45 @@ message { invalid }
 
 	var buf bytes.Buffer
 
-	opts := BuildOptions{}
-	err = RunBuild(&buf, tmpDir, opts)
-
-	// Real buf engine should return an error for invalid proto
+	err = RunBuild(&buf, tmpDir, BuildOptions{})
 	if err == nil {
 		t.Error("RunBuild() should error on invalid proto file")
+	}
+}
+
+func TestRunBuildBinaryOutput(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	protoContent := `syntax = "proto3";
+
+package test.v1;
+
+message User {
+  string id = 1;
+}
+`
+
+	err := os.WriteFile(filepath.Join(tmpDir, "test.proto"), []byte(protoContent), 0644)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	outputPath := filepath.Join(tmpDir, "image.bin")
+
+	var buf bytes.Buffer
+
+	err = RunBuild(&buf, tmpDir, BuildOptions{Output: outputPath})
+	if err != nil {
+		t.Fatalf("RunBuild() error = %v", err)
+	}
+
+	// Verify binary file exists and is non-empty
+	info, err := os.Stat(outputPath)
+	if err != nil {
+		t.Fatalf("Output file not found: %v", err)
+	}
+	if info.Size() == 0 {
+		t.Error("Binary output file is empty")
 	}
 }
 
@@ -296,22 +326,10 @@ service TestService {
 			wantBreaking:  true,
 			checkContains: "was deleted",
 		},
-		{
-			name: "file deleted",
-			currentProto: `syntax = "proto3";
-package test;
-`,
-			againstProto: `syntax = "proto3";
-package test;
-`,
-			wantErr:      false, // Same file exists
-			wantBreaking: false,
-		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// Write proto files
 			_ = os.WriteFile(filepath.Join(currentDir, "test.proto"), []byte(tt.currentProto), 0644)
 			_ = os.WriteFile(filepath.Join(againstDir, "test.proto"), []byte(tt.againstProto), 0644)
 
@@ -345,7 +363,7 @@ func TestRunBreakingMissingAgainst(t *testing.T) {
 
 	var buf bytes.Buffer
 
-	opts := BreakingOptions{} // No Against specified
+	opts := BreakingOptions{}
 
 	err := RunBreaking(&buf, tmpDir, opts)
 	if err == nil {

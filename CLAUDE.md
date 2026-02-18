@@ -222,7 +222,7 @@ return cmderr.Wrap(cmderr.ErrInvalidInput, "path clean: missing operand")
 return cmderr.SilentExit(1) // no message, just exit code
 ```
 
-**Commands adopted:** cat, curl, crypt, diff, grep, find, fs, jq, ls, sed, head, tail, text (sort/uniq), hash, path, archive, base, xxd, yq
+**Commands adopted (49):** cat, curl, crypt, diff, grep, find, fs, jq, ls, sed, head, tail, text (sort/uniq), hash, path, archive, base, xxd, yq, buf (build/format/lint), bzip2, xz, env, kill, ps, df, du, dotenv, free, pipe, chown, rg, pipeline, file, which, shuf, readlink, sqlite, bbolt, pager, join, cmp, comm, cron, loc, lint, seq, sleep, strings
 
 **Commands NOT yet adopted:** ~130 remaining — adopt in future batches following the same pattern.
 
@@ -584,6 +584,7 @@ Shortcuts for common Kubernetes operations.
 | `github.com/charmbracelet/lipgloss` | Terminal styling |
 | `gopkg.in/yaml.v3` | YAML parsing for yq, lint |
 | `github.com/dop251/goja` | Pure Go JS runtime (YouTube signature decryption) |
+| `github.com/bufbuild/protocompile` | Pure Go protobuf compiler (AST parser for buf format/lint) |
 
 ### Standard Library Usage
 
@@ -654,7 +655,7 @@ task test:integration
 
 ### Test Coverage
 
-Current coverage: ~25.8% overall (~75% avg for omni-owned pkg/ packages; total skewed by vendored buf packages)
+Current coverage: ~25.8% overall (~78% avg for omni-owned pkg/ packages; total skewed by vendored buf packages)
 
 ### Test Files
 
@@ -765,7 +766,7 @@ task docker:test:golden:update   # Regenerate and persist to host via volume mou
 
 **Structure:**
 - `testing/golden_engine.py` — Lightweight engine (auto-discovered by `run_all.py`)
-- `testing/golden/golden_tests.yaml` — Declarative test registry (104 tests, 12 categories)
+- `testing/golden/golden_tests.yaml` — Declarative test registry (117 tests, 13 categories)
 - `testing/golden/snapshots/` — JSON metadata + .stdout sidecars
 - `tools/golden/src/golden/` — Full engine (11 modules: manifest, parallel, map, Docker)
 - `tools/golden/golden_tests.yaml` — Shared registry (same tests)

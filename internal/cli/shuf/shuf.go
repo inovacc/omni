@@ -2,6 +2,7 @@ package shuf
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"io"
 	"math/rand"
@@ -9,6 +10,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/inovacc/omni/internal/cli/cmderr"
 	"github.com/inovacc/omni/internal/cli/output"
 )
 
@@ -36,21 +38,21 @@ func RunShuf(w io.Writer, args []string, opts ShufOptions) error {
 		// Generate range
 		parts := strings.Split(opts.InputRange, "-")
 		if len(parts) != 2 {
-			return fmt.Errorf("shuf: invalid input range %q", opts.InputRange)
+			return cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("shuf: invalid input range %q", opts.InputRange))
 		}
 
 		lo, err := strconv.Atoi(parts[0])
 		if err != nil {
-			return fmt.Errorf("shuf: invalid input range %q", opts.InputRange)
+			return cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("shuf: invalid input range %q", opts.InputRange))
 		}
 
 		hi, err := strconv.Atoi(parts[1])
 		if err != nil {
-			return fmt.Errorf("shuf: invalid input range %q", opts.InputRange)
+			return cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("shuf: invalid input range %q", opts.InputRange))
 		}
 
 		if lo > hi {
-			return fmt.Errorf("shuf: invalid input range %q", opts.InputRange)
+			return cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("shuf: invalid input range %q", opts.InputRange))
 		}
 
 		for i := lo; i <= hi; i++ {
@@ -68,6 +70,9 @@ func RunShuf(w io.Writer, args []string, opts ShufOptions) error {
 		} else {
 			f, err := os.Open(args[0])
 			if err != nil {
+				if errors.Is(err, os.ErrNotExist) {
+					return cmderr.Wrap(cmderr.ErrNotFound, fmt.Sprintf("shuf: %s", err))
+				}
 				return fmt.Errorf("shuf: %w", err)
 			}
 

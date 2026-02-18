@@ -1,15 +1,17 @@
 package buf
 
 import (
-	"context"
 	"fmt"
 	"io"
+	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
 	"unicode"
 
-	"github.com/inovacc/omni/pkg/buf/pkg/bufapi"
+	"github.com/bufbuild/protocompile/ast"
+	"github.com/bufbuild/protocompile/parser"
+	"github.com/bufbuild/protocompile/reporter"
 )
 
 // LintRule represents a lint rule
@@ -68,25 +70,50 @@ var lintRules = []LintRule{
 	{ID: "COMMENT_SERVICE", Category: CategoryComments, Check: checkCommentService},
 }
 
-// RunLint runs lint on proto files.
-// Uses the real buf lint engine (protocompile + bufcheck rules).
-// Falls back to the built-in simplified linter if the real engine fails
-// (e.g., unresolvable imports).
+// RunLint runs lint on proto files using the built-in rule engine.
+// The real buf lint engine (pkg/buf/pkg/bufapi) was removed;
+// this uses the simplified linter with 28 built-in rules.
 func RunLint(w io.Writer, dir string, opts LintOptions) error {
-	// Resolve to absolute path for the buf engine.
 	absDir, err := filepath.Abs(dir)
 	if err != nil {
 		absDir = dir
 	}
 
-	format := opts.ErrorFormat
-	if format == "" {
-		format = "text"
+	files, err := FindProtoFiles(absDir, nil)
+	if err != nil {
+		return fmt.Errorf("buf: %w", err)
 	}
 
-	// Try the real buf lint engine first.
-	if err := bufapi.LintDir(context.Background(), w, absDir, format); err != nil {
-		return fmt.Errorf("buf: %w", err)
+	if len(files) == 0 {
+		_, _ = fmt.Fprintln(w, "No proto files found")
+		return nil
+	}
+
+	config := LintConfig{Use: []string{CategoryStandard}}
+	activeRules := getActiveRules(config)
+
+	var totalIssues int
+	for _, file := range files {
+		protoFile, parseErr := parseProtoFileFromPath(file)
+		if parseErr != nil {
+			_, _ = fmt.Fprintf(w, "%s: parse error: %v\n", file, parseErr)
+			continue
+		}
+
+		for _, rule := range activeRules {
+			if shouldIgnoreRule(config, rule.ID, file) {
+				continue
+			}
+			results := rule.Check(protoFile, file)
+			for _, r := range results {
+				_, _ = fmt.Fprintf(w, "%s:%d:%d: %s (%s)\n", r.File, r.Line, r.Column, r.Message, r.Rule)
+				totalIssues++
+			}
+		}
+	}
+
+	if totalIssues > 0 {
+		return fmt.Errorf("buf: lint found %d issue(s)", totalIssues)
 	}
 	return nil
 }
@@ -628,6 +655,220 @@ func checkServiceSuffix(file *ProtoFile, path string) []LintResult {
 	}
 
 	return results
+}
+
+// parseProtoFileFromPath reads a proto file and parses it using protocompile.
+func parseProtoFileFromPath(path string) (*ProtoFile, error) {
+	content, err := os.ReadFile(path)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read %s: %w", path, err)
+	}
+
+	handler := reporter.NewHandler(nil)
+	fileNode, err := parser.Parse(filepath.Base(path), strings.NewReader(string(content)), handler)
+	if err != nil || fileNode == nil {
+		// Fallback to hand-written parser
+		return ParseProtoFile(string(content))
+	}
+
+	return extractProtoFile(fileNode), nil
+}
+
+// extractProtoFile converts a protocompile AST into a ProtoFile.
+func extractProtoFile(file *ast.FileNode) *ProtoFile {
+	pf := &ProtoFile{}
+
+	if syn := file.Syntax; syn != nil {
+		pf.Syntax = syn.Syntax.AsString()
+	}
+
+	for _, decl := range file.Decls {
+		switch d := decl.(type) {
+		case *ast.PackageNode:
+			pf.Package = string(d.Name.AsIdentifier())
+		case *ast.ImportNode:
+			pi := ProtoImport{
+				Path: d.Name.AsString(),
+				Line: file.NodeInfo(d).Start().Line,
+			}
+			if d.Public != nil {
+				pi.Public = true
+			}
+			if d.Weak != nil {
+				pi.Weak = true
+			}
+			pf.Imports = append(pf.Imports, pi)
+		case *ast.MessageNode:
+			pf.Messages = append(pf.Messages, extractMessage(file, d))
+		case *ast.EnumNode:
+			pf.Enums = append(pf.Enums, extractEnum(file, d))
+		case *ast.ServiceNode:
+			pf.Services = append(pf.Services, extractService(file, d))
+		case *ast.OptionNode:
+			pf.Options = append(pf.Options, ProtoOption{
+				Name:  extractOptionName(d),
+				Value: extractOptionValue(d),
+				Line:  file.NodeInfo(d).Start().Line,
+			})
+		}
+	}
+
+	return pf
+}
+
+func extractMessage(file *ast.FileNode, msg *ast.MessageNode) ProtoMessage {
+	pm := ProtoMessage{
+		Name: string(msg.Name.AsIdentifier()),
+		Line: file.NodeInfo(msg).Start().Line,
+	}
+
+	for _, decl := range msg.Decls {
+		switch d := decl.(type) {
+		case *ast.FieldNode:
+			pf := ProtoField{
+				Name:   string(d.Name.AsIdentifier()),
+				Type:   extractFieldType(d),
+				Number: extractTagNumber(d.Tag),
+				Line:   file.NodeInfo(d).Start().Line,
+			}
+			if d.Label.KeywordNode != nil {
+				pf.Label = d.Label.KeywordNode.Val
+			}
+			pm.Fields = append(pm.Fields, pf)
+		case *ast.MapFieldNode:
+			pm.Fields = append(pm.Fields, ProtoField{
+				Name:   string(d.Name.AsIdentifier()),
+				Type:   "map",
+				Number: extractTagNumber(d.Tag),
+				Line:   file.NodeInfo(d).Start().Line,
+			})
+		case *ast.MessageNode:
+			pm.Nested = append(pm.Nested, extractMessage(file, d))
+		case *ast.EnumNode:
+			pm.Enums = append(pm.Enums, extractEnum(file, d))
+		case *ast.OptionNode:
+			pm.Options = append(pm.Options, ProtoOption{
+				Name:  extractOptionName(d),
+				Value: extractOptionValue(d),
+				Line:  file.NodeInfo(d).Start().Line,
+			})
+		case *ast.OneofNode:
+			for _, odecl := range d.Decls {
+				if f, ok := odecl.(*ast.FieldNode); ok {
+					pm.Fields = append(pm.Fields, ProtoField{
+						Name:   string(f.Name.AsIdentifier()),
+						Type:   extractFieldType(f),
+						Number: extractTagNumber(f.Tag),
+						Label:  "oneof",
+						Line:   file.NodeInfo(f).Start().Line,
+					})
+				}
+			}
+		}
+	}
+
+	return pm
+}
+
+func extractEnum(file *ast.FileNode, enum *ast.EnumNode) ProtoEnum {
+	pe := ProtoEnum{
+		Name: string(enum.Name.AsIdentifier()),
+		Line: file.NodeInfo(enum).Start().Line,
+	}
+
+	for _, decl := range enum.Decls {
+		switch d := decl.(type) {
+		case *ast.EnumValueNode:
+			num, _ := d.Number.AsInt64()
+			pe.Values = append(pe.Values, ProtoEnumValue{
+				Name:   string(d.Name.AsIdentifier()),
+				Number: int(num),
+				Line:   file.NodeInfo(d).Start().Line,
+			})
+		case *ast.OptionNode:
+			pe.Options = append(pe.Options, ProtoOption{
+				Name:  extractOptionName(d),
+				Value: extractOptionValue(d),
+				Line:  file.NodeInfo(d).Start().Line,
+			})
+		}
+	}
+
+	return pe
+}
+
+func extractService(file *ast.FileNode, svc *ast.ServiceNode) ProtoService {
+	ps := ProtoService{
+		Name: string(svc.Name.AsIdentifier()),
+		Line: file.NodeInfo(svc).Start().Line,
+	}
+
+	for _, decl := range svc.Decls {
+		switch d := decl.(type) {
+		case *ast.RPCNode:
+			method := ProtoMethod{
+				Name:       string(d.Name.AsIdentifier()),
+				InputType:  extractRPCType(d.Input),
+				OutputType: extractRPCType(d.Output),
+				Line:       file.NodeInfo(d).Start().Line,
+			}
+			if d.Input.Stream != nil {
+				method.ClientStreaming = true
+			}
+			if d.Output.Stream != nil {
+				method.ServerStreaming = true
+			}
+			ps.Methods = append(ps.Methods, method)
+		case *ast.OptionNode:
+			ps.Options = append(ps.Options, ProtoOption{
+				Name:  extractOptionName(d),
+				Value: extractOptionValue(d),
+				Line:  file.NodeInfo(d).Start().Line,
+			})
+		}
+	}
+
+	return ps
+}
+
+func extractFieldType(f *ast.FieldNode) string {
+	if f.FldType != nil {
+		return string(f.FldType.AsIdentifier())
+	}
+	return ""
+}
+
+func extractRPCType(t *ast.RPCTypeNode) string {
+	if t.MessageType != nil {
+		return string(t.MessageType.AsIdentifier())
+	}
+	return ""
+}
+
+func extractTagNumber(tag *ast.UintLiteralNode) int {
+	if tag == nil {
+		return 0
+	}
+	return int(tag.Val)
+}
+
+func extractOptionName(opt *ast.OptionNode) string {
+	if opt.Name != nil && len(opt.Name.Parts) > 0 {
+		return string(opt.Name.Parts[0].Name.AsIdentifier())
+	}
+	return ""
+}
+
+func extractOptionValue(opt *ast.OptionNode) string {
+	if opt.Val == nil {
+		return ""
+	}
+	// Use the Value() interface which returns the Go representation
+	v := opt.Val.Value()
+	if v == nil {
+		return ""
+	}
+	return fmt.Sprintf("%v", v)
 }
 
 // Comment rules - simplified implementations

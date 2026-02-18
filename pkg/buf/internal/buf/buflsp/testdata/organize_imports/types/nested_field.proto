@@ -1,7 +1,0 @@
-syntax = "proto3";
-
-package example.types;
-
-message NestedField {
-  string value = 1;
-}

@@ -1,0 +1,5 @@
+{
+  "exit_code": 1,
+  "stdout_file": "buf_lint_violations.stdout",
+  "stderr": "Error: buf: lint found 3 issue(s)\n"
+}

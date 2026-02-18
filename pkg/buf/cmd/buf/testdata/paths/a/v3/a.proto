@@ -1,8 +1,0 @@
-syntax = "proto3";
-
-package a.v3;
-
-message Foo {
-  int32 key = 1;
-  string Value = 2;
-}

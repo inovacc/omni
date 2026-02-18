@@ -1,7 +1,0 @@
-syntax = "proto3";
-
-package example.types;
-
-message MethodOutputType {
-  string result = 1;
-}

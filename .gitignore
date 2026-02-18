@@ -43,3 +43,5 @@ fabric.properties
 tools/golden/golden_masters/
 tools/golden/test-map.json
 tools/golden/__pycache__/
+.tmp/
+.scripts/

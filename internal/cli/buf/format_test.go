@@ -12,43 +12,106 @@ func TestFormatProto(t *testing.T) {
 	tests := []struct {
 		name  string
 		input string
+		want  string
 	}{
 		{
-			name:  "format simple proto",
-			input: `syntax = "proto3";`,
+			name:  "simple syntax statement",
+			input: "syntax = \"proto3\";\n",
+			want:  "syntax = \"proto3\";\n",
 		},
 		{
-			name: "preserve comments",
-			input: `// Header comment
-syntax = "proto3";
+			name:  "collapse multiple blank lines",
+			input: "syntax = \"proto3\";\n\n\n\npackage test;\n",
+			want:  "syntax = \"proto3\";\n\npackage test;\n",
+		},
+		{
+			name:  "preserve single blank line",
+			input: "syntax = \"proto3\";\n\npackage test;\n",
+			want:  "syntax = \"proto3\";\n\npackage test;\n",
+		},
+		{
+			name: "format message with 2-space indent",
+			input: `syntax = "proto3";
+package test;
+message User {
+    string id = 1;
+    string name = 2;
+}
+`,
+			want: `syntax = "proto3";
+package test;
+message User {
+  string id = 1;
+  string name = 2;
+}
 `,
 		},
 		{
-			name: "format enum values",
+			name:  "expand compressed proto",
+			input: `syntax = "proto3"; package test; message User { string id = 1; }`,
+			want: `syntax = "proto3";
+package test;
+message User {
+  string id = 1;
+}
+`,
+		},
+		{
+			name: "format enum",
 			input: `syntax = "proto3";
+package test;
+message User {
+  string id = 1;
+}
 enum Status {
   STATUS_UNSPECIFIED = 0;
   STATUS_ACTIVE = 1;
-}`,
+}
+`,
+			want: `syntax = "proto3";
+package test;
+message User {
+  string id = 1;
+}
+enum Status {
+  STATUS_UNSPECIFIED = 0;
+  STATUS_ACTIVE = 1;
+}
+`,
+		},
+		{
+			name: "format service with rpc",
+			input: `syntax = "proto3";
+package test;
+message User {}
+service UserService {
+  rpc GetUser(User) returns (User);
+}
+`,
+			want: `syntax = "proto3";
+package test;
+message User {}
+service UserService {
+  rpc GetUser(User) returns (User);
+}
+`,
+		},
+		{
+			name: "preserve trailing comment",
+			input: `syntax = "proto3"; // version comment
+package test;
+`,
+			want: `syntax = "proto3"; // version comment
+package test;
+`,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			formatted := FormatProto(tt.input)
-
-			// Just verify output is non-empty and ends with newline
-			if len(formatted) == 0 {
-				t.Error("FormatProto() returned empty string")
-			}
-
-			if !strings.HasSuffix(formatted, "\n") {
-				t.Error("FormatProto() output should end with newline")
-			}
-
-			// Verify it contains some content from input
-			if !strings.Contains(formatted, "syntax") {
-				t.Errorf("FormatProto() missing basic content\nGot:\n%s", formatted)
+			got := FormatProto(tt.input)
+			if got != tt.want {
+				t.Errorf("FormatProto() mismatch\ngot:\n%s\nwant:\n%s", got, tt.want)
 			}
 		})
 	}
@@ -57,7 +120,8 @@ enum Status {
 func TestRunFormat(t *testing.T) {
 	tmpDir := t.TempDir()
 
-	protoContent := `syntax="proto3";package test;message User{string name=1;}`
+	// Content with multiple blank lines
+	protoContent := "syntax = \"proto3\";\n\n\n\npackage test;\n"
 
 	err := os.WriteFile(filepath.Join(tmpDir, "test.proto"), []byte(protoContent), 0644)
 	if err != nil {
@@ -84,20 +148,19 @@ func TestRunFormat(t *testing.T) {
 			opts:    FormatOptions{Diff: true},
 			wantErr: false,
 			check: func(output, fileContent string) bool {
-				return strings.Contains(output, "---") || strings.Contains(output, "-syntax")
+				return strings.Contains(output, "---")
 			},
 		},
 		{
 			name:    "format with exit-code",
 			opts:    FormatOptions{ExitCode: true},
-			wantErr: true, // Files are unformatted
+			wantErr: true,
 			check:   nil,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// Reset file
 			_ = os.WriteFile(filepath.Join(tmpDir, "test.proto"), []byte(protoContent), 0644)
 
 			var buf bytes.Buffer
@@ -121,7 +184,7 @@ func TestRunFormat(t *testing.T) {
 func TestRunFormatWrite(t *testing.T) {
 	tmpDir := t.TempDir()
 
-	protoContent := `syntax="proto3";package test;message User{string name=1;}`
+	protoContent := "syntax = \"proto3\";\n\n\n\npackage test;\n"
 
 	protoPath := filepath.Join(tmpDir, "test.proto")
 
@@ -139,15 +202,13 @@ func TestRunFormatWrite(t *testing.T) {
 		t.Errorf("RunFormat() error = %v", err)
 	}
 
-	// Check file was modified
 	content, _ := os.ReadFile(protoPath)
 	if string(content) == protoContent {
 		t.Error("RunFormat() with Write should modify the file")
 	}
 
-	// Check file is properly formatted
-	if !strings.Contains(string(content), "syntax = \"proto3\"") {
-		t.Error("RunFormat() file should be formatted")
+	if strings.Contains(string(content), "\n\n\n") {
+		t.Error("RunFormat() should collapse multiple blank lines")
 	}
 }
 
@@ -156,9 +217,7 @@ func TestRunFormatNoFiles(t *testing.T) {
 
 	var buf bytes.Buffer
 
-	opts := FormatOptions{}
-
-	err := RunFormat(&buf, tmpDir, opts)
+	err := RunFormat(&buf, tmpDir, FormatOptions{})
 	if err != nil {
 		t.Errorf("RunFormat() with no files should not error: %v", err)
 	}
@@ -171,15 +230,7 @@ func TestRunFormatNoFiles(t *testing.T) {
 func TestRunFormatAlreadyFormatted(t *testing.T) {
 	tmpDir := t.TempDir()
 
-	// Already properly formatted content
-	protoContent := `syntax = "proto3";
-
-package test;
-
-message User {
-  string name = 1;
-}
-`
+	protoContent := "syntax = \"proto3\";\n\npackage test;\n"
 
 	err := os.WriteFile(filepath.Join(tmpDir, "test.proto"), []byte(protoContent), 0644)
 	if err != nil {
@@ -191,60 +242,40 @@ message User {
 	opts := FormatOptions{ExitCode: true}
 	err = RunFormat(&buf, tmpDir, opts)
 
-	// Should not error since file is already formatted
-	// (might still error due to slight formatting differences)
-	_ = err // Result depends on exact formatting match
+	if err != nil {
+		t.Errorf("RunFormat() should not error for already formatted file: %v", err)
+	}
 }
 
 func TestCleanupBlankLines(t *testing.T) {
 	tests := []struct {
 		name  string
 		input string
+		want  string
 	}{
 		{
-			name:  "multiple blank lines",
+			name:  "multiple blank lines collapsed",
 			input: "a\n\n\n\nb\n",
+			want:  "a\n\nb\n",
 		},
 		{
-			name:  "single blank line",
+			name:  "single blank line preserved",
 			input: "a\n\nb\n",
+			want:  "a\n\nb\n",
 		},
 		{
-			name:  "no blank lines",
+			name:  "no blank lines unchanged",
 			input: "a\nb\n",
+			want:  "a\nb\n",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := cleanupBlankLines(tt.input)
-
-			// Count max consecutive blank lines (excluding trailing)
-			maxBlank := 0
-			currentBlank := 0
-			lines := strings.Split(result, "\n")
-
-			for i, line := range lines {
-				// Skip the last empty element from split
-				if i == len(lines)-1 && line == "" {
-					continue
-				}
-
-				if strings.TrimSpace(line) == "" {
-					currentBlank++
-					if currentBlank > maxBlank {
-						maxBlank = currentBlank
-					}
-				} else {
-					currentBlank = 0
-				}
-			}
-
-			// Just verify we don't have 3+ consecutive blanks
-			if maxBlank > 2 {
-				t.Errorf("cleanupBlankLines() has %d consecutive blanks, expected fewer", maxBlank)
+			got := cleanupBlankLines(tt.input)
+			if got != tt.want {
+				t.Errorf("cleanupBlankLines() = %q, want %q", got, tt.want)
 			}
 		})
 	}
 }
-

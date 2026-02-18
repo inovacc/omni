@@ -1,7 +1,0 @@
-syntax = "proto3";
-
-package example.types;
-
-message MethodInputType {
-  string id = 1;
-}

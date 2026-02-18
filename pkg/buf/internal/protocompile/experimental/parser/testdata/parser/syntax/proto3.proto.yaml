@@ -1,3 +1,0 @@
-decls:
-- syntax: { kind: KIND_SYNTAX, value.literal.string_value: "proto3" }
-- package.path.components: [{ ident: "test" }]

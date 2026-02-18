@@ -1,2 +1,0 @@
-warning: foo.proto:6:9: tabstop
-warning: foo.proto:7:2: partial tabstop

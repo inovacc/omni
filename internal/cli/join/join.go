@@ -2,10 +2,13 @@ package join
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"io"
 	"os"
 	"strings"
+
+	"github.com/inovacc/omni/internal/cli/cmderr"
 )
 
 // JoinOptions configures the join command behavior
@@ -27,7 +30,7 @@ type JoinOptions struct {
 // RunJoin joins lines of two files on a common field
 func RunJoin(w io.Writer, args []string, opts JoinOptions) error {
 	if len(args) != 2 {
-		return fmt.Errorf("join: missing operand")
+		return cmderr.Wrap(cmderr.ErrInvalidInput, "join: missing operand")
 	}
 
 	// Default to field 1 (1-indexed)
@@ -124,6 +127,9 @@ func readJoinFile(path string, sep string) ([]joinLine, error) {
 	} else {
 		f, err := os.Open(path)
 		if err != nil {
+			if errors.Is(err, os.ErrNotExist) {
+				return nil, cmderr.Wrap(cmderr.ErrNotFound, fmt.Sprintf("join: %s", err))
+			}
 			return nil, fmt.Errorf("join: %w", err)
 		}
 

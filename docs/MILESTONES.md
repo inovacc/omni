@@ -76,10 +76,12 @@
 
 **Goals:**
 - [x] Unified `Command` interface contract (`internal/cli/command/`)
-- [x] cmderr error sentinels adopted in 19+ commands (batches 1-2)
+- [x] cmderr error sentinels adopted in 29+ commands (batches 1-3)
 - [x] `repo analyze` command — LLM-optimized repository context generation
 - [x] Exported project package functions for reuse (DetectProjectTypes, AnalyzeDeps, etc.)
-- [x] Golden master tests expanded to 104 tests, 12 categories
+- [x] Golden master tests expanded to 117 tests, 13 categories
+- [x] buf format/lint upgraded with protocompile AST parser
+- [x] ADR-0003: Keep protocompile as external dependency
 - [x] Flatten buf module into omni root module
 
 ---
@@ -90,12 +92,12 @@
 **Target:** TBD
 
 **Goals:**
-- [ ] Unified Command interface contract
-- [ ] Consistent error model with exit codes
+- [x] Unified Command interface contract
+- [~] Consistent error model with exit codes (29+ of 160+ commands adopted)
 - [ ] `--json` flag on all commands
 - [ ] 80%+ overall test coverage
 - [ ] CI coverage threshold enforcement
-- [x] Golden master testing framework (104 tests, 12 categories)
+- [x] Golden master testing framework (117 tests, 13 categories)
 - [ ] Full command reference documentation
 - [ ] Automated releases with goreleaser
 - [ ] Multi-platform, multi-arch builds
@@ -115,31 +117,34 @@
 | pkg/encoding | 100.0% | Excellent |
 | pkg/twig/models | 100.0% | Excellent |
 | pkg/twig/expander | 98.1% | Excellent |
-| pkg/twig/comparer | 96.3% | Excellent |
 | pkg/video/m3u8 | 96.8% | Excellent |
+| pkg/twig/comparer | 96.3% | Excellent |
 | pkg/textutil/diff | 95.2% | Excellent |
 | pkg/textutil | 93.7% | Excellent |
-| pkg/idgen | 91.4% | Excellent |
-| pkg/search/rg | 90.4% | Excellent |
+| pkg/video/jsinterp | 91.7% | Excellent |
+| pkg/idgen | 90.3% | Excellent |
 | pkg/hashutil | 88.5% | Good |
 | pkg/cssfmt | 87.3% | Good |
+| pkg/search/rg | 86.6% | Good |
 | pkg/cryptutil | 85.3% | Good |
 | pkg/figlet | 82.9% | Good |
-| pkg/twig/scanner | 82.4% | Good |
-| pkg/pipeline | 81.6% | Good |
+| pkg/twig/scanner | 81.9% | Good |
+| pkg/pipeline | 81.5% | Good |
 | pkg/twig/formatter | 80.4% | Good |
-| pkg/sqlfmt | 79.2% | Acceptable |
+| pkg/sqlfmt | 79.1% | Acceptable |
+| pkg/twig/parser | 79.1% | Acceptable |
+| pkg/search/grep | 77.9% | Acceptable |
 | pkg/htmlfmt | 77.9% | Acceptable |
-| pkg/search/grep | 77.4% | Acceptable |
+| pkg/video/cache | 73.3% | Acceptable |
 | pkg/jsonutil | 67.5% | Needs improvement |
+| pkg/video/nethttp | 61.8% | Needs improvement |
+| pkg/twig/builder | 58.9% | Needs improvement |
 | pkg/video/utils | 58.4% | Needs improvement |
 | pkg/video/format | 50.0% | Needs improvement |
+| pkg/video (root) | 46.0% | Needs improvement |
 | pkg/twig | 44.3% | Needs improvement |
-| pkg/video/extractor | 5.7% | No meaningful tests |
-| pkg/video (root) | 0.0% | No tests |
-| pkg/video/cache | 0.0% | No tests |
-| pkg/video/downloader | 0.0% | No tests |
-| pkg/video/jsinterp | 0.0% | No tests |
-| pkg/video/nethttp | 0.0% | No tests |
-| pkg/twig/builder | 0.0% | No tests |
-| pkg/twig/parser | 0.0% | No tests |
+| pkg/userdirs | 42.9% | Needs improvement |
+| pkg/video/extractor | 41.7% | Needs improvement |
+| pkg/video/downloader | 32.9% | Needs improvement |
+| pkg/video/extractor/youtube | 4.0% | Minimal |
+| pkg/video/extractor/generic | 0.0% | No tests |
