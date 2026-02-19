@@ -8,7 +8,7 @@ import sys
 from pathlib import Path
 
 from golden.comparator import compare_results
-from golden.config import DEFAULT_TIMEOUT, DEFAULT_WORKERS, default_binary, default_golden_dir, default_registry
+from golden.config import DEFAULT_TIMEOUT, DEFAULT_WORKERS, default_binary, default_golden_dir, default_registry, project_root as detect_project_root
 from golden.discovery import discover_test_cases
 from golden.mapper import build_test_map, format_json, format_table
 from golden.recorder import record_golden
@@ -23,6 +23,7 @@ def main() -> int:
     )
     parser.add_argument("--binary", default=None, help="Path to omni binary")
     parser.add_argument("--golden-dir", default=None, help="Golden masters directory")
+    parser.add_argument("--project-root", default=None, help="Project root for CWD (default: auto-detect)")
     parser.add_argument("--registry", default=None, help="Path to golden_tests.yaml")
     parser.add_argument("--workers", type=int, default=1, help=f"Parallel workers (default: 1)")
     parser.add_argument("--timeout", type=int, default=DEFAULT_TIMEOUT, help=f"Per-test timeout (default: {DEFAULT_TIMEOUT}s)")
@@ -56,6 +57,7 @@ def main() -> int:
         binary += ".exe"
     golden_dir = Path(args.golden_dir) if args.golden_dir else default_golden_dir()
     registry = Path(args.registry) if args.registry else default_registry()
+    proj_root = args.project_root or str(detect_project_root())
 
     # Discover test cases
     try:
@@ -92,6 +94,8 @@ def main() -> int:
                 tags.append("stdin")
             if tc.fixture is not None:
                 tags.append("file")
+            if tc.fixtures_dir is not None:
+                tags.append("dir")
             tag_str = f" ({', '.join(tags)})" if tags else ""
             print(f"    {tc.name}{tag_str}")
         print(f"\nTotal: {len(cases)} tests")
@@ -121,7 +125,7 @@ def main() -> int:
     if args.command in ("record", "update"):
         scope = args.category or "all"
         print(f"{Colors.CYAN}=== Recording Golden Masters ({scope}, {len(cases)} tests) ==={Colors.NC}")
-        results = run_all(cases, binary, args.timeout, args.workers, args.verbose)
+        results = run_all(cases, binary, args.timeout, args.workers, args.verbose, proj_root)
         manifest = record_golden(results, golden_dir, verbose=args.verbose)
         print(f"\n{Colors.GREEN}Recorded {len(results)} golden masters.{Colors.NC}")
         print(f"Manifest: {golden_dir / 'manifest.json'}")
@@ -130,7 +134,7 @@ def main() -> int:
     # === COMPARE ===
     if args.command == "compare":
         print(f"=== Golden Master Tests ({len(cases)} tests) ===")
-        results = run_all(cases, binary, args.timeout, args.workers, args.verbose)
+        results = run_all(cases, binary, args.timeout, args.workers, args.verbose, proj_root)
         comparisons = compare_results(results, golden_dir)
         return print_report(comparisons, verbose=args.verbose)
 

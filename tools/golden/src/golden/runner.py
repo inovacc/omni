@@ -18,6 +18,7 @@ def run_test_case(
     binary: str,
     timeout: int = 30,
     temp_dir: Optional[str] = None,
+    project_root: Optional[str] = None,
 ) -> RunResult:
     """Run a single test case and capture output."""
     args = list(test_case.args)
@@ -30,6 +31,18 @@ def run_test_case(
         temp_file.write_text(test_case.fixture, encoding="utf-8")
         args = [str(temp_file) if a == "{file}" else a for a in args]
 
+    # Handle {dir} placeholder (fixtures_dir creates a temp directory with files)
+    temp_fixtures_dir = None
+    if test_case.fixtures_dir is not None:
+        td = temp_dir or tempfile.gettempdir()
+        temp_fixtures_dir = Path(td) / f"{test_case.name}_dir"
+        temp_fixtures_dir.mkdir(parents=True, exist_ok=True)
+        for fname, content in test_case.fixtures_dir.items():
+            fpath = temp_fixtures_dir / fname
+            fpath.parent.mkdir(parents=True, exist_ok=True)
+            fpath.write_text(content, encoding="utf-8")
+        args = [str(temp_fixtures_dir) if a == "{dir}" else a for a in args]
+
     cmd = [binary] + args
     start = time.monotonic()
     try:
@@ -39,6 +52,7 @@ def run_test_case(
             text=True,
             input=test_case.stdin,
             timeout=timeout,
+            cwd=project_root,
         )
         duration_ms = (time.monotonic() - start) * 1000
         stdout = normalize(result.stdout, test_case.normalizations)
@@ -62,12 +76,15 @@ def run_test_case(
     finally:
         if temp_file and temp_file.exists():
             temp_file.unlink()
+        if temp_fixtures_dir and temp_fixtures_dir.exists():
+            import shutil
+            shutil.rmtree(temp_fixtures_dir, ignore_errors=True)
 
 
 def _run_wrapper(args: tuple) -> RunResult:
     """Wrapper for ProcessPoolExecutor (top-level function for pickling)."""
-    tc, binary, timeout, temp_dir = args
-    return run_test_case(tc, binary, timeout, temp_dir)
+    tc, binary, timeout, temp_dir, proj_root = args
+    return run_test_case(tc, binary, timeout, temp_dir, proj_root)
 
 
 def run_all(
@@ -76,6 +93,7 @@ def run_all(
     timeout: int = 30,
     workers: int = 1,
     verbose: bool = False,
+    project_root: Optional[str] = None,
 ) -> list[RunResult]:
     """Run all test cases, optionally in parallel."""
     temp_dir = tempfile.mkdtemp(prefix="omni_golden_")
@@ -83,12 +101,12 @@ def run_all(
 
     if workers <= 1:
         for tc in test_cases:
-            result = run_test_case(tc, binary, timeout, temp_dir)
+            result = run_test_case(tc, binary, timeout, temp_dir, project_root)
             results.append(result)
             if verbose:
                 print(f"  ran {tc.golden_key} ({result.duration_ms:.0f}ms, exit={result.exit_code})")
     else:
-        tasks = [(tc, binary, timeout, temp_dir) for tc in test_cases]
+        tasks = [(tc, binary, timeout, temp_dir, project_root) for tc in test_cases]
         with ProcessPoolExecutor(max_workers=workers) as pool:
             futures = {pool.submit(_run_wrapper, t): t[0] for t in tasks}
             for future in as_completed(futures):

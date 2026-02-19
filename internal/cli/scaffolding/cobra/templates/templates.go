@@ -1,4 +1,4 @@
-// Package cobra provides unified Cobra CLI application templates.
+// Package templates Package cobra provides unified Cobra CLI application templates.
 // These templates are based on production patterns from the include folder
 // and support both basic and full project structures.
 package templates

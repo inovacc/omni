@@ -36,8 +36,8 @@ YAML Registry → Discovery → Execution → Normalization → Comparison → R
 | strings | 1 | file |
 | case_conv | 4 | args |
 | exist | 9 | args |
-| buf | 13 | fixtures_dir |
-| **Total** | **103** | |
+| buf | 12 | fixtures_dir |
+| **Total** | **102** | |
 
 ## Quick Start
 

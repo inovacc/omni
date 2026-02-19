@@ -8,12 +8,12 @@ import (
 	"time"
 )
 
-// Options configures the scaffolding command behavior.
+// Options configure the scaffolding command behavior.
 type Options struct {
 	JSON bool // --json: output as JSON
 }
 
-// WriteTemplate renders a Go text/template to a file at path.
+// WriteTemplate renders a Go text/template to a file at a path.
 func WriteTemplate(path string, tmpl string, data any) error {
 	t, err := template.New("").Parse(tmpl)
 	if err != nil {

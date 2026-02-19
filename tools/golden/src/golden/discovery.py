@@ -31,6 +31,8 @@ def discover_test_cases(
                 args=test["args"],
                 stdin=test.get("stdin"),
                 fixture=test.get("fixture"),
+                fixtures_dir=test.get("fixtures_dir"),
+                expected_exit_code=test.get("exit_code", 0),
                 normalizations=test.get("normalizations", []),
                 platform_specific=test.get("platform_specific", False),
             )

@@ -8,6 +8,7 @@ from pathlib import Path
 CATEGORIES = {
     "encoding", "hashing", "text", "text_with_files", "data",
     "format", "utils", "security", "xxd", "strings", "case_conv",
+    "exist", "buf",
 }
 
 # Default execution settings

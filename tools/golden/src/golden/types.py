@@ -14,6 +14,8 @@ class TestCase:
     args: list[str]
     stdin: Optional[str] = None
     fixture: Optional[str] = None
+    fixtures_dir: Optional[dict[str, str]] = None
+    expected_exit_code: int = 0
     normalizations: list[str] = field(default_factory=list)
     platform_specific: bool = False
 
