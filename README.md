@@ -266,10 +266,16 @@ omni decrypt -p mypass -a secret.enc
 | `sqlite` | SQLite database management (pure Go) |
 | `bbolt` | BoltDB key-value store management |
 
-### Code Generation
+### Code Scaffolding
 | Command | Description |
 |---------|-------------|
-| `generate cobra` | Generate Cobra CLI applications |
+| `scaffold cobra init` | Scaffold Cobra CLI applications (basic, viper, service, full) |
+| `scaffold cobra add` | Add new commands to existing project |
+| `scaffold cobra add-tools` | Add cmdtree/aicontext to existing project |
+| `scaffold cobra config` | Manage scaffolding configuration |
+| `scaffold handler` | Generate HTTP handlers (stdlib, chi, gin, echo) |
+| `scaffold repository` | Generate database repositories (Postgres, MySQL, SQLite) |
+| `scaffold test` | Generate table-driven tests (AST-based) |
 
 ### Project Analyzer
 | Command | Description |
@@ -344,7 +350,7 @@ omni bbolt check mydb.bolt
 omni bbolt dump mydb.bolt
 ```
 
-## Code Generation
+## Code Scaffolding
 
 ### Cobra CLI Generator
 
@@ -352,20 +358,20 @@ Generate production-ready Cobra CLI applications:
 
 ```bash
 # Basic project
-omni generate cobra init myapp --module github.com/user/myapp
+omni scaffold cobra init myapp --module github.com/user/myapp
 
 # With Viper configuration
-omni generate cobra init myapp --module github.com/user/myapp --viper
+omni scaffold cobra init myapp --module github.com/user/myapp --viper
 
 # Full project with CI/CD (goreleaser, workflows, linting)
-omni generate cobra init myapp --module github.com/user/myapp --full
+omni scaffold cobra init myapp --module github.com/user/myapp --full
 
 # With service pattern (inovacc/config)
-omni generate cobra init myapp --module github.com/user/myapp --service
+omni scaffold cobra init myapp --module github.com/user/myapp --service
 
 # Add new command to existing project
-omni generate cobra add serve
-omni generate cobra add config --parent root
+omni scaffold cobra add serve
+omni scaffold cobra add config --parent root
 ```
 
 **Configuration file** (`~/.cobra.yaml`):
@@ -378,8 +384,8 @@ full: true
 
 Manage config:
 ```bash
-omni generate cobra config --show
-omni generate cobra config --init --author "John Doe" --license MIT
+omni scaffold cobra config --show
+omni scaffold cobra config --init --author "John Doe" --license MIT
 ```
 
 ## Video Download

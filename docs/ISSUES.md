@@ -52,7 +52,7 @@
 |------|-------|----------|
 | pkg/video/extractor/generic | No unit tests | P2 |
 | pkg/video/extractor/youtube | Minimal tests (4.0%) | P2 |
-| cmderr adoption ~29/160+ commands | ~130 commands still return raw fmt.Errorf without exit code classification | P1 |
+| cmderr adoption ~49/160+ commands | ~110 commands still return raw fmt.Errorf without exit code classification | P1 |
 
 ### Recently Resolved
 
@@ -70,6 +70,8 @@
 | internal/cli/repo/ | New package: repo analyze with 17 tests (Feb 2026) |
 | internal/cli/buf/ | Upgraded format/lint with protocompile AST parser (Feb 2026) |
 | cmderr batch 3 | 10 more commands adopted: buf, bzip2, xz, etc. (Feb 2026) |
+| cmderr batches 4-5 | 20 more commands adopted, total now 49 (Feb 2026) |
+| scaffolding refactor | `generate` command renamed to `scaffold`, reorganized into domain subpackages (Feb 2026) |
 
 ---
 

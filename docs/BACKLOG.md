@@ -23,10 +23,10 @@ See CLAUDE.md for the full command inventory.
 
 ### Core Infrastructure
 - [x] Unified `Command` interface contract (`internal/cli/command/` — interface, Registry, adapters)
-- [~] Consistent error model with exit codes (`cmderr` adopted in 29/160+ commands; batches 1-3 done)
+- [~] Consistent error model with exit codes (`cmderr` adopted in 49/160+ commands; batches 1-5 done)
 - [x] Add `--json` flag to remaining commands that lack it
 - [x] Unified output formatter (text/json/table)
-- [ ] cmderr rollout batch 4+: remaining ~130 commands (data, compress, system, flow, cloud)
+- [ ] cmderr rollout batch 6+: remaining ~110 commands (data, compress, system, flow, cloud)
 - [ ] Migrate `pipe` command to use `command.Registry` for dispatch
 
 ---
@@ -126,13 +126,16 @@ See CLAUDE.md for the full command inventory.
 
 ### Current Status (February 2026)
 - **Total Test Cases:** ~700+ tests across all packages
-- **Overall Coverage:** 25.8% (includes vendored buf packages after flattening)
-- **Omni-owned pkg/ avg:** ~75% (16 of 31 packages above 80%)
-- **Packages without Tests:** twig/builder, twig/parser, video/jsinterp
-- **Packages with new tests (Feb 2026):** video/downloader (progress, fragment, selector), video/nethttp (cookies, SAPISID), video/extractor (helpers, M3U8), video/options
+- **Overall Coverage:** 59.4% (includes vendored buf packages after flattening)
+- **Omni-owned pkg/ avg:** ~78% (24 of 31 packages above 80%)
+- **Packages with new tests (Feb 2026):** twig/builder (58.9%), twig/parser (79.1%), video/jsinterp, video/downloader (progress, fragment, selector), video/nethttp (cookies, SAPISID), video/extractor (helpers, M3U8), video/options
+
+### Recently Resolved
+- [x] Tests for twig/builder (58.9%) and twig/parser (79.1%) — completed Feb 2026
+- [x] scaffolding refactor — `generate` renamed to `scaffold`, reorganized into domain subpackages (Feb 2026)
+- [x] cmderr batches 4-5 — 20 more commands adopted (Feb 2026)
 
 ### Remaining
-- [x] Tests for twig/builder (58.9%) and twig/parser (79.1%)
 - [ ] Platform-specific tests (Windows edge cases, symlinks, permissions)
 - [ ] Large file (>1GB) handling tests
 - [ ] Benchmarks vs GNU tools (sort, grep, file operations)

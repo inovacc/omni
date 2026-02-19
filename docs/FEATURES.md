@@ -61,10 +61,11 @@
 - SQLite (pure Go, no CGO): query, stats, tables, schema, dump, import
 - BBolt: buckets, keys, get/put/delete, compact, check
 
-### Code Generation
+### Code Scaffolding
 - **Status:** Complete
-- Cobra CLI application scaffolding
+- `scaffold cobra init/add/add-tools/config` CLI application scaffolding
 - Handler, repository, test code generators
+- cmdtree and aicontext template generation
 
 ### Project Analyzer
 - **Status:** Complete
@@ -90,7 +91,7 @@
 - **Status:** Complete
 - Go unit tests (700+ test cases)
 - Python black-box test suite (15 test scripts)
-- Golden master tests (81 snapshot tests, 11 categories)
+- Golden master tests (117 tests, 13 categories)
 - Docker test environments (Linux, Windows)
 - Benchmark suite (Go micro + coreutils macro + modern tools)
 
@@ -105,7 +106,7 @@
 | ~~Golden master testing~~ | ~~Characterization tests capturing command output snapshots~~ | ~~DONE (81 tests, 11 categories)~~ |
 | Unified output formatter | text/json/table output modes for all commands | Medium |
 | `--json` flag everywhere | Add JSON output to remaining commands | Low |
-| Consistent exit codes | Standardize error codes across all commands | Low |
+| Consistent exit codes | Standardize error codes across all commands (49/160+ adopted) | Low |
 
 ### P2 - Medium Priority
 

@@ -11,7 +11,7 @@
 - [x] Cross-platform support (Linux, macOS, Windows)
 - [x] Basic test suite
 
-**Test Coverage:** 25.8% overall (pkg/ packages avg ~75%)
+**Test Coverage:** 59.4% overall (pkg/ packages avg ~78%)
 
 ---
 
@@ -76,7 +76,7 @@
 
 **Goals:**
 - [x] Unified `Command` interface contract (`internal/cli/command/`)
-- [x] cmderr error sentinels adopted in 29+ commands (batches 1-3)
+- [x] cmderr error sentinels adopted in 49+ commands (batches 1-5)
 - [x] `repo analyze` command — LLM-optimized repository context generation
 - [x] Exported project package functions for reuse (DetectProjectTypes, AnalyzeDeps, etc.)
 - [x] Golden master tests expanded to 117 tests, 13 categories
@@ -93,7 +93,7 @@
 
 **Goals:**
 - [x] Unified Command interface contract
-- [~] Consistent error model with exit codes (29+ of 160+ commands adopted)
+- [~] Consistent error model with exit codes (49+ of 160+ commands adopted)
 - [ ] `--json` flag on all commands
 - [ ] 80%+ overall test coverage
 - [ ] CI coverage threshold enforcement
@@ -108,7 +108,7 @@
 
 ## Test Coverage Summary
 
-**Current Total:** 25.8% (includes vendored buf packages) | **Omni-owned pkg/ avg:** ~75%
+**Current Total:** 59.4% (includes vendored buf packages) | **Omni-owned pkg/ avg:** ~78%
 
 ### Omni-owned pkg/ Packages
 
@@ -145,6 +145,6 @@
 | pkg/twig | 44.3% | Needs improvement |
 | pkg/userdirs | 42.9% | Needs improvement |
 | pkg/video/extractor | 41.7% | Needs improvement |
-| pkg/video/downloader | 32.9% | Needs improvement |
+| pkg/video/downloader | 34.6% | Needs improvement |
 | pkg/video/extractor/youtube | 4.0% | Minimal |
 | pkg/video/extractor/generic | 0.0% | No tests |

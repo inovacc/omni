@@ -45,7 +45,7 @@ omni/
 │   ├── pwd.go
 │   ├── sqlite.go          # SQLite database management
 │   ├── bbolt.go           # BoltDB key-value store
-│   ├── generate.go        # Code generation tools
+│   ├── scaffold.go        # Code scaffolding tools
 │   └── ...
 ├── pkg/                    # Reusable Go libraries (importable externally)
 │   ├── idgen/              # UUID, ULID, KSUID, Nanoid, Snowflake
@@ -69,7 +69,7 @@ omni/
 │   │   ├── pwd/
 │   │   ├── sqlite/        # SQLite operations
 │   │   ├── bbolt/         # BoltDB operations
-│   │   ├── generate/      # Code generation with templates
+│   │   ├── scaffolding/   # Code scaffolding (cobra, handler, repository, testgen)
 │   │   └── ...
 │   ├── flags/             # Feature flags system
 │   └── logger/            # KSUID-based logging with query support
@@ -790,14 +790,14 @@ func printOutput(cmd *cobra.Command, data any, format OutputFormat) error {
 
 | Category | Coverage | Status |
 |----------|----------|--------|
-| **Overall** | 25.8% (includes vendored buf packages) | Skewed by vendor |
-| **Omni-owned pkg/ avg** | ~75% (16 of 31 packages above 80%) | ✅ Good |
+| **Overall** | 59.4% (includes vendored buf packages) | Skewed by vendor |
+| **Omni-owned pkg/ avg** | ~78% (17 of 31 packages above 80%) | ✅ Good |
 | **Golden master tests** | 117 tests, 13 categories | ✅ Excellent |
 
 ### Test Statistics
 - **Total Test Cases:** 700+
 - **Golden Master Tests:** 117 (13 categories including buf/protobuf)
-- **cmderr adoption:** 29/160+ commands (batches 1-3)
+- **cmderr adoption:** 49/160+ commands (batches 1-5)
 
 ### Unit Tests
 - Table-driven tests for all functions

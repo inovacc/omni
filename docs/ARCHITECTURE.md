@@ -20,7 +20,8 @@ flowchart TB
             Pipeline[pipeline/]
             Project[project/]
             Repo[repo/]
-            More["... 70+ packages"]
+            Scaffold[scaffolding/]
+            More["... 80+ packages"]
         end
         CmdErr[cmderr/ - Error Sentinels]
         Command[command/ - Command Interface]
@@ -256,6 +257,7 @@ flowchart TB
     internal/cli --> pkg/twig
     internal/cli --> pkg/pipeline
     internal/cli --> pkg/video
+    internal/cli --> pkg/cobra/helper/output
 
     pkg/twig --> pkg/twig/scanner
     pkg/twig --> pkg/twig/formatter
