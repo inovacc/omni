@@ -2,26 +2,21 @@ package repository
 
 import (
 	"bytes"
-	"os"
-	"path/filepath"
 	"testing"
+
+	"github.com/spf13/afero"
 
 	"github.com/inovacc/omni/internal/cli/scaffolding"
 )
 
 func TestRunRepositoryInit(t *testing.T) {
 	t.Run("basic postgres repository", func(t *testing.T) {
-		tmpDir, err := os.MkdirTemp("", "repo_test")
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		defer func() { _ = os.RemoveAll(tmpDir) }()
+		fs := afero.NewMemMapFs()
 
 		var buf bytes.Buffer
 
-		err = RunRepositoryInit(&buf, "user", RepositoryOptions{
-			Dir:       tmpDir,
+		err := RunRepositoryInit(&buf, fs, "user", RepositoryOptions{
+			Dir:       "/tmp/repo",
 			Interface: true,
 		}, scaffolding.Options{})
 		if err != nil {
@@ -29,26 +24,24 @@ func TestRunRepositoryInit(t *testing.T) {
 		}
 
 		// Check files exist
-		repoPath := filepath.Join(tmpDir, "user.go")
-		if _, err := os.Stat(repoPath); os.IsNotExist(err) {
+		if _, err := fs.Stat("/tmp/repo/user.go"); err != nil {
 			t.Error("user.go should be created")
 		}
 
-		interfacePath := filepath.Join(tmpDir, "interface.go")
-		if _, err := os.Stat(interfacePath); os.IsNotExist(err) {
+		if _, err := fs.Stat("/tmp/repo/interface.go"); err != nil {
 			t.Error("interface.go should be created")
 		}
 
-		testPath := filepath.Join(tmpDir, "user_test.go")
-		if _, err := os.Stat(testPath); os.IsNotExist(err) {
+		if _, err := fs.Stat("/tmp/repo/user_test.go"); err != nil {
 			t.Error("user_test.go should be created")
 		}
 	})
 
 	t.Run("missing name", func(t *testing.T) {
+		fs := afero.NewMemMapFs()
 		var buf bytes.Buffer
 
-		err := RunRepositoryInit(&buf, "", RepositoryOptions{}, scaffolding.Options{})
+		err := RunRepositoryInit(&buf, fs, "", RepositoryOptions{}, scaffolding.Options{})
 		if err == nil {
 			t.Error("Expected error for missing name")
 		}

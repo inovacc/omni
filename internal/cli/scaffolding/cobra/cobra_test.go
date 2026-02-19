@@ -3,28 +3,20 @@ package cobra
 import (
 	"bytes"
 	"encoding/json"
-	"os"
-	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/spf13/afero"
 
 	"github.com/inovacc/omni/internal/cli/scaffolding"
 )
 
 func TestRunCobraInit(t *testing.T) {
 	t.Run("basic initialization", func(t *testing.T) {
-		tmpDir, err := os.MkdirTemp("", "cobra_init_test")
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		defer func() { _ = os.RemoveAll(tmpDir) }()
-
-		appDir := filepath.Join(tmpDir, "myapp")
-
+		fs := afero.NewMemMapFs()
 		var buf bytes.Buffer
 
-		err = RunCobraInit(&buf, appDir, CobraInitOptions{
+		err := RunCobraInit(&buf, fs, "/myapp", CobraInitOptions{
 			Module:      "github.com/test/myapp",
 			AppName:     "myapp",
 			Description: "Test application",
@@ -45,26 +37,17 @@ func TestRunCobraInit(t *testing.T) {
 		}
 
 		for _, f := range expectedFiles {
-			path := filepath.Join(appDir, f)
-			if _, err := os.Stat(path); os.IsNotExist(err) {
+			if _, err := fs.Stat("/myapp/" + f); err != nil {
 				t.Errorf("Expected file %s not created", f)
 			}
 		}
 	})
 
 	t.Run("with viper", func(t *testing.T) {
-		tmpDir, err := os.MkdirTemp("", "cobra_viper_test")
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		defer func() { _ = os.RemoveAll(tmpDir) }()
-
-		appDir := filepath.Join(tmpDir, "viperapp")
-
+		fs := afero.NewMemMapFs()
 		var buf bytes.Buffer
 
-		err = RunCobraInit(&buf, appDir, CobraInitOptions{
+		err := RunCobraInit(&buf, fs, "/viperapp", CobraInitOptions{
 			Module:   "github.com/test/viperapp",
 			UseViper: true,
 		}, scaffolding.Options{})
@@ -73,25 +56,16 @@ func TestRunCobraInit(t *testing.T) {
 		}
 
 		// Check config file was created
-		configPath := filepath.Join(appDir, "internal", "config", "config.go")
-		if _, err := os.Stat(configPath); os.IsNotExist(err) {
+		if _, err := fs.Stat("/viperapp/internal/config/config.go"); err != nil {
 			t.Error("Expected config.go to be created with viper option")
 		}
 	})
 
 	t.Run("with MIT license", func(t *testing.T) {
-		tmpDir, err := os.MkdirTemp("", "cobra_license_test")
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		defer func() { _ = os.RemoveAll(tmpDir) }()
-
-		appDir := filepath.Join(tmpDir, "mitapp")
-
+		fs := afero.NewMemMapFs()
 		var buf bytes.Buffer
 
-		err = RunCobraInit(&buf, appDir, CobraInitOptions{
+		err := RunCobraInit(&buf, fs, "/mitapp", CobraInitOptions{
 			Module:  "github.com/test/mitapp",
 			License: "MIT",
 			Author:  "Test Author",
@@ -100,9 +74,7 @@ func TestRunCobraInit(t *testing.T) {
 			t.Fatalf("RunCobraInit() error = %v", err)
 		}
 
-		licensePath := filepath.Join(appDir, "LICENSE")
-
-		content, err := os.ReadFile(licensePath)
+		content, err := afero.ReadFile(fs, "/mitapp/LICENSE")
 		if err != nil {
 			t.Fatalf("Failed to read LICENSE: %v", err)
 		}
@@ -117,18 +89,10 @@ func TestRunCobraInit(t *testing.T) {
 	})
 
 	t.Run("with Apache license", func(t *testing.T) {
-		tmpDir, err := os.MkdirTemp("", "cobra_apache_test")
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		defer func() { _ = os.RemoveAll(tmpDir) }()
-
-		appDir := filepath.Join(tmpDir, "apacheapp")
-
+		fs := afero.NewMemMapFs()
 		var buf bytes.Buffer
 
-		err = RunCobraInit(&buf, appDir, CobraInitOptions{
+		err := RunCobraInit(&buf, fs, "/apacheapp", CobraInitOptions{
 			Module:  "github.com/test/apacheapp",
 			License: "Apache-2.0",
 			Author:  "Apache Author",
@@ -137,9 +101,7 @@ func TestRunCobraInit(t *testing.T) {
 			t.Fatalf("RunCobraInit() error = %v", err)
 		}
 
-		licensePath := filepath.Join(appDir, "LICENSE")
-
-		content, err := os.ReadFile(licensePath)
+		content, err := afero.ReadFile(fs, "/apacheapp/LICENSE")
 		if err != nil {
 			t.Fatalf("Failed to read LICENSE: %v", err)
 		}
@@ -150,18 +112,10 @@ func TestRunCobraInit(t *testing.T) {
 	})
 
 	t.Run("json output", func(t *testing.T) {
-		tmpDir, err := os.MkdirTemp("", "cobra_json_test")
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		defer func() { _ = os.RemoveAll(tmpDir) }()
-
-		appDir := filepath.Join(tmpDir, "jsonapp")
-
+		fs := afero.NewMemMapFs()
 		var buf bytes.Buffer
 
-		err = RunCobraInit(&buf, appDir, CobraInitOptions{
+		err := RunCobraInit(&buf, fs, "/jsonapp", CobraInitOptions{
 			Module: "github.com/test/jsonapp",
 		}, scaffolding.Options{JSON: true})
 		if err != nil {
@@ -187,57 +141,41 @@ func TestRunCobraInit(t *testing.T) {
 	})
 
 	t.Run("missing module", func(t *testing.T) {
+		fs := afero.NewMemMapFs()
 		var buf bytes.Buffer
 
-		err := RunCobraInit(&buf, "/tmp/test", CobraInitOptions{}, scaffolding.Options{})
+		err := RunCobraInit(&buf, fs, "/tmp/test", CobraInitOptions{}, scaffolding.Options{})
 		if err == nil {
 			t.Error("Expected error for missing module")
 		}
 	})
 
 	t.Run("extracts app name from module", func(t *testing.T) {
-		tmpDir, err := os.MkdirTemp("", "cobra_name_test")
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		defer func() { _ = os.RemoveAll(tmpDir) }()
-
-		appDir := filepath.Join(tmpDir, "extracted")
-
+		fs := afero.NewMemMapFs()
 		var buf bytes.Buffer
 
-		err = RunCobraInit(&buf, appDir, CobraInitOptions{
+		err := RunCobraInit(&buf, fs, "/extracted", CobraInitOptions{
 			Module: "github.com/test/extractedapp",
 		}, scaffolding.Options{})
 		if err != nil {
 			t.Fatalf("RunCobraInit() error = %v", err)
 		}
 
-		// Check that the app name was extracted
-		mainContent, _ := os.ReadFile(filepath.Join(appDir, "main.go"))
+		mainContent, _ := afero.ReadFile(fs, "/extracted/main.go")
 		if !strings.Contains(string(mainContent), "github.com/test/extractedapp") {
 			t.Error("main.go should contain the module path")
 		}
 	})
 
 	t.Run("main.go content", func(t *testing.T) {
-		tmpDir, err := os.MkdirTemp("", "cobra_main_test")
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		defer func() { _ = os.RemoveAll(tmpDir) }()
-
-		appDir := filepath.Join(tmpDir, "maintest")
-
+		fs := afero.NewMemMapFs()
 		var buf bytes.Buffer
 
-		_ = RunCobraInit(&buf, appDir, CobraInitOptions{
+		_ = RunCobraInit(&buf, fs, "/maintest", CobraInitOptions{
 			Module: "github.com/test/maintest",
 		}, scaffolding.Options{})
 
-		content, _ := os.ReadFile(filepath.Join(appDir, "main.go"))
+		content, _ := afero.ReadFile(fs, "/maintest/main.go")
 		mainStr := string(content)
 
 		if !strings.Contains(mainStr, "package main") {
@@ -250,24 +188,16 @@ func TestRunCobraInit(t *testing.T) {
 	})
 
 	t.Run("root.go content", func(t *testing.T) {
-		tmpDir, err := os.MkdirTemp("", "cobra_root_test")
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		defer func() { _ = os.RemoveAll(tmpDir) }()
-
-		appDir := filepath.Join(tmpDir, "roottest")
-
+		fs := afero.NewMemMapFs()
 		var buf bytes.Buffer
 
-		_ = RunCobraInit(&buf, appDir, CobraInitOptions{
+		_ = RunCobraInit(&buf, fs, "/roottest", CobraInitOptions{
 			Module:      "github.com/test/roottest",
 			AppName:     "roottest",
 			Description: "Test description",
 		}, scaffolding.Options{})
 
-		content, _ := os.ReadFile(filepath.Join(appDir, "cmd", "root.go"))
+		content, _ := afero.ReadFile(fs, "/roottest/cmd/root.go")
 		rootStr := string(content)
 
 		if !strings.Contains(rootStr, "package cmd") {
@@ -286,35 +216,28 @@ func TestRunCobraInit(t *testing.T) {
 
 func TestRunCobraAdd(t *testing.T) {
 	// Create a test project first
-	setupProject := func(t *testing.T) (string, func()) {
-		tmpDir, err := os.MkdirTemp("", "cobra_add_test")
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		appDir := filepath.Join(tmpDir, "addtest")
+	setupProject := func(t *testing.T) (afero.Fs, string) {
+		fs := afero.NewMemMapFs()
+		appDir := "/addtest"
 
 		var buf bytes.Buffer
 
-		err = RunCobraInit(&buf, appDir, CobraInitOptions{
+		err := RunCobraInit(&buf, fs, appDir, CobraInitOptions{
 			Module: "github.com/test/addtest",
 		}, scaffolding.Options{})
 		if err != nil {
-			_ = os.RemoveAll(tmpDir)
-
 			t.Fatal(err)
 		}
 
-		return appDir, func() { _ = os.RemoveAll(tmpDir) }
+		return fs, appDir
 	}
 
 	t.Run("add command to root", func(t *testing.T) {
-		appDir, cleanup := setupProject(t)
-		defer cleanup()
+		fs, appDir := setupProject(t)
 
 		var buf bytes.Buffer
 
-		err := RunCobraAdd(&buf, appDir, CobraAddOptions{
+		err := RunCobraAdd(&buf, fs, appDir, CobraAddOptions{
 			Name:        "serve",
 			Parent:      "root",
 			Description: "Start the server",
@@ -324,12 +247,11 @@ func TestRunCobraAdd(t *testing.T) {
 		}
 
 		// Check file was created
-		servePath := filepath.Join(appDir, "cmd", "serve.go")
-		if _, err := os.Stat(servePath); os.IsNotExist(err) {
+		if _, err := fs.Stat("/addtest/cmd/serve.go"); err != nil {
 			t.Error("serve.go should be created")
 		}
 
-		content, _ := os.ReadFile(servePath)
+		content, _ := afero.ReadFile(fs, "/addtest/cmd/serve.go")
 		serveStr := string(content)
 
 		if !strings.Contains(serveStr, "serveCmd") {
@@ -342,32 +264,30 @@ func TestRunCobraAdd(t *testing.T) {
 	})
 
 	t.Run("add command with default parent", func(t *testing.T) {
-		appDir, cleanup := setupProject(t)
-		defer cleanup()
+		fs, appDir := setupProject(t)
 
 		var buf bytes.Buffer
 
-		err := RunCobraAdd(&buf, appDir, CobraAddOptions{
+		err := RunCobraAdd(&buf, fs, appDir, CobraAddOptions{
 			Name: "config",
 		}, scaffolding.Options{})
 		if err != nil {
 			t.Fatalf("RunCobraAdd() error = %v", err)
 		}
 
-		content, _ := os.ReadFile(filepath.Join(appDir, "cmd", "config.go"))
+		content, _ := afero.ReadFile(fs, "/addtest/cmd/config.go")
 		if !strings.Contains(string(content), "rootCmd.AddCommand") {
 			t.Error("Should default to root parent")
 		}
 	})
 
 	t.Run("add subcommand", func(t *testing.T) {
-		appDir, cleanup := setupProject(t)
-		defer cleanup()
+		fs, appDir := setupProject(t)
 
 		// First add a parent command
 		var buf bytes.Buffer
 
-		_ = RunCobraAdd(&buf, appDir, CobraAddOptions{
+		_ = RunCobraAdd(&buf, fs, appDir, CobraAddOptions{
 			Name:   "user",
 			Parent: "root",
 		}, scaffolding.Options{})
@@ -375,7 +295,7 @@ func TestRunCobraAdd(t *testing.T) {
 		// Add subcommand
 		buf.Reset()
 
-		err := RunCobraAdd(&buf, appDir, CobraAddOptions{
+		err := RunCobraAdd(&buf, fs, appDir, CobraAddOptions{
 			Name:   "list",
 			Parent: "user",
 		}, scaffolding.Options{})
@@ -383,19 +303,18 @@ func TestRunCobraAdd(t *testing.T) {
 			t.Fatalf("RunCobraAdd() error = %v", err)
 		}
 
-		content, _ := os.ReadFile(filepath.Join(appDir, "cmd", "list.go"))
+		content, _ := afero.ReadFile(fs, "/addtest/cmd/list.go")
 		if !strings.Contains(string(content), "userCmd.AddCommand(listCmd)") {
 			t.Error("list.go should add to userCmd")
 		}
 	})
 
 	t.Run("json output", func(t *testing.T) {
-		appDir, cleanup := setupProject(t)
-		defer cleanup()
+		fs, appDir := setupProject(t)
 
 		var buf bytes.Buffer
 
-		err := RunCobraAdd(&buf, appDir, CobraAddOptions{
+		err := RunCobraAdd(&buf, fs, appDir, CobraAddOptions{
 			Name: "status",
 		}, scaffolding.Options{JSON: true})
 		if err != nil {
@@ -417,44 +336,37 @@ func TestRunCobraAdd(t *testing.T) {
 	})
 
 	t.Run("missing command name", func(t *testing.T) {
-		appDir, cleanup := setupProject(t)
-		defer cleanup()
+		fs, appDir := setupProject(t)
 
 		var buf bytes.Buffer
 
-		err := RunCobraAdd(&buf, appDir, CobraAddOptions{}, scaffolding.Options{})
+		err := RunCobraAdd(&buf, fs, appDir, CobraAddOptions{}, scaffolding.Options{})
 		if err == nil {
 			t.Error("Expected error for missing command name")
 		}
 	})
 
 	t.Run("command already exists", func(t *testing.T) {
-		appDir, cleanup := setupProject(t)
-		defer cleanup()
+		fs, appDir := setupProject(t)
 
 		var buf bytes.Buffer
 
-		_ = RunCobraAdd(&buf, appDir, CobraAddOptions{Name: "duplicate"}, scaffolding.Options{})
+		_ = RunCobraAdd(&buf, fs, appDir, CobraAddOptions{Name: "duplicate"}, scaffolding.Options{})
 
 		buf.Reset()
 
-		err := RunCobraAdd(&buf, appDir, CobraAddOptions{Name: "duplicate"}, scaffolding.Options{})
+		err := RunCobraAdd(&buf, fs, appDir, CobraAddOptions{Name: "duplicate"}, scaffolding.Options{})
 		if err == nil {
 			t.Error("Expected error for duplicate command")
 		}
 	})
 
 	t.Run("not a cobra project", func(t *testing.T) {
-		tmpDir, err := os.MkdirTemp("", "not_cobra_test")
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		defer func() { _ = os.RemoveAll(tmpDir) }()
+		fs := afero.NewMemMapFs()
 
 		var buf bytes.Buffer
 
-		err = RunCobraAdd(&buf, tmpDir, CobraAddOptions{Name: "test"}, scaffolding.Options{})
+		err := RunCobraAdd(&buf, fs, "/empty", CobraAddOptions{Name: "test"}, scaffolding.Options{})
 		if err == nil {
 			t.Error("Expected error for non-Cobra project")
 		}
@@ -463,18 +375,10 @@ func TestRunCobraAdd(t *testing.T) {
 
 func TestLicenses(t *testing.T) {
 	t.Run("unknown license", func(t *testing.T) {
-		tmpDir, err := os.MkdirTemp("", "unknown_license_test")
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		defer func() { _ = os.RemoveAll(tmpDir) }()
-
-		appDir := filepath.Join(tmpDir, "unknownlic")
-
+		fs := afero.NewMemMapFs()
 		var buf bytes.Buffer
 
-		err = RunCobraInit(&buf, appDir, CobraInitOptions{
+		err := RunCobraInit(&buf, fs, "/unknownlic", CobraInitOptions{
 			Module:  "github.com/test/unknownlic",
 			License: "UNKNOWN",
 		}, scaffolding.Options{})
@@ -484,18 +388,10 @@ func TestLicenses(t *testing.T) {
 	})
 
 	t.Run("BSD license", func(t *testing.T) {
-		tmpDir, err := os.MkdirTemp("", "bsd_license_test")
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		defer func() { _ = os.RemoveAll(tmpDir) }()
-
-		appDir := filepath.Join(tmpDir, "bsdapp")
-
+		fs := afero.NewMemMapFs()
 		var buf bytes.Buffer
 
-		err = RunCobraInit(&buf, appDir, CobraInitOptions{
+		err := RunCobraInit(&buf, fs, "/bsdapp", CobraInitOptions{
 			Module:  "github.com/test/bsdapp",
 			License: "BSD-3",
 			Author:  "BSD Author",
@@ -504,7 +400,7 @@ func TestLicenses(t *testing.T) {
 			t.Fatalf("RunCobraInit() error = %v", err)
 		}
 
-		content, _ := os.ReadFile(filepath.Join(appDir, "LICENSE"))
+		content, _ := afero.ReadFile(fs, "/bsdapp/LICENSE")
 		if !strings.Contains(string(content), "BSD 3-Clause") {
 			t.Error("LICENSE should contain BSD 3-Clause")
 		}
@@ -512,23 +408,15 @@ func TestLicenses(t *testing.T) {
 }
 
 func TestTaskfileContent(t *testing.T) {
-	tmpDir, err := os.MkdirTemp("", "taskfile_test")
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	defer func() { _ = os.RemoveAll(tmpDir) }()
-
-	appDir := filepath.Join(tmpDir, "tasktest")
-
+	fs := afero.NewMemMapFs()
 	var buf bytes.Buffer
 
-	_ = RunCobraInit(&buf, appDir, CobraInitOptions{
+	_ = RunCobraInit(&buf, fs, "/tasktest", CobraInitOptions{
 		Module:  "github.com/test/tasktest",
 		AppName: "tasktest",
 	}, scaffolding.Options{})
 
-	content, _ := os.ReadFile(filepath.Join(appDir, "Taskfile.yml"))
+	content, _ := afero.ReadFile(fs, "/tasktest/Taskfile.yml")
 	taskStr := string(content)
 
 	if !strings.Contains(taskStr, "version: '3'") {
@@ -549,23 +437,15 @@ func TestTaskfileContent(t *testing.T) {
 }
 
 func TestGitignoreContent(t *testing.T) {
-	tmpDir, err := os.MkdirTemp("", "gitignore_test")
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	defer func() { _ = os.RemoveAll(tmpDir) }()
-
-	appDir := filepath.Join(tmpDir, "ignoretest")
-
+	fs := afero.NewMemMapFs()
 	var buf bytes.Buffer
 
-	_ = RunCobraInit(&buf, appDir, CobraInitOptions{
+	_ = RunCobraInit(&buf, fs, "/ignoretest", CobraInitOptions{
 		Module:  "github.com/test/ignoretest",
 		AppName: "ignoretest",
 	}, scaffolding.Options{})
 
-	content, _ := os.ReadFile(filepath.Join(appDir, ".gitignore"))
+	content, _ := afero.ReadFile(fs, "/ignoretest/.gitignore")
 	gitignoreStr := string(content)
 
 	if !strings.Contains(gitignoreStr, "ignoretest") {
@@ -583,18 +463,10 @@ func TestGitignoreContent(t *testing.T) {
 
 func TestFullMode(t *testing.T) {
 	t.Run("full initialization", func(t *testing.T) {
-		tmpDir, err := os.MkdirTemp("", "cobra_full_test")
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		defer func() { _ = os.RemoveAll(tmpDir) }()
-
-		appDir := filepath.Join(tmpDir, "fullapp")
-
+		fs := afero.NewMemMapFs()
 		var buf bytes.Buffer
 
-		err = RunCobraInit(&buf, appDir, CobraInitOptions{
+		err := RunCobraInit(&buf, fs, "/fullapp", CobraInitOptions{
 			Module: "github.com/test/fullapp",
 			Full:   true,
 			Author: "Test Author",
@@ -603,7 +475,6 @@ func TestFullMode(t *testing.T) {
 			t.Fatalf("RunCobraInit() error = %v", err)
 		}
 
-		// Check full mode files were created
 		expectedFiles := []string{
 			"main.go",
 			"go.mod",
@@ -622,34 +493,24 @@ func TestFullMode(t *testing.T) {
 		}
 
 		for _, f := range expectedFiles {
-			path := filepath.Join(appDir, f)
-			if _, err := os.Stat(path); os.IsNotExist(err) {
+			if _, err := fs.Stat("/fullapp/" + f); err != nil {
 				t.Errorf("Expected file %s not created in full mode", f)
 			}
 		}
 	})
 
 	t.Run("full version.go content", func(t *testing.T) {
-		tmpDir, err := os.MkdirTemp("", "cobra_fullversion_test")
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		defer func() { _ = os.RemoveAll(tmpDir) }()
-
-		appDir := filepath.Join(tmpDir, "fullverapp")
-
+		fs := afero.NewMemMapFs()
 		var buf bytes.Buffer
 
-		_ = RunCobraInit(&buf, appDir, CobraInitOptions{
+		_ = RunCobraInit(&buf, fs, "/fullverapp", CobraInitOptions{
 			Module: "github.com/test/fullverapp",
 			Full:   true,
 		}, scaffolding.Options{})
 
-		content, _ := os.ReadFile(filepath.Join(appDir, "cmd", "version.go"))
+		content, _ := afero.ReadFile(fs, "/fullverapp/cmd/version.go")
 		versionStr := string(content)
 
-		// Full mode should have extended version info
 		if !strings.Contains(versionStr, "BuildHash") {
 			t.Error("Full mode version.go should have BuildHash")
 		}
@@ -668,23 +529,15 @@ func TestFullMode(t *testing.T) {
 	})
 
 	t.Run("goreleaser content", func(t *testing.T) {
-		tmpDir, err := os.MkdirTemp("", "cobra_goreleaser_test")
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		defer func() { _ = os.RemoveAll(tmpDir) }()
-
-		appDir := filepath.Join(tmpDir, "gorelapp")
-
+		fs := afero.NewMemMapFs()
 		var buf bytes.Buffer
 
-		_ = RunCobraInit(&buf, appDir, CobraInitOptions{
+		_ = RunCobraInit(&buf, fs, "/gorelapp", CobraInitOptions{
 			Module: "github.com/test/gorelapp",
 			Full:   true,
 		}, scaffolding.Options{})
 
-		content, _ := os.ReadFile(filepath.Join(appDir, ".goreleaser.yaml"))
+		content, _ := afero.ReadFile(fs, "/gorelapp/.goreleaser.yaml")
 		gorelStr := string(content)
 
 		if !strings.Contains(gorelStr, "version: 2") {
@@ -697,23 +550,15 @@ func TestFullMode(t *testing.T) {
 	})
 
 	t.Run("golangci-lint content", func(t *testing.T) {
-		tmpDir, err := os.MkdirTemp("", "cobra_golangci_test")
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		defer func() { _ = os.RemoveAll(tmpDir) }()
-
-		appDir := filepath.Join(tmpDir, "lintapp")
-
+		fs := afero.NewMemMapFs()
 		var buf bytes.Buffer
 
-		_ = RunCobraInit(&buf, appDir, CobraInitOptions{
+		_ = RunCobraInit(&buf, fs, "/lintapp", CobraInitOptions{
 			Module: "github.com/test/lintapp",
 			Full:   true,
 		}, scaffolding.Options{})
 
-		content, _ := os.ReadFile(filepath.Join(appDir, ".golangci.yml"))
+		content, _ := afero.ReadFile(fs, "/lintapp/.golangci.yml")
 		lintStr := string(content)
 
 		if !strings.Contains(lintStr, `version: "2"`) {
@@ -728,18 +573,10 @@ func TestFullMode(t *testing.T) {
 
 func TestServiceMode(t *testing.T) {
 	t.Run("service pattern initialization", func(t *testing.T) {
-		tmpDir, err := os.MkdirTemp("", "cobra_service_test")
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		defer func() { _ = os.RemoveAll(tmpDir) }()
-
-		appDir := filepath.Join(tmpDir, "serviceapp")
-
+		fs := afero.NewMemMapFs()
 		var buf bytes.Buffer
 
-		err = RunCobraInit(&buf, appDir, CobraInitOptions{
+		err := RunCobraInit(&buf, fs, "/serviceapp", CobraInitOptions{
 			Module:     "github.com/test/serviceapp",
 			UseService: true,
 		}, scaffolding.Options{})
@@ -747,7 +584,6 @@ func TestServiceMode(t *testing.T) {
 			t.Fatalf("RunCobraInit() error = %v", err)
 		}
 
-		// Check service pattern files were created
 		expectedFiles := []string{
 			"main.go",
 			"go.mod",
@@ -758,31 +594,22 @@ func TestServiceMode(t *testing.T) {
 		}
 
 		for _, f := range expectedFiles {
-			path := filepath.Join(appDir, f)
-			if _, err := os.Stat(path); os.IsNotExist(err) {
+			if _, err := fs.Stat("/serviceapp/" + f); err != nil {
 				t.Errorf("Expected file %s not created in service mode", f)
 			}
 		}
 	})
 
 	t.Run("service root.go content", func(t *testing.T) {
-		tmpDir, err := os.MkdirTemp("", "cobra_serviceroot_test")
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		defer func() { _ = os.RemoveAll(tmpDir) }()
-
-		appDir := filepath.Join(tmpDir, "servicerootapp")
-
+		fs := afero.NewMemMapFs()
 		var buf bytes.Buffer
 
-		_ = RunCobraInit(&buf, appDir, CobraInitOptions{
+		_ = RunCobraInit(&buf, fs, "/servicerootapp", CobraInitOptions{
 			Module:     "github.com/test/servicerootapp",
 			UseService: true,
 		}, scaffolding.Options{})
 
-		content, _ := os.ReadFile(filepath.Join(appDir, "cmd", "root.go"))
+		content, _ := afero.ReadFile(fs, "/servicerootapp/cmd/root.go")
 		rootStr := string(content)
 
 		if !strings.Contains(rootStr, "inovacc/config") {
@@ -803,23 +630,15 @@ func TestServiceMode(t *testing.T) {
 	})
 
 	t.Run("parameters content", func(t *testing.T) {
-		tmpDir, err := os.MkdirTemp("", "cobra_params_test")
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		defer func() { _ = os.RemoveAll(tmpDir) }()
-
-		appDir := filepath.Join(tmpDir, "paramsapp")
-
+		fs := afero.NewMemMapFs()
 		var buf bytes.Buffer
 
-		_ = RunCobraInit(&buf, appDir, CobraInitOptions{
+		_ = RunCobraInit(&buf, fs, "/paramsapp", CobraInitOptions{
 			Module:     "github.com/test/paramsapp",
 			UseService: true,
 		}, scaffolding.Options{})
 
-		content, _ := os.ReadFile(filepath.Join(appDir, "internal", "parameters", "config.go"))
+		content, _ := afero.ReadFile(fs, "/paramsapp/internal/parameters/config.go")
 		paramsStr := string(content)
 
 		if !strings.Contains(paramsStr, "package parameters") {
@@ -832,23 +651,15 @@ func TestServiceMode(t *testing.T) {
 	})
 
 	t.Run("service content", func(t *testing.T) {
-		tmpDir, err := os.MkdirTemp("", "cobra_svc_test")
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		defer func() { _ = os.RemoveAll(tmpDir) }()
-
-		appDir := filepath.Join(tmpDir, "svcapp")
-
+		fs := afero.NewMemMapFs()
 		var buf bytes.Buffer
 
-		_ = RunCobraInit(&buf, appDir, CobraInitOptions{
+		_ = RunCobraInit(&buf, fs, "/svcapp", CobraInitOptions{
 			Module:     "github.com/test/svcapp",
 			UseService: true,
 		}, scaffolding.Options{})
 
-		content, _ := os.ReadFile(filepath.Join(appDir, "internal", "service", "service.go"))
+		content, _ := afero.ReadFile(fs, "/svcapp/internal/service/service.go")
 		svcStr := string(content)
 
 		if !strings.Contains(svcStr, "package service") {
@@ -865,23 +676,15 @@ func TestServiceMode(t *testing.T) {
 	})
 
 	t.Run("go.mod includes config dependency", func(t *testing.T) {
-		tmpDir, err := os.MkdirTemp("", "cobra_gomod_test")
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		defer func() { _ = os.RemoveAll(tmpDir) }()
-
-		appDir := filepath.Join(tmpDir, "gomodapp")
-
+		fs := afero.NewMemMapFs()
 		var buf bytes.Buffer
 
-		_ = RunCobraInit(&buf, appDir, CobraInitOptions{
+		_ = RunCobraInit(&buf, fs, "/gomodapp", CobraInitOptions{
 			Module:     "github.com/test/gomodapp",
 			UseService: true,
 		}, scaffolding.Options{})
 
-		content, _ := os.ReadFile(filepath.Join(appDir, "go.mod"))
+		content, _ := afero.ReadFile(fs, "/gomodapp/go.mod")
 		gomodStr := string(content)
 
 		if !strings.Contains(gomodStr, "github.com/inovacc/config") {
@@ -891,18 +694,10 @@ func TestServiceMode(t *testing.T) {
 }
 
 func TestRunCobraInitWithCmdtree(t *testing.T) {
-	tmpDir, err := os.MkdirTemp("", "cobra_cmdtree_test")
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	defer func() { _ = os.RemoveAll(tmpDir) }()
-
-	appDir := filepath.Join(tmpDir, "cmdtreeapp")
-
+	fs := afero.NewMemMapFs()
 	var buf bytes.Buffer
 
-	err = RunCobraInit(&buf, appDir, CobraInitOptions{
+	err := RunCobraInit(&buf, fs, "/cmdtreeapp", CobraInitOptions{
 		Module: "github.com/test/cmdtreeapp",
 	}, scaffolding.Options{})
 	if err != nil {
@@ -910,12 +705,11 @@ func TestRunCobraInitWithCmdtree(t *testing.T) {
 	}
 
 	// cmdtree.go should always be created
-	cmdtreePath := filepath.Join(appDir, "cmd", "cmdtree.go")
-	if _, err := os.Stat(cmdtreePath); os.IsNotExist(err) {
+	if _, err := fs.Stat("/cmdtreeapp/cmd/cmdtree.go"); err != nil {
 		t.Error("cmd/cmdtree.go should always be created")
 	}
 
-	content, _ := os.ReadFile(cmdtreePath)
+	content, _ := afero.ReadFile(fs, "/cmdtreeapp/cmd/cmdtree.go")
 	if !strings.Contains(string(content), "cmdtreeCmd") {
 		t.Error("cmdtree.go should define cmdtreeCmd")
 	}
@@ -925,25 +719,16 @@ func TestRunCobraInitWithCmdtree(t *testing.T) {
 	}
 
 	// aicontext.go should NOT be created by default
-	aicontextPath := filepath.Join(appDir, "cmd", "aicontext.go")
-	if _, err := os.Stat(aicontextPath); !os.IsNotExist(err) {
+	if _, err := fs.Stat("/cmdtreeapp/cmd/aicontext.go"); err == nil {
 		t.Error("cmd/aicontext.go should NOT be created by default")
 	}
 }
 
 func TestRunCobraInitWithAIContext(t *testing.T) {
-	tmpDir, err := os.MkdirTemp("", "cobra_aicontext_test")
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	defer func() { _ = os.RemoveAll(tmpDir) }()
-
-	appDir := filepath.Join(tmpDir, "aiapp")
-
+	fs := afero.NewMemMapFs()
 	var buf bytes.Buffer
 
-	err = RunCobraInit(&buf, appDir, CobraInitOptions{
+	err := RunCobraInit(&buf, fs, "/aiapp", CobraInitOptions{
 		Module:      "github.com/test/aiapp",
 		AppName:     "aiapp",
 		Description: "AI test app",
@@ -954,17 +739,15 @@ func TestRunCobraInitWithAIContext(t *testing.T) {
 	}
 
 	// Both should be created
-	cmdtreePath := filepath.Join(appDir, "cmd", "cmdtree.go")
-	if _, err := os.Stat(cmdtreePath); os.IsNotExist(err) {
+	if _, err := fs.Stat("/aiapp/cmd/cmdtree.go"); err != nil {
 		t.Error("cmd/cmdtree.go should be created")
 	}
 
-	aicontextPath := filepath.Join(appDir, "cmd", "aicontext.go")
-	if _, err := os.Stat(aicontextPath); os.IsNotExist(err) {
+	if _, err := fs.Stat("/aiapp/cmd/aicontext.go"); err != nil {
 		t.Error("cmd/aicontext.go should be created when AIContext=true")
 	}
 
-	content, _ := os.ReadFile(aicontextPath)
+	content, _ := afero.ReadFile(fs, "/aiapp/cmd/aicontext.go")
 	aiStr := string(content)
 
 	if !strings.Contains(aiStr, "aiapp") {
@@ -981,96 +764,82 @@ func TestRunCobraInitWithAIContext(t *testing.T) {
 }
 
 func TestRunCobraAddTools(t *testing.T) {
-	setupMinimalProject := func(t *testing.T) (string, func()) {
-		tmpDir, err := os.MkdirTemp("", "cobra_addtools_test")
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		appDir := filepath.Join(tmpDir, "toolsapp")
+	setupMinimalProject := func(t *testing.T) (afero.Fs, string) {
+		fs := afero.NewMemMapFs()
+		appDir := "/toolsapp"
 
 		// Create minimal project structure
-		if err := os.MkdirAll(filepath.Join(appDir, "cmd"), 0755); err != nil {
-			_ = os.RemoveAll(tmpDir)
+		if err := fs.MkdirAll(appDir+"/cmd", 0755); err != nil {
 			t.Fatal(err)
 		}
 
 		// Write go.mod
 		goMod := []byte("module github.com/test/toolsapp\n\ngo 1.21\n")
-		if err := os.WriteFile(filepath.Join(appDir, "go.mod"), goMod, 0644); err != nil {
-			_ = os.RemoveAll(tmpDir)
+		if err := afero.WriteFile(fs, appDir+"/go.mod", goMod, 0644); err != nil {
 			t.Fatal(err)
 		}
 
-		return appDir, func() { _ = os.RemoveAll(tmpDir) }
+		return fs, appDir
 	}
 
 	t.Run("creates cmdtree only", func(t *testing.T) {
-		appDir, cleanup := setupMinimalProject(t)
-		defer cleanup()
+		fs, appDir := setupMinimalProject(t)
 
 		var buf bytes.Buffer
 
-		err := RunCobraAddTools(&buf, appDir, AddToolsOptions{}, scaffolding.Options{})
+		err := RunCobraAddTools(&buf, fs, appDir, AddToolsOptions{}, scaffolding.Options{})
 		if err != nil {
 			t.Fatalf("RunCobraAddTools() error = %v", err)
 		}
 
-		if _, err := os.Stat(filepath.Join(appDir, "cmd", "cmdtree.go")); os.IsNotExist(err) {
+		if _, err := fs.Stat(appDir + "/cmd/cmdtree.go"); err != nil {
 			t.Error("cmd/cmdtree.go should be created")
 		}
 
-		if _, err := os.Stat(filepath.Join(appDir, "cmd", "aicontext.go")); !os.IsNotExist(err) {
+		if _, err := fs.Stat(appDir + "/cmd/aicontext.go"); err == nil {
 			t.Error("cmd/aicontext.go should NOT be created without AIContext flag")
 		}
 	})
 
 	t.Run("creates both with AIContext", func(t *testing.T) {
-		appDir, cleanup := setupMinimalProject(t)
-		defer cleanup()
+		fs, appDir := setupMinimalProject(t)
 
 		var buf bytes.Buffer
 
-		err := RunCobraAddTools(&buf, appDir, AddToolsOptions{AIContext: true}, scaffolding.Options{})
+		err := RunCobraAddTools(&buf, fs, appDir, AddToolsOptions{AIContext: true}, scaffolding.Options{})
 		if err != nil {
 			t.Fatalf("RunCobraAddTools() error = %v", err)
 		}
 
-		if _, err := os.Stat(filepath.Join(appDir, "cmd", "cmdtree.go")); os.IsNotExist(err) {
+		if _, err := fs.Stat(appDir + "/cmd/cmdtree.go"); err != nil {
 			t.Error("cmd/cmdtree.go should be created")
 		}
 
-		if _, err := os.Stat(filepath.Join(appDir, "cmd", "aicontext.go")); os.IsNotExist(err) {
+		if _, err := fs.Stat(appDir + "/cmd/aicontext.go"); err != nil {
 			t.Error("cmd/aicontext.go should be created with AIContext flag")
 		}
 	})
 
 	t.Run("error when no cmd directory", func(t *testing.T) {
-		tmpDir, err := os.MkdirTemp("", "cobra_nocmd_test")
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		defer func() { _ = os.RemoveAll(tmpDir) }()
+		fs := afero.NewMemMapFs()
 
 		var buf bytes.Buffer
 
-		err = RunCobraAddTools(&buf, tmpDir, AddToolsOptions{}, scaffolding.Options{})
+		err := RunCobraAddTools(&buf, fs, "/empty", AddToolsOptions{}, scaffolding.Options{})
 		if err == nil {
 			t.Error("Expected error when cmd/ directory doesn't exist")
 		}
 	})
 
 	t.Run("error when cmdtree already exists", func(t *testing.T) {
-		appDir, cleanup := setupMinimalProject(t)
-		defer cleanup()
+		fs, appDir := setupMinimalProject(t)
 
 		// Create existing cmdtree.go
-		_ = os.WriteFile(filepath.Join(appDir, "cmd", "cmdtree.go"), []byte("package cmd"), 0644)
+		_ = afero.WriteFile(fs, appDir+"/cmd/cmdtree.go", []byte("package cmd"), 0644)
 
 		var buf bytes.Buffer
 
-		err := RunCobraAddTools(&buf, appDir, AddToolsOptions{}, scaffolding.Options{})
+		err := RunCobraAddTools(&buf, fs, appDir, AddToolsOptions{}, scaffolding.Options{})
 		if err == nil {
 			t.Error("Expected error when cmdtree.go already exists")
 		}
@@ -1100,23 +869,15 @@ func TestParseModuleName(t *testing.T) {
 }
 
 func TestEditorConfigContent(t *testing.T) {
-	tmpDir, err := os.MkdirTemp("", "editorconfig_test")
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	defer func() { _ = os.RemoveAll(tmpDir) }()
-
-	appDir := filepath.Join(tmpDir, "editortest")
-
+	fs := afero.NewMemMapFs()
 	var buf bytes.Buffer
 
-	_ = RunCobraInit(&buf, appDir, CobraInitOptions{
+	_ = RunCobraInit(&buf, fs, "/editortest", CobraInitOptions{
 		Module:  "github.com/test/editortest",
 		AppName: "editortest",
 	}, scaffolding.Options{})
 
-	content, _ := os.ReadFile(filepath.Join(appDir, ".editorconfig"))
+	content, _ := afero.ReadFile(fs, "/editortest/.editorconfig")
 	editorStr := string(content)
 
 	if !strings.Contains(editorStr, "root = true") {
@@ -1134,14 +895,9 @@ func TestEditorConfigContent(t *testing.T) {
 
 func TestCobraConfig(t *testing.T) {
 	t.Run("write and read config", func(t *testing.T) {
-		tmpDir, err := os.MkdirTemp("", "cobra_config_test")
-		if err != nil {
-			t.Fatal(err)
-		}
+		fs := afero.NewMemMapFs()
 
-		defer func() { _ = os.RemoveAll(tmpDir) }()
-
-		configPath := filepath.Join(tmpDir, ".cobra.yaml")
+		configPath := "/tmp/.cobra.yaml"
 
 		cfg := &CobraConfig{
 			Author:     "Test Author <test@example.com>",
@@ -1151,18 +907,18 @@ func TestCobraConfig(t *testing.T) {
 			Full:       true,
 		}
 
-		err = WriteDefaultConfig(configPath, cfg)
+		err := WriteDefaultConfig(fs, configPath, cfg)
 		if err != nil {
 			t.Fatalf("WriteDefaultConfig() error = %v", err)
 		}
 
 		// Verify file was created
-		if _, err := os.Stat(configPath); os.IsNotExist(err) {
+		if _, err := fs.Stat(configPath); err != nil {
 			t.Fatal("Config file was not created")
 		}
 
 		// Read it back
-		content, err := os.ReadFile(configPath)
+		content, err := afero.ReadFile(fs, configPath)
 		if err != nil {
 			t.Fatalf("Failed to read config file: %v", err)
 		}

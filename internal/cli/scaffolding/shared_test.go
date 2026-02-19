@@ -1,22 +1,22 @@
 package scaffolding
 
 import (
-	"os"
-	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/spf13/afero"
 )
 
 func TestWriteTemplate(t *testing.T) {
-	tmpDir := t.TempDir()
-	path := filepath.Join(tmpDir, "test.txt")
+	fs := afero.NewMemMapFs()
+	path := "/test.txt"
 
-	err := WriteTemplate(path, "Hello {{.Name}}", struct{ Name string }{"World"})
+	err := WriteTemplate(fs, path, "Hello {{.Name}}", struct{ Name string }{"World"})
 	if err != nil {
 		t.Fatalf("WriteTemplate() error = %v", err)
 	}
 
-	data, err := os.ReadFile(path)
+	data, err := afero.ReadFile(fs, path)
 	if err != nil {
 		t.Fatalf("ReadFile() error = %v", err)
 	}
@@ -27,10 +27,9 @@ func TestWriteTemplate(t *testing.T) {
 }
 
 func TestWriteTemplateInvalidTemplate(t *testing.T) {
-	tmpDir := t.TempDir()
-	path := filepath.Join(tmpDir, "test.txt")
+	fs := afero.NewMemMapFs()
 
-	err := WriteTemplate(path, "{{.Invalid", nil)
+	err := WriteTemplate(fs, "/test.txt", "{{.Invalid", nil)
 	if err == nil {
 		t.Error("expected error for invalid template")
 	}
@@ -51,16 +50,15 @@ func TestWriteLicense(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tmpDir := t.TempDir()
-			path := filepath.Join(tmpDir, "LICENSE")
+			fs := afero.NewMemMapFs()
 
-			err := WriteLicense(path, tt.license, "Test Author")
+			err := WriteLicense(fs, "/LICENSE", tt.license, "Test Author")
 			if (err != nil) != tt.wantErr {
 				t.Fatalf("WriteLicense() error = %v, wantErr %v", err, tt.wantErr)
 			}
 
 			if !tt.wantErr {
-				data, err := os.ReadFile(path)
+				data, err := afero.ReadFile(fs, "/LICENSE")
 				if err != nil {
 					t.Fatalf("ReadFile() error = %v", err)
 				}

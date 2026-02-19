@@ -2,10 +2,11 @@ package scaffolding
 
 import (
 	"fmt"
-	"os"
 	"strings"
 	"text/template"
 	"time"
+
+	"github.com/spf13/afero"
 )
 
 // Options configure the scaffolding command behavior.
@@ -14,13 +15,13 @@ type Options struct {
 }
 
 // WriteTemplate renders a Go text/template to a file at a path.
-func WriteTemplate(path string, tmpl string, data any) error {
+func WriteTemplate(fs afero.Fs, path string, tmpl string, data any) error {
 	t, err := template.New("").Parse(tmpl)
 	if err != nil {
 		return err
 	}
 
-	f, err := os.Create(path)
+	f, err := fs.Create(path)
 	if err != nil {
 		return err
 	}
@@ -32,7 +33,7 @@ func WriteTemplate(path string, tmpl string, data any) error {
 
 // WriteLicense writes a LICENSE file with the given type and author.
 // Supported types: MIT, Apache-2.0, BSD-3.
-func WriteLicense(path, licenseType, author string) error {
+func WriteLicense(fs afero.Fs, path, licenseType, author string) error {
 	year := time.Now().Year()
 
 	var content string
@@ -48,5 +49,5 @@ func WriteLicense(path, licenseType, author string) error {
 		return fmt.Errorf("unknown license type: %s", licenseType)
 	}
 
-	return os.WriteFile(path, []byte(content), 0o644)
+	return afero.WriteFile(fs, path, []byte(content), 0o644)
 }

@@ -4,9 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/spf13/afero"
 
 	"github.com/inovacc/omni/internal/cli/scaffolding"
 	handlertpl "github.com/inovacc/omni/internal/cli/scaffolding/handler/templates"
@@ -32,7 +33,7 @@ type HandlerResult struct {
 }
 
 // RunHandlerInit generates a new handler
-func RunHandlerInit(w io.Writer, name string, opts HandlerOptions, genOpts scaffolding.Options) error {
+func RunHandlerInit(w io.Writer, fs afero.Fs, name string, opts HandlerOptions, genOpts scaffolding.Options) error {
 	if name == "" {
 		return fmt.Errorf("scaffold: handler name is required")
 	}
@@ -60,7 +61,7 @@ func RunHandlerInit(w io.Writer, name string, opts HandlerOptions, genOpts scaff
 	}
 
 	// Create directory
-	if err := os.MkdirAll(opts.Dir, 0755); err != nil {
+	if err := fs.MkdirAll(opts.Dir, 0755); err != nil {
 		return fmt.Errorf("scaffold: failed to create directory %s: %w", opts.Dir, err)
 	}
 
@@ -94,7 +95,7 @@ func RunHandlerInit(w io.Writer, name string, opts HandlerOptions, genOpts scaff
 	// Generate handler file
 	handlerPath := filepath.Join(opts.Dir, strings.ToLower(name)+".go")
 
-	if err := scaffolding.WriteTemplate(handlerPath, tpl, data); err != nil {
+	if err := scaffolding.WriteTemplate(fs, handlerPath, tpl, data); err != nil {
 		return fmt.Errorf("scaffold: failed to create %s: %w", handlerPath, err)
 	}
 
@@ -104,7 +105,7 @@ func RunHandlerInit(w io.Writer, name string, opts HandlerOptions, genOpts scaff
 	if opts.Framework == "stdlib" {
 		testPath := filepath.Join(opts.Dir, strings.ToLower(name)+"_test.go")
 
-		if err := scaffolding.WriteTemplate(testPath, handlertpl.HandlerTestTemplate, data); err != nil {
+		if err := scaffolding.WriteTemplate(fs, testPath, handlertpl.HandlerTestTemplate, data); err != nil {
 			return fmt.Errorf("scaffold: failed to create %s: %w", testPath, err)
 		}
 

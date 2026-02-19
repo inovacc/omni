@@ -4,9 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/spf13/afero"
 
 	"github.com/inovacc/omni/internal/cli/scaffolding"
 	repotpl "github.com/inovacc/omni/internal/cli/scaffolding/repository/templates"
@@ -33,7 +34,7 @@ type RepositoryResult struct {
 }
 
 // RunRepositoryInit generates a new repository
-func RunRepositoryInit(w io.Writer, name string, opts RepositoryOptions, genOpts scaffolding.Options) error {
+func RunRepositoryInit(w io.Writer, fs afero.Fs, name string, opts RepositoryOptions, genOpts scaffolding.Options) error {
 	if name == "" {
 		return fmt.Errorf("scaffold: repository name is required")
 	}
@@ -60,7 +61,7 @@ func RunRepositoryInit(w io.Writer, name string, opts RepositoryOptions, genOpts
 	}
 
 	// Create directory
-	if err := os.MkdirAll(opts.Dir, 0755); err != nil {
+	if err := fs.MkdirAll(opts.Dir, 0755); err != nil {
 		return fmt.Errorf("scaffold: failed to create directory %s: %w", opts.Dir, err)
 	}
 
@@ -82,7 +83,7 @@ func RunRepositoryInit(w io.Writer, name string, opts RepositoryOptions, genOpts
 	if opts.Interface {
 		interfacePath := filepath.Join(opts.Dir, "interface.go")
 
-		if err := scaffolding.WriteTemplate(interfacePath, repotpl.InterfaceTemplate, data); err != nil {
+		if err := scaffolding.WriteTemplate(fs, interfacePath, repotpl.InterfaceTemplate, data); err != nil {
 			return fmt.Errorf("scaffold: failed to create %s: %w", interfacePath, err)
 		}
 
@@ -104,7 +105,7 @@ func RunRepositoryInit(w io.Writer, name string, opts RepositoryOptions, genOpts
 	// Generate repository file
 	repoPath := filepath.Join(opts.Dir, strings.ToLower(name)+".go")
 
-	if err := scaffolding.WriteTemplate(repoPath, tpl, data); err != nil {
+	if err := scaffolding.WriteTemplate(fs, repoPath, tpl, data); err != nil {
 		return fmt.Errorf("scaffold: failed to create %s: %w", repoPath, err)
 	}
 
@@ -113,7 +114,7 @@ func RunRepositoryInit(w io.Writer, name string, opts RepositoryOptions, genOpts
 	// Generate test file
 	testPath := filepath.Join(opts.Dir, strings.ToLower(name)+"_test.go")
 
-	if err := scaffolding.WriteTemplate(testPath, repotpl.RepositoryTestTemplate, data); err != nil {
+	if err := scaffolding.WriteTemplate(fs, testPath, repotpl.RepositoryTestTemplate, data); err != nil {
 		return fmt.Errorf("scaffold: failed to create %s: %w", testPath, err)
 	}
 

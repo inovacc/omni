@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/spf13/afero"
 	"gopkg.in/yaml.v3"
 )
 
@@ -102,7 +103,7 @@ func DefaultConfigPath() string {
 }
 
 // WriteDefaultConfig writes a default configuration file to the specified path
-func WriteDefaultConfig(path string, cfg *CobraConfig) error {
+func WriteDefaultConfig(fs afero.Fs, path string, cfg *CobraConfig) error {
 	data, err := yaml.Marshal(cfg)
 	if err != nil {
 		return err
@@ -123,5 +124,5 @@ func WriteDefaultConfig(path string, cfg *CobraConfig) error {
 
 `
 
-	return os.WriteFile(path, []byte(header+string(data)), 0644)
+	return afero.WriteFile(fs, path, []byte(header+string(data)), 0644)
 }

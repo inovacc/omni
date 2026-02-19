@@ -4,10 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"os"
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/spf13/afero"
 
 	"github.com/inovacc/omni/internal/cli/scaffolding"
 	cobratpl "github.com/inovacc/omni/internal/cli/scaffolding/cobra/templates"
@@ -50,7 +51,7 @@ type AddResult struct {
 }
 
 // RunCobraInit initializes a new Cobra CLI application
-func RunCobraInit(w io.Writer, dir string, opts CobraInitOptions, genOpts scaffolding.Options) error {
+func RunCobraInit(w io.Writer, fs afero.Fs, dir string, opts CobraInitOptions, genOpts scaffolding.Options) error {
 	if opts.Module == "" {
 		return fmt.Errorf("scaffold: module path is required")
 	}
@@ -99,7 +100,7 @@ func RunCobraInit(w io.Writer, dir string, opts CobraInitOptions, genOpts scaffo
 	}
 
 	for _, d := range dirs {
-		if err := os.MkdirAll(d, 0755); err != nil {
+		if err := fs.MkdirAll(d, 0755); err != nil {
 			return fmt.Errorf("scaffold: failed to create directory %s: %w", d, err)
 		}
 	}
@@ -108,7 +109,7 @@ func RunCobraInit(w io.Writer, dir string, opts CobraInitOptions, genOpts scaffo
 
 	// Generate main.go
 	mainPath := filepath.Join(dir, "main.go")
-	if err := scaffolding.WriteTemplate(mainPath, cobratpl.MainTemplate, tplData); err != nil {
+	if err := scaffolding.WriteTemplate(fs, mainPath, cobratpl.MainTemplate, tplData); err != nil {
 		return fmt.Errorf("scaffold: failed to create main.go: %w", err)
 	}
 
@@ -116,7 +117,7 @@ func RunCobraInit(w io.Writer, dir string, opts CobraInitOptions, genOpts scaffo
 
 	// Generate cmd/root.go
 	rootPath := filepath.Join(dir, "cmd", "root.go")
-	if err := scaffolding.WriteTemplate(rootPath, cobratpl.RootTemplate, tplData); err != nil {
+	if err := scaffolding.WriteTemplate(fs, rootPath, cobratpl.RootTemplate, tplData); err != nil {
 		return fmt.Errorf("scaffold: failed to create cmd/root.go: %w", err)
 	}
 
@@ -124,7 +125,7 @@ func RunCobraInit(w io.Writer, dir string, opts CobraInitOptions, genOpts scaffo
 
 	// Generate cmd/version.go
 	versionPath := filepath.Join(dir, "cmd", "version.go")
-	if err := scaffolding.WriteTemplate(versionPath, cobratpl.VersionTemplate, tplData); err != nil {
+	if err := scaffolding.WriteTemplate(fs, versionPath, cobratpl.VersionTemplate, tplData); err != nil {
 		return fmt.Errorf("scaffold: failed to create cmd/version.go: %w", err)
 	}
 
@@ -132,7 +133,7 @@ func RunCobraInit(w io.Writer, dir string, opts CobraInitOptions, genOpts scaffo
 
 	// Generate cmd/cmdtree.go (always included)
 	cmdtreePath := filepath.Join(dir, "cmd", "cmdtree.go")
-	if err := scaffolding.WriteTemplate(cmdtreePath, cobratpl.CmdtreeTemplate, tplData); err != nil {
+	if err := scaffolding.WriteTemplate(fs, cmdtreePath, cobratpl.CmdtreeTemplate, tplData); err != nil {
 		return fmt.Errorf("scaffold: failed to create cmd/cmdtree.go: %w", err)
 	}
 
@@ -141,7 +142,7 @@ func RunCobraInit(w io.Writer, dir string, opts CobraInitOptions, genOpts scaffo
 	// Generate cmd/aicontext.go (when AIContext is enabled)
 	if opts.AIContext {
 		aicontextPath := filepath.Join(dir, "cmd", "aicontext.go")
-		if err := scaffolding.WriteTemplate(aicontextPath, cobratpl.AIContextTemplate, tplData); err != nil {
+		if err := scaffolding.WriteTemplate(fs, aicontextPath, cobratpl.AIContextTemplate, tplData); err != nil {
 			return fmt.Errorf("scaffold: failed to create cmd/aicontext.go: %w", err)
 		}
 
@@ -150,7 +151,7 @@ func RunCobraInit(w io.Writer, dir string, opts CobraInitOptions, genOpts scaffo
 
 	// Generate go.mod
 	goModPath := filepath.Join(dir, "go.mod")
-	if err := scaffolding.WriteTemplate(goModPath, cobratpl.GoModTemplate, tplData); err != nil {
+	if err := scaffolding.WriteTemplate(fs, goModPath, cobratpl.GoModTemplate, tplData); err != nil {
 		return fmt.Errorf("scaffold: failed to create go.mod: %w", err)
 	}
 
@@ -159,7 +160,7 @@ func RunCobraInit(w io.Writer, dir string, opts CobraInitOptions, genOpts scaffo
 	// Generate config if viper is enabled (without service pattern)
 	if opts.UseViper && !opts.UseService {
 		configPath := filepath.Join(dir, "internal", "config", "config.go")
-		if err := scaffolding.WriteTemplate(configPath, cobratpl.ConfigTemplate, tplData); err != nil {
+		if err := scaffolding.WriteTemplate(fs, configPath, cobratpl.ConfigTemplate, tplData); err != nil {
 			return fmt.Errorf("scaffold: failed to create config.go: %w", err)
 		}
 
@@ -170,7 +171,7 @@ func RunCobraInit(w io.Writer, dir string, opts CobraInitOptions, genOpts scaffo
 	if opts.UseService {
 		// internal/parameters/config.go
 		paramsPath := filepath.Join(dir, "internal", "parameters", "config.go")
-		if err := scaffolding.WriteTemplate(paramsPath, cobratpl.ParametersTemplate, tplData); err != nil {
+		if err := scaffolding.WriteTemplate(fs, paramsPath, cobratpl.ParametersTemplate, tplData); err != nil {
 			return fmt.Errorf("scaffold: failed to create parameters/config.go: %w", err)
 		}
 
@@ -178,7 +179,7 @@ func RunCobraInit(w io.Writer, dir string, opts CobraInitOptions, genOpts scaffo
 
 		// internal/service/service.go
 		servicePath := filepath.Join(dir, "internal", "service", "service.go")
-		if err := scaffolding.WriteTemplate(servicePath, cobratpl.ServiceTemplate, tplData); err != nil {
+		if err := scaffolding.WriteTemplate(fs, servicePath, cobratpl.ServiceTemplate, tplData); err != nil {
 			return fmt.Errorf("scaffold: failed to create service/service.go: %w", err)
 		}
 
@@ -188,7 +189,7 @@ func RunCobraInit(w io.Writer, dir string, opts CobraInitOptions, genOpts scaffo
 	// Generate LICENSE
 	if opts.License != "" {
 		licensePath := filepath.Join(dir, "LICENSE")
-		if err := scaffolding.WriteLicense(licensePath, opts.License, opts.Author); err != nil {
+		if err := scaffolding.WriteLicense(fs, licensePath, opts.License, opts.Author); err != nil {
 			return fmt.Errorf("scaffold: failed to create LICENSE: %w", err)
 		}
 
@@ -197,7 +198,7 @@ func RunCobraInit(w io.Writer, dir string, opts CobraInitOptions, genOpts scaffo
 
 	// Generate README.md
 	readmePath := filepath.Join(dir, "README.md")
-	if err := scaffolding.WriteTemplate(readmePath, cobratpl.ReadmeTemplate, tplData); err != nil {
+	if err := scaffolding.WriteTemplate(fs, readmePath, cobratpl.ReadmeTemplate, tplData); err != nil {
 		return fmt.Errorf("scaffold: failed to create README.md: %w", err)
 	}
 
@@ -205,7 +206,7 @@ func RunCobraInit(w io.Writer, dir string, opts CobraInitOptions, genOpts scaffo
 
 	// Generate Taskfile.yml
 	taskfilePath := filepath.Join(dir, "Taskfile.yml")
-	if err := scaffolding.WriteTemplate(taskfilePath, cobratpl.TaskfileTemplate, tplData); err != nil {
+	if err := scaffolding.WriteTemplate(fs, taskfilePath, cobratpl.TaskfileTemplate, tplData); err != nil {
 		return fmt.Errorf("scaffold: failed to create Taskfile.yml: %w", err)
 	}
 
@@ -213,7 +214,7 @@ func RunCobraInit(w io.Writer, dir string, opts CobraInitOptions, genOpts scaffo
 
 	// Generate .gitignore
 	gitignorePath := filepath.Join(dir, ".gitignore")
-	if err := scaffolding.WriteTemplate(gitignorePath, cobratpl.GitignoreTemplate, tplData); err != nil {
+	if err := scaffolding.WriteTemplate(fs, gitignorePath, cobratpl.GitignoreTemplate, tplData); err != nil {
 		return fmt.Errorf("scaffold: failed to create .gitignore: %w", err)
 	}
 
@@ -221,7 +222,7 @@ func RunCobraInit(w io.Writer, dir string, opts CobraInitOptions, genOpts scaffo
 
 	// Generate .editorconfig
 	editorconfigPath := filepath.Join(dir, ".editorconfig")
-	if err := scaffolding.WriteTemplate(editorconfigPath, cobratpl.EditorConfigTemplate, tplData); err != nil {
+	if err := scaffolding.WriteTemplate(fs, editorconfigPath, cobratpl.EditorConfigTemplate, tplData); err != nil {
 		return fmt.Errorf("scaffold: failed to create .editorconfig: %w", err)
 	}
 
@@ -231,7 +232,7 @@ func RunCobraInit(w io.Writer, dir string, opts CobraInitOptions, genOpts scaffo
 	if opts.Full {
 		// .goreleaser.yaml
 		goreleaserPath := filepath.Join(dir, ".goreleaser.yaml")
-		if err := scaffolding.WriteTemplate(goreleaserPath, cobratpl.GoreleaserTemplate, tplData); err != nil {
+		if err := scaffolding.WriteTemplate(fs, goreleaserPath, cobratpl.GoreleaserTemplate, tplData); err != nil {
 			return fmt.Errorf("scaffold: failed to create .goreleaser.yaml: %w", err)
 		}
 
@@ -239,7 +240,7 @@ func RunCobraInit(w io.Writer, dir string, opts CobraInitOptions, genOpts scaffo
 
 		// .golangci.yml
 		golangciPath := filepath.Join(dir, ".golangci.yml")
-		if err := scaffolding.WriteTemplate(golangciPath, cobratpl.GolangciLintTemplate, tplData); err != nil {
+		if err := scaffolding.WriteTemplate(fs, golangciPath, cobratpl.GolangciLintTemplate, tplData); err != nil {
 			return fmt.Errorf("scaffold: failed to create .golangci.yml: %w", err)
 		}
 
@@ -247,7 +248,7 @@ func RunCobraInit(w io.Writer, dir string, opts CobraInitOptions, genOpts scaffo
 
 		// tools.go
 		toolsPath := filepath.Join(dir, "tools.go")
-		if err := scaffolding.WriteTemplate(toolsPath, cobratpl.ToolsTemplate, tplData); err != nil {
+		if err := scaffolding.WriteTemplate(fs, toolsPath, cobratpl.ToolsTemplate, tplData); err != nil {
 			return fmt.Errorf("scaffold: failed to create tools.go: %w", err)
 		}
 
@@ -255,21 +256,21 @@ func RunCobraInit(w io.Writer, dir string, opts CobraInitOptions, genOpts scaffo
 
 		// GitHub workflows
 		buildWorkflowPath := filepath.Join(dir, ".github", "workflows", "build.yml")
-		if err := scaffolding.WriteTemplate(buildWorkflowPath, cobratpl.WorkflowBuildTemplate, tplData); err != nil {
+		if err := scaffolding.WriteTemplate(fs, buildWorkflowPath, cobratpl.WorkflowBuildTemplate, tplData); err != nil {
 			return fmt.Errorf("scaffold: failed to create build.yml: %w", err)
 		}
 
 		filesCreated = append(filesCreated, ".github/workflows/build.yml")
 
 		testWorkflowPath := filepath.Join(dir, ".github", "workflows", "test.yml")
-		if err := scaffolding.WriteTemplate(testWorkflowPath, cobratpl.WorkflowTestTemplate, tplData); err != nil {
+		if err := scaffolding.WriteTemplate(fs, testWorkflowPath, cobratpl.WorkflowTestTemplate, tplData); err != nil {
 			return fmt.Errorf("scaffold: failed to create test.yml: %w", err)
 		}
 
 		filesCreated = append(filesCreated, ".github/workflows/test.yml")
 
 		releaseWorkflowPath := filepath.Join(dir, ".github", "workflows", "release.yaml")
-		if err := scaffolding.WriteTemplate(releaseWorkflowPath, cobratpl.WorkflowReleaseTemplate, tplData); err != nil {
+		if err := scaffolding.WriteTemplate(fs, releaseWorkflowPath, cobratpl.WorkflowReleaseTemplate, tplData); err != nil {
 			return fmt.Errorf("scaffold: failed to create release.yaml: %w", err)
 		}
 
@@ -333,16 +334,16 @@ type AddToolsResult struct {
 }
 
 // RunCobraAddTools adds cmdtree (and optionally aicontext) to an existing Cobra project
-func RunCobraAddTools(w io.Writer, dir string, opts AddToolsOptions, genOpts scaffolding.Options) error {
+func RunCobraAddTools(w io.Writer, fs afero.Fs, dir string, opts AddToolsOptions, genOpts scaffolding.Options) error {
 	// Verify cmd/ directory exists
 	cmdDir := filepath.Join(dir, "cmd")
-	if _, err := os.Stat(cmdDir); os.IsNotExist(err) {
+	if _, err := fs.Stat(cmdDir); err != nil {
 		return fmt.Errorf("scaffold: cmd directory not found, is this a Cobra project?")
 	}
 
 	// Read go.mod to get module name
 	goModPath := filepath.Join(dir, "go.mod")
-	goModData, err := os.ReadFile(goModPath)
+	goModData, err := afero.ReadFile(fs, goModPath)
 	if err != nil {
 		return fmt.Errorf("scaffold: failed to read go.mod: %w", err)
 	}
@@ -367,11 +368,11 @@ func RunCobraAddTools(w io.Writer, dir string, opts AddToolsOptions, genOpts sca
 
 	// Always generate cmd/cmdtree.go
 	cmdtreePath := filepath.Join(cmdDir, "cmdtree.go")
-	if _, err := os.Stat(cmdtreePath); err == nil {
+	if _, err := fs.Stat(cmdtreePath); err == nil {
 		return fmt.Errorf("scaffold: cmd/cmdtree.go already exists")
 	}
 
-	if err := scaffolding.WriteTemplate(cmdtreePath, cobratpl.CmdtreeTemplate, tplData); err != nil {
+	if err := scaffolding.WriteTemplate(fs, cmdtreePath, cobratpl.CmdtreeTemplate, tplData); err != nil {
 		return fmt.Errorf("scaffold: failed to create cmd/cmdtree.go: %w", err)
 	}
 
@@ -380,11 +381,11 @@ func RunCobraAddTools(w io.Writer, dir string, opts AddToolsOptions, genOpts sca
 	// Optionally generate cmd/aicontext.go
 	if opts.AIContext {
 		aicontextPath := filepath.Join(cmdDir, "aicontext.go")
-		if _, err := os.Stat(aicontextPath); err == nil {
+		if _, err := fs.Stat(aicontextPath); err == nil {
 			return fmt.Errorf("scaffold: cmd/aicontext.go already exists")
 		}
 
-		if err := scaffolding.WriteTemplate(aicontextPath, cobratpl.AIContextTemplate, tplData); err != nil {
+		if err := scaffolding.WriteTemplate(fs, aicontextPath, cobratpl.AIContextTemplate, tplData); err != nil {
 			return fmt.Errorf("scaffold: failed to create cmd/aicontext.go: %w", err)
 		}
 
@@ -421,7 +422,7 @@ func parseModuleName(data []byte) string {
 }
 
 // RunCobraAdd adds a new command to an existing Cobra application
-func RunCobraAdd(w io.Writer, dir string, opts CobraAddOptions, genOpts scaffolding.Options) error {
+func RunCobraAdd(w io.Writer, fs afero.Fs, dir string, opts CobraAddOptions, genOpts scaffolding.Options) error {
 	if opts.Name == "" {
 		return fmt.Errorf("scaffold: command name is required")
 	}
@@ -436,13 +437,13 @@ func RunCobraAdd(w io.Writer, dir string, opts CobraAddOptions, genOpts scaffold
 
 	// Check if cmd directory exists
 	cmdDir := filepath.Join(dir, "cmd")
-	if _, err := os.Stat(cmdDir); os.IsNotExist(err) {
+	if _, err := fs.Stat(cmdDir); err != nil {
 		return fmt.Errorf("scaffold: cmd directory not found, is this a Cobra project?")
 	}
 
 	// Generate the command file
 	cmdPath := filepath.Join(cmdDir, opts.Name+".go")
-	if _, err := os.Stat(cmdPath); err == nil {
+	if _, err := fs.Stat(cmdPath); err == nil {
 		return fmt.Errorf("scaffold: command %s already exists", opts.Name)
 	}
 
@@ -458,7 +459,7 @@ func RunCobraAdd(w io.Writer, dir string, opts CobraAddOptions, genOpts scaffold
 		NameTitle:   strings.Title(opts.Name), //nolint:staticcheck
 	}
 
-	if err := scaffolding.WriteTemplate(cmdPath, cobratpl.CommandTemplate, data); err != nil {
+	if err := scaffolding.WriteTemplate(fs, cmdPath, cobratpl.CommandTemplate, data); err != nil {
 		return fmt.Errorf("scaffold: failed to create %s.go: %w", opts.Name, err)
 	}
 

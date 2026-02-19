@@ -6,13 +6,15 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/spf13/afero"
+	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
+
 	"github.com/inovacc/omni/internal/cli/scaffolding"
 	scaffoldcobra "github.com/inovacc/omni/internal/cli/scaffolding/cobra"
 	"github.com/inovacc/omni/internal/cli/scaffolding/handler"
 	"github.com/inovacc/omni/internal/cli/scaffolding/repository"
 	"github.com/inovacc/omni/internal/cli/scaffolding/testgen"
-	"github.com/spf13/cobra"
-	"github.com/spf13/pflag"
 )
 
 var scaffoldCmd = &cobra.Command{
@@ -128,7 +130,7 @@ Examples:
 			UseViper:    useViper,
 			UseService:  useService,
 			Full:        full,
-			AIContext:    aicontext,
+			AIContext:   aicontext,
 		}
 
 		// Load config file and merge with flags
@@ -154,7 +156,7 @@ Examples:
 			dir = filepath.Join(cwd, dir)
 		}
 
-		return scaffoldcobra.RunCobraInit(cmd.OutOrStdout(), dir, opts, scaffolding.Options{JSON: jsonOutput})
+		return scaffoldcobra.RunCobraInit(cmd.OutOrStdout(), afero.NewOsFs(), dir, opts, scaffolding.Options{JSON: jsonOutput})
 	},
 }
 
@@ -180,7 +182,7 @@ Examples:
 			dir, _ = os.Getwd()
 		}
 
-		return scaffoldcobra.RunCobraAdd(cmd.OutOrStdout(), dir, scaffoldcobra.CobraAddOptions{
+		return scaffoldcobra.RunCobraAdd(cmd.OutOrStdout(), afero.NewOsFs(), dir, scaffoldcobra.CobraAddOptions{
 			Name:        args[0],
 			Parent:      parent,
 			Description: description,
@@ -212,7 +214,7 @@ Examples:
 			dir, _ = os.Getwd()
 		}
 
-		return scaffoldcobra.RunCobraAddTools(cmd.OutOrStdout(), dir, scaffoldcobra.AddToolsOptions{
+		return scaffoldcobra.RunCobraAddTools(cmd.OutOrStdout(), afero.NewOsFs(), dir, scaffoldcobra.AddToolsOptions{
 			AIContext: aicontext,
 		}, scaffolding.Options{JSON: jsonOutput})
 	},
@@ -290,7 +292,7 @@ Examples:
 				return nil
 			}
 
-			if err := scaffoldcobra.WriteDefaultConfig(configPath, cfg); err != nil {
+			if err := scaffoldcobra.WriteDefaultConfig(afero.NewOsFs(), configPath, cfg); err != nil {
 				return fmt.Errorf("failed to write config: %w", err)
 			}
 
@@ -345,7 +347,7 @@ Examples:
 			Framework:  framework,
 		}
 
-		return handler.RunHandlerInit(cmd.OutOrStdout(), args[0], opts, scaffolding.Options{JSON: jsonOutput})
+		return handler.RunHandlerInit(cmd.OutOrStdout(), afero.NewOsFs(), args[0], opts, scaffolding.Options{JSON: jsonOutput})
 	},
 }
 
@@ -385,7 +387,7 @@ Examples:
 			Interface: iface,
 		}
 
-		return repository.RunRepositoryInit(cmd.OutOrStdout(), args[0], opts, scaffolding.Options{JSON: jsonOutput})
+		return repository.RunRepositoryInit(cmd.OutOrStdout(), afero.NewOsFs(), args[0], opts, scaffolding.Options{JSON: jsonOutput})
 	},
 }
 
@@ -425,7 +427,7 @@ Examples:
 			Fuzz:      fuzz,
 		}
 
-		return testgen.RunTestInit(cmd.OutOrStdout(), args[0], opts, scaffolding.Options{JSON: jsonOutput})
+		return testgen.RunTestInit(cmd.OutOrStdout(), afero.NewOsFs(), args[0], opts, scaffolding.Options{JSON: jsonOutput})
 	},
 }
 

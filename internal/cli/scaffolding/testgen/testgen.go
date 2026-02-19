@@ -10,6 +10,8 @@ import (
 	"os"
 	"strings"
 
+	"github.com/spf13/afero"
+
 	"github.com/inovacc/omni/internal/cli/scaffolding"
 	testtpl "github.com/inovacc/omni/internal/cli/scaffolding/testgen/templates"
 )
@@ -32,7 +34,7 @@ type TestResult struct {
 }
 
 // RunTestInit generates tests for a Go source file
-func RunTestInit(w io.Writer, sourcePath string, opts TestOptions, genOpts scaffolding.Options) error {
+func RunTestInit(w io.Writer, fs afero.Fs, sourcePath string, opts TestOptions, genOpts scaffolding.Options) error {
 	if sourcePath == "" {
 		return fmt.Errorf("scaffold: source file path is required")
 	}
@@ -143,7 +145,7 @@ func RunTestInit(w io.Writer, sourcePath string, opts TestOptions, genOpts scaff
 	}
 
 	// Write test file
-	if err := scaffolding.WriteTemplate(testPath, tpl, data); err != nil {
+	if err := scaffolding.WriteTemplate(fs, testPath, tpl, data); err != nil {
 		return fmt.Errorf("scaffold: failed to create %s: %w", testPath, err)
 	}
 
