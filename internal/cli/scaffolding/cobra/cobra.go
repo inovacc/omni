@@ -23,6 +23,7 @@ type CobraInitOptions struct {
 	UseViper    bool   // Include viper for configuration
 	UseService  bool   // Include service pattern with inovacc/config
 	Full        bool   // Full project with goreleaser, workflows, etc.
+	AIContext   bool   // Include aicontext command
 }
 
 // CobraAddOptions configures adding a new command
@@ -74,6 +75,7 @@ func RunCobraInit(w io.Writer, dir string, opts CobraInitOptions, genOpts scaffo
 		UseViper:    opts.UseViper,
 		UseService:  opts.UseService,
 		Full:        opts.Full,
+		AIContext:   opts.AIContext,
 		Year:        time.Now().Year(),
 	}
 
@@ -127,6 +129,24 @@ func RunCobraInit(w io.Writer, dir string, opts CobraInitOptions, genOpts scaffo
 	}
 
 	filesCreated = append(filesCreated, "cmd/version.go")
+
+	// Generate cmd/cmdtree.go (always included)
+	cmdtreePath := filepath.Join(dir, "cmd", "cmdtree.go")
+	if err := scaffolding.WriteTemplate(cmdtreePath, cobratpl.CmdtreeTemplate, tplData); err != nil {
+		return fmt.Errorf("scaffold: failed to create cmd/cmdtree.go: %w", err)
+	}
+
+	filesCreated = append(filesCreated, "cmd/cmdtree.go")
+
+	// Generate cmd/aicontext.go (when AIContext is enabled)
+	if opts.AIContext {
+		aicontextPath := filepath.Join(dir, "cmd", "aicontext.go")
+		if err := scaffolding.WriteTemplate(aicontextPath, cobratpl.AIContextTemplate, tplData); err != nil {
+			return fmt.Errorf("scaffold: failed to create cmd/aicontext.go: %w", err)
+		}
+
+		filesCreated = append(filesCreated, "cmd/aicontext.go")
+	}
 
 	// Generate go.mod
 	goModPath := filepath.Join(dir, "go.mod")
@@ -299,6 +319,105 @@ func RunCobraInit(w io.Writer, dir string, opts CobraInitOptions, genOpts scaffo
 	_, _ = fmt.Fprintf(w, "  ./%s --help\n", opts.AppName)
 
 	return nil
+}
+
+// AddToolsOptions configures the add-tools subcommand
+type AddToolsOptions struct {
+	AIContext bool // Include aicontext command
+}
+
+// AddToolsResult represents the result of adding tools
+type AddToolsResult struct {
+	Status       string   `json:"status"`
+	FilesCreated []string `json:"files_created"`
+}
+
+// RunCobraAddTools adds cmdtree (and optionally aicontext) to an existing Cobra project
+func RunCobraAddTools(w io.Writer, dir string, opts AddToolsOptions, genOpts scaffolding.Options) error {
+	// Verify cmd/ directory exists
+	cmdDir := filepath.Join(dir, "cmd")
+	if _, err := os.Stat(cmdDir); os.IsNotExist(err) {
+		return fmt.Errorf("scaffold: cmd directory not found, is this a Cobra project?")
+	}
+
+	// Read go.mod to get module name
+	goModPath := filepath.Join(dir, "go.mod")
+	goModData, err := os.ReadFile(goModPath)
+	if err != nil {
+		return fmt.Errorf("scaffold: failed to read go.mod: %w", err)
+	}
+
+	moduleName := parseModuleName(goModData)
+	if moduleName == "" {
+		return fmt.Errorf("scaffold: failed to parse module name from go.mod")
+	}
+
+	appName := moduleName
+	if parts := strings.Split(moduleName, "/"); len(parts) > 0 {
+		appName = parts[len(parts)-1]
+	}
+
+	tplData := cobratpl.TemplateData{
+		Module:    moduleName,
+		AppName:   appName,
+		AIContext: opts.AIContext,
+	}
+
+	var filesCreated []string
+
+	// Always generate cmd/cmdtree.go
+	cmdtreePath := filepath.Join(cmdDir, "cmdtree.go")
+	if _, err := os.Stat(cmdtreePath); err == nil {
+		return fmt.Errorf("scaffold: cmd/cmdtree.go already exists")
+	}
+
+	if err := scaffolding.WriteTemplate(cmdtreePath, cobratpl.CmdtreeTemplate, tplData); err != nil {
+		return fmt.Errorf("scaffold: failed to create cmd/cmdtree.go: %w", err)
+	}
+
+	filesCreated = append(filesCreated, "cmd/cmdtree.go")
+
+	// Optionally generate cmd/aicontext.go
+	if opts.AIContext {
+		aicontextPath := filepath.Join(cmdDir, "aicontext.go")
+		if _, err := os.Stat(aicontextPath); err == nil {
+			return fmt.Errorf("scaffold: cmd/aicontext.go already exists")
+		}
+
+		if err := scaffolding.WriteTemplate(aicontextPath, cobratpl.AIContextTemplate, tplData); err != nil {
+			return fmt.Errorf("scaffold: failed to create cmd/aicontext.go: %w", err)
+		}
+
+		filesCreated = append(filesCreated, "cmd/aicontext.go")
+	}
+
+	if genOpts.JSON {
+		result := AddToolsResult{
+			Status:       "created",
+			FilesCreated: filesCreated,
+		}
+
+		return json.NewEncoder(w).Encode(result)
+	}
+
+	_, _ = fmt.Fprintln(w, "Added developer tools:")
+	for _, f := range filesCreated {
+		_, _ = fmt.Fprintf(w, "  - %s\n", f)
+	}
+
+	return nil
+}
+
+// parseModuleName extracts the module name from go.mod content
+func parseModuleName(data []byte) string {
+	for _, line := range strings.Split(string(data), "\n") {
+		line = strings.TrimSpace(line)
+		if strings.HasPrefix(line, "module ") {
+			return strings.TrimSpace(strings.TrimPrefix(line, "module "))
+		}
+	}
+
+	return ""
 }
 
 // RunCobraAdd adds a new command to an existing Cobra application

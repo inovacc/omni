@@ -15,6 +15,7 @@ type TemplateData struct {
 	UseViper    bool   // Include viper for configuration
 	UseService  bool   // Include service pattern with inovacc/config
 	Full        bool   // Full project with goreleaser, workflows, etc.
+	AIContext   bool   // Include aicontext command
 	Year        int    // Current year for license
 }
 
