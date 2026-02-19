@@ -890,6 +890,215 @@ func TestServiceMode(t *testing.T) {
 	})
 }
 
+func TestRunCobraInitWithCmdtree(t *testing.T) {
+	tmpDir, err := os.MkdirTemp("", "cobra_cmdtree_test")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	defer func() { _ = os.RemoveAll(tmpDir) }()
+
+	appDir := filepath.Join(tmpDir, "cmdtreeapp")
+
+	var buf bytes.Buffer
+
+	err = RunCobraInit(&buf, appDir, CobraInitOptions{
+		Module: "github.com/test/cmdtreeapp",
+	}, scaffolding.Options{})
+	if err != nil {
+		t.Fatalf("RunCobraInit() error = %v", err)
+	}
+
+	// cmdtree.go should always be created
+	cmdtreePath := filepath.Join(appDir, "cmd", "cmdtree.go")
+	if _, err := os.Stat(cmdtreePath); os.IsNotExist(err) {
+		t.Error("cmd/cmdtree.go should always be created")
+	}
+
+	content, _ := os.ReadFile(cmdtreePath)
+	if !strings.Contains(string(content), "cmdtreeCmd") {
+		t.Error("cmdtree.go should define cmdtreeCmd")
+	}
+
+	if !strings.Contains(string(content), "collectPersistentFlags") {
+		t.Error("cmdtree.go should define collectPersistentFlags")
+	}
+
+	// aicontext.go should NOT be created by default
+	aicontextPath := filepath.Join(appDir, "cmd", "aicontext.go")
+	if _, err := os.Stat(aicontextPath); !os.IsNotExist(err) {
+		t.Error("cmd/aicontext.go should NOT be created by default")
+	}
+}
+
+func TestRunCobraInitWithAIContext(t *testing.T) {
+	tmpDir, err := os.MkdirTemp("", "cobra_aicontext_test")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	defer func() { _ = os.RemoveAll(tmpDir) }()
+
+	appDir := filepath.Join(tmpDir, "aiapp")
+
+	var buf bytes.Buffer
+
+	err = RunCobraInit(&buf, appDir, CobraInitOptions{
+		Module:      "github.com/test/aiapp",
+		AppName:     "aiapp",
+		Description: "AI test app",
+		AIContext:   true,
+	}, scaffolding.Options{})
+	if err != nil {
+		t.Fatalf("RunCobraInit() error = %v", err)
+	}
+
+	// Both should be created
+	cmdtreePath := filepath.Join(appDir, "cmd", "cmdtree.go")
+	if _, err := os.Stat(cmdtreePath); os.IsNotExist(err) {
+		t.Error("cmd/cmdtree.go should be created")
+	}
+
+	aicontextPath := filepath.Join(appDir, "cmd", "aicontext.go")
+	if _, err := os.Stat(aicontextPath); os.IsNotExist(err) {
+		t.Error("cmd/aicontext.go should be created when AIContext=true")
+	}
+
+	content, _ := os.ReadFile(aicontextPath)
+	aiStr := string(content)
+
+	if !strings.Contains(aiStr, "aiapp") {
+		t.Error("aicontext.go should contain app name")
+	}
+
+	if !strings.Contains(aiStr, "AI test app") {
+		t.Error("aicontext.go should contain description")
+	}
+
+	if !strings.Contains(aiStr, "aicontextCmd") {
+		t.Error("aicontext.go should define aicontextCmd")
+	}
+}
+
+func TestRunCobraAddTools(t *testing.T) {
+	setupMinimalProject := func(t *testing.T) (string, func()) {
+		tmpDir, err := os.MkdirTemp("", "cobra_addtools_test")
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		appDir := filepath.Join(tmpDir, "toolsapp")
+
+		// Create minimal project structure
+		if err := os.MkdirAll(filepath.Join(appDir, "cmd"), 0755); err != nil {
+			_ = os.RemoveAll(tmpDir)
+			t.Fatal(err)
+		}
+
+		// Write go.mod
+		goMod := []byte("module github.com/test/toolsapp\n\ngo 1.21\n")
+		if err := os.WriteFile(filepath.Join(appDir, "go.mod"), goMod, 0644); err != nil {
+			_ = os.RemoveAll(tmpDir)
+			t.Fatal(err)
+		}
+
+		return appDir, func() { _ = os.RemoveAll(tmpDir) }
+	}
+
+	t.Run("creates cmdtree only", func(t *testing.T) {
+		appDir, cleanup := setupMinimalProject(t)
+		defer cleanup()
+
+		var buf bytes.Buffer
+
+		err := RunCobraAddTools(&buf, appDir, AddToolsOptions{}, scaffolding.Options{})
+		if err != nil {
+			t.Fatalf("RunCobraAddTools() error = %v", err)
+		}
+
+		if _, err := os.Stat(filepath.Join(appDir, "cmd", "cmdtree.go")); os.IsNotExist(err) {
+			t.Error("cmd/cmdtree.go should be created")
+		}
+
+		if _, err := os.Stat(filepath.Join(appDir, "cmd", "aicontext.go")); !os.IsNotExist(err) {
+			t.Error("cmd/aicontext.go should NOT be created without AIContext flag")
+		}
+	})
+
+	t.Run("creates both with AIContext", func(t *testing.T) {
+		appDir, cleanup := setupMinimalProject(t)
+		defer cleanup()
+
+		var buf bytes.Buffer
+
+		err := RunCobraAddTools(&buf, appDir, AddToolsOptions{AIContext: true}, scaffolding.Options{})
+		if err != nil {
+			t.Fatalf("RunCobraAddTools() error = %v", err)
+		}
+
+		if _, err := os.Stat(filepath.Join(appDir, "cmd", "cmdtree.go")); os.IsNotExist(err) {
+			t.Error("cmd/cmdtree.go should be created")
+		}
+
+		if _, err := os.Stat(filepath.Join(appDir, "cmd", "aicontext.go")); os.IsNotExist(err) {
+			t.Error("cmd/aicontext.go should be created with AIContext flag")
+		}
+	})
+
+	t.Run("error when no cmd directory", func(t *testing.T) {
+		tmpDir, err := os.MkdirTemp("", "cobra_nocmd_test")
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		defer func() { _ = os.RemoveAll(tmpDir) }()
+
+		var buf bytes.Buffer
+
+		err = RunCobraAddTools(&buf, tmpDir, AddToolsOptions{}, scaffolding.Options{})
+		if err == nil {
+			t.Error("Expected error when cmd/ directory doesn't exist")
+		}
+	})
+
+	t.Run("error when cmdtree already exists", func(t *testing.T) {
+		appDir, cleanup := setupMinimalProject(t)
+		defer cleanup()
+
+		// Create existing cmdtree.go
+		_ = os.WriteFile(filepath.Join(appDir, "cmd", "cmdtree.go"), []byte("package cmd"), 0644)
+
+		var buf bytes.Buffer
+
+		err := RunCobraAddTools(&buf, appDir, AddToolsOptions{}, scaffolding.Options{})
+		if err == nil {
+			t.Error("Expected error when cmdtree.go already exists")
+		}
+	})
+}
+
+func TestParseModuleName(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    string
+		expected string
+	}{
+		{"simple", "module github.com/test/app\n\ngo 1.21\n", "github.com/test/app"},
+		{"with spaces", "module  github.com/test/app \n", "github.com/test/app"},
+		{"empty", "", ""},
+		{"no module", "go 1.21\n", ""},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := parseModuleName([]byte(tt.input))
+			if got != tt.expected {
+				t.Errorf("parseModuleName() = %q, want %q", got, tt.expected)
+			}
+		})
+	}
+}
+
 func TestEditorConfigContent(t *testing.T) {
 	tmpDir, err := os.MkdirTemp("", "editorconfig_test")
 	if err != nil {
