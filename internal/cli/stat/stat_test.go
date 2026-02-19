@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/inovacc/omni/internal/cli/output"
+	"github.com/inovacc/omni/pkg/cobra/helper/output"
 )
 
 func TestRunStat(t *testing.T) {

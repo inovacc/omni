@@ -8,7 +8,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/inovacc/omni/internal/cli/output"
+	"github.com/inovacc/omni/pkg/cobra/helper/output"
 )
 
 // PackageStatus represents the test status of a package.

@@ -8,7 +8,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/inovacc/omni/internal/cli/output"
+	"github.com/inovacc/omni/pkg/cobra/helper/output"
 )
 
 // Options configures the html encode/decode command behavior

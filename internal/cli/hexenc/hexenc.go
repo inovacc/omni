@@ -8,7 +8,7 @@ import (
 	"os"
 	"strings"
 
-	clioutput "github.com/inovacc/omni/internal/cli/output"
+	clioutput "github.com/inovacc/omni/pkg/cobra/helper/output"
 )
 
 // Options configures the hex encode/decode command behavior

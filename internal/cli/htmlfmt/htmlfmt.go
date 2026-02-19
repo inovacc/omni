@@ -7,7 +7,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/inovacc/omni/internal/cli/output"
+	"github.com/inovacc/omni/pkg/cobra/helper/output"
 	pkghtml "github.com/inovacc/omni/pkg/htmlfmt"
 )
 

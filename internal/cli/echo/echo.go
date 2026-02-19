@@ -5,7 +5,7 @@ import (
 	"io"
 	"strings"
 
-	"github.com/inovacc/omni/internal/cli/output"
+	"github.com/inovacc/omni/pkg/cobra/helper/output"
 )
 
 // EchoOptions holds the options for the echo command.

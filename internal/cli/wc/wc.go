@@ -10,7 +10,7 @@ import (
 
 	"github.com/inovacc/omni/internal/cli/cmderr"
 	"github.com/inovacc/omni/internal/cli/input"
-	"github.com/inovacc/omni/internal/cli/output"
+	"github.com/inovacc/omni/pkg/cobra/helper/output"
 )
 
 // WCOptions configures the wc command behavior

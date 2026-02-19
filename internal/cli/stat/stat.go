@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/inovacc/omni/internal/cli/cmderr"
-	"github.com/inovacc/omni/internal/cli/output"
+	"github.com/inovacc/omni/pkg/cobra/helper/output"
 )
 
 // StatOptions configures the stat command behavior

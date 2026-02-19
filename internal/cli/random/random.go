@@ -7,7 +7,7 @@ import (
 	"math/big"
 	"strings"
 
-	"github.com/inovacc/omni/internal/cli/output"
+	"github.com/inovacc/omni/pkg/cobra/helper/output"
 )
 
 // RandomOptions configures the random command behavior

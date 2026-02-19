@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/inovacc/omni/internal/cli/cmderr"
-	"github.com/inovacc/omni/internal/cli/output"
+	"github.com/inovacc/omni/pkg/cobra/helper/output"
 )
 
 // Schedule represents a parsed cron schedule

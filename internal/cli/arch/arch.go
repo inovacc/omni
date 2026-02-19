@@ -5,8 +5,8 @@ import (
 	"io"
 	"runtime"
 
-	"github.com/inovacc/omni/internal/cli/output"
 	"github.com/inovacc/omni/internal/cli/uname"
+	"github.com/inovacc/omni/pkg/cobra/helper/output"
 )
 
 // ArchOptions configures the arch command behavior

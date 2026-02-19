@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/google/gops/goprocess"
-	"github.com/inovacc/omni/internal/cli/output"
+	"github.com/inovacc/omni/pkg/cobra/helper/output"
 )
 
 // Options configure the ps command behavior

@@ -9,7 +9,7 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/inovacc/omni/internal/cli/output"
+	"github.com/inovacc/omni/pkg/cobra/helper/output"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 )

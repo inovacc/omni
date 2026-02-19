@@ -5,7 +5,7 @@ import (
 	"io"
 	"time"
 
-	"github.com/inovacc/omni/internal/cli/output"
+	"github.com/inovacc/omni/pkg/cobra/helper/output"
 	"github.com/inovacc/omni/pkg/idgen"
 )
 

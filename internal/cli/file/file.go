@@ -11,7 +11,7 @@ import (
 	"strings"
 
 	"github.com/inovacc/omni/internal/cli/cmderr"
-	"github.com/inovacc/omni/internal/cli/output"
+	"github.com/inovacc/omni/pkg/cobra/helper/output"
 )
 
 // FileOptions configures the file command behavior

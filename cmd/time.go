@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/inovacc/omni/internal/cli/output"
 	"github.com/inovacc/omni/internal/cli/timecmd"
+	"github.com/inovacc/omni/pkg/cobra/helper/output"
 	"github.com/spf13/cobra"
 )
 

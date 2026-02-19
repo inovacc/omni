@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/inovacc/omni/internal/cli/input"
-	"github.com/inovacc/omni/internal/cli/output"
+	"github.com/inovacc/omni/pkg/cobra/helper/output"
 )
 
 // TacOptions configures the tac command behavior

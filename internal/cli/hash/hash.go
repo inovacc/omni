@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	"github.com/inovacc/omni/internal/cli/cmderr"
-	"github.com/inovacc/omni/internal/cli/output"
+	"github.com/inovacc/omni/pkg/cobra/helper/output"
 	"github.com/inovacc/omni/pkg/hashutil"
 )
 

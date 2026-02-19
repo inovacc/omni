@@ -13,7 +13,7 @@ import (
 	"time"
 
 	"github.com/inovacc/omni/internal/cli/cmderr"
-	"github.com/inovacc/omni/internal/cli/output"
+	"github.com/inovacc/omni/pkg/cobra/helper/output"
 )
 
 // FindOptions configures the find command behavior

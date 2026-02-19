@@ -5,7 +5,7 @@ import (
 	"io"
 	"os/user"
 
-	"github.com/inovacc/omni/internal/cli/output"
+	"github.com/inovacc/omni/pkg/cobra/helper/output"
 )
 
 // WhoamiOptions configures the whoami command behavior

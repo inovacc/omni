@@ -5,7 +5,7 @@ import (
 	"io"
 	"os"
 
-	"github.com/inovacc/omni/internal/cli/output"
+	"github.com/inovacc/omni/pkg/cobra/helper/output"
 )
 
 // PwdOptions configures the pwd command behavior

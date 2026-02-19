@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"github.com/inovacc/omni/internal/cli/output"
+	"github.com/inovacc/omni/pkg/cobra/helper/output"
 	"github.com/spf13/cobra"
 )
 

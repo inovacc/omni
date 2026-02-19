@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/inovacc/omni/internal/cli/output"
+	"github.com/inovacc/omni/pkg/cobra/helper/output"
 )
 
 func TestRun(t *testing.T) {

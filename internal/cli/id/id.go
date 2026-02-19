@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/inovacc/omni/internal/cli/output"
+	"github.com/inovacc/omni/pkg/cobra/helper/output"
 )
 
 // IDOptions configures the id command behavior

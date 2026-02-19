@@ -8,7 +8,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/inovacc/omni/internal/cli/output"
+	"github.com/inovacc/omni/pkg/cobra/helper/output"
 	twig2 "github.com/inovacc/omni/pkg/twig"
 	"github.com/inovacc/omni/pkg/twig/comparer"
 	"github.com/inovacc/omni/pkg/twig/models"

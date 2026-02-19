@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/inovacc/omni/internal/cli/output"
+	"github.com/inovacc/omni/pkg/cobra/helper/output"
 )
 
 // UptimeOptions configures the uptime command behavior
