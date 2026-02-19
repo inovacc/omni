@@ -589,6 +589,7 @@ Shortcuts for common Kubernetes operations.
 | `github.com/charmbracelet/lipgloss` | Terminal styling |
 | `gopkg.in/yaml.v3` | YAML parsing for yq, lint |
 | `github.com/dop251/goja` | Pure Go JS runtime (YouTube signature decryption) |
+| `github.com/spf13/afero` | Filesystem abstraction for testable scaffolding |
 | `github.com/bufbuild/protocompile` | Pure Go protobuf compiler (AST parser for buf format/lint) |
 
 ### Standard Library Usage

@@ -134,6 +134,7 @@ See CLAUDE.md for the full command inventory.
 - [x] Tests for twig/builder (58.9%) and twig/parser (79.1%) — completed Feb 2026
 - [x] scaffolding refactor — `generate` renamed to `scaffold`, reorganized into domain subpackages (Feb 2026)
 - [x] cmderr batches 4-5 — 20 more commands adopted (Feb 2026)
+- [x] afero refactor — scaffolding packages accept `afero.Fs` for in-memory testing (Feb 2026)
 
 ### Remaining
 - [ ] Platform-specific tests (Windows edge cases, symlinks, permissions)

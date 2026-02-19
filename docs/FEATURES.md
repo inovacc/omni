@@ -66,6 +66,7 @@
 - `scaffold cobra init/add/add-tools/config` CLI application scaffolding
 - Handler, repository, test code generators
 - cmdtree and aicontext template generation
+- All scaffolding functions accept `afero.Fs` for filesystem abstraction (in-memory testing)
 
 ### Project Analyzer
 - **Status:** Complete

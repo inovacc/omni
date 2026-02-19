@@ -72,6 +72,7 @@
 | cmderr batch 3 | 10 more commands adopted: buf, bzip2, xz, etc. (Feb 2026) |
 | cmderr batches 4-5 | 20 more commands adopted, total now 49 (Feb 2026) |
 | scaffolding refactor | `generate` command renamed to `scaffold`, reorganized into domain subpackages (Feb 2026) |
+| scaffolding afero | All scaffolding packages refactored to accept `afero.Fs` — tests use in-memory FS, no disk I/O (Feb 2026) |
 
 ---
 
