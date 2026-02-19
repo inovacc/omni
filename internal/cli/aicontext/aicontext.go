@@ -79,7 +79,7 @@ var categoryMap = map[string]string{
 	"sqlite": "db", "bbolt": "db",
 
 	// Code Generation
-	"generate": "codegen",
+	"scaffold": "codegen",
 
 	// Utilities
 	"time": "util", "sleep": "util", "seq": "util", "xargs": "util",

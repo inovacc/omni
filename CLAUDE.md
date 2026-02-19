@@ -53,6 +53,11 @@ omni/
 │   ├── cmderr/         # Unified error model (sentinels, exit codes)
 │   ├── command/        # Unified Command interface + Registry + adapters
 │   ├── repo/           # Repository analyzer (LLM-optimized context generation)
+│   ├── scaffolding/    # Code scaffolding (cobra, handler, repository, testgen)
+│   │   ├── cobra/      # Cobra CLI project generator + config
+│   │   ├── handler/    # HTTP handler generator
+│   │   ├── repository/ # Database repository generator
+│   │   └── testgen/    # Go test generator
 │   ├── <command>/      # Each command delegates to pkg/ for core logic
 │   │   ├── <command>.go
 │   │   ├── <command>_test.go
@@ -262,7 +267,7 @@ defer func() {
 | **Data** | jq, yq, dotenv, json (tostruct, tocsv, fromcsv, toxml, fromxml), yaml tostruct, yaml validate, toml validate, xml (validate, tojson, fromjson) |
 | **Formatting** | sql fmt/minify/validate, html fmt/minify/validate, css fmt/minify/validate |
 | **Protobuf** | buf lint, buf format, buf compile, buf breaking, buf generate, buf mod init/update, buf ls-files |
-| **Code Gen** | generate handler, generate repository, generate test |
+| **Code Gen** | scaffold cobra init/add/add-tools/config, scaffold handler, scaffold repository, scaffold test |
 | **Security** | encrypt, decrypt, uuid, random, jwt decode |
 | **Pagers** | less, more |
 | **Comparison** | diff |
@@ -602,7 +607,7 @@ Shortcuts for common Kubernetes operations.
 | `compress/bzip2` | bzip2, bunzip2, bzcat (decompress only) |
 | `crypto/*` | hash, encrypt/decrypt |
 | `syscall` | df, free, uptime, ps |
-| `go/parser`, `go/ast` | generate test |
+| `go/parser`, `go/ast` | scaffold test |
 | `text/template` | code generators |
 
 ---
