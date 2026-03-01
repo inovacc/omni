@@ -82,7 +82,7 @@ func RunCobraInit(w io.Writer, fs afero.Fs, dir string, opts CobraInitOptions, g
 
 	// Create directory structure
 	dirs := []string{
-		filepath.Join(dir, "cmd"),
+		filepath.Join(dir, "cmd", opts.AppName),
 		filepath.Join(dir, "internal"),
 	}
 
@@ -107,46 +107,39 @@ func RunCobraInit(w io.Writer, fs afero.Fs, dir string, opts CobraInitOptions, g
 
 	var filesCreated []string
 
-	// Generate main.go
-	mainPath := filepath.Join(dir, "main.go")
+	// Generate cmd/{appName}/{appName}.go (combined entry point + root command)
+	cmdAppDir := filepath.Join("cmd", opts.AppName)
+	mainPath := filepath.Join(dir, cmdAppDir, opts.AppName+".go")
 	if err := scaffolding.WriteTemplate(fs, mainPath, cobratpl.MainTemplate, tplData); err != nil {
-		return fmt.Errorf("scaffold: failed to create main.go: %w", err)
+		return fmt.Errorf("scaffold: failed to create %s/%s.go: %w", cmdAppDir, opts.AppName, err)
 	}
 
-	filesCreated = append(filesCreated, "main.go")
+	filesCreated = append(filesCreated, filepath.Join(cmdAppDir, opts.AppName+".go"))
 
-	// Generate cmd/root.go
-	rootPath := filepath.Join(dir, "cmd", "root.go")
-	if err := scaffolding.WriteTemplate(fs, rootPath, cobratpl.RootTemplate, tplData); err != nil {
-		return fmt.Errorf("scaffold: failed to create cmd/root.go: %w", err)
-	}
-
-	filesCreated = append(filesCreated, "cmd/root.go")
-
-	// Generate cmd/version.go
-	versionPath := filepath.Join(dir, "cmd", "version.go")
+	// Generate cmd/{appName}/cmd_version.go
+	versionPath := filepath.Join(dir, cmdAppDir, "cmd_version.go")
 	if err := scaffolding.WriteTemplate(fs, versionPath, cobratpl.VersionTemplate, tplData); err != nil {
-		return fmt.Errorf("scaffold: failed to create cmd/version.go: %w", err)
+		return fmt.Errorf("scaffold: failed to create %s/cmd_version.go: %w", cmdAppDir, err)
 	}
 
-	filesCreated = append(filesCreated, "cmd/version.go")
+	filesCreated = append(filesCreated, filepath.Join(cmdAppDir, "cmd_version.go"))
 
-	// Generate cmd/cmdtree.go (always included)
-	cmdtreePath := filepath.Join(dir, "cmd", "cmdtree.go")
+	// Generate cmd/{appName}/cmd_cmdtree.go (always included)
+	cmdtreePath := filepath.Join(dir, cmdAppDir, "cmd_cmdtree.go")
 	if err := scaffolding.WriteTemplate(fs, cmdtreePath, cobratpl.CmdtreeTemplate, tplData); err != nil {
-		return fmt.Errorf("scaffold: failed to create cmd/cmdtree.go: %w", err)
+		return fmt.Errorf("scaffold: failed to create %s/cmd_cmdtree.go: %w", cmdAppDir, err)
 	}
 
-	filesCreated = append(filesCreated, "cmd/cmdtree.go")
+	filesCreated = append(filesCreated, filepath.Join(cmdAppDir, "cmd_cmdtree.go"))
 
-	// Generate cmd/aicontext.go (when AIContext is enabled)
+	// Generate cmd/{appName}/cmd_aicontext.go (when AIContext is enabled)
 	if opts.AIContext {
-		aicontextPath := filepath.Join(dir, "cmd", "aicontext.go")
+		aicontextPath := filepath.Join(dir, cmdAppDir, "cmd_aicontext.go")
 		if err := scaffolding.WriteTemplate(fs, aicontextPath, cobratpl.AIContextTemplate, tplData); err != nil {
-			return fmt.Errorf("scaffold: failed to create cmd/aicontext.go: %w", err)
+			return fmt.Errorf("scaffold: failed to create %s/cmd_aicontext.go: %w", cmdAppDir, err)
 		}
 
-		filesCreated = append(filesCreated, "cmd/aicontext.go")
+		filesCreated = append(filesCreated, filepath.Join(cmdAppDir, "cmd_aicontext.go"))
 	}
 
 	// Generate go.mod
@@ -317,7 +310,7 @@ func RunCobraInit(w io.Writer, fs afero.Fs, dir string, opts CobraInitOptions, g
 		_, _ = fmt.Fprintln(w, "  go build")
 	}
 
-	_, _ = fmt.Fprintf(w, "  ./%s --help\n", opts.AppName)
+	_, _ = fmt.Fprintf(w, "  go run ./cmd/%s\n", opts.AppName)
 
 	return nil
 }
@@ -335,12 +328,6 @@ type AddToolsResult struct {
 
 // RunCobraAddTools adds cmdtree (and optionally aicontext) to an existing Cobra project
 func RunCobraAddTools(w io.Writer, fs afero.Fs, dir string, opts AddToolsOptions, genOpts scaffolding.Options) error {
-	// Verify cmd/ directory exists
-	cmdDir := filepath.Join(dir, "cmd")
-	if _, err := fs.Stat(cmdDir); err != nil {
-		return fmt.Errorf("scaffold: cmd directory not found, is this a Cobra project?")
-	}
-
 	// Read go.mod to get module name
 	goModPath := filepath.Join(dir, "go.mod")
 	goModData, err := afero.ReadFile(fs, goModPath)
@@ -358,6 +345,12 @@ func RunCobraAddTools(w io.Writer, fs afero.Fs, dir string, opts AddToolsOptions
 		appName = parts[len(parts)-1]
 	}
 
+	// Verify cmd/{appName} directory exists
+	cmdDir := filepath.Join(dir, "cmd", appName)
+	if _, err := fs.Stat(cmdDir); err != nil {
+		return fmt.Errorf("scaffold: cmd/%s directory not found, is this a Cobra project?", appName)
+	}
+
 	tplData := cobratpl.TemplateData{
 		Module:    moduleName,
 		AppName:   appName,
@@ -366,30 +359,30 @@ func RunCobraAddTools(w io.Writer, fs afero.Fs, dir string, opts AddToolsOptions
 
 	var filesCreated []string
 
-	// Always generate cmd/cmdtree.go
-	cmdtreePath := filepath.Join(cmdDir, "cmdtree.go")
+	// Always generate cmd/{appName}/cmd_cmdtree.go
+	cmdtreePath := filepath.Join(cmdDir, "cmd_cmdtree.go")
 	if _, err := fs.Stat(cmdtreePath); err == nil {
-		return fmt.Errorf("scaffold: cmd/cmdtree.go already exists")
+		return fmt.Errorf("scaffold: cmd/%s/cmd_cmdtree.go already exists", appName)
 	}
 
 	if err := scaffolding.WriteTemplate(fs, cmdtreePath, cobratpl.CmdtreeTemplate, tplData); err != nil {
-		return fmt.Errorf("scaffold: failed to create cmd/cmdtree.go: %w", err)
+		return fmt.Errorf("scaffold: failed to create cmd/%s/cmd_cmdtree.go: %w", appName, err)
 	}
 
-	filesCreated = append(filesCreated, "cmd/cmdtree.go")
+	filesCreated = append(filesCreated, filepath.Join("cmd", appName, "cmd_cmdtree.go"))
 
-	// Optionally generate cmd/aicontext.go
+	// Optionally generate cmd/{appName}/cmd_aicontext.go
 	if opts.AIContext {
-		aicontextPath := filepath.Join(cmdDir, "aicontext.go")
+		aicontextPath := filepath.Join(cmdDir, "cmd_aicontext.go")
 		if _, err := fs.Stat(aicontextPath); err == nil {
-			return fmt.Errorf("scaffold: cmd/aicontext.go already exists")
+			return fmt.Errorf("scaffold: cmd/%s/cmd_aicontext.go already exists", appName)
 		}
 
 		if err := scaffolding.WriteTemplate(fs, aicontextPath, cobratpl.AIContextTemplate, tplData); err != nil {
-			return fmt.Errorf("scaffold: failed to create cmd/aicontext.go: %w", err)
+			return fmt.Errorf("scaffold: failed to create cmd/%s/cmd_aicontext.go: %w", appName, err)
 		}
 
-		filesCreated = append(filesCreated, "cmd/aicontext.go")
+		filesCreated = append(filesCreated, filepath.Join("cmd", appName, "cmd_aicontext.go"))
 	}
 
 	if genOpts.JSON {
@@ -435,14 +428,30 @@ func RunCobraAdd(w io.Writer, fs afero.Fs, dir string, opts CobraAddOptions, gen
 		opts.Description = fmt.Sprintf("%s command", opts.Name)
 	}
 
-	// Check if cmd directory exists
-	cmdDir := filepath.Join(dir, "cmd")
-	if _, err := fs.Stat(cmdDir); err != nil {
-		return fmt.Errorf("scaffold: cmd directory not found, is this a Cobra project?")
+	// Read go.mod to get app name
+	goModData, err := afero.ReadFile(fs, filepath.Join(dir, "go.mod"))
+	if err != nil {
+		return fmt.Errorf("scaffold: failed to read go.mod: %w", err)
 	}
 
-	// Generate the command file
-	cmdPath := filepath.Join(cmdDir, opts.Name+".go")
+	moduleName := parseModuleName(goModData)
+	if moduleName == "" {
+		return fmt.Errorf("scaffold: failed to parse module name from go.mod")
+	}
+
+	appName := moduleName
+	if parts := strings.Split(moduleName, "/"); len(parts) > 0 {
+		appName = parts[len(parts)-1]
+	}
+
+	// Check if cmd/{appName} directory exists
+	cmdDir := filepath.Join(dir, "cmd", appName)
+	if _, err := fs.Stat(cmdDir); err != nil {
+		return fmt.Errorf("scaffold: cmd/%s directory not found, is this a Cobra project?", appName)
+	}
+
+	// Generate the command file with cmd_ prefix
+	cmdPath := filepath.Join(cmdDir, "cmd_"+opts.Name+".go")
 	if _, err := fs.Stat(cmdPath); err == nil {
 		return fmt.Errorf("scaffold: command %s already exists", opts.Name)
 	}
@@ -460,15 +469,17 @@ func RunCobraAdd(w io.Writer, fs afero.Fs, dir string, opts CobraAddOptions, gen
 	}
 
 	if err := scaffolding.WriteTemplate(fs, cmdPath, cobratpl.CommandTemplate, data); err != nil {
-		return fmt.Errorf("scaffold: failed to create %s.go: %w", opts.Name, err)
+		return fmt.Errorf("scaffold: failed to create cmd_%s.go: %w", opts.Name, err)
 	}
+
+	relPath := filepath.Join("cmd", appName, "cmd_"+opts.Name+".go")
 
 	if genOpts.JSON {
 		result := AddResult{
 			Status:  "created",
 			Command: opts.Name,
 			Parent:  opts.Parent,
-			File:    filepath.Join("cmd", opts.Name+".go"),
+			File:    relPath,
 		}
 
 		return json.NewEncoder(w).Encode(result)
@@ -476,7 +487,7 @@ func RunCobraAdd(w io.Writer, fs afero.Fs, dir string, opts CobraAddOptions, gen
 
 	_, _ = fmt.Fprintf(w, "Created command: %s\n", opts.Name)
 	_, _ = fmt.Fprintf(w, "Parent: %s\n", opts.Parent)
-	_, _ = fmt.Fprintf(w, "File: cmd/%s.go\n", opts.Name)
+	_, _ = fmt.Fprintf(w, "File: %s\n", relPath)
 
 	return nil
 }

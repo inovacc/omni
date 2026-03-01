@@ -3,7 +3,7 @@ package templates
 // CmdtreeTemplate generates cmd/cmdtree.go for scaffolded projects.
 // This template has NO Go template variables — it's literal Go source.
 // The cmdtree command is app-agnostic; it reads everything from rootCmd at runtime.
-const CmdtreeTemplate = `package cmd
+const CmdtreeTemplate = `package main
 
 import (
 	"bytes"

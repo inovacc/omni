@@ -29,18 +29,8 @@ func NewTemplateData(module, appName, description string) TemplateData {
 	}
 }
 
-// MainTemplate generates the main.go entry point
+// MainTemplate generates cmd/{appName}/{appName}.go — the combined entry point and root command
 const MainTemplate = `package main
-
-import "{{.Module}}/cmd"
-
-func main() {
-	cmd.Execute()
-}
-`
-
-// RootTemplate generates cmd/root.go with an optional service pattern
-const RootTemplate = `package cmd
 
 import (
 {{if .UseService}}
@@ -71,9 +61,12 @@ This is a CLI application built with Cobra.` + "`" + `,
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
-// This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
 	cobra.CheckErr(rootCmd.Execute())
+}
+
+func main() {
+	Execute()
 }
 
 func init() {
@@ -109,8 +102,8 @@ func initConfig() {
 {{end}}
 `
 
-// VersionTemplate generates cmd/version.go with full version info
-const VersionTemplate = `package cmd
+// VersionTemplate generates cmd/{appName}/cmd_version.go with full version info
+const VersionTemplate = `package main
 
 import (
 	"encoding/json"
@@ -333,7 +326,7 @@ const TaskfileTemplate = `version: '3'
 
 vars:
   APP_NAME: {{.AppName}}
-  MAIN_PACKAGE: .
+  MAIN_PACKAGE: ./cmd/{{.AppName}}
   COVERAGE_FILE: coverage.out
   VERSION:
     sh: git describe --tags --always --dirty 2>/dev/null || echo "dev"
@@ -363,7 +356,7 @@ tasks:
   build:
     desc: Build the application
     cmds:
-      - go build -ldflags "-X {{.Module}}/cmd.Version=$VERSION -X {{.Module}}/cmd.GitHash=$COMMIT -X {{.Module}}/cmd.BuildTime=$BUILD_DATE" -o $APP_NAME
+      - go build -ldflags "-X main.Version=$VERSION -X main.GitHash=$COMMIT -X main.BuildTime=$BUILD_DATE" -o $APP_NAME
     vars:
       VERSION: "{{"{{"}} .VERSION {{"}}"}}"
       COMMIT: "{{"{{"}} .COMMIT {{"}}"}}"
@@ -479,7 +472,7 @@ tasks:
   install:
     desc: Install the application
     cmds:
-      - go install -ldflags "-X {{.Module}}/cmd.Version=$VERSION -X {{.Module}}/cmd.GitHash=$COMMIT -X {{.Module}}/cmd.BuildTime=$BUILD_DATE"
+      - go install -ldflags "-X main.Version=$VERSION -X main.GitHash=$COMMIT -X main.BuildTime=$BUILD_DATE"
     vars:
       VERSION: "{{"{{"}} .VERSION {{"}}"}}"
       COMMIT: "{{"{{"}} .COMMIT {{"}}"}}"
@@ -647,7 +640,8 @@ before:
     - go generate ./...
 
 builds:
-  - env:
+  - main: ./cmd/{{.AppName}}
+    env:
       - CGO_ENABLED=0
     goos:
       - linux
@@ -826,7 +820,7 @@ import (
 `
 
 // CommandTemplate generates a new command file
-const CommandTemplate = `package cmd
+const CommandTemplate = `package main
 
 import (
 	"fmt"

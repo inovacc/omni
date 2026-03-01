@@ -2,7 +2,7 @@ package templates
 
 // AIContextTemplate generates cmd/aicontext.go for scaffolded projects.
 // Template variables: {{.AppName}}, {{.Description}}
-const AIContextTemplate = `package cmd
+const AIContextTemplate = `package main
 
 import (
 	"encoding/json"
@@ -151,10 +151,9 @@ func printAIContextMarkdown(cmd *cobra.Command) error {
 	b.WriteString("## Project Structure\n\n")
 	b.WriteString("` + "```" + `\n")
 	structure := []string{
-		"cmd/           # CLI commands (Cobra wrappers)",
-		"internal/      # Private application code",
-		"pkg/           # Public reusable libraries",
-		"main.go        # Entry point",
+		"cmd/{{.AppName}}/  # CLI entry point and commands",
+		"internal/          # Private application code",
+		"pkg/               # Public reusable libraries",
 	}
 	for _, s := range structure {
 		_, _ = fmt.Fprintf(&b, "%s\n", s)

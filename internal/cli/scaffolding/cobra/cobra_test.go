@@ -27,10 +27,9 @@ func TestRunCobraInit(t *testing.T) {
 
 		// Check files were created
 		expectedFiles := []string{
-			"main.go",
+			"cmd/myapp/myapp.go",
 			"go.mod",
-			"cmd/root.go",
-			"cmd/version.go",
+			"cmd/myapp/cmd_version.go",
 			"README.md",
 			"Taskfile.yml",
 			".gitignore",
@@ -161,13 +160,18 @@ func TestRunCobraInit(t *testing.T) {
 			t.Fatalf("RunCobraInit() error = %v", err)
 		}
 
-		mainContent, _ := afero.ReadFile(fs, "/extracted/main.go")
-		if !strings.Contains(string(mainContent), "github.com/test/extractedapp") {
-			t.Error("main.go should contain the module path")
+		// Verify the entry point file was created with the extracted app name
+		if _, err := fs.Stat("/extracted/cmd/extractedapp/extractedapp.go"); err != nil {
+			t.Error("entry point should be created at cmd/extractedapp/extractedapp.go")
+		}
+
+		mainContent, _ := afero.ReadFile(fs, "/extracted/cmd/extractedapp/extractedapp.go")
+		if !strings.Contains(string(mainContent), "extractedapp") {
+			t.Error("entry point should contain the extracted app name")
 		}
 	})
 
-	t.Run("main.go content", func(t *testing.T) {
+	t.Run("entry point content", func(t *testing.T) {
 		fs := afero.NewMemMapFs()
 		var buf bytes.Buffer
 
@@ -175,19 +179,19 @@ func TestRunCobraInit(t *testing.T) {
 			Module: "github.com/test/maintest",
 		}, scaffolding.Options{})
 
-		content, _ := afero.ReadFile(fs, "/maintest/main.go")
+		content, _ := afero.ReadFile(fs, "/maintest/cmd/maintest/maintest.go")
 		mainStr := string(content)
 
 		if !strings.Contains(mainStr, "package main") {
-			t.Error("main.go should have package main")
+			t.Error("entry point should have package main")
 		}
 
-		if !strings.Contains(mainStr, "cmd.Execute()") {
-			t.Error("main.go should call cmd.Execute()")
+		if !strings.Contains(mainStr, "func main()") {
+			t.Error("entry point should have func main()")
 		}
 	})
 
-	t.Run("root.go content", func(t *testing.T) {
+	t.Run("entry point root content", func(t *testing.T) {
 		fs := afero.NewMemMapFs()
 		var buf bytes.Buffer
 
@@ -197,19 +201,19 @@ func TestRunCobraInit(t *testing.T) {
 			Description: "Test description",
 		}, scaffolding.Options{})
 
-		content, _ := afero.ReadFile(fs, "/roottest/cmd/root.go")
+		content, _ := afero.ReadFile(fs, "/roottest/cmd/roottest/roottest.go")
 		rootStr := string(content)
 
-		if !strings.Contains(rootStr, "package cmd") {
-			t.Error("root.go should have package cmd")
+		if !strings.Contains(rootStr, "package main") {
+			t.Error("entry point should have package main")
 		}
 
 		if !strings.Contains(rootStr, "roottest") {
-			t.Error("root.go should contain app name")
+			t.Error("entry point should contain app name")
 		}
 
 		if !strings.Contains(rootStr, "Test description") {
-			t.Error("root.go should contain description")
+			t.Error("entry point should contain description")
 		}
 	})
 }
@@ -247,11 +251,11 @@ func TestRunCobraAdd(t *testing.T) {
 		}
 
 		// Check file was created
-		if _, err := fs.Stat("/addtest/cmd/serve.go"); err != nil {
-			t.Error("serve.go should be created")
+		if _, err := fs.Stat("/addtest/cmd/addtest/cmd_serve.go"); err != nil {
+			t.Error("cmd_serve.go should be created")
 		}
 
-		content, _ := afero.ReadFile(fs, "/addtest/cmd/serve.go")
+		content, _ := afero.ReadFile(fs, "/addtest/cmd/addtest/cmd_serve.go")
 		serveStr := string(content)
 
 		if !strings.Contains(serveStr, "serveCmd") {
@@ -275,7 +279,7 @@ func TestRunCobraAdd(t *testing.T) {
 			t.Fatalf("RunCobraAdd() error = %v", err)
 		}
 
-		content, _ := afero.ReadFile(fs, "/addtest/cmd/config.go")
+		content, _ := afero.ReadFile(fs, "/addtest/cmd/addtest/cmd_config.go")
 		if !strings.Contains(string(content), "rootCmd.AddCommand") {
 			t.Error("Should default to root parent")
 		}
@@ -303,7 +307,7 @@ func TestRunCobraAdd(t *testing.T) {
 			t.Fatalf("RunCobraAdd() error = %v", err)
 		}
 
-		content, _ := afero.ReadFile(fs, "/addtest/cmd/list.go")
+		content, _ := afero.ReadFile(fs, "/addtest/cmd/addtest/cmd_list.go")
 		if !strings.Contains(string(content), "userCmd.AddCommand(listCmd)") {
 			t.Error("list.go should add to userCmd")
 		}
@@ -363,6 +367,8 @@ func TestRunCobraAdd(t *testing.T) {
 
 	t.Run("not a cobra project", func(t *testing.T) {
 		fs := afero.NewMemMapFs()
+		// Write go.mod so it passes that check, but no cmd/{appName} dir
+		_ = afero.WriteFile(fs, "/empty/go.mod", []byte("module github.com/test/empty\n\ngo 1.21\n"), 0644)
 
 		var buf bytes.Buffer
 
@@ -476,10 +482,9 @@ func TestFullMode(t *testing.T) {
 		}
 
 		expectedFiles := []string{
-			"main.go",
+			"cmd/fullapp/fullapp.go",
 			"go.mod",
-			"cmd/root.go",
-			"cmd/version.go",
+			"cmd/fullapp/cmd_version.go",
 			"README.md",
 			"Taskfile.yml",
 			".gitignore",
@@ -508,7 +513,7 @@ func TestFullMode(t *testing.T) {
 			Full:   true,
 		}, scaffolding.Options{})
 
-		content, _ := afero.ReadFile(fs, "/fullverapp/cmd/version.go")
+		content, _ := afero.ReadFile(fs, "/fullverapp/cmd/fullverapp/cmd_version.go")
 		versionStr := string(content)
 
 		if !strings.Contains(versionStr, "BuildHash") {
@@ -585,10 +590,9 @@ func TestServiceMode(t *testing.T) {
 		}
 
 		expectedFiles := []string{
-			"main.go",
+			"cmd/serviceapp/serviceapp.go",
 			"go.mod",
-			"cmd/root.go",
-			"cmd/version.go",
+			"cmd/serviceapp/cmd_version.go",
 			"internal/parameters/config.go",
 			"internal/service/service.go",
 		}
@@ -609,23 +613,23 @@ func TestServiceMode(t *testing.T) {
 			UseService: true,
 		}, scaffolding.Options{})
 
-		content, _ := afero.ReadFile(fs, "/servicerootapp/cmd/root.go")
+		content, _ := afero.ReadFile(fs, "/servicerootapp/cmd/servicerootapp/servicerootapp.go")
 		rootStr := string(content)
 
 		if !strings.Contains(rootStr, "inovacc/config") {
-			t.Error("Service mode root.go should import inovacc/config")
+			t.Error("Service mode entry point should import inovacc/config")
 		}
 
 		if !strings.Contains(rootStr, "service.Handler") {
-			t.Error("Service mode root.go should use service.Handler")
+			t.Error("Service mode entry point should use service.Handler")
 		}
 
 		if !strings.Contains(rootStr, "internal/parameters") {
-			t.Error("Service mode root.go should import parameters")
+			t.Error("Service mode entry point should import parameters")
 		}
 
 		if !strings.Contains(rootStr, "internal/service") {
-			t.Error("Service mode root.go should import service")
+			t.Error("Service mode entry point should import service")
 		}
 	})
 
@@ -704,12 +708,12 @@ func TestRunCobraInitWithCmdtree(t *testing.T) {
 		t.Fatalf("RunCobraInit() error = %v", err)
 	}
 
-	// cmdtree.go should always be created
-	if _, err := fs.Stat("/cmdtreeapp/cmd/cmdtree.go"); err != nil {
-		t.Error("cmd/cmdtree.go should always be created")
+	// cmd_cmdtree.go should always be created
+	if _, err := fs.Stat("/cmdtreeapp/cmd/cmdtreeapp/cmd_cmdtree.go"); err != nil {
+		t.Error("cmd/cmdtreeapp/cmd_cmdtree.go should always be created")
 	}
 
-	content, _ := afero.ReadFile(fs, "/cmdtreeapp/cmd/cmdtree.go")
+	content, _ := afero.ReadFile(fs, "/cmdtreeapp/cmd/cmdtreeapp/cmd_cmdtree.go")
 	if !strings.Contains(string(content), "cmdtreeCmd") {
 		t.Error("cmdtree.go should define cmdtreeCmd")
 	}
@@ -718,9 +722,9 @@ func TestRunCobraInitWithCmdtree(t *testing.T) {
 		t.Error("cmdtree.go should define collectPersistentFlags")
 	}
 
-	// aicontext.go should NOT be created by default
-	if _, err := fs.Stat("/cmdtreeapp/cmd/aicontext.go"); err == nil {
-		t.Error("cmd/aicontext.go should NOT be created by default")
+	// cmd_aicontext.go should NOT be created by default
+	if _, err := fs.Stat("/cmdtreeapp/cmd/cmdtreeapp/cmd_aicontext.go"); err == nil {
+		t.Error("cmd/cmdtreeapp/cmd_aicontext.go should NOT be created by default")
 	}
 }
 
@@ -739,15 +743,15 @@ func TestRunCobraInitWithAIContext(t *testing.T) {
 	}
 
 	// Both should be created
-	if _, err := fs.Stat("/aiapp/cmd/cmdtree.go"); err != nil {
-		t.Error("cmd/cmdtree.go should be created")
+	if _, err := fs.Stat("/aiapp/cmd/aiapp/cmd_cmdtree.go"); err != nil {
+		t.Error("cmd/aiapp/cmd_cmdtree.go should be created")
 	}
 
-	if _, err := fs.Stat("/aiapp/cmd/aicontext.go"); err != nil {
-		t.Error("cmd/aicontext.go should be created when AIContext=true")
+	if _, err := fs.Stat("/aiapp/cmd/aiapp/cmd_aicontext.go"); err != nil {
+		t.Error("cmd/aiapp/cmd_aicontext.go should be created when AIContext=true")
 	}
 
-	content, _ := afero.ReadFile(fs, "/aiapp/cmd/aicontext.go")
+	content, _ := afero.ReadFile(fs, "/aiapp/cmd/aiapp/cmd_aicontext.go")
 	aiStr := string(content)
 
 	if !strings.Contains(aiStr, "aiapp") {
@@ -769,7 +773,7 @@ func TestRunCobraAddTools(t *testing.T) {
 		appDir := "/toolsapp"
 
 		// Create minimal project structure
-		if err := fs.MkdirAll(appDir+"/cmd", 0755); err != nil {
+		if err := fs.MkdirAll(appDir+"/cmd/toolsapp", 0755); err != nil {
 			t.Fatal(err)
 		}
 
@@ -792,12 +796,12 @@ func TestRunCobraAddTools(t *testing.T) {
 			t.Fatalf("RunCobraAddTools() error = %v", err)
 		}
 
-		if _, err := fs.Stat(appDir + "/cmd/cmdtree.go"); err != nil {
-			t.Error("cmd/cmdtree.go should be created")
+		if _, err := fs.Stat(appDir + "/cmd/toolsapp/cmd_cmdtree.go"); err != nil {
+			t.Error("cmd/toolsapp/cmd_cmdtree.go should be created")
 		}
 
-		if _, err := fs.Stat(appDir + "/cmd/aicontext.go"); err == nil {
-			t.Error("cmd/aicontext.go should NOT be created without AIContext flag")
+		if _, err := fs.Stat(appDir + "/cmd/toolsapp/cmd_aicontext.go"); err == nil {
+			t.Error("cmd/toolsapp/cmd_aicontext.go should NOT be created without AIContext flag")
 		}
 	})
 
@@ -811,17 +815,19 @@ func TestRunCobraAddTools(t *testing.T) {
 			t.Fatalf("RunCobraAddTools() error = %v", err)
 		}
 
-		if _, err := fs.Stat(appDir + "/cmd/cmdtree.go"); err != nil {
-			t.Error("cmd/cmdtree.go should be created")
+		if _, err := fs.Stat(appDir + "/cmd/toolsapp/cmd_cmdtree.go"); err != nil {
+			t.Error("cmd/toolsapp/cmd_cmdtree.go should be created")
 		}
 
-		if _, err := fs.Stat(appDir + "/cmd/aicontext.go"); err != nil {
-			t.Error("cmd/aicontext.go should be created with AIContext flag")
+		if _, err := fs.Stat(appDir + "/cmd/toolsapp/cmd_aicontext.go"); err != nil {
+			t.Error("cmd/toolsapp/cmd_aicontext.go should be created with AIContext flag")
 		}
 	})
 
 	t.Run("error when no cmd directory", func(t *testing.T) {
 		fs := afero.NewMemMapFs()
+		// Write go.mod so it passes that check, but no cmd/{appName} dir
+		_ = afero.WriteFile(fs, "/empty/go.mod", []byte("module github.com/test/empty\n\ngo 1.21\n"), 0644)
 
 		var buf bytes.Buffer
 
@@ -834,8 +840,8 @@ func TestRunCobraAddTools(t *testing.T) {
 	t.Run("error when cmdtree already exists", func(t *testing.T) {
 		fs, appDir := setupMinimalProject(t)
 
-		// Create existing cmdtree.go
-		_ = afero.WriteFile(fs, appDir+"/cmd/cmdtree.go", []byte("package cmd"), 0644)
+		// Create existing cmd_cmdtree.go
+		_ = afero.WriteFile(fs, appDir+"/cmd/toolsapp/cmd_cmdtree.go", []byte("package main"), 0644)
 
 		var buf bytes.Buffer
 

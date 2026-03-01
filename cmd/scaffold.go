@@ -72,19 +72,18 @@ Configuration:
   Command-line flags override config file values.
 
 Creates (basic mode):
-  - main.go          Entry point
-  - cmd/root.go      Root command
-  - cmd/version.go   Version command
-  - cmd/cmdtree.go   Command tree utility
-  - go.mod           Go module
-  - README.md        Documentation
-  - Taskfile.yml     Task runner
-  - .gitignore       Git ignore file
-  - .editorconfig    Editor configuration
-  - LICENSE          License file (optional)
+  - cmd/{name}/{name}.go       Entry point + root command
+  - cmd/{name}/cmd_version.go  Version command
+  - cmd/{name}/cmd_cmdtree.go  Command tree utility
+  - go.mod                     Go module
+  - README.md                  Documentation
+  - Taskfile.yml               Task runner
+  - .gitignore                 Git ignore file
+  - .editorconfig              Editor configuration
+  - LICENSE                    License file (optional)
 
 With --aicontext:
-  - cmd/aicontext.go AI context generator for coding agents
+  - cmd/{name}/cmd_aicontext.go AI context generator for coding agents
 
 With --viper:
   - internal/config/config.go  Viper configuration
@@ -94,11 +93,11 @@ With --service:
   - internal/service/service.go    Service handler (uses inovacc/config)
 
 With --full (includes all above plus):
-  - .goreleaser.yaml              GoReleaser configuration
-  - .golangci.yml                 GolangCI-Lint configuration (v2)
-  - tools.go                      Build tool dependencies
-  - .github/workflows/build.yml   GitHub Actions build workflow
-  - .github/workflows/test.yml    GitHub Actions test workflow
+  - .goreleaser.yaml               GoReleaser configuration
+  - .golangci.yml                  GolangCI-Lint configuration (v2)
+  - tools.go                       Build tool dependencies
+  - .github/workflows/build.yml    GitHub Actions build workflow
+  - .github/workflows/test.yml     GitHub Actions test workflow
   - .github/workflows/release.yaml GitHub Actions release workflow
 
 Examples:
@@ -165,7 +164,7 @@ var scaffoldCobraAddCmd = &cobra.Command{
 	Short: "Add a new command to an existing Cobra application",
 	Long: `Add a new command to an existing Cobra CLI application.
 
-Creates a new command file in the cmd/ directory with the proper structure.
+Creates a new command file in the cmd/{appName}/ directory with cmd_ prefix.
 
 Examples:
   omni scaffold cobra add serve
@@ -196,10 +195,10 @@ var scaffoldCobraAddToolsCmd = &cobra.Command{
 	Long: `Add cmdtree and aicontext commands to an existing Cobra CLI project.
 
 Creates:
-  - cmd/cmdtree.go   Command tree utility
+  - cmd/{appName}/cmd_cmdtree.go   Command tree utility
 
 With --aicontext:
-  - cmd/aicontext.go AI context generator for coding agents
+  - cmd/{appName}/cmd_aicontext.go AI context generator for coding agents
 
 Examples:
   omni scaffold cobra add-tools
