@@ -13,6 +13,7 @@ import (
 	"github.com/inovacc/omni/internal/cli/scaffolding"
 	scaffoldcobra "github.com/inovacc/omni/internal/cli/scaffolding/cobra"
 	"github.com/inovacc/omni/internal/cli/scaffolding/handler"
+	scaffoldmcp "github.com/inovacc/omni/internal/cli/scaffolding/mcp"
 	"github.com/inovacc/omni/internal/cli/scaffolding/repository"
 	"github.com/inovacc/omni/internal/cli/scaffolding/testgen"
 )
@@ -29,6 +30,7 @@ Subcommands:
   handler       Generate HTTP handler
   repository    Generate database repository
   test          Generate tests for a Go source file
+  mcp           Generate MCP server with tools, resources, and debug logging
 
 Configuration:
   Default values can be set in ~/.cobra.yaml (compatible with cobra-cli).
@@ -40,7 +42,8 @@ Examples:
   omni scaffold cobra config --show
   omni scaffold handler user --method GET,POST --framework chi
   omni scaffold repository user --entity User --table users
-  omni scaffold test internal/cli/foo/foo.go`,
+  omni scaffold test internal/cli/foo/foo.go
+  omni scaffold mcp myserver --transport sse --addr :9090`,
 }
 
 var scaffoldCobraCmd = &cobra.Command{
@@ -430,12 +433,52 @@ Examples:
 	},
 }
 
+var scaffoldMCPCmd = &cobra.Command{
+	Use:   "mcp <name>",
+	Short: "Generate MCP server",
+	Long: `Generate an MCP (Model Context Protocol) server with tools, resources, and debug logging.
+
+Generates:
+  - internal/mcp/server.go       Server setup with transport selection
+  - internal/mcp/tools.go        Example greet tool
+  - internal/mcp/resources.go    Example info resource
+  - internal/mcp/debug.go        Logger with debug/trace levels
+  - cmd/{appName}/cmd_mcp.go     Cobra command with mcp serve
+
+Transports:
+  stdio        Standard I/O (default, for CLI integration)
+  sse          Server-Sent Events (legacy, HTTP-based)
+  http-stream  Streamable HTTP (recommended for remote servers)
+
+Examples:
+  omni scaffold mcp myserver
+  omni scaffold mcp myserver --transport sse --addr :9090
+  omni scaffold mcp myserver --transport http-stream
+  omni scaffold mcp myserver --module github.com/user/myapp`,
+	Args: cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		jsonOutput, _ := cmd.Flags().GetBool("json")
+		module, _ := cmd.Flags().GetString("module")
+		transport, _ := cmd.Flags().GetString("transport")
+		addr, _ := cmd.Flags().GetString("addr")
+
+		opts := scaffoldmcp.MCPOptions{
+			Module:    module,
+			Transport: transport,
+			Addr:      addr,
+		}
+
+		return scaffoldmcp.RunMCPInit(cmd.OutOrStdout(), afero.NewOsFs(), args[0], opts, scaffolding.Options{JSON: jsonOutput})
+	},
+}
+
 func init() {
 	rootCmd.AddCommand(scaffoldCmd)
 	scaffoldCmd.AddCommand(scaffoldCobraCmd)
 	scaffoldCmd.AddCommand(scaffoldHandlerCmd)
 	scaffoldCmd.AddCommand(scaffoldRepositoryCmd)
 	scaffoldCmd.AddCommand(scaffoldTestCmd)
+	scaffoldCmd.AddCommand(scaffoldMCPCmd)
 	scaffoldCobraCmd.AddCommand(scaffoldCobraInitCmd)
 	scaffoldCobraCmd.AddCommand(scaffoldCobraAddCmd)
 	scaffoldCobraCmd.AddCommand(scaffoldCobraAddToolsCmd)
@@ -496,4 +539,9 @@ func init() {
 	scaffoldTestCmd.Flags().Bool("mock", false, "generate mock setup")
 	scaffoldTestCmd.Flags().Bool("benchmark", false, "include benchmark tests")
 	scaffoldTestCmd.Flags().Bool("fuzz", false, "include fuzz tests")
+
+	// Flags for mcp
+	scaffoldMCPCmd.Flags().StringP("module", "m", "", "Go module path (auto-detected from go.mod)")
+	scaffoldMCPCmd.Flags().String("transport", "stdio", "transport type: stdio, sse, http-stream")
+	scaffoldMCPCmd.Flags().String("addr", ":8080", "listen address (for sse/http-stream)")
 }
