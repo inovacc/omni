@@ -3,6 +3,8 @@ package mcp
 import (
 	"bytes"
 	"encoding/json"
+	"os/exec"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -168,14 +170,14 @@ func TestRunMCPInit_FileContents(t *testing.T) {
 
 	// Verify server.go contains transport switch
 	serverContent, _ := afero.ReadFile(fs, "internal/mcp/server.go")
-	if !strings.Contains(string(serverContent), "NewStdioServer") {
-		t.Error("server.go should contain NewStdioServer")
+	if !strings.Contains(string(serverContent), "StdioTransport") {
+		t.Error("server.go should contain StdioTransport")
 	}
-	if !strings.Contains(string(serverContent), "NewSSEServer") {
-		t.Error("server.go should contain NewSSEServer")
+	if !strings.Contains(string(serverContent), "NewSSEHandler") {
+		t.Error("server.go should contain NewSSEHandler")
 	}
-	if !strings.Contains(string(serverContent), "NewStreamableHTTPServer") {
-		t.Error("server.go should contain NewStreamableHTTPServer")
+	if !strings.Contains(string(serverContent), "NewStreamableHTTPHandler") {
+		t.Error("server.go should contain NewStreamableHTTPHandler")
 	}
 
 	// Verify cmd file references correct module
@@ -201,6 +203,90 @@ func TestRunMCPInit_FileContents(t *testing.T) {
 	if !strings.Contains(string(debugContent), "NewLogger") {
 		t.Error("debug.go should contain NewLogger")
 	}
+}
+
+func TestRunMCPInit_CompileGeneratedCode(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping integration test in short mode")
+	}
+
+	// Create real temp directory
+	tmpDir := t.TempDir()
+
+	// Use real filesystem
+	fs := afero.NewOsFs()
+
+	module := "github.com/test/mcpapp"
+	appName := "mcpapp"
+
+	// Generate MCP server files
+	var buf bytes.Buffer
+	err := RunMCPInit(&buf, afero.NewBasePathFs(fs, tmpDir), "testserver", MCPOptions{
+		Module:    module,
+		Transport: "stdio",
+	}, scaffolding.Options{})
+	if err != nil {
+		t.Fatalf("RunMCPInit failed: %v", err)
+	}
+
+	// Create go.mod
+	gomod := "module " + module + "\n\ngo 1.22\n"
+	if err := afero.WriteFile(fs, filepath.Join(tmpDir, "go.mod"), []byte(gomod), 0644); err != nil {
+		t.Fatalf("write go.mod: %v", err)
+	}
+
+	// Create main.go with rootCmd so cmd_mcp.go compiles
+	mainGo := `package main
+
+import (
+	"fmt"
+	"os"
+
+	"github.com/spf13/cobra"
+)
+
+var rootCmd = &cobra.Command{
+	Use:   "` + appName + `",
+	Short: "Test MCP app",
+}
+
+func main() {
+	if err := rootCmd.Execute(); err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
+}
+`
+	cmdDir := filepath.Join(tmpDir, "cmd", appName)
+	if err := afero.WriteFile(fs, filepath.Join(cmdDir, appName+".go"), []byte(mainGo), 0644); err != nil {
+		t.Fatalf("write main.go: %v", err)
+	}
+
+	// Run go mod tidy to fetch dependencies
+	tidy := exec.Command("go", "mod", "tidy")
+	tidy.Dir = tmpDir
+	tidyOut, err := tidy.CombinedOutput()
+	if err != nil {
+		t.Fatalf("go mod tidy failed: %v\n%s", err, tidyOut)
+	}
+
+	// Compile the generated code
+	build := exec.Command("go", "build", "./cmd/"+appName)
+	build.Dir = tmpDir
+	buildOut, err := build.CombinedOutput()
+	if err != nil {
+		t.Fatalf("go build failed: %v\n%s", err, buildOut)
+	}
+
+	// Verify internal/mcp/ also compiles independently
+	buildMCP := exec.Command("go", "build", "./internal/mcp/...")
+	buildMCP.Dir = tmpDir
+	buildMCPOut, err := buildMCP.CombinedOutput()
+	if err != nil {
+		t.Fatalf("go build ./internal/mcp/... failed: %v\n%s", err, buildMCPOut)
+	}
+
+	t.Log("Generated MCP project compiles successfully")
 }
 
 func TestDetectModule(t *testing.T) {

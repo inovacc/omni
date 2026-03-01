@@ -19,29 +19,29 @@ import (
 	"net/http"
 
 	"github.com/modelcontextprotocol/go-sdk/mcp"
-	"github.com/modelcontextprotocol/go-sdk/server"
 )
 
-func NewServer(name, version string, logger *slog.Logger) *server.MCPServer {
-	s := server.NewMCPServer(name, version)
+func NewServer(name, version string, logger *slog.Logger) *mcp.Server {
+	s := mcp.NewServer(&mcp.Implementation{Name: name, Version: version}, &mcp.ServerOptions{
+		Logger: logger,
+	})
 	RegisterTools(s)
 	RegisterResources(s)
 	return s
 }
 
-func Run(ctx context.Context, s *server.MCPServer, transport, addr string, logger *slog.Logger) error {
+func Run(ctx context.Context, s *mcp.Server, transport, addr string, logger *slog.Logger) error {
 	switch transport {
 	case "stdio":
-		srv := server.NewStdioServer(s)
-		return srv.Listen(ctx, nil, nil)
+		return s.Run(ctx, &mcp.StdioTransport{})
 	case "sse":
-		srv := server.NewSSEServer(s)
+		handler := mcp.NewSSEHandler(func(r *http.Request) *mcp.Server { return s }, nil)
 		logger.Info("starting SSE server", "addr", addr)
-		return http.ListenAndServe(addr, srv)
+		return http.ListenAndServe(addr, handler)
 	case "http-stream":
-		srv := server.NewStreamableHTTPServer(s)
+		handler := mcp.NewStreamableHTTPHandler(func(r *http.Request) *mcp.Server { return s }, nil)
 		logger.Info("starting HTTP streamable server", "addr", addr)
-		return http.ListenAndServe(addr, srv)
+		return http.ListenAndServe(addr, handler)
 	default:
 		return fmt.Errorf("unknown transport: %s", transport)
 	}
@@ -56,33 +56,25 @@ import (
 	"fmt"
 
 	"github.com/modelcontextprotocol/go-sdk/mcp"
-	"github.com/modelcontextprotocol/go-sdk/server"
 )
 
 type GreetInput struct {
 	Name string ` + "`" + `json:"name" jsonschema:"description=Name of the person to greet"` + "`" + `
 }
 
-func RegisterTools(s *server.MCPServer) {
-	s.AddTool(mcp.Tool{
+func RegisterTools(s *mcp.Server) {
+	mcp.AddTool(s, &mcp.Tool{
 		Name:        "greet",
 		Description: "Greet someone by name",
-		InputSchema: mcp.ToolInputSchema{
-			Type: "object",
-			Properties: map[string]map[string]interface{}{
-				"name": {"type": "string", "description": "Name of the person to greet"},
-			},
-			Required: []string{"name"},
-		},
 	}, handleGreet)
 }
 
-func handleGreet(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	name, ok := request.Params.Arguments["name"].(string)
-	if !ok {
-		return mcp.NewToolResultError("name must be a string"), nil
-	}
-	return mcp.NewToolResultText(fmt.Sprintf("Hello, %s!", name)), nil
+func handleGreet(_ context.Context, _ *mcp.CallToolRequest, input GreetInput) (*mcp.CallToolResult, any, error) {
+	return &mcp.CallToolResult{
+		Content: []mcp.Content{
+			&mcp.TextContent{Text: fmt.Sprintf("Hello, %s!", input.Name)},
+		},
+	}, nil, nil
 }
 `
 
@@ -93,11 +85,10 @@ import (
 	"context"
 
 	"github.com/modelcontextprotocol/go-sdk/mcp"
-	"github.com/modelcontextprotocol/go-sdk/server"
 )
 
-func RegisterResources(s *server.MCPServer) {
-	s.AddResource(mcp.Resource{
+func RegisterResources(s *mcp.Server) {
+	s.AddResource(&mcp.Resource{
 		URI:         "info://server",
 		Name:        "Server Info",
 		Description: "Information about this MCP server",
@@ -105,12 +96,10 @@ func RegisterResources(s *server.MCPServer) {
 	}, handleInfo)
 }
 
-func handleInfo(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
-	return []mcp.ResourceContents{
-		mcp.TextResourceContents{
-			URI:      "info://server",
-			MIMEType: "text/plain",
-			Text:     "{{.Name}} MCP Server v0.1.0",
+func handleInfo(_ context.Context, _ *mcp.ReadResourceRequest) (*mcp.ReadResourceResult, error) {
+	return &mcp.ReadResourceResult{
+		Contents: []*mcp.ResourceContents{
+			{URI: "info://server", MIMEType: "text/plain", Text: "{{.Name}} MCP Server v0.1.0"},
 		},
 	}, nil
 }
