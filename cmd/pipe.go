@@ -2,22 +2,30 @@ package cmd
 
 import (
 	"bufio"
+	"fmt"
 	"io"
 	"os"
 	"strings"
 
+	"github.com/inovacc/omni/internal/cli/awk"
 	"github.com/inovacc/omni/internal/cli/cat"
+	"github.com/inovacc/omni/internal/cli/column"
 	"github.com/inovacc/omni/internal/cli/command"
 	"github.com/inovacc/omni/internal/cli/cut"
+	"github.com/inovacc/omni/internal/cli/fold"
+	"github.com/inovacc/omni/internal/cli/grep"
 	"github.com/inovacc/omni/internal/cli/head"
 	"github.com/inovacc/omni/internal/cli/nl"
+	"github.com/inovacc/omni/internal/cli/paste"
 	"github.com/inovacc/omni/internal/cli/pipe"
 	"github.com/inovacc/omni/internal/cli/rev"
 	"github.com/inovacc/omni/internal/cli/sed"
 	"github.com/inovacc/omni/internal/cli/tac"
 	"github.com/inovacc/omni/internal/cli/tail"
 	"github.com/inovacc/omni/internal/cli/text"
+	"github.com/inovacc/omni/internal/cli/tr"
 	"github.com/inovacc/omni/internal/cli/wc"
+	"github.com/inovacc/omni/internal/cli/xxd"
 	"github.com/spf13/cobra"
 )
 
@@ -90,6 +98,61 @@ func buildPipeRegistry() *command.Registry {
 	reg.Register("tac", command.AdaptWriterReaderArgs(
 		func(w io.Writer, r io.Reader, args []string) error {
 			return tac.RunTac(w, r, args, tac.TacOptions{})
+		},
+	))
+
+	reg.Register("awk", command.AdaptWriterReaderArgs(
+		func(w io.Writer, r io.Reader, args []string) error {
+			return awk.RunAwk(w, r, args, awk.AwkOptions{})
+		},
+	))
+
+	reg.Register("fold", command.AdaptWriterReaderArgs(
+		func(w io.Writer, r io.Reader, args []string) error {
+			return fold.RunFold(w, r, args, fold.FoldOptions{Width: 80})
+		},
+	))
+
+	reg.Register("column", command.AdaptWriterReaderArgs(
+		func(w io.Writer, r io.Reader, args []string) error {
+			return column.RunColumn(w, r, args, column.ColumnOptions{})
+		},
+	))
+
+	reg.Register("paste", command.AdaptWriterReaderArgs(
+		func(w io.Writer, r io.Reader, args []string) error {
+			return paste.RunPaste(w, r, args, paste.PasteOptions{})
+		},
+	))
+
+	reg.Register("xxd", command.AdaptWriterReaderArgs(
+		func(w io.Writer, r io.Reader, args []string) error {
+			return xxd.Run(w, r, args, xxd.Options{})
+		},
+	))
+
+	// grep: first arg is the pattern, rest are file args
+	reg.Register("grep", command.AdaptWriterReaderArgs(
+		func(w io.Writer, r io.Reader, args []string) error {
+			if len(args) == 0 {
+				return fmt.Errorf("grep: missing pattern")
+			}
+			return grep.RunGrep(w, r, args[0], args[1:], grep.GrepOptions{})
+		},
+	))
+
+	// tr: first arg is set1, optional second is set2
+	reg.Register("tr", command.AdaptWriterReaderArgs(
+		func(w io.Writer, r io.Reader, args []string) error {
+			if len(args) == 0 {
+				return fmt.Errorf("tr: missing operand")
+			}
+			set1 := args[0]
+			set2 := ""
+			if len(args) > 1 {
+				set2 = args[1]
+			}
+			return tr.RunTr(w, r, set1, set2, tr.TrOptions{})
 		},
 	))
 

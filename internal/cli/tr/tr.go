@@ -7,6 +7,8 @@ import (
 	"os"
 	"strings"
 	"unicode"
+
+	"github.com/inovacc/omni/internal/cli/cmderr"
 )
 
 // TrOptions configures the tr command behavior
@@ -70,7 +72,7 @@ func RunTr(w io.Writer, r io.Reader, set1, set2 string, opts TrOptions) error {
 				break
 			}
 
-			return err
+			return cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("tr: %s", err))
 		}
 
 		// Delete mode

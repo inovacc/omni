@@ -8,6 +8,8 @@ import (
 	"os"
 	"strings"
 	"sync"
+
+	"github.com/inovacc/omni/internal/cli/cmderr"
 )
 
 // XargsOptions configures the xargs command behavior
@@ -166,7 +168,10 @@ func parseXargsInput(r io.Reader, opts XargsOptions) ([]string, error) {
 			}
 		}
 
-		return args, scanner.Err()
+		if err := scanner.Err(); err != nil {
+		return nil, cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("xargs: %s", err))
+	}
+	return args, nil
 	}
 
 	if opts.Delimiter != "" {
@@ -200,7 +205,10 @@ func parseXargsInput(r io.Reader, opts XargsOptions) ([]string, error) {
 			}
 		}
 
-		return args, scanner.Err()
+		if err := scanner.Err(); err != nil {
+		return nil, cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("xargs: %s", err))
+	}
+	return args, nil
 	}
 
 	// Default: whitespace separated
@@ -211,7 +219,10 @@ func parseXargsInput(r io.Reader, opts XargsOptions) ([]string, error) {
 		args = append(args, scanner.Text())
 	}
 
-	return args, scanner.Err()
+	if err := scanner.Err(); err != nil {
+		return nil, cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("xargs: %s", err))
+	}
+	return args, nil
 }
 
 // RunXargsWithPrint is a convenience function that just prints arguments

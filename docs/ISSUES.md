@@ -52,7 +52,7 @@
 |------|-------|----------|
 | pkg/video/extractor/generic | No unit tests | P2 |
 | pkg/video/extractor/youtube | Minimal tests (4.0%) | P2 |
-| cmderr adoption ~65/160+ commands | ~95 commands still return raw fmt.Errorf without exit code classification | P1 |
+| cmderr adoption ~73/160+ commands | ~87 commands still return raw fmt.Errorf without exit code classification | P1 |
 
 ### Recently Resolved
 
@@ -74,6 +74,11 @@
 | scaffolding refactor | `generate` command renamed to `scaffold`, reorganized into domain subpackages (Feb 2026) |
 | scaffolding afero | All scaffolding packages refactored to accept `afero.Fs` — tests use in-memory FS, no disk I/O (Feb 2026) |
 | scaffold cobra structure | `scaffold cobra init` now generates `cmd/{appName}/` structure instead of flat `main.go` + `cmd/` (Mar 2026) |
+| cmderr batch 6 | 16 more commands adopted: basename, dirname, realpath, whoami, uptime, id, awk, column, nl, paste, banner, rev, tac, fold, bzip2, xz (Mar 2026) |
+| cmderr batch 7 | 8 more commands adopted: cut, printf, hexenc, urlenc, tr, xargs, watch, yes (Mar 2026) |
+| pipe registry | Expanded from 11 to 18 commands; added awk, fold, column, paste, xxd, grep, tr (Mar 2026) |
+| package splits | archive.go → archive.go + tar.go + zip.go; pipe.go → pipe.go + parse.go + substitute.go + execute.go (Mar 2026) |
+| pipeline context | Pipeline CLI wrapper now accepts and propagates context.Context (Mar 2026) |
 
 ---
 

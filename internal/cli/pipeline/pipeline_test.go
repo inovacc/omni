@@ -2,6 +2,7 @@ package pipeline
 
 import (
 	"bytes"
+	"context"
 	"strings"
 	"testing"
 )
@@ -63,7 +64,7 @@ func TestRun(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			var buf bytes.Buffer
 
-			err := Run(&buf, strings.NewReader(tt.input), tt.args, tt.opts)
+			err := Run(context.Background(), &buf, strings.NewReader(tt.input), tt.args, tt.opts)
 			if tt.wantErr {
 				if err == nil {
 					t.Error("expected error, got nil")
@@ -86,7 +87,7 @@ func TestRun(t *testing.T) {
 func TestRunVerbose(t *testing.T) {
 	var buf bytes.Buffer
 
-	err := Run(&buf, strings.NewReader("a\nb\n"), []string{"sort", "uniq"}, Options{Verbose: true})
+	err := Run(context.Background(), &buf, strings.NewReader("a\nb\n"), []string{"sort", "uniq"}, Options{Verbose: true})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -104,7 +105,7 @@ func TestRunVerbose(t *testing.T) {
 func TestRunFileNotFound(t *testing.T) {
 	var buf bytes.Buffer
 
-	err := Run(&buf, nil, []string{"sort"}, Options{File: "/nonexistent/file.txt"})
+	err := Run(context.Background(), &buf, nil, []string{"sort"}, Options{File: "/nonexistent/file.txt"})
 	if err == nil {
 		t.Error("expected error for missing file")
 	}

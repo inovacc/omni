@@ -42,7 +42,7 @@ Examples:
 		opts.File, _ = cmd.Flags().GetString("file")
 		opts.Verbose, _ = cmd.Flags().GetBool("verbose")
 
-		return pipeline.Run(cmd.OutOrStdout(), cmd.InOrStdin(), args, opts)
+		return pipeline.Run(cmd.Context(), cmd.OutOrStdout(), cmd.InOrStdin(), args, opts)
 	},
 }
 

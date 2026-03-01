@@ -3,11 +3,14 @@ package urlenc
 import (
 	"bufio"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/url"
 	"os"
 	"strings"
+
+	"github.com/inovacc/omni/internal/cli/cmderr"
 )
 
 // Options configures the url encode/decode command behavior
@@ -71,7 +74,7 @@ func RunDecode(w io.Writer, args []string, opts Options) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("url decode: %w", err)
+		return cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("url decode: %s", err))
 	}
 
 	if opts.JSON {
@@ -99,6 +102,9 @@ func getInput(args []string) (string, error) {
 		if _, err := os.Stat(args[0]); err == nil {
 			content, err := os.ReadFile(args[0])
 			if err != nil {
+				if errors.Is(err, os.ErrPermission) {
+					return "", cmderr.Wrap(cmderr.ErrPermission, fmt.Sprintf("url: %s", err))
+				}
 				return "", fmt.Errorf("url: %w", err)
 			}
 
@@ -119,7 +125,7 @@ func getInput(args []string) (string, error) {
 	}
 
 	if err := scanner.Err(); err != nil {
-		return "", fmt.Errorf("url: %w", err)
+		return "", cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("url: %s", err))
 	}
 
 	return strings.Join(lines, "\n"), nil

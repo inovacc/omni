@@ -23,11 +23,12 @@ See CLAUDE.md for the full command inventory.
 
 ### Core Infrastructure
 - [x] Unified `Command` interface contract (`internal/cli/command/` — interface, Registry, adapters)
-- [~] Consistent error model with exit codes (`cmderr` adopted in 65/160+ commands; batches 1-6 done)
+- [~] Consistent error model with exit codes (`cmderr` adopted in 73/160+ commands; batches 1-7 done)
 - [x] Add `--json` flag to remaining commands that lack it
 - [x] Unified output formatter (text/json/table)
-- [ ] cmderr rollout batch 7+: remaining ~95 commands (data, compress, system, flow, cloud)
+- [ ] cmderr rollout batch 8+: remaining ~87 commands (data, compress, system, flow, cloud)
 - [x] Migrate `pipe` command to use `command.Registry` for dispatch (with Cobra fallback)
+- [x] Expand pipe Registry to 18 commands (awk, fold, column, paste, xxd, grep, tr added)
 
 ---
 
@@ -136,6 +137,11 @@ See CLAUDE.md for the full command inventory.
 - [x] scaffolding refactor — `generate` renamed to `scaffold`, reorganized into domain subpackages (Feb 2026)
 - [x] cmderr batches 4-5 — 20 more commands adopted (Feb 2026)
 - [x] afero refactor — scaffolding packages accept `afero.Fs` for in-memory testing (Feb 2026)
+- [x] cmderr batches 6-7 — 24 more commands adopted, total now 73 (Mar 2026)
+- [x] pipe registry expanded to 18 commands with unified dispatch (Mar 2026)
+- [x] archive.go split into archive.go + tar.go + zip.go (Mar 2026)
+- [x] pipe.go split into pipe.go + parse.go + substitute.go + execute.go (Mar 2026)
+- [x] pipeline CLI wrapper now propagates context.Context (Mar 2026)
 
 ### Remaining
 - [ ] Platform-specific tests (Windows edge cases, symlinks, permissions)

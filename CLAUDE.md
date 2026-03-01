@@ -227,9 +227,9 @@ return cmderr.Wrap(cmderr.ErrInvalidInput, "path clean: missing operand")
 return cmderr.SilentExit(1) // no message, just exit code
 ```
 
-**Commands adopted (49):** cat, curl, crypt, diff, grep, find, fs, jq, ls, sed, head, tail, text (sort/uniq), hash, path, archive, base, xxd, yq, buf (build/format/lint), bzip2, xz, env, kill, ps, df, du, dotenv, free, pipe, chown, rg, pipeline, file, which, shuf, readlink, sqlite, bbolt, pager, join, cmp, comm, cron, loc, lint, seq, sleep, strings
+**Commands adopted (73):** cat, curl, crypt, diff, grep, find, fs, jq, ls, sed, head, tail, text (sort/uniq), hash, path, archive, base, xxd, yq, buf (build/format/lint), bzip2, xz, env, kill, ps, df, du, dotenv, free, pipe, chown, rg, pipeline, file, which, shuf, readlink, sqlite, bbolt, pager, join, cmp, comm, cron, loc, lint, seq, sleep, strings, basename, dirname, realpath, whoami, uptime, id, awk, column, nl, paste, banner, rev, tac, fold, cut, printf, hexenc, urlenc, tr, xargs, watch, yes
 
-**Commands NOT yet adopted:** ~130 remaining — adopt in future batches following the same pattern.
+**Commands NOT yet adopted:** ~87 remaining — adopt in future batches following the same pattern.
 
 **General rules:**
 - Always wrap errors with context: `fmt.Errorf("command: %w", err)`

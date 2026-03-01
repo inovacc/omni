@@ -18,7 +18,7 @@ type Options struct {
 }
 
 // Run executes the pipeline with the given stage definitions.
-func Run(w io.Writer, r io.Reader, args []string, opts Options) error {
+func Run(ctx context.Context, w io.Writer, r io.Reader, args []string, opts Options) error {
 	if len(args) == 0 {
 		return cmderr.Wrap(cmderr.ErrInvalidInput, "pipeline: no stages provided")
 	}
@@ -54,5 +54,5 @@ func Run(w io.Writer, r io.Reader, args []string, opts Options) error {
 
 	p := pkgpipeline.New(stages...)
 
-	return p.Run(context.Background(), input, w)
+	return p.Run(ctx, input, w)
 }

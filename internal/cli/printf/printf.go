@@ -6,6 +6,8 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/inovacc/omni/internal/cli/cmderr"
 )
 
 // Options configures the printf command behavior
@@ -16,7 +18,7 @@ type Options struct {
 // Run executes the printf command
 func Run(w io.Writer, args []string, opts Options) error {
 	if len(args) == 0 {
-		return fmt.Errorf("printf: missing format string")
+		return cmderr.Wrap(cmderr.ErrInvalidInput, "printf: missing format string")
 	}
 
 	format := args[0]

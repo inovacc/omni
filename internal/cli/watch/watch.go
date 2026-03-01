@@ -3,12 +3,15 @@ package watch
 import (
 	"context"
 	"crypto/sha256"
+	"errors"
 	"fmt"
 	"io"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
+
+	"github.com/inovacc/omni/internal/cli/cmderr"
 )
 
 // WatchOptions configures the watch command behavior
@@ -151,7 +154,10 @@ func WatchFile(ctx context.Context, path string, callback func(path string) erro
 	// Get initial mod time
 	info, err := os.Stat(path)
 	if err != nil {
-		return err
+		if errors.Is(err, os.ErrNotExist) {
+			return cmderr.Wrap(cmderr.ErrNotFound, fmt.Sprintf("watch: %s", err))
+		}
+		return fmt.Errorf("watch: %w", err)
 	}
 
 	lastModTime = info.ModTime()
@@ -192,7 +198,10 @@ func WatchDir(ctx context.Context, path string, callback func(event string, path
 	// Initial scan
 	entries, err := os.ReadDir(path)
 	if err != nil {
-		return err
+		if errors.Is(err, os.ErrNotExist) {
+			return cmderr.Wrap(cmderr.ErrNotFound, fmt.Sprintf("watch: %s", err))
+		}
+		return fmt.Errorf("watch: %w", err)
 	}
 
 	for _, entry := range entries {

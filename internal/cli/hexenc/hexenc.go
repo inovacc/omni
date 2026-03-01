@@ -3,11 +3,13 @@ package hexenc
 import (
 	"bufio"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"io"
 	"os"
 	"strings"
 
+	"github.com/inovacc/omni/internal/cli/cmderr"
 	clioutput "github.com/inovacc/omni/pkg/cobra/helper/output"
 )
 
@@ -69,7 +71,7 @@ func RunDecode(w io.Writer, args []string, opts Options) error {
 
 	decoded, err := hex.DecodeString(cleaned)
 	if err != nil {
-		return fmt.Errorf("hex decode: %w", err)
+		return cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("hex decode: %s", err))
 	}
 
 	output := string(decoded)
@@ -96,6 +98,9 @@ func getInput(args []string) (string, error) {
 		if _, err := os.Stat(args[0]); err == nil {
 			content, err := os.ReadFile(args[0])
 			if err != nil {
+				if errors.Is(err, os.ErrPermission) {
+					return "", cmderr.Wrap(cmderr.ErrPermission, fmt.Sprintf("hex: %s", err))
+				}
 				return "", fmt.Errorf("hex: %w", err)
 			}
 
@@ -116,7 +121,7 @@ func getInput(args []string) (string, error) {
 	}
 
 	if err := scanner.Err(); err != nil {
-		return "", fmt.Errorf("hex: %w", err)
+		return "", cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("hex: %s", err))
 	}
 
 	return strings.Join(lines, "\n"), nil

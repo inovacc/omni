@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/inovacc/omni/internal/cli/cmderr"
 	"github.com/inovacc/omni/internal/cli/input"
 	"github.com/inovacc/omni/pkg/cobra/helper/output"
 )
@@ -47,18 +48,18 @@ func RunCut(w io.Writer, r io.Reader, args []string, opts CutOptions) error {
 	}
 
 	if modes == 0 {
-		return fmt.Errorf("you must specify a list of bytes, characters, or fields")
+		return cmderr.Wrap(cmderr.ErrInvalidInput, "cut: you must specify a list of bytes, characters, or fields")
 	}
 
 	if modes > 1 {
-		return fmt.Errorf("only one type of list may be specified")
+		return cmderr.Wrap(cmderr.ErrInvalidInput, "cut: only one type of list may be specified")
 	}
 
 	// Default delimiter is TAB
 	if opts.Delimiter == "" {
 		opts.Delimiter = "\t"
 	} else if len(opts.Delimiter) > 1 {
-		return fmt.Errorf("the delimiter must be a single character")
+		return cmderr.Wrap(cmderr.ErrInvalidInput, "cut: the delimiter must be a single character")
 	}
 
 	// Output delimiter defaults to input delimiter for fields
@@ -235,7 +236,7 @@ func parseRanges(spec string, maxVal int) ([]int, error) {
 
 				start, err = strconv.Atoi(rangeParts[0])
 				if err != nil {
-					return nil, fmt.Errorf("invalid range: %s", part)
+					return nil, cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("cut: invalid range: %s", part))
 				}
 			}
 
@@ -244,7 +245,7 @@ func parseRanges(spec string, maxVal int) ([]int, error) {
 
 				end, err = strconv.Atoi(rangeParts[1])
 				if err != nil {
-					return nil, fmt.Errorf("invalid range: %s", part)
+					return nil, cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("cut: invalid range: %s", part))
 				}
 			}
 
@@ -258,7 +259,7 @@ func parseRanges(spec string, maxVal int) ([]int, error) {
 			// Single number
 			n, err := strconv.Atoi(part)
 			if err != nil {
-				return nil, fmt.Errorf("invalid field: %s", part)
+				return nil, cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("cut: invalid field: %s", part))
 			}
 
 			if !seen[n] {
