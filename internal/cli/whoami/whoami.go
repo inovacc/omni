@@ -5,6 +5,7 @@ import (
 	"io"
 	"os/user"
 
+	"github.com/inovacc/omni/internal/cli/cmderr"
 	"github.com/inovacc/omni/pkg/cobra/helper/output"
 )
 
@@ -26,7 +27,7 @@ type WhoamiResult struct {
 func RunWhoami(w io.Writer, opts WhoamiOptions) error {
 	u, err := user.Current()
 	if err != nil {
-		return fmt.Errorf("cannot get current user: %w", err)
+		return cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("whoami: %s", err))
 	}
 
 	f := output.New(w, opts.OutputFormat)

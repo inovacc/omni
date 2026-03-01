@@ -1,10 +1,13 @@
 package realpath
 
 import (
+	"errors"
 	"fmt"
 	"io"
+	"os"
 	"path/filepath"
 
+	"github.com/inovacc/omni/internal/cli/cmderr"
 	"github.com/inovacc/omni/pkg/cobra/helper/output"
 )
 
@@ -22,7 +25,7 @@ type RealpathResult struct {
 // RunRealpath prints the resolved absolute path for each argument
 func RunRealpath(w io.Writer, args []string, opts RealpathOptions) error {
 	if len(args) == 0 {
-		return fmt.Errorf("realpath: missing operand")
+		return cmderr.Wrap(cmderr.ErrInvalidInput, "realpath: missing operand")
 	}
 
 	f := output.New(w, opts.OutputFormat)
@@ -33,12 +36,15 @@ func RunRealpath(w io.Writer, args []string, opts RealpathOptions) error {
 	for _, arg := range args {
 		absPath, err := filepath.Abs(arg)
 		if err != nil {
-			return err
+			return fmt.Errorf("realpath: %w", err)
 		}
 
 		resolved, err := filepath.EvalSymlinks(absPath)
 		if err != nil {
-			return err
+			if errors.Is(err, os.ErrNotExist) {
+				return cmderr.Wrap(cmderr.ErrNotFound, fmt.Sprintf("realpath: %s", err))
+			}
+			return fmt.Errorf("realpath: %w", err)
 		}
 
 		if jsonMode {

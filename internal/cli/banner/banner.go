@@ -5,6 +5,7 @@ import (
 	"io"
 	"strings"
 
+	"github.com/inovacc/omni/internal/cli/cmderr"
 	"github.com/inovacc/omni/pkg/figlet"
 )
 
@@ -31,14 +32,14 @@ func RunBanner(w io.Writer, r io.Reader, args []string, opts Options) error {
 	if text == "" {
 		data, err := io.ReadAll(r)
 		if err != nil {
-			return fmt.Errorf("banner: read stdin: %w", err)
+			return cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("banner: read stdin: %s", err))
 		}
 
 		text = strings.TrimRight(string(data), "\n\r")
 	}
 
 	if text == "" {
-		return fmt.Errorf("banner: no text provided")
+		return cmderr.Wrap(cmderr.ErrInvalidInput, "banner: no text provided")
 	}
 
 	fontName := opts.Font

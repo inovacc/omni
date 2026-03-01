@@ -2,11 +2,14 @@ package fold
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"io"
+	"os"
 	"strings"
 	"unicode/utf8"
 
+	"github.com/inovacc/omni/internal/cli/cmderr"
 	"github.com/inovacc/omni/internal/cli/input"
 )
 
@@ -26,6 +29,9 @@ func RunFold(w io.Writer, r io.Reader, args []string, opts FoldOptions) error {
 
 	sources, err := input.Open(args, r)
 	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return cmderr.Wrap(cmderr.ErrNotFound, fmt.Sprintf("fold: %s", err))
+		}
 		return fmt.Errorf("fold: %w", err)
 	}
 	defer input.CloseAll(sources)

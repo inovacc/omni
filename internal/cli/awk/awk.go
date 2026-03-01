@@ -2,12 +2,15 @@ package awk
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"io"
+	"os"
 	"regexp"
 	"strconv"
 	"strings"
 
+	"github.com/inovacc/omni/internal/cli/cmderr"
 	"github.com/inovacc/omni/internal/cli/input"
 )
 
@@ -32,7 +35,7 @@ func RunAwk(w io.Writer, r io.Reader, args []string, opts AwkOptions) error {
 	}
 
 	if opts.Program == "" {
-		return fmt.Errorf("awk: no program text")
+		return cmderr.Wrap(cmderr.ErrInvalidInput, "awk: no program text")
 	}
 
 	if opts.FieldSeparator == "" {
@@ -41,7 +44,7 @@ func RunAwk(w io.Writer, r io.Reader, args []string, opts AwkOptions) error {
 
 	program, err := parseAwkProgram(opts.Program)
 	if err != nil {
-		return fmt.Errorf("awk: %w", err)
+		return cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("awk: %s", err))
 	}
 
 	// Execute BEGIN block
@@ -54,6 +57,9 @@ func RunAwk(w io.Writer, r io.Reader, args []string, opts AwkOptions) error {
 	// Process files or stdin
 	sources, err := input.Open(args, r)
 	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return cmderr.Wrap(cmderr.ErrNotFound, fmt.Sprintf("awk: %s", err))
+		}
 		return fmt.Errorf("awk: %w", err)
 	}
 	defer input.CloseAll(sources)

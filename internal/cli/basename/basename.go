@@ -5,6 +5,7 @@ import (
 	"io"
 	"path/filepath"
 
+	"github.com/inovacc/omni/internal/cli/cmderr"
 	"github.com/inovacc/omni/pkg/cobra/helper/output"
 )
 
@@ -23,7 +24,7 @@ type BasenameResult struct {
 // RunBasename prints the base name of each path, optionally removing a suffix
 func RunBasename(w io.Writer, args []string, opts BasenameOptions) error {
 	if len(args) == 0 {
-		return fmt.Errorf("basename: missing operand")
+		return cmderr.Wrap(cmderr.ErrInvalidInput, "basename: missing operand")
 	}
 
 	f := output.New(w, opts.OutputFormat)

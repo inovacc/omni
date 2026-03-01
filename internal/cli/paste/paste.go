@@ -2,10 +2,13 @@ package paste
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"io"
+	"os"
 	"strings"
 
+	"github.com/inovacc/omni/internal/cli/cmderr"
 	"github.com/inovacc/omni/internal/cli/input"
 )
 
@@ -48,6 +51,9 @@ func pasteParallel(w io.Writer, defaultReader io.Reader, files []string, delimit
 	// Open all files using input package
 	sources, err := input.Open(files, defaultReader)
 	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return cmderr.Wrap(cmderr.ErrNotFound, fmt.Sprintf("paste: %s", err))
+		}
 		return fmt.Errorf("paste: %w", err)
 	}
 	defer input.CloseAll(sources)
@@ -102,6 +108,9 @@ func pasteParallel(w io.Writer, defaultReader io.Reader, files []string, delimit
 func pasteSerial(w io.Writer, defaultReader io.Reader, files []string, delimiters, lineTerminator string) error {
 	sources, err := input.Open(files, defaultReader)
 	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return cmderr.Wrap(cmderr.ErrNotFound, fmt.Sprintf("paste: %s", err))
+		}
 		return fmt.Errorf("paste: %w", err)
 	}
 	defer input.CloseAll(sources)

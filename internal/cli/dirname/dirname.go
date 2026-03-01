@@ -5,6 +5,7 @@ import (
 	"io"
 	"path/filepath"
 
+	"github.com/inovacc/omni/internal/cli/cmderr"
 	"github.com/inovacc/omni/pkg/cobra/helper/output"
 )
 
@@ -22,7 +23,7 @@ type DirnameResult struct {
 // RunDirname prints the directory portion of each path
 func RunDirname(w io.Writer, args []string, opts DirnameOptions) error {
 	if len(args) == 0 {
-		return fmt.Errorf("dirname: missing operand")
+		return cmderr.Wrap(cmderr.ErrInvalidInput, "dirname: missing operand")
 	}
 
 	f := output.New(w, opts.OutputFormat)

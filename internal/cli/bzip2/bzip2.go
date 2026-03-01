@@ -2,10 +2,13 @@ package bzip2
 
 import (
 	"compress/bzip2"
+	"errors"
 	"fmt"
 	"io"
 	"os"
 	"strings"
+
+	"github.com/inovacc/omni/internal/cli/cmderr"
 )
 
 // Bzip2Options configures the bzip2 command behavior
@@ -21,7 +24,7 @@ type Bzip2Options struct {
 // Note: Go stdlib only supports bzip2 decompression, not compression
 func RunBzip2(w io.Writer, args []string, opts Bzip2Options) error {
 	if !opts.Decompress {
-		return fmt.Errorf("bzip2: compression not supported (Go stdlib limitation), use -d for decompression")
+		return cmderr.Wrap(cmderr.ErrUnsupported, "bzip2: compression not supported (Go stdlib limitation), use -d for decompression")
 	}
 
 	// Read from stdin if no files
@@ -48,12 +51,15 @@ func bunzip2Reader(w io.Writer, r io.Reader) error {
 func bunzip2File(w io.Writer, path string, opts Bzip2Options) error {
 	// Check if compressed
 	if !strings.HasSuffix(path, ".bz2") {
-		return fmt.Errorf("%s: unknown suffix", path)
+		return cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("%s: unknown suffix", path))
 	}
 
 	inFile, err := os.Open(path)
 	if err != nil {
-		return err
+		if errors.Is(err, os.ErrNotExist) {
+			return cmderr.Wrap(cmderr.ErrNotFound, fmt.Sprintf("bzip2: %s", err))
+		}
+		return fmt.Errorf("bzip2: %w", err)
 	}
 
 	defer func() { _ = inFile.Close() }()
@@ -67,7 +73,7 @@ func bunzip2File(w io.Writer, path string, opts Bzip2Options) error {
 	// Check if output exists
 	if !opts.Force {
 		if _, err := os.Stat(outPath); err == nil {
-			return fmt.Errorf("%s already exists; use -f to overwrite", outPath)
+			return cmderr.Wrap(cmderr.ErrConflict, fmt.Sprintf("%s already exists; use -f to overwrite", outPath))
 		}
 	}
 
@@ -115,7 +121,7 @@ func RunBzcat(w io.Writer, args []string) error {
 	for _, path := range args {
 		// Add .bz2 if not present
 		if !strings.HasSuffix(path, ".bz2") {
-			if _, err := os.Stat(path); os.IsNotExist(err) {
+			if _, err := os.Stat(path); errors.Is(err, os.ErrNotExist) {
 				path += ".bz2"
 			}
 		}

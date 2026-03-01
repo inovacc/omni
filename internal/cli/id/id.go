@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/inovacc/omni/internal/cli/cmderr"
 	"github.com/inovacc/omni/pkg/cobra/helper/output"
 )
 
@@ -43,7 +44,7 @@ func RunID(w io.Writer, opts IDOptions) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("cannot find user: %w", err)
+		return cmderr.Wrap(cmderr.ErrNotFound, fmt.Sprintf("id: cannot find user: %s", err))
 	}
 
 	// Get group info

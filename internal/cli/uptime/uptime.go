@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/inovacc/omni/internal/cli/cmderr"
 	"github.com/inovacc/omni/pkg/cobra/helper/output"
 )
 
@@ -30,7 +31,7 @@ type UptimeInfo struct {
 func RunUptime(w io.Writer, opts UptimeOptions) error {
 	info, err := getUptimeInfo()
 	if err != nil {
-		return fmt.Errorf("uptime: %w", err)
+		return cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("uptime: %s", err))
 	}
 
 	f := output.New(w, opts.OutputFormat)

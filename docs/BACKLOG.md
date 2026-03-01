@@ -23,11 +23,11 @@ See CLAUDE.md for the full command inventory.
 
 ### Core Infrastructure
 - [x] Unified `Command` interface contract (`internal/cli/command/` — interface, Registry, adapters)
-- [~] Consistent error model with exit codes (`cmderr` adopted in 49/160+ commands; batches 1-5 done)
+- [~] Consistent error model with exit codes (`cmderr` adopted in 65/160+ commands; batches 1-6 done)
 - [x] Add `--json` flag to remaining commands that lack it
 - [x] Unified output formatter (text/json/table)
-- [ ] cmderr rollout batch 6+: remaining ~110 commands (data, compress, system, flow, cloud)
-- [ ] Migrate `pipe` command to use `command.Registry` for dispatch
+- [ ] cmderr rollout batch 7+: remaining ~95 commands (data, compress, system, flow, cloud)
+- [x] Migrate `pipe` command to use `command.Registry` for dispatch (with Cobra fallback)
 
 ---
 
@@ -117,7 +117,7 @@ See CLAUDE.md for the full command inventory.
 - [ ] Standardize flag naming across commands
 - [ ] Add context.Context to all long-running operations (Command interface provides this path)
 - [~] Improve error messages with actionable suggestions (cmderr sentinels provide structured exit codes)
-- [ ] Split large packages (archive.go ~500 lines)
+- [x] Split large packages: archive.go → archive.go + tar.go + zip.go; pipe.go → pipe.go + parse.go + substitute.go + execute.go (Mar 2026)
 - [ ] Migrate remaining Run signatures to `command.Command` interface incrementally
 
 ---
@@ -131,6 +131,7 @@ See CLAUDE.md for the full command inventory.
 - **Packages with new tests (Feb 2026):** twig/builder (58.9%), twig/parser (79.1%), video/jsinterp, video/downloader (progress, fragment, selector), video/nethttp (cookies, SAPISID), video/extractor (helpers, M3U8), video/options
 
 ### Recently Resolved
+- [x] scaffold cobra generates `cmd/{appName}/` structure instead of `main.go` + `cmd/` (Mar 2026)
 - [x] Tests for twig/builder (58.9%) and twig/parser (79.1%) — completed Feb 2026
 - [x] scaffolding refactor — `generate` renamed to `scaffold`, reorganized into domain subpackages (Feb 2026)
 - [x] cmderr batches 4-5 — 20 more commands adopted (Feb 2026)

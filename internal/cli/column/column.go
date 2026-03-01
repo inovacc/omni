@@ -3,10 +3,13 @@ package column
 import (
 	"bufio"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
+	"os"
 	"strings"
 
+	"github.com/inovacc/omni/internal/cli/cmderr"
 	"github.com/inovacc/omni/internal/cli/input"
 )
 
@@ -41,6 +44,9 @@ func RunColumn(w io.Writer, r io.Reader, args []string, opts ColumnOptions) erro
 
 	sources, err := input.Open(args, r)
 	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return cmderr.Wrap(cmderr.ErrNotFound, fmt.Sprintf("column: %s", err))
+		}
 		return fmt.Errorf("column: %w", err)
 	}
 	defer input.CloseAll(sources)

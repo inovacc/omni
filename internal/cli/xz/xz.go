@@ -3,10 +3,13 @@ package xz
 import (
 	"bytes"
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"io"
 	"os"
 	"strings"
+
+	"github.com/inovacc/omni/internal/cli/cmderr"
 )
 
 // XzOptions configures the xz command behavior
@@ -26,7 +29,7 @@ var xzMagic = []byte{0xFD, '7', 'z', 'X', 'Z', 0x00}
 // Note: Full xz support requires external library; this provides basic functionality
 func RunXz(w io.Writer, args []string, opts XzOptions) error {
 	if !opts.Decompress && !opts.List {
-		return fmt.Errorf("xz: compression not supported (requires external library), use -d for decompression")
+		return cmderr.Wrap(cmderr.ErrUnsupported, "xz: compression not supported (requires external library), use -d for decompression")
 	}
 
 	if opts.List {
@@ -35,7 +38,7 @@ func RunXz(w io.Writer, args []string, opts XzOptions) error {
 
 	// Read from stdin if no files
 	if len(args) == 0 || (len(args) == 1 && args[0] == "-") {
-		return fmt.Errorf("xz: decompression from stdin not supported")
+		return cmderr.Wrap(cmderr.ErrUnsupported, "xz: decompression from stdin not supported")
 	}
 
 	for _, path := range args {
@@ -80,12 +83,15 @@ func xzList(w io.Writer, args []string) error {
 func unxzFile(w io.Writer, path string, opts XzOptions) error {
 	// Check if compressed
 	if !strings.HasSuffix(path, ".xz") {
-		return fmt.Errorf("%s: unknown suffix", path)
+		return cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("%s: unknown suffix", path))
 	}
 
 	inFile, err := os.Open(path)
 	if err != nil {
-		return err
+		if errors.Is(err, os.ErrNotExist) {
+			return cmderr.Wrap(cmderr.ErrNotFound, fmt.Sprintf("xz: %s", err))
+		}
+		return fmt.Errorf("xz: %w", err)
 	}
 
 	defer func() { _ = inFile.Close() }()
@@ -97,7 +103,7 @@ func unxzFile(w io.Writer, path string, opts XzOptions) error {
 	}
 
 	if !bytes.Equal(magic, xzMagic) {
-		return fmt.Errorf("%s: not in xz format", path)
+		return cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("%s: not in xz format", path))
 	}
 
 	// Seek back to start
@@ -114,7 +120,7 @@ func unxzFile(w io.Writer, path string, opts XzOptions) error {
 	// Check if output exists
 	if !opts.Force {
 		if _, err := os.Stat(outPath); err == nil {
-			return fmt.Errorf("%s already exists; use -f to overwrite", outPath)
+			return cmderr.Wrap(cmderr.ErrConflict, fmt.Sprintf("%s already exists; use -f to overwrite", outPath))
 		}
 	}
 
@@ -184,7 +190,7 @@ func unxzReader(_ io.Writer, r io.Reader) error {
 		return fmt.Errorf("invalid xz index")
 	}
 
-	return fmt.Errorf("xz decompression requires external library (github.com/ulikunitz/xz)")
+	return cmderr.Wrap(cmderr.ErrUnsupported, "xz decompression requires external library (github.com/ulikunitz/xz)")
 }
 
 // RunUnxz is an alias for xz -d

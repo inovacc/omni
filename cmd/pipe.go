@@ -2,12 +2,99 @@ package cmd
 
 import (
 	"bufio"
+	"io"
 	"os"
 	"strings"
 
+	"github.com/inovacc/omni/internal/cli/cat"
+	"github.com/inovacc/omni/internal/cli/command"
+	"github.com/inovacc/omni/internal/cli/cut"
+	"github.com/inovacc/omni/internal/cli/head"
+	"github.com/inovacc/omni/internal/cli/nl"
 	"github.com/inovacc/omni/internal/cli/pipe"
+	"github.com/inovacc/omni/internal/cli/rev"
+	"github.com/inovacc/omni/internal/cli/sed"
+	"github.com/inovacc/omni/internal/cli/tac"
+	"github.com/inovacc/omni/internal/cli/tail"
+	"github.com/inovacc/omni/internal/cli/text"
+	"github.com/inovacc/omni/internal/cli/wc"
 	"github.com/spf13/cobra"
 )
+
+// buildPipeRegistry creates a unified command.Registry for commonly-piped commands.
+// Commands registered here are dispatched directly without Cobra overhead.
+// Commands not registered fall back to Cobra dispatch.
+func buildPipeRegistry() *command.Registry {
+	reg := command.NewRegistry()
+
+	reg.Register("head", command.AdaptWriterReaderArgs(
+		func(w io.Writer, r io.Reader, args []string) error {
+			return head.RunHead(w, r, args, head.HeadOptions{Lines: 10})
+		},
+	))
+
+	reg.Register("tail", command.AdaptWriterReaderArgs(
+		func(w io.Writer, r io.Reader, args []string) error {
+			return tail.RunTail(w, r, args, tail.TailOptions{Lines: 10})
+		},
+	))
+
+	reg.Register("sort", command.AdaptWriterReaderArgs(
+		func(w io.Writer, r io.Reader, args []string) error {
+			return text.RunSort(w, r, args, text.SortOptions{})
+		},
+	))
+
+	reg.Register("uniq", command.AdaptWriterReaderArgs(
+		func(w io.Writer, r io.Reader, args []string) error {
+			return text.RunUniq(w, r, args, text.UniqOptions{})
+		},
+	))
+
+	reg.Register("cat", command.AdaptWriterReaderArgs(
+		func(w io.Writer, r io.Reader, args []string) error {
+			return cat.RunCat(w, r, args, cat.CatOptions{})
+		},
+	))
+
+	reg.Register("wc", command.AdaptWriterReaderArgs(
+		func(w io.Writer, r io.Reader, args []string) error {
+			return wc.RunWC(w, r, args, wc.WCOptions{})
+		},
+	))
+
+	reg.Register("cut", command.AdaptWriterReaderArgs(
+		func(w io.Writer, r io.Reader, args []string) error {
+			return cut.RunCut(w, r, args, cut.CutOptions{})
+		},
+	))
+
+	reg.Register("sed", command.AdaptWriterReaderArgs(
+		func(w io.Writer, r io.Reader, args []string) error {
+			return sed.RunSed(w, r, args, sed.SedOptions{})
+		},
+	))
+
+	reg.Register("nl", command.AdaptWriterReaderArgs(
+		func(w io.Writer, r io.Reader, args []string) error {
+			return nl.RunNl(w, r, args, nl.NlOptions{})
+		},
+	))
+
+	reg.Register("rev", command.AdaptWriterReaderArgs(
+		func(w io.Writer, r io.Reader, args []string) error {
+			return rev.RunRev(w, r, args, rev.RevOptions{})
+		},
+	))
+
+	reg.Register("tac", command.AdaptWriterReaderArgs(
+		func(w io.Writer, r io.Reader, args []string) error {
+			return tac.RunTac(w, r, args, tac.TacOptions{})
+		},
+	))
+
+	return reg
+}
 
 var pipeCmd = &cobra.Command{
 	Use:   "pipe {CMD}, {CMD}, ... | CMD | CMD",
@@ -74,7 +161,7 @@ Supported commands include all omni commands:
 		opts.Verbose, _ = cmd.Flags().GetBool("verbose")
 		opts.VarName, _ = cmd.Flags().GetString("var")
 
-		registry := pipe.NewRegistry(rootCmd)
+		registry := pipe.NewRegistryWithUnified(rootCmd, buildPipeRegistry())
 
 		// Check if we have stdin input
 		stat, _ := os.Stdin.Stat()

@@ -52,7 +52,7 @@
 |------|-------|----------|
 | pkg/video/extractor/generic | No unit tests | P2 |
 | pkg/video/extractor/youtube | Minimal tests (4.0%) | P2 |
-| cmderr adoption ~49/160+ commands | ~110 commands still return raw fmt.Errorf without exit code classification | P1 |
+| cmderr adoption ~65/160+ commands | ~95 commands still return raw fmt.Errorf without exit code classification | P1 |
 
 ### Recently Resolved
 
@@ -73,6 +73,7 @@
 | cmderr batches 4-5 | 20 more commands adopted, total now 49 (Feb 2026) |
 | scaffolding refactor | `generate` command renamed to `scaffold`, reorganized into domain subpackages (Feb 2026) |
 | scaffolding afero | All scaffolding packages refactored to accept `afero.Fs` — tests use in-memory FS, no disk I/O (Feb 2026) |
+| scaffold cobra structure | `scaffold cobra init` now generates `cmd/{appName}/` structure instead of flat `main.go` + `cmd/` (Mar 2026) |
 
 ---
 

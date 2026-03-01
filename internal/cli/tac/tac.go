@@ -2,10 +2,13 @@ package tac
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"io"
+	"os"
 	"strings"
 
+	"github.com/inovacc/omni/internal/cli/cmderr"
 	"github.com/inovacc/omni/internal/cli/input"
 	"github.com/inovacc/omni/pkg/cobra/helper/output"
 )
@@ -29,6 +32,9 @@ type TacResult struct {
 func RunTac(w io.Writer, r io.Reader, args []string, opts TacOptions) error {
 	sources, err := input.Open(args, r)
 	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return cmderr.Wrap(cmderr.ErrNotFound, fmt.Sprintf("tac: %s", err))
+		}
 		return fmt.Errorf("tac: %w", err)
 	}
 	defer input.CloseAll(sources)
