@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/google/gops/goprocess"
+	"github.com/inovacc/omni/internal/cli/cmderr"
 	"github.com/inovacc/omni/pkg/cobra/helper/output"
 )
 
@@ -45,11 +46,27 @@ type Info struct {
 	BuildInfo string  `json:"build_info,omitempty"` // Go build path if IsGo
 }
 
+// validSortKeys is the set of accepted --sort values.
+var validSortKeys = map[string]struct{}{
+	"pid": {}, "cpu": {}, "mem": {}, "time": {},
+}
+
 // Run lists running processes
 func Run(w io.Writer, opts Options) error {
+	if opts.Sort != "" {
+		if _, ok := validSortKeys[strings.ToLower(opts.Sort)]; !ok {
+			return cmderr.Wrap(cmderr.ErrInvalidInput,
+				fmt.Sprintf("ps: invalid sort key %q (pid|cpu|mem|time)", opts.Sort))
+		}
+	}
+
+	if err := checkPlatformSupport(opts); err != nil {
+		return err
+	}
+
 	processes, err := GetProcessList(opts)
 	if err != nil {
-		return fmt.Errorf("ps: %w", err)
+		return err
 	}
 
 	// Enrich with Go process information
@@ -193,7 +210,7 @@ func RunTop(w io.Writer, opts Options, n int) error {
 
 	processes, err := GetProcessList(opts)
 	if err != nil {
-		return fmt.Errorf("top: %w", err)
+		return err
 	}
 
 	// Enrich with Go process information

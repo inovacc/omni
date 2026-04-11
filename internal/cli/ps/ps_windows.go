@@ -7,6 +7,8 @@ import (
 	"os"
 	"syscall"
 	"unsafe"
+
+	"github.com/inovacc/omni/internal/cli/cmderr"
 )
 
 var (
@@ -35,6 +37,16 @@ type processEntry32 struct {
 	ExeFile         [maxPath]uint16
 }
 
+// checkPlatformSupport rejects options that cannot be satisfied on Windows.
+// User filtering requires token-level API calls not available via Toolhelp32.
+// Locked message format (pins POLISH-09 audit): "ps: field user not supported on windows"
+func checkPlatformSupport(opts Options) error {
+	if opts.User != "" {
+		return cmderr.Wrap(cmderr.ErrUnsupported, "ps: field user not supported on windows")
+	}
+	return nil
+}
+
 // GetProcessList returns a list of running processes on Windows
 func GetProcessList(opts Options) ([]Info, error) {
 	var processes []Info
@@ -45,7 +57,7 @@ func GetProcessList(opts Options) ([]Info, error) {
 		0,
 	)
 	if handle == uintptr(syscall.InvalidHandle) {
-		return nil, fmt.Errorf("CreateToolhelp32Snapshot failed: %w", err)
+		return nil, cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("ps: CreateToolhelp32Snapshot failed: %s", err))
 	}
 
 	defer func() {
@@ -59,7 +71,7 @@ func GetProcessList(opts Options) ([]Info, error) {
 	// Get first process
 	ret, _, _ := procProcess32First.Call(handle, uintptr(unsafe.Pointer(&entry)))
 	if ret == 0 {
-		return nil, fmt.Errorf("Process32First failed")
+		return nil, cmderr.Wrap(cmderr.ErrIO, "ps: Process32First failed")
 	}
 
 	currentPID := uint32(os.Getpid())
@@ -86,7 +98,9 @@ func GetProcessList(opts Options) ([]Info, error) {
 				TTY:     "?",
 				Stat:    "R",
 				Time:    "0:00",
-				User:    "SYSTEM", // Would need more API calls to get actual user
+				// User field not supported on windows via Toolhelp32 snapshot API.
+				// Locked message format (pins POLISH-09 audit): "ps: field user not supported on windows"
+				User: "?",
 			}
 			processes = append(processes, proc)
 		}

@@ -4,13 +4,19 @@ package ps
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"os"
 	"os/user"
 	"path/filepath"
 	"strconv"
 	"strings"
+
+	"github.com/inovacc/omni/internal/cli/cmderr"
 )
+
+// checkPlatformSupport is a no-op on Unix — all ps options are supported.
+func checkPlatformSupport(_ Options) error { return nil }
 
 // GetProcessList returns a list of running processes on Unix systems
 func GetProcessList(opts Options) ([]Info, error) {
@@ -19,7 +25,10 @@ func GetProcessList(opts Options) ([]Info, error) {
 	// Read /proc directory
 	entries, err := os.ReadDir("/proc")
 	if err != nil {
-		return nil, fmt.Errorf("cannot read /proc: %w", err)
+		if errors.Is(err, os.ErrPermission) {
+			return nil, cmderr.Wrap(cmderr.ErrPermission, "ps: cannot read /proc")
+		}
+		return nil, cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("ps: cannot read /proc: %s", err))
 	}
 
 	currentUID := os.Getuid()
