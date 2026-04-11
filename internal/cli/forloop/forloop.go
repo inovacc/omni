@@ -8,6 +8,8 @@ import (
 	"os/exec"
 	"strconv"
 	"strings"
+
+	"github.com/inovacc/omni/internal/cli/cmderr"
 )
 
 // Options configures the for command behavior
@@ -48,7 +50,7 @@ func RunRange(w io.Writer, start, end, step int, command string, opts Options) e
 			_, _ = fmt.Fprintf(w, "%s\n", cmd)
 		} else {
 			if err := executeCommand(w, cmd); err != nil {
-				return fmt.Errorf("for range: command failed at %d: %w", i, err)
+				return cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("for range: command failed at %d: %s", i, err))
 			}
 		}
 
@@ -73,7 +75,7 @@ func RunEach(w io.Writer, items []string, command string, opts Options) error {
 			_, _ = fmt.Fprintf(w, "%s\n", cmd)
 		} else {
 			if err := executeCommand(w, cmd); err != nil {
-				return fmt.Errorf("for each: command failed for %q: %w", item, err)
+				return cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("for each: command failed for %q: %s", item, err))
 			}
 		}
 	}
@@ -103,7 +105,7 @@ func RunLines(w io.Writer, r io.Reader, command string, opts Options) error {
 			_, _ = fmt.Fprintf(w, "%s\n", cmd)
 		} else {
 			if err := executeCommand(w, cmd); err != nil {
-				return fmt.Errorf("for lines: command failed at line %d: %w", lineNum, err)
+				return cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("for lines: command failed at line %d: %s", lineNum, err))
 			}
 		}
 	}
@@ -153,7 +155,7 @@ func RunGlob(w io.Writer, pattern, command string, opts Options) error {
 	// Use filepath.Glob for pattern matching
 	matches, err := globFiles(pattern)
 	if err != nil {
-		return fmt.Errorf("for glob: %w", err)
+		return cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("for glob: %s", err))
 	}
 
 	for _, match := range matches {
@@ -163,7 +165,7 @@ func RunGlob(w io.Writer, pattern, command string, opts Options) error {
 			_, _ = fmt.Fprintf(w, "%s\n", cmd)
 		} else {
 			if err := executeCommand(w, cmd); err != nil {
-				return fmt.Errorf("for glob: command failed for %q: %w", match, err)
+				return cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("for glob: command failed for %q: %s", match, err))
 			}
 		}
 	}
