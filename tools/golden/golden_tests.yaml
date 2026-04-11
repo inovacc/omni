@@ -532,3 +532,56 @@ categories:
               string name = 2;
             }
         normalizations: ["strip_path", "strip_temp_dir"]
+
+  # ===== CMDERR WAVE A ERROR PATHS =====
+  # Phase 1 Plan 04: sort/env/date cmderr classification.
+  - name: cmderr_wave_a
+    tests:
+      - name: sort_file_not_found
+        args: ["sort", "nonexistent_file_plan04_xyz"]
+        exit_code: 1
+        normalizations: ["strip_path"]
+
+      - name: date_unknown_flag
+        args: ["date", "--definitely-not-a-real-flag"]
+        exit_code: 1
+        normalizations: ["strip_path"]
+
+      - name: env_unknown_flag
+        args: ["env", "--definitely-not-a-real-flag"]
+        exit_code: 1
+        normalizations: ["strip_path"]
+
+  # ===== KILL (RISKY-MATRIX ERROR PATHS) =====
+  # Phase 1 Plan 05 Wave A: cmderr sentinels for kill with platform split.
+  # See .planning/phases/01-cmderr-migration-completion/05-wave-a-kill-PLAN.md
+  # and RESEARCH.md "Risky-Commands List" row for kill.
+  - name: kill
+    tests:
+      - name: kill_bad_pid
+        args: ["kill", "not-a-pid"]
+        exit_code: 2          # cmderr.ErrInvalidInput
+        normalizations: ["strip_path"]
+
+      - name: kill_unknown_signal
+        args: ["kill", "-s", "BOGUSX", "1"]
+        exit_code: 2          # cmderr.ErrInvalidInput
+        normalizations: ["strip_path"]
+
+      - name: kill_nonexistent_pid
+        args: ["kill", "999999999"]
+        exit_code: 1          # cmderr.ErrNotFound (ESRCH / ErrProcessDone)
+        normalizations: ["strip_path"]
+
+      # Platform-sensitive snapshot. On windows, `kill -USR1 1` returns
+      # cmderr.ErrUnsupported (exit 6) with the locked message
+      # "kill: signal SIGUSR1 not supported on windows (INT/KILL/TERM only)".
+      # On unix, USR1 is a valid signal, so this targets a nonexistent pid
+      # and yields ErrNotFound (exit 1). The harness does not yet support
+      # per-platform expected exit codes, so the recorded snapshot must be
+      # regenerated on each platform with `task golden:record`.
+      # Full platform-gating lands in POLISH-09 (Phase 3).
+      - name: kill_posix_signal_nonexistent_pid
+        args: ["kill", "-USR1", "999999999"]
+        exit_code: 1          # unix: ErrNotFound; windows would be 6 ErrUnsupported
+        normalizations: ["strip_path"]
