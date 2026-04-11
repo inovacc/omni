@@ -56,7 +56,7 @@ func RunBanner(w io.Writer, r io.Reader, args []string, opts Options) error {
 
 	result, err := figlet.Render(text, renderOpts...)
 	if err != nil {
-		return fmt.Errorf("banner: %w", err)
+		return cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("banner: %s", err))
 	}
 
 	_, _ = fmt.Fprintln(w, result)
