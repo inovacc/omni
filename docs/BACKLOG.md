@@ -23,12 +23,28 @@ See CLAUDE.md for the full command inventory.
 
 ### Core Infrastructure
 - [x] Unified `Command` interface contract (`internal/cli/command/` — interface, Registry, adapters)
-- [~] Consistent error model with exit codes (`cmderr` adopted in 73/160+ commands; batches 1-7 done)
+- [x] Consistent error model with exit codes (`cmderr` 100% adoption — all internal/cli/ commands, Phase 1 Apr 2026)
 - [x] Add `--json` flag to remaining commands that lack it
 - [x] Unified output formatter (text/json/table)
-- [ ] cmderr rollout batch 9+: remaining ~76 commands (data, compress, system, flow, cloud)
+- [x] cmderr rollout — all commands adopted (Phase 1 complete, Apr 2026)
 - [x] Migrate `pipe` command to use `command.Registry` for dispatch (with Cobra fallback)
 - [x] Expand pipe Registry to 24 commands (awk, fold, column, paste, xxd, grep, tr, hash, base64, base32, caseconv, strings, shuf added)
+
+### cmderr Phase 2 follow-ups (deferred from Phase 1)
+
+- [ ] **[BACKLOG] golangci-lint custom rule:** Add static analysis rule to catch raw `os.ErrX` returns that bypass cmderr classification. Target: Phase 2. (Discovered during Phase 1 audit.)
+- [ ] **[BACKLOG] Cross-command exit-code golden matrix:** Automated test matrix verifying every command returns the correct exit code for each error class (not-found=1, invalid=2, permission=3, io=4, timeout=5, unsupported=6). Target: Phase 2+. (Deferred from Phase 1 plan context.)
+- [ ] **[BACKLOG] `cmderr.Is<Class>()` convenience helpers:** e.g. `cmderr.IsNotFound(err)`, `cmderr.IsPermission(err)` for callers that need to inspect sentinel class without importing cmderr directly. Target: Phase 3.
+- [ ] **[BACKLOG] `docs/EXIT-CODES.md` generation:** Auto-generate a reference page from the cmderr sentinel table and EXIT-CODE-CHANGES.md. Target: Phase 3. (Deferred from Phase 1 CONTEXT.md Deferred Ideas.)
+
+### Pre-existing design-principle violations (no-exec)
+
+- [ ] **[BACKLOG / no-exec-violation] `internal/cli/exec/exec.go`:** Uses `os/exec` to spawn arbitrary external processes via `osexec.Command(command, args...)` — violates "No exec" design principle. Rewrite to use the omni unified command Registry for dispatching internal commands. Discovered: Plan 14 (Apr 2026). Pre-existing; out of scope for cmderr migration.
+- [ ] **[BACKLOG / no-exec-violation] `internal/cli/repo/remote.go`:** Uses `os/exec` to run `gh repo clone` and `git clone` — violates "No exec" design principle. Rewrite to use pure-Go git clone (e.g. `go-git`). Discovered: Plan 13 (Apr 2026). Pre-existing; out of scope for cmderr migration.
+
+### Pre-existing flaky tests
+
+- [ ] **[BACKLOG / flaky-test] `internal/cli/exec/detector_test.go::TestDetectGo_PrivateWithNetrc`:** Uses `HOME` env var which does not apply on Windows (Go uses `USERPROFILE`). Test passes on Linux/macOS, may fail on Windows. Discovered during Phase 1. Pre-existing.
 
 ---
 

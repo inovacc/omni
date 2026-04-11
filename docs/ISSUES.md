@@ -52,7 +52,7 @@
 |------|-------|----------|
 | pkg/video/extractor/generic | No unit tests | P2 |
 | pkg/video/extractor/youtube | Minimal tests (4.0%) | P2 |
-| cmderr adoption ~84/160+ commands | ~76 commands still return raw fmt.Errorf without exit code classification | P1 |
+| ~~cmderr adoption~~ | ~~76 commands still return raw fmt.Errorf without exit code classification~~ | **RESOLVED Apr 2026** — 100% adoption complete (Phase 1) |
 
 ### Recently Resolved
 
