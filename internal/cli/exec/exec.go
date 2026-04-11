@@ -9,6 +9,7 @@ import (
 	"strings"
 	"text/tabwriter"
 
+	"github.com/inovacc/omni/internal/cli/cmderr"
 	"github.com/inovacc/omni/pkg/cobra/helper/output"
 )
 
@@ -22,9 +23,12 @@ type Options struct {
 }
 
 // Run executes a command with pre-flight credential detection.
+// NOTE: This package intentionally spawns an external process via os/exec.
+// This is a pre-existing violation of the project "No exec" design principle.
+// Tracked for remediation in deferred-items.md (no-exec-violation tag).
 func Run(w io.Writer, command string, args []string, opts Options) error {
 	if command == "" {
-		return fmt.Errorf("no command specified")
+		return cmderr.Wrap(cmderr.ErrInvalidInput, "exec: no command specified")
 	}
 
 	if opts.Force && !opts.DryRun {
@@ -66,7 +70,7 @@ func Run(w io.Writer, command string, args []string, opts Options) error {
 	printMissing(w, missing)
 
 	if opts.Strict {
-		return fmt.Errorf("aborting: missing credentials (strict mode)")
+		return cmderr.Wrap(cmderr.ErrInvalidInput, "exec: aborting: missing credentials (strict mode)")
 	}
 
 	if !opts.NoPrompt {
@@ -74,7 +78,7 @@ func Run(w io.Writer, command string, args []string, opts Options) error {
 		var answer string
 		_, _ = fmt.Scanln(&answer)
 		if !strings.HasPrefix(strings.ToLower(answer), "y") {
-			return fmt.Errorf("aborted by user")
+			return cmderr.Wrap(cmderr.ErrInvalidInput, "exec: aborted by user")
 		}
 	}
 

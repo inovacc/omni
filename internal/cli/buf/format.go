@@ -2,6 +2,7 @@ package buf
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -10,6 +11,7 @@ import (
 	"github.com/bufbuild/protocompile/ast"
 	"github.com/bufbuild/protocompile/parser"
 	"github.com/bufbuild/protocompile/reporter"
+	"github.com/inovacc/omni/internal/cli/cmderr"
 )
 
 // RunFormat formats proto files.
@@ -29,7 +31,13 @@ func RunFormat(w io.Writer, dir string, opts FormatOptions) error {
 	for _, file := range files {
 		content, err := os.ReadFile(file)
 		if err != nil {
-			return fmt.Errorf("buf: failed to read %s: %w", file, err)
+			if errors.Is(err, os.ErrNotExist) {
+				return cmderr.Wrap(cmderr.ErrNotFound, fmt.Sprintf("buf: %s: %s", file, err))
+			}
+			if errors.Is(err, os.ErrPermission) {
+				return cmderr.Wrap(cmderr.ErrPermission, fmt.Sprintf("buf: %s: %s", file, err))
+			}
+			return cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("buf: failed to read %s: %s", file, err))
 		}
 
 		formatted := FormatProto(string(content))
@@ -47,7 +55,10 @@ func RunFormat(w io.Writer, dir string, opts FormatOptions) error {
 
 		if opts.Write {
 			if err := os.WriteFile(file, []byte(formatted), 0644); err != nil {
-				return fmt.Errorf("buf: failed to write %s: %w", file, err)
+				if errors.Is(err, os.ErrPermission) {
+					return cmderr.Wrap(cmderr.ErrPermission, fmt.Sprintf("buf: failed to write %s: %s", file, err))
+				}
+				return cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("buf: failed to write %s: %s", file, err))
 			}
 
 			if !opts.Diff {
@@ -57,7 +68,7 @@ func RunFormat(w io.Writer, dir string, opts FormatOptions) error {
 	}
 
 	if opts.ExitCode && hasUnformatted {
-		return fmt.Errorf("found unformatted files")
+		return cmderr.Wrap(cmderr.ErrConflict, "buf: found unformatted files")
 	}
 
 	return nil

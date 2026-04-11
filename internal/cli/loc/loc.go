@@ -2,6 +2,7 @@ package loc
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"io"
 	"io/fs"
@@ -418,6 +419,16 @@ func RunLoc(w io.Writer, args []string, opts Options) error {
 	langStats := make(map[string]*LanguageStats)
 
 	for _, root := range args {
+		if _, statErr := os.Lstat(root); statErr != nil {
+			if errors.Is(statErr, os.ErrNotExist) {
+				return cmderr.Wrap(cmderr.ErrNotFound, fmt.Sprintf("loc: %s: %s", root, statErr))
+			}
+			if errors.Is(statErr, os.ErrPermission) {
+				return cmderr.Wrap(cmderr.ErrPermission, fmt.Sprintf("loc: %s: %s", root, statErr))
+			}
+			return cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("loc: %s: %s", root, statErr))
+		}
+
 		err := filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
 			if err != nil {
 				return nil //nolint:nilerr // intentional: skip files we can't access

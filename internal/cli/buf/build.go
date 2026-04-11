@@ -3,6 +3,7 @@ package buf
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -12,6 +13,7 @@ import (
 	"github.com/bufbuild/protocompile"
 	"github.com/bufbuild/protocompile/linker"
 	"github.com/bufbuild/protocompile/reporter"
+	"github.com/inovacc/omni/internal/cli/cmderr"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protodesc"
 	"google.golang.org/protobuf/types/descriptorpb"
@@ -55,7 +57,10 @@ func RunBuild(w io.Writer, dir string, opts BuildOptions) error {
 
 	if opts.Output != "" {
 		if err := writeFileDescriptorSet(fds, opts.Output); err != nil {
-			return fmt.Errorf("buf build: %w", err)
+			if errors.Is(err, os.ErrPermission) {
+				return cmderr.Wrap(cmderr.ErrPermission, fmt.Sprintf("buf build: %s", err))
+			}
+			return cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("buf build: %s", err))
 		}
 		_, _ = fmt.Fprintf(w, "Built %d file(s) to %s\n", len(fds.File), opts.Output)
 	} else {
@@ -63,7 +68,7 @@ func RunBuild(w io.Writer, dir string, opts BuildOptions) error {
 		enc := json.NewEncoder(w)
 		enc.SetIndent("", "  ")
 		if err := enc.Encode(descriptorSetToMap(fds)); err != nil {
-			return fmt.Errorf("buf build: %w", err)
+			return cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("buf build: write: %s", err))
 		}
 	}
 
@@ -73,7 +78,7 @@ func RunBuild(w io.Writer, dir string, opts BuildOptions) error {
 // RunBreaking checks for breaking changes between dir and opts.Against.
 func RunBreaking(w io.Writer, dir string, opts BreakingOptions) error {
 	if opts.Against == "" {
-		return fmt.Errorf("buf: --against is required")
+		return cmderr.Wrap(cmderr.ErrInvalidInput, "buf: --against is required")
 	}
 
 	absDir, err := filepath.Abs(dir)
@@ -122,7 +127,7 @@ func RunBreaking(w io.Writer, dir string, opts BreakingOptions) error {
 			issue.File, issue.Line, issue.Column, issue.Message, issue.Rule)
 	}
 
-	return fmt.Errorf("buf breaking: found %d breaking change(s)", len(issues))
+	return cmderr.Wrap(cmderr.ErrConflict, fmt.Sprintf("buf breaking: found %d breaking change(s)", len(issues)))
 }
 
 // compileProtos compiles proto files in the given directory using protocompile.

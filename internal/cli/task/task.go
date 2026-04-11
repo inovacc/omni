@@ -4,10 +4,13 @@ package task
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"os"
 	"path/filepath"
+
+	"github.com/inovacc/omni/internal/cli/cmderr"
 )
 
 // Options configures the task runner
@@ -78,7 +81,7 @@ func Run(ctx context.Context, w io.Writer, taskNames []string, opts Options) err
 		if tf.Tasks["default"] != nil {
 			taskNames = []string{"default"}
 		} else {
-			return fmt.Errorf("task: no task specified and no default task found")
+			return cmderr.Wrap(cmderr.ErrInvalidInput, "task: no task specified and no default task found")
 		}
 	}
 
@@ -97,7 +100,13 @@ func findTaskfile(path, dir string) (string, error) {
 	// If explicit path given, use it
 	if path != "" {
 		if _, err := os.Stat(path); err != nil {
-			return "", fmt.Errorf("taskfile not found: %s", path)
+			if errors.Is(err, os.ErrNotExist) {
+				return "", cmderr.Wrap(cmderr.ErrNotFound, fmt.Sprintf("task: taskfile not found: %s", path))
+			}
+			if errors.Is(err, os.ErrPermission) {
+				return "", cmderr.Wrap(cmderr.ErrPermission, fmt.Sprintf("task: %s", err))
+			}
+			return "", fmt.Errorf("task: %w", err)
 		}
 
 		return path, nil
@@ -110,7 +119,7 @@ func findTaskfile(path, dir string) (string, error) {
 
 		searchDir, err = os.Getwd()
 		if err != nil {
-			return "", err
+			return "", cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("task: getwd: %s", err))
 		}
 	}
 
@@ -122,5 +131,5 @@ func findTaskfile(path, dir string) (string, error) {
 		}
 	}
 
-	return "", fmt.Errorf("no taskfile found in %s", searchDir)
+	return "", cmderr.Wrap(cmderr.ErrNotFound, fmt.Sprintf("task: no taskfile found in %s", searchDir))
 }

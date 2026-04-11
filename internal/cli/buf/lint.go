@@ -12,6 +12,7 @@ import (
 	"github.com/bufbuild/protocompile/ast"
 	"github.com/bufbuild/protocompile/parser"
 	"github.com/bufbuild/protocompile/reporter"
+	"github.com/inovacc/omni/internal/cli/cmderr"
 )
 
 // LintRule represents a lint rule
@@ -113,7 +114,7 @@ func RunLint(w io.Writer, dir string, opts LintOptions) error {
 	}
 
 	if totalIssues > 0 {
-		return fmt.Errorf("buf: lint found %d issue(s)", totalIssues)
+		return cmderr.Wrap(cmderr.ErrConflict, fmt.Sprintf("buf: lint found %d issue(s)", totalIssues))
 	}
 	return nil
 }

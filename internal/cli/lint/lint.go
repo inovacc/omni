@@ -2,6 +2,7 @@ package lint
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -190,6 +191,12 @@ func RunLint(w io.Writer, args []string, opts LintOptions) error {
 		info, err := os.Stat(arg)
 		if err != nil {
 			_, _ = fmt.Fprintf(w, "lint: %s: %v\n", arg, err)
+			if errors.Is(err, os.ErrNotExist) {
+				return cmderr.Wrap(cmderr.ErrNotFound, fmt.Sprintf("lint: %s: %s", arg, err))
+			}
+			if errors.Is(err, os.ErrPermission) {
+				return cmderr.Wrap(cmderr.ErrPermission, fmt.Sprintf("lint: %s: %s", arg, err))
+			}
 			exitCode = 1
 
 			continue
