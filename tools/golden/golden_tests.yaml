@@ -533,6 +533,38 @@ categories:
             }
         normalizations: ["strip_path", "strip_temp_dir"]
 
+  # ===== CMDERR WAVE B ERROR PATHS =====
+  # Phase 1 Plan 06: cssfmt/htmlfmt/sqlfmt/xmlutil cmderr classification.
+  - name: cmderr_wave_b
+    tests:
+      - name: cssfmt_invalid_input
+        args: ["css", "validate"]
+        stdin: "body { margin: 0;"
+        exit_code: 2
+        normalizations: ["strip_path"]
+
+      # Note: htmlfmt's getInput falls through to literal-string parsing when
+      # the arg is not a file (preexisting behavior, out of scope for Plan 06).
+      # We instead exercise the validate path on empty stdin which reliably
+      # hits the ErrInvalidInput branch.
+      - name: htmlfmt_empty_input
+        args: ["html", "validate"]
+        stdin: ""
+        exit_code: 2
+        normalizations: ["strip_path"]
+
+      - name: sqlfmt_invalid_input
+        args: ["sql", "validate"]
+        stdin: "SELECT * FROM ("
+        exit_code: 2
+        normalizations: ["strip_path"]
+
+      - name: xmlutil_invalid_xml
+        args: ["xml", "tojson"]
+        stdin: "<a><b></a>"
+        exit_code: 2
+        normalizations: ["strip_path"]
+
   # ===== CMDERR WAVE A ERROR PATHS =====
   # Phase 1 Plan 04: sort/env/date cmderr classification.
   - name: cmderr_wave_a

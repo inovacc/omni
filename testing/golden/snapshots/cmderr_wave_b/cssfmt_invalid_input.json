@@ -1,0 +1,5 @@
+{
+  "exit_code": 2,
+  "stdout_file": "cssfmt_invalid_input.stdout",
+  "stderr": "Error: cssfmt: parse: unbalanced braces: missing '}': invalid input\n"
+}

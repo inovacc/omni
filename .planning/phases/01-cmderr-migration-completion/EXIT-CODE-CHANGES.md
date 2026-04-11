@@ -17,3 +17,21 @@ v1.0 release notes per CONTEXT.md Decision 6.
 | A | sort (`-c` disorder) | 1 | ErrConflict → 1 | Already wrapped in `text.RunSort`; exit code unchanged. |
 | A | env (write failure, e.g. broken pipe) | 0 (silently muted) | ErrIO → 4 | Previously `_, _ = fmt.Fprint(...)` silently dropped write errors; now classified. |
 | A | date (write failure, e.g. broken pipe) | 0 (silently muted) | ErrIO → 4 | Previously `_, _ = fmt.Fprintln(...)` silently dropped write errors; now classified. |
+| B | cssfmt / `css validate` (unbalanced/unclosed) | 1 | ErrInvalidInput → 2 | Was `fmt.Errorf("validation failed")`; now cmderr.ErrInvalidInput. |
+| B | cssfmt / `css format` (file not found) | 1 | ErrNotFound → 1 | Previously raw `fmt.Errorf`; now classified via errors.Is(os.ErrNotExist). |
+| B | cssfmt / `css format` (permission denied) | 1 | ErrPermission → 3 | Exit code shifts from 1 to 3. |
+| B | cssfmt / `css format` (write failure) | 0 (silently muted) | ErrIO → 4 | Previously `_, _ = fmt.Fprintln(...)`; now classified. |
+| B | htmlfmt / `html validate` (empty/invalid) | 1 | ErrInvalidInput → 2 | Was `fmt.Errorf("validation failed")`; now cmderr.ErrInvalidInput. |
+| B | htmlfmt / `html format` (parse failure from pkghtml) | 1 | ErrInvalidInput → 2 | Was raw `fmt.Errorf("html: %w")`; now classified. |
+| B | htmlfmt / `html format` (file not found) | 1 | ErrNotFound → 1 | Previously unclassified; now classified. |
+| B | htmlfmt / `html format` (permission denied) | 1 | ErrPermission → 3 | Exit code shifts from 1 to 3. |
+| B | htmlfmt / `html format` (write failure) | 0 (silently muted) | ErrIO → 4 | Previously muted; now classified. |
+| B | sqlfmt / `sql validate` (parse error) | 1 | ErrInvalidInput → 2 | Was `fmt.Errorf("validation failed")`; now cmderr.ErrInvalidInput. |
+| B | sqlfmt / `sql format` (file not found) | 1 | ErrNotFound → 1 | Previously unclassified; now classified. |
+| B | sqlfmt / `sql format` (permission denied) | 1 | ErrPermission → 3 | Exit code shifts from 1 to 3. |
+| B | sqlfmt / `sql format` (write failure) | 0 (silently muted) | ErrIO → 4 | Previously muted; now classified. |
+| B | xmlutil / `xml tojson` (invalid XML) | 1 | ErrInvalidInput → 2 | Was raw `fmt.Errorf("json: invalid XML")`; now classified. |
+| B | xmlutil / `xml fromjson` (invalid JSON) | 1 | ErrInvalidInput → 2 | Was raw `fmt.Errorf("xml: invalid JSON")`; now classified. |
+| B | xmlutil / `xml tojson|fromjson` (file not found) | 1 | ErrNotFound → 1 | Previously unclassified; now classified. |
+| B | xmlutil / `xml tojson|fromjson` (permission denied) | 1 | ErrPermission → 3 | Exit code shifts from 1 to 3. |
+| B | xmlutil / `xml tojson|fromjson` (write failure) | 0 (silently muted) | ErrIO → 4 | Previously `_, _ = fmt.Fprint(...)`; now classified. |

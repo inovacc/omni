@@ -1,0 +1,5 @@
+{
+  "exit_code": 2,
+  "stdout_file": "sqlfmt_invalid_input.stdout",
+  "stderr": "Error: sqlfmt: parse: unbalanced parentheses: missing ')': invalid input\n"
+}

@@ -1,0 +1,5 @@
+{
+  "exit_code": 2,
+  "stdout_file": "htmlfmt_empty_input.stdout",
+  "stderr": "Error: htmlfmt: parse: empty input: invalid input\n"
+}

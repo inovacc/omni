@@ -1,0 +1,5 @@
+{
+  "exit_code": 2,
+  "stdout_file": "xmlutil_invalid_xml.stdout",
+  "stderr": "Error: xmlutil: parse: invalid XML: XML syntax error on line 1: element <b> closed by </a>: invalid input\n"
+}
