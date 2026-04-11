@@ -3,6 +3,7 @@ package tagfixer
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"go/ast"
 	"go/format"
@@ -15,6 +16,8 @@ import (
 	"sort"
 	"strings"
 	"unicode"
+
+	"github.com/inovacc/omni/internal/cli/cmderr"
 )
 
 // CaseType represents the case convention for struct tags
@@ -270,7 +273,13 @@ func runFix(w io.Writer, opts Options) error {
 func collectGoFiles(path string, recursive bool) ([]string, error) {
 	info, err := os.Stat(path)
 	if err != nil {
-		return nil, err
+		if errors.Is(err, os.ErrNotExist) {
+			return nil, cmderr.Wrap(cmderr.ErrNotFound, fmt.Sprintf("tagfixer: %s", err))
+		}
+		if errors.Is(err, os.ErrPermission) {
+			return nil, cmderr.Wrap(cmderr.ErrPermission, fmt.Sprintf("tagfixer: %s", err))
+		}
+		return nil, cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("tagfixer: %s", err))
 	}
 
 	if !info.IsDir() {
