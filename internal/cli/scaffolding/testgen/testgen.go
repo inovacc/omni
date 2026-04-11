@@ -12,6 +12,7 @@ import (
 
 	"github.com/spf13/afero"
 
+	"github.com/inovacc/omni/internal/cli/cmderr"
 	"github.com/inovacc/omni/internal/cli/scaffolding"
 	testtpl "github.com/inovacc/omni/internal/cli/scaffolding/testgen/templates"
 )
@@ -36,12 +37,12 @@ type TestResult struct {
 // RunTestInit generates tests for a Go source file
 func RunTestInit(w io.Writer, fs afero.Fs, sourcePath string, opts TestOptions, genOpts scaffolding.Options) error {
 	if sourcePath == "" {
-		return fmt.Errorf("scaffold: source file path is required")
+		return cmderr.Wrap(cmderr.ErrInvalidInput, "scaffold: source file path is required")
 	}
 
 	// Check if file exists
 	if _, err := os.Stat(sourcePath); os.IsNotExist(err) {
-		return fmt.Errorf("scaffold: file not found: %s", sourcePath)
+		return cmderr.Wrap(cmderr.ErrNotFound, fmt.Sprintf("scaffold: file not found: %s", sourcePath))
 	}
 
 	// Parse the Go source file
@@ -49,7 +50,7 @@ func RunTestInit(w io.Writer, fs afero.Fs, sourcePath string, opts TestOptions, 
 
 	node, err := parser.ParseFile(fset, sourcePath, nil, parser.ParseComments)
 	if err != nil {
-		return fmt.Errorf("scaffold: failed to parse %s: %w", sourcePath, err)
+		return cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("scaffold: failed to parse %s: %v", sourcePath, err))
 	}
 
 	// Extract functions
@@ -115,7 +116,7 @@ func RunTestInit(w io.Writer, fs afero.Fs, sourcePath string, opts TestOptions, 
 	})
 
 	if len(functions) == 0 {
-		return fmt.Errorf("scaffold: no exported functions found in %s", sourcePath)
+		return cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("scaffold: no exported functions found in %s", sourcePath))
 	}
 
 	// Prepare template data

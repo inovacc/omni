@@ -10,6 +10,7 @@ import (
 
 	"github.com/spf13/afero"
 
+	"github.com/inovacc/omni/internal/cli/cmderr"
 	"github.com/inovacc/omni/internal/cli/scaffolding"
 	cobratpl "github.com/inovacc/omni/internal/cli/scaffolding/cobra/templates"
 )
@@ -53,7 +54,7 @@ type AddResult struct {
 // RunCobraInit initializes a new Cobra CLI application
 func RunCobraInit(w io.Writer, fs afero.Fs, dir string, opts CobraInitOptions, genOpts scaffolding.Options) error {
 	if opts.Module == "" {
-		return fmt.Errorf("scaffold: module path is required")
+		return cmderr.Wrap(cmderr.ErrInvalidInput, "scaffold: module path is required")
 	}
 
 	if opts.AppName == "" {
@@ -101,7 +102,7 @@ func RunCobraInit(w io.Writer, fs afero.Fs, dir string, opts CobraInitOptions, g
 
 	for _, d := range dirs {
 		if err := fs.MkdirAll(d, 0755); err != nil {
-			return fmt.Errorf("scaffold: failed to create directory %s: %w", d, err)
+			return cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("scaffold: failed to create directory %s: %v", d, err))
 		}
 	}
 
@@ -332,12 +333,12 @@ func RunCobraAddTools(w io.Writer, fs afero.Fs, dir string, opts AddToolsOptions
 	goModPath := filepath.Join(dir, "go.mod")
 	goModData, err := afero.ReadFile(fs, goModPath)
 	if err != nil {
-		return fmt.Errorf("scaffold: failed to read go.mod: %w", err)
+		return cmderr.Wrap(cmderr.ErrNotFound, fmt.Sprintf("scaffold: failed to read go.mod: %v", err))
 	}
 
 	moduleName := parseModuleName(goModData)
 	if moduleName == "" {
-		return fmt.Errorf("scaffold: failed to parse module name from go.mod")
+		return cmderr.Wrap(cmderr.ErrInvalidInput, "scaffold: failed to parse module name from go.mod")
 	}
 
 	appName := moduleName
@@ -348,7 +349,7 @@ func RunCobraAddTools(w io.Writer, fs afero.Fs, dir string, opts AddToolsOptions
 	// Verify cmd/{appName} directory exists
 	cmdDir := filepath.Join(dir, "cmd", appName)
 	if _, err := fs.Stat(cmdDir); err != nil {
-		return fmt.Errorf("scaffold: cmd/%s directory not found, is this a Cobra project?", appName)
+		return cmderr.Wrap(cmderr.ErrNotFound, fmt.Sprintf("scaffold: cmd/%s directory not found, is this a Cobra project?", appName))
 	}
 
 	tplData := cobratpl.TemplateData{
@@ -362,7 +363,7 @@ func RunCobraAddTools(w io.Writer, fs afero.Fs, dir string, opts AddToolsOptions
 	// Always generate cmd/{appName}/cmd_cmdtree.go
 	cmdtreePath := filepath.Join(cmdDir, "cmd_cmdtree.go")
 	if _, err := fs.Stat(cmdtreePath); err == nil {
-		return fmt.Errorf("scaffold: cmd/%s/cmd_cmdtree.go already exists", appName)
+		return cmderr.Wrap(cmderr.ErrConflict, fmt.Sprintf("scaffold: cmd/%s/cmd_cmdtree.go already exists", appName))
 	}
 
 	if err := scaffolding.WriteTemplate(fs, cmdtreePath, cobratpl.CmdtreeTemplate, tplData); err != nil {
@@ -375,7 +376,7 @@ func RunCobraAddTools(w io.Writer, fs afero.Fs, dir string, opts AddToolsOptions
 	if opts.AIContext {
 		aicontextPath := filepath.Join(cmdDir, "cmd_aicontext.go")
 		if _, err := fs.Stat(aicontextPath); err == nil {
-			return fmt.Errorf("scaffold: cmd/%s/cmd_aicontext.go already exists", appName)
+			return cmderr.Wrap(cmderr.ErrConflict, fmt.Sprintf("scaffold: cmd/%s/cmd_aicontext.go already exists", appName))
 		}
 
 		if err := scaffolding.WriteTemplate(fs, aicontextPath, cobratpl.AIContextTemplate, tplData); err != nil {
@@ -417,7 +418,7 @@ func parseModuleName(data []byte) string {
 // RunCobraAdd adds a new command to an existing Cobra application
 func RunCobraAdd(w io.Writer, fs afero.Fs, dir string, opts CobraAddOptions, genOpts scaffolding.Options) error {
 	if opts.Name == "" {
-		return fmt.Errorf("scaffold: command name is required")
+		return cmderr.Wrap(cmderr.ErrInvalidInput, "scaffold: command name is required")
 	}
 
 	if opts.Parent == "" {
@@ -431,12 +432,12 @@ func RunCobraAdd(w io.Writer, fs afero.Fs, dir string, opts CobraAddOptions, gen
 	// Read go.mod to get app name
 	goModData, err := afero.ReadFile(fs, filepath.Join(dir, "go.mod"))
 	if err != nil {
-		return fmt.Errorf("scaffold: failed to read go.mod: %w", err)
+		return cmderr.Wrap(cmderr.ErrNotFound, fmt.Sprintf("scaffold: failed to read go.mod: %v", err))
 	}
 
 	moduleName := parseModuleName(goModData)
 	if moduleName == "" {
-		return fmt.Errorf("scaffold: failed to parse module name from go.mod")
+		return cmderr.Wrap(cmderr.ErrInvalidInput, "scaffold: failed to parse module name from go.mod")
 	}
 
 	appName := moduleName
@@ -447,13 +448,13 @@ func RunCobraAdd(w io.Writer, fs afero.Fs, dir string, opts CobraAddOptions, gen
 	// Check if cmd/{appName} directory exists
 	cmdDir := filepath.Join(dir, "cmd", appName)
 	if _, err := fs.Stat(cmdDir); err != nil {
-		return fmt.Errorf("scaffold: cmd/%s directory not found, is this a Cobra project?", appName)
+		return cmderr.Wrap(cmderr.ErrNotFound, fmt.Sprintf("scaffold: cmd/%s directory not found, is this a Cobra project?", appName))
 	}
 
 	// Generate the command file with cmd_ prefix
 	cmdPath := filepath.Join(cmdDir, "cmd_"+opts.Name+".go")
 	if _, err := fs.Stat(cmdPath); err == nil {
-		return fmt.Errorf("scaffold: command %s already exists", opts.Name)
+		return cmderr.Wrap(cmderr.ErrConflict, fmt.Sprintf("scaffold: command %s already exists", opts.Name))
 	}
 
 	data := struct {

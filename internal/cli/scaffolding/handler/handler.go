@@ -9,6 +9,7 @@ import (
 
 	"github.com/spf13/afero"
 
+	"github.com/inovacc/omni/internal/cli/cmderr"
 	"github.com/inovacc/omni/internal/cli/scaffolding"
 	handlertpl "github.com/inovacc/omni/internal/cli/scaffolding/handler/templates"
 )
@@ -35,7 +36,7 @@ type HandlerResult struct {
 // RunHandlerInit generates a new handler
 func RunHandlerInit(w io.Writer, fs afero.Fs, name string, opts HandlerOptions, genOpts scaffolding.Options) error {
 	if name == "" {
-		return fmt.Errorf("scaffold: handler name is required")
+		return cmderr.Wrap(cmderr.ErrInvalidInput, "scaffold: handler name is required")
 	}
 
 	// Set defaults
@@ -62,7 +63,7 @@ func RunHandlerInit(w io.Writer, fs afero.Fs, name string, opts HandlerOptions, 
 
 	// Create directory
 	if err := fs.MkdirAll(opts.Dir, 0755); err != nil {
-		return fmt.Errorf("scaffold: failed to create directory %s: %w", opts.Dir, err)
+		return cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("scaffold: failed to create directory %s: %v", opts.Dir, err))
 	}
 
 	// Prepare template data

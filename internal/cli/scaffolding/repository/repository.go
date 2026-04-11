@@ -9,6 +9,7 @@ import (
 
 	"github.com/spf13/afero"
 
+	"github.com/inovacc/omni/internal/cli/cmderr"
 	"github.com/inovacc/omni/internal/cli/scaffolding"
 	repotpl "github.com/inovacc/omni/internal/cli/scaffolding/repository/templates"
 )
@@ -36,7 +37,7 @@ type RepositoryResult struct {
 // RunRepositoryInit generates a new repository
 func RunRepositoryInit(w io.Writer, fs afero.Fs, name string, opts RepositoryOptions, genOpts scaffolding.Options) error {
 	if name == "" {
-		return fmt.Errorf("scaffold: repository name is required")
+		return cmderr.Wrap(cmderr.ErrInvalidInput, "scaffold: repository name is required")
 	}
 
 	// Set defaults
@@ -62,7 +63,7 @@ func RunRepositoryInit(w io.Writer, fs afero.Fs, name string, opts RepositoryOpt
 
 	// Create directory
 	if err := fs.MkdirAll(opts.Dir, 0755); err != nil {
-		return fmt.Errorf("scaffold: failed to create directory %s: %w", opts.Dir, err)
+		return cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("scaffold: failed to create directory %s: %v", opts.Dir, err))
 	}
 
 	// Prepare template data

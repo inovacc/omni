@@ -7,6 +7,8 @@ import (
 	"time"
 
 	"github.com/spf13/afero"
+
+	"github.com/inovacc/omni/internal/cli/cmderr"
 )
 
 // Options configure the scaffolding command behavior.
@@ -18,17 +20,21 @@ type Options struct {
 func WriteTemplate(fs afero.Fs, path string, tmpl string, data any) error {
 	t, err := template.New("").Parse(tmpl)
 	if err != nil {
-		return err
+		return cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("scaffold: failed to parse template: %v", err))
 	}
 
 	f, err := fs.Create(path)
 	if err != nil {
-		return err
+		return cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("scaffold: failed to create %s: %v", path, err))
 	}
 
 	defer func() { _ = f.Close() }()
 
-	return t.Execute(f, data)
+	if err := t.Execute(f, data); err != nil {
+		return cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("scaffold: failed to write %s: %v", path, err))
+	}
+
+	return nil
 }
 
 // WriteLicense writes a LICENSE file with the given type and author.
@@ -46,7 +52,7 @@ func WriteLicense(fs afero.Fs, path, licenseType, author string) error {
 	case "bsd-3", "bsd":
 		content = fmt.Sprintf(BSDLicense, year, author)
 	default:
-		return fmt.Errorf("unknown license type: %s", licenseType)
+		return cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("scaffold: unknown license type: %s", licenseType))
 	}
 
 	return afero.WriteFile(fs, path, []byte(content), 0o644)

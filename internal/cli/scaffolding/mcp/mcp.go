@@ -9,6 +9,7 @@ import (
 
 	"github.com/spf13/afero"
 
+	"github.com/inovacc/omni/internal/cli/cmderr"
 	"github.com/inovacc/omni/internal/cli/scaffolding"
 	mcptpl "github.com/inovacc/omni/internal/cli/scaffolding/mcp/templates"
 )
@@ -31,7 +32,7 @@ type MCPResult struct {
 // RunMCPInit generates MCP server code for an existing Cobra project
 func RunMCPInit(w io.Writer, fs afero.Fs, name string, opts MCPOptions, genOpts scaffolding.Options) error {
 	if name == "" {
-		return fmt.Errorf("scaffold: MCP server name is required")
+		return cmderr.Wrap(cmderr.ErrInvalidInput, "scaffold: MCP server name is required")
 	}
 
 	// Set defaults
@@ -47,14 +48,14 @@ func RunMCPInit(w io.Writer, fs afero.Fs, name string, opts MCPOptions, genOpts 
 	switch opts.Transport {
 	case "stdio", "sse", "http-stream":
 	default:
-		return fmt.Errorf("scaffold: invalid transport %q (must be stdio, sse, or http-stream)", opts.Transport)
+		return cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("scaffold: invalid transport %q (must be stdio, sse, or http-stream)", opts.Transport))
 	}
 
 	// Detect module from go.mod if not provided
 	if opts.Module == "" {
 		mod, err := detectModule(fs)
 		if err != nil {
-			return fmt.Errorf("scaffold: --module is required (could not detect from go.mod: %w)", err)
+			return cmderr.Wrap(cmderr.ErrNotFound, fmt.Sprintf("scaffold: --module is required (could not detect from go.mod: %v)", err))
 		}
 		opts.Module = mod
 	}
@@ -76,7 +77,7 @@ func RunMCPInit(w io.Writer, fs afero.Fs, name string, opts MCPOptions, genOpts 
 	// Create internal/mcp/ directory
 	mcpDir := filepath.Join("internal", "mcp")
 	if err := fs.MkdirAll(mcpDir, 0755); err != nil {
-		return fmt.Errorf("scaffold: failed to create directory %s: %w", mcpDir, err)
+		return cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("scaffold: failed to create directory %s: %v", mcpDir, err))
 	}
 
 	// Generate files
@@ -100,7 +101,7 @@ func RunMCPInit(w io.Writer, fs afero.Fs, name string, opts MCPOptions, genOpts 
 	// Generate cmd file
 	cmdDir := filepath.Join("cmd", appName)
 	if err := fs.MkdirAll(cmdDir, 0755); err != nil {
-		return fmt.Errorf("scaffold: failed to create directory %s: %w", cmdDir, err)
+		return cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("scaffold: failed to create directory %s: %v", cmdDir, err))
 	}
 
 	cmdPath := filepath.Join(cmdDir, "cmd_mcp.go")
