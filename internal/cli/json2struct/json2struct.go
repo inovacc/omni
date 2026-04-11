@@ -2,14 +2,28 @@ package json2struct
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
+	"os"
 	"sort"
 	"strings"
 	"unicode"
 
+	"github.com/inovacc/omni/internal/cli/cmderr"
 	"github.com/inovacc/omni/internal/cli/input"
 )
+
+// wrapInputErr classifies input-reading errors into cmderr sentinels.
+func wrapInputErr(cmd string, err error) error {
+	if errors.Is(err, os.ErrNotExist) {
+		return cmderr.Wrap(cmderr.ErrNotFound, fmt.Sprintf("%s: %s", cmd, err))
+	}
+	if errors.Is(err, os.ErrPermission) {
+		return cmderr.Wrap(cmderr.ErrPermission, fmt.Sprintf("%s: %s", cmd, err))
+	}
+	return cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("%s: %s", cmd, err))
+}
 
 // Options configures the json2struct command behavior
 type Options struct {
@@ -24,7 +38,7 @@ type Options struct {
 func RunJSON2Struct(w io.Writer, r io.Reader, args []string, opts Options) error {
 	sources, err := input.Open(args, r)
 	if err != nil {
-		return fmt.Errorf("json2struct: %w", err)
+		return wrapInputErr("json2struct", err)
 	}
 	defer input.CloseAll(sources)
 
@@ -39,12 +53,12 @@ func RunJSON2Struct(w io.Writer, r io.Reader, args []string, opts Options) error
 	for _, src := range sources {
 		data, err := io.ReadAll(src.Reader)
 		if err != nil {
-			return fmt.Errorf("json2struct: %w", err)
+			return cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("json2struct: read: %s", err))
 		}
 
 		var v any
 		if err := json.Unmarshal(data, &v); err != nil {
-			return fmt.Errorf("json2struct: invalid JSON: %w", err)
+			return cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("json2struct: invalid JSON: %s", err))
 		}
 
 		gen := &generator{
