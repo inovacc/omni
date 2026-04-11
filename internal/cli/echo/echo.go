@@ -5,6 +5,7 @@ import (
 	"io"
 	"strings"
 
+	"github.com/inovacc/omni/internal/cli/cmderr"
 	"github.com/inovacc/omni/pkg/cobra/helper/output"
 )
 
@@ -36,13 +37,18 @@ func RunEcho(w io.Writer, args []string, opts EchoOptions) error {
 	}
 
 	if opts.NoNewline {
-		_, err := fmt.Fprint(w, echoOutput)
-		return err
+		if _, err := fmt.Fprint(w, echoOutput); err != nil {
+			return cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("echo: write: %s", err))
+		}
+
+		return nil
 	}
 
-	_, err := fmt.Fprintln(w, echoOutput)
+	if _, err := fmt.Fprintln(w, echoOutput); err != nil {
+		return cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("echo: write: %s", err))
+	}
 
-	return err
+	return nil
 }
 
 // interpretEscapes interprets backslash escape sequences.
