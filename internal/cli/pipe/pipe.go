@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/inovacc/omni/internal/cli/cmderr"
 	"github.com/inovacc/omni/internal/cli/command"
 	"github.com/inovacc/omni/pkg/cobra/helper/output"
 	"github.com/spf13/cobra"
@@ -53,13 +54,13 @@ func NewRegistryWithUnified(rootCmd *cobra.Command, unified *command.Registry) *
 // Run executes a pipeline of commands
 func Run(w io.Writer, args []string, opts Options, registry *CommandRegistry) error {
 	if len(args) == 0 {
-		return fmt.Errorf("pipe: no commands provided")
+		return cmderr.Wrap(cmderr.ErrInvalidInput, "pipe: no commands provided")
 	}
 
 	// Parse commands from args
 	commands := parseCommands(args, opts.Separator)
 	if len(commands) == 0 {
-		return fmt.Errorf("pipe: no commands provided")
+		return cmderr.Wrap(cmderr.ErrInvalidInput, "pipe: no commands provided")
 	}
 
 	result := Result{
@@ -149,13 +150,13 @@ func Run(w io.Writer, args []string, opts Options, registry *CommandRegistry) er
 // RunWithInput executes a pipeline with initial input
 func RunWithInput(w io.Writer, input string, args []string, opts Options, registry *CommandRegistry) error {
 	if len(args) == 0 {
-		return fmt.Errorf("pipe: no commands provided")
+		return cmderr.Wrap(cmderr.ErrInvalidInput, "pipe: no commands provided")
 	}
 
 	// Parse commands
 	commands := parseCommands(args, opts.Separator)
 	if len(commands) == 0 {
-		return fmt.Errorf("pipe: no commands provided")
+		return cmderr.Wrap(cmderr.ErrInvalidInput, "pipe: no commands provided")
 	}
 
 	result := Result{

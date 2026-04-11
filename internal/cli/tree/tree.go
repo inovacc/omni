@@ -3,11 +3,13 @@ package tree
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"os"
 	"strings"
 
+	"github.com/inovacc/omni/internal/cli/cmderr"
 	"github.com/inovacc/omni/pkg/cobra/helper/output"
 	twig2 "github.com/inovacc/omni/pkg/twig"
 	"github.com/inovacc/omni/pkg/twig/comparer"
@@ -90,35 +92,49 @@ func RunTree(w io.Writer, args []string, opts TreeOptions) error {
 	if opts.Stats {
 		result, err := t.GenerateWithStats(context.Background(), path)
 		if err != nil {
-			return fmt.Errorf("tree: %w", err)
+			return classifyTreeError("tree", err)
 		}
 
 		_, _ = fmt.Fprint(w, result.Output)
 		_, _ = fmt.Fprintf(w, "\n%d directories, %d files\n", result.Stats.TotalDirs, result.Stats.TotalFiles)
 	} else {
-		output, err := t.Generate(context.Background(), path)
+		out, err := t.Generate(context.Background(), path)
 		if err != nil {
-			return fmt.Errorf("tree: %w", err)
+			return classifyTreeError("tree", err)
 		}
 
 		// Trim trailing newline if present (Generate adds one)
-		output = strings.TrimSuffix(output, "\n")
-		_, _ = fmt.Fprintln(w, output)
+		out = strings.TrimSuffix(out, "\n")
+		if _, err := fmt.Fprintln(w, out); err != nil {
+			return cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("tree: write: %s", err))
+		}
 	}
 
 	return nil
+}
+
+// classifyTreeError maps twig/scanner errors to cmderr sentinels at the CLI boundary.
+func classifyTreeError(cmd string, err error) error {
+	switch {
+	case errors.Is(err, os.ErrNotExist):
+		return cmderr.Wrap(cmderr.ErrNotFound, fmt.Sprintf("%s: %s", cmd, err))
+	case errors.Is(err, os.ErrPermission):
+		return cmderr.Wrap(cmderr.ErrPermission, fmt.Sprintf("%s: %s", cmd, err))
+	default:
+		return fmt.Errorf("%s: %w", cmd, err)
+	}
 }
 
 // runCompare compares two JSON tree snapshots
 func runCompare(w io.Writer, opts TreeOptions) error {
 	left, err := loadTreeJSON(opts.Compare[0])
 	if err != nil {
-		return fmt.Errorf("tree compare: %w", err)
+		return err // already classified by loadTreeJSON
 	}
 
 	right, err := loadTreeJSON(opts.Compare[1])
 	if err != nil {
-		return fmt.Errorf("tree compare: %w", err)
+		return err // already classified by loadTreeJSON
 	}
 
 	cfg := comparer.CompareConfig{
@@ -164,17 +180,23 @@ func runCompare(w io.Writer, opts TreeOptions) error {
 func loadTreeJSON(path string) (*models.JSONOutput, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
-		return nil, fmt.Errorf("reading %s: %w", path, err)
+		if errors.Is(err, os.ErrNotExist) {
+			return nil, cmderr.Wrap(cmderr.ErrNotFound, fmt.Sprintf("tree compare: %s: %s", path, err))
+		}
+		if errors.Is(err, os.ErrPermission) {
+			return nil, cmderr.Wrap(cmderr.ErrPermission, fmt.Sprintf("tree compare: %s: %s", path, err))
+		}
+		return nil, fmt.Errorf("tree compare: reading %s: %w", path, err)
 	}
 
-	var output models.JSONOutput
-	if err := json.Unmarshal(data, &output); err != nil {
-		return nil, fmt.Errorf("parsing %s: %w", path, err)
+	var out models.JSONOutput
+	if err := json.Unmarshal(data, &out); err != nil {
+		return nil, cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("tree compare: parsing %s: %s", path, err))
 	}
 
-	if output.Tree == nil {
-		return nil, fmt.Errorf("%s: missing 'tree' field", path)
+	if out.Tree == nil {
+		return nil, cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("tree compare: %s: missing 'tree' field", path))
 	}
 
-	return &output, nil
+	return &out, nil
 }
