@@ -1,13 +1,16 @@
 package ss
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"net"
+	"os"
 	"sort"
 	"strconv"
 	"strings"
 
+	"github.com/inovacc/omni/internal/cli/cmderr"
 	"github.com/inovacc/omni/pkg/cobra/helper/output"
 	gnet "github.com/shirou/gopsutil/v3/net"
 	"github.com/shirou/gopsutil/v3/process"
@@ -109,10 +112,19 @@ func Run(w io.Writer, opts Options) error {
 	}
 
 	if f.IsJSON() {
-		return f.Print(sockets)
+		if err := f.Print(sockets); err != nil {
+			return cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("ss: write: %s", err))
+		}
+		return nil
 	}
 
-	return printSockets(w, sockets, opts)
+	if err := printSockets(w, sockets, opts); err != nil {
+		if errors.Is(err, os.ErrPermission) {
+			return cmderr.Wrap(cmderr.ErrPermission, fmt.Sprintf("ss: %s", err))
+		}
+		return cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("ss: %s", err))
+	}
+	return nil
 }
 
 func getSockets(opts Options) []Socket {
