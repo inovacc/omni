@@ -5,6 +5,7 @@ import (
 	"io"
 	"runtime"
 
+	"github.com/inovacc/omni/internal/cli/cmderr"
 	"github.com/inovacc/omni/internal/cli/uname"
 	"github.com/inovacc/omni/pkg/cobra/helper/output"
 )
@@ -29,7 +30,9 @@ func RunArch(w io.Writer, opts ArchOptions) error {
 		return f.Print(ArchResult{Architecture: arch, GOARCH: runtime.GOARCH})
 	}
 
-	_, _ = fmt.Fprintln(w, arch)
+	if _, err := fmt.Fprintln(w, arch); err != nil {
+		return cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("arch: write: %s", err))
+	}
 
 	return nil
 }
