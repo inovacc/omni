@@ -4,11 +4,14 @@ import (
 	"bufio"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"os"
 	"strings"
 	"time"
+
+	"github.com/inovacc/omni/internal/cli/cmderr"
 )
 
 // Options configures the jwt decode command behavior
@@ -51,7 +54,7 @@ func RunDecode(w io.Writer, args []string, opts Options) error {
 func decodeJWT(token string) (*DecodedJWT, error) {
 	parts := strings.Split(strings.TrimSpace(token), ".")
 	if len(parts) != 3 {
-		return nil, fmt.Errorf("jwt: invalid token format (expected 3 parts, got %d)", len(parts))
+		return nil, cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("jwt: invalid token format (expected 3 parts, got %d)", len(parts)))
 	}
 
 	result := &DecodedJWT{
@@ -175,6 +178,10 @@ func getInput(args []string) (string, error) {
 		if _, err := os.Stat(args[0]); err == nil {
 			content, err := os.ReadFile(args[0])
 			if err != nil {
+				if errors.Is(err, os.ErrPermission) {
+					return "", cmderr.Wrap(cmderr.ErrPermission, fmt.Sprintf("jwt: %v", err))
+				}
+
 				return "", fmt.Errorf("jwt: %w", err)
 			}
 
@@ -195,7 +202,7 @@ func getInput(args []string) (string, error) {
 	}
 
 	if err := scanner.Err(); err != nil {
-		return "", fmt.Errorf("jwt: %w", err)
+		return "", cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("jwt: %v", err))
 	}
 
 	return strings.Join(lines, ""), nil

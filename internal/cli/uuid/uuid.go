@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/inovacc/omni/internal/cli/cmderr"
 	"github.com/inovacc/omni/pkg/cobra/helper/output"
 	"github.com/inovacc/omni/pkg/idgen"
 )
@@ -41,7 +42,7 @@ func RunUUID(w io.Writer, opts UUIDOptions) error {
 	case 7:
 		uuidOpts = append(uuidOpts, idgen.WithUUIDVersion(idgen.V7))
 	default:
-		return fmt.Errorf("uuid: unsupported version %d (use 4 or 7)", opts.Version)
+		return cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("uuid: unsupported version %d (use 4 or 7)", opts.Version))
 	}
 
 	if opts.Upper {

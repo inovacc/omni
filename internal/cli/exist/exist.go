@@ -13,6 +13,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/inovacc/omni/internal/cli/cmderr"
 	"github.com/inovacc/omni/internal/cli/ps"
 	gnet "github.com/shirou/gopsutil/v3/net"
 	"github.com/shirou/gopsutil/v3/process"
@@ -256,7 +257,7 @@ func runProcessByName(w io.Writer, target string, opts Options) error {
 func RunPort(w io.Writer, target string, opts Options) error {
 	port, err := strconv.Atoi(target)
 	if err != nil || port < 1 || port > 65535 {
-		return fmt.Errorf("exist: invalid port number: %s", target)
+		return cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("exist: invalid port number: %s", target))
 	}
 
 	// Try gopsutil first for LISTEN state detection

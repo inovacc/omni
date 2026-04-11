@@ -5,6 +5,7 @@ import (
 	"io"
 	"os"
 
+	"github.com/inovacc/omni/internal/cli/cmderr"
 	"github.com/inovacc/omni/pkg/cobra/helper/output"
 )
 
@@ -22,7 +23,7 @@ type PwdResult struct {
 func RunPwd(w io.Writer, opts PwdOptions) error {
 	wd, err := Pwd()
 	if err != nil {
-		return err
+		return cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("pwd: %v", err))
 	}
 
 	f := output.New(w, opts.OutputFormat)

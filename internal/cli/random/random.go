@@ -7,6 +7,7 @@ import (
 	"math/big"
 	"strings"
 
+	"github.com/inovacc/omni/internal/cli/cmderr"
 	"github.com/inovacc/omni/pkg/cobra/helper/output"
 )
 
@@ -83,12 +84,12 @@ func RunRandom(w io.Writer, opts RandomOptions) error {
 			result, err = randomBytes(opts.Length)
 		case "custom":
 			if opts.Charset == "" {
-				return fmt.Errorf("random: custom type requires -c charset")
+				return cmderr.Wrap(cmderr.ErrInvalidInput, "random: custom type requires -c charset")
 			}
 
 			result, err = randomString(opts.Length, opts.Charset)
 		default:
-			return fmt.Errorf("random: unknown type: %s", opts.Type)
+			return cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("random: unknown type: %s", opts.Type))
 		}
 
 		if err != nil {

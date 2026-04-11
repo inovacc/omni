@@ -2,6 +2,7 @@ package note
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -10,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/inovacc/omni/internal/cli/cmderr"
 	"github.com/inovacc/omni/pkg/userdirs"
 )
 
@@ -48,7 +50,7 @@ func RunNote(w io.Writer, args []string, opts Options) error {
 
 	text := strings.TrimSpace(strings.Join(args, " "))
 	if text == "" {
-		return fmt.Errorf("note: text is required (example: omni note \"buy milk\")")
+		return cmderr.Wrap(cmderr.ErrInvalidInput, "note: text is required (example: omni note \"buy milk\")")
 	}
 
 	entry, err := add(path, text)
@@ -76,12 +78,12 @@ func RunNote(w io.Writer, args []string, opts Options) error {
 // RunRemove deletes a note entry by 1-based index or note ID.
 func RunRemove(w io.Writer, args []string, opts Options) error {
 	if len(args) == 0 {
-		return fmt.Errorf("note: remove target is required (index or note id)")
+		return cmderr.Wrap(cmderr.ErrInvalidInput, "note: remove target is required (index or note id)")
 	}
 
 	target := strings.TrimSpace(args[0])
 	if target == "" {
-		return fmt.Errorf("note: remove target is required (index or note id)")
+		return cmderr.Wrap(cmderr.ErrInvalidInput, "note: remove target is required (index or note id)")
 	}
 
 	path, err := resolveNotesPath(opts.File)
@@ -179,10 +181,10 @@ func remove(path, target string) (Entry, int, error) {
 
 	if idx == -1 {
 		if parsedIndex {
-			return Entry{}, 0, fmt.Errorf("note: index out of range: %d", parsedIndexValue)
+			return Entry{}, 0, cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("note: index out of range: %d", parsedIndexValue))
 		}
 
-		return Entry{}, 0, fmt.Errorf("note: entry not found: %s", target)
+		return Entry{}, 0, cmderr.Wrap(cmderr.ErrNotFound, fmt.Sprintf("note: entry not found: %s", target))
 	}
 
 	removed := store.Notes[idx]
@@ -220,7 +222,7 @@ func add(path, text string) (Entry, error) {
 func load(path string) (Store, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
-		if os.IsNotExist(err) {
+		if errors.Is(err, os.ErrNotExist) {
 			return Store{}, nil
 		}
 

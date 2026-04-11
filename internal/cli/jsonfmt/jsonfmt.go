@@ -3,11 +3,13 @@ package jsonfmt
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"os"
 	"sort"
 
+	"github.com/inovacc/omni/internal/cli/cmderr"
 	"github.com/inovacc/omni/pkg/cobra/helper/output"
 )
 
@@ -59,6 +61,14 @@ func RunJSONFmt(w io.Writer, args []string, opts Options) error {
 					return f.Print(Result{Valid: false, Error: err.Error(), File: file})
 				}
 
+				if errors.Is(err, os.ErrNotExist) {
+					return cmderr.Wrap(cmderr.ErrNotFound, fmt.Sprintf("json: %v", err))
+				}
+
+				if errors.Is(err, os.ErrPermission) {
+					return cmderr.Wrap(cmderr.ErrPermission, fmt.Sprintf("json: %v", err))
+				}
+
 				return fmt.Errorf("json: %w", err)
 			}
 
@@ -96,7 +106,7 @@ func processReader(w io.Writer, r io.Reader, filename string, opts Options, json
 			return fmt.Errorf("%s: invalid JSON: %w", filename, err)
 		}
 
-		return fmt.Errorf("json: invalid JSON: %w", err)
+		return cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("json: invalid JSON: %v", err))
 	}
 
 	// Validate only mode

@@ -4,11 +4,13 @@ import (
 	"bufio"
 	"bytes"
 	"encoding/xml"
+	"errors"
 	"fmt"
 	"io"
 	"os"
 	"strings"
 
+	"github.com/inovacc/omni/internal/cli/cmderr"
 	"github.com/inovacc/omni/pkg/cobra/helper/output"
 )
 
@@ -136,6 +138,10 @@ func getInput(args []string) (string, error) {
 		if _, err := os.Stat(args[0]); err == nil {
 			content, err := os.ReadFile(args[0])
 			if err != nil {
+				if errors.Is(err, os.ErrPermission) {
+					return "", cmderr.Wrap(cmderr.ErrPermission, fmt.Sprintf("xml: %v", err))
+				}
+
 				return "", fmt.Errorf("xml: %w", err)
 			}
 
@@ -156,7 +162,7 @@ func getInput(args []string) (string, error) {
 	}
 
 	if err := scanner.Err(); err != nil {
-		return "", fmt.Errorf("xml: %w", err)
+		return "", cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("xml: %v", err))
 	}
 
 	return strings.Join(lines, "\n"), nil
@@ -176,6 +182,14 @@ func RunValidate(w io.Writer, args []string, opts ValidateOptions) error {
 		if info, err := os.Stat(arg); err == nil && !info.IsDir() {
 			f, err := os.Open(arg)
 			if err != nil {
+				if errors.Is(err, os.ErrNotExist) {
+					return cmderr.Wrap(cmderr.ErrNotFound, fmt.Sprintf("xml validate: %v", err))
+				}
+
+				if errors.Is(err, os.ErrPermission) {
+					return cmderr.Wrap(cmderr.ErrPermission, fmt.Sprintf("xml validate: %v", err))
+				}
+
 				return fmt.Errorf("xml validate: %w", err)
 			}
 

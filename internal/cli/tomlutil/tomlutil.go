@@ -2,12 +2,14 @@ package tomlutil
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"io"
 	"os"
 	"strings"
 
 	"github.com/BurntSushi/toml"
+	"github.com/inovacc/omni/internal/cli/cmderr"
 	"github.com/inovacc/omni/pkg/cobra/helper/output"
 )
 
@@ -40,7 +42,15 @@ func RunValidate(w io.Writer, args []string, opts ValidateOptions) error {
 		if info, err := os.Stat(arg); err == nil && !info.IsDir() {
 			f, err := os.Open(arg)
 			if err != nil {
-				return fmt.Errorf("toml validate: %w", err)
+				if errors.Is(err, os.ErrNotExist) {
+				return cmderr.Wrap(cmderr.ErrNotFound, fmt.Sprintf("toml validate: %v", err))
+			}
+
+			if errors.Is(err, os.ErrPermission) {
+				return cmderr.Wrap(cmderr.ErrPermission, fmt.Sprintf("toml validate: %v", err))
+			}
+
+			return fmt.Errorf("toml validate: %w", err)
 			}
 
 			err = validateReader(w, f, arg, opts)
@@ -142,7 +152,7 @@ func RunFormat(w io.Writer, args []string, opts FormatOptions) error {
 	var data any
 
 	if _, err := toml.Decode(input, &data); err != nil {
-		return fmt.Errorf("toml format: %w", err)
+		return cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("toml format: %v", err))
 	}
 
 	enc := toml.NewEncoder(w)
@@ -161,6 +171,10 @@ func getInput(args []string) (string, error) {
 		if _, err := os.Stat(args[0]); err == nil {
 			content, err := os.ReadFile(args[0])
 			if err != nil {
+				if errors.Is(err, os.ErrPermission) {
+					return "", cmderr.Wrap(cmderr.ErrPermission, fmt.Sprintf("toml: %v", err))
+				}
+
 				return "", fmt.Errorf("toml: %w", err)
 			}
 
@@ -181,7 +195,7 @@ func getInput(args []string) (string, error) {
 	}
 
 	if err := scanner.Err(); err != nil {
-		return "", fmt.Errorf("toml: %w", err)
+		return "", cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("toml: %v", err))
 	}
 
 	return strings.Join(lines, "\n"), nil

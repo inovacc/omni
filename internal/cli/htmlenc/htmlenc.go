@@ -2,12 +2,14 @@ package htmlenc
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"html"
 	"io"
 	"os"
 	"strings"
 
+	"github.com/inovacc/omni/internal/cli/cmderr"
 	"github.com/inovacc/omni/pkg/cobra/helper/output"
 )
 
@@ -76,6 +78,10 @@ func getInput(args []string) (string, error) {
 		if _, err := os.Stat(args[0]); err == nil {
 			content, err := os.ReadFile(args[0])
 			if err != nil {
+				if errors.Is(err, os.ErrPermission) {
+					return "", cmderr.Wrap(cmderr.ErrPermission, fmt.Sprintf("html: %v", err))
+				}
+
 				return "", fmt.Errorf("html: %w", err)
 			}
 
@@ -96,7 +102,7 @@ func getInput(args []string) (string, error) {
 	}
 
 	if err := scanner.Err(); err != nil {
-		return "", fmt.Errorf("html: %w", err)
+		return "", cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("html: %v", err))
 	}
 
 	return strings.Join(lines, "\n"), nil

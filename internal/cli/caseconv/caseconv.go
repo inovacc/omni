@@ -9,6 +9,7 @@ import (
 	"strings"
 	"unicode"
 
+	"github.com/inovacc/omni/internal/cli/cmderr"
 	"github.com/inovacc/omni/pkg/cobra/helper/output"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
@@ -64,7 +65,7 @@ func RunCase(w io.Writer, args []string, opts Options) error {
 		}
 
 		if err := scanner.Err(); err != nil {
-			return err
+			return cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("caseconv: %v", err))
 		}
 	} else {
 		inputs = args
@@ -437,7 +438,7 @@ func ParseCaseType(s string) (CaseType, error) {
 	case "toggle":
 		return CaseToggle, nil
 	default:
-		return "", fmt.Errorf("unknown case type: %s", s)
+		return "", cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("unknown case type: %s", s))
 	}
 }
 
