@@ -41,7 +41,7 @@ type Store struct {
 func RunNote(w io.Writer, args []string, opts Options) error {
 	path, err := resolveNotesPath(opts.File)
 	if err != nil {
-		return fmt.Errorf("note: %w", err)
+		return cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("note: %s", err))
 	}
 
 	if opts.List {
@@ -61,7 +61,7 @@ func RunNote(w io.Writer, args []string, opts Options) error {
 	if opts.JSON {
 		data, err := json.MarshalIndent(entry, "", "  ")
 		if err != nil {
-			return fmt.Errorf("note: marshal: %w", err)
+			return cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("note: marshal: %s", err))
 		}
 
 		_, _ = fmt.Fprintln(w, string(data))
@@ -88,7 +88,7 @@ func RunRemove(w io.Writer, args []string, opts Options) error {
 
 	path, err := resolveNotesPath(opts.File)
 	if err != nil {
-		return fmt.Errorf("note: %w", err)
+		return cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("note: %s", err))
 	}
 
 	removed, index, err := remove(path, target)
@@ -99,7 +99,7 @@ func RunRemove(w io.Writer, args []string, opts Options) error {
 	if opts.JSON {
 		data, err := json.MarshalIndent(removed, "", "  ")
 		if err != nil {
-			return fmt.Errorf("note: marshal: %w", err)
+			return cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("note: marshal: %s", err))
 		}
 
 		_, _ = fmt.Fprintln(w, string(data))
@@ -126,7 +126,7 @@ func runList(w io.Writer, path string, opts Options) error {
 	if opts.JSON {
 		data, err := json.MarshalIndent(Store{Notes: notes}, "", "  ")
 		if err != nil {
-			return fmt.Errorf("note: marshal: %w", err)
+			return cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("note: marshal: %s", err))
 		}
 
 		_, _ = fmt.Fprintln(w, string(data))
@@ -153,7 +153,7 @@ func remove(path, target string) (Entry, int, error) {
 	}
 
 	if len(store.Notes) == 0 {
-		return Entry{}, 0, fmt.Errorf("note: no notes to remove")
+		return Entry{}, 0, cmderr.Wrap(cmderr.ErrNotFound, "note: no notes to remove")
 	}
 
 	var idx = -1
@@ -225,8 +225,11 @@ func load(path string) (Store, error) {
 		if errors.Is(err, os.ErrNotExist) {
 			return Store{}, nil
 		}
+		if errors.Is(err, os.ErrPermission) {
+			return Store{}, cmderr.Wrap(cmderr.ErrPermission, fmt.Sprintf("note: read %s: %s", path, err))
+		}
 
-		return Store{}, fmt.Errorf("note: read %s: %w", path, err)
+		return Store{}, cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("note: read %s: %s", path, err))
 	}
 
 	var store Store
@@ -235,7 +238,7 @@ func load(path string) (Store, error) {
 	}
 
 	if err := json.Unmarshal(data, &store); err != nil {
-		return Store{}, fmt.Errorf("note: parse %s: %w", path, err)
+		return Store{}, cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("note: parse %s: %s", path, err))
 	}
 
 	return store, nil
@@ -243,18 +246,24 @@ func load(path string) (Store, error) {
 
 func save(path string, store Store) error {
 	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
-		return fmt.Errorf("note: create directory: %w", err)
+		if errors.Is(err, os.ErrPermission) {
+			return cmderr.Wrap(cmderr.ErrPermission, fmt.Sprintf("note: create directory: %s", err))
+		}
+		return cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("note: create directory: %s", err))
 	}
 
 	data, err := json.MarshalIndent(store, "", "  ")
 	if err != nil {
-		return fmt.Errorf("note: marshal: %w", err)
+		return cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("note: marshal: %s", err))
 	}
 
 	data = append(data, '\n')
 
 	if err := os.WriteFile(path, data, 0o644); err != nil {
-		return fmt.Errorf("note: write %s: %w", path, err)
+		if errors.Is(err, os.ErrPermission) {
+			return cmderr.Wrap(cmderr.ErrPermission, fmt.Sprintf("note: write %s: %s", path, err))
+		}
+		return cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("note: write %s: %s", path, err))
 	}
 
 	return nil
