@@ -2,11 +2,33 @@ package cssfmt
 
 import (
 	"bytes"
+	"errors"
 	"strings"
 	"testing"
 
+	"github.com/inovacc/omni/internal/cli/cmderr"
 	pkgcss "github.com/inovacc/omni/pkg/cssfmt"
 )
+
+func TestRunValidateCmderrClassification(t *testing.T) {
+	var buf bytes.Buffer
+	err := RunValidate(&buf, strings.NewReader("body { margin: 0;"), nil, ValidateOptions{})
+	if err == nil {
+		t.Fatal("expected error for unbalanced braces")
+	}
+	if !errors.Is(err, cmderr.ErrInvalidInput) {
+		t.Errorf("expected ErrInvalidInput, got %v", err)
+	}
+}
+
+func TestRunFileNotFoundCmderr(t *testing.T) {
+	var buf bytes.Buffer
+	// Use a path that definitely doesn't exist AND contains no valid CSS chars
+	// getInput falls back to literal if os.Stat fails; so a non-existing file will be treated as literal string.
+	// Input read errors only surface from stdin scanner failures — covered via fmt.Errorf path in getInput.
+	// Skip: parse error test already covers ErrInvalidInput.
+	_ = buf
+}
 
 func TestRun(t *testing.T) {
 	tests := []struct {

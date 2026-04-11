@@ -2,11 +2,13 @@ package cssfmt
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"io"
 	"os"
 	"strings"
 
+	"github.com/inovacc/omni/internal/cli/cmderr"
 	"github.com/inovacc/omni/pkg/cobra/helper/output"
 	pkgcss "github.com/inovacc/omni/pkg/cssfmt"
 )
@@ -31,7 +33,7 @@ type ValidateResult = pkgcss.ValidateResult
 func Run(w io.Writer, r io.Reader, args []string, opts Options) error {
 	input, err := getInput(args, r)
 	if err != nil {
-		return fmt.Errorf("css: %w", err)
+		return wrapInputErr("cssfmt", err)
 	}
 
 	var output string
@@ -54,7 +56,9 @@ func Run(w io.Writer, r io.Reader, args []string, opts Options) error {
 		output = pkgcss.Format(input, pkgOpts...)
 	}
 
-	_, _ = fmt.Fprintln(w, output)
+	if _, err := fmt.Fprintln(w, output); err != nil {
+		return cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("cssfmt: write: %s", err))
+	}
 
 	return nil
 }
@@ -69,24 +73,42 @@ func RunMinify(w io.Writer, r io.Reader, args []string, opts Options) error {
 func RunValidate(w io.Writer, r io.Reader, args []string, opts ValidateOptions) error {
 	input, err := getInput(args, r)
 	if err != nil {
-		return fmt.Errorf("css: %w", err)
+		return wrapInputErr("cssfmt", err)
 	}
 
 	result := pkgcss.Validate(input)
 
 	f := output.New(w, opts.OutputFormat)
 	if f.IsJSON() {
-		return f.Print(result)
+		if err := f.Print(result); err != nil {
+			return cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("cssfmt: write: %s", err))
+		}
+		if !result.Valid {
+			return cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("cssfmt: parse: %s", result.Error))
+		}
+		return nil
 	}
 
 	if result.Valid {
-		_, _ = fmt.Fprintln(w, result.Message)
-	} else {
-		_, _ = fmt.Fprintf(w, "invalid CSS: %s\n", result.Error)
-		return fmt.Errorf("validation failed")
+		if _, err := fmt.Fprintln(w, result.Message); err != nil {
+			return cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("cssfmt: write: %s", err))
+		}
+		return nil
 	}
 
-	return nil
+	_, _ = fmt.Fprintf(w, "invalid CSS: %s\n", result.Error)
+	return cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("cssfmt: parse: %s", result.Error))
+}
+
+// wrapInputErr classifies input-reading errors into cmderr sentinels.
+func wrapInputErr(cmd string, err error) error {
+	if errors.Is(err, os.ErrNotExist) {
+		return cmderr.Wrap(cmderr.ErrNotFound, fmt.Sprintf("%s: %s", cmd, err))
+	}
+	if errors.Is(err, os.ErrPermission) {
+		return cmderr.Wrap(cmderr.ErrPermission, fmt.Sprintf("%s: %s", cmd, err))
+	}
+	return cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("%s: %s", cmd, err))
 }
 
 // getInput reads input from args (file or literal) or stdin

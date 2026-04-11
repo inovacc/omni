@@ -2,11 +2,24 @@ package htmlfmt
 
 import (
 	"bytes"
+	"errors"
 	"strings"
 	"testing"
 
+	"github.com/inovacc/omni/internal/cli/cmderr"
 	pkghtml "github.com/inovacc/omni/pkg/htmlfmt"
 )
+
+func TestRunValidateCmderrClassification(t *testing.T) {
+	var buf bytes.Buffer
+	err := RunValidate(&buf, strings.NewReader(""), nil, ValidateOptions{})
+	if err == nil {
+		t.Fatal("expected error for empty input")
+	}
+	if !errors.Is(err, cmderr.ErrInvalidInput) {
+		t.Errorf("expected ErrInvalidInput, got %v", err)
+	}
+}
 
 func TestRun(t *testing.T) {
 	tests := []struct {
