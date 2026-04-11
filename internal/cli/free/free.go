@@ -36,7 +36,7 @@ type MemInfo struct {
 func RunFree(w io.Writer, opts FreeOptions) error {
 	info, err := getMemInfo()
 	if err != nil {
-		return fmt.Errorf("free: %w", err)
+		return err
 	}
 
 	f := output.New(w, opts.OutputFormat)

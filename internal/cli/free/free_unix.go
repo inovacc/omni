@@ -4,10 +4,13 @@ package free
 
 import (
 	"bufio"
+	"fmt"
 	"os"
 	"strconv"
 	"strings"
 	"syscall"
+
+	"github.com/inovacc/omni/internal/cli/cmderr"
 )
 
 func getMemInfo() (MemInfo, error) {
@@ -56,7 +59,7 @@ func getMemInfo() (MemInfo, error) {
 	// Fallback to sysinfo (works on Linux but less detailed)
 	var sysinfo syscall.Sysinfo_t
 	if err := syscall.Sysinfo(&sysinfo); err != nil {
-		return info, err
+		return info, cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("free: sysinfo: %v", err))
 	}
 
 	unit := uint64(sysinfo.Unit)

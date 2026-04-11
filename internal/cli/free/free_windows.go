@@ -3,8 +3,11 @@
 package free
 
 import (
+	"fmt"
 	"syscall"
 	"unsafe"
+
+	"github.com/inovacc/omni/internal/cli/cmderr"
 )
 
 type memoryStatusEx struct {
@@ -31,7 +34,7 @@ func getMemInfo() (MemInfo, error) {
 
 	ret, _, err := globalMemoryStatusEx.Call(uintptr(unsafe.Pointer(&memStatus)))
 	if ret == 0 {
-		return info, err
+		return info, cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("free: GlobalMemoryStatusEx: %v", err))
 	}
 
 	info.MemTotal = memStatus.ullTotalPhys
