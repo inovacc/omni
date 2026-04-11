@@ -7,6 +7,7 @@ import (
 	"runtime"
 	"strings"
 
+	"github.com/inovacc/omni/internal/cli/cmderr"
 	"github.com/inovacc/omni/pkg/cobra/helper/output"
 )
 
@@ -97,7 +98,9 @@ func RunUname(w io.Writer, opts UnameOptions) error {
 		return f.Print(info)
 	}
 
-	_, _ = fmt.Fprintln(w, strings.Join(parts, " "))
+	if _, err := fmt.Fprintln(w, strings.Join(parts, " ")); err != nil {
+		return cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("uname: write: %s", err))
+	}
 
 	return nil
 }
