@@ -8,8 +8,8 @@ progress:
   total_phases: 8
   completed_phases: 0
   total_plans: 18
-  completed_plans: 6
-  percent: 33
+  completed_plans: 18
+  percent: 100
 ---
 
 # omni — Project State
@@ -25,9 +25,9 @@ progress:
 
 **Milestone:** v1.0
 **Phase:** Phase 1 — cmderr Migration Completion (in progress)
-**Plan:** Plan 13 complete — Wave D scaffold/project/repo done
-**Status:** 4/18 plans complete
-**Progress:** [███░░░░░░░] 33%
+**Plan:** Plan 18 complete — Wave Z CI enforcement (Phase 1 EXIT GATE)
+**Status:** 18/18 plans complete
+**Progress:** [██████████] 100%
 
 ```
 [░░░░░░░░] 0%  ─  Phase 0/8
@@ -81,8 +81,9 @@ None — ready to plan Phase 1.
 
 ## Session Continuity
 
-**Last session:** 2026-04-11T22:32:24.191Z
-**Next action:** Continue Wave D remaining plans (14, 15) or run Plan 16 golden snapshots
+**Last session:** 2026-04-11
+**Stopped at:** Completed Phase 1 Plan 18 (Wave Z — CI enforcement)
+**Next action:** Manual admin step — enable branch protection in GitHub UI (see BRANCH-PROTECTION-CHECKPOINT.md). After that, Phase 1 is fully closed; proceed to Phase 2.
 
 ### Files of Record
 
