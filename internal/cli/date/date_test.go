@@ -2,11 +2,32 @@ package date
 
 import (
 	"bytes"
+	"errors"
 	"slices"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/inovacc/omni/internal/cli/cmderr"
 )
+
+// failingWriter returns an error on every Write call.
+type failingWriter struct{}
+
+func (failingWriter) Write(_ []byte) (int, error) { return 0, errors.New("forced write failure") }
+
+func TestRunDate_WriteFailureReturnsErrIO(t *testing.T) {
+	t.Run("text format", func(t *testing.T) {
+		err := RunDate(failingWriter{}, DateOptions{})
+		if err == nil {
+			t.Fatal("RunDate() expected error, got nil")
+		}
+
+		if !errors.Is(err, cmderr.ErrIO) {
+			t.Errorf("RunDate() error = %v, want cmderr.ErrIO", err)
+		}
+	})
+}
 
 func TestRunDate(t *testing.T) {
 	t.Run("default format is RFC3339", func(t *testing.T) {

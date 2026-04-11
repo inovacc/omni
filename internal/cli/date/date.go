@@ -5,6 +5,7 @@ import (
 	"io"
 	"time"
 
+	"github.com/inovacc/omni/internal/cli/cmderr"
 	"github.com/inovacc/omni/pkg/cobra/helper/output"
 )
 
@@ -64,10 +65,16 @@ func RunDate(w io.Writer, opts DateOptions) error {
 			UTC:       opts.UTC,
 		}
 
-		return f.Print(result)
+		if err := f.Print(result); err != nil {
+			return cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("date: write: %s", err))
+		}
+
+		return nil
 	}
 
-	_, _ = fmt.Fprintln(w, now.Format(format))
+	if _, err := fmt.Fprintln(w, now.Format(format)); err != nil {
+		return cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("date: write: %s", err))
+	}
 
 	return nil
 }

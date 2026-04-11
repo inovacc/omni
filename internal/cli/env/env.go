@@ -7,6 +7,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/inovacc/omni/internal/cli/cmderr"
 	"github.com/inovacc/omni/pkg/cobra/helper/output"
 )
 
@@ -62,16 +63,24 @@ func RunEnv(w io.Writer, args []string, opts EnvOptions) error {
 				}
 			}
 
-			return f.Print(result)
+			if err := f.Print(result); err != nil {
+				return cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("env: write: %s", err))
+			}
+
+			return nil
 		}
 
 		for _, name := range args {
 			value := os.Getenv(name)
 			if value != "" {
 				if opts.NullTerminated {
-					_, _ = fmt.Fprintf(w, "%s=%s\x00", name, value)
+					if _, err := fmt.Fprintf(w, "%s=%s\x00", name, value); err != nil {
+						return cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("env: write: %s", err))
+					}
 				} else {
-					_, _ = fmt.Fprintf(w, "%s=%s\n", name, value)
+					if _, err := fmt.Fprintf(w, "%s=%s\n", name, value); err != nil {
+						return cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("env: write: %s", err))
+					}
 				}
 			}
 		}
@@ -91,7 +100,11 @@ func RunEnv(w io.Writer, args []string, opts EnvOptions) error {
 			}
 		}
 
-		return f.Print(result)
+		if err := f.Print(result); err != nil {
+			return cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("env: write: %s", err))
+		}
+
+		return nil
 	}
 
 	terminator := "\n"
@@ -100,7 +113,9 @@ func RunEnv(w io.Writer, args []string, opts EnvOptions) error {
 	}
 
 	for _, env := range envVars {
-		_, _ = fmt.Fprint(w, env+terminator)
+		if _, err := fmt.Fprint(w, env+terminator); err != nil {
+			return cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("env: write: %s", err))
+		}
 	}
 
 	return nil

@@ -2,10 +2,49 @@ package env
 
 import (
 	"bytes"
+	"errors"
 	"os"
 	"strings"
 	"testing"
+
+	"github.com/inovacc/omni/internal/cli/cmderr"
 )
+
+// failingWriter returns an error on every Write call.
+type failingWriter struct{}
+
+func (failingWriter) Write(_ []byte) (int, error) { return 0, errors.New("forced write failure") }
+
+func TestRunEnv_WriteFailureReturnsErrIO(t *testing.T) {
+	// Guarantee at least one env var exists so the write path is exercised.
+	if err := os.Setenv("OMNI_ENV_WRITE_FAIL_TEST", "x"); err != nil {
+		t.Fatal(err)
+	}
+
+	defer func() { _ = os.Unsetenv("OMNI_ENV_WRITE_FAIL_TEST") }()
+
+	t.Run("all env listing", func(t *testing.T) {
+		err := RunEnv(failingWriter{}, nil, EnvOptions{})
+		if err == nil {
+			t.Fatal("RunEnv() expected error, got nil")
+		}
+
+		if !errors.Is(err, cmderr.ErrIO) {
+			t.Errorf("RunEnv() error = %v, want cmderr.ErrIO", err)
+		}
+	})
+
+	t.Run("filtered by name", func(t *testing.T) {
+		err := RunEnv(failingWriter{}, []string{"OMNI_ENV_WRITE_FAIL_TEST"}, EnvOptions{})
+		if err == nil {
+			t.Fatal("RunEnv() expected error, got nil")
+		}
+
+		if !errors.Is(err, cmderr.ErrIO) {
+			t.Errorf("RunEnv() error = %v, want cmderr.ErrIO", err)
+		}
+	})
+}
 
 func TestRunEnv(t *testing.T) {
 	t.Run("show all environment variables", func(t *testing.T) {
