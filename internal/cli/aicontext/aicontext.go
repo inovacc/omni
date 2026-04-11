@@ -7,6 +7,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/inovacc/omni/internal/cli/cmderr"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 )
@@ -242,7 +243,9 @@ func writeMarkdown(w io.Writer, ctx AIContext) error {
 		}
 	}
 
-	_, err := io.WriteString(w, sb.String())
+	if _, err := io.WriteString(w, sb.String()); err != nil {
+		return cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("aicontext: write: %s", err))
+	}
 
-	return err
+	return nil
 }
