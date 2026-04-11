@@ -63,3 +63,32 @@ v1.0 release notes per CONTEXT.md Decision 6.
 | C | ss (JSON write failure) | 0 (silently muted) | ErrIO → 4 | f.Print() errors were previously unchecked; now classified. |
 | C | ss (socket print, permission denied) | 1 | ErrPermission → 3 | os.ErrPermission from printSockets(); exit code shifts from 1 to 3. |
 | C | ss (socket print, I/O failure) | 1 | ErrIO → 4 | Non-permission errors from printSockets(); exit code shifts from 1 to 4. |
+| D | scaffold / WriteTemplate (create/write failure) | 1 | ErrIO → 4 | fs.Create or t.Execute failure now classified; exit code shifts from 1 to 4. |
+| D | scaffold / WriteTemplate (template parse failure) | 1 | ErrInvalidInput → 2 | template.New().Parse() failure now classified; exit code shifts from 1 to 2. |
+| D | scaffold / WriteLicense (unknown license type) | 1 | ErrInvalidInput → 2 | Unknown license string now classified; exit code shifts from 1 to 2. |
+| D | scaffold cobra init (missing --module flag) | 1 | ErrInvalidInput → 2 | Was raw fmt.Errorf; now classified. |
+| D | scaffold cobra init (MkdirAll failure) | 1 | ErrIO → 4 | fs.MkdirAll failure now classified; exit code shifts from 1 to 4. |
+| D | scaffold cobra add / add-tools (go.mod not found) | 1 | ErrNotFound → 1 | afero.ReadFile failure on go.mod now classified; exit code unchanged but sentinel set. |
+| D | scaffold cobra add / add-tools (go.mod parse failure) | 1 | ErrInvalidInput → 2 | Empty module name from go.mod now classified; exit code shifts from 1 to 2. |
+| D | scaffold cobra add / add-tools (cmd dir not found) | 1 | ErrNotFound → 1 | fs.Stat failure on cmd/{appName} now classified; exit code unchanged but sentinel set. |
+| D | scaffold cobra add / add-tools (file already exists) | 1 | ErrConflict → 1 | Duplicate command/tool file now classified; exit code unchanged but sentinel set. |
+| D | scaffold cobra add (empty command name) | 1 | ErrInvalidInput → 2 | Was raw fmt.Errorf; now classified. |
+| D | scaffold handler (empty name) | 1 | ErrInvalidInput → 2 | Was raw fmt.Errorf; now classified. |
+| D | scaffold handler (MkdirAll failure) | 1 | ErrIO → 4 | fs.MkdirAll failure now classified; exit code shifts from 1 to 4. |
+| D | scaffold repository (empty name) | 1 | ErrInvalidInput → 2 | Was raw fmt.Errorf; now classified. |
+| D | scaffold repository (MkdirAll failure) | 1 | ErrIO → 4 | fs.MkdirAll failure now classified; exit code shifts from 1 to 4. |
+| D | scaffold test (empty source path) | 1 | ErrInvalidInput → 2 | Was raw fmt.Errorf; now classified. |
+| D | scaffold test (source file not found) | 1 | ErrNotFound → 1 | os.IsNotExist check now classified; exit code unchanged but sentinel set. |
+| D | scaffold test (Go parse failure) | 1 | ErrInvalidInput → 2 | parser.ParseFile failure now classified; exit code shifts from 1 to 2. |
+| D | scaffold test (no exported functions) | 1 | ErrInvalidInput → 2 | Was raw fmt.Errorf; now classified. |
+| D | scaffold mcp (empty name) | 1 | ErrInvalidInput → 2 | Was raw fmt.Errorf; now classified. |
+| D | scaffold mcp (invalid transport) | 1 | ErrInvalidInput → 2 | Unknown transport string now classified; exit code shifts from 1 to 2. |
+| D | scaffold mcp (go.mod not found for module detection) | 1 | ErrNotFound → 1 | afero.ReadFile failure on go.mod now classified; exit code unchanged but sentinel set. |
+| D | scaffold mcp (MkdirAll failure) | 1 | ErrIO → 4 | fs.MkdirAll failure now classified; exit code shifts from 1 to 4. |
+| D | project (path not found) | 1 | ErrNotFound → 1 | os.ErrNotExist from os.Stat now classified; exit code unchanged but sentinel set. |
+| D | project (permission denied on path) | 1 | ErrPermission → 3 | os.ErrPermission from os.Stat now classified; exit code shifts from 1 to 3. |
+| D | project (I/O failure on stat) | 1 | ErrIO → 4 | Other os.Stat errors now classified; exit code shifts from 1 to 4. |
+| D | repo analyze (path not found) | 1 | ErrNotFound → 1 | os.ErrNotExist from resolvePath now classified; exit code unchanged but sentinel set. |
+| D | repo analyze (permission denied on path) | 1 | ErrPermission → 3 | os.ErrPermission from resolvePath now classified; exit code shifts from 1 to 3. |
+| D | repo analyze (clone failure for remote target) | 1 | ErrIO → 4 | cloneToTemp failure now classified; exit code shifts from 1 to 4. |
+| D | repo analyze (output file create failure, -o flag) | 1 | ErrIO → 4 | os.Create failure on output file now classified; exit code shifts from 1 to 4. |

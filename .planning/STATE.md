@@ -8,7 +8,7 @@ progress:
   total_phases: 8
   completed_phases: 0
   total_plans: 18
-  completed_plans: 3
+  completed_plans: 4
   percent: 17
 ---
 
@@ -24,9 +24,9 @@ progress:
 ## Current Position
 
 **Milestone:** v1.0
-**Phase:** Phase 1 — cmderr Migration Completion (not started)
-**Plan:** None (awaiting `/gsd-plan-phase 1`)
-**Status:** Roadmap approved, ready for phase planning
+**Phase:** Phase 1 — cmderr Migration Completion (in progress)
+**Plan:** Plan 13 complete — Wave D scaffold/project/repo done
+**Status:** 4/18 plans complete
 **Progress:** [██░░░░░░░░] 17%
 
 ```
@@ -56,6 +56,8 @@ progress:
 | Honest SLSA level (likely L2) pinned by ADR before attest ships | 7 | Pitfall 5 — no SLSA overclaim |
 | Phase 01-cmderr-migration-completion P10 | 10 | 4 tasks | 8 files |
 | Phase 01-cmderr-migration-completion P11 | 10 | 4 tasks | 5 files |
+| scaffold sub-packages are the CLI boundary (not cmd/scaffold.go) | 13 | No top-level Run* dispatcher in scaffolding.go; sub-package Run* functions own error paths |
+| remote.go exec violation deferred | 13 | Pre-existing design-principle violation; out of scope for cmderr migration |
 
 ### Open Todos
 
@@ -77,8 +79,8 @@ None — ready to plan Phase 1.
 
 ## Session Continuity
 
-**Last session:** 2026-04-11T21:41:24.689Z
-**Next action:** `/gsd-plan-phase 1` — decompose Phase 1 (cmderr Migration Completion) into plans
+**Last session:** 2026-04-11 — Completed Plan 13 (Wave D: scaffold, project, repo)
+**Next action:** Continue Wave D remaining plans (14, 15) or run Plan 16 golden snapshots
 
 ### Files of Record
 
