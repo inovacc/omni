@@ -56,3 +56,10 @@ v1.0 release notes per CONTEXT.md Decision 6.
 | C | du (root path I/O failure) | 1 | ErrIO → 4 | Exit code shifts from 1 to 4. |
 | C | free (unix, sysinfo syscall failure) | 1 | ErrIO → 4 | Exit code shifts from 1 to 4. |
 | C | free (windows, GlobalMemoryStatusEx failure) | 1 | ErrIO → 4 | Exit code shifts from 1 to 4. |
+| C | yes (write failure, e.g. broken pipe to `head`) | 0 (silently muted) | ErrIO → 4 | Previously `return nil` on any write error; now classified. EPIPE is the expected termination path for `yes \| head`; exit 4 is now the correct sentinel. Document: callers piping yes through head should ignore ErrIO (exit 4) as normal termination. |
+| C | uname (write failure, e.g. broken pipe) | 0 (silently muted) | ErrIO → 4 | Previously `_, _ = fmt.Fprintln(...)` silently dropped write errors; now classified. |
+| C | lsof (process listing / network query, permission denied) | 1 | ErrPermission → 3 | os.ErrPermission from gopsutil process.Processes() or net.Connections(); exit code shifts from 1 to 3. |
+| C | lsof (process listing / network query, I/O failure) | 1 | ErrIO → 4 | Non-permission errors from gopsutil; exit code shifts from 1 to 4. |
+| C | ss (JSON write failure) | 0 (silently muted) | ErrIO → 4 | f.Print() errors were previously unchecked; now classified. |
+| C | ss (socket print, permission denied) | 1 | ErrPermission → 3 | os.ErrPermission from printSockets(); exit code shifts from 1 to 3. |
+| C | ss (socket print, I/O failure) | 1 | ErrIO → 4 | Non-permission errors from printSockets(); exit code shifts from 1 to 4. |
