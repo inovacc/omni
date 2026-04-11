@@ -92,3 +92,34 @@ v1.0 release notes per CONTEXT.md Decision 6.
 | D | repo analyze (permission denied on path) | 1 | ErrPermission → 3 | os.ErrPermission from resolvePath now classified; exit code shifts from 1 to 3. |
 | D | repo analyze (clone failure for remote target) | 1 | ErrIO → 4 | cloneToTemp failure now classified; exit code shifts from 1 to 4. |
 | D | repo analyze (output file create failure, -o flag) | 1 | ErrIO → 4 | os.Create failure on output file now classified; exit code shifts from 1 to 4. |
+
+## Summary: 84 commands changed exit codes during Phase 1
+
+Waves A through D migrated all remaining `internal/cli/` commands to cmderr sentinels.
+Exit codes are now deterministic and machine-readable across the entire omni CLI surface.
+
+## Release-notes template
+
+**Breaking change: exit code contract stabilized (v1.0)**
+
+Prior to v1.0, many omni commands returned exit code 1 for all error conditions.
+Starting with v1.0, every command in `internal/cli/` uses the cmderr sentinel model:
+
+| Exit code | Meaning |
+|-----------|---------|
+| 1 | Not found / conflict (ErrNotFound, ErrConflict) |
+| 2 | Invalid input / bad flags (ErrInvalidInput) |
+| 3 | Permission denied (ErrPermission) |
+| 4 | I/O failure / broken pipe (ErrIO) |
+| 5 | Timeout (ErrTimeout) |
+| 6 | Unsupported on this platform (ErrUnsupported) |
+
+Scripts that previously checked only for non-zero exit should be updated to handle
+specific codes where appropriate. The full per-command transition table is in
+`.planning/phases/01-cmderr-migration-completion/EXIT-CODE-CHANGES.md`.
+
+Notable behavioral changes:
+- Permission-denied errors now exit 3 (was 1) for: cssfmt, htmlfmt, sqlfmt, xmlutil, df, du, ps, lsof, ss, kill, pkill, scaffold, project, repo
+- I/O / broken-pipe errors now exit 4 (was 0 or 1) for: env, date, yes, uname, ss, free, scaffold, and all formatter commands
+- Platform-unsupported operations now exit 6 (was 1) for: kill (Windows non-POSIX signals), ps (Windows -u flag)
+- `pkill` with no matches now exits 1 (was 0), matching POSIX pkill behavior
