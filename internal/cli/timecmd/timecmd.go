@@ -5,6 +5,7 @@ import (
 	"io"
 	"time"
 
+	"github.com/inovacc/omni/internal/cli/cmderr"
 	"github.com/inovacc/omni/pkg/cobra/helper/output"
 )
 
@@ -49,9 +50,10 @@ func RunTimeJSON(w io.Writer, format output.Format, fn func() error) (TimeResult
 
 		_ = f.Print(jsonResult)
 	} else {
-		_, _ = fmt.Fprintf(w, "\nreal\t%s\n", formatDuration(result.Real))
-		_, _ = fmt.Fprintf(w, "user\t%s\n", formatDuration(result.User))
-		_, _ = fmt.Fprintf(w, "sys\t%s\n", formatDuration(result.Sys))
+		if _, werr := fmt.Fprintf(w, "\nreal\t%s\nuser\t%s\nsys\t%s\n",
+			formatDuration(result.Real), formatDuration(result.User), formatDuration(result.Sys)); werr != nil {
+			return result, cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("time: write: %s", werr))
+		}
 	}
 
 	return result, err
@@ -78,9 +80,10 @@ func RunTime(w io.Writer, fn func() error) (TimeResult, error) {
 	}
 
 	// Print timing info to stderr (like bash time)
-	_, _ = fmt.Fprintf(w, "\nreal\t%s\n", formatDuration(result.Real))
-	_, _ = fmt.Fprintf(w, "user\t%s\n", formatDuration(result.User))
-	_, _ = fmt.Fprintf(w, "sys\t%s\n", formatDuration(result.Sys))
+	if _, werr := fmt.Fprintf(w, "\nreal\t%s\nuser\t%s\nsys\t%s\n",
+		formatDuration(result.Real), formatDuration(result.User), formatDuration(result.Sys)); werr != nil {
+		return result, cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("time: write: %s", werr))
+	}
 
 	return result, err
 }
