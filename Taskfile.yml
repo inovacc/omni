@@ -339,6 +339,12 @@ tasks:
     cmds:
       - golangci-lint run --fix ./... --timeout=5m
 
+  lint:cmderr-coverage:
+    desc: Gate internal/cli/cmderr statement coverage at >=90% (pure-Go, cross-platform)
+    cmds:
+      - go test -coverprofile=cmderr-cov.out ./internal/cli/cmderr/...
+      - go run ./tools/cmderr-cov -profile=cmderr-cov.out -min=90
+
   check:
     desc: Run all quality checks (fmt, vet, lint, test)
     cmds:
