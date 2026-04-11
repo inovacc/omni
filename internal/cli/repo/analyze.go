@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/inovacc/omni/internal/cli/cmderr"
 	"github.com/inovacc/omni/internal/cli/project"
 )
 
@@ -72,7 +73,7 @@ func RunAnalyze(w io.Writer, args []string, opts Options) error {
 	if isRemote(target) {
 		tmpDir, err := cloneToTemp(target)
 		if err != nil {
-			return fmt.Errorf("repo analyze: %w", err)
+			return cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("repo analyze: %v", err))
 		}
 
 		dir = tmpDir
@@ -80,7 +81,8 @@ func RunAnalyze(w io.Writer, args []string, opts Options) error {
 	} else {
 		abs, err := resolvePath(target)
 		if err != nil {
-			return fmt.Errorf("repo analyze: %w", err)
+			// resolvePath already returns classified cmderr errors; pass through
+			return err
 		}
 
 		dir = abs
@@ -96,7 +98,7 @@ func RunAnalyze(w io.Writer, args []string, opts Options) error {
 	if opts.Output != "" {
 		f, err := os.Create(opts.Output)
 		if err != nil {
-			return fmt.Errorf("repo analyze: %w", err)
+			return cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("repo analyze: failed to create output file %s: %v", opts.Output, err))
 		}
 		defer func() { _ = f.Close() }()
 

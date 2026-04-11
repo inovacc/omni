@@ -2,8 +2,12 @@
 package project
 
 import (
+	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
+
+	"github.com/inovacc/omni/internal/cli/cmderr"
 )
 
 // Options configures the project command behavior.
@@ -23,12 +27,18 @@ func resolvePath(args []string) (string, error) {
 
 	abs, err := filepath.Abs(dir)
 	if err != nil {
-		return "", err
+		return "", cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("project: invalid path %q: %v", dir, err))
 	}
 
 	info, err := os.Stat(abs)
 	if err != nil {
-		return "", err
+		if errors.Is(err, os.ErrNotExist) {
+			return "", cmderr.Wrap(cmderr.ErrNotFound, fmt.Sprintf("project: path not found: %s", abs))
+		}
+		if errors.Is(err, os.ErrPermission) {
+			return "", cmderr.Wrap(cmderr.ErrPermission, fmt.Sprintf("project: permission denied: %s", abs))
+		}
+		return "", cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("project: stat %s: %v", abs, err))
 	}
 
 	if !info.IsDir() {

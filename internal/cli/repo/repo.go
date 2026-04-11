@@ -2,9 +2,13 @@
 package repo
 
 import (
+	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/inovacc/omni/internal/cli/cmderr"
 )
 
 // Options configures the repo analyze command behavior.
@@ -47,17 +51,27 @@ func (o Options) wantSection(name string) bool {
 // It handles ".", absolute paths, and relative paths.
 func resolvePath(target string) (string, error) {
 	if target == "" || target == "." {
-		return filepath.Abs(".")
+		abs, err := filepath.Abs(".")
+		if err != nil {
+			return "", cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("repo: invalid path: %v", err))
+		}
+		return abs, nil
 	}
 
 	abs, err := filepath.Abs(target)
 	if err != nil {
-		return "", err
+		return "", cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("repo: invalid path %q: %v", target, err))
 	}
 
 	info, err := os.Stat(abs)
 	if err != nil {
-		return "", err
+		if errors.Is(err, os.ErrNotExist) {
+			return "", cmderr.Wrap(cmderr.ErrNotFound, fmt.Sprintf("repo: path not found: %s", abs))
+		}
+		if errors.Is(err, os.ErrPermission) {
+			return "", cmderr.Wrap(cmderr.ErrPermission, fmt.Sprintf("repo: permission denied: %s", abs))
+		}
+		return "", cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("repo: stat %s: %v", abs, err))
 	}
 
 	if !info.IsDir() {
