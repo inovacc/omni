@@ -5,6 +5,7 @@ import (
 	"io"
 	"time"
 
+	"github.com/inovacc/omni/internal/cli/cmderr"
 	"github.com/inovacc/omni/pkg/cobra/helper/output"
 	"github.com/inovacc/omni/pkg/idgen"
 )
@@ -27,12 +28,16 @@ type Generator = idgen.SnowflakeGenerator
 
 // RunSnowflake generates Snowflake IDs
 func RunSnowflake(w io.Writer, opts Options) error {
-	if opts.Count <= 0 {
+	if opts.Count < 0 {
+		return cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("snowflake: count must be non-negative, got %d", opts.Count))
+	}
+
+	if opts.Count == 0 {
 		opts.Count = 1
 	}
 
 	if opts.WorkerID < 0 || opts.WorkerID > 1023 {
-		return fmt.Errorf("snowflake: worker ID must be between 0 and 1023")
+		return cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("snowflake: worker ID must be between 0 and 1023, got %d", opts.WorkerID))
 	}
 
 	gen := idgen.NewSnowflakeGenerator(opts.WorkerID)
@@ -49,7 +54,9 @@ func RunSnowflake(w io.Writer, opts Options) error {
 		if f.IsJSON() {
 			snowflakes = append(snowflakes, id)
 		} else {
-			_, _ = fmt.Fprintln(w, id)
+			if _, err := fmt.Fprintln(w, id); err != nil {
+				return cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("snowflake: write failed: %v", err))
+			}
 		}
 	}
 

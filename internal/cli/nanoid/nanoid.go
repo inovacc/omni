@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/inovacc/omni/internal/cli/cmderr"
 	"github.com/inovacc/omni/pkg/cobra/helper/output"
 	"github.com/inovacc/omni/pkg/idgen"
 )
@@ -24,8 +25,16 @@ type Result struct {
 
 // RunNanoID generates NanoIDs
 func RunNanoID(w io.Writer, opts Options) error {
-	if opts.Count <= 0 {
+	if opts.Count < 0 {
+		return cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("nanoid: count must be non-negative, got %d", opts.Count))
+	}
+
+	if opts.Count == 0 {
 		opts.Count = 1
+	}
+
+	if opts.Length < 0 {
+		return cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("nanoid: length must be non-negative, got %d", opts.Length))
 	}
 
 	var genOpts []idgen.NanoidOption
@@ -50,7 +59,9 @@ func RunNanoID(w io.Writer, opts Options) error {
 		if f.IsJSON() {
 			nanoids = append(nanoids, n)
 		} else {
-			_, _ = fmt.Fprintln(w, n)
+			if _, err := fmt.Fprintln(w, n); err != nil {
+				return cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("nanoid: write failed: %v", err))
+			}
 		}
 	}
 
