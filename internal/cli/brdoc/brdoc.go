@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/inovacc/brdoc"
+	"github.com/inovacc/omni/internal/cli/cmderr"
 )
 
 // Options configures brdoc command behavior
@@ -125,7 +126,7 @@ func generateCPF(w io.Writer, opts Options) error {
 
 func validateCPF(w io.Writer, args []string, opts Options) error {
 	if len(args) == 0 {
-		return fmt.Errorf("cpf: no document provided")
+		return cmderr.Wrap(cmderr.ErrInvalidInput, "cpf: no document provided")
 	}
 
 	if opts.JSON {
@@ -164,7 +165,7 @@ func validateCPF(w io.Writer, args []string, opts Options) error {
 	}
 
 	if !allValid {
-		return fmt.Errorf("one or more CPFs are invalid")
+		return cmderr.Wrap(cmderr.ErrInvalidInput, "cpf: one or more CPFs are invalid")
 	}
 
 	return nil
@@ -172,7 +173,7 @@ func validateCPF(w io.Writer, args []string, opts Options) error {
 
 func formatCPF(w io.Writer, args []string, opts Options) error {
 	if len(args) == 0 {
-		return fmt.Errorf("cpf: no document provided")
+		return cmderr.Wrap(cmderr.ErrInvalidInput, "cpf: no document provided")
 	}
 
 	if opts.JSON {
@@ -242,7 +243,7 @@ func generateCNPJ(w io.Writer, opts Options) error {
 
 func validateCNPJ(w io.Writer, args []string, opts Options) error {
 	if len(args) == 0 {
-		return fmt.Errorf("cnpj: no document provided")
+		return cmderr.Wrap(cmderr.ErrInvalidInput, "cnpj: no document provided")
 	}
 
 	if opts.JSON {
@@ -279,7 +280,7 @@ func validateCNPJ(w io.Writer, args []string, opts Options) error {
 	}
 
 	if !allValid {
-		return fmt.Errorf("one or more CNPJs are invalid")
+		return cmderr.Wrap(cmderr.ErrInvalidInput, "cnpj: one or more CNPJs are invalid")
 	}
 
 	return nil
@@ -287,7 +288,7 @@ func validateCNPJ(w io.Writer, args []string, opts Options) error {
 
 func formatCNPJ(w io.Writer, args []string, opts Options) error {
 	if len(args) == 0 {
-		return fmt.Errorf("cnpj: no document provided")
+		return cmderr.Wrap(cmderr.ErrInvalidInput, "cnpj: no document provided")
 	}
 
 	if opts.JSON {
