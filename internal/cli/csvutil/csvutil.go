@@ -4,12 +4,26 @@ import (
 	"bufio"
 	"encoding/csv"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"os"
 	"sort"
 	"strings"
+
+	"github.com/inovacc/omni/internal/cli/cmderr"
 )
+
+// wrapInputErr classifies input-reading errors into cmderr sentinels.
+func wrapInputErr(cmd string, err error) error {
+	if errors.Is(err, os.ErrNotExist) {
+		return cmderr.Wrap(cmderr.ErrNotFound, fmt.Sprintf("%s: %s", cmd, err))
+	}
+	if errors.Is(err, os.ErrPermission) {
+		return cmderr.Wrap(cmderr.ErrPermission, fmt.Sprintf("%s: %s", cmd, err))
+	}
+	return cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("%s: %s", cmd, err))
+}
 
 // ToCSVOptions configures the JSON to CSV conversion
 type ToCSVOptions struct {
@@ -29,14 +43,14 @@ type FromCSVOptions struct {
 func RunToCSV(w io.Writer, r io.Reader, args []string, opts ToCSVOptions) error {
 	input, err := getInput(args, r)
 	if err != nil {
-		return fmt.Errorf("csv: %w", err)
+		return wrapInputErr("csvutil", err)
 	}
 
 	// Parse JSON
 	var data any
 
 	if err := json.Unmarshal([]byte(input), &data); err != nil {
-		return fmt.Errorf("csv: invalid JSON: %w", err)
+		return cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("csvutil: invalid JSON: %s", err))
 	}
 
 	// Convert to array if single object
@@ -48,7 +62,7 @@ func RunToCSV(w io.Writer, r io.Reader, args []string, opts ToCSVOptions) error 
 	case map[string]any:
 		arr = []any{v}
 	default:
-		return fmt.Errorf("csv: JSON must be an array or object")
+		return cmderr.Wrap(cmderr.ErrInvalidInput, "csvutil: JSON must be an array or object")
 	}
 
 	if len(arr) == 0 {
@@ -58,7 +72,7 @@ func RunToCSV(w io.Writer, r io.Reader, args []string, opts ToCSVOptions) error 
 	// Get headers from first object
 	headers, err := extractHeaders(arr)
 	if err != nil {
-		return fmt.Errorf("csv: %w", err)
+		return cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("csvutil: %s", err))
 	}
 
 	// Create CSV writer
@@ -70,7 +84,7 @@ func RunToCSV(w io.Writer, r io.Reader, args []string, opts ToCSVOptions) error 
 	// Write header row
 	if opts.Header {
 		if err := csvWriter.Write(headers); err != nil {
-			return fmt.Errorf("csv: %w", err)
+			return cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("csvutil: write: %s", err))
 		}
 	}
 
@@ -87,20 +101,23 @@ func RunToCSV(w io.Writer, r io.Reader, args []string, opts ToCSVOptions) error 
 		}
 
 		if err := csvWriter.Write(row); err != nil {
-			return fmt.Errorf("csv: %w", err)
+			return cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("csvutil: write: %s", err))
 		}
 	}
 
 	csvWriter.Flush()
 
-	return csvWriter.Error()
+	if err := csvWriter.Error(); err != nil {
+		return cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("csvutil: write: %s", err))
+	}
+	return nil
 }
 
 // RunFromCSV converts CSV to JSON
 func RunFromCSV(w io.Writer, r io.Reader, args []string, opts FromCSVOptions) error {
 	input, err := getInputReader(args, r)
 	if err != nil {
-		return fmt.Errorf("csv: %w", err)
+		return wrapInputErr("csvutil", err)
 	}
 
 	defer func() {
@@ -118,7 +135,7 @@ func RunFromCSV(w io.Writer, r io.Reader, args []string, opts FromCSVOptions) er
 
 	records, err := csvReader.ReadAll()
 	if err != nil {
-		return fmt.Errorf("csv: %w", err)
+		return cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("csvutil: parse: %s", err))
 	}
 
 	if len(records) == 0 {

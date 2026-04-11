@@ -3,14 +3,27 @@ package yamlutil
 import (
 	"bufio"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"os"
 	"strings"
 
+	"github.com/inovacc/omni/internal/cli/cmderr"
 	"github.com/inovacc/omni/pkg/cobra/helper/output"
 	"gopkg.in/yaml.v3"
 )
+
+// wrapInputErr classifies input-reading errors into cmderr sentinels.
+func wrapInputErr(cmd string, err error) error {
+	if errors.Is(err, os.ErrNotExist) {
+		return cmderr.Wrap(cmderr.ErrNotFound, fmt.Sprintf("%s: %s", cmd, err))
+	}
+	if errors.Is(err, os.ErrPermission) {
+		return cmderr.Wrap(cmderr.ErrPermission, fmt.Sprintf("%s: %s", cmd, err))
+	}
+	return cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("%s: %s", cmd, err))
+}
 
 // ValidateOptions configures the yaml validate command behavior
 type ValidateOptions struct {
@@ -42,7 +55,7 @@ func RunValidate(w io.Writer, args []string, opts ValidateOptions) error {
 		if info, err := os.Stat(arg); err == nil && !info.IsDir() {
 			f, err := os.Open(arg)
 			if err != nil {
-				return fmt.Errorf("yaml validate: %w", err)
+				return wrapInputErr("yaml validate", err)
 			}
 
 			err = validateReader(w, f, arg, opts)
@@ -61,7 +74,7 @@ func RunValidate(w io.Writer, args []string, opts ValidateOptions) error {
 	}
 
 	if hasError {
-		return fmt.Errorf("yaml validation failed")
+		return cmderr.Wrap(cmderr.ErrInvalidInput, "yaml validate: validation failed")
 	}
 
 	return nil
@@ -133,7 +146,7 @@ func outputResult(w io.Writer, result ValidateResult, opts ValidateOptions) erro
 	}
 
 	if !result.Valid {
-		return fmt.Errorf("validation failed")
+		return cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("yamlutil: %s: %s", result.File, result.Error))
 	}
 
 	return nil
@@ -159,7 +172,7 @@ func RunFormat(w io.Writer, args []string, opts FormatOptions) error {
 	// Parse all documents
 	docs, err := parseMultiDoc(input)
 	if err != nil {
-		return fmt.Errorf("yaml format: %w", err)
+		return cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("yaml format: parse: %s", err))
 	}
 
 	// Process each document
@@ -183,7 +196,7 @@ func RunFormat(w io.Writer, args []string, opts FormatOptions) error {
 	if opts.InPlace && filename != "" {
 		f, err := os.Create(filename)
 		if err != nil {
-			return fmt.Errorf("yaml format: %w", err)
+			return wrapInputErr("yaml format", err)
 		}
 
 		defer func() { _ = f.Close() }()
@@ -208,11 +221,14 @@ func RunFormat(w io.Writer, args []string, opts FormatOptions) error {
 
 	for _, doc := range docs {
 		if err := enc.Encode(doc); err != nil {
-			return fmt.Errorf("yaml format: %w", err)
+			return cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("yaml format: write: %s", err))
 		}
 	}
 
-	return enc.Close()
+	if err := enc.Close(); err != nil {
+		return cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("yaml format: write: %s", err))
+	}
+	return nil
 }
 
 // K8sFormatOptions configures the yaml k8s command behavior
@@ -469,7 +485,7 @@ func getInputWithFilename(args []string) (string, string, error) {
 		if _, err := os.Stat(args[0]); err == nil {
 			content, err := os.ReadFile(args[0])
 			if err != nil {
-				return "", "", fmt.Errorf("yaml: %w", err)
+				return "", "", wrapInputErr("yaml", err)
 			}
 
 			return string(content), args[0], nil
@@ -487,7 +503,7 @@ func getInputWithFilename(args []string) (string, string, error) {
 	}
 
 	if err := scanner.Err(); err != nil {
-		return "", "", fmt.Errorf("yaml: %w", err)
+		return "", "", cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("yaml: %s", err))
 	}
 
 	return strings.Join(lines, "\n"), "", nil
