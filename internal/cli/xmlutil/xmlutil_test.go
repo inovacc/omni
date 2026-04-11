@@ -2,9 +2,34 @@ package xmlutil
 
 import (
 	"bytes"
+	"errors"
 	"strings"
 	"testing"
+
+	"github.com/inovacc/omni/internal/cli/cmderr"
 )
+
+func TestRunFromXMLCmderrClassification(t *testing.T) {
+	var buf bytes.Buffer
+	err := RunFromXML(&buf, strings.NewReader("<a><b></a>"), nil, FromXMLOptions{})
+	if err == nil {
+		t.Fatal("expected error for malformed XML")
+	}
+	if !errors.Is(err, cmderr.ErrInvalidInput) {
+		t.Errorf("expected ErrInvalidInput, got %v", err)
+	}
+}
+
+func TestRunToXMLCmderrClassification(t *testing.T) {
+	var buf bytes.Buffer
+	err := RunToXML(&buf, strings.NewReader("{not valid json"), nil, ToXMLOptions{})
+	if err == nil {
+		t.Fatal("expected error for malformed JSON")
+	}
+	if !errors.Is(err, cmderr.ErrInvalidInput) {
+		t.Errorf("expected ErrInvalidInput, got %v", err)
+	}
+}
 
 func TestRunToXML(t *testing.T) {
 	tests := []struct {

@@ -5,11 +5,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"encoding/xml"
+	"errors"
 	"fmt"
 	"io"
 	"os"
 	"sort"
 	"strings"
+
+	"github.com/inovacc/omni/internal/cli/cmderr"
 )
 
 // ToXMLOptions configures JSON to XML conversion
@@ -30,7 +33,7 @@ type FromXMLOptions struct {
 func RunToXML(w io.Writer, r io.Reader, args []string, opts ToXMLOptions) error {
 	input, err := getInput(args, r)
 	if err != nil {
-		return fmt.Errorf("xml: %w", err)
+		return wrapInputErr("xmlutil", err)
 	}
 
 	// Set defaults
@@ -53,7 +56,7 @@ func RunToXML(w io.Writer, r io.Reader, args []string, opts ToXMLOptions) error 
 	// Parse JSON
 	var data any
 	if err := json.Unmarshal([]byte(input), &data); err != nil {
-		return fmt.Errorf("xml: invalid JSON: %w", err)
+		return cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("xmlutil: parse: invalid JSON: %s", err))
 	}
 
 	// Convert to XML
@@ -61,10 +64,12 @@ func RunToXML(w io.Writer, r io.Reader, args []string, opts ToXMLOptions) error 
 	buf.WriteString(xml.Header)
 
 	if err := writeXMLElement(&buf, opts.Root, data, 0, opts); err != nil {
-		return fmt.Errorf("xml: %w", err)
+		return cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("xmlutil: parse: %s", err))
 	}
 
-	_, _ = fmt.Fprint(w, buf.String())
+	if _, err := fmt.Fprint(w, buf.String()); err != nil {
+		return cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("xmlutil: write: %s", err))
+	}
 
 	return nil
 }
@@ -73,7 +78,7 @@ func RunToXML(w io.Writer, r io.Reader, args []string, opts ToXMLOptions) error 
 func RunFromXML(w io.Writer, r io.Reader, args []string, opts FromXMLOptions) error {
 	input, err := getInput(args, r)
 	if err != nil {
-		return fmt.Errorf("json: %w", err)
+		return wrapInputErr("xmlutil", err)
 	}
 
 	// Set defaults
@@ -88,14 +93,28 @@ func RunFromXML(w io.Writer, r io.Reader, args []string, opts FromXMLOptions) er
 	// Parse XML
 	result, err := parseXML(strings.NewReader(input), opts)
 	if err != nil {
-		return fmt.Errorf("json: invalid XML: %w", err)
+		return cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("xmlutil: parse: invalid XML: %s", err))
 	}
 
 	// Output JSON
 	encoder := json.NewEncoder(w)
 	encoder.SetIndent("", "  ")
 
-	return encoder.Encode(result)
+	if err := encoder.Encode(result); err != nil {
+		return cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("xmlutil: write: %s", err))
+	}
+	return nil
+}
+
+// wrapInputErr classifies input-reading errors into cmderr sentinels.
+func wrapInputErr(cmd string, err error) error {
+	if errors.Is(err, os.ErrNotExist) {
+		return cmderr.Wrap(cmderr.ErrNotFound, fmt.Sprintf("%s: %s", cmd, err))
+	}
+	if errors.Is(err, os.ErrPermission) {
+		return cmderr.Wrap(cmderr.ErrPermission, fmt.Sprintf("%s: %s", cmd, err))
+	}
+	return cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("%s: %s", cmd, err))
 }
 
 // writeXMLElement writes a JSON value as XML element

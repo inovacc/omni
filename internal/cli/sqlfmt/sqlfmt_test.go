@@ -2,11 +2,24 @@ package sqlfmt
 
 import (
 	"bytes"
+	"errors"
 	"strings"
 	"testing"
 
+	"github.com/inovacc/omni/internal/cli/cmderr"
 	pkgsql "github.com/inovacc/omni/pkg/sqlfmt"
 )
+
+func TestRunValidateCmderrClassification(t *testing.T) {
+	var buf bytes.Buffer
+	err := RunValidate(&buf, strings.NewReader("SELEKT * FORM"), nil, ValidateOptions{})
+	if err == nil {
+		t.Fatal("expected error for invalid SQL")
+	}
+	if !errors.Is(err, cmderr.ErrInvalidInput) {
+		t.Errorf("expected ErrInvalidInput, got %v", err)
+	}
+}
 
 func TestRun(t *testing.T) {
 	tests := []struct {
