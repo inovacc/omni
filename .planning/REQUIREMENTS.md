@@ -11,8 +11,8 @@
 
 ### Polish — cmderr migration
 
-- [ ] **POLISH-01**: Every command in `cmd/` + `internal/cli/` returns classified `cmderr` sentinels (ErrNotFound / ErrInvalidInput / ErrPermission / ErrIO / ErrTimeout / ErrUnsupported / ErrConflict) with correct exit codes via `cmderr.ExitCodeFor()` — finish the remaining ~76 commands beyond the 84 already migrated.
-- [ ] **POLISH-02**: Every migrated command has at least one golden-master test case exercising an error path to lock exit-code behavior.
+- [x] **POLISH-01**: Every command in `cmd/` + `internal/cli/` returns classified `cmderr` sentinels (ErrNotFound / ErrInvalidInput / ErrPermission / ErrIO / ErrTimeout / ErrUnsupported / ErrConflict) with correct exit codes via `cmderr.ExitCodeFor()` — finish the remaining ~76 commands beyond the 84 already migrated.
+- [x] **POLISH-02**: Every migrated command has at least one golden-master test case exercising an error path to lock exit-code behavior.
 - [ ] **POLISH-03**: `internal/cli/cmderr` has a coverage threshold of ≥90% enforced in CI.
 
 ### Polish — test coverage
@@ -147,8 +147,8 @@ Each requirement maps to exactly one phase. Coverage: **58/58 (100%)**.
 
 | REQ-ID | Phase | Status |
 |--------|-------|--------|
-| POLISH-01 | Phase 1 | Pending |
-| POLISH-02 | Phase 1 | Pending |
+| POLISH-01 | Phase 1 | Complete |
+| POLISH-02 | Phase 1 | Complete |
 | POLISH-03 | Phase 1 | Pending |
 | POLISH-04 | Phase 2 | Pending |
 | POLISH-05 | Phase 2 | Pending |

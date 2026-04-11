@@ -46,3 +46,13 @@ v1.0 release notes per CONTEXT.md Decision 6.
 | C | pkill (no match) | 0 | SilentExit(1) → 1 | Previously returned nil (exit 0); now SilentExit(1) per pkill canonical Pattern 4. |
 | C | pkill (process listing failure) | 1 | ErrIO → 4 | `process.Processes()` failure now classified. |
 | C | pkill (permission denied on signal send) | 1 | ErrPermission → 3 | EPERM on `proc.Signal()` now classified in Result.Error. |
+| C | df (unix, path not found) | 1 | ErrNotFound → 1 | Statfs on missing path; exit code unchanged but sentinel set. |
+| C | df (unix, permission denied) | 1 | ErrPermission → 3 | Exit code shifts from 1 to 3. |
+| C | df (unix, I/O failure) | 1 | ErrIO → 4 | Exit code shifts from 1 to 4. |
+| C | df (windows, invalid path string) | 1 | ErrInvalidInput → 2 | UTF16PtrFromString failure; exit code shifts from 1 to 2. |
+| C | df (windows, GetDiskFreeSpaceExW failure) | 1 | ErrIO → 4 | Exit code shifts from 1 to 4. |
+| C | du (root path not found) | 1 | ErrNotFound → 1 | os.Lstat missing path; exit code unchanged but sentinel set. |
+| C | du (root path permission denied) | 1 | ErrPermission → 3 | Exit code shifts from 1 to 3. |
+| C | du (root path I/O failure) | 1 | ErrIO → 4 | Exit code shifts from 1 to 4. |
+| C | free (unix, sysinfo syscall failure) | 1 | ErrIO → 4 | Exit code shifts from 1 to 4. |
+| C | free (windows, GlobalMemoryStatusEx failure) | 1 | ErrIO → 4 | Exit code shifts from 1 to 4. |
