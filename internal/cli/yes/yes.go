@@ -8,6 +8,8 @@ import (
 	"os/signal"
 	"strings"
 	"syscall"
+
+	"github.com/inovacc/omni/internal/cli/cmderr"
 )
 
 // RunYes repeatedly outputs a string until killed
@@ -28,10 +30,9 @@ func RunYes(ctx context.Context, w io.Writer, args []string) error {
 		case <-sigCh:
 			return nil
 		default:
-			_, err := fmt.Fprintln(w, output)
-			if err != nil {
-				// Likely a broken pipe, exit gracefully
-				return nil //nolint:nilerr // Intentional: exit gracefully on broken pipe
+			// Classify once per Pitfall 7: do not allocate per-iteration on broken pipe.
+			if _, err := fmt.Fprintln(w, output); err != nil {
+				return cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("yes: write: %s", err))
 			}
 		}
 	}
