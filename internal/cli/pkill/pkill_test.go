@@ -3,11 +3,13 @@ package pkill
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"regexp"
 	"strings"
 	"syscall"
 	"testing"
 
+	"github.com/inovacc/omni/internal/cli/cmderr"
 	"github.com/inovacc/omni/pkg/cobra/helper/output"
 )
 
@@ -154,15 +156,16 @@ func TestRun_CountJSON(t *testing.T) {
 
 func TestRun_ExactMatch(t *testing.T) {
 	var buf bytes.Buffer
-	// "nonexistent_process_xyz" should not match anything
+	// "nonexistent_process_xyz" should not match anything → SilentExit(1)
 	err := Run(&buf, "nonexistent_process_xyz_12345", Options{Exact: true, ListOnly: true})
-	if err != nil {
-		t.Fatal(err)
+	var silent *cmderr.SilentError
+	if !errors.As(err, &silent) || silent.Code != 1 {
+		t.Fatalf("expected SilentExit(1) for no match, got: %v", err)
 	}
 
 	output := strings.TrimSpace(buf.String())
 	if output != "" {
-		t.Errorf("expected no match for nonexistent process, got: %s", output)
+		t.Errorf("expected no output for nonexistent process, got: %s", output)
 	}
 }
 
@@ -211,14 +214,16 @@ func TestRun_Oldest(t *testing.T) {
 func TestRun_NoMatch_JSON(t *testing.T) {
 	var buf bytes.Buffer
 
+	// No match → SilentExit(1) even in JSON mode; "[]" is written before the return.
 	err := Run(&buf, "nonexistent_process_xyz_12345", Options{ListOnly: true, OutputFormat: output.FormatJSON})
-	if err != nil {
-		t.Fatal(err)
+	var silent *cmderr.SilentError
+	if !errors.As(err, &silent) || silent.Code != 1 {
+		t.Fatalf("expected SilentExit(1) for no match, got: %v", err)
 	}
 
-	output := strings.TrimSpace(buf.String())
-	if output != "[]" {
-		t.Errorf("expected empty JSON array for no matches, got: %s", output)
+	out := strings.TrimSpace(buf.String())
+	if out != "[]" {
+		t.Errorf("expected empty JSON array for no matches, got: %s", out)
 	}
 }
 
@@ -243,12 +248,19 @@ func TestRun_SignalParsing(t *testing.T) {
 
 			err := Run(&buf, "nonexistent_process_xyz_12345", Options{Signal: tt.signal, ListOnly: true})
 			if tt.valid {
-				if err != nil {
-					t.Errorf("expected no error for signal %q, got: %v", tt.signal, err)
+				// Valid signal + no match → SilentExit(1) (classified no-match behavior)
+				var silent *cmderr.SilentError
+				if err != nil && !errors.As(err, &silent) {
+					t.Errorf("expected nil or SilentExit for signal %q, got: %v", tt.signal, err)
 				}
 			} else {
 				if err == nil {
 					t.Errorf("expected error for invalid signal %q", tt.signal)
+				}
+				// Must NOT be a SilentExit — invalid signals should be classified ErrInvalidInput
+				var silent *cmderr.SilentError
+				if errors.As(err, &silent) {
+					t.Errorf("invalid signal %q should not produce SilentExit, got code %d", tt.signal, silent.Code)
 				}
 			}
 		})

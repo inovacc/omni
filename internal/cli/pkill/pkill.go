@@ -1,6 +1,7 @@
 package pkill
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -9,6 +10,7 @@ import (
 	"strings"
 	"syscall"
 
+	"github.com/inovacc/omni/internal/cli/cmderr"
 	"github.com/inovacc/omni/pkg/cobra/helper/output"
 	"github.com/shirou/gopsutil/v3/process"
 )
@@ -59,7 +61,7 @@ var signalMap = map[string]syscall.Signal{
 // Run executes the pkill command
 func Run(w io.Writer, pattern string, opts Options) error {
 	if pattern == "" {
-		return fmt.Errorf("pkill: no pattern specified")
+		return cmderr.Wrap(cmderr.ErrInvalidInput, "pkill: no pattern specified")
 	}
 
 	// Compile pattern
@@ -80,7 +82,7 @@ func Run(w io.Writer, pattern string, opts Options) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("pkill: invalid pattern: %w", err)
+		return cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("pkill: invalid pattern: %s", err))
 	}
 
 	f := output.New(w, opts.OutputFormat)
@@ -96,7 +98,7 @@ func Run(w io.Writer, pattern string, opts Options) error {
 		} else {
 			sigNum, err := strconv.Atoi(opts.Signal)
 			if err != nil {
-				return fmt.Errorf("pkill: invalid signal: %s", opts.Signal)
+				return cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("pkill: invalid signal: %s", opts.Signal))
 			}
 
 			sig = syscall.Signal(sigNum)
@@ -106,7 +108,7 @@ func Run(w io.Writer, pattern string, opts Options) error {
 	// Get all processes
 	procs, err := process.Processes()
 	if err != nil {
-		return fmt.Errorf("pkill: failed to get processes: %w", err)
+		return cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("pkill: failed to get processes: %s", err))
 	}
 
 	var matched []Result
@@ -176,7 +178,8 @@ func Run(w io.Writer, pattern string, opts Options) error {
 			_, _ = fmt.Fprintln(w, "[]")
 		}
 
-		return nil
+		// pkill canonical behavior: no match → exit 1 with no message
+		return cmderr.SilentExit(1)
 	}
 
 	// Select newest/oldest if requested
@@ -245,7 +248,11 @@ func Run(w io.Writer, pattern string, opts Options) error {
 		}
 
 		if err := proc.Signal(sig); err != nil {
-			m.Error = err.Error()
+			if errors.Is(err, os.ErrPermission) {
+				m.Error = cmderr.Wrap(cmderr.ErrPermission, fmt.Sprintf("pkill: kill %d", m.PID)).Error()
+			} else {
+				m.Error = err.Error()
+			}
 		} else {
 			m.Killed = true
 			if opts.Verbose {
