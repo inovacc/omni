@@ -1,22 +1,37 @@
 // Package terraform provides Terraform CLI wrapper for omni.
 // It wraps the terraform binary as a subprocess for now.
 // Future: Direct integration via local source code.
+//
+// TODO:no-exec-violation: this package uses os/exec.Command("terraform", ...) which violates
+// CLAUDE.md "No exec" design principle. Tracked for Plan 17 / backlog cleanup.
 package terraform
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
+
+	"github.com/inovacc/omni/internal/cli/cmderr"
 )
 
 // Run executes a terraform command with the given arguments.
 func Run(args []string) error {
-	cmd := exec.Command("terraform", args...)
+	cmd := exec.Command("terraform", args...) //nolint:gosec // TODO:no-exec-violation
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	cmd.Stdin = os.Stdin
 
-	return cmd.Run()
+	if err := cmd.Run(); err != nil {
+		var exitErr *exec.ExitError
+		if errors.As(err, &exitErr) {
+			return cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("terraform: command failed with exit code %d", exitErr.ExitCode()))
+		}
+		// Binary not found or spawn failure.
+		return cmderr.Wrap(cmderr.ErrUnsupported, fmt.Sprintf("terraform: %v", err))
+	}
+
+	return nil
 }
 
 // Init initializes a Terraform working directory.

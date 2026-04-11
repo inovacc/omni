@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/vault/api"
+	"github.com/inovacc/omni/internal/cli/cmderr"
 )
 
 // KVClient wraps the Vault KV v2 API.
@@ -46,7 +47,7 @@ func (kv *KVClient) Get(ctx context.Context, path string, version int) (*api.KVS
 	}
 
 	if err != nil {
-		return nil, fmt.Errorf("failed to get secret: %w", err)
+		return nil, classifyVaultError(err, "kv get "+path)
 	}
 
 	return secret, nil
@@ -58,7 +59,7 @@ func (kv *KVClient) Put(ctx context.Context, path string, data map[string]any) (
 
 	secret, err := kvv2.Put(ctx, path, data)
 	if err != nil {
-		return nil, fmt.Errorf("failed to put secret: %w", err)
+		return nil, classifyVaultError(err, "kv put "+path)
 	}
 
 	return secret, nil
@@ -70,7 +71,7 @@ func (kv *KVClient) Patch(ctx context.Context, path string, data map[string]any)
 
 	secret, err := kvv2.Patch(ctx, path, data)
 	if err != nil {
-		return nil, fmt.Errorf("failed to patch secret: %w", err)
+		return nil, classifyVaultError(err, "kv patch "+path)
 	}
 
 	return secret, nil
@@ -82,7 +83,7 @@ func (kv *KVClient) Delete(ctx context.Context, path string) error {
 
 	err := kvv2.Delete(ctx, path)
 	if err != nil {
-		return fmt.Errorf("failed to delete secret: %w", err)
+		return classifyVaultError(err, "kv delete "+path)
 	}
 
 	return nil
@@ -94,7 +95,7 @@ func (kv *KVClient) DeleteVersions(ctx context.Context, path string, versions []
 
 	err := kvv2.DeleteVersions(ctx, path, versions)
 	if err != nil {
-		return fmt.Errorf("failed to delete versions: %w", err)
+		return classifyVaultError(err, "kv delete-versions "+path)
 	}
 
 	return nil
@@ -106,7 +107,7 @@ func (kv *KVClient) Undelete(ctx context.Context, path string, versions []int) e
 
 	err := kvv2.Undelete(ctx, path, versions)
 	if err != nil {
-		return fmt.Errorf("failed to undelete secret: %w", err)
+		return classifyVaultError(err, "kv undelete "+path)
 	}
 
 	return nil
@@ -118,7 +119,7 @@ func (kv *KVClient) Destroy(ctx context.Context, path string, versions []int) er
 
 	err := kvv2.Destroy(ctx, path, versions)
 	if err != nil {
-		return fmt.Errorf("failed to destroy secret: %w", err)
+		return classifyVaultError(err, "kv destroy "+path)
 	}
 
 	return nil
@@ -131,7 +132,7 @@ func (kv *KVClient) List(ctx context.Context, path string) ([]string, error) {
 
 	secret, err := kv.client.Logical().ListWithContext(ctx, listPath)
 	if err != nil {
-		return nil, fmt.Errorf("failed to list secrets: %w", err)
+		return nil, classifyVaultError(err, "kv list "+path)
 	}
 
 	if secret == nil || secret.Data == nil {
@@ -145,7 +146,7 @@ func (kv *KVClient) List(ctx context.Context, path string) ([]string, error) {
 
 	keysSlice, ok := keysRaw.([]any)
 	if !ok {
-		return nil, fmt.Errorf("unexpected keys format")
+		return nil, cmderr.Wrap(cmderr.ErrIO, "vault: kv list: unexpected keys format in response")
 	}
 
 	keys := make([]string, 0, len(keysSlice))
@@ -165,7 +166,7 @@ func (kv *KVClient) GetMetadata(ctx context.Context, path string) (*api.KVMetada
 
 	metadata, err := kvv2.GetMetadata(ctx, path)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get metadata: %w", err)
+		return nil, classifyVaultError(err, "kv get-metadata "+path)
 	}
 
 	return metadata, nil
@@ -177,7 +178,7 @@ func (kv *KVClient) PutMetadata(ctx context.Context, path string, metadata api.K
 
 	err := kvv2.PutMetadata(ctx, path, metadata)
 	if err != nil {
-		return fmt.Errorf("failed to put metadata: %w", err)
+		return classifyVaultError(err, "kv put-metadata "+path)
 	}
 
 	return nil
@@ -189,7 +190,7 @@ func (kv *KVClient) DeleteMetadata(ctx context.Context, path string) error {
 
 	err := kvv2.DeleteMetadata(ctx, path)
 	if err != nil {
-		return fmt.Errorf("failed to delete metadata: %w", err)
+		return classifyVaultError(err, "kv delete-metadata "+path)
 	}
 
 	return nil
@@ -201,7 +202,7 @@ func (kv *KVClient) Rollback(ctx context.Context, path string, version int) (*ap
 
 	secret, err := kvv2.Rollback(ctx, path, version)
 	if err != nil {
-		return nil, fmt.Errorf("failed to rollback secret: %w", err)
+		return nil, classifyVaultError(err, "kv rollback "+path)
 	}
 
 	return secret, nil

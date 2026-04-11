@@ -3,23 +3,29 @@ package hacks
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
 	"strings"
+
+	"github.com/inovacc/omni/internal/cli/cmderr"
 )
+
+// TODO:no-exec-violation: this package uses os/exec.Command("git", ...) which violates
+// CLAUDE.md "No exec" design principle. Tracked for Plan 17 / backlog cleanup.
 
 // QuickCommit stages all changes and commits with a message.
 // Equivalent to: git add -A && git commit -m "message"
 func QuickCommit(message string, addAll bool) error {
 	if addAll {
 		if err := runGitCommand("add", "-A"); err != nil {
-			return fmt.Errorf("failed to stage files: %w", err)
+			return cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("git: failed to stage files: %v", err))
 		}
 	}
 
 	if err := runGitCommand("commit", "-m", message); err != nil {
-		return fmt.Errorf("failed to commit: %w", err)
+		return cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("git: failed to commit: %v", err))
 	}
 
 	return nil
@@ -37,7 +43,7 @@ func BranchClean(dryRun bool) ([]string, error) {
 	// Get merged branches
 	out, err := runGitCommandOutput("branch", "--merged")
 	if err != nil {
-		return nil, fmt.Errorf("failed to list merged branches: %w", err)
+		return nil, cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("git: failed to list merged branches: %v", err))
 	}
 
 	var deleted []string
@@ -154,23 +160,31 @@ func FetchAll() error {
 func getCurrentBranch() (string, error) {
 	out, err := runGitCommandOutput("rev-parse", "--abbrev-ref", "HEAD")
 	if err != nil {
-		return "", fmt.Errorf("failed to get current branch: %w", err)
+		return "", cmderr.Wrap(cmderr.ErrNotFound, fmt.Sprintf("git: not a git repository or failed to get branch: %v", err))
 	}
 
 	return strings.TrimSpace(out), nil
 }
 
 func runGitCommand(args ...string) error {
-	cmd := exec.Command("git", args...)
+	cmd := exec.Command("git", args...) //nolint:gosec // TODO:no-exec-violation
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	cmd.Stdin = os.Stdin
 
-	return cmd.Run()
+	if err := cmd.Run(); err != nil {
+		var exitErr *exec.ExitError
+		if errors.As(err, &exitErr) {
+			return cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("git: command failed with exit code %d", exitErr.ExitCode()))
+		}
+		return cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("git: %v", err))
+	}
+
+	return nil
 }
 
 func runGitCommandOutput(args ...string) (string, error) {
-	cmd := exec.Command("git", args...)
+	cmd := exec.Command("git", args...) //nolint:gosec // TODO:no-exec-violation
 
 	var stdout, stderr bytes.Buffer
 
@@ -179,7 +193,11 @@ func runGitCommandOutput(args ...string) (string, error) {
 
 	err := cmd.Run()
 	if err != nil {
-		return "", fmt.Errorf("%w: %s", err, stderr.String())
+		var exitErr *exec.ExitError
+		if errors.As(err, &exitErr) {
+			return "", cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("git: %s (exit %d)", stderr.String(), exitErr.ExitCode()))
+		}
+		return "", cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("git: %v: %s", err, stderr.String()))
 	}
 
 	return stdout.String(), nil

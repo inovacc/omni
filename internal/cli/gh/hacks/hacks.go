@@ -3,11 +3,17 @@ package hacks
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
 	"strings"
+
+	"github.com/inovacc/omni/internal/cli/cmderr"
 )
+
+// TODO:no-exec-violation: this package uses os/exec.Command("gh", ...) which violates
+// CLAUDE.md "No exec" design principle. Tracked for Plan 17 / backlog cleanup.
 
 // PRCheckout checks out a pull request by number.
 func PRCheckout(number int) error {
@@ -37,7 +43,7 @@ func RepoCloneOrg(org string, limit int) ([]string, error) {
 
 	out, err := runGhCommandOutput("repo", "list", org, "--limit", fmt.Sprintf("%d", limit), "--json", "name", "--jq", ".[].name")
 	if err != nil {
-		return nil, fmt.Errorf("failed to list repos: %w", err)
+		return nil, cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("gh: failed to list repos for org %q: %v", org, err))
 	}
 
 	var cloned []string
@@ -67,16 +73,29 @@ func ActionsRerun(runID int) error {
 }
 
 func runGhCommand(args ...string) error {
-	cmd := exec.Command("gh", args...)
+	cmd := exec.Command("gh", args...) //nolint:gosec // TODO:no-exec-violation
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	cmd.Stdin = os.Stdin
 
-	return cmd.Run()
+	if err := cmd.Run(); err != nil {
+		var exitErr *exec.ExitError
+		if errors.As(err, &exitErr) {
+			switch exitErr.ExitCode() {
+			case 4: // gh uses exit 4 for auth errors
+				return cmderr.Wrap(cmderr.ErrPermission, fmt.Sprintf("gh: not authenticated (exit %d)", exitErr.ExitCode()))
+			default:
+				return cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("gh: command failed with exit code %d", exitErr.ExitCode()))
+			}
+		}
+		return cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("gh: %v", err))
+	}
+
+	return nil
 }
 
 func runGhCommandOutput(args ...string) (string, error) {
-	cmd := exec.Command("gh", args...)
+	cmd := exec.Command("gh", args...) //nolint:gosec // TODO:no-exec-violation
 
 	var stdout, stderr bytes.Buffer
 
@@ -85,7 +104,16 @@ func runGhCommandOutput(args ...string) (string, error) {
 
 	err := cmd.Run()
 	if err != nil {
-		return "", fmt.Errorf("%w: %s", err, stderr.String())
+		var exitErr *exec.ExitError
+		if errors.As(err, &exitErr) {
+			switch exitErr.ExitCode() {
+			case 4: // gh auth error
+				return "", cmderr.Wrap(cmderr.ErrPermission, fmt.Sprintf("gh: not authenticated (exit %d): %s", exitErr.ExitCode(), stderr.String()))
+			default:
+				return "", cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("gh: %s (exit %d)", stderr.String(), exitErr.ExitCode()))
+			}
+		}
+		return "", cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("gh: %v: %s", err, stderr.String()))
 	}
 
 	return stdout.String(), nil

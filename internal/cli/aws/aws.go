@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/inovacc/omni/internal/cli/cloud/profile"
+	"github.com/inovacc/omni/internal/cli/cmderr"
 )
 
 // Options configures AWS operations
@@ -77,7 +78,7 @@ func LoadConfig(ctx context.Context, opts Options) (aws.Config, error) {
 	// Load configuration
 	cfg, err := config.LoadDefaultConfig(ctx, cfgOpts...)
 	if err != nil {
-		return aws.Config{}, fmt.Errorf("loading AWS config: %w", err)
+		return aws.Config{}, cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("aws: loading config: %v", err))
 	}
 
 	return cfg, nil
@@ -87,19 +88,19 @@ func LoadConfig(ctx context.Context, opts Options) (aws.Config, error) {
 func loadWithOmniProfile(ctx context.Context, name string, opts Options) (aws.Config, error) {
 	svc, err := profile.NewService()
 	if err != nil {
-		return aws.Config{}, fmt.Errorf("initializing profile service: %w", err)
+		return aws.Config{}, cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("aws: initializing profile service: %v", err))
 	}
 
 	// Get the profile to check region
 	p, err := svc.GetProfile(profile.ProviderAWS, name)
 	if err != nil {
-		return aws.Config{}, fmt.Errorf("loading omni profile: %w", err)
+		return aws.Config{}, cmderr.Wrap(cmderr.ErrNotFound, fmt.Sprintf("aws: profile %q not found: %v", name, err))
 	}
 
 	// Get credentials
 	creds, err := svc.GetAWSCredentials(name)
 	if err != nil {
-		return aws.Config{}, fmt.Errorf("loading credentials: %w", err)
+		return aws.Config{}, cmderr.Wrap(cmderr.ErrPermission, fmt.Sprintf("aws: loading credentials for profile %q: %v", name, err))
 	}
 
 	// Create static credentials provider
@@ -125,7 +126,7 @@ func loadWithOmniProfile(ctx context.Context, name string, opts Options) (aws.Co
 		config.WithRegion(region),
 	)
 	if err != nil {
-		return aws.Config{}, fmt.Errorf("loading AWS config: %w", err)
+		return aws.Config{}, cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("aws: loading config with omni profile: %v", err))
 	}
 
 	return cfg, nil

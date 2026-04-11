@@ -3,10 +3,13 @@ package vault
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"net/http"
 	"os"
 
 	"github.com/hashicorp/vault/api"
+	"github.com/inovacc/omni/internal/cli/cmderr"
 )
 
 // Client wraps the Vault API client.
@@ -22,6 +25,29 @@ type Options struct {
 	TLSSkip   bool   // Skip TLS verification
 }
 
+// classifyVaultError maps a Vault API error to a cmderr sentinel.
+func classifyVaultError(err error, op string) error {
+	if err == nil {
+		return nil
+	}
+
+	var respErr *api.ResponseError
+	if errors.As(err, &respErr) {
+		switch respErr.StatusCode {
+		case http.StatusUnauthorized, http.StatusForbidden:
+			return cmderr.Wrap(cmderr.ErrPermission, fmt.Sprintf("vault: %s: %v", op, err))
+		case http.StatusNotFound:
+			return cmderr.Wrap(cmderr.ErrNotFound, fmt.Sprintf("vault: %s: %v", op, err))
+		case http.StatusBadRequest:
+			return cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("vault: %s: %v", op, err))
+		default:
+			return cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("vault: %s: %v", op, err))
+		}
+	}
+
+	return cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("vault: %s: %v", op, err))
+}
+
 // New creates a new Vault client with the given options.
 func New(opts Options) (*Client, error) {
 	config := api.DefaultConfig()
@@ -32,13 +58,13 @@ func New(opts Options) (*Client, error) {
 
 	if opts.TLSSkip {
 		if err := config.ConfigureTLS(&api.TLSConfig{Insecure: true}); err != nil {
-			return nil, fmt.Errorf("failed to configure TLS: %w", err)
+			return nil, cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("vault: failed to configure TLS: %v", err))
 		}
 	}
 
 	client, err := api.NewClient(config)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create vault client: %w", err)
+		return nil, cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("vault: failed to create client: %v", err))
 	}
 
 	if opts.Token != "" {
@@ -76,7 +102,11 @@ func (c *Client) Address() string {
 func (c *Client) Read(ctx context.Context, path string) (*api.Secret, error) {
 	secret, err := c.client.Logical().ReadWithContext(ctx, path)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read secret: %w", err)
+		return nil, classifyVaultError(err, "read "+path)
+	}
+
+	if secret == nil {
+		return nil, cmderr.Wrap(cmderr.ErrNotFound, fmt.Sprintf("vault: secret not found at path: %s", path))
 	}
 
 	return secret, nil
@@ -86,7 +116,7 @@ func (c *Client) Read(ctx context.Context, path string) (*api.Secret, error) {
 func (c *Client) Write(ctx context.Context, path string, data map[string]any) (*api.Secret, error) {
 	secret, err := c.client.Logical().WriteWithContext(ctx, path, data)
 	if err != nil {
-		return nil, fmt.Errorf("failed to write secret: %w", err)
+		return nil, classifyVaultError(err, "write "+path)
 	}
 
 	return secret, nil
@@ -96,7 +126,7 @@ func (c *Client) Write(ctx context.Context, path string, data map[string]any) (*
 func (c *Client) List(ctx context.Context, path string) (*api.Secret, error) {
 	secret, err := c.client.Logical().ListWithContext(ctx, path)
 	if err != nil {
-		return nil, fmt.Errorf("failed to list secrets: %w", err)
+		return nil, classifyVaultError(err, "list "+path)
 	}
 
 	return secret, nil
@@ -106,7 +136,7 @@ func (c *Client) List(ctx context.Context, path string) (*api.Secret, error) {
 func (c *Client) Delete(ctx context.Context, path string) (*api.Secret, error) {
 	secret, err := c.client.Logical().DeleteWithContext(ctx, path)
 	if err != nil {
-		return nil, fmt.Errorf("failed to delete secret: %w", err)
+		return nil, classifyVaultError(err, "delete "+path)
 	}
 
 	return secret, nil
@@ -119,7 +149,7 @@ func (c *Client) LoginToken(token string) error {
 	// Verify the token by looking it up
 	_, err := c.client.Auth().Token().LookupSelf()
 	if err != nil {
-		return fmt.Errorf("token verification failed: %w", err)
+		return classifyVaultError(err, "token verification")
 	}
 
 	return nil
@@ -138,7 +168,7 @@ func (c *Client) LoginUserpass(ctx context.Context, username, password string, m
 
 	secret, err := c.client.Logical().WriteWithContext(ctx, path, data)
 	if err != nil {
-		return nil, fmt.Errorf("userpass login failed: %w", err)
+		return nil, classifyVaultError(err, "userpass login")
 	}
 
 	if secret != nil && secret.Auth != nil {
@@ -162,7 +192,7 @@ func (c *Client) LoginAppRole(ctx context.Context, roleID, secretID string, moun
 
 	secret, err := c.client.Logical().WriteWithContext(ctx, path, data)
 	if err != nil {
-		return nil, fmt.Errorf("approle login failed: %w", err)
+		return nil, classifyVaultError(err, "approle login")
 	}
 
 	if secret != nil && secret.Auth != nil {
@@ -201,12 +231,19 @@ func (c *Client) Health() (*api.HealthResponse, error) {
 func (c *Client) SaveToken() error {
 	token := c.client.Token()
 	if token == "" {
-		return fmt.Errorf("no token to save")
+		return cmderr.Wrap(cmderr.ErrInvalidInput, "vault: no token to save")
 	}
 
 	tokenFile := getTokenFile()
 
-	return os.WriteFile(tokenFile, []byte(token), 0600)
+	if err := os.WriteFile(tokenFile, []byte(token), 0600); err != nil {
+		if errors.Is(err, os.ErrPermission) {
+			return cmderr.Wrap(cmderr.ErrPermission, fmt.Sprintf("vault: save token: %v", err))
+		}
+		return cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("vault: save token: %v", err))
+	}
+
+	return nil
 }
 
 // LoadToken loads the token from the default token file.
@@ -215,7 +252,13 @@ func (c *Client) LoadToken() error {
 
 	data, err := os.ReadFile(tokenFile)
 	if err != nil {
-		return fmt.Errorf("failed to read token file: %w", err)
+		if errors.Is(err, os.ErrNotExist) {
+			return cmderr.Wrap(cmderr.ErrNotFound, fmt.Sprintf("vault: token file not found: %s", tokenFile))
+		}
+		if errors.Is(err, os.ErrPermission) {
+			return cmderr.Wrap(cmderr.ErrPermission, fmt.Sprintf("vault: load token: %v", err))
+		}
+		return cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("vault: load token: %v", err))
 	}
 
 	c.client.SetToken(string(data))
