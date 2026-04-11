@@ -2,9 +2,12 @@ package video
 
 import (
 	"bytes"
+	"errors"
 	"path/filepath"
+	"strings"
 	"testing"
 
+	"github.com/inovacc/omni/internal/cli/cmderr"
 	"github.com/inovacc/omni/pkg/video/types"
 )
 
@@ -15,8 +18,11 @@ func TestRunChannel_NoArgs(t *testing.T) {
 		t.Fatal("expected error for no args")
 	}
 
-	if err.Error() != "video channel: URL is required" {
-		t.Errorf("unexpected error: %v", err)
+	if !errors.Is(err, cmderr.ErrInvalidInput) {
+		t.Errorf("expected ErrInvalidInput, got %v", err)
+	}
+	if !strings.Contains(err.Error(), "URL is required") {
+		t.Errorf("expected 'URL is required' in message, got %v", err)
 	}
 }
 

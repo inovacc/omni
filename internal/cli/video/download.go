@@ -12,7 +12,11 @@ import (
 // RunDownload downloads a video from the given URL.
 func RunDownload(w io.Writer, args []string, opts Options) error {
 	if len(args) == 0 {
-		return fmt.Errorf("video download: URL is required")
+		return validateVideoURL("")
+	}
+
+	if err := validateVideoURL(args[0]); err != nil {
+		return err
 	}
 
 	url := normalizeVideoURL(args[0])
@@ -93,7 +97,7 @@ func RunDownload(w io.Writer, args []string, opts Options) error {
 
 	client, err := video.New(clientOpts...)
 	if err != nil {
-		return fmt.Errorf("video download: %w", err)
+		return wrapVideoErr("video download", err)
 	}
 
 	ctx := context.Background()
@@ -101,7 +105,7 @@ func RunDownload(w io.Writer, args []string, opts Options) error {
 	// Extract info first for display.
 	info, err := client.Extract(ctx, url)
 	if err != nil {
-		return err
+		return wrapVideoErr("video download", err)
 	}
 
 	if !opts.Quiet {

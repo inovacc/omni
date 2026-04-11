@@ -2,11 +2,13 @@ package video
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"os"
 	"path/filepath"
 
+	"github.com/inovacc/omni/internal/cli/cmderr"
 	"github.com/inovacc/omni/pkg/userdirs"
 	"github.com/inovacc/omni/pkg/video"
 	"github.com/inovacc/omni/pkg/video/utils"
@@ -15,7 +17,11 @@ import (
 // RunChannel downloads all videos from a YouTube channel with SQLite tracking.
 func RunChannel(w io.Writer, args []string, opts Options) error {
 	if len(args) == 0 {
-		return fmt.Errorf("video channel: URL is required")
+		return validateVideoURL("")
+	}
+
+	if err := validateVideoURL(args[0]); err != nil {
+		return err
 	}
 
 	url := normalizeVideoURL(args[0])
@@ -41,7 +47,7 @@ func RunChannel(w io.Writer, args []string, opts Options) error {
 
 	extractClient, err := video.New(clientOpts...)
 	if err != nil {
-		return fmt.Errorf("video channel: %w", err)
+		return wrapVideoErr("video channel", err)
 	}
 
 	// Extract channel info.
@@ -51,11 +57,11 @@ func RunChannel(w io.Writer, args []string, opts Options) error {
 
 	info, err := extractClient.Extract(ctx, url)
 	if err != nil {
-		return fmt.Errorf("video channel: %w", err)
+		return wrapVideoErr("video channel", err)
 	}
 
 	if info.Type != "playlist" || len(info.Entries) == 0 {
-		return fmt.Errorf("video channel: no videos found in channel")
+		return cmderr.Wrap(cmderr.ErrNotFound, "video channel: no videos found in channel")
 	}
 
 	channelName := info.Title
@@ -66,32 +72,35 @@ func RunChannel(w io.Writer, args []string, opts Options) error {
 	// Create channel folder in Downloads.
 	downloadDir, err := userdirs.DownloadsDir()
 	if err != nil {
-		return fmt.Errorf("video channel: %w", err)
+		return cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("video channel: %s", err))
 	}
 
 	channelDir := filepath.Join(downloadDir, utils.SanitizeFilename(channelName, false))
 
 	if err := os.MkdirAll(channelDir, 0o755); err != nil {
-		return fmt.Errorf("video channel: create directory: %w", err)
+		if errors.Is(err, os.ErrPermission) {
+			return cmderr.Wrap(cmderr.ErrPermission, fmt.Sprintf("video channel: create directory: %s", err))
+		}
+		return cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("video channel: create directory: %s", err))
 	}
 
 	// Init SQLite.
 	dbPath := filepath.Join(channelDir, "channel.db")
 	db, err := initChannelDB(dbPath)
 	if err != nil {
-		return fmt.Errorf("video channel: %w", err)
+		return cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("video channel: open db: %s", err))
 	}
 	defer func() { _ = db.Close() }()
 
 	// Upsert channel metadata.
 	if err := upsertChannel(db, info); err != nil {
-		return fmt.Errorf("video channel: %w", err)
+		return cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("video channel: %s", err))
 	}
 
 	// Get already-downloaded video IDs.
 	seen, err := getDownloadedVideoIDs(db)
 	if err != nil {
-		return fmt.Errorf("video channel: %w", err)
+		return cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("video channel: %s", err))
 	}
 
 	// Filter entries.

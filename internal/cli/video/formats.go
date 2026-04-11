@@ -13,7 +13,11 @@ import (
 // RunListFormats extracts and displays available formats.
 func RunListFormats(w io.Writer, args []string, opts Options) error {
 	if len(args) == 0 {
-		return fmt.Errorf("video list-formats: URL is required")
+		return validateVideoURL("")
+	}
+
+	if err := validateVideoURL(args[0]); err != nil {
+		return err
 	}
 
 	url := normalizeVideoURL(args[0])
@@ -33,12 +37,12 @@ func RunListFormats(w io.Writer, args []string, opts Options) error {
 
 	client, err := video.New(clientOpts...)
 	if err != nil {
-		return fmt.Errorf("video list-formats: %w", err)
+		return wrapVideoErr("video list-formats", err)
 	}
 
 	info, err := client.Extract(context.Background(), url)
 	if err != nil {
-		return err
+		return wrapVideoErr("video list-formats", err)
 	}
 
 	format.SortFormats(info.Formats)
@@ -46,7 +50,7 @@ func RunListFormats(w io.Writer, args []string, opts Options) error {
 	if opts.JSON {
 		data, err := json.MarshalIndent(info.Formats, "", "  ")
 		if err != nil {
-			return err
+			return wrapVideoErr("video list-formats", err)
 		}
 
 		_, _ = fmt.Fprintln(w, string(data))

@@ -12,7 +12,11 @@ import (
 // RunInfo extracts and displays video metadata.
 func RunInfo(w io.Writer, args []string, opts Options) error {
 	if len(args) == 0 {
-		return fmt.Errorf("video info: URL is required")
+		return validateVideoURL("")
+	}
+
+	if err := validateVideoURL(args[0]); err != nil {
+		return err
 	}
 
 	url := normalizeVideoURL(args[0])
@@ -36,17 +40,17 @@ func RunInfo(w io.Writer, args []string, opts Options) error {
 
 	client, err := video.New(clientOpts...)
 	if err != nil {
-		return fmt.Errorf("video info: %w", err)
+		return wrapVideoErr("video info", err)
 	}
 
 	info, err := client.Extract(context.Background(), url)
 	if err != nil {
-		return err
+		return wrapVideoErr("video info", err)
 	}
 
 	data, err := json.MarshalIndent(info, "", "  ")
 	if err != nil {
-		return fmt.Errorf("video info: %w", err)
+		return wrapVideoErr("video info", err)
 	}
 
 	_, _ = fmt.Fprintln(w, string(data))
