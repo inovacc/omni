@@ -3,10 +3,31 @@
 package kill
 
 import (
+	"errors"
 	"fmt"
 	"io"
+	"os"
 	"syscall"
 )
+
+// sendSignal dispatches a signal to a process on Unix. All supported signals
+// in signalMap are valid here; errors are returned raw so kill.go's
+// classifySignalErr can map them to cmderr sentinels.
+func sendSignal(process *os.Process, sig syscall.Signal) error {
+	return process.Signal(sig)
+}
+
+// isNoSuchProcess reports whether err represents ESRCH ("no such process").
+func isNoSuchProcess(err error) bool {
+	return errors.Is(err, syscall.ESRCH)
+}
+
+// isPlatformUnsupportedSignal reports whether a signal name is recognised as
+// a POSIX signal but unavailable on the current platform. Always false on
+// Unix — all signals in signalMap are supported.
+func isPlatformUnsupportedSignal(_ string) bool {
+	return false
+}
 
 // signalMap maps signal names to syscall.Signal values
 var signalMap = map[string]syscall.Signal{

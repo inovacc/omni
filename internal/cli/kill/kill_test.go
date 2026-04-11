@@ -2,8 +2,11 @@ package kill
 
 import (
 	"bytes"
+	"errors"
 	"strings"
 	"testing"
+
+	"github.com/inovacc/omni/internal/cli/cmderr"
 )
 
 func TestListSignals(t *testing.T) {
@@ -45,8 +48,47 @@ func TestRunKillNoArgs(t *testing.T) {
 
 	err := RunKill(&buf, []string{}, KillOptions{})
 	if err == nil {
-		t.Error("RunKill() expected error with no arguments")
+		t.Fatal("RunKill() expected error with no arguments")
 	}
+	if !errors.Is(err, cmderr.ErrInvalidInput) {
+		t.Errorf("RunKill() no-args: want ErrInvalidInput, got %v", err)
+	}
+}
+
+func TestRunKillSentinels(t *testing.T) {
+	t.Run("bad pid → ErrInvalidInput", func(t *testing.T) {
+		var buf bytes.Buffer
+		err := RunKill(&buf, []string{"not-a-pid"}, KillOptions{})
+		if err == nil {
+			t.Fatal("expected error")
+		}
+		if !errors.Is(err, cmderr.ErrInvalidInput) {
+			t.Errorf("want ErrInvalidInput, got %v", err)
+		}
+	})
+
+	t.Run("unknown signal via -s → ErrInvalidInput", func(t *testing.T) {
+		var buf bytes.Buffer
+		err := RunKill(&buf, []string{"1"}, KillOptions{Signal: "BOGUSX"})
+		if err == nil {
+			t.Fatal("expected error")
+		}
+		if !errors.Is(err, cmderr.ErrInvalidInput) {
+			t.Errorf("want ErrInvalidInput, got %v", err)
+		}
+	})
+
+	t.Run("nonexistent pid → ErrNotFound", func(t *testing.T) {
+		var buf bytes.Buffer
+		// 999999999 is almost certainly not a live PID.
+		err := RunKill(&buf, []string{"999999999"}, KillOptions{})
+		if err == nil {
+			t.Skip("pid 999999999 unexpectedly exists")
+		}
+		if !errors.Is(err, cmderr.ErrNotFound) && !errors.Is(err, cmderr.ErrPermission) {
+			t.Errorf("want ErrNotFound or ErrPermission, got %v", err)
+		}
+	})
 }
 
 func TestRunKillInvalidPID(t *testing.T) {

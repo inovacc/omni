@@ -1,6 +1,7 @@
 package kill
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -8,6 +9,7 @@ import (
 	"strings"
 	"syscall"
 
+	"github.com/inovacc/omni/internal/cli/cmderr"
 	"github.com/inovacc/omni/pkg/cobra/helper/output"
 )
 
@@ -43,23 +45,27 @@ func RunKill(w io.Writer, args []string, opts KillOptions) error {
 	}
 
 	if len(args) == 0 {
-		return fmt.Errorf("kill: usage: kill [-s signal | -signal] pid ")
+		return cmderr.Wrap(cmderr.ErrInvalidInput, "kill: usage: kill [-s signal | -signal] pid")
 	}
 
 	// Determine signal
 	sig := defaultSignal()
 
 	if opts.Signal != "" {
-		var ok bool
-
 		sigName := strings.ToUpper(strings.TrimPrefix(opts.Signal, "SIG"))
 
-		sig, ok = signalMap[sigName]
-		if !ok {
+		s, ok := signalMap[sigName]
+		switch {
+		case ok:
+			sig = s
+		case isPlatformUnsupportedSignal(sigName):
+			return cmderr.Wrap(cmderr.ErrUnsupported,
+				fmt.Sprintf("kill: signal SIG%s not supported on windows (INT/KILL/TERM only)", sigName))
+		default:
 			// Try parsing as a number
 			sigNum, err := strconv.Atoi(opts.Signal)
 			if err != nil {
-				return fmt.Errorf("kill: invalid signal: %s", opts.Signal)
+				return cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("kill: unknown signal: %s", opts.Signal))
 			}
 
 			sig = syscall.Signal(sigNum)
@@ -73,13 +79,21 @@ func RunKill(w io.Writer, args []string, opts KillOptions) error {
 
 	for _, arg := range args {
 		// Check for signal specification in argument (-9, -KILL, etc.)
-		if strings.HasPrefix(arg, "-") && !strings.HasPrefix(arg, "--") {
+		if strings.HasPrefix(arg, "-") && !strings.HasPrefix(arg, "--") && len(arg) > 1 {
 			sigSpec := arg[1:]
 
 			sigName := strings.ToUpper(strings.TrimPrefix(sigSpec, "SIG"))
 			if s, ok := signalMap[sigName]; ok {
 				sig = s
 				continue
+			}
+			if isPlatformUnsupportedSignal(sigName) {
+				return cmderr.Wrap(cmderr.ErrUnsupported,
+					fmt.Sprintf("kill: signal SIG%s not supported on windows (INT/KILL/TERM only)", sigName))
+			}
+			// If it looks like a signal name (alphabetic), reject as unknown.
+			if isAlphaSignalName(sigName) {
+				return cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("kill: unknown signal: %s", sigSpec))
 			}
 		}
 
@@ -90,13 +104,13 @@ func RunKill(w io.Writer, args []string, opts KillOptions) error {
 					PID:     0,
 					Signal:  int(sig),
 					Success: false,
-					Error:   fmt.Sprintf("invalid PID: %s", arg),
+					Error:   fmt.Sprintf("invalid pid: %s", arg),
 				})
 			} else {
-				_, _ = fmt.Fprintf(os.Stderr, "kill: invalid PID: %s\n", arg)
+				_, _ = fmt.Fprintf(os.Stderr, "kill: invalid pid: %s\n", arg)
 			}
 
-			lastErr = err
+			lastErr = cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("kill: invalid pid: %s", arg))
 
 			continue
 		}
@@ -111,15 +125,15 @@ func RunKill(w io.Writer, args []string, opts KillOptions) error {
 					Error:   "no such process",
 				})
 			} else {
-				_, _ = fmt.Fprintf(os.Stderr, "kill: no such process: %d\n", pid)
+				_, _ = fmt.Fprintf(os.Stderr, "kill: no such process: pid %d\n", pid)
 			}
 
-			lastErr = err
+			lastErr = cmderr.Wrap(cmderr.ErrNotFound, fmt.Sprintf("kill: no such process: pid %d", pid))
 
 			continue
 		}
 
-		if err := process.Signal(sig); err != nil {
+		if err := sendSignal(process, sig); err != nil {
 			if jsonMode {
 				results = append(results, KillResult{
 					PID:     pid,
@@ -128,10 +142,10 @@ func RunKill(w io.Writer, args []string, opts KillOptions) error {
 					Error:   err.Error(),
 				})
 			} else {
-				_, _ = fmt.Fprintf(os.Stderr, "kill: (%d) - %v\n", pid, err)
+				_, _ = fmt.Fprintf(os.Stderr, "kill: %v\n", err)
 			}
 
-			lastErr = err
+			lastErr = classifySignalErr(err, pid)
 
 			continue
 		}
@@ -181,4 +195,48 @@ func Kill(pid int, sig syscall.Signal) error {
 	}
 
 	return process.Signal(sig)
+}
+
+// isAlphaSignalName reports whether name looks like a POSIX signal mnemonic
+// (purely alphabetic, non-empty). Used to distinguish "-USR1" (unknown signal)
+// from "-1" (numeric PID).
+func isAlphaSignalName(name string) bool {
+	if name == "" {
+		return false
+	}
+	for _, r := range name {
+		if (r < 'A' || r > 'Z') && (r < 'a' || r > 'z') {
+			return false
+		}
+	}
+	return true
+}
+
+// classifySignalErr maps a raw os/syscall error from process.Signal to a
+// cmderr-classified error. It recognises permission errors and "no such
+// process" (ESRCH). Errors already wrapped with a cmderr sentinel (e.g.
+// ErrUnsupported from the Windows branch) are passed through unchanged.
+func classifySignalErr(err error, pid int) error {
+	if err == nil {
+		return nil
+	}
+
+	// Pass through already-classified cmderr errors (e.g. ErrUnsupported
+	// from kill_windows.go sendSignal).
+	if errors.Is(err, cmderr.ErrUnsupported) ||
+		errors.Is(err, cmderr.ErrInvalidInput) ||
+		errors.Is(err, cmderr.ErrPermission) ||
+		errors.Is(err, cmderr.ErrNotFound) {
+		return err
+	}
+
+	if errors.Is(err, os.ErrPermission) || errors.Is(err, syscall.EPERM) {
+		return cmderr.Wrap(cmderr.ErrPermission, fmt.Sprintf("kill: permission denied: pid %d", pid))
+	}
+
+	if isNoSuchProcess(err) {
+		return cmderr.Wrap(cmderr.ErrNotFound, fmt.Sprintf("kill: no such process: pid %d", pid))
+	}
+
+	return fmt.Errorf("kill: %w", err)
 }
