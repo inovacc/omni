@@ -617,3 +617,413 @@ categories:
         args: ["kill", "-USR1", "999999999"]
         exit_code: 1          # unix: ErrNotFound; windows would be 6 ErrUnsupported
         normalizations: ["strip_path"]
+
+  # ===== CMDERR WAVE Z — PASS 1: MINIMUM-ONE-PER-COMMAND =====
+  # Phase 1 Plan 16: backfill error-path goldens for commands migrated in Plans 07-15.
+  # Each deferred command gets at least one snapshot to satisfy POLISH-02.
+  - name: cmderr_wave_z
+    tests:
+      # --- Plan 07: json / yaml struct conversion ---
+      - name: json2struct_invalid_json
+        args: ["json", "tostruct"]
+        stdin: "{bad json"
+        exit_code: 2
+        normalizations: ["strip_path"]
+
+      - name: yaml2struct_invalid_yaml
+        args: ["yaml", "tostruct"]
+        stdin: "key: [unclosed"
+        exit_code: 2
+        normalizations: ["strip_path"]
+
+      # --- Plan 08: idgen commands ---
+      - name: ksuid_invalid_flag
+        args: ["ksuid", "--count", "not-a-number"]
+        exit_code: 2
+        normalizations: ["strip_path"]
+
+      - name: nanoid_invalid_size
+        args: ["nanoid", "--size", "-1"]
+        exit_code: 2
+        normalizations: ["strip_path"]
+
+      - name: snowflake_invalid_node
+        args: ["snowflake", "--node", "99999"]
+        exit_code: 2
+        normalizations: ["strip_path"]
+
+      - name: ulid_invalid_flag
+        args: ["ulid", "--count", "not-a-number"]
+        exit_code: 2
+        normalizations: ["strip_path"]
+
+      # --- Plan 09: ps / pkill ---
+      - name: ps_invalid_sort_key
+        args: ["ps", "--sort=bogus"]
+        exit_code: 2
+        normalizations: ["strip_path"]
+
+      - name: pkill_empty_pattern
+        args: ["pkill", ""]
+        exit_code: 2
+        normalizations: ["strip_path"]
+
+      - name: pkill_invalid_regex
+        args: ["pkill", "[[invalid"]
+        exit_code: 2
+        normalizations: ["strip_path"]
+
+      - name: pkill_invalid_signal
+        args: ["pkill", "-s", "BOGUSX", "someproc"]
+        exit_code: 2
+        normalizations: ["strip_path"]
+
+      # --- Plan 10: df / du / free ---
+      - name: df_nonexistent_path
+        args: ["df", "/nonexistent_omni_plan16_xyz"]
+        exit_code: 1
+        normalizations: ["strip_path"]
+
+      - name: du_nonexistent_path
+        args: ["du", "/nonexistent_omni_plan16_xyz"]
+        exit_code: 1
+        normalizations: ["strip_path"]
+
+      - name: free_invalid_flag
+        args: ["free", "--definitely-not-a-real-flag"]
+        exit_code: 1
+        normalizations: ["strip_path"]
+
+      # --- Plan 11: yes / uname / lsof / ss ---
+      - name: yes_invalid_flag
+        args: ["yes", "--definitely-not-a-real-flag"]
+        exit_code: 1
+        normalizations: ["strip_path"]
+
+      - name: uname_invalid_flag
+        args: ["uname", "--definitely-not-a-real-flag"]
+        exit_code: 1
+        normalizations: ["strip_path"]
+
+      - name: lsof_invalid_flag
+        args: ["lsof", "--definitely-not-a-real-flag"]
+        exit_code: 1
+        normalizations: ["strip_path"]
+
+      - name: ss_invalid_flag
+        args: ["ss", "--definitely-not-a-real-flag"]
+        exit_code: 1
+        normalizations: ["strip_path"]
+
+      # --- Plan 12: cloud/devops wrappers ---
+      - name: aws_missing_subcommand
+        args: ["aws", "--help"]
+        exit_code: 0
+        normalizations: ["strip_path"]
+
+      - name: git_invalid_subcommand
+        args: ["git", "not-a-real-git-subcmd-xyz"]
+        exit_code: 1
+        normalizations: ["strip_path"]
+
+      - name: kubectl_invalid_flag
+        args: ["kubectl", "--definitely-not-a-real-flag"]
+        exit_code: 1
+        normalizations: ["strip_path"]
+
+      - name: terraform_invalid_subcommand
+        args: ["terraform", "not-a-real-tf-subcmd-xyz"]
+        exit_code: 1
+        normalizations: ["strip_path"]
+
+      # --- Plan 13: scaffold / project / repo ---
+      - name: scaffold_cobra_missing_module
+        args: ["scaffold", "cobra", "init", "--name", "testapp"]
+        exit_code: 2
+        normalizations: ["strip_path"]
+
+      - name: scaffold_cobra_empty_name
+        args: ["scaffold", "cobra", "add", ""]
+        exit_code: 2
+        normalizations: ["strip_path"]
+
+      - name: scaffold_handler_empty_name
+        args: ["scaffold", "handler", ""]
+        exit_code: 2
+        normalizations: ["strip_path"]
+
+      - name: scaffold_repository_empty_name
+        args: ["scaffold", "repository", ""]
+        exit_code: 2
+        normalizations: ["strip_path"]
+
+      - name: scaffold_test_empty_path
+        args: ["scaffold", "test", ""]
+        exit_code: 2
+        normalizations: ["strip_path"]
+
+      - name: project_nonexistent_path
+        args: ["project", "info", "/nonexistent_omni_plan16_xyz"]
+        exit_code: 1
+        normalizations: ["strip_path"]
+
+      - name: repo_analyze_nonexistent_path
+        args: ["repo", "analyze", "/nonexistent_omni_plan16_xyz"]
+        exit_code: 1
+        normalizations: ["strip_path"]
+
+      # --- Plan 14: tree / pipe / buf / lint / loc ---
+      - name: tree_nonexistent_path
+        args: ["tree", "/nonexistent_omni_plan16_xyz"]
+        exit_code: 1
+        normalizations: ["strip_path"]
+
+      - name: pipe_invalid_separator
+        args: ["pipe", "--sep", ""]
+        exit_code: 2
+        normalizations: ["strip_path"]
+
+      - name: buf_lint_nonexistent_path
+        args: ["buf", "lint", "/nonexistent_omni_plan16_xyz"]
+        exit_code: 1
+        normalizations: ["strip_path"]
+
+      - name: lint_nonexistent_path
+        args: ["lint", "/nonexistent_omni_plan16_xyz"]
+        exit_code: 1
+        normalizations: ["strip_path"]
+
+      - name: loc_nonexistent_path
+        args: ["loc", "/nonexistent_omni_plan16_xyz"]
+        exit_code: 1
+        normalizations: ["strip_path"]
+
+      # --- Plan 15: misc commands ---
+      - name: arch_invalid_flag
+        args: ["arch", "--definitely-not-a-real-flag"]
+        exit_code: 1
+        normalizations: ["strip_path"]
+
+      - name: banner_empty_text
+        args: ["banner", ""]
+        exit_code: 0
+        normalizations: ["strip_path"]
+
+      - name: cron_invalid_expression
+        args: ["cron", "--validate", "not-a-cron-expr"]
+        exit_code: 2
+        normalizations: ["strip_path"]
+
+      - name: note_invalid_flag
+        args: ["note", "--definitely-not-a-real-flag"]
+        exit_code: 1
+        normalizations: ["strip_path"]
+
+      - name: pager_nonexistent_file
+        args: ["less", "/nonexistent_omni_plan16_xyz"]
+        exit_code: 1
+        normalizations: ["strip_path"]
+
+  # ===== CMDERR WAVE Z — PASS 2: RICH MATRICES FOR RISKY COMMANDS =====
+  # Phase 1 Plan 16 original scope: 3-5 error-class snapshots per risky command.
+  - name: cmderr_wave_z_risky
+    tests:
+      # --- find (5) ---
+      - name: find_invalid_regex
+        args: ["find", ".", "--regex", "[[bad"]
+        exit_code: 2
+        normalizations: ["strip_path"]
+
+      - name: find_invalid_size_unit
+        args: ["find", ".", "--size", "bad-unit"]
+        exit_code: 2
+        normalizations: ["strip_path"]
+
+      - name: find_nonexistent_root
+        args: ["find", "/nonexistent_omni_plan16_xyz"]
+        exit_code: 1
+        normalizations: ["strip_path"]
+
+      - name: find_invalid_type_flag
+        args: ["find", ".", "--type", "z"]
+        exit_code: 2
+        normalizations: ["strip_path"]
+
+      - name: find_invalid_maxdepth
+        args: ["find", ".", "--maxdepth", "-1"]
+        exit_code: 2
+        normalizations: ["strip_path"]
+
+      # --- sed (4) ---
+      - name: sed_bad_regex
+        args: ["sed", "s/[[bad/x/"]
+        stdin: "hello"
+        exit_code: 2
+        normalizations: ["strip_path"]
+
+      - name: sed_missing_file
+        args: ["sed", "s/a/b/", "/nonexistent_omni_plan16_xyz"]
+        exit_code: 1
+        normalizations: ["strip_path"]
+
+      - name: sed_bad_substitute_flags
+        args: ["sed", "s/a/b/Q"]
+        stdin: "hello"
+        exit_code: 2
+        normalizations: ["strip_path"]
+
+      - name: sed_unsupported_command
+        args: ["sed", "z/a/b/"]
+        stdin: "hello"
+        exit_code: 2
+        normalizations: ["strip_path"]
+
+      # --- awk (3) ---
+      - name: awk_parse_error
+        args: ["awk", "{print $"]
+        stdin: "hello"
+        exit_code: 2
+        normalizations: ["strip_path"]
+
+      - name: awk_missing_file
+        args: ["awk", "{print $1}", "/nonexistent_omni_plan16_xyz"]
+        exit_code: 1
+        normalizations: ["strip_path"]
+
+      - name: awk_invalid_flag
+        args: ["awk", "--definitely-not-a-real-flag"]
+        exit_code: 2
+        normalizations: ["strip_path"]
+
+      # --- dd (4) ---
+      - name: dd_missing_if
+        args: ["dd", "of=/dev/null"]
+        exit_code: 2
+        normalizations: ["strip_path"]
+
+      - name: dd_missing_of
+        args: ["dd", "if=/dev/null"]
+        exit_code: 2
+        normalizations: ["strip_path"]
+
+      - name: dd_bad_bs
+        args: ["dd", "if=/dev/null", "of=/dev/null", "bs=bad"]
+        exit_code: 2
+        normalizations: ["strip_path"]
+
+      - name: dd_nonexistent_if
+        args: ["dd", "if=/nonexistent_omni_plan16_xyz", "of=/dev/null"]
+        exit_code: 1
+        normalizations: ["strip_path"]
+
+      # --- grep (4) ---
+      - name: grep_file_not_found
+        args: ["grep", "pattern", "/nonexistent_omni_plan16_xyz"]
+        exit_code: 1
+        normalizations: ["strip_path"]
+
+      - name: grep_bad_regex
+        args: ["grep", "[[bad"]
+        stdin: "hello"
+        exit_code: 2
+        normalizations: ["strip_path"]
+
+      - name: grep_no_match_silent_exit
+        args: ["grep", "zzz_no_match_xyz"]
+        stdin: "hello world"
+        exit_code: 1
+        normalizations: ["strip_path"]
+
+      - name: grep_invalid_flag
+        args: ["grep", "--definitely-not-a-real-flag"]
+        exit_code: 2
+        normalizations: ["strip_path"]
+
+      # --- curl (5) ---
+      - name: curl_bad_url
+        args: ["curl", "not-a-url"]
+        exit_code: 2
+        normalizations: ["strip_path"]
+
+      - name: curl_unresolvable_host
+        args: ["curl", "http://this.host.does.not.exist.invalid/"]
+        exit_code: 1
+        normalizations: ["strip_path"]
+
+      - name: curl_connect_refused
+        args: ["curl", "http://127.0.0.1:19999/"]
+        exit_code: 1
+        normalizations: ["strip_path"]
+
+      - name: curl_invalid_flag
+        args: ["curl", "--definitely-not-a-real-flag"]
+        exit_code: 2
+        normalizations: ["strip_path"]
+
+      - name: curl_missing_url
+        args: ["curl"]
+        exit_code: 2
+        normalizations: ["strip_path"]
+
+      # --- tar (4) ---
+      - name: tar_nonexistent_archive
+        args: ["tar", "-xf", "/nonexistent_omni_plan16_xyz.tar"]
+        exit_code: 1
+        normalizations: ["strip_path"]
+
+      - name: tar_missing_file_arg
+        args: ["tar", "-x"]
+        exit_code: 2
+        normalizations: ["strip_path"]
+
+      - name: tar_invalid_flag
+        args: ["tar", "--definitely-not-a-real-flag"]
+        exit_code: 2
+        normalizations: ["strip_path"]
+
+      - name: tar_corrupt_header
+        args: ["tar", "-xf", "-"]
+        stdin: "this is not a valid tar archive"
+        exit_code: 1
+        normalizations: ["strip_path"]
+
+      # --- jq (4) ---
+      - name: jq_bad_filter_syntax
+        args: ["jq", ".foo bar"]
+        stdin: "{\"foo\": 1}"
+        exit_code: 2
+        normalizations: ["strip_path"]
+
+      - name: jq_invalid_json_input
+        args: ["jq", ".foo"]
+        stdin: "{bad json"
+        exit_code: 2
+        normalizations: ["strip_path"]
+
+      - name: jq_missing_field_strict
+        args: ["jq", ".nonexistent"]
+        stdin: "{}"
+        exit_code: 0
+        normalizations: ["strip_path"]
+
+      - name: jq_invalid_flag
+        args: ["jq", "--definitely-not-a-real-flag"]
+        exit_code: 2
+        normalizations: ["strip_path"]
+
+      # --- diff (3) ---
+      - name: diff_files_differ
+        args: ["diff", "-"]
+        stdin: "line1\nline2"
+        exit_code: 0
+        normalizations: ["strip_path"]
+
+      - name: diff_missing_file
+        args: ["diff", "/nonexistent_omni_plan16_xyz_a", "/nonexistent_omni_plan16_xyz_b"]
+        exit_code: 1
+        normalizations: ["strip_path"]
+
+      - name: diff_invalid_flag
+        args: ["diff", "--definitely-not-a-real-flag"]
+        exit_code: 2
+        normalizations: ["strip_path"]
