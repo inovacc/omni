@@ -2,6 +2,7 @@ package rg
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -67,7 +68,7 @@ func BenchmarkRg_SearchFile_Regex(b *testing.B) {
 
 	for b.Loop() {
 		buf.Reset()
-		_ = Run(&buf, `ERROR .+ wrong`, []string{dir}, opts)
+		_ = Run(context.Background(), &buf, `ERROR .+ wrong`, []string{dir}, opts)
 	}
 }
 
@@ -81,7 +82,7 @@ func BenchmarkRg_SearchFile_Literal(b *testing.B) {
 
 	for b.Loop() {
 		buf.Reset()
-		_ = Run(&buf, "ERROR something went wrong", []string{dir}, opts)
+		_ = Run(context.Background(), &buf, "ERROR something went wrong", []string{dir}, opts)
 	}
 }
 
@@ -94,7 +95,7 @@ func BenchmarkRg_SearchDir_Small(b *testing.B) {
 
 	for b.Loop() {
 		buf.Reset()
-		_ = Run(&buf, "ERROR", []string{dir}, opts)
+		_ = Run(context.Background(), &buf, "ERROR", []string{dir}, opts)
 	}
 }
 
@@ -107,7 +108,7 @@ func BenchmarkRg_SearchDir_Large(b *testing.B) {
 
 	for b.Loop() {
 		buf.Reset()
-		_ = Run(&buf, "ERROR", []string{dir}, opts)
+		_ = Run(context.Background(), &buf, "ERROR", []string{dir}, opts)
 	}
 }
 
@@ -120,7 +121,7 @@ func BenchmarkRg_SearchDir_Parallel(b *testing.B) {
 
 	for b.Loop() {
 		buf.Reset()
-		_ = Run(&buf, "ERROR", []string{dir}, opts)
+		_ = Run(context.Background(), &buf, "ERROR", []string{dir}, opts)
 	}
 }
 
@@ -133,7 +134,7 @@ func BenchmarkRg_FilesWithMatch(b *testing.B) {
 
 	for b.Loop() {
 		buf.Reset()
-		_ = Run(&buf, "ERROR", []string{dir}, opts)
+		_ = Run(context.Background(), &buf, "ERROR", []string{dir}, opts)
 	}
 }
 
@@ -146,7 +147,7 @@ func BenchmarkRg_Count(b *testing.B) {
 
 	for b.Loop() {
 		buf.Reset()
-		_ = Run(&buf, "ERROR", []string{dir}, opts)
+		_ = Run(context.Background(), &buf, "ERROR", []string{dir}, opts)
 	}
 }
 
@@ -159,6 +160,6 @@ func BenchmarkRg_TypeFilter(b *testing.B) {
 
 	for b.Loop() {
 		buf.Reset()
-		_ = Run(&buf, "ERROR", []string{dir}, opts)
+		_ = Run(context.Background(), &buf, "ERROR", []string{dir}, opts)
 	}
 }

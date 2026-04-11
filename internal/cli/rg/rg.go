@@ -2,6 +2,7 @@ package rg
 
 import (
 	"bufio"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -136,7 +137,7 @@ type StreamSummary struct {
 var fileTypeExtensions = pkgrg.FileTypeExtensions
 
 // Run executes the rg command
-func Run(w io.Writer, pattern string, paths []string, opts Options) error {
+func Run(ctx context.Context, w io.Writer, pattern string, paths []string, opts Options) error {
 	if pattern == "" {
 		return cmderr.Wrap(cmderr.ErrInvalidInput, "rg: no pattern provided")
 	}
@@ -225,12 +226,12 @@ func Run(w io.Writer, pattern string, paths []string, opts Options) error {
 
 		if info.IsDir() {
 			if numWorkers > 1 {
-				err = searchDirParallel(w, path, re, pattern, literalPattern, useLiteralSearch, opts, gitignore, result, numWorkers, streamEnc, &streamMu)
+				err = searchDirParallel(ctx, w, path, re, pattern, literalPattern, useLiteralSearch, opts, gitignore, result, numWorkers, streamEnc, &streamMu)
 			} else {
-				err = searchDir(w, path, re, pattern, literalPattern, useLiteralSearch, opts, gitignore, result, 0, streamEnc, &streamMu)
+				err = searchDir(ctx, w, path, re, pattern, literalPattern, useLiteralSearch, opts, gitignore, result, 0, streamEnc, &streamMu)
 			}
 		} else {
-			err = searchFile(w, path, re, pattern, literalPattern, useLiteralSearch, opts, result, streamEnc, &streamMu)
+			err = searchFile(ctx, w, path, re, pattern, literalPattern, useLiteralSearch, opts, result, streamEnc, &streamMu)
 		}
 
 		if err != nil {
@@ -269,13 +270,13 @@ func Run(w io.Writer, pattern string, paths []string, opts Options) error {
 }
 
 // searchDirParallel performs parallel directory traversal and search
-func searchDirParallel(w io.Writer, dir string, re *regexp.Regexp, pattern, literalPattern string, useLiteral bool, opts Options, gitignore *GitignoreSet, result *resultInternal, numWorkers int, streamEnc *json.Encoder, streamMu *sync.Mutex) error {
+func searchDirParallel(ctx context.Context, w io.Writer, dir string, re *regexp.Regexp, pattern, literalPattern string, useLiteral bool, opts Options, gitignore *GitignoreSet, result *resultInternal, numWorkers int, streamEnc *json.Encoder, streamMu *sync.Mutex) error {
 	jsonMode := output.New(w, opts.OutputFormat).IsJSON()
 
 	// Collect all files to search
 	var files []string
 
-	err := collectFiles(dir, opts, gitignore, &files, 0)
+	err := collectFiles(ctx, dir, opts, gitignore, &files, 0)
 	if err != nil {
 		return err
 	}
@@ -295,6 +296,12 @@ func searchDirParallel(w io.Writer, dir string, re *regexp.Regexp, pattern, lite
 	for range numWorkers {
 		wg.Go(func() {
 			for path := range fileCh {
+				select {
+				case <-ctx.Done():
+					return
+				default:
+				}
+
 				fr, err := searchFileSingle(path, re, pattern, literalPattern, useLiteral, opts)
 				if err != nil {
 					select {
@@ -378,7 +385,11 @@ func searchDirParallel(w io.Writer, dir string, re *regexp.Regexp, pattern, lite
 }
 
 // collectFiles recursively collects all searchable files
-func collectFiles(dir string, opts Options, gitignore *GitignoreSet, files *[]string, depth int) error {
+func collectFiles(ctx context.Context, dir string, opts Options, gitignore *GitignoreSet, files *[]string, depth int) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+
 	if opts.MaxDepth > 0 && depth > opts.MaxDepth {
 		return nil
 	}
@@ -404,7 +415,7 @@ func collectFiles(dir string, opts Options, gitignore *GitignoreSet, files *[]st
 
 		if entry.IsDir() {
 			if opts.FollowSymlinks || entry.Type()&os.ModeSymlink == 0 {
-				_ = collectFiles(path, opts, gitignore, files, depth+1)
+				_ = collectFiles(ctx, path, opts, gitignore, files, depth+1)
 			}
 
 			continue
@@ -564,7 +575,11 @@ func outputFileResult(w io.Writer, fr FileResult, opts Options, re *regexp.Regex
 	}
 }
 
-func searchDir(w io.Writer, dir string, re *regexp.Regexp, pattern, literalPattern string, useLiteral bool, opts Options, gitignore *GitignoreSet, result *resultInternal, depth int, streamEnc *json.Encoder, streamMu *sync.Mutex) error {
+func searchDir(ctx context.Context, w io.Writer, dir string, re *regexp.Regexp, pattern, literalPattern string, useLiteral bool, opts Options, gitignore *GitignoreSet, result *resultInternal, depth int, streamEnc *json.Encoder, streamMu *sync.Mutex) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+
 	if opts.MaxDepth > 0 && depth > opts.MaxDepth {
 		return nil
 	}
@@ -590,7 +605,7 @@ func searchDir(w io.Writer, dir string, re *regexp.Regexp, pattern, literalPatte
 
 		if entry.IsDir() {
 			if opts.FollowSymlinks || entry.Type()&os.ModeSymlink == 0 {
-				if err := searchDir(w, path, re, pattern, literalPattern, useLiteral, opts, gitignore, result, depth+1, streamEnc, streamMu); err != nil {
+				if err := searchDir(ctx, w, path, re, pattern, literalPattern, useLiteral, opts, gitignore, result, depth+1, streamEnc, streamMu); err != nil {
 					if !opts.Quiet {
 						_, _ = fmt.Fprintf(w, "rg: %s: %v\n", path, err)
 					}
@@ -610,7 +625,7 @@ func searchDir(w io.Writer, dir string, re *regexp.Regexp, pattern, literalPatte
 			continue
 		}
 
-		if err := searchFile(w, path, re, pattern, literalPattern, useLiteral, opts, result, streamEnc, streamMu); err != nil {
+		if err := searchFile(ctx, w, path, re, pattern, literalPattern, useLiteral, opts, result, streamEnc, streamMu); err != nil {
 			if !opts.Quiet {
 				_, _ = fmt.Fprintf(w, "rg: %s: %v\n", path, err)
 			}
@@ -624,7 +639,7 @@ func searchDir(w io.Writer, dir string, re *regexp.Regexp, pattern, literalPatte
 	return nil
 }
 
-func searchFile(w io.Writer, path string, re *regexp.Regexp, pattern, literalPattern string, useLiteral bool, opts Options, result *resultInternal, streamEnc *json.Encoder, streamMu *sync.Mutex) error {
+func searchFile(ctx context.Context, w io.Writer, path string, re *regexp.Regexp, pattern, literalPattern string, useLiteral bool, opts Options, result *resultInternal, streamEnc *json.Encoder, streamMu *sync.Mutex) error {
 	jsonMode := output.New(w, opts.OutputFormat).IsJSON()
 
 	file, err := os.Open(path)

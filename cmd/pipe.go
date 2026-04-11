@@ -8,18 +8,23 @@ import (
 	"strings"
 
 	"github.com/inovacc/omni/internal/cli/awk"
+	"github.com/inovacc/omni/internal/cli/base"
+	"github.com/inovacc/omni/internal/cli/caseconv"
 	"github.com/inovacc/omni/internal/cli/cat"
 	"github.com/inovacc/omni/internal/cli/column"
 	"github.com/inovacc/omni/internal/cli/command"
 	"github.com/inovacc/omni/internal/cli/cut"
 	"github.com/inovacc/omni/internal/cli/fold"
 	"github.com/inovacc/omni/internal/cli/grep"
+	"github.com/inovacc/omni/internal/cli/hash"
 	"github.com/inovacc/omni/internal/cli/head"
 	"github.com/inovacc/omni/internal/cli/nl"
 	"github.com/inovacc/omni/internal/cli/paste"
 	"github.com/inovacc/omni/internal/cli/pipe"
 	"github.com/inovacc/omni/internal/cli/rev"
 	"github.com/inovacc/omni/internal/cli/sed"
+	"github.com/inovacc/omni/internal/cli/shuf"
+	clstrings "github.com/inovacc/omni/internal/cli/strings"
 	"github.com/inovacc/omni/internal/cli/tac"
 	"github.com/inovacc/omni/internal/cli/tail"
 	"github.com/inovacc/omni/internal/cli/text"
@@ -153,6 +158,43 @@ func buildPipeRegistry() *command.Registry {
 				set2 = args[1]
 			}
 			return tr.RunTr(w, r, set1, set2, tr.TrOptions{})
+		},
+	))
+
+	// hash: first arg is algorithm, rest are file args
+	reg.Register("hash", command.AdaptWriterArgs(
+		func(w io.Writer, args []string) error {
+			return hash.RunHash(w, args, hash.HashOptions{})
+		},
+	))
+
+	reg.Register("base64", command.AdaptWriterArgs(
+		func(w io.Writer, args []string) error {
+			return base.RunBase64(w, args, base.BaseOptions{})
+		},
+	))
+
+	reg.Register("base32", command.AdaptWriterArgs(
+		func(w io.Writer, args []string) error {
+			return base.RunBase32(w, args, base.BaseOptions{})
+		},
+	))
+
+	reg.Register("caseconv", command.AdaptWriterArgs(
+		func(w io.Writer, args []string) error {
+			return caseconv.RunCase(w, args, caseconv.Options{Case: caseconv.CaseUpper})
+		},
+	))
+
+	reg.Register("strings", command.AdaptWriterArgs(
+		func(w io.Writer, args []string) error {
+			return clstrings.RunStrings(w, args, clstrings.StringsOptions{})
+		},
+	))
+
+	reg.Register("shuf", command.AdaptWriterArgs(
+		func(w io.Writer, args []string) error {
+			return shuf.RunShuf(w, args, shuf.ShufOptions{})
 		},
 	))
 

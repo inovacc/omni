@@ -116,7 +116,7 @@ Gitignore Support:
 		pattern := args[0]
 		paths := args[1:]
 
-		return rg.Run(cmd.OutOrStdout(), pattern, paths, opts)
+		return rg.Run(cmd.Context(), cmd.OutOrStdout(), pattern, paths, opts)
 	},
 }
 

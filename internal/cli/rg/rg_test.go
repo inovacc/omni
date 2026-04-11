@@ -2,6 +2,7 @@ package rg
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"os"
 	"path/filepath"
@@ -156,7 +157,7 @@ func Nested() {
 		t.Run(tt.name, func(t *testing.T) {
 			var buf bytes.Buffer
 
-			err := Run(&buf, tt.pattern, tt.paths, tt.opts)
+			err := Run(context.Background(), &buf, tt.pattern, tt.paths, tt.opts)
 
 			if tt.pattern == "" {
 				if err == nil {
@@ -239,7 +240,7 @@ func test() {
 		t.Run(tt.name, func(t *testing.T) {
 			var buf bytes.Buffer
 
-			err := Run(&buf, tt.pattern, []string{dir}, tt.opts)
+			err := Run(context.Background(), &buf, tt.pattern, []string{dir}, tt.opts)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -268,7 +269,7 @@ func TestParallelSearch(t *testing.T) {
 	// Run with single thread
 	var buf1 bytes.Buffer
 
-	err := Run(&buf1, "hello", []string{dir}, Options{Threads: 1, FilesWithMatch: true})
+	err := Run(context.Background(), &buf1, "hello", []string{dir}, Options{Threads: 1, FilesWithMatch: true})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -276,7 +277,7 @@ func TestParallelSearch(t *testing.T) {
 	// Run with multiple threads
 	var buf2 bytes.Buffer
 
-	err = Run(&buf2, "hello", []string{dir}, Options{Threads: 4, FilesWithMatch: true})
+	err = Run(context.Background(), &buf2, "hello", []string{dir}, Options{Threads: 4, FilesWithMatch: true})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -311,7 +312,7 @@ func hello() {
 
 	opts := Options{JSONStream: true}
 
-	err := Run(&buf, "hello", []string{dir}, opts)
+	err := Run(context.Background(), &buf, "hello", []string{dir}, opts)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -453,7 +454,7 @@ func hello() {
 
 	opts := Options{OutputFormat: outputpkg.FormatJSON}
 
-	err := Run(&buf, "hello", []string{dir}, opts)
+	err := Run(context.Background(), &buf, "hello", []string{dir}, opts)
 	if err != nil {
 		t.Fatalf("Run() error = %v", err)
 	}
@@ -494,7 +495,7 @@ line 7
 		LineNumber: true,
 	}
 
-	err := Run(&buf, "MATCH", []string{testFile}, opts)
+	err := Run(context.Background(), &buf, "MATCH", []string{testFile}, opts)
 	if err != nil {
 		t.Fatalf("Run() error = %v", err)
 	}
@@ -554,7 +555,7 @@ build/
 
 	opts := Options{FilesWithMatch: true}
 
-	err := Run(&buf, "hello", []string{dir}, opts)
+	err := Run(context.Background(), &buf, "hello", []string{dir}, opts)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -620,7 +621,7 @@ testdata/
 
 	opts := Options{FilesWithMatch: true}
 
-	err := Run(&buf, "hello", []string{dir}, opts)
+	err := Run(context.Background(), &buf, "hello", []string{dir}, opts)
 	if err != nil {
 		t.Fatal(err)
 	}
