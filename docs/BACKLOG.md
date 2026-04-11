@@ -26,9 +26,9 @@ See CLAUDE.md for the full command inventory.
 - [~] Consistent error model with exit codes (`cmderr` adopted in 73/160+ commands; batches 1-7 done)
 - [x] Add `--json` flag to remaining commands that lack it
 - [x] Unified output formatter (text/json/table)
-- [ ] cmderr rollout batch 8+: remaining ~87 commands (data, compress, system, flow, cloud)
+- [ ] cmderr rollout batch 9+: remaining ~76 commands (data, compress, system, flow, cloud)
 - [x] Migrate `pipe` command to use `command.Registry` for dispatch (with Cobra fallback)
-- [x] Expand pipe Registry to 18 commands (awk, fold, column, paste, xxd, grep, tr added)
+- [x] Expand pipe Registry to 24 commands (awk, fold, column, paste, xxd, grep, tr, hash, base64, base32, caseconv, strings, shuf added)
 
 ---
 
@@ -142,6 +142,9 @@ See CLAUDE.md for the full command inventory.
 - [x] archive.go split into archive.go + tar.go + zip.go (Mar 2026)
 - [x] pipe.go split into pipe.go + parse.go + substitute.go + execute.go (Mar 2026)
 - [x] pipeline CLI wrapper now propagates context.Context (Mar 2026)
+- [x] cmderr batch 8 — 11 more commands adopted: uuid, random, caseconv, jwt, note, jsonfmt, htmlenc, tomlutil, xmlfmt, pwd, exist (Mar 2026)
+- [x] rg package threaded with context.Context for cancellation support (Mar 2026)
+- [x] pipe Registry expanded to 24 commands with hash, base64, base32, caseconv, strings, shuf (Mar 2026)
 
 ### Remaining
 - [ ] Platform-specific tests (Windows edge cases, symlinks, permissions)

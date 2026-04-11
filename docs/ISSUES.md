@@ -52,7 +52,7 @@
 |------|-------|----------|
 | pkg/video/extractor/generic | No unit tests | P2 |
 | pkg/video/extractor/youtube | Minimal tests (4.0%) | P2 |
-| cmderr adoption ~73/160+ commands | ~87 commands still return raw fmt.Errorf without exit code classification | P1 |
+| cmderr adoption ~84/160+ commands | ~76 commands still return raw fmt.Errorf without exit code classification | P1 |
 
 ### Recently Resolved
 
@@ -79,6 +79,9 @@
 | pipe registry | Expanded from 11 to 18 commands; added awk, fold, column, paste, xxd, grep, tr (Mar 2026) |
 | package splits | archive.go → archive.go + tar.go + zip.go; pipe.go → pipe.go + parse.go + substitute.go + execute.go (Mar 2026) |
 | pipeline context | Pipeline CLI wrapper now accepts and propagates context.Context (Mar 2026) |
+| cmderr batch 8 | 11 more commands adopted: uuid, random, caseconv, jwt, note, jsonfmt, htmlenc, tomlutil, xmlfmt, pwd, exist (Mar 2026) |
+| rg context | rg package threaded with context.Context — Run, searchDirParallel, searchDir, searchFile, collectFiles (Mar 2026) |
+| pipe registry | Expanded from 18 to 24 commands; added hash, base64, base32, caseconv, strings, shuf (Mar 2026) |
 
 ---
 
