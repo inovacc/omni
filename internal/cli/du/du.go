@@ -1,6 +1,7 @@
 package du
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"io/fs"
@@ -8,6 +9,7 @@ import (
 	"path/filepath"
 	"sort"
 
+	"github.com/inovacc/omni/internal/cli/cmderr"
 	"github.com/inovacc/omni/pkg/cobra/helper/output"
 )
 
@@ -102,7 +104,14 @@ func duPath(w io.Writer, path string, opts DUOptions, _ int, terminator string, 
 
 	info, err := os.Lstat(path)
 	if err != nil {
-		return 0, nil, err
+		switch {
+		case errors.Is(err, os.ErrNotExist):
+			return 0, nil, cmderr.Wrap(cmderr.ErrNotFound, fmt.Sprintf("du: %s: %v", path, err))
+		case errors.Is(err, os.ErrPermission):
+			return 0, nil, cmderr.Wrap(cmderr.ErrPermission, fmt.Sprintf("du: %s: %v", path, err))
+		default:
+			return 0, nil, cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("du: %s: %v", path, err))
+		}
 	}
 
 	// If it's a file, just return its size
