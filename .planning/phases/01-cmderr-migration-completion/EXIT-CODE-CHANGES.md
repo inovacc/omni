@@ -35,3 +35,14 @@ v1.0 release notes per CONTEXT.md Decision 6.
 | B | xmlutil / `xml tojson|fromjson` (file not found) | 1 | ErrNotFound → 1 | Previously unclassified; now classified. |
 | B | xmlutil / `xml tojson|fromjson` (permission denied) | 1 | ErrPermission → 3 | Exit code shifts from 1 to 3. |
 | B | xmlutil / `xml tojson|fromjson` (write failure) | 0 (silently muted) | ErrIO → 4 | Previously `_, _ = fmt.Fprint(...)`; now classified. |
+| C | ps (invalid sort key, e.g. `ps --sort=bogus`) | 1 | ErrInvalidInput → 2 | New validation; unknown sort keys now classified. |
+| C | ps (unix, `/proc` read permission denied) | 1 | ErrPermission → 3 | Exit code shifts from 1 to 3. |
+| C | ps (unix, `/proc` read I/O failure) | 1 | ErrIO → 4 | Exit code shifts from 1 to 4. |
+| C | ps (windows, `-u` user filter) | 1 | ErrUnsupported → 6 | Locked message: `ps: field user not supported on windows`; pins POLISH-09 format. |
+| C | ps (windows, snapshot API failure) | 1 | ErrIO → 4 | CreateToolhelp32Snapshot/Process32First failures now classified. |
+| C | pkill (empty pattern) | 1 | ErrInvalidInput → 2 | Was raw `fmt.Errorf`; now classified. |
+| C | pkill (invalid regex pattern) | 1 | ErrInvalidInput → 2 | Was `fmt.Errorf("pkill: invalid pattern: %w")`; now classified. |
+| C | pkill (invalid signal name/number) | 1 | ErrInvalidInput → 2 | Was `fmt.Errorf("pkill: invalid signal: %s")`; now classified. |
+| C | pkill (no match) | 0 | SilentExit(1) → 1 | Previously returned nil (exit 0); now SilentExit(1) per pkill canonical Pattern 4. |
+| C | pkill (process listing failure) | 1 | ErrIO → 4 | `process.Processes()` failure now classified. |
+| C | pkill (permission denied on signal send) | 1 | ErrPermission → 3 | EPERM on `proc.Signal()` now classified in Result.Error. |
