@@ -1,0 +1,81 @@
+# omni — Project State
+
+## Project Reference
+
+**Project:** omni — cross-platform, Go-native shell utility replacement (160+ commands)
+**Core Value:** One static binary replaces every shell utility a Go-based CI/CD pipeline needs — deterministically, on every OS, with no external processes spawned.
+**Current Focus:** v1.0 milestone — Polish → Supply chain capabilities → Release
+**Audience:** me + my CI/CD pipelines (broader adoption = bonus, not driver)
+
+## Current Position
+
+**Milestone:** v1.0
+**Phase:** Phase 1 — cmderr Migration Completion (not started)
+**Plan:** None (awaiting `/gsd-plan-phase 1`)
+**Status:** Roadmap approved, ready for phase planning
+**Progress:** 0/8 phases complete
+
+```
+[░░░░░░░░] 0%  ─  Phase 0/8
+```
+
+## Performance Metrics
+
+- **Requirements mapped:** 58/58 (100%)
+- **Phases defined:** 8
+- **ADR gates pending:** 3 (Phase 4 entry, Phase 5 entry, Phase 7 entry)
+- **Research spikes pending:** 1 (Phase 6 — OSV DB distribution)
+- **Granularity:** standard
+
+## Accumulated Context
+
+### Key Decisions
+
+| Decision | Phase | Rationale |
+|----------|-------|-----------|
+| Polish track must complete before any supply-chain phase | 1–3 before 4+ | Pitfall 13 — parallel work creates inconsistent exit-code semantics on security commands |
+| Golden-master timestamp normalization lands in Phase 2, not later | 2 | Pitfall 14 — supply-chain goldens depend on it |
+| Strict DAG: sign → sbom → scan → attest | 4→5→6→7 | Cryptographic primitive reuse, serialized-document boundary between sbom and scan |
+| ADR gates at Phase 4, 5, 7 entries before any code | 4, 5, 7 | Scope-lock decisions (key handling, cosign-compat, round-trip matrix, honest SLSA level) |
+| Minisign-only default, Sigstore verification behind build tag | 4 | Keeps default binary lean; Fulcio/Rekor/OCI rejected as v1.0 scope |
+| `pkg/scan/` imports `pkg/sbom/format.Document` only, never `pkg/sbom/model` | 5/6 | Non-negotiable architectural boundary — enables third-party SBOM input |
+| Honest SLSA level (likely L2) pinned by ADR before attest ships | 7 | Pitfall 5 — no SLSA overclaim |
+
+### Open Todos
+
+- [ ] Run `/gsd-plan-phase 1` to decompose Phase 1 into executable plans
+- [ ] Before Phase 4 entry: write ADR on key handling + cosign-compat scope
+- [ ] Before Phase 5 entry: write ADR on SBOM round-trip test matrix
+- [ ] Before Phase 6 entry: run `/gsd-research-phase 6` for DB distribution format spike
+- [ ] Before Phase 7 entry: write ADR pinning honest SLSA level
+
+### Blockers
+
+None — ready to plan Phase 1.
+
+### Research Flags
+
+- **Phase 6 (scan):** NEEDS DEEPER RESEARCH — OSV DB distribution format, osv-scanner v2 API, grype v6 schema, `golang.org/x/vuln` public surface. Training-data stale.
+- **Phase 7 (attest):** Recommended secondary research on SLSA v1.0 vs draft build-provenance schema and current GitHub Actions OIDC claim structure.
+- **Phase 8 (release):** Recommended secondary research on Go toolchain reproducibility drift (`-buildvcs`, `toolchain` directive).
+
+## Session Continuity
+
+**Last session:** 2026-04-11 — Project initialization (PROJECT.md, REQUIREMENTS.md, research, ROADMAP.md)
+**Next action:** `/gsd-plan-phase 1` — decompose Phase 1 (cmderr Migration Completion) into plans
+
+### Files of Record
+
+- `.planning/PROJECT.md` — core value, constraints, out-of-scope
+- `.planning/REQUIREMENTS.md` — 58 v1 requirements with traceability table
+- `.planning/ROADMAP.md` — 8 phases, success criteria, ordering constraints
+- `.planning/research/SUMMARY.md` — research synthesis
+- `.planning/research/ARCHITECTURE.md` — build-order DAG
+- `.planning/research/PITFALLS.md` — 17 pitfalls with phase mapping
+- `.planning/research/STACK.md` — dependency recommendations
+- `.planning/research/FEATURES.md` — feature categorization
+- `.planning/config.json` — granularity=standard, parallelization=true, mode=normal
+
+---
+
+*Last updated: 2026-04-11 at initialization*

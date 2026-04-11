@@ -143,8 +143,69 @@
 
 ## Traceability
 
-To be filled by `gsd-roadmapper`. Each requirement maps to exactly one phase.
+Each requirement maps to exactly one phase. Coverage: **58/58 (100%)**.
 
 | REQ-ID | Phase | Status |
 |--------|-------|--------|
-| (populated during roadmap creation) | | |
+| POLISH-01 | Phase 1 | Pending |
+| POLISH-02 | Phase 1 | Pending |
+| POLISH-03 | Phase 1 | Pending |
+| POLISH-04 | Phase 2 | Pending |
+| POLISH-05 | Phase 2 | Pending |
+| POLISH-06 | Phase 2 | Pending |
+| POLISH-07 | Phase 2 | Pending |
+| POLISH-11 | Phase 2 | Pending |
+| POLISH-12 | Phase 2 | Pending |
+| POLISH-13 | Phase 2 | Pending |
+| POLISH-14 | Phase 2 | Pending |
+| POLISH-08 | Phase 3 | Pending |
+| POLISH-09 | Phase 3 | Pending |
+| POLISH-10 | Phase 3 | Pending |
+| POLISH-15 | Phase 3 | Pending |
+| POLISH-16 | Phase 3 | Pending |
+| POLISH-17 | Phase 3 | Pending |
+| SIGN-01 | Phase 4 | Pending |
+| SIGN-02 | Phase 4 | Pending |
+| SIGN-03 | Phase 4 | Pending |
+| SIGN-04 | Phase 4 | Pending |
+| SIGN-05 | Phase 4 | Pending |
+| SIGN-06 | Phase 4 | Pending |
+| SIGN-07 | Phase 4 | Pending |
+| SIGN-08 | Phase 4 | Pending |
+| SIGN-09 | Phase 4 | Pending |
+| SBOM-01 | Phase 5 | Pending |
+| SBOM-02 | Phase 5 | Pending |
+| SBOM-03 | Phase 5 | Pending |
+| SBOM-04 | Phase 5 | Pending |
+| SBOM-05 | Phase 5 | Pending |
+| SBOM-06 | Phase 5 | Pending |
+| SBOM-07 | Phase 5 | Pending |
+| SBOM-08 | Phase 5 | Pending |
+| SBOM-09 | Phase 5 | Pending |
+| SBOM-10 | Phase 5 | Pending |
+| SCAN-01 | Phase 6 | Pending |
+| SCAN-02 | Phase 6 | Pending |
+| SCAN-03 | Phase 6 | Pending |
+| SCAN-04 | Phase 6 | Pending |
+| SCAN-05 | Phase 6 | Pending |
+| SCAN-06 | Phase 6 | Pending |
+| SCAN-07 | Phase 6 | Pending |
+| SCAN-08 | Phase 6 | Pending |
+| SCAN-09 | Phase 6 | Pending |
+| ATTEST-01 | Phase 7 | Pending |
+| ATTEST-02 | Phase 7 | Pending |
+| ATTEST-03 | Phase 7 | Pending |
+| ATTEST-04 | Phase 7 | Pending |
+| ATTEST-05 | Phase 7 | Pending |
+| ATTEST-06 | Phase 7 | Pending |
+| ATTEST-07 | Phase 7 | Pending |
+| ATTEST-08 | Phase 7 | Pending |
+| ATTEST-09 | Phase 7 | Pending |
+| REL-01 | Phase 8 | Pending |
+| REL-02 | Phase 8 | Pending |
+| REL-03 | Phase 8 | Pending |
+| REL-04 | Phase 8 | Pending |
+| REL-05 | Phase 8 | Pending |
+| REL-06 | Phase 8 | Pending |
+| REL-07 | Phase 8 | Pending |
+| REL-08 | Phase 8 | Pending |

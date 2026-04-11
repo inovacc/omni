@@ -227,9 +227,9 @@ return cmderr.Wrap(cmderr.ErrInvalidInput, "path clean: missing operand")
 return cmderr.SilentExit(1) // no message, just exit code
 ```
 
-**Commands adopted (73):** cat, curl, crypt, diff, grep, find, fs, jq, ls, sed, head, tail, text (sort/uniq), hash, path, archive, base, xxd, yq, buf (build/format/lint), bzip2, xz, env, kill, ps, df, du, dotenv, free, pipe, chown, rg, pipeline, file, which, shuf, readlink, sqlite, bbolt, pager, join, cmp, comm, cron, loc, lint, seq, sleep, strings, basename, dirname, realpath, whoami, uptime, id, awk, column, nl, paste, banner, rev, tac, fold, cut, printf, hexenc, urlenc, tr, xargs, watch, yes
+**Commands adopted (84):** cat, curl, crypt, diff, grep, find, fs, jq, ls, sed, head, tail, text (sort/uniq), hash, path, archive, base, xxd, yq, buf (build/format/lint), bzip2, xz, env, kill, ps, df, du, dotenv, free, pipe, chown, rg, pipeline, file, which, shuf, readlink, sqlite, bbolt, pager, join, cmp, comm, cron, loc, lint, seq, sleep, strings, basename, dirname, realpath, whoami, uptime, id, awk, column, nl, paste, banner, rev, tac, fold, cut, printf, hexenc, urlenc, tr, xargs, watch, yes, uuid, random, caseconv, jwt, note, jsonfmt, htmlenc, tomlutil, xmlfmt, pwd, exist
 
-**Commands NOT yet adopted:** ~87 remaining — adopt in future batches following the same pattern.
+**Commands NOT yet adopted:** ~76 remaining — adopt in future batches following the same pattern.
 
 **General rules:**
 - Always wrap errors with context: `fmt.Errorf("command: %w", err)`
@@ -869,3 +869,281 @@ GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" -o omni.exe .
 - **Repo**: https://github.com/inovacc/omni
 - **Taskfile**: https://taskfile.dev/
 - **Cobra**: https://github.com/spf13/cobra
+
+<!-- GSD:project-start source:PROJECT.md -->
+## Project
+
+**omni**
+
+omni is a cross-platform, Go-native shell utility replacement providing deterministic, testable implementations of 160+ Unix commands for use in Taskfile, CI/CD, and enterprise environments. Today it ships as a single binary plus a growing set of reusable `pkg/` libraries. The primary user is me and my CI/CD pipelines — broader open-source adoption is a welcome bonus, not the driver.
+
+**Core Value:** **One static binary replaces every shell utility a Go-based CI/CD pipeline needs — deterministically, on every OS, with no external processes spawned.** If everything else fails, this must remain true.
+
+### Constraints
+
+- **Tech stack**: Go (stdlib-first, Cobra CLI, pure-Go deps only) — deterministic, portable, no CGO where avoidable. No exec of external processes is a foundational rule.
+- **Timeline**: 3–4 months to v1.0 — polish → supply chain → release, in that order. No aggressive parallelism across tracks.
+- **Cross-platform**: Linux, macOS, Windows must all work. Platform-specific code uses build tags, never silent runtime branches.
+- **Breaking changes**: Follow CLAUDE.md breaking-change protocol — 30-day deprecation window, log warnings on deprecated paths, cleanup commit separate from feature commits.
+- **Security**: No committed secrets (`~/.claude/scripts/check-leaks.sh`), parameterized queries, bcrypt ≥ 10, distroless base for any containers. Pre-v1.0 cannot introduce new security footguns.
+- **Licensing**: BSD 3-Clause, already in place.
+- **Audience**: Design decisions serve me + CI/CD pipelines first. "Would a general open-source user want X?" is never a v1.0 prioritization input.
+- **No new external processes**: The "no exec" design principle is non-negotiable — new capabilities must be pure Go.
+<!-- GSD:project-end -->
+
+<!-- GSD:stack-start source:codebase/STACK.md -->
+## Technology Stack
+
+## Languages
+- Go 1.25.0 - All core logic, CLI commands, libraries, and utilities
+## Runtime
+- Go runtime (no external runtime dependencies)
+- Cross-platform: Linux (amd64, arm64), macOS (amd64, arm64), Windows (amd64, arm64)
+- Go Modules (`go.mod`, `go.sum`)
+- Lockfile: `go.sum` present
+## Frameworks
+- Cobra v1.10.2 - Command-line interface framework (located in `cmd/`)
+- Go testing package (`testing` stdlib)
+- Table-driven test patterns throughout
+- Charmbracelet Bubbletea v1.3.10 - Terminal UI framework (used by pagers)
+- Charmbracelet Lipgloss v1.1.0 - Terminal styling and ANSI formatting
+- GoReleaser v2 - Cross-platform binary building and releases (config: `.goreleaser.yaml`)
+- Task v3 - Task automation (config: `Taskfile.yml`)
+## Key Dependencies
+- `github.com/spf13/cobra` v1.10.2 - CLI command framework (all commands)
+- `github.com/charmbracelet/bubbletea` v1.3.10 - TUI pagers (less, more)
+- `github.com/dop251/goja` v0.0.0-20260106131823 - Pure Go JavaScript runtime (YouTube signature decryption in video package)
+- `gopkg.in/yaml.v3` v3.0.1 - YAML parsing (yq, dotenv, config parsing)
+- `github.com/aws/aws-sdk-go-v2` v1.41.1 - AWS SDK (with services: EC2, IAM, S3, SSM, STS)
+- `github.com/hashicorp/vault/api` v1.22.0 - HashiCorp Vault client (secret management)
+- `k8s.io/kubectl` v0.35.0 - Kubernetes kubectl client (with `k8s.io/cli-runtime`)
+- `go.etcd.io/bbolt` v1.4.3 - Pure Go key-value store (embedded database)
+- `modernc.org/sqlite` v1.44.3 - Pure Go SQLite driver (channel DB for video downloader, SQLite shell)
+- `golang.org/x/crypto` v0.48.0 - Stdlib crypto extensions (PBKDF2 for encryption)
+- `github.com/btcsuite/btcd/btcutil` v1.1.6 - Bitcoin utilities (Base58 encoding)
+- `github.com/bufbuild/protocompile` v0.14.1 - Pure Go protobuf compiler (buf format/lint)
+- `google.golang.org/protobuf` v1.36.11 - Protocol Buffers runtime
+- `github.com/segmentio/ksuid` v1.0.4 - Sortable unique IDs (KSUID generation)
+- `github.com/spf13/afero` v1.15.0 - Filesystem abstraction (testable file operations in scaffolding)
+- Standard `text/template` - Code generation templates
+- `github.com/shirou/gopsutil/v3` v3.24.5 - OS/process utilities (ps, df, du, free, uptime)
+- `github.com/google/gops` v0.3.29 - Go process analysis
+- `github.com/BurntSushi/toml` v1.6.0 - TOML parsing
+- `github.com/fatih/color` v1.18.0 - Colored terminal output
+- `github.com/xlab/treeprint` v1.2.0 - Tree printing (legacy, replaced by `pkg/twig`)
+- `os`, `io`, `io/fs` - File operations
+- `path/filepath` - Path manipulation
+- `regexp` - Pattern matching (grep, sed, rg)
+- `sync`, `sync/atomic` - Concurrency (parallel scanning in rg, tree)
+- `encoding/json` - JSON operations (jq, output)
+- `encoding/xml` - XML parsing/output
+- `encoding/csv` - CSV operations
+- `archive/tar`, `archive/zip` - Archive operations
+- `compress/gzip`, `compress/bzip2` - Compression
+- `crypto/*` - Hashing, encryption
+- `syscall` - System calls (for df, ps, etc.)
+- `go/parser`, `go/ast` - Go code analysis (scaffold testgen)
+## Configuration
+- `VAULT_ADDR` - Vault server address (default: `https://127.0.0.1:8200`)
+- `VAULT_TOKEN` - Vault authentication token
+- `VAULT_NAMESPACE` - Vault namespace
+- `AWS_PROFILE` - AWS profile selection
+- `AWS_REGION` - AWS region
+- `OMNI_CLOUD_PROFILE` - Custom omni cloud profile (alternative to `--profile omni:name`)
+- `CGO_ENABLED` - Enables/disables CGO (set to 0 for cross-platform builds)
+- `.golangci.yml` - Linting configuration (golangci-lint)
+- `.goreleaser.yaml` - Release binary building
+- `Taskfile.yml` - Task automation for build, test, golden tests
+- `docker/docker-compose.test.yml` - Containerized test environments
+- `.github/workflows/test.yml` - GitHub Actions test pipeline
+- `.github/workflows/release.yml` - Release pipeline (GoReleaser)
+## Platform Requirements
+- Go 1.25.0 or later
+- Task 3.x for local automation
+- Docker (optional, for containerized tests)
+- Python 3.8+ (for black-box tests)
+- Target: Linux, macOS, Windows
+- Architecture: x86_64 (amd64), ARM64 (arm64)
+- No external runtime dependencies (static binaries via CGO_ENABLED=0)
+- Supports AWS SDK (for aws commands)
+- Supports kubectl (for k8s commands)
+- Supports HashiCorp Vault (optional, for vault commands)
+<!-- GSD:stack-end -->
+
+<!-- GSD:conventions-start source:CONVENTIONS.md -->
+## Conventions
+
+## Naming Patterns
+- Command packages: `internal/cli/<command>/` (lowercase, single word or hyphenated)
+- Library packages: `pkg/<domain>/` (e.g., `pkg/video/`, `pkg/twig/`)
+- Test files: `<name>_test.go` (always suffix test, never prefix)
+- Platform-specific: `<name>_unix.go`, `<name>_windows.go` with `//go:build` tags
+- Options structs: `<Command>Options` (PascalCase, e.g., `HeadOptions`, `HashOptions`)
+- Result structs: `<Command>Result` or `<Commands>Result` for plurals (e.g., `HashResult`, `HashesResult`)
+- Exported functions: `Run<Command>` or `Run` (e.g., `RunHead()`, `RunHash()`)
+- Unexported helpers: lowercase with underscores (e.g., `verifyChecksums()`, `parseCommands()`)
+- All exported functions: PascalCase starting with action verb (e.g., `RunHash`, `WithIndent`, `FormatBytes`)
+- CLI wrappers in `cmd/`: Cobra command variables named `<command>Cmd` (e.g., `headCmd`, `lsCmd`)
+- Package init functions: Standard `init()` (for flag preprocessing, command registration)
+- Receiver names: 1-2 letters (e.g., `func (f *Formatter) Format()`)
+- Options: CamelCase (e.g., `tmpDir`, `testFile`, `showHeaders`)
+- Boolean flags: prefix with action or state (e.g., `wantError`, `isJSON`, `showHeaders`)
+- Package-level: all lowercase (e.g., `defaultHeadLines`, `omniBanner`)
+- Constants: ALL_CAPS (e.g., `DefaultHeadLines`, `ErrNotFound`)
+- Structs: PascalCase (e.g., `HashOptions`, `ColorScheme`, `StreamMessage`)
+- Interfaces: PascalCase (e.g., `Command`, `Extractor`, `Formatter`)
+- Sentinel errors: PascalCase prefixed with `Err` (e.g., `ErrNotFound`, `ErrInvalidInput`)
+## Code Style
+- Tool: `gofmt` (Go standard)
+- Linter: `golangci-lint` with `govet` enabled
+- Configuration: `.golangci.yml` with minimal rules (excludes generated code, relaxed comment checks)
+- No custom formatter config detected
+- Enabled: `govet` only (strict mode)
+- Excluded: generated code in `pkg/buf`
+- Run: `golangci-lint run --fix ./... --timeout=5m`
+## Import Organization
+## Error Handling
+| Sentinel | Use For |
+|----------|---------|
+| `cmderr.ErrNotFound` | File/resource not found (exit code 1) |
+| `cmderr.ErrInvalidInput` | Bad flags, missing operands, parse errors (exit code 2) |
+| `cmderr.ErrPermission` | Permission denied (exit code 3) |
+| `cmderr.ErrIO` | I/O errors (exit code 4) |
+| `cmderr.ErrTimeout` | Timeouts (exit code 5) |
+| `cmderr.ErrUnsupported` | Unsupported operations (exit code 6) |
+| `cmderr.ErrConflict` | Verification failures, sort disorder (exit code 1) |
+## Logging
+- Used only for debug/execution tracking, not in command logic
+- Commands accept `io.Writer` for stdout (testable)
+- Errors written to stderr explicitly
+## Comments
+- Package-level docstrings (required for all packages)
+- Exported function/type documentation (required by golangci-lint)
+- Non-obvious logic or workarounds
+- Complex algorithms or edge cases
+## Function Design
+- Max 3-4 parameters (use Options struct for many config values)
+- Order: context/writer first, then inputs, then options
+- Example: `func RunHead(w io.Writer, r io.Reader, args []string, opts HeadOptions) error`
+- Always return `error` as last value
+- For result data, use struct (e.g., `HashResult`) with JSON tags
+- Multiple returns only for (value, error) pairs
+## Module Design
+- Options structs
+- Result structs
+- Run functions
+- High-level public APIs
+- Example: `pkg/video/types/types.go` exports `VideoInfo`, `Format`, etc.
+## Output Patterns
+## Platform-Specific Code
+<!-- GSD:conventions-end -->
+
+<!-- GSD:architecture-start source:ARCHITECTURE.md -->
+## Architecture
+
+## Pattern Overview
+- Thin CLI command wrappers in `cmd/` that delegate to reusable packages
+- Core logic abstracted into `pkg/` libraries importable by external projects
+- I/O glue layer in `internal/cli/` that bridges Cobra and pkg logic
+- Unified Command interface for registry-based dispatch
+- Error classification via sentinel values with mapped exit codes
+- All commands accept `io.Writer` and `io.Reader` for testability
+## Layers
+- Purpose: Cobra CLI command definitions and flag parsing
+- Location: `cmd/*.go` (160+ command files)
+- Contains: Command definitions, flag configuration, args preprocessing
+- Depends on: `internal/cli/<command>` packages for business logic
+- Used by: Cobra CLI framework (main entry point)
+- Pattern: Commands are thin wrappers that parse flags and delegate to `internal/cli/<cmd>/Run()` functions
+- Purpose: Handle input/output operations, orchestrate stdin/stdout, manage file I/O
+- Location: `internal/cli/<command>/` (160+ subdirectories, one per command)
+- Contains: Options structs, Run functions with `(io.Writer, io.Reader, []string)` signatures
+- Depends on: `pkg/` libraries for core logic, `internal/cli/cmderr` for error handling
+- Used by: `cmd/` wrappers and pipe command
+- Pattern: Each command has a Run function that coordinates I/O, calls pkg logic, and formats output
+- Purpose: Reusable, testable command implementations
+- Location: `pkg/<domain>/` (18+ subdirectories)
+- Contains: Core algorithms (hashing, encryption, encoding, formatting), data structures, processing engines
+- Depends on: Go stdlib only (no Cobra, no io.Writer output)
+- Used by: `internal/cli/` packages and external Go projects
+- Pattern: Pure functions with options using functional option pattern (`WithFlag(value) Option`)
+- Purpose: Cross-cutting concerns and utilities
+- Location: `internal/cli/cmderr/`, `internal/cli/command/`, `internal/cli/input/`, `pkg/cobra/`
+- Contains: Error handling, command registry, input source management, output formatting
+## Data Flow
+- Commands return errors instead of calling `os.Exit()`
+- Errors are classified via sentinel values in `internal/cli/cmderr/`
+- `cmderr.ExitCodeFor(err)` in root command maps errors to exit codes:
+## Key Abstractions
+- Purpose: Unified interface for command dispatch in pipe/pipeline
+- Location: `internal/cli/command/command.go`
+- Pattern: `Command interface { Run(ctx, w, io.Writer, r io.Reader, args []string) error }`
+- Adapters: `AdaptWriterArgs()`, `AdaptWriterReaderArgs()`, `AdaptFull()` for legacy Run signatures
+- Registry: Thread-safe map of command name → Command implementation
+- Purpose: Flexible, type-safe command configuration
+- Example: `head.HeadOptions{Lines: 10, Quiet: false}`
+- pkg pattern: `func (opt Option) Apply(*Options)` for functional options
+- Cobra pattern: Parse flags → populate Options struct → pass to Run function
+- Purpose: Unified handling of stdin, files, and multiple input sources
+- Location: `internal/cli/input/input.go`
+- Pattern: `input.Open(args, r)` returns `[]Source` where Source has Name and Reader
+- Handles: `-` (stdin), multiple files, missing files with appropriate error classification
+- Purpose: Flexible output (text/JSON/table) without duplicating logic
+- Location: `pkg/cobra/helper/output/`
+- Pattern: `output.New(w, format)` → methods like `Render()`, `IsJSON()`
+- Usage: Commands check `f.IsJSON()` to decide between text and JSON output
+- Purpose: Add context while preserving sentinel error type
+- Location: `internal/cli/cmderr/cmderr.go`
+- Pattern: `cmderr.Wrap(sentinel, "context message")` returns `fmt.Errorf("context: %w", sentinel)`
+- Effect: `errors.Is(err, ErrNotFound)` still matches wrapped errors
+## Entry Points
+- Location: `main.go`
+- Triggers: `omni` binary execution
+- Responsibilities: Delegates to `cmd.Execute()`
+- Location: `cmd/root.go`
+- Triggers: All subcommands route through here
+- Responsibilities:
+- Location: `cmd/<cmd>.go init()` functions
+- Purpose: Rewrite `os.Args` before Cobra parsing for GNU compatibility
+- Examples:
+## Cross-Cutting Concerns
+- Framework: `log/slog` (structured JSON)
+- Location: `internal/logger/`
+- Pattern: Initialized in `cmd/root.go` PersistentPreRun
+- Output: Only when `OMNI_LOGGING` env var set
+- Pattern: Input validation in `internal/cli/<cmd>/` before calling pkg logic
+- Example: `head` validates Lines/Bytes are non-negative
+- Error type: `cmderr.ErrInvalidInput` for bad arguments
+- Cloud commands (AWS, kubectl, vault): Use environment-based auth
+- Location: `internal/cli/aws/`, `internal/cli/kubectl/`, `internal/cli/vault/`
+- Pattern: Load config from `~/.aws/credentials`, `~/.kube/config`, `~/.vault-token`
+- Pattern: Use `pkg/twig/scanner` for directory walking with parallelism and progress
+- Pattern: Use `internal/cli/input` for unified input source handling
+- Pattern: Always defer file closes with `defer func() { _ = f.Close() }()`
+<!-- GSD:architecture-end -->
+
+<!-- GSD:skills-start source:skills/ -->
+## Project Skills
+
+No project skills found. Add skills to any of: `.claude/skills/`, `.agents/skills/`, `.cursor/skills/`, or `.github/skills/` with a `SKILL.md` index file.
+<!-- GSD:skills-end -->
+
+<!-- GSD:workflow-start source:GSD defaults -->
+## GSD Workflow Enforcement
+
+Before using Edit, Write, or other file-changing tools, start work through a GSD command so planning artifacts and execution context stay in sync.
+
+Use these entry points:
+- `/gsd-quick` for small fixes, doc updates, and ad-hoc tasks
+- `/gsd-debug` for investigation and bug fixing
+- `/gsd-execute-phase` for planned phase work
+
+Do not make direct repo edits outside a GSD workflow unless the user explicitly asks to bypass it.
+<!-- GSD:workflow-end -->
+
+<!-- GSD:profile-start -->
+## Developer Profile
+
+> Profile not yet configured. Run `/gsd-profile-user` to generate your developer profile.
+> This section is managed by `generate-claude-profile` -- do not edit manually.
+<!-- GSD:profile-end -->
