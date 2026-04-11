@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: Release Cut
 status: completed
-last_updated: "2026-04-11T22:28:02.180Z"
+last_updated: "2026-04-11T22:32:24.198Z"
 progress:
   total_phases: 8
   completed_phases: 0
   total_plans: 18
-  completed_plans: 5
-  percent: 28
+  completed_plans: 6
+  percent: 33
 ---
 
 # omni — Project State
@@ -27,7 +27,7 @@ progress:
 **Phase:** Phase 1 — cmderr Migration Completion (in progress)
 **Plan:** Plan 13 complete — Wave D scaffold/project/repo done
 **Status:** 4/18 plans complete
-**Progress:** [███░░░░░░░] 28%
+**Progress:** [███░░░░░░░] 33%
 
 ```
 [░░░░░░░░] 0%  ─  Phase 0/8
@@ -59,6 +59,7 @@ progress:
 | scaffold sub-packages are the CLI boundary (not cmd/scaffold.go) | 13 | No top-level Run* dispatcher in scaffolding.go; sub-package Run* functions own error paths |
 | remote.go exec violation deferred | 13 | Pre-existing design-principle violation; out of scope for cmderr migration |
 | Phase 01-cmderr-migration-completion P16 | 25 | 2 tasks | 2 files |
+| Phase 01-cmderr-migration-completion P17 | 15 | 3 tasks | 4 files |
 
 ### Open Todos
 
@@ -80,7 +81,7 @@ None — ready to plan Phase 1.
 
 ## Session Continuity
 
-**Last session:** 2026-04-11T22:28:02.159Z
+**Last session:** 2026-04-11T22:32:24.191Z
 **Next action:** Continue Wave D remaining plans (14, 15) or run Plan 16 golden snapshots
 
 ### Files of Record

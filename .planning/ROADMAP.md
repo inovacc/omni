@@ -140,7 +140,7 @@
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. cmderr Migration Completion | 5/18 | In Progress|  |
+| 1. cmderr Migration Completion | 6/18 | In Progress|  |
 | 2. Test Coverage + Deterministic Golden Harness | 0/? | Not started | - |
 | 3. CONCERNS Burn-down, Windows Parity, pkg/ API Audit, Docs | 0/? | Not started | - |
 | 4. pkg/sign/ — Signing Primitive | 0/? | Not started | - |
