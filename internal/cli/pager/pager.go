@@ -73,7 +73,7 @@ func runPager(_ io.Writer, args []string, opts PagerOptions, name string) error 
 		}
 
 		if err := scanner.Err(); err != nil {
-			return fmt.Errorf("%s: %w", name, err)
+			return cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("%s: read stdin: %s", name, err))
 		}
 	} else {
 		// Read from file
@@ -84,7 +84,10 @@ func runPager(_ io.Writer, args []string, opts PagerOptions, name string) error 
 			if errors.Is(err, os.ErrNotExist) {
 				return cmderr.Wrap(cmderr.ErrNotFound, fmt.Sprintf("%s: %s", name, err))
 			}
-			return fmt.Errorf("%s: %w", name, err)
+			if errors.Is(err, os.ErrPermission) {
+				return cmderr.Wrap(cmderr.ErrPermission, fmt.Sprintf("%s: %s", name, err))
+			}
+			return cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("%s: %s", name, err))
 		}
 
 		defer func() {
@@ -97,7 +100,7 @@ func runPager(_ io.Writer, args []string, opts PagerOptions, name string) error 
 		}
 
 		if err := scanner.Err(); err != nil {
-			return fmt.Errorf("%s: %w", name, err)
+			return cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("%s: read %s: %s", name, filename, err))
 		}
 	}
 
@@ -112,9 +115,11 @@ func runPager(_ io.Writer, args []string, opts PagerOptions, name string) error 
 	}
 
 	p := tea.NewProgram(model, tea.WithAltScreen())
-	_, err := p.Run()
+	if _, err := p.Run(); err != nil {
+		return cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("%s: terminal: %s", name, err))
+	}
 
-	return err
+	return nil
 }
 
 func (m pagerModel) Init() tea.Cmd {
