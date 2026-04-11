@@ -5,6 +5,7 @@ import (
 	"io"
 	"time"
 
+	"github.com/inovacc/omni/internal/cli/cmderr"
 	"github.com/inovacc/omni/pkg/cobra/helper/output"
 	"github.com/inovacc/omni/pkg/idgen"
 )
@@ -26,7 +27,11 @@ type KSUID = idgen.KSUID
 
 // RunKSUID generates KSUIDs
 func RunKSUID(w io.Writer, opts Options) error {
-	if opts.Count <= 0 {
+	if opts.Count < 0 {
+		return cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("ksuid: count must be non-negative, got %d", opts.Count))
+	}
+
+	if opts.Count == 0 {
 		opts.Count = 1
 	}
 
@@ -44,7 +49,9 @@ func RunKSUID(w io.Writer, opts Options) error {
 		if f.IsJSON() {
 			ksuids = append(ksuids, encoded)
 		} else {
-			_, _ = fmt.Fprintln(w, encoded)
+			if _, err := fmt.Fprintln(w, encoded); err != nil {
+				return cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("ksuid: write failed: %v", err))
+			}
 		}
 	}
 

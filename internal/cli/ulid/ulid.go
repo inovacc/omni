@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/inovacc/omni/internal/cli/cmderr"
 	"github.com/inovacc/omni/pkg/cobra/helper/output"
 	"github.com/inovacc/omni/pkg/idgen"
 )
@@ -28,7 +29,11 @@ type ULID = idgen.ULID
 
 // RunULID generates ULIDs
 func RunULID(w io.Writer, opts Options) error {
-	if opts.Count <= 0 {
+	if opts.Count < 0 {
+		return cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("ulid: count must be non-negative, got %d", opts.Count))
+	}
+
+	if opts.Count == 0 {
 		opts.Count = 1
 	}
 
@@ -50,7 +55,9 @@ func RunULID(w io.Writer, opts Options) error {
 		if f.IsJSON() {
 			ulids = append(ulids, encoded)
 		} else {
-			_, _ = fmt.Fprintln(w, encoded)
+			if _, err := fmt.Fprintln(w, encoded); err != nil {
+				return cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("ulid: write failed: %v", err))
+			}
 		}
 	}
 
