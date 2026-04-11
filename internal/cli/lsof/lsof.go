@@ -1,12 +1,15 @@
 package lsof
 
 import (
+	"errors"
 	"fmt"
 	"io"
+	"os"
 	"sort"
 	"strconv"
 	"strings"
 
+	"github.com/inovacc/omni/internal/cli/cmderr"
 	"github.com/inovacc/omni/pkg/cobra/helper/output"
 	gnet "github.com/shirou/gopsutil/v3/net"
 	"github.com/shirou/gopsutil/v3/process"
@@ -55,7 +58,10 @@ func Run(w io.Writer, opts Options) error {
 	// For now, we focus on network connections which is cross-platform
 	files, err := getNetworkFiles(opts)
 	if err != nil {
-		return fmt.Errorf("lsof: %w", err)
+		if errors.Is(err, os.ErrPermission) {
+			return cmderr.Wrap(cmderr.ErrPermission, fmt.Sprintf("lsof: %s", err))
+		}
+		return cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("lsof: %s", err))
 	}
 
 	// Sort by PID then FD
@@ -81,6 +87,9 @@ func getNetworkFiles(opts Options) ([]OpenFile, error) {
 	// Get process info map
 	procs, err := process.Processes()
 	if err != nil {
+		if errors.Is(err, os.ErrPermission) {
+			return nil, fmt.Errorf("%w", os.ErrPermission)
+		}
 		return nil, err
 	}
 
