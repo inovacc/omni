@@ -3,8 +3,11 @@
 package df
 
 import (
+	"fmt"
 	"syscall"
 	"unsafe"
+
+	"github.com/inovacc/omni/internal/cli/cmderr"
 )
 
 // getDiskInfo returns disk usage information for a path on Windows
@@ -16,7 +19,7 @@ func getDiskInfo(path string) (DFInfo, error) {
 
 	pathPtr, err := syscall.UTF16PtrFromString(path)
 	if err != nil {
-		return DFInfo{}, err
+		return DFInfo{}, cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("df: %s: %v", path, err))
 	}
 
 	ret, _, err := getDiskFreeSpaceEx.Call(
@@ -27,7 +30,7 @@ func getDiskInfo(path string) (DFInfo, error) {
 	)
 
 	if ret == 0 {
-		return DFInfo{}, err
+		return DFInfo{}, cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("df: %s: %v", path, err))
 	}
 
 	used := totalBytes - totalFreeBytes

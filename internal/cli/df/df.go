@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/inovacc/omni/internal/cli/cmderr"
 	"github.com/inovacc/omni/internal/cli/du"
 	"github.com/inovacc/omni/pkg/cobra/helper/output"
 )
@@ -45,6 +46,11 @@ func RunDF(w io.Writer, args []string, opts DFOptions) error {
 		} else {
 			opts.BlockSize = 1024 // Default 1K blocks
 		}
+	}
+
+	// Validate -t type filter (non-empty string must be a non-whitespace token)
+	if opts.Type != "" && len(opts.Type) == 0 {
+		return cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("df: invalid filesystem type: %q", opts.Type))
 	}
 
 	paths := args

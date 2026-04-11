@@ -3,14 +3,26 @@
 package df
 
 import (
+	"errors"
+	"fmt"
+	"os"
 	"syscall"
+
+	"github.com/inovacc/omni/internal/cli/cmderr"
 )
 
 // getDiskInfo returns disk usage information for a path on Unix systems
 func getDiskInfo(path string) (DFInfo, error) {
 	var stat syscall.Statfs_t
 	if err := syscall.Statfs(path, &stat); err != nil {
-		return DFInfo{}, err
+		switch {
+		case errors.Is(err, os.ErrNotExist):
+			return DFInfo{}, cmderr.Wrap(cmderr.ErrNotFound, fmt.Sprintf("df: %s: %v", path, err))
+		case errors.Is(err, os.ErrPermission):
+			return DFInfo{}, cmderr.Wrap(cmderr.ErrPermission, fmt.Sprintf("df: %s: %v", path, err))
+		default:
+			return DFInfo{}, cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("df: %s: %v", path, err))
+		}
 	}
 
 	blockSize := uint64(stat.Bsize)
