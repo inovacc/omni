@@ -41,7 +41,7 @@ func Run(w io.Writer, args []string, opts Options) error {
 
 	schedule, err := Parse(expr)
 	if err != nil {
-		return fmt.Errorf("cron: %w", err)
+		return cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("cron: %s", err))
 	}
 
 	f := output.New(w, opts.OutputFormat)
