@@ -15,3 +15,26 @@ jobs:
       run-vulncheck: true
       test-timeout: "15m"
       timeout-minutes: 30
+
+  cmderr-coverage-gate:
+    name: cmderr coverage gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Install Task
+        uses: arduino/setup-task@v2
+        with:
+          version: 3.x
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Run cmderr coverage gate (>=90%)
+        run: task lint:cmderr-coverage
