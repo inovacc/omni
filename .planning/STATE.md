@@ -8,8 +8,8 @@ progress:
   total_phases: 8
   completed_phases: 1
   total_plans: 28
-  completed_plans: 18
-  percent: 25
+  completed_plans: 19
+  percent: 28
 ---
 
 # omni — Project State
@@ -26,7 +26,7 @@ progress:
 **Milestone:** v1.0
 **Phase:** Phase 2 — Test Coverage + Deterministic Golden Harness (planned, ready to execute)
 **Plan:** 10 plans across 3 waves (Wave 1: infra tools, Wave 2: tests + goldens, Wave 3: gate enforcement)
-**Status:** 0/10 plans complete (Phase 1 complete: 18/18)
+**Status:** 1/10 plans complete (Phase 1 complete: 18/18)
 **Progress:** [██░░░░░░░░] 12.5%
 
 ## Performance Metrics
@@ -77,9 +77,9 @@ None — ready to plan Phase 1.
 
 ## Session Continuity
 
-**Last session:** 2026-04-11
-**Stopped at:** Phase 2 PLAN.md committed (4b8fc17c) — 10 plans ready to execute
-**Next action:** `/gsd-execute-phase 2` — run Wave 1 (covgate + normalize hooks + helplint) first
+**Last session:** 2026-04-12
+**Stopped at:** Completed Phase 2 Plan 01 — tools/covgate dual-rule coverage gate (73d1c680)
+**Next action:** `/gsd-execute-phase 2` — continue Wave 1: Plan 02 (normalize hooks) + Plan 03 (helplint)
 
 ### Files of Record
 
