@@ -1,0 +1,5 @@
+{
+  "exit_code": 1,
+  "stdout_file": "json2struct_invalid_json.stdout",
+  "stderr": "Error: json2struct: invalid JSON: invalid character 'b' looking for beginning of object key string\n"
+}

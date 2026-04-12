@@ -1,0 +1,5 @@
+{
+  "exit_code": 1,
+  "stdout_file": "scaffold_handler_empty_name.stdout",
+  "stderr": "Error: scaffold: handler name is required\n"
+}

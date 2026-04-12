@@ -1,0 +1,5 @@
+{
+  "exit_code": 1,
+  "stdout_file": "buf_lint_nonexistent_path.stdout",
+  "stderr": "Error: buf: GetFileAttributesEx <PATH> The system cannot find the file specified.\n"
+}

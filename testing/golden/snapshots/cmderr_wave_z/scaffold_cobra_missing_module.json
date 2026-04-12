@@ -1,0 +1,5 @@
+{
+  "exit_code": 1,
+  "stdout_file": "scaffold_cobra_missing_module.stdout",
+  "stderr": "Error: accepts 1 arg(s), received 0\n"
+}

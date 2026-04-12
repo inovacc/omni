@@ -1,0 +1,5 @@
+{
+  "exit_code": 1,
+  "stdout_file": "lint_nonexistent_path.stdout",
+  "stderr": "Error: lint found issues: conflict\n"
+}

@@ -1,0 +1,5 @@
+{
+  "exit_code": 1,
+  "stdout_file": "scaffold_repository_empty_name.stdout",
+  "stderr": "Error: scaffold: repository name is required\n"
+}

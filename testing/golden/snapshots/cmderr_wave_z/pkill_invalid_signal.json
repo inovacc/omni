@@ -1,0 +1,5 @@
+{
+  "exit_code": 1,
+  "stdout_file": "pkill_invalid_signal.stdout",
+  "stderr": "Error: pkill: invalid signal: BOGUSX\n"
+}

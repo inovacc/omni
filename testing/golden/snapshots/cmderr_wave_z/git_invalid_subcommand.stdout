@@ -1,0 +1,27 @@
+Git shortcut commands for common operations.
+
+Usage:
+  omni git [command]
+
+Available Commands:
+  amend        Amend last commit without editing
+  blame-line   Blame specific line range
+  branch-clean Delete merged branches
+  diff-words   Word-level diff
+  fetch-all    Fetch all remotes with prune
+  log-graph    Pretty log with graph
+  pull-rebase  Pull with rebase
+  push         Push to remote
+  quick-commit Stage all and commit
+  stash-staged Stash only staged changes
+  status       Short status
+  undo         Undo last commit (soft reset)
+
+Flags:
+  -h, --help   help for git
+
+Global Flags:
+      --json    output as JSON
+      --table   output as aligned table
+
+Use "omni git [command] --help" for more information about a command.

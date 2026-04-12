@@ -1,0 +1,5 @@
+{
+  "exit_code": 1,
+  "stdout_file": "dd_missing_of.stdout",
+  "stderr": "Error: dd: failed to open \"<PATH>\": open <PATH> The system cannot find the path specified.: not found\n"
+}

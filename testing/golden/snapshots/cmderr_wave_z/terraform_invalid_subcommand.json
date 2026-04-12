@@ -1,0 +1,5 @@
+{
+  "exit_code": 1,
+  "stdout_file": "terraform_invalid_subcommand.stdout",
+  "stderr": "Error: exec: \"terraform\": executable file not found in %PATH%\n"
+}

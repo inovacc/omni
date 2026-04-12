@@ -1,0 +1,5 @@
+{
+  "exit_code": 1,
+  "stdout_file": "nanoid_invalid_size.stdout",
+  "stderr": "Error: unknown flag: --size\n"
+}

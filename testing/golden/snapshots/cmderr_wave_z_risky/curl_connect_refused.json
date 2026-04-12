@@ -1,0 +1,5 @@
+{
+  "exit_code": 1,
+  "stdout_file": "curl_connect_refused.stdout",
+  "stderr": "Error: curl: Get \"http://127.0.0.1:19999/\": dial tcp 127.0.0.1:19999: connectex: No connection could be made because the target machine actively refused it.\n"
+}

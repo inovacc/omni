@@ -1,0 +1,5 @@
+{
+  "exit_code": 2,
+  "stdout_file": "banner_empty_text.stdout",
+  "stderr": "Error: banner: no text provided: invalid input\n"
+}

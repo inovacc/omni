@@ -1,0 +1,5 @@
+{
+  "exit_code": 2,
+  "stdout_file": "find_invalid_regex.stdout",
+  "stderr": "Error: find: invalid regex: error parsing regexp: missing closing ]: `[[bad`: invalid input\n"
+}

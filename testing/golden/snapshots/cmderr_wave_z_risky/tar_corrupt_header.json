@@ -1,0 +1,5 @@
+{
+  "exit_code": 1,
+  "stdout_file": "tar_corrupt_header.stdout",
+  "stderr": "Error: archive: open -: The system cannot find the file specified.: not found\n"
+}

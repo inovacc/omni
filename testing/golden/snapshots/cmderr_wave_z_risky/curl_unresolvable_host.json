@@ -1,0 +1,5 @@
+{
+  "exit_code": 1,
+  "stdout_file": "curl_unresolvable_host.stdout",
+  "stderr": "Error: curl: Get \"http://this.host.does.not.exist.invalid/\": dial tcp: lookup this.host.does.not.exist.invalid: no such host\n"
+}

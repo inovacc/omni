@@ -325,6 +325,64 @@ categories:
         args: ["cat"]
         stdin: "hello\nworld\n"
 
+  # ===== IDGEN (happy-path with normalize: hooks) =====
+  # Phase 2 Plan 08: non-deterministic idgen commands normalised to stable placeholders.
+  - name: idgen
+    tests:
+      - name: uuid_v4
+        args: ["uuid"]
+        normalize:
+          - pattern: "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"
+            replacement: "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
+
+      - name: uuid_v7
+        args: ["uuid", "-v", "7"]
+        normalize:
+          - pattern: "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"
+            replacement: "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
+
+      - name: ulid_basic
+        args: ["ulid"]
+        normalize:
+          - pattern: "[0-9A-Z]{26}"
+            replacement: "ZZZZZZZZZZZZZZZZZZZZZZZZZZ"
+
+      - name: ksuid_basic
+        args: ["ksuid"]
+        normalize:
+          - pattern: "[0-9A-Za-z]{27}"
+            replacement: "XXXXXXXXXXXXXXXXXXXXXXXXXXX"
+
+      - name: nanoid_basic
+        args: ["nanoid"]
+        normalize:
+          - pattern: "[A-Za-z0-9_-]{21}"
+            replacement: "XXXXXXXXXXXXXXXXXXXXX"
+
+      - name: snowflake_basic
+        args: ["snowflake"]
+        normalize:
+          - pattern: "\\d{15,20}"
+            replacement: "000000000000000000"
+
+  # ===== DATE (happy-path with normalize: hook) =====
+  # Phase 2 Plan 08: date output normalised to stable placeholder.
+  - name: date_happy
+    tests:
+      - name: date_utc
+        args: ["date", "-u"]
+        normalize:
+          - pattern: "\\w{3}\\s+\\w{3}\\s+\\d+\\s+\\d{2}:\\d{2}:\\d{2}\\s+UTC\\s+\\d{4}"
+            replacement: "Mon Jan  1 00:00:00 UTC 2000"
+          - pattern: "\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z?"
+            replacement: "2000-01-01T00:00:00Z"
+
+      - name: date_format_iso
+        args: ["date", "-u", "+%Y-%m-%dT%H:%M:%SZ"]
+        normalize:
+          - pattern: "\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z"
+            replacement: "2000-01-01T00:00:00Z"
+
   # ===== SECURITY =====
   - name: security
     tests:

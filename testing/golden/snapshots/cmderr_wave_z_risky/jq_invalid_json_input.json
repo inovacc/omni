@@ -1,0 +1,5 @@
+{
+  "exit_code": 2,
+  "stdout_file": "jq_invalid_json_input.stdout",
+  "stderr": "Error: jq: parse error: invalid character 'b' looking for beginning of object key string: invalid input\n"
+}

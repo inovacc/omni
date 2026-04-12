@@ -1,0 +1,5 @@
+{
+  "exit_code": 1,
+  "stdout_file": "ksuid_invalid_flag.stdout",
+  "stderr": "Error: invalid argument \"not-a-number\" for \"-n, --count\" flag: strconv.ParseInt: parsing \"not-a-number\": invalid syntax\n"
+}

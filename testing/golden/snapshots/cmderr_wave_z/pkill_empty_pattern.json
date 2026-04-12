@@ -1,0 +1,5 @@
+{
+  "exit_code": 1,
+  "stdout_file": "pkill_empty_pattern.stdout",
+  "stderr": "Error: pkill: no pattern specified\n"
+}

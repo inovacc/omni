@@ -1,0 +1,5 @@
+{
+  "exit_code": 1,
+  "stdout_file": "yaml2struct_invalid_yaml.stdout",
+  "stderr": "Error: yaml2struct: invalid YAML: yaml: line 1: did not find expected ',' or ']'\n"
+}

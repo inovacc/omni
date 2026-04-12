@@ -1,0 +1,5 @@
+{
+  "exit_code": 2,
+  "stdout_file": "dd_bad_bs.stdout",
+  "stderr": "Error: dd: invalid value for bs: dd: invalid number: : invalid input\n"
+}

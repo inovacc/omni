@@ -1,0 +1,5 @@
+{
+  "exit_code": 1,
+  "stdout_file": "tar_nonexistent_archive.stdout",
+  "stderr": "Error: archive: open /nonexistent_omni_plan16_xyz.tar: The system cannot find the file specified.: not found\n"
+}

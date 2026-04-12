@@ -1,0 +1,5 @@
+{
+  "exit_code": 1,
+  "stdout_file": "grep_file_not_found.stdout",
+  "stderr": "grep: cannot open '/nonexistent_omni_plan16_xyz': open /nonexistent_omni_plan16_xyz: The system cannot find the file specified.\nError: cannot open '/nonexistent_omni_plan16_xyz': open /nonexistent_omni_plan16_xyz: The system cannot find the file specified.\n"
+}

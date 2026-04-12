@@ -1,0 +1,53 @@
+AWS CLI operations for core services.
+
+Supported services:
+  s3    - S3 bucket and object operations
+  ec2   - EC2 instance operations
+  iam   - IAM user, role, and policy operations
+  sts   - STS identity and credential operations
+  ssm   - SSM Parameter Store operations
+
+Configuration:
+  AWS credentials are loaded from standard AWS SDK sources:
+  - Environment variables (AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY)
+  - Shared credentials file (~<PATH>
+  - IAM role (when running on EC2)
+
+Examples:
+  # Get caller identity
+  omni aws sts get-caller-identity
+
+  # List S3 buckets
+  omni aws s3 ls
+
+  # List S3 objects
+  omni aws s3 ls s3:<PATH>
+
+  # Describe EC2 instances
+  omni aws ec2 describe-instances
+
+  # Get SSM parameter
+  omni aws ssm get-parameter --name <PATH>
+
+Usage:
+  omni aws [command]
+
+Available Commands:
+  ec2         AWS EC2 operations
+  iam         AWS IAM operations
+  s3          AWS S3 operations
+  ssm         AWS SSM Parameter Store operations
+  sts         AWS STS operations
+
+Flags:
+      --endpoint-url string   custom endpoint URL (for LocalStack, MinIO, etc.)
+  -h, --help                  help for aws
+      --output string         output format: json, text, table (default "json")
+      --profile string        AWS profile to use
+      --region string         AWS region
+
+Global Flags:
+      --json    output as JSON
+      --table   output as aligned table
+
+Use "omni aws [command] --help" for more information about a command.

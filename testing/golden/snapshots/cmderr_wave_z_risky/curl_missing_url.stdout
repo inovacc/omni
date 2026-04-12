@@ -1,0 +1,35 @@
+HTTP client inspired by curlie/httpie.
+
+Supports httpie-like syntax for headers and data:
+  key:value     HTTP header
+  key=value     JSON data field
+  key==value    URL query parameter
+  @file         Request body from file
+
+Methods: GET, POST, PUT, DELETE, PATCH, HEAD, OPTIONS
+
+Examples:
+  omni curl https:<PATH>
+  omni curl POST https:<PATH> name=John email=john@example.com
+  omni curl https:<PATH> Authorization:"Bearer token"
+  omni curl https:<PATH> q==hello
+  omni curl POST https:<PATH> @data.json
+  omni curl -v https:<PATH>
+  omni curl --json https:<PATH>
+
+Usage:
+  omni curl [METHOD] URL [ITEM...] [flags]
+
+Flags:
+  -d, --data string          request body data
+  -f, --form                 send as form data instead of JSON
+  -H, --header stringArray   custom header (can be used multiple times)
+  -h, --help                 help for curl
+  -k, --insecure             skip TLS verification
+      --json                 output response as structured JSON
+  -L, --location             follow redirects (default true)
+  -t, --timeout int          request timeout in seconds (default 30)
+  -v, --verbose              show request/response details
+
+Global Flags:
+      --table   output as aligned table

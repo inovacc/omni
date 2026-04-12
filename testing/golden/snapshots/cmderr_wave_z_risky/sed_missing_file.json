@@ -1,0 +1,5 @@
+{
+  "exit_code": 1,
+  "stdout_file": "sed_missing_file.stdout",
+  "stderr": "Error: sed: cannot open '/nonexistent_omni_plan16_xyz': open /nonexistent_omni_plan16_xyz: The system cannot find the file specified.\n"
+}

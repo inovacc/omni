@@ -1,0 +1,5 @@
+{
+  "exit_code": 1,
+  "stdout_file": "curl_bad_url.stdout",
+  "stderr": "Error: curl: Get \"not-a-url\": unsupported protocol scheme \"\"\n"
+}

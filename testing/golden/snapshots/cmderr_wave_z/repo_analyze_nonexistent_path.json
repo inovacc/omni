@@ -1,0 +1,5 @@
+{
+  "exit_code": 1,
+  "stdout_file": "repo_analyze_nonexistent_path.stdout",
+  "stderr": "Error: repo analyze: GetFileAttributesEx <PATH> The system cannot find the file specified.\n"
+}

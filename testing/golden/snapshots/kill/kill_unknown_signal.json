@@ -1,0 +1,5 @@
+{
+  "exit_code": 2,
+  "stdout_file": "kill_unknown_signal.stdout",
+  "stderr": "Error: kill: unknown signal: BOGUSX: invalid input\n"
+}

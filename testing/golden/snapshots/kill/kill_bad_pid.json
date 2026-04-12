@@ -1,0 +1,5 @@
+{
+  "exit_code": 2,
+  "stdout_file": "kill_bad_pid.stdout",
+  "stderr": "kill: invalid pid: not-a-pid\nError: kill: invalid pid: not-a-pid: invalid input\n"
+}

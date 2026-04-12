@@ -1,0 +1,5 @@
+{
+  "exit_code": 2,
+  "stdout_file": "tar_missing_file_arg.stdout",
+  "stderr": "Error: archive: no input file specified (-f): invalid input\n"
+}

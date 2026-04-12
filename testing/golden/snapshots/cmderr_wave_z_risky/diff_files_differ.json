@@ -1,0 +1,5 @@
+{
+  "exit_code": 1,
+  "stdout_file": "diff_files_differ.stdout",
+  "stderr": "Error: requires at least 2 arg(s), only received 1\n"
+}

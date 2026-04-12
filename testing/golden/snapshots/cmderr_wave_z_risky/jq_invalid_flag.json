@@ -1,0 +1,5 @@
+{
+  "exit_code": 1,
+  "stdout_file": "jq_invalid_flag.stdout",
+  "stderr": "Error: unknown flag: --definitely-not-a-real-flag\n"
+}

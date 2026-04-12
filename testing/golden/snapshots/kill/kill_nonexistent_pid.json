@@ -1,0 +1,5 @@
+{
+  "exit_code": 1,
+  "stdout_file": "kill_nonexistent_pid.stdout",
+  "stderr": "kill: no such process: pid 999999999\nError: kill: no such process: pid 999999999: not found\n"
+}

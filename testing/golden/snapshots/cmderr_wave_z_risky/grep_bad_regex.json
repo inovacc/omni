@@ -1,0 +1,5 @@
+{
+  "exit_code": 1,
+  "stdout_file": "grep_bad_regex.stdout",
+  "stderr": "Error: grep: error parsing regexp: missing closing ]: `[[bad`\n"
+}

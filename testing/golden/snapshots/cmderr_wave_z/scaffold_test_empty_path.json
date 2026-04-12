@@ -1,0 +1,5 @@
+{
+  "exit_code": 1,
+  "stdout_file": "scaffold_test_empty_path.stdout",
+  "stderr": "Error: scaffold: source file path is required\n"
+}

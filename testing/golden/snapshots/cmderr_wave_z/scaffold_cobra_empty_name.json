@@ -1,0 +1,5 @@
+{
+  "exit_code": 1,
+  "stdout_file": "scaffold_cobra_empty_name.stdout",
+  "stderr": "Error: scaffold: command name is required\n"
+}

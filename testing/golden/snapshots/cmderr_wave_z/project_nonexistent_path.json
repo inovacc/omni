@@ -1,0 +1,5 @@
+{
+  "exit_code": 1,
+  "stdout_file": "project_nonexistent_path.stdout",
+  "stderr": "Error: project info: GetFileAttributesEx <PATH> The system cannot find the file specified.\n"
+}

@@ -1,0 +1,5 @@
+{
+  "exit_code": 0,
+  "stdout_file": "find_nonexistent_root.stdout",
+  "stderr": "find: \"/nonexistent_omni_plan16_xyz\": GetFileAttributesEx /nonexistent_omni_plan16_xyz: The system cannot find the file specified.\n"
+}

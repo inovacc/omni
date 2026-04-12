@@ -1,0 +1,5 @@
+{
+  "exit_code": 2,
+  "stdout_file": "awk_parse_error.stdout",
+  "stderr": "Error: awk: unmatched '{': invalid input\n"
+}

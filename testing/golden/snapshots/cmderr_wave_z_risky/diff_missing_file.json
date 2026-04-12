@@ -1,0 +1,5 @@
+{
+  "exit_code": 1,
+  "stdout_file": "diff_missing_file.stdout",
+  "stderr": "Error: diff: /nonexistent_omni_plan16_xyz_a: not found\n"
+}

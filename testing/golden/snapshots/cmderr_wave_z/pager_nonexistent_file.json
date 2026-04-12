@@ -1,0 +1,5 @@
+{
+  "exit_code": 1,
+  "stdout_file": "pager_nonexistent_file.stdout",
+  "stderr": "Error: less: open /nonexistent_omni_plan16_xyz: The system cannot find the file specified.: not found\n"
+}

@@ -1,0 +1,5 @@
+{
+  "exit_code": 1,
+  "stdout_file": "cron_invalid_expression.stdout",
+  "stderr": "Error: cron: invalid cron expression: expected 5 fields, got 1\n"
+}

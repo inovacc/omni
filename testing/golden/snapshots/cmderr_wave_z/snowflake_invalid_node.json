@@ -1,0 +1,5 @@
+{
+  "exit_code": 1,
+  "stdout_file": "snowflake_invalid_node.stdout",
+  "stderr": "Error: unknown flag: --node\n"
+}

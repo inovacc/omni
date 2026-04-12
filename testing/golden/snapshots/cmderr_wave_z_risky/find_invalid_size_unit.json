@@ -1,0 +1,5 @@
+{
+  "exit_code": 2,
+  "stdout_file": "find_invalid_size_unit.stdout",
+  "stderr": "Error: find: invalid size: invalid number: bad-unit: invalid input\n"
+}

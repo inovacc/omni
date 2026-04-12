@@ -1,0 +1,5 @@
+{
+  "exit_code": 2,
+  "stdout_file": "sed_unsupported_command.stdout",
+  "stderr": "Error: sed: sed: unknown command: z<PATH> invalid input\n"
+}

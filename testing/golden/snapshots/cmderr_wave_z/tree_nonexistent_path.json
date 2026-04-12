@@ -1,0 +1,5 @@
+{
+  "exit_code": 1,
+  "stdout_file": "tree_nonexistent_path.stdout",
+  "stderr": "Error: tree: path not found\nGetFileAttributesEx <PATH> The system cannot find the file specified.\n"
+}

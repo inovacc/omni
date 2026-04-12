@@ -1,0 +1,5 @@
+{
+  "exit_code": 1,
+  "stdout_file": "kill_posix_signal_nonexistent_pid.stdout",
+  "stderr": "Error: unknown shorthand flag: 'U' in -USR1\n"
+}

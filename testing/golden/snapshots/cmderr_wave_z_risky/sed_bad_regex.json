@@ -1,0 +1,5 @@
+{
+  "exit_code": 2,
+  "stdout_file": "sed_bad_regex.stdout",
+  "stderr": "Error: sed: sed: invalid regex: error parsing regexp: missing closing ]: `[[bad`: invalid input\n"
+}
