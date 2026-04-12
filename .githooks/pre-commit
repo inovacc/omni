@@ -1,0 +1,34 @@
+#!/bin/bash
+# Pre-commit hook: detect cmdtree drift when cmd/ files are staged
+
+# Check if any cmd/ files are staged
+if git diff --cached --name-only | grep -q "^cmd/"; then
+    # Get the project root
+    ROOT="$(git rev-parse --show-toplevel)"
+
+    # Build omni if needed (or use existing binary)
+    if [ ! -f "$ROOT/bin/omni" ] && [ ! -f "$ROOT/bin/omni.exe" ]; then
+        go build -o "$ROOT/bin/omni" "$ROOT" 2>/dev/null
+    fi
+
+    # Determine binary path
+    OMNI_BIN="$ROOT/bin/omni"
+    if [ -f "$ROOT/bin/omni.exe" ]; then
+        OMNI_BIN="$ROOT/bin/omni.exe"
+    fi
+
+    # Regenerate cmdtree to a temp file
+    TMPFILE=$(mktemp)
+    "$OMNI_BIN" cmdtree > "$TMPFILE" 2>/dev/null
+
+    # Compare with committed version
+    if [ -f "$ROOT/docs/cmdtree.md" ]; then
+        if ! diff -q "$TMPFILE" "$ROOT/docs/cmdtree.md" > /dev/null 2>&1; then
+            echo "ERROR: docs/cmdtree.md is out of date. Run: omni cmdtree > docs/cmdtree.md"
+            rm "$TMPFILE"
+            exit 1
+        fi
+    fi
+    rm "$TMPFILE"
+fi
+exit 0

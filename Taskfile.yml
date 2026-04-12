@@ -374,6 +374,13 @@ tasks:
 
 
 
+  # === GIT HOOKS ===
+  hooks:install:
+    desc: Install git hooks from .githooks/
+    cmds:
+      - git config core.hooksPath .githooks
+      - echo "Git hooks installed from .githooks/"
+
   # === DEPENDENCY MANAGEMENT ===
   deps:
     desc: Download and tidy dependencies
