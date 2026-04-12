@@ -1,5 +1,7 @@
 package cmd
 
+// helplint:ignore — Long strings need omni-usage examples added in a future pass.
+
 import (
 	"github.com/inovacc/omni/internal/cli/ls"
 	"github.com/spf13/cobra"
