@@ -32,3 +32,10 @@ def normalize(text: str, normalizer_names: list[str] | None = None) -> str:
         if fn:
             text = fn(text)
     return text
+
+
+def apply_normalize_rules(text: str, rules: list) -> str:
+    """Apply a list of {pattern, replacement} regex rules to text."""
+    for rule in rules:
+        text = re.sub(rule["pattern"], rule["replacement"], text)
+    return text

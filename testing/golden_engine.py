@@ -28,6 +28,7 @@ class GoldenTestCase:
     fixture: Optional[str] = None  # file content for {file} placeholder
     fixtures_dir: Optional[dict[str, str]] = None  # filename->content for {dir} placeholder
     normalizations: list[str] = field(default_factory=list)
+    normalize: list[dict] = field(default_factory=list)  # {pattern, replacement} pairs
     platform_specific: bool = False
 
 
@@ -98,6 +99,7 @@ class GoldenEngine:
                     stdin=test.get("stdin"),
                     fixture=test.get("fixture"),
                     normalizations=test.get("normalizations", []),
+                    normalize=test.get("normalize", []),
                     fixtures_dir=test.get("fixtures_dir"),
                     platform_specific=test.get("platform_specific", False),
                 ))
@@ -143,13 +145,16 @@ class GoldenEngine:
             if temp_fixture_dir and temp_fixture_dir.exists():
                 shutil.rmtree(temp_fixture_dir)
 
-    def normalize(self, text: str, normalizer_names: list[str]) -> str:
+    def normalize(self, text: str, normalizer_names: list[str], normalize_rules: list[dict] | None = None) -> str:
         """Apply normalization chain to text. Always normalizes newlines."""
         # Always normalize newlines first
         text = NORMALIZERS["normalize_newlines"](text)
         for name in normalizer_names:
             if name in NORMALIZERS:
                 text = NORMALIZERS[name](text)
+        # Apply inline regex rules from normalize: YAML field
+        for rule in (normalize_rules or []):
+            text = re.sub(rule["pattern"], rule["replacement"], text)
         return text
 
     def _snapshot_dir_for(self, test: GoldenTestCase) -> Path:
@@ -189,8 +194,8 @@ class GoldenEngine:
         cat_dir.mkdir(parents=True, exist_ok=True)
 
         # Normalize before saving
-        stdout = self.normalize(stdout, test.normalizations)
-        stderr = self.normalize(stderr, test.normalizations)
+        stdout = self.normalize(stdout, test.normalizations, test.normalize)
+        stderr = self.normalize(stderr, test.normalizations, test.normalize)
 
         # JSON metadata
         meta = {
@@ -221,8 +226,8 @@ class GoldenEngine:
             )
 
         exit_code, stdout, stderr = self.run_command(test)
-        stdout = self.normalize(stdout, test.normalizations)
-        stderr = self.normalize(stderr, test.normalizations)
+        stdout = self.normalize(stdout, test.normalizations, test.normalize)
+        stderr = self.normalize(stderr, test.normalizations, test.normalize)
 
         # Compare exit code
         if exit_code != snapshot.exit_code:

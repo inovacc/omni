@@ -17,6 +17,7 @@ class TestCase:
     fixtures_dir: Optional[dict[str, str]] = None
     expected_exit_code: int = 0
     normalizations: list[str] = field(default_factory=list)
+    normalize: list = field(default_factory=list)
     platform_specific: bool = False
 
     @property

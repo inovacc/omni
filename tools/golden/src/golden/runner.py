@@ -9,7 +9,7 @@ from concurrent.futures import ProcessPoolExecutor, as_completed
 from pathlib import Path
 from typing import Optional
 
-from golden.normalize import normalize
+from golden.normalize import apply_normalize_rules, normalize
 from golden.types import RunResult, TestCase
 
 
@@ -55,8 +55,8 @@ def run_test_case(
             cwd=project_root,
         )
         duration_ms = (time.monotonic() - start) * 1000
-        stdout = normalize(result.stdout, test_case.normalizations)
-        stderr = normalize(result.stderr, test_case.normalizations)
+        stdout = apply_normalize_rules(normalize(result.stdout, test_case.normalizations), test_case.normalize)
+        stderr = apply_normalize_rules(normalize(result.stderr, test_case.normalizations), test_case.normalize)
         return RunResult(
             test_case=test_case,
             stdout=stdout,

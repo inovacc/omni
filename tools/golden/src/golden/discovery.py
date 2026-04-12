@@ -34,6 +34,7 @@ def discover_test_cases(
                 fixtures_dir=test.get("fixtures_dir"),
                 expected_exit_code=test.get("exit_code", 0),
                 normalizations=test.get("normalizations", []),
+                normalize=test.get("normalize", []),
                 platform_specific=test.get("platform_specific", False),
             )
             if pattern and pattern not in tc.name:

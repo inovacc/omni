@@ -179,6 +179,39 @@ task golden:compare     # Ensure no regressions
 | `task test:golden:update` | Lightweight update (testing/golden/) |
 | `task test:golden:check` | Verify snapshots exist (CI) |
 
+## normalize: Hook
+
+The `normalize:` field accepts a list of `{pattern, replacement}` regex substitutions applied to command output **before** snapshot comparison. Use it to mask non-deterministic values (timestamps, UUIDs, ports) so tests remain stable across runs.
+
+### YAML syntax
+
+```yaml
+- name: "uuid generate"
+  command: "omni uuid"
+  args: ["uuid"]
+  normalize:
+    - pattern: "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"
+      replacement: "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
+```
+
+### Common patterns
+
+| What to mask | Pattern | Replacement |
+|---|---|---|
+| UUID v4/v7 | `[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}` | `XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX` |
+| ISO timestamp | `\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}` | `TIMESTAMP` |
+| Unix epoch | `\b\d{10}\b` | `EPOCH` |
+| Port number | `:\d{4,5}\b` | `:PORT` |
+
+### How it works
+
+`normalize:` rules run **after** the built-in `normalizations:` list (newline fix, path stripping, etc.) in both golden harness engines:
+
+- **Engine 1** (`testing/golden_engine.py`): `GoldenTestCase.normalize` applied in `GoldenEngine.normalize()`
+- **Engine 2** (`tools/golden/`): `TestCase.normalize` applied via `apply_normalize_rules()` in `runner.py`
+
+Rules are applied in order using Python `re.sub`. Both the recorded baseline and the live run pass through the same rules, so only genuinely changed content triggers a diff.
+
 ## Design Decisions
 
 - **YAML registry**: Declarative test definitions allow adding tests without code changes
