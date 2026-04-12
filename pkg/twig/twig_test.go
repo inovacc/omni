@@ -429,3 +429,200 @@ func TestTree_Parse_InvalidFormat(t *testing.T) {
 		t.Error("Parse() should error on empty input")
 	}
 }
+
+func TestTree_GenerateJSON_NoStats(t *testing.T) {
+	tmpDir, err := os.MkdirTemp("", "twig_test")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = os.RemoveAll(tmpDir) }()
+
+	_ = os.WriteFile(filepath.Join(tmpDir, "file.txt"), []byte("x"), 0644)
+
+	tree := NewTree()
+	output, err := tree.GenerateJSON(context.Background(), tmpDir, false)
+	if err != nil {
+		t.Fatalf("GenerateJSON(false) error = %v", err)
+	}
+	if output == "" {
+		t.Error("GenerateJSON() should produce output")
+	}
+	// Without stats the JSON should not contain "stats" key
+	if strings.Contains(output, `"stats"`) {
+		t.Error("GenerateJSON(includeStats=false) should not contain 'stats'")
+	}
+}
+
+func TestTree_GenerateJSONStream(t *testing.T) {
+	tmpDir, err := os.MkdirTemp("", "twig_test")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = os.RemoveAll(tmpDir) }()
+
+	_ = os.WriteFile(filepath.Join(tmpDir, "file.txt"), []byte("data"), 0644)
+
+	var buf strings.Builder
+	tree := NewTree()
+	err = tree.GenerateJSONStream(context.Background(), tmpDir, &buf)
+	if err != nil {
+		t.Fatalf("GenerateJSONStream() error = %v", err)
+	}
+	out := buf.String()
+	if out == "" {
+		t.Error("GenerateJSONStream() should produce output")
+	}
+}
+
+func TestTree_GenerateJSONStream_NonexistentPath(t *testing.T) {
+	tree := NewTree()
+	var buf strings.Builder
+	err := tree.GenerateJSONStream(context.Background(), "/nonexistent/path/99999", &buf)
+	if err == nil {
+		t.Error("GenerateJSONStream() should error on nonexistent path")
+	}
+}
+
+func TestTree_GenerateJSON_NonexistentPath(t *testing.T) {
+	tree := NewTree()
+	_, err := tree.GenerateJSON(context.Background(), "/nonexistent/path/99999", true)
+	if err == nil {
+		t.Error("GenerateJSON() should error on nonexistent path")
+	}
+}
+
+func TestTree_Create_Reader(t *testing.T) {
+	tmpDir, err := os.MkdirTemp("", "twig_test")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = os.RemoveAll(tmpDir) }()
+
+	treeFormat := `readerproject/
+└── main.go`
+
+	tree := NewTree()
+	result, err := tree.Create(context.Background(), strings.NewReader(treeFormat), tmpDir)
+	if err != nil {
+		t.Fatalf("Create() error = %v", err)
+	}
+	if result == nil {
+		t.Fatal("Create() should return result")
+	}
+	if result.BuildResult == nil {
+		t.Error("Create() should return BuildResult")
+	}
+	if result.Root == nil {
+		t.Error("Create() should return Root")
+	}
+}
+
+func TestTree_ParseReader(t *testing.T) {
+	tree := NewTree()
+	treeFormat := `myproject/
+├── src/
+└── README.md`
+
+	root, err := tree.ParseReader(strings.NewReader(treeFormat))
+	if err != nil {
+		t.Fatalf("ParseReader() error = %v", err)
+	}
+	if root == nil {
+		t.Fatal("ParseReader() should return root")
+	}
+	if root.Name != "myproject" {
+		t.Errorf("root.Name = %q, want myproject", root.Name)
+	}
+}
+
+func TestTree_GenerateWithStats_JSONOutput(t *testing.T) {
+	tmpDir, err := os.MkdirTemp("", "twig_test")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = os.RemoveAll(tmpDir) }()
+
+	_ = os.WriteFile(filepath.Join(tmpDir, "a.txt"), []byte("a"), 0644)
+
+	tree := NewTree(WithJSONOutput(true))
+	result, err := tree.GenerateWithStats(context.Background(), tmpDir)
+	if err != nil {
+		t.Fatalf("GenerateWithStats(JSON) error = %v", err)
+	}
+	if !strings.Contains(result.Output, "{") {
+		t.Error("GenerateWithStats() with JSON output should return JSON")
+	}
+}
+
+func TestTree_Options_Coverage(t *testing.T) {
+	tests := []struct {
+		name string
+		opts []TreeOption
+	}{
+		{"MaxFiles", []TreeOption{WithMaxFiles(100)}},
+		{"MaxHashSize", []TreeOption{WithMaxHashSize(1024 * 1024)}},
+		{"Parallel", []TreeOption{WithParallel(2)}},
+		{"ShowHash", []TreeOption{WithShowHash(true)}},
+		{"FlattenFilesHash", []TreeOption{WithFlattenFilesHash(true)}},
+		{"Colors", []TreeOption{WithColors(true)}},
+		{"DirSlash", []TreeOption{WithDirSlash(true)}},
+		{"ShowSize", []TreeOption{WithShowSize(true)}},
+		{"ShowDate", []TreeOption{WithShowDate(true)}},
+		{"JSONStreamOutput", []TreeOption{WithJSONStreamOutput(true)}},
+		{"Overwrite", []TreeOption{WithOverwrite(true)}},
+		{"SkipExisting", []TreeOption{WithSkipExisting(true)}},
+		{"AbortOnConflict", []TreeOption{WithAbortOnConflict(true)}},
+		{"Verbose", []TreeOption{WithVerbose(true)}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tree := NewTree(tt.opts...)
+			if tree == nil {
+				t.Fatalf("NewTree() with %s returned nil", tt.name)
+			}
+		})
+	}
+}
+
+func TestTree_ProgressCallback(t *testing.T) {
+	tmpDir, err := os.MkdirTemp("", "twig_test")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = os.RemoveAll(tmpDir) }()
+	_ = os.WriteFile(filepath.Join(tmpDir, "f.txt"), []byte("x"), 0644)
+
+	called := false
+	tree := NewTree(WithProgressCallback(func(n int) {
+		called = true
+	}))
+
+	_, err = tree.Generate(context.Background(), tmpDir)
+	if err != nil {
+		t.Fatalf("Generate() error = %v", err)
+	}
+	_ = called // callback may or may not fire depending on file count threshold
+}
+
+func TestTree_Build_DryRun(t *testing.T) {
+	tmpDir, err := os.MkdirTemp("", "twig_test")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = os.RemoveAll(tmpDir) }()
+
+	tree := NewTree(WithDryRun(true))
+	root, err := tree.Parse(`drytest/
+└── file.txt`)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	result, err := tree.Build(context.Background(), root, tmpDir)
+	if err != nil {
+		t.Fatalf("Build(dryrun) error = %v", err)
+	}
+	if !result.DryRun {
+		t.Error("Build() in dry run mode should return DryRun=true")
+	}
+}
