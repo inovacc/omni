@@ -141,7 +141,7 @@
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. cmderr Migration Completion | 6/18 | In Progress|  |
-| 2. Test Coverage + Deterministic Golden Harness | 8/1 | Complete   | 2026-04-12 |
+| 2. Test Coverage + Deterministic Golden Harness | 10/1 | Complete   | 2026-04-12 |
 | 3. CONCERNS Burn-down, Windows Parity, pkg/ API Audit, Docs | 0/? | Not started | - |
 | 4. pkg/sign/ — Signing Primitive | 0/? | Not started | - |
 | 5. pkg/sbom/ — SBOM Generation | 0/? | Not started | - |
