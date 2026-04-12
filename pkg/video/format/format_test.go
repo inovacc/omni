@@ -77,3 +77,113 @@ func TestFilterFormats(t *testing.T) {
 		t.Errorf("FilterFormats audio-only = %v", audioOnly)
 	}
 }
+
+func TestBestFormat_Empty(t *testing.T) {
+	if f := BestFormat(nil); f != nil {
+		t.Errorf("BestFormat(nil) = %v, want nil", f)
+	}
+}
+
+func TestWorstFormat_Empty(t *testing.T) {
+	if f := WorstFormat(nil); f != nil {
+		t.Errorf("WorstFormat(nil) = %v, want nil", f)
+	}
+}
+
+func TestWorstFormat_NoAV(t *testing.T) {
+	// All video-only — should fall back to first
+	h480 := 480
+	formats := []types.Format{
+		{FormatID: "video-only", Height: &h480, VCodec: "avc1", ACodec: ""},
+	}
+	SortFormats(formats)
+	f := WorstFormat(formats)
+	if f == nil {
+		t.Fatal("WorstFormat returned nil")
+	}
+	if f.FormatID != "video-only" {
+		t.Errorf("WorstFormat = %s, want video-only", f.FormatID)
+	}
+}
+
+func TestBestVideoOnly(t *testing.T) {
+	h480, h720 := 480, 720
+	formats := []types.Format{
+		{FormatID: "v480", Height: &h480, VCodec: "avc1", ACodec: ""},
+		{FormatID: "v720", Height: &h720, VCodec: "avc1", ACodec: ""},
+		{FormatID: "audio", VCodec: "none", ACodec: "mp4a"},
+	}
+	SortFormats(formats)
+	f := BestVideoOnly(formats)
+	if f == nil {
+		t.Fatal("BestVideoOnly returned nil")
+	}
+	if f.FormatID != "v720" {
+		t.Errorf("BestVideoOnly = %s, want v720", f.FormatID)
+	}
+}
+
+func TestBestVideoOnly_Empty(t *testing.T) {
+	formats := []types.Format{
+		{FormatID: "audio", VCodec: "none", ACodec: "mp4a"},
+	}
+	SortFormats(formats)
+	f := BestVideoOnly(formats)
+	if f != nil {
+		t.Errorf("BestVideoOnly should be nil when no video formats, got %v", f)
+	}
+}
+
+func TestBestAudioOnly(t *testing.T) {
+	h720 := 720
+	formats := []types.Format{
+		{FormatID: "video-only", Height: &h720, VCodec: "avc1", ACodec: ""},
+		{FormatID: "audio-only", VCodec: "none", ACodec: "mp4a"},
+	}
+	SortFormats(formats)
+	f := BestAudioOnly(formats)
+	if f == nil {
+		t.Fatal("BestAudioOnly returned nil")
+	}
+	if f.FormatID != "audio-only" {
+		t.Errorf("BestAudioOnly = %s, want audio-only", f.FormatID)
+	}
+}
+
+func TestBestAudioOnly_Empty(t *testing.T) {
+	formats := []types.Format{
+		{FormatID: "video-only", VCodec: "avc1", ACodec: ""},
+	}
+	SortFormats(formats)
+	f := BestAudioOnly(formats)
+	if f != nil {
+		t.Errorf("BestAudioOnly should be nil when no audio formats, got %v", f)
+	}
+}
+
+func TestSortFormats_ExtPreference(t *testing.T) {
+	h720 := 720
+	formats := []types.Format{
+		{FormatID: "webm", Height: &h720, Ext: "webm", VCodec: "vp9", ACodec: "opus"},
+		{FormatID: "mp4", Height: &h720, Ext: "mp4", VCodec: "avc1", ACodec: "mp4a"},
+	}
+	SortFormats(formats)
+	// webm (index 3) > mp4 (index 2) so webm should be last (better)
+	if formats[len(formats)-1].FormatID != "webm" {
+		t.Errorf("webm should rank higher than mp4, got last=%s", formats[len(formats)-1].FormatID)
+	}
+}
+
+func TestSortFormats_Preference(t *testing.T) {
+	pref := -1
+	h720 := 720
+	formats := []types.Format{
+		{FormatID: "normal", Height: &h720, VCodec: "avc1", ACodec: "mp4a"},
+		{FormatID: "preferred", Height: &h720, Preference: &pref, VCodec: "avc1", ACodec: "mp4a"},
+	}
+	SortFormats(formats)
+	// Negative preference = lower rank = should come first
+	if formats[0].FormatID != "preferred" {
+		t.Errorf("preferred (pref=-1) should sort first, got %s", formats[0].FormatID)
+	}
+}

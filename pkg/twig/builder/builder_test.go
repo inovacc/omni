@@ -181,3 +181,150 @@ func TestPrintResult_NoPanic(t *testing.T) {
 		DryRun:  true,
 	})
 }
+
+func TestPrintResult_WithErrors(t *testing.T) {
+	// Just verify it doesn't panic with errors
+	PrintResult(&BuildResult{
+		Created: []string{"a"},
+		Errors:  []error{errors.New("something went wrong"), errors.New("another error")},
+		DryRun:  false,
+	})
+}
+
+func TestBuild_Overwrite(t *testing.T) {
+	root := models.NewNode("proj", "proj", true)
+	root.AddChild(models.NewNode("file.txt", "proj/file.txt", false))
+
+	target := filepath.Join(t.TempDir(), "proj")
+	if err := os.MkdirAll(target, 0755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(target, "file.txt"), []byte("old"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	b := NewBuilder(&BuildConfig{Overwrite: true})
+	result, err := b.Build(context.Background(), root, target)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	// File existed so not added to Created, but no error either
+	if len(result.Errors) > 0 {
+		t.Errorf("unexpected errors: %v", result.Errors)
+	}
+}
+
+func TestBuild_VerboseOutput(t *testing.T) {
+	root := models.NewNode("proj", "proj", true)
+	root.AddChild(models.NewNode("subdir", "proj/subdir", true))
+	root.AddChild(models.NewNode("file.txt", "proj/file.txt", false))
+
+	target := filepath.Join(t.TempDir(), "proj")
+	b := NewBuilder(&BuildConfig{Verbose: true})
+
+	result, err := b.Build(context.Background(), root, target)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(result.Created) == 0 {
+		t.Error("should have created items with verbose mode")
+	}
+}
+
+func TestBuild_DryRunVerbose(t *testing.T) {
+	root := models.NewNode("proj", "proj", true)
+	root.AddChild(models.NewNode("subdir", "proj/subdir", true))
+	root.AddChild(models.NewNode("file.txt", "proj/file.txt", false))
+
+	target := filepath.Join(t.TempDir(), "proj")
+	b := NewBuilder(&BuildConfig{DryRun: true, Verbose: true})
+
+	result, err := b.Build(context.Background(), root, target)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !result.DryRun {
+		t.Error("result.DryRun should be true")
+	}
+}
+
+func TestBuild_AbortOnConflictChild(t *testing.T) {
+	root := models.NewNode("proj", "proj", true)
+	root.AddChild(models.NewNode("existing.txt", "proj/existing.txt", false))
+
+	target := filepath.Join(t.TempDir(), "proj")
+	if err := os.MkdirAll(target, 0755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(target, "existing.txt"), []byte("old"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	b := NewBuilder(&BuildConfig{AbortOnConflict: true})
+	_, err := b.Build(context.Background(), root, target)
+	if err == nil {
+		t.Error("expected error when AbortOnConflict and child exists")
+	}
+}
+
+func TestBuild_TypeMismatch(t *testing.T) {
+	// Create a file where the tree expects a directory
+	root := models.NewNode("proj", "proj", true)
+	dirNode := models.NewNode("item", "proj/item", true) // expect dir
+	root.AddChild(dirNode)
+
+	target := filepath.Join(t.TempDir(), "proj")
+	if err := os.MkdirAll(target, 0755); err != nil {
+		t.Fatal(err)
+	}
+	// Create a file where builder expects a directory
+	if err := os.WriteFile(filepath.Join(target, "item"), []byte("file content"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	b := NewBuilder(&BuildConfig{})
+	result, err := b.Build(context.Background(), root, target)
+	if err != nil {
+		t.Fatalf("unexpected fatal error: %v", err)
+	}
+	if len(result.Errors) == 0 {
+		t.Error("expected type mismatch error in result.Errors")
+	}
+	if !errors.Is(result.Errors[0], ErrTypeMismatch) {
+		t.Errorf("expected ErrTypeMismatch, got %v", result.Errors[0])
+	}
+}
+
+func TestBuild_NilNode(t *testing.T) {
+	b := NewBuilder(&BuildConfig{})
+	target := t.TempDir()
+	result, err := b.Build(context.Background(), nil, target)
+	if err != nil {
+		t.Fatalf("unexpected error for nil root: %v", err)
+	}
+	if result == nil {
+		t.Fatal("result should not be nil")
+	}
+}
+
+func TestBuild_SkipExistingWithVerbose(t *testing.T) {
+	root := models.NewNode("proj", "proj", true)
+	root.AddChild(models.NewNode("existing.txt", "proj/existing.txt", false))
+
+	target := filepath.Join(t.TempDir(), "proj")
+	if err := os.MkdirAll(target, 0755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(target, "existing.txt"), []byte("original"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	b := NewBuilder(&BuildConfig{SkipExisting: true, Verbose: true})
+	result, err := b.Build(context.Background(), root, target)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(result.Skipped) == 0 {
+		t.Error("should have skipped existing file")
+	}
+}
