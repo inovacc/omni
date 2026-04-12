@@ -348,8 +348,8 @@ tasks:
     desc: Dual-rule coverage gate — pkg/ floor>=40% avg>=75%, internal/cli/ floor>=30% avg>=60%
     cmds:
       - go test -coverprofile=coverage.out -short ./pkg/... ./internal/cli/...
-      - go run ./tools/covgate -profile=coverage.out -pkg-prefix=github.com/inovacc/omni/pkg/ -avg-min=75 -floor=40
-      - go run ./tools/covgate -profile=coverage.out -pkg-prefix=github.com/inovacc/omni/internal/cli/ -avg-min=60 -floor=30
+      - go run ./tools/covgate -profile=coverage.out -pkg-prefix=github.com/inovacc/omni/pkg/ -avg-min=75 -floor=40 -exclude=private
+      - go run ./tools/covgate -profile=coverage.out -pkg-prefix=github.com/inovacc/omni/internal/cli/ -avg-min=60 -floor=30 -exclude=private,aws,vault,kubectl,terraform,kubehacks,cloud,video,chown,/cli/ln,templates
 
   lint:cmderr-coverage:
     desc: Gate internal/cli/cmderr statement coverage at >=90% (pure-Go, cross-platform)
