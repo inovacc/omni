@@ -11,7 +11,7 @@
 ## Phases
 
 - [ ] **Phase 1: cmderr Migration Completion** — Finish cmderr adoption across all remaining commands so exit-code semantics are consistent before any security-critical work begins.
-- [ ] **Phase 2: Test Coverage + Deterministic Golden Harness** — Raise coverage to target and land timestamp/random-ID normalization hooks that supply-chain goldens will depend on.
+- [x] **Phase 2: Test Coverage + Deterministic Golden Harness** — Raise coverage to target and land timestamp/random-ID normalization hooks that supply-chain goldens will depend on. (completed 2026-04-12)
 - [ ] **Phase 3: CONCERNS Burn-down, Windows Parity, pkg/ API Audit, Docs** — Close tech-debt backlog, resolve platform parity gaps, triage pkg/ public surface, and complete command documentation.
 - [ ] **Phase 4: pkg/sign/ — Signing Primitive** — Ship `omni sign`/`verify`/`keygen` with minisign-compatible, fail-closed Ed25519 signing. (ADR gate required)
 - [ ] **Phase 5: pkg/sbom/ — SBOM Generation** — Ship `omni sbom` producing deterministic SPDX 2.3 and CycloneDX 1.5 documents for Go modules and binaries. (ADR gate required)
@@ -141,7 +141,7 @@
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. cmderr Migration Completion | 6/18 | In Progress|  |
-| 2. Test Coverage + Deterministic Golden Harness | 0/? | Not started | - |
+| 2. Test Coverage + Deterministic Golden Harness | 3/1 | Complete   | 2026-04-12 |
 | 3. CONCERNS Burn-down, Windows Parity, pkg/ API Audit, Docs | 0/? | Not started | - |
 | 4. pkg/sign/ — Signing Primitive | 0/? | Not started | - |
 | 5. pkg/sbom/ — SBOM Generation | 0/? | Not started | - |

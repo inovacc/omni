@@ -30,7 +30,7 @@
 
 ### Polish — docs & golden master completeness
 
-- [ ] **POLISH-11**: Every command has a top-level usage docstring surfaced by `omni <cmd> --help` that includes at least one concrete example.
+- [x] **POLISH-11**: Every command has a top-level usage docstring surfaced by `omni <cmd> --help` that includes at least one concrete example.
 - [ ] **POLISH-12**: Every command is registered in both golden-master registries (`testing/golden/golden_tests.yaml` and `tools/golden/golden_tests.yaml`) with at least one happy-path snapshot.
 - [ ] **POLISH-13**: The golden-master harness supports timestamp and random-ID normalization hooks, so supply-chain commands (sbom/sign/attest) can have deterministic goldens in later phases.
 - [ ] **POLISH-14**: `omni cmdtree` output is regenerated and committed at the end of the polish track so `aicontext` documentation reflects current command coverage.
@@ -154,7 +154,7 @@ Each requirement maps to exactly one phase. Coverage: **58/58 (100%)**.
 | POLISH-05 | Phase 2 | Pending |
 | POLISH-06 | Phase 2 | Pending |
 | POLISH-07 | Phase 2 | Pending |
-| POLISH-11 | Phase 2 | Pending |
+| POLISH-11 | Phase 2 | Complete |
 | POLISH-12 | Phase 2 | Pending |
 | POLISH-13 | Phase 2 | Pending |
 | POLISH-14 | Phase 2 | Pending |
