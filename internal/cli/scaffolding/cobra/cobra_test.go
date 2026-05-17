@@ -1018,3 +1018,45 @@ func TestCobraConfig(t *testing.T) {
 		}
 	})
 }
+
+func TestServiceCommandMode(t *testing.T) {
+	fs := afero.NewMemMapFs()
+	var buf bytes.Buffer
+
+	err := RunCobraInit(&buf, fs, "/svcapp", CobraInitOptions{
+		Module:     "example.com/svcapp",
+		UseService: true,
+	}, scaffolding.Options{})
+	if err != nil {
+		t.Fatalf("RunCobraInit: %v", err)
+	}
+
+	svcFile := "/svcapp/cmd/svcapp/cmd_service.go"
+	b, err := afero.ReadFile(fs, svcFile)
+	if err != nil {
+		t.Fatalf("expected %s: %v", svcFile, err)
+	}
+	src := string(b)
+	for _, want := range []string{
+		"serviceCmd", "serviceProgram",
+		"func (p *serviceProgram) Start", "func (p *serviceProgram) Stop",
+		"kardianos/service",
+		`Use:   "install"`, `Use:   "uninstall"`, `Use:   "start"`,
+		`Use:   "stop"`, `Use:   "restart"`, `Use:   "status"`, `Use:   "run"`,
+		"rootCmd.AddCommand(serviceCmd)",
+	} {
+		if !strings.Contains(src, want) {
+			t.Errorf("cmd_service.go missing %q", want)
+		}
+	}
+
+	gomod, _ := afero.ReadFile(fs, "/svcapp/go.mod")
+	if !strings.Contains(string(gomod), "github.com/kardianos/service") {
+		t.Errorf("go.mod missing kardianos/service require")
+	}
+
+	mainB, _ := afero.ReadFile(fs, "/svcapp/cmd/svcapp/svcapp.go")
+	if strings.Contains(string(mainB), "RunE: service.Handler") {
+		t.Errorf("service mode must not hard-bind rootCmd.RunE; run owns it")
+	}
+}
