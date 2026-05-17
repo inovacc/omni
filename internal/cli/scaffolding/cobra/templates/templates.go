@@ -38,7 +38,6 @@ import (
 	"os"
 
 	"{{.Module}}/internal/parameters"
-	"{{.Module}}/internal/service"
 
 	"github.com/inovacc/config"
 {{else if .UseViper}}
@@ -55,9 +54,6 @@ var rootCmd = &cobra.Command{
 	Long: ` + "`" + `{{.Description}}
 
 This is a CLI application built with Cobra.` + "`" + `,
-{{if .UseService}}
-	RunE: service.Handler,
-{{end}}
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -493,6 +489,7 @@ require github.com/spf13/viper v1.18.0
 {{end}}
 {{if .UseService}}
 require github.com/inovacc/config v1.2.2
+require github.com/kardianos/service v1.2.2
 {{end}}
 `
 

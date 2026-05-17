@@ -620,16 +620,20 @@ func TestServiceMode(t *testing.T) {
 			t.Error("Service mode entry point should import inovacc/config")
 		}
 
-		if !strings.Contains(rootStr, "service.Handler") {
-			t.Error("Service mode entry point should use service.Handler")
+		// Behavior change: the entry point is now a command group; the
+		// long-running handler is owned by the `service run` subcommand
+		// (cmd_service.go), so the root file must NOT bind service.Handler
+		// nor import internal/service.
+		if strings.Contains(rootStr, "RunE: service.Handler") {
+			t.Error("Service mode entry point must not bind rootCmd.RunE; service run owns it")
 		}
 
 		if !strings.Contains(rootStr, "internal/parameters") {
 			t.Error("Service mode entry point should import parameters")
 		}
 
-		if !strings.Contains(rootStr, "internal/service") {
-			t.Error("Service mode entry point should import service")
+		if strings.Contains(rootStr, `"github.com/test/servicerootapp/internal/service"`) {
+			t.Error("Service mode entry point should no longer import internal/service")
 		}
 	})
 

@@ -178,6 +178,14 @@ func RunCobraInit(w io.Writer, fs afero.Fs, dir string, opts CobraInitOptions, g
 		}
 
 		filesCreated = append(filesCreated, "internal/service/service.go")
+
+		// cmd/{AppName}/cmd_service.go — service lifecycle command group
+		svcCmdPath := filepath.Join(dir, "cmd", opts.AppName, "cmd_service.go")
+		if err := scaffolding.WriteTemplate(fs, svcCmdPath, cobratpl.ServiceCmdTemplate, tplData); err != nil {
+			return fmt.Errorf("scaffold: failed to create cmd/%s/cmd_service.go: %w", opts.AppName, err)
+		}
+
+		filesCreated = append(filesCreated, filepath.Join("cmd", opts.AppName, "cmd_service.go"))
 	}
 
 	// Generate LICENSE
