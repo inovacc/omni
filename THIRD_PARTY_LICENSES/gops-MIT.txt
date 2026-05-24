@@ -1,0 +1,46 @@
+The classification and signal-delivery logic in pkg/procutil is adapted from
+github.com/inovacc/gops (https://github.com/inovacc/gops), licensed under MIT.
+
+Files derived from gops:
+  - pkg/procutil/classify.go              (from internal/inspect/gobinary.go + process.go)
+  - pkg/procutil/kill.go                  (from internal/killer/killer.go)
+  - pkg/procutil/kill_unix.go             (from internal/killer/killer_unix.go)
+  - pkg/procutil/kill_windows.go          (from internal/killer/killer_windows.go)
+  - pkg/obfuscate/obfuscate.go            (from internal/obfuscate/detector.go + verdict.go)
+  - pkg/procmetrics/procmetrics.go        (from internal/monitor/collector.go + metrics.go)
+  - pkg/gopsagent/agent.go                (from pkg/agent/agent.go)
+  - pkg/gopsagent/auth.go                 (from pkg/agent/auth.go)
+  - pkg/gopsagent/opcodes.go              (from pkg/agent/opcodes.go)
+  - pkg/gopsagent/handlers.go             (from pkg/agent/handlers.go)
+  - internal/gopsclient/client.go         (from internal/agent/client.go)
+  - internal/gopsclient/discovery.go      (from internal/agent/discovery.go)
+  - internal/cli/runtimeps/top.go         (TUI from internal/render/tui.go)
+
+The pkg/gopsagent/config.go file (notify_on_startup config) is original work
+not present in upstream gops.
+
+Upstream license text follows verbatim:
+
+----------------------------------------------------------------------
+
+MIT License
+
+Copyright (c) 2026 dyammarcano
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.

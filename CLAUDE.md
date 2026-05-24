@@ -308,7 +308,7 @@ defer func() {
 
 ## Command Categories
 
-### Implemented (160+ commands)
+### Implemented (170+ commands)
 
 | Category | Commands |
 |----------|----------|
@@ -317,6 +317,7 @@ defer func() {
 | **Text** | grep, egrep, fgrep, head, tail, sort, uniq, wc, cut, tr, nl, paste, tac, column, fold, join, sed, awk, shuf, split, rev, comm, cmp, strings |
 | **Search** | rg (ripgrep-style search with gitignore support, parallel walking, streaming JSON) |
 | **System** | env, whoami, id, uname, uptime, free, df, du, ps, kill, time |
+| **Process (runtime-aware)** | gops (Go), nodeps (Node), pyps (Python), javaps (Java) — runtime-filtered process tools. All four support `list`, `kill <pid\|name>` with `--recursive --yes` bulk-kill guard, `--json`. `gops` additionally supports `inspect <pid>` (build info + obfuscation report + agent presence), `monitor <pid>` (CPU/mem/IO/FD; `--watch` streams NDJSON), `obfuscation <pid\|path>` (garble heuristic), `top` (bubbletea TUI dashboard), `agent-cmd <pid> <op>` (stack/gc/memstats/version/stats/snapshot opcode passthrough to an embedded `pkg/gopsagent`), `trace <pid> -d 5s`, `profile <pid> -d 30s`, `stream <pid> -i 1s` (NDJSON snapshot stream). The embeddable agent ships in `pkg/gopsagent` — Go programs add three lines (`a := gopsagent.New(gopsagent.Options{}); a.Listen(); defer a.Close()`) to expose runtime introspection on a loopback TCP socket. Optional HMAC challenge via `AuthKey` + `GOPS_AGENT_KEY` env var; optional startup notification via `~/.config/gops/config.json` (`{"notify_on_startup":true}`) or `GOPS_AGENT_NOTIFY=1` env var. |
 | **Flow** | xargs, watch, yes, pipe, pipeline |
 | **Archive** | tar, zip, unzip |
 | **Compression** | gzip, gunzip, zcat, bzip2, bunzip2, bzcat, xz, unxz, xzcat |

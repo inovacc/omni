@@ -1,103 +1,196 @@
 package cmd
 
 import (
-	"encoding/json"
-	"fmt"
-	"os"
-	"text/tabwriter"
+	"time"
 
-	"github.com/google/gops/goprocess"
 	"github.com/spf13/cobra"
+
+	"github.com/inovacc/omni/internal/cli/runtimeps"
+	"github.com/inovacc/omni/pkg/procutil"
 )
 
-// GoProcessInfo represents Go process information for JSON output
-type GoProcessInfo struct {
-	PID       int    `json:"pid"`
-	PPID      int    `json:"ppid"`
-	Command   string `json:"command"`
-	Version   string `json:"version"`
-	BuildPath string `json:"build_path"`
-}
-
-// gopsCmd represents the gops command
+// gopsCmd lists Go processes and signals them. Replaces the older
+// google/gops-based implementation with a pure-Go classifier under
+// pkg/procutil (no embedded agent required).
 var gopsCmd = &cobra.Command{
-	Use:   "gops [PID]",
-	Short: "Display Go process information",
-	Long: `Display information about running Go processes.
-
-Uses google/gops to detect Go processes and show their version
-and build information.
+	Use:   "gops",
+	Short: "List and signal running Go processes",
+	Long: `Enumerate Go processes by inspecting binaries on disk via debug/buildinfo.
+Pure Go — no external commands, no embedded agent required.
 
 Examples:
-  omni gops           # list all Go processes
-  omni gops -j        # output as JSON
-  omni gops 1234      # show info for specific PID`,
+  omni gops                                # list Go processes (table)
+  omni gops --json                         # list as JSON
+  omni gops kill 12345                     # signal by PID
+  omni gops kill myapp                     # signal the single matching process
+  omni gops kill myapp --recursive --yes   # signal every Go process named "myapp"
+`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		jsonOutput, _ := cmd.Flags().GetBool("json")
-
-		procs := goprocess.FindAll()
-
-		if len(procs) == 0 {
-			if !jsonOutput {
-				_, _ = fmt.Fprintln(os.Stdout, "No Go processes found")
-			} else {
-				_, _ = fmt.Fprintln(os.Stdout, "[]")
-			}
-
-			return nil
-		}
-
-		if jsonOutput {
-			return printGopsJSON(procs)
-		}
-
-		return printGopsTable(procs)
+		return runRuntimePsList(cmd, procutil.RuntimeGo)
 	},
 }
 
-func printGopsTable(procs []goprocess.P) error {
-	w := tabwriter.NewWriter(os.Stdout, 0, 8, 2, ' ', 0)
-	_, _ = fmt.Fprintln(w, "PID\tPPID\tCOMMAND\tVERSION\tBUILD PATH")
-
-	for _, p := range procs {
-		cmd := p.Exec
-		if len(cmd) > 40 {
-			cmd = cmd[:40] + "..."
-		}
-
-		path := p.Path
-		if len(path) > 50 {
-			path = "..." + path[len(path)-47:]
-		}
-
-		_, _ = fmt.Fprintf(w, "%d\t%d\t%s\t%s\t%s\n",
-			p.PID, p.PPID, cmd, p.BuildVersion, path)
-	}
-
-	return w.Flush()
+var gopsListCmd = &cobra.Command{
+	Use:   "list",
+	Short: "List Go processes (default action of `omni gops`)",
+	RunE:  func(cmd *cobra.Command, args []string) error { return runRuntimePsList(cmd, procutil.RuntimeGo) },
 }
 
-func printGopsJSON(procs []goprocess.P) error {
-	result := make([]GoProcessInfo, 0, len(procs))
+var gopsKillCmd = &cobra.Command{
+	Use:   "kill <pid|name>",
+	Short: "Signal one or more Go processes",
+	Args:  cobra.ExactArgs(1),
+	RunE:  func(cmd *cobra.Command, args []string) error { return runRuntimePsKill(cmd, procutil.RuntimeGo, args[0]) },
+}
 
-	for _, p := range procs {
-		result = append(result, GoProcessInfo{
-			PID:       p.PID,
-			PPID:      p.PPID,
-			Command:   p.Exec,
-			Version:   p.BuildVersion,
-			BuildPath: p.Path,
+var gopsInspectCmd = &cobra.Command{
+	Use:   "inspect <pid>",
+	Short: "Detail report for a single Go process (build info + obfuscation)",
+	Args:  cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		format := "table"
+		if j, _ := cmd.Flags().GetBool("json"); j {
+			format = "json"
+		}
+		return runtimeps.RunInspect(cmd.Context(), cmd.OutOrStdout(), args[0], runtimeps.InspectOptions{Format: format})
+	},
+}
+
+var gopsMonitorCmd = &cobra.Command{
+	Use:   "monitor <pid>",
+	Short: "Sample CPU/memory/IO/FD metrics for a process (single-shot or --watch)",
+	Args:  cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		watch, _ := cmd.Flags().GetBool("watch")
+		interval, _ := cmd.Flags().GetDuration("interval")
+		format := "table"
+		if j, _ := cmd.Flags().GetBool("json"); j {
+			format = "json"
+		}
+		return runtimeps.RunMonitor(cmd.Context(), cmd.OutOrStdout(), args[0], runtimeps.MonitorOptions{
+			Watch:    watch,
+			Interval: interval,
+			Format:   format,
 		})
-	}
+	},
+}
 
-	encoder := json.NewEncoder(os.Stdout)
-	encoder.SetIndent("", "  ")
+var gopsObfuscationCmd = &cobra.Command{
+	Use:   "obfuscation <pid|path>",
+	Short: "Detect garble-style obfuscation in a Go binary (by PID or file path)",
+	Args:  cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		format := "table"
+		if j, _ := cmd.Flags().GetBool("json"); j {
+			format = "json"
+		}
+		return runtimeps.RunObfuscation(cmd.Context(), cmd.OutOrStdout(), args[0], runtimeps.ObfuscationOptions{Format: format})
+	},
+}
 
-	return encoder.Encode(result)
+var gopsTopCmd = &cobra.Command{
+	Use:   "top",
+	Short: "Interactive TUI dashboard of Go processes (q to quit)",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		interval, _ := cmd.Flags().GetDuration("interval")
+		all, _ := cmd.Flags().GetBool("all")
+		return runtimeps.RunTop(cmd.Context(), interval, all)
+	},
+}
+
+var gopsAgentCmd = &cobra.Command{
+	Use:   "agent-cmd <pid> <stack|gc|memstats|version|stats|snapshot>",
+	Short: "Send an opcode to a target's embedded gops agent",
+	Args:  cobra.ExactArgs(2),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return runtimeps.RunAgentCmd(cmd.Context(), cmd.OutOrStdout(), args[0], args[1])
+	},
+}
+
+var gopsTraceCmd = &cobra.Command{
+	Use:   "trace <pid>",
+	Short: "Capture a runtime trace from a target's embedded agent (analyze with `go tool trace`)",
+	Args:  cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		dur, _ := cmd.Flags().GetDuration("duration")
+		out, _ := cmd.Flags().GetString("file")
+		return runtimeps.RunTrace(cmd.Context(), cmd.OutOrStdout(), args[0], runtimeps.TraceOptions{Duration: dur, OutFile: out})
+	},
+}
+
+var gopsProfileCmd = &cobra.Command{
+	Use:   "profile <pid>",
+	Short: "Capture a CPU profile from a target's embedded agent (analyze with `go tool pprof`)",
+	Args:  cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		dur, _ := cmd.Flags().GetDuration("duration")
+		out, _ := cmd.Flags().GetString("file")
+		return runtimeps.RunProfile(cmd.Context(), cmd.OutOrStdout(), args[0], runtimeps.ProfileOptions{Duration: dur, OutFile: out})
+	},
+}
+
+var gopsStreamCmd = &cobra.Command{
+	Use:   "stream <pid>",
+	Short: "Stream NDJSON runtime snapshots from a target's embedded agent",
+	Args:  cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		interval, _ := cmd.Flags().GetDuration("interval")
+		return runtimeps.RunStream(cmd.Context(), cmd.OutOrStdout(), args[0], runtimeps.StreamOptions{Interval: interval})
+	},
 }
 
 func init() {
+	registerRuntimePsFlags(gopsCmd, gopsListCmd, gopsKillCmd)
+	gopsInspectCmd.Flags().BoolP("json", "j", false, "output as JSON")
+	gopsObfuscationCmd.Flags().BoolP("json", "j", false, "output as JSON")
+	gopsMonitorCmd.Flags().BoolP("json", "j", false, "output as JSON (ignored when --watch; that path streams NDJSON)")
+	gopsMonitorCmd.Flags().BoolP("watch", "w", false, "stream metrics continuously as NDJSON")
+	gopsMonitorCmd.Flags().DurationP("interval", "i", time.Second, "sampling interval when --watch")
+	gopsTopCmd.Flags().DurationP("interval", "i", time.Second, "refresh interval")
+	gopsTopCmd.Flags().BoolP("all", "a", false, "include the omni process itself")
+	gopsTraceCmd.Flags().DurationP("duration", "d", 5*time.Second, "trace duration (max 600s)")
+	gopsTraceCmd.Flags().StringP("file", "f", "", "output file (default stdout)")
+	gopsProfileCmd.Flags().DurationP("duration", "d", 30*time.Second, "profile duration (max 600s)")
+	gopsProfileCmd.Flags().StringP("file", "f", "", "output file (default stdout)")
+	gopsStreamCmd.Flags().DurationP("interval", "i", time.Second, "snapshot interval (50ms-60s)")
+	gopsCmd.AddCommand(
+		gopsListCmd, gopsKillCmd, gopsInspectCmd, gopsMonitorCmd, gopsObfuscationCmd, gopsTopCmd,
+		gopsAgentCmd, gopsTraceCmd, gopsProfileCmd, gopsStreamCmd,
+	)
 	rootCmd.AddCommand(gopsCmd)
+}
 
-	gopsCmd.Flags().BoolP("json", "j", false, "output as JSON")
+// Shared helpers live in cmd/runtimeps_shared.go so nodeps/pyps/javaps can reuse them.
+
+func runRuntimePsList(cmd *cobra.Command, rt procutil.Runtime) error {
+	all, _ := cmd.Flags().GetBool("all")
+	format := "table"
+	if j, _ := cmd.Flags().GetBool("json"); j {
+		format = "json"
+	}
+	return runtimeps.RunList(cmd.Context(), cmd.OutOrStdout(), rt, runtimeps.ListOptions{
+		All:    all,
+		Format: format,
+	})
+}
+
+func runRuntimePsKill(cmd *cobra.Command, rt procutil.Runtime, target string) error {
+	sig, _ := cmd.Flags().GetString("signal")
+	rec, _ := cmd.Flags().GetBool("recursive")
+	yes, _ := cmd.Flags().GetBool("yes")
+	return runtimeps.RunKill(cmd.Context(), cmd.OutOrStdout(), rt, target, runtimeps.KillOptions{
+		Signal:    sig,
+		Recursive: rec,
+		Yes:       yes,
+	})
+}
+
+func registerRuntimePsFlags(root, listCmd, killCmd *cobra.Command) {
+	for _, c := range []*cobra.Command{root, listCmd} {
+		c.Flags().BoolP("all", "a", false, "include the omni process itself")
+		c.Flags().BoolP("json", "j", false, "output as JSON")
+	}
+	killCmd.Flags().String("signal", "TERM", "signal to deliver: TERM|KILL|INT|HUP (Windows: TERM/KILL only)")
+	killCmd.Flags().Bool("recursive", false, "kill every matching process (required when name matches >1 process)")
+	killCmd.Flags().Bool("yes", false, "confirm --recursive without prompt (required by --recursive)")
 }
