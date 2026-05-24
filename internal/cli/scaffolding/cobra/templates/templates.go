@@ -7,16 +7,18 @@ import "time"
 
 // TemplateData contains all data needed for template rendering
 type TemplateData struct {
-	Module      string // Go module path (e.g., github.com/user/myapp)
-	AppName     string // Application name
-	Description string // Application description
-	Author      string // Author name
-	License     string // License type (MIT, Apache-2.0, BSD-3)
-	UseViper    bool   // Include viper for configuration
-	UseService  bool   // Include service pattern with inovacc/config
-	Full        bool   // Full project with goreleaser, workflows, etc.
-	AIContext   bool   // Include aicontext command
-	Year        int    // Current year for license
+	Module       string // Go module path (e.g., github.com/user/myapp)
+	AppName      string // Application name
+	AppNameUpper string // UPPERCASE form of AppName, used for env var prefixes
+	Description  string // Application description
+	Author       string // Author name
+	License      string // License type (MIT, Apache-2.0, BSD-3)
+	UseViper     bool   // Include viper for configuration
+	UseService   bool   // Include service pattern with inovacc/config (kardianos/service)
+	UseDaemon    bool   // Include self-daemonizing PID-file pattern (weaver-style)
+	Full         bool   // Full project with goreleaser, workflows, etc.
+	AIContext    bool   // Include aicontext command
+	Year         int    // Current year for license
 }
 
 // NewTemplateData creates template data with defaults
@@ -490,6 +492,10 @@ require github.com/spf13/viper v1.18.0
 {{if .UseService}}
 require github.com/inovacc/config v1.2.2
 require github.com/kardianos/service v1.2.2
+{{end}}
+{{if .UseDaemon}}
+require github.com/shirou/gopsutil/v3 v3.24.5
+require golang.org/x/sys v0.28.0
 {{end}}
 `
 
@@ -1017,6 +1023,84 @@ func init() {
 
 	// Add flags here
 	// {{.Name}}Cmd.Flags().StringP("example", "e", "", "example flag")
+}
+`
+
+// CommandSharedTemplate is the platform-agnostic file when --platform-split is used.
+// The actual implementation lives in cmd_<name>_windows.go / _darwin.go / _unix.go.
+const CommandSharedTemplate = `package main
+
+import (
+	"github.com/spf13/cobra"
+)
+
+var {{.Name}}Cmd = &cobra.Command{
+	Use:   "{{.Name}}",
+	Short: "{{.Description}}",
+	Long: ` + "`" + `{{.Description}}
+
+Add more detailed description here.` + "`" + `,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return run{{.NameTitle}}(cmd, args)
+	},
+}
+
+func init() {
+	{{.Parent}}Cmd.AddCommand({{.Name}}Cmd)
+
+	// Add flags here
+	// {{.Name}}Cmd.Flags().StringP("example", "e", "", "example flag")
+}
+`
+
+// CommandPlatformWindowsTemplate is the Windows-specific implementation.
+const CommandPlatformWindowsTemplate = `//go:build windows
+
+package main
+
+import (
+	"fmt"
+
+	"github.com/spf13/cobra"
+)
+
+func run{{.NameTitle}}(cmd *cobra.Command, args []string) error {
+	fmt.Println("{{.Name}} called (windows)")
+	return nil
+}
+`
+
+// CommandPlatformDarwinTemplate is the macOS-specific implementation.
+const CommandPlatformDarwinTemplate = `//go:build darwin
+
+package main
+
+import (
+	"fmt"
+
+	"github.com/spf13/cobra"
+)
+
+func run{{.NameTitle}}(cmd *cobra.Command, args []string) error {
+	fmt.Println("{{.Name}} called (darwin)")
+	return nil
+}
+`
+
+// CommandPlatformUnixTemplate is the Unix (Linux/BSD) implementation, excluding darwin.
+const CommandPlatformUnixTemplate = `//go:build unix && !darwin
+
+package main
+
+import (
+	"fmt"
+
+	"github.com/spf13/cobra"
+)
+
+func run{{.NameTitle}}(cmd *cobra.Command, args []string) error {
+	fmt.Println("{{.Name}} called (unix)")
+	return nil
 }
 `
 

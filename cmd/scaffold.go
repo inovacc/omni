@@ -97,6 +97,15 @@ With --service:
   - internal/parameters/config.go  Service parameters
   - internal/service/service.go    Service handler (uses inovacc/config)
 
+With --daemon (mutually exclusive with --service):
+  - internal/serverinfo/serverinfo.go  PID/version JSON state with stale-PID detection
+  - cmd/{name}/cmd_server.go           Cobra subcommands: start/stop/restart/status/install/uninstall
+  - cmd/{name}/server.go               Shared start/stop/daemonize logic + --foreground flag
+  - cmd/{name}/server_unix.go          Unix helpers (setSysProcAttr, stopProcess, isPrivileged, elevateAndRerun)
+  - cmd/{name}/server_systemd.go       systemd unit install/uninstall (Linux/BSD)
+  - cmd/{name}/server_darwin.go        launchd plist install/uninstall (macOS)
+  - cmd/{name}/server_windows.go       Windows SCM install/uninstall + helpers
+
 With --full (includes all above plus):
   - .goreleaser.yaml               GoReleaser configuration
   - .golangci.yml                  GolangCI-Lint configuration (v2)
@@ -110,7 +119,8 @@ Examples:
   omni scaffold cobra init ./apps/cli --module github.com/user/cli --viper
   omni scaffold cobra init myapp --module github.com/user/myapp --license MIT --author "John Doe"
   omni scaffold cobra init myapp --module github.com/user/myapp --full --service
-  omni scaffold cobra init myapp --module github.com/user/myapp --aicontext`,
+  omni scaffold cobra init myapp --module github.com/user/myapp --aicontext
+  omni scaffold cobra init weaverd --module github.com/user/weaverd --daemon   # self-daemonizing server`,
 	Args: cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		jsonOutput, _ := cmd.Flags().GetBool("json")
@@ -121,6 +131,7 @@ Examples:
 		license, _ := cmd.Flags().GetString("license")
 		useViper, _ := cmd.Flags().GetBool("viper")
 		useService, _ := cmd.Flags().GetBool("service")
+		useDaemon, _ := cmd.Flags().GetBool("daemon")
 		full, _ := cmd.Flags().GetBool("full")
 		aicontext, _ := cmd.Flags().GetBool("aicontext")
 
@@ -133,6 +144,7 @@ Examples:
 			License:     license,
 			UseViper:    useViper,
 			UseService:  useService,
+			UseDaemon:   useDaemon,
 			Full:        full,
 			AIContext:   aicontext,
 		}
@@ -174,22 +186,25 @@ Creates a new command file in the cmd/{appName}/ directory with cmd_ prefix.
 Examples:
   omni scaffold cobra add serve
   omni scaffold cobra add serve --parent root
-  omni scaffold cobra add list --parent user --description "List all users"`,
+  omni scaffold cobra add list --parent user --description "List all users"
+  omni scaffold cobra add daemon --platform-split   # emits shared + _windows.go + _darwin.go + _unix.go`,
 	Args: cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		jsonOutput, _ := cmd.Flags().GetBool("json")
 		parent, _ := cmd.Flags().GetString("parent")
 		description, _ := cmd.Flags().GetString("description")
 		dir, _ := cmd.Flags().GetString("dir")
+		platformSplit, _ := cmd.Flags().GetBool("platform-split")
 
 		if dir == "" {
 			dir, _ = os.Getwd()
 		}
 
 		return scaffoldcobra.RunCobraAdd(cmd.OutOrStdout(), afero.NewOsFs(), dir, scaffoldcobra.CobraAddOptions{
-			Name:        args[0],
-			Parent:      parent,
-			Description: description,
+			Name:          args[0],
+			Parent:        parent,
+			Description:   description,
+			PlatformSplit: platformSplit,
 		}, scaffolding.Options{JSON: jsonOutput})
 	},
 }
@@ -496,7 +511,8 @@ func init() {
 	scaffoldCobraInitCmd.Flags().StringP("author", "a", "", "author name")
 	scaffoldCobraInitCmd.Flags().StringP("license", "l", "", "license type (MIT, Apache-2.0, BSD-3)")
 	scaffoldCobraInitCmd.Flags().Bool("viper", false, "include viper for configuration")
-	scaffoldCobraInitCmd.Flags().Bool("service", false, "include service pattern with inovacc/config")
+	scaffoldCobraInitCmd.Flags().Bool("service", false, "include OS service pattern (kardianos/service)")
+	scaffoldCobraInitCmd.Flags().Bool("daemon", false, "include self-daemonizing PID-file pattern with server start/stop/restart/status/install/uninstall (mutually exclusive with --service)")
 	scaffoldCobraInitCmd.Flags().Bool("full", false, "full project with goreleaser, workflows, etc.")
 	scaffoldCobraInitCmd.Flags().Bool("aicontext", false, "include aicontext command for AI coding agents")
 	_ = scaffoldCobraInitCmd.MarkFlagRequired("module")
@@ -505,6 +521,7 @@ func init() {
 	scaffoldCobraAddCmd.Flags().StringP("parent", "p", "root", "parent command")
 	scaffoldCobraAddCmd.Flags().StringP("description", "d", "", "command description")
 	scaffoldCobraAddCmd.Flags().String("dir", "", "project directory (defaults to current directory)")
+	scaffoldCobraAddCmd.Flags().Bool("platform-split", false, "emit platform-split files: cmd_<name>_{windows,darwin,unix}.go alongside the shared file")
 
 	// Flags for cobra add-tools
 	scaffoldCobraAddToolsCmd.Flags().Bool("aicontext", false, "include aicontext command for AI coding agents")

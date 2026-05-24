@@ -23,16 +23,18 @@ type CobraInitOptions struct {
 	Author      string // Author name
 	License     string // License type (MIT, Apache-2.0, BSD-3)
 	UseViper    bool   // Include viper for configuration
-	UseService  bool   // Include service pattern with inovacc/config
+	UseService  bool   // Include service pattern with inovacc/config (kardianos/service)
+	UseDaemon   bool   // Include self-daemonizing PID-file pattern (weaver-style)
 	Full        bool   // Full project with goreleaser, workflows, etc.
 	AIContext   bool   // Include aicontext command
 }
 
 // CobraAddOptions configures adding a new command
 type CobraAddOptions struct {
-	Name        string // Command name
-	Parent      string // Parent command (default: root)
-	Description string // Command description
+	Name          string // Command name
+	Parent        string // Parent command (default: root)
+	Description   string // Command description
+	PlatformSplit bool   // If true, emit cmd_<name>_{windows,darwin,unix}.go alongside the shared file
 }
 
 // InitResult represents the result of initialization
@@ -45,16 +47,22 @@ type InitResult struct {
 
 // AddResult represents the result of adding a command
 type AddResult struct {
-	Status  string `json:"status"`
-	Command string `json:"command"`
-	Parent  string `json:"parent"`
-	File    string `json:"file"`
+	Status  string   `json:"status"`
+	Command string   `json:"command"`
+	Parent  string   `json:"parent"`
+	File    string   `json:"file"`
+	Files   []string `json:"files,omitempty"`
 }
 
 // RunCobraInit initializes a new Cobra CLI application
 func RunCobraInit(w io.Writer, fs afero.Fs, dir string, opts CobraInitOptions, genOpts scaffolding.Options) error {
 	if opts.Module == "" {
 		return cmderr.Wrap(cmderr.ErrInvalidInput, "scaffold: module path is required")
+	}
+
+	if opts.UseService && opts.UseDaemon {
+		return cmderr.Wrap(cmderr.ErrInvalidInput,
+			"scaffold: --service and --daemon are mutually exclusive (both emit lifecycle commands)")
 	}
 
 	if opts.AppName == "" {
@@ -69,16 +77,18 @@ func RunCobraInit(w io.Writer, fs afero.Fs, dir string, opts CobraInitOptions, g
 
 	// Create template data
 	tplData := cobratpl.TemplateData{
-		Module:      opts.Module,
-		AppName:     opts.AppName,
-		Description: opts.Description,
-		Author:      opts.Author,
-		License:     opts.License,
-		UseViper:    opts.UseViper,
-		UseService:  opts.UseService,
-		Full:        opts.Full,
-		AIContext:   opts.AIContext,
-		Year:        time.Now().Year(),
+		Module:       opts.Module,
+		AppName:      opts.AppName,
+		AppNameUpper: strings.ToUpper(opts.AppName),
+		Description:  opts.Description,
+		Author:       opts.Author,
+		License:      opts.License,
+		UseViper:     opts.UseViper,
+		UseService:   opts.UseService,
+		UseDaemon:    opts.UseDaemon,
+		Full:         opts.Full,
+		AIContext:    opts.AIContext,
+		Year:         time.Now().Year(),
 	}
 
 	// Create directory structure
@@ -94,6 +104,10 @@ func RunCobraInit(w io.Writer, fs afero.Fs, dir string, opts CobraInitOptions, g
 	if opts.UseService {
 		dirs = append(dirs, filepath.Join(dir, "internal", "parameters"))
 		dirs = append(dirs, filepath.Join(dir, "internal", "service"))
+	}
+
+	if opts.UseDaemon {
+		dirs = append(dirs, filepath.Join(dir, "internal", "serverinfo"))
 	}
 
 	if opts.Full {
@@ -186,6 +200,29 @@ func RunCobraInit(w io.Writer, fs afero.Fs, dir string, opts CobraInitOptions, g
 		}
 
 		filesCreated = append(filesCreated, filepath.Join("cmd", opts.AppName, "cmd_service.go"))
+	}
+
+	// Generate self-daemonizing PID-file pattern (weaver-style) if enabled.
+	if opts.UseDaemon {
+		daemonFiles := []struct {
+			rel  string
+			tmpl string
+		}{
+			{filepath.Join("internal", "serverinfo", "serverinfo.go"), cobratpl.ServerInfoTemplate},
+			{filepath.Join("cmd", opts.AppName, "cmd_server.go"), cobratpl.DaemonCmdTemplate},
+			{filepath.Join("cmd", opts.AppName, "server.go"), cobratpl.DaemonServerTemplate},
+			{filepath.Join("cmd", opts.AppName, "server_unix.go"), cobratpl.DaemonServerUnixTemplate},
+			{filepath.Join("cmd", opts.AppName, "server_systemd.go"), cobratpl.DaemonServerSystemdTemplate},
+			{filepath.Join("cmd", opts.AppName, "server_darwin.go"), cobratpl.DaemonServerDarwinTemplate},
+			{filepath.Join("cmd", opts.AppName, "server_windows.go"), cobratpl.DaemonServerWindowsTemplate},
+		}
+		for _, f := range daemonFiles {
+			full := filepath.Join(dir, f.rel)
+			if err := scaffolding.WriteTemplate(fs, full, f.tmpl, tplData); err != nil {
+				return fmt.Errorf("scaffold: failed to create %s: %w", f.rel, err)
+			}
+			filesCreated = append(filesCreated, f.rel)
+		}
 	}
 
 	// Generate LICENSE
@@ -302,6 +339,10 @@ func RunCobraInit(w io.Writer, fs afero.Fs, dir string, opts CobraInitOptions, g
 		_, _ = fmt.Fprintln(w, "Config: Service pattern (inovacc/config)")
 	} else if opts.UseViper {
 		_, _ = fmt.Fprintln(w, "Config: Viper")
+	}
+
+	if opts.UseDaemon {
+		_, _ = fmt.Fprintln(w, "Daemon: Self-daemonizing PID-file pattern (server start/stop/restart/status/install/uninstall)")
 	}
 
 	_, _ = fmt.Fprintln(w, "\nFiles created:")
@@ -459,12 +500,6 @@ func RunCobraAdd(w io.Writer, fs afero.Fs, dir string, opts CobraAddOptions, gen
 		return cmderr.Wrap(cmderr.ErrNotFound, fmt.Sprintf("scaffold: cmd/%s directory not found, is this a Cobra project?", appName))
 	}
 
-	// Generate the command file with cmd_ prefix
-	cmdPath := filepath.Join(cmdDir, "cmd_"+opts.Name+".go")
-	if _, err := fs.Stat(cmdPath); err == nil {
-		return cmderr.Wrap(cmderr.ErrConflict, fmt.Sprintf("scaffold: command %s already exists", opts.Name))
-	}
-
 	data := struct {
 		Name        string
 		Parent      string
@@ -477,18 +512,46 @@ func RunCobraAdd(w io.Writer, fs afero.Fs, dir string, opts CobraAddOptions, gen
 		NameTitle:   strings.Title(opts.Name), //nolint:staticcheck
 	}
 
-	if err := scaffolding.WriteTemplate(fs, cmdPath, cobratpl.CommandTemplate, data); err != nil {
-		return fmt.Errorf("scaffold: failed to create cmd_%s.go: %w", opts.Name, err)
+	// Build the set of files to generate. Shared file always; platform files when PlatformSplit.
+	type fileSpec struct {
+		name string
+		tmpl string
+	}
+	specs := []fileSpec{{name: "cmd_" + opts.Name + ".go", tmpl: cobratpl.CommandTemplate}}
+	if opts.PlatformSplit {
+		specs = []fileSpec{
+			{name: "cmd_" + opts.Name + ".go", tmpl: cobratpl.CommandSharedTemplate},
+			{name: "cmd_" + opts.Name + "_windows.go", tmpl: cobratpl.CommandPlatformWindowsTemplate},
+			{name: "cmd_" + opts.Name + "_darwin.go", tmpl: cobratpl.CommandPlatformDarwinTemplate},
+			{name: "cmd_" + opts.Name + "_unix.go", tmpl: cobratpl.CommandPlatformUnixTemplate},
+		}
 	}
 
-	relPath := filepath.Join("cmd", appName, "cmd_"+opts.Name+".go")
+	// Pre-flight: refuse if any target already exists.
+	for _, s := range specs {
+		if _, err := fs.Stat(filepath.Join(cmdDir, s.name)); err == nil {
+			return cmderr.Wrap(cmderr.ErrConflict, fmt.Sprintf("scaffold: %s already exists", s.name))
+		}
+	}
+
+	relPaths := make([]string, 0, len(specs))
+	for _, s := range specs {
+		full := filepath.Join(cmdDir, s.name)
+		if err := scaffolding.WriteTemplate(fs, full, s.tmpl, data); err != nil {
+			return fmt.Errorf("scaffold: failed to create %s: %w", s.name, err)
+		}
+		relPaths = append(relPaths, filepath.Join("cmd", appName, s.name))
+	}
 
 	if genOpts.JSON {
 		result := AddResult{
 			Status:  "created",
 			Command: opts.Name,
 			Parent:  opts.Parent,
-			File:    relPath,
+			File:    relPaths[0],
+		}
+		if len(relPaths) > 1 {
+			result.Files = relPaths
 		}
 
 		return json.NewEncoder(w).Encode(result)
@@ -496,7 +559,9 @@ func RunCobraAdd(w io.Writer, fs afero.Fs, dir string, opts CobraAddOptions, gen
 
 	_, _ = fmt.Fprintf(w, "Created command: %s\n", opts.Name)
 	_, _ = fmt.Fprintf(w, "Parent: %s\n", opts.Parent)
-	_, _ = fmt.Fprintf(w, "File: %s\n", relPath)
+	for _, p := range relPaths {
+		_, _ = fmt.Fprintf(w, "File: %s\n", p)
+	}
 
 	return nil
 }

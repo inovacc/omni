@@ -176,7 +176,17 @@ cmd, ok := reg.Get("head")
 
 #### Platform-Specific Code
 
-Use build tags for platform-specific implementations:
+Use build tags for platform-specific implementations. Two acceptable layouts:
+
+**Single file with build tag** — use when only one platform needs a divergent impl and the file is small (<~80 lines):
+
+```go
+//go:build !windows
+// or
+//go:build unix
+```
+
+**Split files (default for new scaffolds)** — `_windows.go` + `_darwin.go` + `_unix.go` (where `_unix.go` covers Linux/BSD via `//go:build unix && !darwin`). Use when each platform diverges meaningfully:
 
 ```
 internal/cli/df/
@@ -189,6 +199,52 @@ internal/cli/kill/
 ├── kill_unix.go    # Unix signals (30 signals)
 └── kill_windows.go # Windows signals (INT, KILL, TERM only)
 ```
+
+##### Scaffolding daemon-style apps (`--daemon`)
+
+For long-running services that need self-management (PID file, foreground/background, OS service install) — modeled after the weaver pattern — pass `--daemon` to `omni scaffold cobra init`:
+
+```bash
+omni scaffold cobra init weaverd --module github.com/user/weaverd --daemon
+# Generates:
+#   internal/serverinfo/serverinfo.go    - PID + version JSON state under os.UserConfigDir(),
+#                                          stale-PID detection via gopsutil
+#   cmd/weaverd/cmd_server.go            - Cobra subcommands: server {start,stop,restart,status,install,uninstall}
+#                                          plus --foreground flag on start
+#   cmd/weaverd/server.go                - Shared: serverStart/Stop/Restart/Status/Install/Uninstall + daemonize()
+#                                          self-execs with WEAVERD_DAEMON_CHILD=1 to detach from parent
+#   cmd/weaverd/server_unix.go           - //go:build !windows: setSysProcAttr (Setsid),
+#                                          stopProcess (SIGTERM), isPrivileged (uid 0), elevateAndRerun (sudo)
+#   cmd/weaverd/server_systemd.go        - //go:build !windows && !darwin: systemd unit install/uninstall
+#   cmd/weaverd/server_darwin.go         - //go:build darwin: launchd plist install/uninstall
+#   cmd/weaverd/server_windows.go        - //go:build windows: SCM install/uninstall, taskkill, UAC elevate
+```
+
+**What's different from `--service`:**
+- `--service` registers with the OS service manager via `kardianos/service` — start/stop happen through systemd/launchd/SCM.
+- `--daemon` is **self-supervising**: writes its own PID file, validates the recorded PID is actually our binary (handles crashes that leave stale state), and re-execs itself with an env-var marker to fork into the background.
+- The two are **mutually exclusive** (both would register a lifecycle command group); the scaffolder rejects `--service --daemon`.
+
+**How to fill in your server logic**: edit `runServe()` in `cmd/<app>/server.go`. It MUST call `serverinfo.Write()` once ready to serve and `serverinfo.Remove()` on exit (the scaffolded stub does both).
+
+**Privilege elevation**: `server install`/`uninstall` auto-elevate via `sudo` (Unix) or `runas` (Windows) if not already privileged — no need to wrap the command yourself.
+
+**Foreground mode**: `<app> server start --foreground` skips daemonization (useful when running under a service manager that expects PID 1 to be the daemon, like `systemctl`'s `Type=simple` units). The generated systemd unit and launchd plist already pass `--foreground`.
+
+##### Scaffolding platform-split commands
+
+`omni scaffold cobra add` accepts `--platform-split` to emit the three-file layout automatically alongside the shared Cobra registration file:
+
+```bash
+omni scaffold cobra add daemon --platform-split
+# Creates:
+#   cmd/<app>/cmd_daemon.go          - shared: Cobra registration, RunE -> runDaemon(cmd, args)
+#   cmd/<app>/cmd_daemon_windows.go  - //go:build windows         + func runDaemon
+#   cmd/<app>/cmd_daemon_darwin.go   - //go:build darwin          + func runDaemon
+#   cmd/<app>/cmd_daemon_unix.go     - //go:build unix && !darwin + func runDaemon
+```
+
+The shared file's `RunE` delegates to `run<Name>(cmd, args)`; each platform file supplies exactly one implementation, so the Go build picks the correct one per OS at compile time. Pre-flight check rejects the scaffold if any of the four target files already exists.
 
 #### Error Handling (cmderr)
 
@@ -1130,18 +1186,23 @@ omni is a cross-platform, Go-native shell utility replacement providing determin
 No project skills found. Add skills to any of: `.claude/skills/`, `.agents/skills/`, `.cursor/skills/`, or `.github/skills/` with a `SKILL.md` index file.
 <!-- GSD:skills-end -->
 
-<!-- GSD:workflow-start source:GSD defaults -->
-## GSD Workflow Enforcement
+<!-- superpowers:workflow-start -->
+## Superpowers Workflow
 
-Before using Edit, Write, or other file-changing tools, start work through a GSD command so planning artifacts and execution context stay in sync.
+Before starting any feature, fix, or phase work, follow this sequence:
+
+1. **Brainstorm** — use `/superpowers:brainstorm` to explore intent, requirements, and design before touching code.
+2. **Spec** — write or update a spec in `docs/superpowers/specs/` that captures the what and why.
+3. **Plan** — use `/superpowers:writing-plans` to break the spec into an executable plan with clear tasks.
+4. **Execute with TDD** — implement each task test-first; use `/superpowers:executing-plans` to drive execution.
+5. **Verify** — use `/superpowers:verification-before-completion` to confirm all acceptance criteria pass before marking work done.
 
 Use these entry points:
-- `/gsd-quick` for small fixes, doc updates, and ad-hoc tasks
-- `/gsd-debug` for investigation and bug fixing
-- `/gsd-execute-phase` for planned phase work
-
-Do not make direct repo edits outside a GSD workflow unless the user explicitly asks to bypass it.
-<!-- GSD:workflow-end -->
+- `/superpowers:brainstorm` before any creative or design work
+- `/superpowers:writing-plans` when you have a spec or requirements for a multi-step task
+- `/superpowers:executing-plans` to drive plan execution
+- `/superpowers:verification-before-completion` before declaring a phase or task complete
+<!-- superpowers:workflow-end -->
 
 <!-- GSD:profile-start -->
 ## Developer Profile
@@ -1149,3 +1210,66 @@ Do not make direct repo edits outside a GSD workflow unless the user explicitly 
 > Profile not yet configured. Run `/gsd-profile-user` to generate your developer profile.
 > This section is managed by `generate-claude-profile` -- do not edit manually.
 <!-- GSD:profile-end -->
+
+# context-mode — MANDATORY routing rules
+
+You have context-mode MCP tools available. These rules are NOT optional — they protect your context window from flooding. A single unrouted command can dump 56 KB into context and waste the entire session.
+
+## BLOCKED commands — do NOT attempt these
+
+### curl / wget — BLOCKED
+Any Bash command containing `curl` or `wget` is intercepted and replaced with an error message. Do NOT retry.
+Instead use:
+- `ctx_fetch_and_index(url, source)` to fetch and index web pages
+- `ctx_execute(language: "javascript", code: "const r = await fetch(...)")` to run HTTP calls in sandbox
+
+### Inline HTTP — BLOCKED
+Any Bash command containing `fetch('http`, `requests.get(`, `requests.post(`, `http.get(`, or `http.request(` is intercepted and replaced with an error message. Do NOT retry with Bash.
+Instead use:
+- `ctx_execute(language, code)` to run HTTP calls in sandbox — only stdout enters context
+
+### WebFetch — BLOCKED
+WebFetch calls are denied entirely. The URL is extracted and you are told to use `ctx_fetch_and_index` instead.
+Instead use:
+- `ctx_fetch_and_index(url, source)` then `ctx_search(queries)` to query the indexed content
+
+## REDIRECTED tools — use sandbox equivalents
+
+### Bash (>20 lines output)
+Bash is ONLY for: `git`, `mkdir`, `rm`, `mv`, `cd`, `ls`, `npm install`, `pip install`, and other short-output commands.
+For everything else, use:
+- `ctx_batch_execute(commands, queries)` — run multiple commands + search in ONE call
+- `ctx_execute(language: "shell", code: "...")` — run in sandbox, only stdout enters context
+
+### Read (for analysis)
+If you are reading a file to **Edit** it → Read is correct (Edit needs content in context).
+If you are reading to **analyze, explore, or summarize** → use `ctx_execute_file(path, language, code)` instead. Only your printed summary enters context. The raw file content stays in the sandbox.
+
+### Grep (large results)
+Grep results can flood context. Use `ctx_execute(language: "shell", code: "grep ...")` to run searches in sandbox. Only your printed summary enters context.
+
+## Tool selection hierarchy
+
+1. **GATHER**: `ctx_batch_execute(commands, queries)` — Primary tool. Runs all commands, auto-indexes output, returns search results. ONE call replaces 30+ individual calls.
+2. **FOLLOW-UP**: `ctx_search(queries: ["q1", "q2", ...])` — Query indexed content. Pass ALL questions as array in ONE call.
+3. **PROCESSING**: `ctx_execute(language, code)` | `ctx_execute_file(path, language, code)` — Sandbox execution. Only stdout enters context.
+4. **WEB**: `ctx_fetch_and_index(url, source)` then `ctx_search(queries)` — Fetch, chunk, index, query. Raw HTML never enters context.
+5. **INDEX**: `ctx_index(content, source)` — Store content in FTS5 knowledge base for later search.
+
+## Subagent routing
+
+When spawning subagents (Agent/Task tool), the routing block is automatically injected into their prompt. Bash-type subagents are upgraded to general-purpose so they have access to MCP tools. You do NOT need to manually instruct subagents about context-mode.
+
+## Output constraints
+
+- Keep responses under 500 words.
+- Write artifacts (code, configs, PRDs) to FILES — never return them as inline text. Return only: file path + 1-line description.
+- When indexing content, use descriptive source labels so others can `ctx_search(source: "label")` later.
+
+## ctx commands
+
+| Command | Action |
+|---------|--------|
+| `ctx stats` | Call the `ctx_stats` MCP tool and display the full output verbatim |
+| `ctx doctor` | Call the `ctx_doctor` MCP tool, run the returned shell command, display as checklist |
+| `ctx upgrade` | Call the `ctx_upgrade` MCP tool, run the returned shell command, display as checklist |

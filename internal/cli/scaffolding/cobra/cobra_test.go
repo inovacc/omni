@@ -3,6 +3,8 @@ package cobra
 import (
 	"bytes"
 	"encoding/json"
+	"go/parser"
+	"go/token"
 	"strings"
 	"testing"
 
@@ -362,6 +364,68 @@ func TestRunCobraAdd(t *testing.T) {
 		err := RunCobraAdd(&buf, fs, appDir, CobraAddOptions{Name: "duplicate"}, scaffolding.Options{})
 		if err == nil {
 			t.Error("Expected error for duplicate command")
+		}
+	})
+
+	t.Run("platform-split emits shared + three platform files", func(t *testing.T) {
+		fs, appDir := setupProject(t)
+
+		var buf bytes.Buffer
+
+		err := RunCobraAdd(&buf, fs, appDir, CobraAddOptions{
+			Name:          "daemon",
+			Parent:        "root",
+			Description:   "Run as daemon",
+			PlatformSplit: true,
+		}, scaffolding.Options{})
+		if err != nil {
+			t.Fatalf("RunCobraAdd() error = %v", err)
+		}
+
+		want := map[string]string{
+			"/addtest/cmd/addtest/cmd_daemon.go":         "daemonCmd",
+			"/addtest/cmd/addtest/cmd_daemon_windows.go": "//go:build windows",
+			"/addtest/cmd/addtest/cmd_daemon_darwin.go":  "//go:build darwin",
+			"/addtest/cmd/addtest/cmd_daemon_unix.go":    "//go:build unix && !darwin",
+		}
+		for path, marker := range want {
+			content, err := afero.ReadFile(fs, path)
+			if err != nil {
+				t.Fatalf("expected file %s: %v", path, err)
+			}
+			if !strings.Contains(string(content), marker) {
+				t.Errorf("%s missing marker %q", path, marker)
+			}
+		}
+
+		// Shared file must delegate to runDaemon, not inline Println.
+		shared, _ := afero.ReadFile(fs, "/addtest/cmd/addtest/cmd_daemon.go")
+		if !strings.Contains(string(shared), "runDaemon(cmd, args)") {
+			t.Error("shared file should delegate to runDaemon")
+		}
+
+		// Each platform file must define runDaemon so exactly one is compiled per OS.
+		for _, p := range []string{"cmd_daemon_windows.go", "cmd_daemon_darwin.go", "cmd_daemon_unix.go"} {
+			content, _ := afero.ReadFile(fs, "/addtest/cmd/addtest/"+p)
+			if !strings.Contains(string(content), "func runDaemon(") {
+				t.Errorf("%s should define runDaemon", p)
+			}
+		}
+	})
+
+	t.Run("platform-split conflict if any target file exists", func(t *testing.T) {
+		fs, appDir := setupProject(t)
+
+		// Pre-create one of the platform files so the pre-flight should reject.
+		_ = afero.WriteFile(fs, "/addtest/cmd/addtest/cmd_daemon_darwin.go", []byte("// pre-existing\n"), 0644)
+
+		var buf bytes.Buffer
+		err := RunCobraAdd(&buf, fs, appDir, CobraAddOptions{
+			Name:          "daemon",
+			PlatformSplit: true,
+		}, scaffolding.Options{})
+		if err == nil {
+			t.Error("expected conflict error when a platform file already exists")
 		}
 	})
 
@@ -1063,4 +1127,86 @@ func TestServiceCommandMode(t *testing.T) {
 	if strings.Contains(string(mainB), "RunE: service.Handler") {
 		t.Errorf("service mode must not hard-bind rootCmd.RunE; run owns it")
 	}
+}
+
+func TestRunCobraInitDaemon(t *testing.T) {
+	t.Run("emits all daemon files and they parse as Go", func(t *testing.T) {
+		fs := afero.NewMemMapFs()
+		var buf bytes.Buffer
+
+		err := RunCobraInit(&buf, fs, "/daemonapp", CobraInitOptions{
+			Module:    "github.com/test/daemonapp",
+			AppName:   "daemonapp",
+			UseDaemon: true,
+		}, scaffolding.Options{})
+		if err != nil {
+			t.Fatalf("RunCobraInit(--daemon) error = %v", err)
+		}
+
+		want := []string{
+			"/daemonapp/internal/serverinfo/serverinfo.go",
+			"/daemonapp/cmd/daemonapp/cmd_server.go",
+			"/daemonapp/cmd/daemonapp/server.go",
+			"/daemonapp/cmd/daemonapp/server_unix.go",
+			"/daemonapp/cmd/daemonapp/server_systemd.go",
+			"/daemonapp/cmd/daemonapp/server_darwin.go",
+			"/daemonapp/cmd/daemonapp/server_windows.go",
+		}
+		fset := token.NewFileSet()
+		for _, p := range want {
+			content, err := afero.ReadFile(fs, p)
+			if err != nil {
+				t.Fatalf("expected %s: %v", p, err)
+			}
+			// Each generated file must parse as valid Go.
+			if _, err := parser.ParseFile(fset, p, content, parser.SkipObjectResolution); err != nil {
+				t.Errorf("%s did not parse: %v", p, err)
+			}
+		}
+
+		// Spot-check semantics that templates must preserve.
+		serverGo, _ := afero.ReadFile(fs, "/daemonapp/cmd/daemonapp/server.go")
+		if !strings.Contains(string(serverGo), `daemonEnvVar = "DAEMONAPP_DAEMON_CHILD"`) {
+			t.Error("server.go should use uppercased AppName for daemon env var")
+		}
+		if !strings.Contains(string(serverGo), `"github.com/test/daemonapp/internal/serverinfo"`) {
+			t.Error("server.go should import the generated serverinfo package")
+		}
+
+		// Build tags must be exact — wrong tags cause silent platform breakage.
+		cases := map[string]string{
+			"/daemonapp/cmd/daemonapp/server_unix.go":    "//go:build !windows",
+			"/daemonapp/cmd/daemonapp/server_systemd.go": "//go:build !windows && !darwin",
+			"/daemonapp/cmd/daemonapp/server_darwin.go":  "//go:build darwin",
+			"/daemonapp/cmd/daemonapp/server_windows.go": "//go:build windows",
+		}
+		for path, tag := range cases {
+			b, _ := afero.ReadFile(fs, path)
+			if !strings.Contains(string(b), tag) {
+				t.Errorf("%s missing %q build tag", path, tag)
+			}
+		}
+
+		// go.mod must list the daemon-only deps so `go mod tidy` resolves cleanly.
+		goMod, _ := afero.ReadFile(fs, "/daemonapp/go.mod")
+		for _, dep := range []string{"github.com/shirou/gopsutil/v3", "golang.org/x/sys"} {
+			if !strings.Contains(string(goMod), dep) {
+				t.Errorf("go.mod missing daemon dep %s", dep)
+			}
+		}
+	})
+
+	t.Run("--service and --daemon are mutually exclusive", func(t *testing.T) {
+		fs := afero.NewMemMapFs()
+		var buf bytes.Buffer
+
+		err := RunCobraInit(&buf, fs, "/clash", CobraInitOptions{
+			Module:     "github.com/test/clash",
+			UseService: true,
+			UseDaemon:  true,
+		}, scaffolding.Options{})
+		if err == nil {
+			t.Error("expected error when both --service and --daemon are set")
+		}
+	})
 }
