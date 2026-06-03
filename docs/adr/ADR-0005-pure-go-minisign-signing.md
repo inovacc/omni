@@ -62,6 +62,8 @@ Therefore:
 - The default build (`go build ./...`) ships a no-tag stub: `omni verify --bundle …` returns `cmderr.ErrUnsupported` ("requires building with `-tags omni_sigstore`"). CI builds **both** the tagged and untagged binaries to keep both paths honest.
 - **v1.0 explicitly EXCLUDES Rekor upload, Fulcio issuance, and OCI/registry operations.** omni does not issue keyless certificates, upload to a transparency log, or push/pull OCI artifacts. Only local bundle *verification* (with a supplied trusted root) is in scope, and only behind the tag.
 
+> **Amendment (2026-06-03): build tag → separate module.** The `//go:build omni_sigstore` tag isolated *compilation* but NOT the *module graph*: with `sigstore-go` in the main `go.mod`, Go's minimal version selection (MVS) still pulled ~50 transitive modules (go-openapi, rekor, in-toto, go-tuf, certificate-transparency, go-containerregistry, ...) and forced `golang.org/x/*` bumps (e.g. x/crypto → v0.52) into the **default** build's dependency graph. That is unacceptable for the lean pure-Go v1.0. Sigstore bundle verification is therefore delivered as a **separate, self-contained module** at `contrib/sigstore-verify/` (`github.com/inovacc/omni/contrib/sigstore-verify`, binary `omni-sigstore-verify`, stdlib `flag` CLI, no cobra, no omni `internal/`/`pkg/` imports). The build tag is removed; `internal/cli/verify/bundle.go` is the single (no-tag) implementation and `omni verify --bundle` always returns `cmderr.ErrUnsupported` pointing at that module. The main `omni` go.mod now has ZERO sigstore/go-openapi/rekor/in-toto/go-tuf deps.
+
 ### Decision 4 — scrypt SENSITIVE cost (N=2²⁰) is intentional; tests use fixtures
 
 Secret keys are encrypted at rest with the libsodium **SENSITIVE** scrypt profile (`opslimit=33554432`, `memlimit=1073741824` → `N=1<<20`, `r=8`, `p=1`). This is a deliberate at-rest protection choice: ~1 GiB of RAM and multiple seconds per derivation make offline brute-forcing of a stolen `.key` file expensive.
@@ -74,17 +76,17 @@ Implement `pkg/sign/` as a pure-Go, fail-closed, minisign-compatible Ed25519 sig
 
 1. **Default scheme** — minisign-compatible Ed25519, prehashed (`"ED"`); legacy raw `"Ed"` read-only (verify-accepted, never emitted).
 2. **Build, don't buy** — reimplement the `.pub`/`.key`/`.minisig` codec on `crypto/ed25519` + `golang.org/x/crypto/{scrypt,blake2b}`; no external minisign library.
-3. **Sigstore = verification only, behind `//go:build omni_sigstore`**; v1.0 excludes Rekor upload, Fulcio issuance, and OCI; default build returns `cmderr.ErrUnsupported` for `--bundle`.
+3. **Sigstore = verification only, in a SEPARATE module** (`contrib/sigstore-verify`, amended 2026-06-03 from the original `//go:build omni_sigstore` tag — a tag isolates compilation but not the go.mod module graph); v1.0 excludes Rekor upload, Fulcio issuance, and OCI; the default `omni verify --bundle` returns `cmderr.ErrUnsupported` pointing at that module.
 4. **scrypt SENSITIVE (N=2²⁰)** for keys at rest; tests use `WithScryptParams(low)` or committed fixtures, never live default-cost keygen.
 
 Key-handling and secret-redaction policy (the `pkg/secret.Key` wrapper, file permissions, dev-vs-release key separation) is recorded separately in **ADR-0006**.
 
 ## Consequences
 
-- **Pure-Go, no new heavy deps in the default binary.** Only `golang.org/x/crypto/{scrypt,blake2b}` are pulled in (x/crypto is already a direct dep). The sigstore-go tree is compiled only under `-tags omni_sigstore`.
+- **Pure-Go, no new heavy deps in the default binary.** Only `golang.org/x/crypto/{scrypt,blake2b}` are pulled in (x/crypto is already a direct dep). The sigstore-go tree lives entirely in the separate `contrib/sigstore-verify` module and never enters the main omni go.mod (amended 2026-06-03 — see Decision 3; a build tag could not achieve this because MVS resolves the whole module graph regardless of tags).
 - **Full ownership and auditability** of the keygen + sign + verify path; the format is implemented byte-exactly and is cross-checkable against the reference `minisign` tool.
 - **Interoperability** with the minisign ecosystem: omni-produced `.minisig`/`.pub`/`.key` files are usable by `minisign`, and vice-versa.
 - **Fail-closed verification** by construction — key-ID checked before any crypto, both the data signature and the trusted-comment global signature must verify, and every error path rejects; the CLI maps verification failures to `cmderr.ErrConflict` (exit 1).
-- **CI must build both** the default and `-tags omni_sigstore` binaries, and test the untagged `ErrUnsupported` path, so neither path silently rots.
+- **CI builds the two modules independently** (amended 2026-06-03): the lean default `omni` binary, and the separate `contrib/sigstore-verify` module (which legitimately carries the heavy sigstore tree). The default `omni verify --bundle` `ErrUnsupported` path is unit-tested so it never silently rots.
 - **Test cost is controlled** via `WithScryptParams` and committed fixtures; the production SENSITIVE cost is preserved and exercised by a single `-short`-skippable test.
 - **Future supply-chain phases** (sbom / scan / attest / release) build on `pkg/sign` as their signing foundation without re-deciding the scheme.

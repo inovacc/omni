@@ -20,11 +20,11 @@ as a flag value.
 
   -k, --key FILE      path to the public key file (*.pub)
   -s, --sig FILE      path to the signature file (default: <FILE>.minisig)
-      --bundle FILE   verify a Sigstore bundle (requires building with
-                      -tags omni_sigstore; otherwise unsupported)
-      --trusted-root  Sigstore trusted-root path (omni_sigstore only)
-      --cert-identity Sigstore certificate identity (omni_sigstore only)
-      --cert-oidc-issuer Sigstore OIDC issuer (omni_sigstore only)
+      --bundle FILE   verify a Sigstore bundle (unsupported here; provided by
+                      the separate github.com/inovacc/omni/contrib/sigstore-verify module)
+      --trusted-root  Sigstore trusted-root path (sigstore-verify module only)
+      --cert-identity Sigstore certificate identity (sigstore-verify module only)
+      --cert-oidc-issuer Sigstore OIDC issuer (sigstore-verify module only)
 
 Examples:
   omni verify --key release.pub artifact.tar.gz
@@ -46,8 +46,8 @@ func init() {
 
 	verifyCmd.Flags().StringP("key", "k", "", "path to the public key file")
 	verifyCmd.Flags().StringP("sig", "s", "", "path to the signature file (default: <FILE>.minisig)")
-	verifyCmd.Flags().String("bundle", "", "verify a Sigstore bundle (requires -tags omni_sigstore)")
-	verifyCmd.Flags().String("trusted-root", "", "Sigstore trusted-root path (omni_sigstore only)")
-	verifyCmd.Flags().String("cert-identity", "", "Sigstore certificate identity (omni_sigstore only)")
-	verifyCmd.Flags().String("cert-oidc-issuer", "", "Sigstore OIDC issuer (omni_sigstore only)")
+	verifyCmd.Flags().String("bundle", "", "verify a Sigstore bundle (unsupported here; see contrib/sigstore-verify module)")
+	verifyCmd.Flags().String("trusted-root", "", "Sigstore trusted-root path (sigstore-verify module only)")
+	verifyCmd.Flags().String("cert-identity", "", "Sigstore certificate identity (sigstore-verify module only)")
+	verifyCmd.Flags().String("cert-oidc-issuer", "", "Sigstore OIDC issuer (sigstore-verify module only)")
 }
