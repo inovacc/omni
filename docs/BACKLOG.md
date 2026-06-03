@@ -2,7 +2,7 @@
 
 Prioritized items for future development.
 
-> Last updated: February 2026
+> Last updated: 2026-05-24
 
 ---
 
@@ -37,10 +37,20 @@ See CLAUDE.md for the full command inventory.
 - [ ] **[BACKLOG] `cmderr.Is<Class>()` convenience helpers:** e.g. `cmderr.IsNotFound(err)`, `cmderr.IsPermission(err)` for callers that need to inspect sentinel class without importing cmderr directly. Target: Phase 3.
 - [ ] **[BACKLOG] `docs/EXIT-CODES.md` generation:** Auto-generate a reference page from the cmderr sentinel table and EXIT-CODE-CHANGES.md. Target: Phase 3. (Deferred from Phase 1 CONTEXT.md Deferred Ideas.)
 
-### Pre-existing design-principle violations (no-exec)
+### no-exec items — RESOLVED via boundary decision (2026-06-03)
 
-- [ ] **[BACKLOG / no-exec-violation] `internal/cli/exec/exec.go`:** Uses `os/exec` to spawn arbitrary external processes via `osexec.Command(command, args...)` — violates "No exec" design principle. Rewrite to use the omni unified command Registry for dispatching internal commands. Discovered: Plan 14 (Apr 2026). Pre-existing; out of scope for cmderr migration.
-- [ ] **[BACKLOG / no-exec-violation] `internal/cli/repo/remote.go`:** Uses `os/exec` to run `gh repo clone` and `git clone` — violates "No exec" design principle. Rewrite to use pure-Go git clone (e.g. `go-git`). Discovered: Plan 13 (Apr 2026). Pre-existing; out of scope for cmderr migration.
+Resolved by the no-exec boundary decision: the invariant governs *utility reimplementations*; commands whose **purpose** is to orchestrate an external tool are sanctioned exceptions. See `docs/architecture/patterns.md` § "No-exec invariant: scope & sanctioned exceptions" and `docs/quality/HARDENING.md` § "Resolution status".
+
+- [x] **[RESOLVED — accepted] `internal/cli/exec/exec.go`:** ACCEPTED as a sanctioned exec wrapper (the launcher *is* the feature). Documented, not a violation. (was: no-exec-violation, Plan 14.)
+- [x] **[RESOLVED — accepted] `internal/cli/repo/remote.go`:** ACCEPTED as a sanctioned exec wrapper (`git`/`gh` clone orchestration). Documented. (was: no-exec-violation, Plan 13.) Optional future enhancement: pure-Go clone via `go-git` — nice-to-have, not required.
+
+### Hardening deferrals (from security/robustness audit, 2026-06-03)
+
+Surfaced by the hardening sweep on `harden/audit-fixes`; full context in `docs/quality/HARDENING.md`.
+
+- [ ] **[BACKLOG / DEPRECATION] crypto-02 — versioned ciphertext envelope:** `pkg/cryptutil` PBKDF2 default iteration count (100k) is below current OWASP guidance, but cannot be raised: the iteration count is NOT stored in the ciphertext envelope, so bumping the default would make existing default-cost blobs undecryptable. Needs a versioned envelope (store the iteration count + version byte) → dual-read old/new → raise default → cleanup after the 30-day deprecation window. The floor-validation (crypto-01) was already applied.
+- [ ] **[BACKLOG / no-exec] machineid_darwin — remove `ioreg` dependency:** macOS `getMachineID` still spawns `ioreg` to read `IOPlatformUUID`; kept as a documented machine-identity exec exception because there is no pure-Go/no-cgo path to the *same* value and the ID feeds the master-key KDF (changing it bricks existing `master.key`). Future fix requires a pure-Go-reachable UUID source OR a `master.key` re-encryption migration on identifier change.
+- [ ] **[BACKLOG / flaky-test] `internal/cli/exec` test hermeticity (broader than below):** `detector_test.go` / `exec_test.go` read the developer's real `~/.aws`, `~/.npmrc`, env vars, and require a real `aws` binary on PATH — so `TestDetectAWS_Missing`, `TestDetectNpm_Missing`, `TestRun_Strict_MissingCreds` fail based on machine state, not code. Make these tests hermetic (inject fake HOME/PATH/env via `t.Setenv` + temp dirs; stub the credential probes). Supersedes the `TestDetectGo_PrivateWithNetrc` item below.
 
 ### Pre-existing flaky tests
 
@@ -82,6 +92,12 @@ See CLAUDE.md for the full command inventory.
 ---
 
 ## Medium-Low Priority (P1.5)
+
+### Feature Completeness (relocated from ISSUES.md, 2026-06-03)
+- [ ] `sed` does not implement the full GNU sed feature set (multi-line, hold space, branching) — only basic substitution patterns today.
+- [ ] `awk` does not implement the complete AWK language specification — covers common patterns only.
+- [ ] `rg` fidelity gaps: binary file detection is heuristic (null-byte check) and may misclassify files; `.gitignore` nested-negation edge cases may differ from ripgrep.
+- [ ] Video download limits: YouTube signature decryption is fragile (depends on goja JS runtime; YouTube player-JS changes require updates); no SAMPLE-AES HLS (only AES-128-CBC); no FFmpeg merge for video+audio (note: FFmpeg merge conflicts with the no-exec invariant).
 
 ### Video Enhancements
 - [x] `omni video download <ID>` — shortcut to download by bare 11-char YouTube ID (auto-resolves to full URL)
@@ -141,10 +157,11 @@ See CLAUDE.md for the full command inventory.
 
 ## Testing
 
-### Current Status (February 2026)
-- **Total Test Cases:** ~700+ tests across all packages
+### Current Status (May 2026)
+- **Total Test Cases:** ~800+ tests across all packages (+92 added in May 2026 for procutil/obfuscate/procmetrics/gopsagent/gopsclient/runtimeps)
 - **Overall Coverage:** 59.4% (includes vendored buf packages after flattening)
-- **Omni-owned pkg/ avg:** ~78% (24 of 31 packages above 80%)
+- **Omni-owned pkg/ avg:** ~78% (24 of 31 packages above 80%; new gops packages drag the avg slightly until backlog item is addressed)
+- **New (May 2026):** pkg/procmetrics 93.8%, pkg/gopsagent 59.1%, pkg/procutil 57.4%, pkg/obfuscate 55.6%, internal/cli/runtimeps 34.9%, internal/gopsclient 31.3%
 - **Packages with new tests (Feb 2026):** twig/builder (58.9%), twig/parser (79.1%), video/jsinterp, video/downloader (progress, fragment, selector), video/nethttp (cookies, SAPISID), video/extractor (helpers, M3U8), video/options
 
 ### Recently Resolved
@@ -161,8 +178,13 @@ See CLAUDE.md for the full command inventory.
 - [x] cmderr batch 8 — 11 more commands adopted: uuid, random, caseconv, jwt, note, jsonfmt, htmlenc, tomlutil, xmlfmt, pwd, exist (Mar 2026)
 - [x] rg package threaded with context.Context for cancellation support (Mar 2026)
 - [x] pipe Registry expanded to 24 commands with hash, base64, base32, caseconv, strings, shuf (Mar 2026)
+- [x] Runtime-aware process tools shipped: `omni gops` (10 subcommands) + `nodeps`/`pyps`/`javaps` (May 2026)
+- [x] Embeddable runtime agent shipped as `pkg/gopsagent` with HMAC challenge + notify-on-startup config (May 2026)
+- [x] Cobra scaffolder: `--platform-split` (cmd_<name>_{windows,darwin,unix}.go) + `--daemon` (full PID-file service template with systemd/launchd/SCM install) (May 2026)
 
 ### Remaining
+- [ ] **Coverage gap in new gops packages (May 2026):** `internal/gopsclient` 31.3%, `internal/cli/runtimeps` 34.9%, `pkg/obfuscate` 55.6%, `pkg/procutil` 57.4%, `pkg/gopsagent` 59.1%. Target 80% per project policy. `pkg/procmetrics` already at 93.8%. Lower numbers reflect TUI/cobra-flag code paths and platform-conditional kill impls that need OS-specific test fixtures.
+- [ ] **Coverage gap (relocated from ISSUES.md, 2026-06-03):** `pkg/video/extractor/generic` has no unit tests (P2); `pkg/video/extractor/youtube` has minimal tests (~4.0%, P2). Target 80% per project policy.
 - [ ] Platform-specific tests (Windows edge cases, symlinks, permissions)
 - [ ] Large file (>1GB) handling tests
 - [ ] Benchmarks vs GNU tools (sort, grep, file operations)

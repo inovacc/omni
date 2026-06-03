@@ -1,94 +1,51 @@
 # Known Issues & Limitations
 
-> Last updated: February 2026
+> Last updated: 2026-06-03
+
+This page tracks **open defects** only. Feature-completeness gaps, test-coverage
+gaps, and CI hardening live in `docs/BACKLOG.md`. Intentional, permanent
+platform/design tradeoffs are listed at the bottom under
+[Platform & design notes (not defects)](#platform--design-notes-not-defects).
 
 ---
 
-## Platform Limitations
+## Open Issues
+
+_None._ No open defects are currently tracked. (Backlog/feature work →
+`docs/BACKLOG.md`; design tradeoffs → below.)
+
+---
+
+## Platform & design notes (not defects)
+
+These are intentional, permanent tradeoffs of omni's pure-Go, no-exec,
+cross-platform design — not bugs and not on any fix track.
 
 ### Windows
 
-| Issue | Severity | Workaround |
-|-------|----------|------------|
-| `chmod` has limited permission model | Low | Windows ACLs don't map 1:1 to Unix permissions |
-| `chown` not supported | Low | Not applicable on Windows |
-| `ln -s` requires elevated privileges | Medium | Run as Administrator or enable Developer Mode |
-| `kill` supports only INT, KILL, TERM signals | Low | Windows does not have POSIX signals |
-| `free` uses different APIs (WMI) | Low | Output format matches Linux |
-| `df` uses different syscalls | Low | Output format matches Linux |
+| Note | Detail |
+|------|--------|
+| `chmod` has a limited permission model | Windows ACLs do not map 1:1 to Unix permissions |
+| `chown` not supported | Not applicable on Windows |
+| `ln -s` requires elevated privileges | Run as Administrator or enable Developer Mode |
+| `kill` supports only INT, KILL, TERM signals | Windows has no POSIX signal set |
+| `free` / `df` use different APIs (WMI/different syscalls) | Output format still matches Linux |
 
 ### macOS
 
-| Issue | Severity | Workaround |
-|-------|----------|------------|
-| `free` uses sysctl instead of /proc | Low | Transparent to user |
-
----
-
-## Functional Limitations
-
-### Text Processing
-- `sed` supports basic substitution patterns but not the full GNU sed feature set (multi-line, hold space, branching)
-- `awk` covers common patterns but does not implement the complete AWK language specification
-
-### Video Download
-- YouTube signature decryption depends on goja JS runtime; changes to YouTube's player JS may require updates
-- HLS downloads do not support SAMPLE-AES encryption (only AES-128-CBC)
-- No FFmpeg integration for format merging (video+audio must be in same container)
-
-### Search (rg)
-- Binary file detection uses heuristic (null byte check), may misclassify some files
-- `.gitignore` pattern support covers common patterns but edge cases with nested negation may differ from ripgrep
+| Note | Detail |
+|------|--------|
+| `free` uses sysctl instead of `/proc` | Transparent to the user; `/proc` does not exist on macOS |
 
 ### Database
-- SQLite is pure Go (modernc.org/sqlite), slightly slower than CGO-based drivers for large datasets
-- BBolt is limited to single-writer transactions
 
----
+| Note | Detail |
+|------|--------|
+| SQLite is pure Go (`modernc.org/sqlite`) | Slightly slower than CGO-based drivers for large datasets — accepted for the no-CGO invariant |
+| BBolt single-writer | Limited to single-writer transactions by design |
 
-## Test Coverage Gaps
+### Build & test
 
-| Area | Issue | Priority |
-|------|-------|----------|
-| pkg/video/extractor/generic | No unit tests | P2 |
-| pkg/video/extractor/youtube | Minimal tests (4.0%) | P2 |
-| ~~cmderr adoption~~ | ~~76 commands still return raw fmt.Errorf without exit code classification~~ | **RESOLVED Apr 2026** — 100% adoption complete (Phase 1) |
-
-### Recently Resolved
-
-| Area | Resolution |
-|------|------------|
-| pkg/video/downloader | Added progress, fragment, selector tests (Feb 2026) |
-| pkg/video/nethttp | Added cookies, SAPISID hash tests (Feb 2026) |
-| pkg/video/extractor | Added helpers, ParseM3U8Formats tests (Feb 2026) |
-| pkg/video/options | Added applyOptions, With* option tests (Feb 2026) |
-| pkg/video/jsinterp | Added tests, now 91.7% coverage (Feb 2026) |
-| pkg/twig/builder | Added tests, now 58.9% coverage (Feb 2026) |
-| pkg/twig/parser | Added tests, now 79.1% coverage (Feb 2026) |
-| pkg/video/cache | Added tests, now 73.3% coverage (Feb 2026) |
-| internal/cli/project/ | Exported 8 functions for reuse by repo package (Feb 2026) |
-| internal/cli/repo/ | New package: repo analyze with 17 tests (Feb 2026) |
-| internal/cli/buf/ | Upgraded format/lint with protocompile AST parser (Feb 2026) |
-| cmderr batch 3 | 10 more commands adopted: buf, bzip2, xz, etc. (Feb 2026) |
-| cmderr batches 4-5 | 20 more commands adopted, total now 49 (Feb 2026) |
-| scaffolding refactor | `generate` command renamed to `scaffold`, reorganized into domain subpackages (Feb 2026) |
-| scaffolding afero | All scaffolding packages refactored to accept `afero.Fs` — tests use in-memory FS, no disk I/O (Feb 2026) |
-| scaffold cobra structure | `scaffold cobra init` now generates `cmd/{appName}/` structure instead of flat `main.go` + `cmd/` (Mar 2026) |
-| cmderr batch 6 | 16 more commands adopted: basename, dirname, realpath, whoami, uptime, id, awk, column, nl, paste, banner, rev, tac, fold, bzip2, xz (Mar 2026) |
-| cmderr batch 7 | 8 more commands adopted: cut, printf, hexenc, urlenc, tr, xargs, watch, yes (Mar 2026) |
-| pipe registry | Expanded from 11 to 18 commands; added awk, fold, column, paste, xxd, grep, tr (Mar 2026) |
-| package splits | archive.go → archive.go + tar.go + zip.go; pipe.go → pipe.go + parse.go + substitute.go + execute.go (Mar 2026) |
-| pipeline context | Pipeline CLI wrapper now accepts and propagates context.Context (Mar 2026) |
-| cmderr batch 8 | 11 more commands adopted: uuid, random, caseconv, jwt, note, jsonfmt, htmlenc, tomlutil, xmlfmt, pwd, exist (Mar 2026) |
-| rg context | rg package threaded with context.Context — Run, searchDirParallel, searchDir, searchFile, collectFiles (Mar 2026) |
-| pipe registry | Expanded from 18 to 24 commands; added hash, base64, base32, caseconv, strings, shuf (Mar 2026) |
-
----
-
-## Build & CI
-
-| Issue | Severity | Notes |
-|-------|----------|-------|
-| `go test ./...` can be slow due to buf package compilation | Low | Use `-short` flag or test specific packages |
-| No automated release pipeline | Medium | Manual `go build` for releases |
-| No coverage threshold enforcement in CI | Medium | Target: 80% for omni-owned packages |
+| Note | Detail |
+|------|--------|
+| `go test ./...` can be slow | Driven by buf package compilation; use `-short` or test specific packages |
