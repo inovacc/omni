@@ -1,11 +1,12 @@
 # Phase 05 — pkg/sbom/ — SBOM Generation
 
-**Status:** Planned
+**Status:** Complete
 **Date:** 2026-05-16 (synthesized from ROADMAP — no phase directory yet)
+**Completed:** 2026-06-03
 **Requirements:** SBOM-01 through SBOM-10
 **Depends on:** Phase 4
-**ADR Gate:** Required before any code lands (1 ADR)
-**Plans:** TBD
+**ADR Gate:** Required before any code lands (1 ADR) — satisfied by `docs/adr/ADR-0007-sbom-determinism-and-purl-policy.md`
+**Plans:** `docs/superpowers/plans/2026-06-03-phase-05-pkg-sbom.md`
 
 ---
 

@@ -14,6 +14,7 @@
 | Roadmap / backlog / features / issues / bugs | `docs/{ROADMAP,BACKLOG,FEATURES,ISSUES,BUGS}.md` |
 | External source attribution | `docs/EXTERNAL_SOURCES.md` |
 | Third-party licenses for ported code | `THIRD_PARTY_LICENSES/` |
+| SBOM generation (`omni sbom`, purl policy, determinism, `omni_sbomvalidate` tag, `pkg/sbom/format.Document` boundary) | `docs/adr/ADR-0007-sbom-determinism-and-purl-policy.md` |
 
 
 ## Project Overview
@@ -42,9 +43,11 @@
 
 ## Command Categories
 
-The full command inventory — 170+ commands across Core/File/Text/System/Process/Flow/Archive/Hash/Encoding/Data/Formatting/Protobuf/Code Gen/Security/Pagers/Comparison/Tooling/Network/Video/Cloud-DevOps/Git Hacks/Checks/Kubectl Hacks — lives in **`docs/COMMANDS.md`** (also browsable as `omni cmdtree`).
+The full command inventory — 170+ commands across Core/File/Text/System/Process/Flow/Archive/Hash/Encoding/Data/Formatting/Protobuf/Code Gen/Security (incl. supply-chain: `sign`, `sbom`)/Pagers/Comparison/Tooling/Network/Video/Cloud-DevOps/Git Hacks/Checks/Kubectl Hacks — lives in **`docs/COMMANDS.md`** (also browsable as `omni cmdtree`).
 
 Run `omni cmdtree` for the live tree, or `omni <verb> --help` for any verb's flags.
+
+**SBOM (`omni sbom`):** byte-deterministic SPDX 2.3 / CycloneDX 1.5 JSON for a Go module dir or binary. Pure-stdlib emitter; the heavy SPDX/CycloneDX validator libs compile only under the `omni_sbomvalidate` build tag (tests/CI only, never release builds). `pkg/sbom/format.Document` is the stable cross-package boundary that Phase 6 `pkg/scan` will import (not `pkg/sbom/model`). See `docs/adr/ADR-0007-sbom-determinism-and-purl-policy.md`.
 
 ## Cloud & DevOps Integrations
 

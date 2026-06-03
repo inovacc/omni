@@ -1026,6 +1026,36 @@ omni dotenv -x                 # expand ${VAR} references
 
 ## Security & Random
 
+### sbom - Generate an SBOM (SPDX 2.3 or CycloneDX 1.5) for a Go module dir or binary
+```bash
+omni sbom [OPTION]... PATH [flags]
+      --format spdx|cyclonedx   output format (default: spdx)
+      --from   auto|module|binary  source kind (default: auto-detect from PATH)
+      --source-date RFC3339     fixed creation timestamp (default: epoch)
+      --out FILE                write to FILE instead of stdout
+      --sign                    sign --out with a minisign key (requires --key, --out)
+  -k, --key FILE                secret key path for --sign (passphrase via OMNI_SIGN_PASSPHRASE)
+      --validate                validate emitted doc against the upstream schema
+                                (requires -tags omni_sbomvalidate; else ErrUnsupported, exit 6)
+```
+
+Produces byte-deterministic output (sorted slices, no `serialNumber`/UUID, epoch
+default timestamp) so identical input yields identical bytes — golden-master
+pinnable. Every component carries a normalized Go purl; for binary SBOMs the Go
+toolchain is listed as a component. The default emitter is pure-stdlib
+`encoding/json`; the upstream SPDX/CycloneDX libraries are compiled in only under
+the `omni_sbomvalidate` build tag as an in-process schema validator for
+tests/CI, never in release builds. The stable `pkg/sbom/format.Document` type is
+the only cross-package boundary (Phase 6 `pkg/scan` imports it).
+
+**Examples:**
+```bash
+omni sbom . --format spdx
+omni sbom ./bin/omni --format cyclonedx
+omni sbom . --format spdx --source-date 1970-01-01T00:00:00Z --out omni.spdx.json
+omni sbom . --format spdx --out omni.spdx.json --sign --key release.key
+```
+
 ### encrypt - Encrypt data using AES-256-GCM
 ```bash
 omni encrypt [OPTION]... [FILE] [flags]
@@ -1300,6 +1330,7 @@ omni
 +-- rg                                       # Recursively search for a pattern (ripg...
 +-- rm                                       # Remove files or directories
 +-- rmdir                                    # Remove empty directories
++-- sbom                                     # Generate an SBOM (SPDX 2.3 or Cyclon...
 +-- sed                                      # Stream editor for filtering and trans...
 +-- sha256sum                                # Compute and check SHA256 message digest
 +-- sha512sum                                # Compute and check SHA512 message digest
