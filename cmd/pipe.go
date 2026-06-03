@@ -24,11 +24,13 @@ import (
 	"github.com/inovacc/omni/internal/cli/rev"
 	"github.com/inovacc/omni/internal/cli/sed"
 	"github.com/inovacc/omni/internal/cli/shuf"
+	"github.com/inovacc/omni/internal/cli/sign"
 	clstrings "github.com/inovacc/omni/internal/cli/strings"
 	"github.com/inovacc/omni/internal/cli/tac"
 	"github.com/inovacc/omni/internal/cli/tail"
 	"github.com/inovacc/omni/internal/cli/text"
 	"github.com/inovacc/omni/internal/cli/tr"
+	"github.com/inovacc/omni/internal/cli/verify"
 	"github.com/inovacc/omni/internal/cli/wc"
 	"github.com/inovacc/omni/internal/cli/xxd"
 	"github.com/spf13/cobra"
@@ -195,6 +197,21 @@ func buildPipeRegistry() *command.Registry {
 	reg.Register("shuf", command.AdaptWriterArgs(
 		func(w io.Writer, args []string) error {
 			return shuf.RunShuf(w, args, shuf.ShufOptions{})
+		},
+	))
+
+	// sign/verify: detached minisign over stdin or a file arg. keygen stays
+	// Cobra-only — it has no stdin transform. Defaults read the passphrase from
+	// OMNI_SIGN_PASSPHRASE; key material is referenced only by file path.
+	reg.Register("sign", command.AdaptWriterReaderArgs(
+		func(w io.Writer, r io.Reader, args []string) error {
+			return sign.RunSign(w, r, args, sign.SignOptions{})
+		},
+	))
+
+	reg.Register("verify", command.AdaptWriterReaderArgs(
+		func(w io.Writer, r io.Reader, args []string) error {
+			return verify.RunVerify(w, r, args, verify.VerifyOptions{})
 		},
 	))
 
