@@ -4,6 +4,9 @@
 // agent snapshot in afterwards.
 //
 // Adapted from github.com/inovacc/gops (MIT) — see THIRD_PARTY_LICENSES/gops-MIT.txt.
+//
+// Experimental: this package's API may change before a stable release and is
+// not covered by the v1.0 compatibility guarantee.
 package procmetrics
 
 import (

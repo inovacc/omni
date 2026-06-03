@@ -47,3 +47,9 @@ tools/golden/test-map.json
 tools/golden/__pycache__/
 .tmp/
 .scripts/
+
+# /testing:* baselines (local-only per skill plumbing)
+docs/testing/
+
+# vendored buf/googleapis testdata cache — not a public package
+/pkg/private/
