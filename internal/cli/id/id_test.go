@@ -2,8 +2,11 @@ package id
 
 import (
 	"bytes"
+	"runtime"
 	"strings"
 	"testing"
+
+	"github.com/inovacc/omni/internal/cli/cmderr"
 )
 
 func TestRunID(t *testing.T) {
@@ -157,4 +160,37 @@ func TestGetGroups(t *testing.T) {
 	// Should have at least one group (primary group) on Unix systems
 	// On Windows, may return empty
 	t.Logf("GetGroups() returned %d groups", len(groups))
+}
+
+func TestNumericHelpers_PlatformContract(t *testing.T) {
+	t.Run("GetUID", func(t *testing.T) {
+		_, err := GetUID()
+		assertPlatformContract(t, "GetUID", err)
+	})
+
+	t.Run("GetGID", func(t *testing.T) {
+		_, err := GetGID()
+		assertPlatformContract(t, "GetGID", err)
+	})
+
+	t.Run("GetGroups", func(t *testing.T) {
+		_, err := GetGroups()
+		assertPlatformContract(t, "GetGroups", err)
+	})
+}
+
+func assertPlatformContract(t *testing.T, name string, err error) {
+	t.Helper()
+
+	if runtime.GOOS == "windows" {
+		if !cmderr.IsUnsupported(err) {
+			t.Errorf("%s on windows: want ErrUnsupported, got %v", name, err)
+		}
+
+		return
+	}
+
+	if err != nil {
+		t.Errorf("%s on %s: unexpected error %v", name, runtime.GOOS, err)
+	}
 }

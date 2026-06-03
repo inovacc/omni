@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io"
 	"os/user"
-	"strconv"
 	"strings"
 
 	"github.com/inovacc/omni/internal/cli/cmderr"
@@ -160,46 +159,4 @@ func RunID(w io.Writer, opts IDOptions) error {
 	_, _ = fmt.Fprintln(w, output.String())
 
 	return nil
-}
-
-// GetUID returns the current user's UID
-func GetUID() (int, error) {
-	u, err := user.Current()
-	if err != nil {
-		return 0, err
-	}
-
-	return strconv.Atoi(u.Uid)
-}
-
-// GetGID returns the current user's primary GID
-func GetGID() (int, error) {
-	u, err := user.Current()
-	if err != nil {
-		return 0, err
-	}
-
-	return strconv.Atoi(u.Gid)
-}
-
-// GetGroups returns the current user's group IDs
-func GetGroups() ([]int, error) {
-	u, err := user.Current()
-	if err != nil {
-		return nil, err
-	}
-
-	gids, err := u.GroupIds()
-	if err != nil {
-		return nil, err
-	}
-
-	result := make([]int, 0, len(gids))
-	for _, gid := range gids {
-		if id, err := strconv.Atoi(gid); err == nil {
-			result = append(result, id)
-		}
-	}
-
-	return result, nil
 }
