@@ -12,8 +12,9 @@ import (
 	"github.com/inovacc/omni/internal/cli/cmderr"
 )
 
-// TODO:no-exec-violation: this package uses os/exec.Command("gh", ...) which violates
-// CLAUDE.md "No exec" design principle. Tracked for Plan 17 / backlog cleanup.
+// Sanctioned exec exception: this package's purpose is to orchestrate the
+// external gh tool. Permitted under the no-exec invariant — see
+// docs/architecture/patterns.md § "No-exec invariant: scope & sanctioned exceptions".
 
 // PRCheckout checks out a pull request by number.
 func PRCheckout(number int) error {
@@ -73,7 +74,7 @@ func ActionsRerun(runID int) error {
 }
 
 func runGhCommand(args ...string) error {
-	cmd := exec.Command("gh", args...) //nolint:gosec // TODO:no-exec-violation
+	cmd := exec.Command("gh", args...) //nolint:gosec // sanctioned exec exception (see package doc)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	cmd.Stdin = os.Stdin
@@ -95,7 +96,7 @@ func runGhCommand(args ...string) error {
 }
 
 func runGhCommandOutput(args ...string) (string, error) {
-	cmd := exec.Command("gh", args...) //nolint:gosec // TODO:no-exec-violation
+	cmd := exec.Command("gh", args...) //nolint:gosec // sanctioned exec exception (see package doc)
 
 	var stdout, stderr bytes.Buffer
 

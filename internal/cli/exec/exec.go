@@ -23,9 +23,11 @@ type Options struct {
 }
 
 // Run executes a command with pre-flight credential detection.
-// NOTE: This package intentionally spawns an external process via os/exec.
-// This is a pre-existing violation of the project "No exec" design principle.
-// Tracked for remediation in deferred-items.md (no-exec-violation tag).
+//
+// Sanctioned exec exception: this package's purpose is to launch an operator-
+// supplied external command — the launcher is the feature. Permitted under the
+// no-exec invariant — see docs/architecture/patterns.md § "No-exec invariant:
+// scope & sanctioned exceptions".
 func Run(w io.Writer, command string, args []string, opts Options) error {
 	if command == "" {
 		return cmderr.Wrap(cmderr.ErrInvalidInput, "exec: no command specified")

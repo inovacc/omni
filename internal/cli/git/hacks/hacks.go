@@ -12,8 +12,9 @@ import (
 	"github.com/inovacc/omni/internal/cli/cmderr"
 )
 
-// TODO:no-exec-violation: this package uses os/exec.Command("git", ...) which violates
-// CLAUDE.md "No exec" design principle. Tracked for Plan 17 / backlog cleanup.
+// Sanctioned exec exception: this package's purpose is to orchestrate the
+// external git tool. Permitted under the no-exec invariant — see
+// docs/architecture/patterns.md § "No-exec invariant: scope & sanctioned exceptions".
 
 // QuickCommit stages all changes and commits with a message.
 // Equivalent to: git add -A && git commit -m "message"
@@ -167,7 +168,7 @@ func getCurrentBranch() (string, error) {
 }
 
 func runGitCommand(args ...string) error {
-	cmd := exec.Command("git", args...) //nolint:gosec // TODO:no-exec-violation
+	cmd := exec.Command("git", args...) //nolint:gosec // sanctioned exec exception (see package doc)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	cmd.Stdin = os.Stdin
@@ -184,7 +185,7 @@ func runGitCommand(args ...string) error {
 }
 
 func runGitCommandOutput(args ...string) (string, error) {
-	cmd := exec.Command("git", args...) //nolint:gosec // TODO:no-exec-violation
+	cmd := exec.Command("git", args...) //nolint:gosec // sanctioned exec exception (see package doc)
 
 	var stdout, stderr bytes.Buffer
 

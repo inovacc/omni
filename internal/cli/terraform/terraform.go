@@ -2,8 +2,9 @@
 // It wraps the terraform binary as a subprocess for now.
 // Future: Direct integration via local source code.
 //
-// TODO:no-exec-violation: this package uses os/exec.Command("terraform", ...) which violates
-// CLAUDE.md "No exec" design principle. Tracked for Plan 17 / backlog cleanup.
+// Sanctioned exec exception: this package's purpose is to orchestrate the
+// external terraform tool. Permitted under the no-exec invariant — see
+// docs/architecture/patterns.md § "No-exec invariant: scope & sanctioned exceptions".
 package terraform
 
 import (
@@ -17,7 +18,7 @@ import (
 
 // Run executes a terraform command with the given arguments.
 func Run(args []string) error {
-	cmd := exec.Command("terraform", args...) //nolint:gosec // TODO:no-exec-violation
+	cmd := exec.Command("terraform", args...) //nolint:gosec // sanctioned exec exception (see package doc)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	cmd.Stdin = os.Stdin
