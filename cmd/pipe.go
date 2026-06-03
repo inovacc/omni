@@ -22,6 +22,7 @@ import (
 	"github.com/inovacc/omni/internal/cli/paste"
 	"github.com/inovacc/omni/internal/cli/pipe"
 	"github.com/inovacc/omni/internal/cli/rev"
+	"github.com/inovacc/omni/internal/cli/sbom"
 	"github.com/inovacc/omni/internal/cli/sed"
 	"github.com/inovacc/omni/internal/cli/shuf"
 	"github.com/inovacc/omni/internal/cli/sign"
@@ -212,6 +213,16 @@ func buildPipeRegistry() *command.Registry {
 	reg.Register("verify", command.AdaptWriterReaderArgs(
 		func(w io.Writer, r io.Reader, args []string) error {
 			return verify.RunVerify(w, r, args, verify.VerifyOptions{})
+		},
+	))
+
+	// sbom: takes a PATH argument and ignores stdin (reader unused); registered
+	// for unified-registry parity with sign/verify. Defaults to SPDX over an
+	// auto-detected module-dir/binary path; the epoch-default timestamp keeps
+	// the piped output deterministic.
+	reg.Register("sbom", command.AdaptWriterReaderArgs(
+		func(w io.Writer, _ io.Reader, args []string) error {
+			return sbom.RunSBOM(w, args, sbom.SBOMOptions{Format: "spdx", From: "auto", OmniVersion: rootVersion()})
 		},
 	))
 

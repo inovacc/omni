@@ -3,6 +3,8 @@ package cmd
 import (
 	"bytes"
 	"context"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -50,5 +52,29 @@ func TestPipeSignDispatchesToGlue(t *testing.T) {
 	err := cmd.Run(context.Background(), &buf, strings.NewReader(""), nil)
 	if !cmderr.IsInvalidInput(err) {
 		t.Fatalf("sign with no key: err = %v, want ErrInvalidInput", err)
+	}
+}
+
+// TestPipeSbomDispatchesToGlue confirms the registered sbom command reaches the
+// real sbom.RunSBOM glue (reader ignored): given a temp module directory it
+// writes SPDX JSON to the writer. This proves sbom participates in the unified
+// pipe registry like sign/verify.
+func TestPipeSbomDispatchesToGlue(t *testing.T) {
+	reg := buildPipeRegistry()
+	cmd, ok := reg.Get("sbom")
+	if !ok {
+		t.Fatal("sbom not registered")
+	}
+	dir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(dir, "go.mod"),
+		[]byte("module github.com/example/app\n\ngo 1.25.0\n"), 0o644); err != nil {
+		t.Fatalf("write go.mod: %v", err)
+	}
+	var buf bytes.Buffer
+	if err := cmd.Run(context.Background(), &buf, strings.NewReader(""), []string{dir}); err != nil {
+		t.Fatalf("sbom dispatch: %v", err)
+	}
+	if !strings.Contains(buf.String(), "SPDX-2.3") {
+		t.Errorf("sbom output missing SPDX-2.3 marker:\n%s", buf.String())
 	}
 }
