@@ -1,24 +1,24 @@
 # Phase 06 — `pkg/scan/` Vulnerability Scanning Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
-> **HARD GATE:** Task 1 (ADR-0008) MUST be written AND human-reviewed/approved BEFORE any code task (2+) begins. The research spike concluded that `golang.org/x/vuln/scan` execs `go list` internally — this collides with omni's foundational NO-exec rule, so the architecture decision (pure-Go default + tagged reachability) must be recorded and approved first.
+> **HARD GATE — SATISFIED (2026-06-03):** ADR-0008 is written AND human-decided. The research spike (`docs/superpowers/research/phase-06/RESEARCH.md`) concluded that `golang.org/x/vuln` source mode execs `go list` (via `x/tools/go/packages`) AND pulls `x/vuln`+`x/tools v0.44.0` into the main `go.mod` via MVS even behind a build tag — violating BOTH the no-exec rule and ADR-0007's lean-go.mod rule. **DECISION: reachability is DROPPED from v1.0** (`omni scan source` → `ErrUnsupported`); its future home is a self-contained `contrib/govulncheck-scan` module. The default pure-Go SBOM matcher is unaffected and proceeds.
 
-**Goal:** Ship `omni scan` — a pure-Go, fail-closed vulnerability scanner that matches an SBOM (`pkg/sbom/format.Document`) against a `pkg/sign`-signed OSV vulnerability database, gates CI on a `--fail-on <severity>` threshold (`cmderr.ErrConflict`), works offline with a `--max-db-age` staleness gate, and offers reachability-aware Go-source scanning behind an opt-in `//go:build omni_govulncheck` tag (default build returns `cmderr.ErrUnsupported`).
+**Goal:** Ship `omni scan` — a pure-Go, fail-closed vulnerability scanner that matches an SBOM (`pkg/sbom/format.Document`) against a `pkg/sign`-signed OSV vulnerability database, gates CI on a `--fail-on <severity>` threshold (`cmderr.ErrConflict`), and works offline with a `--max-db-age` staleness gate. Reachability source scanning is **deferred** per ADR-0008: `omni scan source` returns `cmderr.ErrUnsupported` (its future home is a `contrib/govulncheck-scan` module).
 
-**Architecture:** Pure-Go from the ground up. `pkg/scan/` imports `pkg/sbom/format.Document` ONLY (never `pkg/sbom/model`), `pkg/sign` (DB verify), and `golang.org/x/mod/semver` (range matching — already a Phase 5 dep). The default matcher is purely version-range based over a local OSV DB: zero exec, fully deterministic, golden-testable. Reachability analysis (which requires `go list` + package load + SSA call-graph and therefore exec) is isolated behind `//go:build omni_govulncheck`; without the tag, `omni scan source` returns `ErrUnsupported`. The OSV DB is a signed bundle (a `.zip` of OSV JSON entries + a manifest), verified with `pkg/sign.Verify` on load — a tampered DB fails closed. Live OSV-API enrichment (`--online`, `net/http` only — never exec) is opt-in; tests always use a committed fixture DB. Layering: pure lib `pkg/scan/` → I/O glue `internal/cli/scan/` → thin Cobra wrapper `cmd/scan.go`.
+**Architecture:** Pure-Go from the ground up. `pkg/scan/` imports `pkg/sbom/format.Document` ONLY (never `pkg/sbom/model`), `pkg/sign` (DB verify), and `golang.org/x/mod/semver` (range matching — already a Phase 5 dep). The default matcher is purely version-range based over a local OSV DB: zero exec, fully deterministic, golden-testable. Reachability analysis (which requires `go list` + package load + SSA call-graph and therefore exec, and which pulls `golang.org/x/vuln`+`golang.org/x/tools` into the main `go.mod` via MVS even behind a build tag) is DEFERRED from v1.0 per ADR-0008: `omni scan source` returns `ErrUnsupported` with a backlog pointer, and the future home is a self-contained `contrib/govulncheck-scan` module — NEVER a main-module build tag. The OSV DB is a signed bundle (a `.zip` of OSV JSON entries + a manifest), verified with `pkg/sign.Verify` on load — a tampered DB fails closed. Live OSV-API enrichment (`--online`, `net/http` only — never exec) is opt-in; tests always use a committed fixture DB. Layering: pure lib `pkg/scan/` → I/O glue `internal/cli/scan/` → thin Cobra wrapper `cmd/scan.go`.
 
-**Tech Stack:** Go stdlib (`archive/zip`, `encoding/json`, `net/http`, `time`, `io/fs`, `log/slog`); `golang.org/x/mod/semver` (semver range matching, Phase-5 dep); `github.com/inovacc/omni/pkg/sign` (Phase 4, DB signature verify); `github.com/inovacc/omni/pkg/sbom/format` (Phase 5 boundary type); optional `golang.org/x/vuln` (reachability, build-tag `omni_govulncheck` only); Cobra; the Python YAML golden harness.
+**Tech Stack:** Go stdlib (`archive/zip`, `encoding/json`, `net/http`, `time`, `io/fs`, `log/slog`); `golang.org/x/mod/semver` (semver range matching, Phase-5 dep); `github.com/inovacc/omni/pkg/sign` (Phase 4, DB signature verify); `github.com/inovacc/omni/pkg/sbom/format` (Phase 5 boundary type); Cobra; the Python YAML golden harness. NO `golang.org/x/vuln` — reachability is deferred to a future `contrib/govulncheck-scan` module per ADR-0008.
 
 **Repo conventions (from research, cite when implementing):**
 - Commands self-wire: `cmd/scan.go` declares `var scanCmd = &cobra.Command{...}` and calls `rootCmd.AddCommand(scanCmd)` in `init()`; `RunE` reads flags → Options → calls `internal/cli/scan.RunScan(cmd.OutOrStdout(), …)`. No central registration list. Subcommands (`scan source`, `scan db update`) attach via `scanCmd.AddCommand(...)`.
-- `cmderr` (`internal/cli/cmderr/cmderr.go`): findings meet/exceed `--fail-on` → `cmderr.Wrap(cmderr.ErrConflict, …)` (exit 1); missing DB / SBOM file → `ErrNotFound` (1); unreadable → `ErrPermission` (3); bad flags / unparseable SBOM or DB JSON → `ErrInvalidInput` (2); DB signature mismatch / stale-DB-over-`--max-db-age` → `ErrConflict` (1, fail closed); `scan source` without `omni_govulncheck` tag → `ErrUnsupported` (6); network failure in `--online` → `ErrIO` (4). `Wrap(sentinel, msg)` = `fmt.Errorf("%s: %w", msg, sentinel)`; `Is<Class>()` predicates exist; use `errors.Is`/`As`, never `==`.
+- `cmderr` (`internal/cli/cmderr/cmderr.go`): findings meet/exceed `--fail-on` → `cmderr.Wrap(cmderr.ErrConflict, …)` (exit 1); missing DB / SBOM file → `ErrNotFound` (1); unreadable → `ErrPermission` (3); bad flags / unparseable SBOM or DB JSON → `ErrInvalidInput` (2); DB signature mismatch / stale-DB-over-`--max-db-age` → `ErrConflict` (1, fail closed); `scan source` (reachability deferred per ADR-0008) → `ErrUnsupported` (6); network failure in `--online` → `ErrIO` (4). `Wrap(sentinel, msg)` = `fmt.Errorf("%s: %w", msg, sentinel)`; `Is<Class>()` predicates exist; use `errors.Is`/`As`, never `==`.
 - Layering: pure lib `pkg/scan/` (stdlib + `x/mod/semver` + `pkg/sign` + `pkg/sbom/format`; NO cobra, NO io.Writer-for-output) + I/O glue `internal/cli/scan/` + thin `cmd/scan.go`. Every package gets a `doc.go`. `pkg/scan` is a NEW v1.0 surface — mark its `doc.go` `// Experimental:` until the API stabilizes (per pkg/* API triage convention).
 - Golden harness: Python+YAML, TWO files kept in sync (`testing/golden/golden_tests.yaml` + `tools/golden/golden_tests.yaml`); negative tests set `exit_code:` + `normalizations: ["strip_path"]` annotated with the cmderr sentinel; committed fixtures via the `{fixtures}` placeholder → `testing/golden/fixtures/<category>/`; regenerate with `task test:golden:update` then `task golden:record`. Confirmed example: the `sign` category at `golden_tests.yaml:1091` uses `args: ["verify", "--key", "{fixtures}/test.pub", …]`.
-- ADRs live in `docs/adr/` as `ADR-NNNN-kebab-title.md`; 0001–0006 are used, so the next number is **0007**; header format per `docs/adr/ADR-0004-internalize-cobra-cli.md`.
+- ADRs live in `docs/adr/` as `ADR-NNNN-kebab-title.md`; 0001–0007 are used, so this phase's ADR is **ADR-0008** (already written/decided); header format per `docs/adr/ADR-0004-internalize-cobra-cli.md`.
 - Pipe: register stdin→stdout commands in `cmd/pipe.go buildPipeRegistry()` via `command.AdaptWriterReaderArgs(...)`.
 - INVARIANTS: pure-Go, NO `os/exec`, no CGO; cross-platform via `//go:build` tags (never runtime `os ==`); `io.Writer`/`io.Reader`; deferred `Close`.
 - **Phase 5 boundary (depends-on):** `pkg/sbom/format.Document` MUST exist before Task 4. Its component-bearing field is required for matching. This plan assumes the shape `Document{ Components []Component }` where `Component{ Name, Version, PURL string; Ecosystem string }` (purl like `pkg:golang/github.com/x/y`). **If Phase 5 lands a different shape, adjust Task 3's `format` import and the `componentsOf` adapter ONLY — the matcher logic is shape-agnostic because it consumes the normalized `pkg`/`version` pair the adapter emits.**
-- **Phase 4 reuse:** `pkg/sign` exposes `Sign(data []byte, sk SecretKey, opts ...Option) ([]byte, error)`, `Verify(data []byte, sig []byte, pub PublicKey) error`, `ParsePublicKey(text []byte) (PublicKey, error)`. The DB bundle is signed/verified through these exact signatures. Heavy optional deps (`golang.org/x/vuln`) bump go.mod via MVS even when tag-gated (Phase 4 finding) — accept it ONLY in the tagged file; the default path stays on `x/mod/semver`.
+- **Phase 4 reuse:** `pkg/sign` exposes `Sign(data []byte, sk SecretKey, opts ...Option) ([]byte, error)`, `Verify(data []byte, sig []byte, pub PublicKey) error`, `ParsePublicKey(text []byte) (PublicKey, error)`. The DB bundle is signed/verified through these exact signatures. The default path uses ONLY `x/mod/semver` (already in go.sum) + stdlib + `pkg/sign` — NO `golang.org/x/vuln` anywhere in the main module (it bumps go.mod via MVS even when tag-gated; reachability is deferred to a separate `contrib/` module per ADR-0008).
 
 ---
 
@@ -28,39 +28,39 @@ The signed OSV DB omni consumes is a **single `.zip` file** (`osv-db.zip`) plus 
 
 Zip layout (all members UTF-8):
 - `manifest.json` (required, exactly one): `{"schema_version":"1.0","generated":"<RFC3339 UTC>","ecosystem":"Go","entry_count":<int>}`. `generated` is the freshness timestamp the `--max-db-age` gate reads.
-- `entries/<OSV-ID>.json` (zero or more): one OSV record per file, each conforming to OSV schema 1.7.5 (fields used by omni: `id`, `summary`, `details`, `modified`, `severity[].{type,score}`, `affected[].package.{ecosystem,name,purl}`, `affected[].ranges[].{type,events[].{introduced,fixed}}`, `affected[].versions[]`, `affected[].ecosystem_specific.imports[].{path,symbols[]}` — Go-vuln symbol data, used only by the reachability path).
+- `entries/<OSV-ID>.json` (zero or more): one OSV record per file, **byte-passthrough from upstream — never re-marshalled through typed structs** (preserves forward-compatible fields). omni validates only the OSV-required `id`, `modified`, `schema_version` and TOLERATES unknown fields, so future OSV minor versions (1.7.6/1.8.0) don't break `scan`. Fields used by omni: `id`, `summary`, `details`, `modified`, `severity[].{type,score}`, `affected[].package.{ecosystem,name,purl}`, `affected[].ranges[].{type,events[].{introduced,fixed,last_affected}}`, `affected[].versions[]`. (`affected[].ecosystem_specific.imports[]` symbol data is unused in v1.0 — reachability is deferred.)
 
 **Matching algorithm (default, pure-Go, no exec — implement exactly):**
 For each SBOM component `(pkg, version)` where `pkg` is the Go MODULE path (normalized from the purl) and `version` is its semver (with a leading `v` for `x/mod/semver`):
 1. Load every OSV entry whose `affected[].package.ecosystem == "Go"` and `affected[].package.name == pkg`.
 2. For each matching `affected`, decide "is `version` vulnerable?":
    - If an `affected[].versions` list is present and contains `version` exactly → **vulnerable**.
-   - Else evaluate `affected[].ranges[]` of `type == "SEMVER"` as a sorted event timeline: walk `events` in order; `introduced:"0"` (or any `introduced`) opens an interval, the next `fixed` closes it. `version` is vulnerable iff it falls in an open `[introduced, fixed)` interval, compared with `semver.Compare("v"+version, "v"+bound)`. An `introduced` with no later `fixed` means "all versions ≥ introduced".
+   - Else evaluate `affected[].ranges[]` of `type == "SEMVER"` as a sorted event timeline: walk `events` in order; `introduced:"0"` (or any `introduced`) opens an interval, the next `fixed` closes it. `version` is vulnerable iff it falls in an open `[introduced, fixed)` interval, compared with `semver.Compare("v"+version, "v"+bound)`. An `introduced` with no later `fixed` means "all versions ≥ introduced". A `last_affected` event closes the interval **inclusively** (`[introduced, last_affected]` — the version equal to `last_affected` is still vulnerable), whereas `fixed` is **exclusive** (`[introduced, fixed)`).
    - `type == "ECOSYSTEM"` ranges fall back to exact `versions` membership (we do not interpret arbitrary ecosystem ordering).
 3. A match yields a `Finding{ID, Package, Version, FixedVersion, Severity, Summary}` where `Severity` is the normalized label from `severityLabel(...)` (below) and `FixedVersion` is the smallest `fixed` bound > `version`, or `""` if none.
 
 **Severity normalization (`severityLabel`) — deterministic, no external CVSS lib:**
 Pick the first `severity[]` of type `CVSS_V3` or `CVSS_V4`; parse the base score from the vector's CVSS qualitative band using the canonical CVSS v3.1/v4.0 cutoffs applied to the numeric base score WHEN a numeric `score` is present; when only a vector string is present, fall back to the band from the vector's computed base. To keep this pure and dependency-free, omni implements a tiny CVSS base-score parser limited to what it needs:
 - If `score` parses as a float (some DBs put the number there) → band it.
-- Else compute the base score from the CVSS vector metrics (AV/AC/PR/UI/S/C/I/A for v3; AV/AC/AT/PR/UI/VC/VI/VA/SC/SI/SA for v4) using the published formulas.
+- Else compute the base score from the CVSS **v3.1** vector metrics (AV/AC/PR/UI/S/C/I/A) using the published closed-form formula (mind the v3.1 Roundup and that PR's weight depends on Scope). **CVSS v4.0 is NOT hand-rolled** (it has no closed-form equation — it needs FIRST's ~270-entry MacroVector lookup + EQ interpolation): for a `CVSS_V4` record, use its numeric `score` if present, else treat as `unknown`.
 - Bands (CVSS v3.1/v4.0, canonical): `0.0`→`none`, `0.1–3.9`→`low`, `4.0–6.9`→`medium`, `7.0–8.9`→`high`, `9.0–10.0`→`critical`.
 - If NO usable `severity[]` exists → `unknown` (treated as below `low` for `--fail-on`, but always reported).
 Ordered constants: `SeverityUnknown < SeverityNone < SeverityLow < SeverityMedium < SeverityHigh < SeverityCritical`. `--fail-on <label>` fails (ErrConflict) iff any finding's severity `>=` the threshold.
 
 ---
 
-### Task 1 (ADR GATE): ADR-0008 — no-exec scan architecture, signed-DB trust, reachability tag
+### Task 1 (ADR GATE — DONE 2026-06-03): ADR-0008 — no-exec scan architecture, signed-DB trust, reachability DEFERRED
 
-**Files:** Create `docs/adr/ADR-0008-pure-go-vuln-scan-and-signed-osv-db.md`
+**Files:** Create `docs/adr/ADR-0008-pure-go-vuln-scan-and-signed-osv-db.md` — **already written and human-decided; verify it exists, then proceed to Task 2.**
 
 - [ ] **Step 1: Write the ADR** matching the `ADR-0004` header/section format (`# ADR-0008: …`, `**Status:** Accepted`, `**Date:** 2026-06-03`, `**Decision:** …`, then `## Context`, `## Analysis` (table), `## Consequences`). Record + justify the decisions the research spike forced:
-  - **Research-spike conclusion (the crux):** `golang.org/x/vuln/scan.Cmd` is documented as "similar to `exec.Cmd`" and internally shells out to `go list` / the build system. Using it in the default binary would VIOLATE omni's foundational NO-exec rule. Decision: the **default scanner is a pure-Go version-range matcher** over a local OSV DB (zero exec, deterministic, golden-testable); **reachability** (`scan source`) is opt-in behind `//go:build omni_govulncheck` and returns `cmderr.ErrUnsupported` without the tag — mirroring Phase 4's `omni_sigstore` isolation.
+  - **Research-spike conclusion (the crux):** `golang.org/x/vuln/scan.Cmd` is documented as "similar to `exec.Cmd`" and internally shells out to `go list` / the build system. Using it in the default binary would VIOLATE omni's foundational NO-exec rule. Decision: the **default scanner is a pure-Go version-range matcher** over a local OSV DB (zero exec, deterministic, golden-testable); **reachability** (`scan source`) is **DEFERRED from v1.0** (returns `cmderr.ErrUnsupported`) because `golang.org/x/vuln` both execs `go list` AND pulls into the main `go.mod` via MVS even behind a build tag — its future home is a self-contained `contrib/govulncheck-scan` module, mirroring `contrib/sigstore-verify`.
   - **OSV DB distribution = a single signed `.zip` bundle** (flat JSON entries + `manifest.json`), NOT bbolt — keeps it diffable, language-agnostic, and `archive/zip`-loadable with no new deps. Verified with `pkg/sign.Verify` on load (Phase 4 reuse); tampered DB fails closed → `ErrConflict`.
   - **Offline-first:** the matcher needs only the local bundle. `--online` (OSV API enrichment over `net/http`) is opt-in and never the test path. `--max-db-age` reads `manifest.generated`; a DB older than the gate fails LOUDLY (`ErrConflict`), never silently degrades.
   - **Severity:** omni ships a tiny pure-Go CVSS v3.1/v4.0 base-score band parser (no external CVSS lib — avoids MVS bloat per Phase 4 finding); `unknown` when no usable severity, always reported, below `low` for gating.
   - **Boundary:** `pkg/scan` imports `pkg/sbom/format.Document` ONLY, never `pkg/sbom/model` (architectural invariant from the spec).
-  - **MVS note:** `golang.org/x/vuln` bumps `go.mod` even when tag-gated; confine it to the tagged file. Default path deps: stdlib + `x/mod/semver` + `pkg/sign`.
-- [ ] **Step 2: Stop for human review.** Do NOT proceed to any code task until this ADR is approved.
+  - **MVS note:** `golang.org/x/vuln` bumps `go.mod` even when tag-gated (build tags gate linking, NOT the module require graph), so it is **NOT used in the main module at all**. Default path deps: stdlib + `x/mod/semver` + `pkg/sign`.
+- [x] **Step 2: Human-decided (2026-06-03).** ADR-0008 written and the reachability fork decided: **DROP from v1.0** (`scan source` → `ErrUnsupported`; future `contrib/govulncheck-scan` module). Proceed to Task 2.
 
 ---
 
@@ -633,11 +633,173 @@ func VerifyAndLoadDB(zipBytes, minisig, pubKeyText []byte) (*DB, error) {
 
 ---
 
+### Task 4b: extend `pkg/sbom/format` with a reader (Parse + Components) + `purl.Parse` (TDD)
+
+**Files:** Create `pkg/sbom/purl/parse.go`, `pkg/sbom/purl/parse_test.go`, `pkg/sbom/format/parse.go`, `pkg/sbom/format/parse_test.go`.
+
+**Why (post-Phase-5 reality):** Phase 5 shipped `format.Document` as a WRITE-ONLY boundary — all fields unexported, only `From()` + `Encode()`. Phase 6's `omni scan <sbom>` must READ an SBOM file (omni's own OR a third-party SPDX 2.3 / CycloneDX 1.5 JSON) and extract its Go `(module, version)` components. To honor the invariant "`pkg/scan` imports `pkg/sbom/format` ONLY", we make `format` a bidirectional boundary by adding the reader HERE (never in `pkg/scan`). Strictly additive — `From`/`Encode`/`Document` write behavior is unchanged. `format` already imports `pkg/sbom/purl`.
+
+- [ ] **Step 1: `purl.Parse` (inverse of `ForModule`).** Write `pkg/sbom/purl/parse_test.go`, run (FAIL), then `pkg/sbom/purl/parse.go`:
+
+```go
+package purl
+
+import "strings"
+
+// Parse decomposes a Go package-URL ("pkg:golang/<module>[@<version>]") into its
+// module path and version. ok is false for any purl whose type is not "golang".
+// version is the substring after the last '@' (empty if absent).
+func Parse(s string) (modulePath, version string, ok bool) {
+	const prefix = "pkg:golang/"
+	if !strings.HasPrefix(s, prefix) {
+		return "", "", false
+	}
+	body := s[len(prefix):]
+	if at := strings.LastIndex(body, "@"); at >= 0 {
+		return body[:at], body[at+1:], true
+	}
+	return body, "", true
+}
+```
+
+  Tests: `pkg:golang/github.com/spf13/cobra@v1.10.2`→(`github.com/spf13/cobra`,`v1.10.2`,true); `pkg:golang/golang.org/x/mod`→(`golang.org/x/mod`,``,true); `pkg:npm/left-pad@1.0.0`→(``,``,false); ``→(``,``,false).
+
+- [ ] **Step 2: Exported `Component` view + `Document.Components()` accessor.** In `pkg/sbom/format/parse.go`:
+
+```go
+package format
+
+// Component is the exported, format-agnostic READ view of one SBOM component,
+// for consumers (pkg/scan) that read a Document. Name is the Go module path,
+// Version its module version (may be empty), PURL the full package-URL, Ecosystem
+// the purl type (e.g. "golang").
+type Component struct {
+	Name      string
+	Version   string
+	PURL      string
+	Ecosystem string
+}
+
+// Components returns every component carried by the Document (root included),
+// in the Document's deterministic order. The read side of the stable boundary;
+// pkg/scan depends on this, never on pkg/sbom/model.
+func (d *Document) Components() []Component {
+	out := make([]Component, 0, len(d.entries)+1)
+	for _, e := range append([]entry{d.root}, d.entries...) {
+		if e.purl == "" {
+			continue // a Parse-built Document has no root purl
+		}
+		mod, ver, ok := purl.Parse(e.purl)
+		eco := ""
+		if ok {
+			eco = "golang"
+		}
+		out = append(out, Component{Name: mod, Version: ver, PURL: e.purl, Ecosystem: eco})
+	}
+	return out
+}
+```
+
+  (Use the real `entry` field name — `entry.purl` exists from Phase 5.)
+
+- [ ] **Step 3: `format.Parse` — read SPDX 2.3 OR CycloneDX 1.5 JSON into a Document.** Append to `pkg/sbom/format/parse.go` a permissive, unknown-field-tolerant reader that extracts components by purl:
+
+```go
+import (
+	"encoding/json"
+	"fmt"
+	"io"
+)
+
+// Parse reads an SPDX-2.3 or CycloneDX-1.5 JSON SBOM and returns a Document whose
+// Components() yields its Go components. Detection: "spdxVersion" => SPDX;
+// "bomFormat":"CycloneDX" or "specVersion" => CycloneDX. Unknown fields are ignored
+// so third-party SBOMs (e.g. syft output) parse cleanly. Only entry.purl is
+// populated — the read side needs nothing else.
+func Parse(r io.Reader) (*Document, error) {
+	raw, err := io.ReadAll(r)
+	if err != nil {
+		return nil, err
+	}
+	var probe struct {
+		SPDXVersion string `json:"spdxVersion"`
+		BOMFormat   string `json:"bomFormat"`
+		SpecVersion string `json:"specVersion"`
+	}
+	if err := json.Unmarshal(raw, &probe); err != nil {
+		return nil, fmt.Errorf("sbom: not valid JSON: %w", err)
+	}
+	switch {
+	case probe.SPDXVersion != "":
+		return parseSPDX(raw)
+	case probe.BOMFormat == "CycloneDX" || probe.SpecVersion != "":
+		return parseCycloneDX(raw)
+	default:
+		return nil, fmt.Errorf("sbom: unrecognized format (no spdxVersion/bomFormat/specVersion)")
+	}
+}
+
+func parseSPDX(raw []byte) (*Document, error) {
+	var doc struct {
+		Name     string `json:"name"`
+		Packages []struct {
+			ExternalRefs []struct {
+				ReferenceType    string `json:"referenceType"`
+				ReferenceLocator string `json:"referenceLocator"`
+			} `json:"externalRefs"`
+		} `json:"packages"`
+	}
+	if err := json.Unmarshal(raw, &doc); err != nil {
+		return nil, fmt.Errorf("sbom: bad SPDX: %w", err)
+	}
+	d := &Document{name: doc.Name}
+	for _, p := range doc.Packages {
+		for _, ref := range p.ExternalRefs {
+			if ref.ReferenceType == "purl" && ref.ReferenceLocator != "" {
+				d.entries = append(d.entries, entry{purl: ref.ReferenceLocator})
+			}
+		}
+	}
+	return d, nil
+}
+
+func parseCycloneDX(raw []byte) (*Document, error) {
+	var bom struct {
+		Metadata struct {
+			Component struct {
+				Name string `json:"name"`
+			} `json:"component"`
+		} `json:"metadata"`
+		Components []struct {
+			PURL string `json:"purl"`
+		} `json:"components"`
+	}
+	if err := json.Unmarshal(raw, &bom); err != nil {
+		return nil, fmt.Errorf("sbom: bad CycloneDX: %w", err)
+	}
+	d := &Document{name: bom.Metadata.Component.Name}
+	for _, c := range bom.Components {
+		if c.PURL != "" {
+			d.entries = append(d.entries, entry{purl: c.PURL})
+		}
+	}
+	return d, nil
+}
+```
+
+- [ ] **Step 4: Tests** (`pkg/sbom/format/parse_test.go`): (a) round-trip SPDX — `From(...)` → `Encode(SPDX)` → `Parse` → assert `Components()` contains `pkg:golang/github.com/spf13/cobra@v1.10.2` with Name/Version split; (b) round-trip CycloneDX; (c) a minimal third-party CycloneDX literal; (d) unrecognized-format → error. Existing `format`/`purl` tests MUST still pass (additive change).
+
+- [ ] **Step 5: Verify:** `go test ./pkg/sbom/... -count=1` (all green) && `go build ./...`.
+
+- [ ] **Step 6: Commit:** `gofmt -w pkg/sbom && git commit -- pkg/sbom -m "feat(sbom): add format.Parse + Document.Components reader and purl.Parse (bidirectional boundary for pkg/scan)"`
+
+---
+
 ### Task 5: top-level `Scan` over an SBOM Document + `--fail-on` gate (TDD)
 
 **Files:** Create `pkg/scan/document.go`, `pkg/scan/document_test.go`. Modify `pkg/scan/scan.go` (add `Scan`, `Options`).
 
-> **Phase-5 boundary contract:** this is the ONLY file that imports `github.com/inovacc/omni/pkg/sbom/format`. It adapts `format.Document` → a slice of normalized `(pkg, version)` pairs via `componentsOf`. If Phase 5's `format.Document` field names differ, fix `componentsOf` ONLY.
+> **Phase-5 boundary contract:** `pkg/scan` imports `github.com/inovacc/omni/pkg/sbom/format` ONLY. `document.go` reads an SBOM with `format.Parse(r)` (added in Task 4b) and adapts `doc.Components()` (`[]format.Component{Name,Version,PURL,Ecosystem}`) → normalized `(pkg, version)` pairs via `componentsOf` (drop non-`golang` ecosystems; module path = `Component.Name`; version = `Component.Version`). The matcher tests still use a local `component` fake so matcher logic stays independent of the `format` types.
 
 - [ ] **Step 1: Write failing test** (`pkg/scan/document_test.go`) using a local fake that mirrors the assumed `format.Document` shape, so the matcher logic is tested independent of Phase 5 timing:
 
@@ -717,7 +879,7 @@ type component struct {
 // Options configures a scan.
 type Options struct {
 	FailOn   Severity // findings >= FailOn trip ErrConflict; SeverityUnknown (0) disables the gate
-	Reachability bool  // request reachability filtering (only honored under -tags omni_govulncheck)
+	Reachability bool  // reserved for the future contrib reachability path; ignored in v1.0 (scan source returns ErrUnsupported)
 }
 
 // componentsOf adapts the SBOM boundary type into normalized components.
@@ -783,15 +945,15 @@ func scanComponents(comps []component, db *DB, opts Options) (Report, error) {
 
 ---
 
-### Task 6: reachability split — default stub vs `omni_govulncheck` tag (TDD)
+### Task 6: reachability source scan — deferred stub (no x/vuln, no build tag) (TDD)
 
-**Files:** Create `pkg/scan/reach_default.go` (`//go:build !omni_govulncheck`), `pkg/scan/reach_govulncheck.go` (`//go:build omni_govulncheck`), `pkg/scan/reach_default_test.go`.
+**Files:** Create `pkg/scan/reach.go`, `pkg/scan/reach_test.go`.
 
-- [ ] **Step 1: Default (no-tag) failing test** (`pkg/scan/reach_default_test.go`):
+Per ADR-0008, reachability is DROPPED from v1.0: its only implementation (`golang.org/x/vuln`) execs `go list` (no-exec violation) AND pulls `x/vuln`+`x/tools` into the main `go.mod` via MVS even behind a build tag (ADR-0007 violation). So `ScanSource` is a permanent, unconditional stub returning `ErrUnsupported` — **NO build tag, NO `golang.org/x/vuln` dependency**. The future home is a self-contained `contrib/govulncheck-scan` module (separate `go.mod`), tracked in `docs/BACKLOG.md`.
+
+- [ ] **Step 1: Failing test** (`pkg/scan/reach_test.go`):
 
 ```go
-//go:build !omni_govulncheck
-
 package scan
 
 import (
@@ -800,132 +962,46 @@ import (
 	"github.com/inovacc/omni/internal/cli/cmderr"
 )
 
-func TestScanSourceUnsupportedWithoutTag(t *testing.T) {
+func TestScanSourceUnsupported(t *testing.T) {
 	_, err := ScanSource("./...", &DB{byPkg: map[string][]osvEntry{}}, Options{})
 	if err == nil || !cmderr.IsUnsupported(err) {
-		t.Fatalf("ScanSource without -tags omni_govulncheck = %v, want ErrUnsupported", err)
+		t.Fatalf("ScanSource = %v, want ErrUnsupported", err)
 	}
 }
 ```
 
 - [ ] **Step 2: Run, verify fail:** `go test ./pkg/scan/ -run ScanSourceUnsupported -v` → FAIL (`ScanSource` undefined).
-- [ ] **Step 3: Implement the default stub** (`pkg/scan/reach_default.go`):
+- [ ] **Step 3: Implement the stub** (`pkg/scan/reach.go`):
 
 ```go
-//go:build !omni_govulncheck
-
 package scan
 
 import "github.com/inovacc/omni/internal/cli/cmderr"
 
-// ScanSource performs reachability-aware scanning of a Go source tree.
-// In the default build it is unavailable because reachability analysis requires
-// invoking the Go build system (go list), which violates omni's no-exec rule.
-// Build with -tags omni_govulncheck to enable it.
-func ScanSource(pattern string, db *DB, opts Options) (Report, error) {
+// ScanSource performs reachability-aware scanning of a Go source tree — reporting
+// only vulnerabilities whose vulnerable symbol is actually called.
+//
+// DEFERRED (ADR-0008): reachability requires golang.org/x/vuln, which (a) execs
+// `go list` via golang.org/x/tools/go/packages (violating omni's no-exec rule) and
+// (b) pulls golang.org/x/vuln + golang.org/x/tools into the main go.mod via MVS even
+// behind a build tag (violating the lean-go.mod rule, ADR-0007). It is therefore
+// unavailable in v1.0 and returns ErrUnsupported. The future home is a self-contained
+// contrib/govulncheck-scan module (see docs/BACKLOG.md). The params are accepted for
+// signature stability with that future implementation.
+func ScanSource(_ string, _ *DB, _ Options) (Report, error) {
 	return Report{}, cmderr.Wrap(cmderr.ErrUnsupported,
-		"reachability source scanning requires building with -tags omni_govulncheck")
+		"omni scan source (reachability) is not available in this build; see docs/BACKLOG.md (deferred per ADR-0008)")
 }
 ```
 
-- [ ] **Step 4: Implement the tagged path** (`pkg/scan/reach_govulncheck.go`), documenting that it intentionally relaxes the no-exec rule for this opt-in build only:
-
-```go
-//go:build omni_govulncheck
-
-package scan
-
-import (
-	"bytes"
-	"context"
-	"encoding/json"
-	"fmt"
-
-	"github.com/inovacc/omni/internal/cli/cmderr"
-	"golang.org/x/vuln/scan"
-)
-
-// ScanSource runs govulncheck's reachability engine over the Go source tree at pattern
-// and returns only findings whose vulnerable symbols are actually called.
-// NOTE: golang.org/x/vuln/scan invokes the Go toolchain (go list); this is permitted
-// ONLY in the opt-in omni_govulncheck build, never the default binary.
-func ScanSource(pattern string, db *DB, opts Options) (Report, error) {
-	var out bytes.Buffer
-	cmd := scan.Command(context.Background(), "-json", "-mode", "source", pattern)
-	cmd.Stdout = &out
-	cmd.Stderr = &bytes.Buffer{}
-	if err := cmd.Start(); err != nil {
-		return Report{}, cmderr.Wrap(cmderr.ErrIO, "start govulncheck")
-	}
-	if err := cmd.Wait(); err != nil {
-		// govulncheck exits non-zero when vulns are found; JSON is still on stdout.
-	}
-	rep, err := parseGovulncheckJSON(out.Bytes())
-	if err != nil {
-		return Report{}, cmderr.Wrap(cmderr.ErrInvalidInput, "parse govulncheck output")
-	}
-	if opts.FailOn > SeverityUnknown {
-		for _, f := range rep.Findings {
-			if sev, _ := ParseSeverity(f.Severity); sev >= opts.FailOn {
-				return rep, cmderr.Wrap(cmderr.ErrConflict,
-					"reachable vulnerabilities found at or above --fail-on threshold")
-			}
-		}
-	}
-	return rep, nil
-}
-
-// parseGovulncheckJSON converts the streaming govulncheck JSON ("osv" + "finding"
-// messages) into a Report, marking every emitted finding Reachable=true (govulncheck
-// in source mode only reports called symbols).
-func parseGovulncheckJSON(b []byte) (Report, error) {
-	dec := json.NewDecoder(bytes.NewReader(b))
-	osvByID := map[string]osvEntry{}
-	reachable := map[string]bool{}
-	for dec.More() {
-		var msg struct {
-			OSV     *osvEntry `json:"osv"`
-			Finding *struct {
-				OSV   string `json:"osv"`
-				Trace []struct {
-					Function string `json:"function"`
-				} `json:"trace"`
-			} `json:"finding"`
-		}
-		if err := dec.Decode(&msg); err != nil {
-			return Report{}, fmt.Errorf("decode govulncheck json: %w", err)
-		}
-		switch {
-		case msg.OSV != nil:
-			osvByID[msg.OSV.ID] = *msg.OSV
-		case msg.Finding != nil && len(msg.Finding.Trace) > 0 && msg.Finding.Trace[0].Function != "":
-			reachable[msg.Finding.OSV] = true // a trace with a function => reachable
-		}
-	}
-	var findings []Finding
-	for id := range reachable {
-		e := osvByID[id]
-		yes := true
-		f := Finding{ID: id, Summary: e.Summary, Severity: severityLabel(e.Severity).String(), Reachable: &yes}
-		if len(e.Affected) > 0 {
-			f.Package = e.Affected[0].Package.Name
-		}
-		findings = append(findings, f)
-	}
-	sortFindings(findings)
-	return Report{Findings: findings, Scanned: len(osvByID)}, nil
-}
-```
-
-   Extract the sort from Task 5 into `sortFindings([]Finding)` in `pkg/scan/match.go` (shared by both paths). The `db` param is unused in the tagged path (govulncheck carries its own DB client); name it `_ *DB` to satisfy the linter, and add a doc note.
-- [ ] **Step 5: Verify BOTH builds:**
+- [ ] **Step 4: Shared sort** — ensure the finding sort lives in `sortFindings([]Finding)` in `pkg/scan/match.go` (extracted in Task 5; `Scan` uses it). No reachability-specific code is added.
+- [ ] **Step 5: Verify (default build only — there is no tagged build):**
 ```bash
-go build ./... && go test ./pkg/scan/ -run ScanSourceUnsupported -v   # default: stub returns ErrUnsupported
-go build -tags omni_govulncheck ./... && go vet -tags omni_govulncheck ./pkg/scan/
-go get golang.org/x/vuln && go mod tidy   # adds x/vuln (tag-gated; accept MVS bump per Phase 4)
+go build ./... && go vet ./pkg/scan/ && go test ./pkg/scan/ -run ScanSourceUnsupported -v
+grep -q 'golang.org/x/vuln' go.mod && echo "FAIL: x/vuln leaked into go.mod" || echo "OK: no x/vuln"
 ```
-   Expected: default build does NOT compile `golang.org/x/vuln`; tagged build compiles cleanly.
-- [ ] **Step 6: Commit:** `gofmt -w pkg/scan/ && git commit -- pkg/scan/ go.mod go.sum -m "feat(scan): reachability source scan behind omni_govulncheck tag (default: ErrUnsupported)"`
+   Expected: build/vet/test green; `golang.org/x/vuln` is absent from `go.mod`.
+- [ ] **Step 6: Commit:** `gofmt -w pkg/scan/ && git commit -- pkg/scan/ -m "feat(scan): scan source returns ErrUnsupported (reachability deferred to contrib per ADR-0008)"`
 
 ---
 
@@ -942,7 +1018,7 @@ go get golang.org/x/vuln && go mod tidy   # adds x/vuln (tag-gated; accept MVS b
 - [ ] **Step 4: Cobra wrapper** (`cmd/scan.go`):
   - `var scanCmd = &cobra.Command{Use: "scan <sbom>", Short: "Scan an SBOM against a signed OSV vulnerability database", Args: cobra.MaximumNArgs(1), RunE: func(cmd, args) error { return scan.RunScan(cmd.OutOrStdout(), args, optsFromFlags()) }}`.
   - Flags on `scanCmd`: `--db` (path to `osv-db.zip`), `--db-key` (minisign pubkey path), `--db-sig` (detached `.minisig`; default `<db>.minisig`), `--fail-on` (string, default ""), `--json` (bool), `--max-db-age` (duration, default `0` = off), `--online` (bool).
-  - `var scanSourceCmd = &cobra.Command{Use: "source <pattern>", Short: "Reachability-aware Go source scan (requires -tags omni_govulncheck)", Args: cobra.ExactArgs(1), RunE: …RunScanSource}`; `scanCmd.AddCommand(scanSourceCmd)`.
+  - `var scanSourceCmd = &cobra.Command{Use: "source <pattern>", Short: "Reachability-aware Go source scan (deferred in v1.0 — returns unsupported)", Args: cobra.ExactArgs(1), RunE: …RunScanSource}`; `scanCmd.AddCommand(scanSourceCmd)`.
   - `var scanDBCmd = &cobra.Command{Use: "db", Short: "Manage the OSV vulnerability database"}` with `scanDBUpdateCmd` (`Use: "update"`) — wired in Task 8; add `scanCmd.AddCommand(scanDBCmd)` and `scanDBCmd.AddCommand(scanDBUpdateCmd)` here as a placeholder calling a Task-8 function.
   - `init()`: `rootCmd.AddCommand(scanCmd)`.
 - [ ] **Step 5: Run, verify pass + smoke:** `go test ./internal/cli/scan/ -v` → PASS. Manual: build a fixture DB (`omni sign` over a zip), then `go run . scan --db /tmp/osv-db.zip --db-key /tmp/k.pub /tmp/sbom.json` and `… --fail-on high` (expect exit 1).
@@ -1067,7 +1143,7 @@ reg.Register("scan", command.AdaptWriterReaderArgs(func(w io.Writer, r io.Reader
   - `scan_bad_sbom` → `… "{fixtures}/bad-sbom.json"]` → `exit_code: 2` `# cmderr.ErrInvalidInput`.
   - `scan_tampered_db` → point `--db` at a committed `osv-db.tampered.zip` (one flipped byte) → `exit_code: 1` `# cmderr.ErrConflict (signature verification, fail-closed)`.
   - `scan_stale_db` → `… "--max-db-age", "1s", "{fixtures}/vuln-sbom.json"]` → `exit_code: 1` `# cmderr.ErrConflict (ErrStaleDB, fail-loud)`.
-  - `scan_source_unsupported` → `args: ["scan", "source", "./..."]` → `exit_code: 6` `# cmderr.ErrUnsupported (default build, no omni_govulncheck tag)`.
+  - `scan_source_unsupported` → `args: ["scan", "source", "./..."]` → `exit_code: 6` `# cmderr.ErrUnsupported (reachability deferred per ADR-0008)`.
 - [ ] **Step 3: Determinism guard** — confirm text output is byte-stable: it must NOT include the wall-clock DBAge or any absolute path. If the renderer prints DBAge in text mode, add a `strip_db_age` normalization to `testing/scripts/` (regex `db age: .*` → `db age: <STRIPPED>`) and register it in BOTH harness configs; otherwise keep DBAge JSON-only.
 - [ ] **Step 4: Generate + verify snapshots:** `task test:golden:update && task golden:record`, then `python testing/scripts/test_golden.py` → all green.
 - [ ] **Step 5: Commit:** `git commit -- testing/golden tools/golden -m "test(scan): golden-master report + fail-on/tampered/stale/unsupported negatives"`
@@ -1076,20 +1152,21 @@ reg.Register("scan", command.AdaptWriterReaderArgs(func(w io.Writer, r io.Reader
 
 ### Task 11: Docs + final gate
 
-**Files:** `docs/COMMANDS.md`, `CLAUDE.md` (command inventory line), `docs/architecture/cloud-integrations.md` (or the appropriate subsystem doc), `docs/superpowers/specs/2026-05-16-06-pkg-scan-design.md` (status), `docs/EXTERNAL_SOURCES.md` (attribute OSV schema + `golang.org/x/vuln` under the build tag).
+**Files:** `docs/COMMANDS.md`, `CLAUDE.md` (command inventory line), `docs/architecture/cloud-integrations.md` (or the appropriate subsystem doc), `docs/superpowers/specs/2026-05-16-06-pkg-scan-design.md` (status), `docs/EXTERNAL_SOURCES.md` (attribute the OSV schema), `docs/BACKLOG.md` (add the deferred reachability item → future `contrib/govulncheck-scan`).
 
-- [ ] **Step 1: Docs** — add `scan`, `scan source`, `scan db update` to `docs/COMMANDS.md` and bump the CLAUDE.md inventory count; document the `omni_govulncheck` build tag and the signed-DB workflow (how to build a signed `osv-db.zip` with `omni sign`). Add an OSV-schema + `golang.org/x/vuln` attribution row to `docs/EXTERNAL_SOURCES.md`. Run `omni aicontext` / `omni cmdtree` regen if applicable. Mark the spec `Status: Complete`.
+- [ ] **Step 1: Docs** — add `scan`, `scan source`, `scan db update` to `docs/COMMANDS.md` and bump the CLAUDE.md inventory count; document that `omni scan source` (reachability) is deferred per ADR-0008 (returns `ErrUnsupported`), and the signed-DB workflow (how to build a signed `osv-db.zip` with `omni sign`). Add an OSV-schema attribution row to `docs/EXTERNAL_SOURCES.md`, and log the deferred reachability feature in `docs/BACKLOG.md`. Run `omni aicontext` / `omni cmdtree` regen if applicable. Mark the spec `Status: Complete`.
 - [ ] **Step 2: Final gate:**
 ```bash
-go build ./... && go build -tags omni_govulncheck ./...
-go vet ./... && go vet -tags omni_govulncheck ./pkg/scan/...
+go build ./...
+go vet ./...
 gofmt -l pkg/scan internal/cli/scan cmd/scan.go
 golangci-lint run --timeout=5m ./...
 go test ./pkg/scan/... ./internal/cli/scan/... -count=1
 CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build ./... && CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build ./...
 python testing/scripts/test_golden.py
+grep -q 'golang.org/x/vuln' go.mod && echo "FAIL: x/vuln leaked into go.mod" || echo "OK: no x/vuln in go.mod"
 ```
-   Expected: all green; default build does NOT link `golang.org/x/vuln`; tagged build compiles.
+   Expected: all green; `golang.org/x/vuln` is ABSENT from `go.mod` (reachability deferred — there is no tagged build).
 - [ ] **Step 3: Commit:** `git commit -- docs/ CLAUDE.md -m "docs(scan): document omni scan / scan source / scan db update; mark Phase 06 complete"`
 
 ---
@@ -1102,11 +1179,11 @@ python testing/scripts/test_golden.py
 |---|---|
 | `omni scan <sbom>` on SPDX/CycloneDX → findings in JSON and text | T5 (`Scan`), T7 (`RunScan` text/JSON render) |
 | `--fail-on <severity>` → `cmderr.ErrConflict`; CI gating golden-tested | T2 (Severity order), T5 (gate), T7 (CLI), T10 (`scan_fail_on_high` golden) |
-| `omni scan source <path>` → reachability-aware findings (only called symbols) | T6 (tag split + govulncheck JSON `trace` parse), T7 (`RunScanSource`) |
+| `omni scan source <path>` → reachability (DEFERRED v1.0 per ADR-0008) | T6 (`ScanSource` stub → `ErrUnsupported`), T7 (`RunScanSource` surfaces it), T10 (`scan_source_unsupported` golden, exit 6) |
 | `scan db update` downloads + verifies OSV DB signed with `pkg/sign`; tampered fails closed | T4 (`VerifyAndLoadDB`), T8 (`RunDBUpdate` verify-before-write), T10 (`scan_tampered_db`) |
 | Offline mode with cached DB; `--max-db-age` gates staleness, fails loudly | T4 (`CheckFresh`/`ErrStaleDB`), T7 (gate wiring), T10 (`scan_stale_db`) |
 | `pkg/scan` imports `pkg/sbom/format.Document` ONLY (never `pkg/sbom/model`) | T5 (`document.go` is the single `format` importer; `componentsOf` adapter) |
-| Pure-Go, no exec (default) | T2–T5 stdlib + `x/mod/semver`; exec confined to T6 `omni_govulncheck` tag; T11 gate builds both |
+| Pure-Go, no exec (everywhere in v1.0) | T2–T6 stdlib + `x/mod/semver`; NO exec, NO `x/vuln` (reachability deferred to a future contrib module); T11 gate asserts no `x/vuln` in go.mod |
 | Research-spike-driven architecture decision recorded | T1 (ADR-0008, hard gate) |
 | `omni pipe` integration | T9 |
 
@@ -1117,6 +1194,6 @@ python testing/scripts/test_golden.py
 **Known risks:**
 1. **Phase 5 not merged yet** — `pkg/sbom/format.Document` shape is assumed. Mitigation: ALL matcher tests (T2–T5) use a local `component`/`osvEntry` fake and never import `format`; only `document.go` (T5) and `RunScan` (T7) touch `format`, behind a single `componentsOf`/`format.Parse` adapter to fix if names differ. The plan should not START Task 5 until Phase 5's `format` package exists (depends-on gate).
 2. **CVSS base-score parser correctness** — a hand-rolled v3.1/v4.0 formula is error-prone. Mitigation: T2's table-driven test pins known vectors→bands; if a numeric `score` is present omni uses it directly (the common OSV-for-Go case), so the formula path is the fallback, not the primary. Document that `unknown` is always reported and treated as below `low`.
-3. **govulncheck/exec under the tag** — `golang.org/x/vuln/scan` execs `go list`; this is the single, opt-in, documented exception to the no-exec rule, fully excluded from the default binary (T6 build-tag, verified in T11). The default scanner has zero exec.
+3. **No exec anywhere (v1.0)** — reachability (`golang.org/x/vuln`, which execs `go list`) is DEFERRED entirely; `omni scan source` returns `ErrUnsupported`. The whole scanner has zero exec. When reachability ships it will be a self-contained `contrib/govulncheck-scan` module under a sanctioned exec exception (future ADR), never the main binary.
 4. **DB freshness in golden tests** — a fixed past `generated` timestamp makes the unsigned matcher deterministic but means golden tests must avoid `--max-db-age` except the dedicated `scan_stale_db` case; DBAge is kept out of byte-compared output (T10 Step 3).
-5. **MVS bump from x/vuln** — accepted, confined to the tagged file; default-build `go.mod` graph gains only `x/mod` (likely already present from Phase 5). T11 verifies the default build does not link x/vuln.
+5. **No MVS bump** — `golang.org/x/vuln` is NOT used in the main module at all (a build tag would not confine it — MVS pulls it into `go.mod` regardless, the ADR-0007 lesson). The main `go.mod` gains only `x/mod` (already present from Phase 5). T11 asserts `x/vuln` is absent from `go.mod`.
