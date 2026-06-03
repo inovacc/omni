@@ -127,6 +127,14 @@ class GoldenEngine:
                 fpath.write_text(content, encoding="utf-8")
             args = [str(temp_fixture_dir) if a == "{dir}" else a for a in args]
 
+        # Handle {fixtures} placeholder: expands to the committed per-category
+        # fixtures directory (testing/golden/fixtures/<category>/). Used by tests
+        # that verify against pre-generated, checked-in fixture files (e.g. the
+        # `sign` category, whose key material is generated once at low scrypt
+        # cost and committed — never regenerated in the test path).
+        fixtures_dir = (self.golden_base / "fixtures" / test.category).resolve()
+        args = [a.replace("{fixtures}", str(fixtures_dir)) for a in args]
+
         cmd = [self.binary] + args
         try:
             result = subprocess.run(

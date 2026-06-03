@@ -45,6 +45,8 @@ fabric.properties
 tools/golden/golden_masters/
 tools/golden/test-map.json
 tools/golden/__pycache__/
+# Golden engine scratch dirs (tempfile.mkdtemp prefix) that can land in cwd
+omni_golden_*/
 .tmp/
 .scripts/
 

@@ -43,6 +43,15 @@ def run_test_case(
             fpath.write_text(content, encoding="utf-8")
         args = [str(temp_fixtures_dir) if a == "{dir}" else a for a in args]
 
+    # Handle {fixtures} placeholder: expands to the committed per-category
+    # fixtures directory (testing/golden/fixtures/<category>/) relative to the
+    # repo root. Used by tests that verify against pre-generated, checked-in
+    # fixture files (e.g. the `sign` category, whose key material is generated
+    # once at low scrypt cost and committed — never regenerated in the test path).
+    root = Path(project_root) if project_root else Path.cwd()
+    fixtures_dir = (root / "testing" / "golden" / "fixtures" / test_case.category).resolve()
+    args = [a.replace("{fixtures}", str(fixtures_dir)) for a in args]
+
     cmd = [binary] + args
     start = time.monotonic()
     try:

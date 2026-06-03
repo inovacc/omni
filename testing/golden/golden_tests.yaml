@@ -1085,3 +1085,39 @@ categories:
         args: ["diff", "--definitely-not-a-real-flag"]
         exit_code: 2
         normalizations: ["strip_path"]
+
+  # ===== SIGN / VERIFY (minisign-compatible, fail-closed) =====
+  # Fixtures are pre-generated ONCE at low scrypt cost and committed under
+  # testing/golden/fixtures/sign/ — the {fixtures} placeholder expands to that
+  # directory. Tests NEVER run live keygen (default SENSITIVE cost is ~1 GiB).
+  - name: sign
+    tests:
+      # Positive: a good detached signature verifies (exit 0).
+      - name: verify_good
+        args: ["verify", "--key", "{fixtures}/test.pub", "--sig", "{fixtures}/data.txt.minisig", "{fixtures}/data.txt"]
+        exit_code: 0
+        normalizations: ["strip_path"]
+
+      # Negative: tampered payload -> ErrConflict (exit 1).
+      - name: verify_tampered
+        args: ["verify", "--key", "{fixtures}/test.pub", "--sig", "{fixtures}/data.txt.minisig", "{fixtures}/tampered.txt"]
+        exit_code: 1
+        normalizations: ["strip_path"]
+
+      # Negative: signature made by a different key -> ErrConflict (exit 1).
+      - name: verify_wrong_key
+        args: ["verify", "--key", "{fixtures}/wrong.pub", "--sig", "{fixtures}/data.txt.minisig", "{fixtures}/data.txt"]
+        exit_code: 1
+        normalizations: ["strip_path"]
+
+      # Negative: malformed public key -> ErrInvalidInput (exit 2).
+      - name: verify_bad_key
+        args: ["verify", "--key", "{fixtures}/bad.pub", "--sig", "{fixtures}/data.txt.minisig", "{fixtures}/data.txt"]
+        exit_code: 2
+        normalizations: ["strip_path"]
+
+      # Negative: --bundle without -tags omni_sigstore -> ErrUnsupported (exit 6).
+      - name: verify_bundle_no_tag
+        args: ["verify", "--bundle", "{fixtures}/data.txt", "{fixtures}/data.txt"]
+        exit_code: 6
+        normalizations: ["strip_path"]

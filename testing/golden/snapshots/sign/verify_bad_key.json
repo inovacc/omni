@@ -1,0 +1,5 @@
+{
+  "exit_code": 2,
+  "stdout_file": "verify_bad_key.stdout",
+  "stderr": "Error: verify: parse public key: sign: malformed key or signature: public key base64: illegal base64 data at input byte 4: invalid input\n"
+}

@@ -1,0 +1,5 @@
+{
+  "exit_code": 1,
+  "stdout_file": "verify_tampered.stdout",
+  "stderr": "Error: signature verification failed: conflict\n"
+}

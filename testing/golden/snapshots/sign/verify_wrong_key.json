@@ -1,0 +1,5 @@
+{
+  "exit_code": 1,
+  "stdout_file": "verify_wrong_key.stdout",
+  "stderr": "Error: signature verification failed: conflict\n"
+}

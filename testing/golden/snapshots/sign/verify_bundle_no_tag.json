@@ -1,0 +1,5 @@
+{
+  "exit_code": 6,
+  "stdout_file": "verify_bundle_no_tag.stdout",
+  "stderr": "Error: sigstore bundle verification requires building with -tags omni_sigstore: unsupported\n"
+}
