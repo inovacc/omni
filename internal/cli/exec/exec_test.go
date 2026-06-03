@@ -2,8 +2,11 @@ package exec
 
 import (
 	"bytes"
+	"errors"
 	"strings"
 	"testing"
+
+	"github.com/inovacc/omni/internal/cli/cmderr"
 )
 
 func TestRun_NoCommand(t *testing.T) {
@@ -45,16 +48,30 @@ func TestRun_Strict_MissingCreds(t *testing.T) {
 	t.Setenv("AWS_ACCESS_KEY_ID", "")
 	t.Setenv("AWS_PROFILE", "")
 	t.Setenv("AWS_SESSION_TOKEN", "")
+	// Isolate HOME (Unix) and USERPROFILE (Windows) to an empty temp dir so the
+	// developer's real ~/.aws/credentials is not discovered and detectAWS
+	// reports the credentials as MISSING.
 	tmp := t.TempDir()
 	t.Setenv("HOME", tmp)
+	t.Setenv("USERPROFILE", tmp)
+	// Empty PATH so no real `aws` binary can resolve. In strict mode the
+	// missing-credentials error must be returned BEFORE any exec attempt, so
+	// this also proves the strict gate fires first rather than surfacing an
+	// "executable file not found" exec error.
+	t.Setenv("PATH", t.TempDir())
 
 	var buf bytes.Buffer
 	err := Run(&buf, "aws", []string{"s3", "ls"}, Options{Strict: true})
 	if err == nil {
-		t.Error("expected error in strict mode with missing credentials")
+		t.Fatal("expected error in strict mode with missing credentials")
 	}
 	if !strings.Contains(err.Error(), "strict mode") {
 		t.Errorf("expected strict mode error, got: %v", err)
+	}
+	// The error must be the classified invalid-input sentinel, not an exec
+	// "binary not found" failure.
+	if !errors.Is(err, cmderr.ErrInvalidInput) {
+		t.Errorf("expected cmderr.ErrInvalidInput, got: %v", err)
 	}
 }
 
@@ -73,6 +90,7 @@ func TestRun_NoPrompt_Proceeds(t *testing.T) {
 	t.Setenv("AWS_SESSION_TOKEN", "")
 	tmp := t.TempDir()
 	t.Setenv("HOME", tmp)
+	t.Setenv("USERPROFILE", tmp)
 
 	var buf bytes.Buffer
 	// NoPrompt with missing creds should proceed to execute (and fail because 'aws' may not exist in test)

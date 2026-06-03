@@ -57,9 +57,14 @@ func TestDetectNpm_NodeAuthToken(t *testing.T) {
 func TestDetectNpm_Missing(t *testing.T) {
 	t.Setenv("NPM_TOKEN", "")
 	t.Setenv("NODE_AUTH_TOKEN", "")
-	// Point HOME to temp dir with no .npmrc
+	// Point HOME (and USERPROFILE on Windows) to a temp dir with no .npmrc.
+	// os.UserHomeDir reads USERPROFILE on Windows and HOME on Unix, so both
+	// must be set for hermetic isolation from the developer's real ~/.npmrc.
 	tmp := t.TempDir()
 	t.Setenv("HOME", tmp)
+	t.Setenv("USERPROFILE", tmp)
+	// Run from inside the temp dir so the relative "./.npmrc" probe is empty too.
+	t.Chdir(tmp)
 	status := detectNpm("npm", []string{"install"})
 	if status.Present {
 		t.Error("expected credentials missing when no NPM_TOKEN and no .npmrc")
@@ -74,6 +79,7 @@ func TestDetectNpm_Npmrc(t *testing.T) {
 	t.Setenv("NODE_AUTH_TOKEN", "")
 	tmp := t.TempDir()
 	t.Setenv("HOME", tmp)
+	t.Setenv("USERPROFILE", tmp)
 
 	npmrc := filepath.Join(tmp, ".npmrc")
 	if err := os.WriteFile(npmrc, []byte("//registry.npmjs.org/:_authToken=secret\n"), 0o600); err != nil {
@@ -110,8 +116,11 @@ func TestDetectAWS_Missing(t *testing.T) {
 	t.Setenv("AWS_ACCESS_KEY_ID", "")
 	t.Setenv("AWS_PROFILE", "")
 	t.Setenv("AWS_SESSION_TOKEN", "")
+	// Both HOME (Unix) and USERPROFILE (Windows) must point to an empty temp
+	// dir so the developer's real ~/.aws/credentials is not discovered.
 	tmp := t.TempDir()
 	t.Setenv("HOME", tmp)
+	t.Setenv("USERPROFILE", tmp)
 	status := detectAWS("aws", nil)
 	if status.Present {
 		t.Error("expected credentials missing")
@@ -151,6 +160,7 @@ func TestDetectKubectl_Present(t *testing.T) {
 	}
 	t.Setenv("KUBECONFIG", "")
 	t.Setenv("HOME", tmp)
+	t.Setenv("USERPROFILE", tmp)
 	status := detectKubectl("kubectl", nil)
 	if !status.Present {
 		t.Error("expected credentials present when kubeconfig exists")
@@ -168,8 +178,12 @@ func TestDetectGo_NoPrivate(t *testing.T) {
 func TestDetectGo_PrivateWithNetrc(t *testing.T) {
 	t.Setenv("GOPRIVATE", "github.com/private/*")
 	t.Setenv("GONOSUMCHECK", "")
+	// Point HOME (Unix) and USERPROFILE (Windows) at a temp dir, then create a
+	// fake ~/.netrc inside it so detection is deterministically present and does
+	// not depend on the developer's real ~/.netrc.
 	tmp := t.TempDir()
 	t.Setenv("HOME", tmp)
+	t.Setenv("USERPROFILE", tmp)
 	if err := os.WriteFile(filepath.Join(tmp, ".netrc"), []byte("machine github.com\n"), 0o600); err != nil {
 		t.Fatal(err)
 	}

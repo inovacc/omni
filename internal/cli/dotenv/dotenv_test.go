@@ -38,6 +38,11 @@ func TestRunDotenv(t *testing.T) {
 	})
 
 	t.Run("export format", func(t *testing.T) {
+		// Pin SHELL so DetectShell() deterministically selects the POSIX bash
+		// branch on every OS. DetectShell checks SHELL before any runtime.GOOS
+		// logic, so this forces `export KEY=` output regardless of host platform.
+		t.Setenv("SHELL", "/bin/bash")
+
 		file := filepath.Join(tmpDir, ".env2")
 		_ = os.WriteFile(file, []byte("KEY=value\n"), 0644)
 
