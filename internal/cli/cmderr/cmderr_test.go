@@ -175,6 +175,38 @@ func TestWrapDoubleWrap(t *testing.T) {
 	}
 }
 
+func TestIsClassHelpers(t *testing.T) {
+	cases := []struct {
+		name     string
+		fn       func(error) bool
+		sentinel error
+	}{
+		{"IsNotFound", cmderr.IsNotFound, cmderr.ErrNotFound},
+		{"IsInvalidInput", cmderr.IsInvalidInput, cmderr.ErrInvalidInput},
+		{"IsPermission", cmderr.IsPermission, cmderr.ErrPermission},
+		{"IsIO", cmderr.IsIO, cmderr.ErrIO},
+		{"IsConflict", cmderr.IsConflict, cmderr.ErrConflict},
+		{"IsTimeout", cmderr.IsTimeout, cmderr.ErrTimeout},
+		{"IsUnsupported", cmderr.IsUnsupported, cmderr.ErrUnsupported},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			if !tc.fn(tc.sentinel) {
+				t.Errorf("%s(sentinel) = false, want true", tc.name)
+			}
+			if !tc.fn(cmderr.Wrap(tc.sentinel, "context")) {
+				t.Errorf("%s(wrapped) = false, want true", tc.name)
+			}
+			if tc.fn(errors.New("unrelated")) {
+				t.Errorf("%s(unrelated) = true, want false", tc.name)
+			}
+			if tc.fn(nil) {
+				t.Errorf("%s(nil) = true, want false", tc.name)
+			}
+		})
+	}
+}
+
 func TestExitErrorUnwrap(t *testing.T) {
 	base := fmt.Errorf("base error")
 	wrapped := &cmderr.ExitError{Err: base, Code: 99}

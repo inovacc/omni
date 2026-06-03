@@ -63,6 +63,27 @@ func Wrap(sentinel error, msg string) error {
 	return fmt.Errorf("%s: %w", msg, sentinel)
 }
 
+// IsNotFound reports whether err is, or wraps, ErrNotFound.
+func IsNotFound(err error) bool { return errors.Is(err, ErrNotFound) }
+
+// IsInvalidInput reports whether err is, or wraps, ErrInvalidInput.
+func IsInvalidInput(err error) bool { return errors.Is(err, ErrInvalidInput) }
+
+// IsPermission reports whether err is, or wraps, ErrPermission.
+func IsPermission(err error) bool { return errors.Is(err, ErrPermission) }
+
+// IsIO reports whether err is, or wraps, ErrIO.
+func IsIO(err error) bool { return errors.Is(err, ErrIO) }
+
+// IsConflict reports whether err is, or wraps, ErrConflict.
+func IsConflict(err error) bool { return errors.Is(err, ErrConflict) }
+
+// IsTimeout reports whether err is, or wraps, ErrTimeout.
+func IsTimeout(err error) bool { return errors.Is(err, ErrTimeout) }
+
+// IsUnsupported reports whether err is, or wraps, ErrUnsupported.
+func IsUnsupported(err error) bool { return errors.Is(err, ErrUnsupported) }
+
 // ExitCodeFor maps an error to an exit code.
 // Returns 0 for nil errors.
 func ExitCodeFor(err error) int {
