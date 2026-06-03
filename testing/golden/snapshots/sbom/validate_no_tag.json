@@ -1,0 +1,5 @@
+{
+  "exit_code": 6,
+  "stdout_file": "validate_no_tag.stdout",
+  "stderr": "Error: sbom schema validation requires building with -tags omni_sbomvalidate: unsupported\n"
+}

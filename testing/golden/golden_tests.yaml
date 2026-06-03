@@ -1121,3 +1121,40 @@ categories:
         args: ["verify", "--bundle", "{fixtures}/data.txt", "{fixtures}/data.txt"]
         exit_code: 6
         normalizations: ["strip_path"]
+
+  # sbom: byte-deterministic SPDX/CycloneDX over a FROZEN module-dir fixture
+  # (testing/golden/fixtures/sbom/mod/go.mod). --source-date is pinned to the
+  # epoch so the `created` timestamp never drifts; output is pure go.mod-derived
+  # JSON (forward-slash purls), so snapshots are cross-platform stable.
+  - name: sbom
+    tests:
+      # SPDX module SBOM pins EXACT bytes (full purls + content-hash namespace).
+      # Module-dir output carries no filesystem paths, so no strip_path is needed
+      # or applied; newlines are always normalized first by the harness.
+      - name: spdx_module
+        args: ["sbom", "{fixtures}/mod", "--format", "spdx", "--source-date", "1970-01-01T00:00:00Z"]
+        exit_code: 0
+
+      # CycloneDX module SBOM pins exact bytes (full purls, no serialNumber).
+      - name: cyclonedx_module
+        args: ["sbom", "{fixtures}/mod", "--format", "cyclonedx", "--source-date", "1970-01-01T00:00:00Z"]
+        exit_code: 0
+
+      # Negative: unknown format -> ErrInvalidInput (exit 2).
+      - name: bad_format
+        args: ["sbom", "{fixtures}/mod", "--format", "xml"]
+        exit_code: 2
+        normalizations: ["strip_path"]
+
+      # Negative: missing path -> ErrNotFound (exit 1).
+      - name: missing_path
+        args: ["sbom", "{fixtures}/does-not-exist", "--format", "spdx"]
+        exit_code: 1
+        normalizations: ["strip_path"]
+
+      # Negative: --validate without the omni_sbomvalidate build tag ->
+      # ErrUnsupported (exit 6). Fail-closed, never silently passing.
+      - name: validate_no_tag
+        args: ["sbom", "{fixtures}/mod", "--format", "spdx", "--validate"]
+        exit_code: 6
+        normalizations: ["strip_path"]

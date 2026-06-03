@@ -1,0 +1,82 @@
+{
+  "spdxVersion": "SPDX-2.3",
+  "dataLicense": "CC0-1.0",
+  "SPDXID": "SPDXRef-DOCUMENT",
+  "name": "golden-app",
+  "documentNamespace": "https://spdx.org/spdxdocs/omni/golden-app-d4599beac9eca07d",
+  "creationInfo": {
+    "created": "1970-01-01T00:00:00Z",
+    "creators": [
+      "Tool: omni-sbom-dev"
+    ]
+  },
+  "packages": [
+    {
+      "name": "github.com/example/golden-app",
+      "SPDXID": "SPDXRef-Package-github.com-example-golden-app",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "copyrightText": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceType": "purl",
+          "referenceLocator": "pkg:golang/github.com/example/golden-app"
+        }
+      ]
+    },
+    {
+      "name": "github.com/spf13/cobra",
+      "SPDXID": "SPDXRef-Package-github.com-spf13-cobra",
+      "versionInfo": "v1.10.2",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "copyrightText": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceType": "purl",
+          "referenceLocator": "pkg:golang/github.com/spf13/cobra@v1.10.2"
+        }
+      ]
+    },
+    {
+      "name": "golang.org/x/mod",
+      "SPDXID": "SPDXRef-Package-golang.org-x-mod",
+      "versionInfo": "v0.36.0",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "copyrightText": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceType": "purl",
+          "referenceLocator": "pkg:golang/golang.org/x/mod@v0.36.0"
+        }
+      ]
+    }
+  ],
+  "relationships": [
+    {
+      "spdxElementId": "SPDXRef-DOCUMENT",
+      "relatedSpdxElement": "SPDXRef-Package-github.com-example-golden-app",
+      "relationshipType": "DESCRIBES"
+    },
+    {
+      "spdxElementId": "SPDXRef-Package-github.com-example-golden-app",
+      "relatedSpdxElement": "SPDXRef-Package-github.com-spf13-cobra",
+      "relationshipType": "DEPENDS_ON"
+    },
+    {
+      "spdxElementId": "SPDXRef-Package-github.com-example-golden-app",
+      "relatedSpdxElement": "SPDXRef-Package-golang.org-x-mod",
+      "relationshipType": "DEPENDS_ON"
+    }
+  ]
+}

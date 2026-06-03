@@ -1,0 +1,5 @@
+{
+  "exit_code": 2,
+  "stdout_file": "bad_format.stdout",
+  "stderr": "Error: sbom: unknown --format (want spdx|cyclonedx): invalid input\n"
+}

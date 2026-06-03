@@ -1,0 +1,55 @@
+{
+  "$schema": "http://cyclonedx.org/schema/bom-1.5.schema.json",
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.5",
+  "version": 1,
+  "metadata": {
+    "timestamp": "1970-01-01T00:00:00Z",
+    "tools": {
+      "components": [
+        {
+          "type": "application",
+          "name": "omni",
+          "version": "dev"
+        }
+      ]
+    },
+    "component": {
+      "bom-ref": "pkg:golang/github.com/example/golden-app",
+      "type": "application",
+      "name": "github.com/example/golden-app",
+      "purl": "pkg:golang/github.com/example/golden-app"
+    }
+  },
+  "components": [
+    {
+      "bom-ref": "pkg:golang/github.com/spf13/cobra@v1.10.2",
+      "type": "library",
+      "name": "github.com/spf13/cobra",
+      "version": "v1.10.2",
+      "purl": "pkg:golang/github.com/spf13/cobra@v1.10.2"
+    },
+    {
+      "bom-ref": "pkg:golang/golang.org/x/mod@v0.36.0",
+      "type": "library",
+      "name": "golang.org/x/mod",
+      "version": "v0.36.0",
+      "purl": "pkg:golang/golang.org/x/mod@v0.36.0"
+    }
+  ],
+  "dependencies": [
+    {
+      "ref": "pkg:golang/github.com/example/golden-app",
+      "dependsOn": [
+        "pkg:golang/github.com/spf13/cobra@v1.10.2",
+        "pkg:golang/golang.org/x/mod@v0.36.0"
+      ]
+    },
+    {
+      "ref": "pkg:golang/github.com/spf13/cobra@v1.10.2"
+    },
+    {
+      "ref": "pkg:golang/golang.org/x/mod@v0.36.0"
+    }
+  ]
+}
