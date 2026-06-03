@@ -65,7 +65,8 @@ func RunEncrypt(w io.Writer, args []string, opts CryptOptions) error {
 	var outWriter = w
 
 	if opts.Output != "" {
-		f, err := os.Create(opts.Output)
+		// 0o600: restrict ciphertext output to owner-only (mode bits inert on Windows).
+		f, err := os.OpenFile(opts.Output, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0o600)
 		if err != nil {
 			return fmt.Errorf("encrypt: %w", err)
 		}
@@ -133,7 +134,8 @@ func RunDecrypt(w io.Writer, args []string, opts CryptOptions) error {
 	var outWriter = w
 
 	if opts.Output != "" {
-		f, err := os.Create(opts.Output)
+		// 0o600: recovered plaintext is owner-only readable (mode bits inert on Windows).
+		f, err := os.OpenFile(opts.Output, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0o600)
 		if err != nil {
 			return fmt.Errorf("decrypt: %w", err)
 		}
@@ -180,6 +182,9 @@ func getPassword(opts CryptOptions) (string, error) {
 
 	// Check environment variable
 	if envPass := os.Getenv("omni_PASSWORD"); envPass != "" {
+		// Env-var passwords are visible to other same-user processes (e.g. /proc/<pid>/environ),
+		// crash reporters, and shell history. Prefer -P/--password-file (read with 0600 expectation).
+		_, _ = fmt.Fprintln(os.Stderr, "warning: omni_PASSWORD env var is exposed to other local processes; prefer -P/--password-file")
 		return envPass, nil
 	}
 

@@ -208,9 +208,13 @@ func checkSystemPath(path string) CheckResult {
 
 // checkSensitivePath checks if path contains sensitive data patterns
 func checkSensitivePath(path string) CheckResult {
+	segments := splitPathSegments(path)
+
 	for _, pattern := range ProtectedPatterns {
-		// Check if path contains this pattern
-		if strings.Contains(path, pattern) || strings.HasSuffix(path, pattern) {
+		// Match patterns against whole path segments rather than a raw
+		// substring, so unrelated paths like /tmp/db.awsdump are not blocked
+		// and matching is anchored to real path boundaries.
+		if pathContainsSegments(segments, pattern) {
 			return CheckResult{
 				Path:      path,
 				IsSafe:    false,
@@ -222,6 +226,58 @@ func checkSensitivePath(path string) CheckResult {
 	}
 
 	return CheckResult{IsSafe: true}
+}
+
+// splitPathSegments splits a cleaned path into its individual components,
+// dropping empty entries and the volume/separator-only roots.
+func splitPathSegments(path string) []string {
+	// Normalize any separators (a pattern may use '/' on Windows) and split.
+	normalized := strings.ReplaceAll(path, "\\", "/")
+	parts := strings.Split(normalized, "/")
+
+	segments := make([]string, 0, len(parts))
+	for _, p := range parts {
+		if p == "" {
+			continue
+		}
+		segments = append(segments, p)
+	}
+
+	return segments
+}
+
+// pathContainsSegments reports whether the segments of pattern appear as a
+// contiguous run of whole path segments within segments. Comparison is
+// case-insensitive on Windows to match pathEquals semantics.
+func pathContainsSegments(segments []string, pattern string) bool {
+	patSegs := splitPathSegments(pattern)
+	if len(patSegs) == 0 || len(patSegs) > len(segments) {
+		return false
+	}
+
+	for i := 0; i+len(patSegs) <= len(segments); i++ {
+		matched := true
+		for j, ps := range patSegs {
+			if !segmentEquals(segments[i+j], ps) {
+				matched = false
+				break
+			}
+		}
+		if matched {
+			return true
+		}
+	}
+
+	return false
+}
+
+// segmentEquals compares two path segments (case-insensitive on Windows).
+func segmentEquals(a, b string) bool {
+	if runtime.GOOS == "windows" {
+		return strings.EqualFold(a, b)
+	}
+
+	return a == b
 }
 
 // checkSensitiveFile checks if a file matches sensitive patterns

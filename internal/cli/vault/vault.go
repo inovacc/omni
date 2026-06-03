@@ -5,8 +5,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"os"
+	"path/filepath"
 
 	"github.com/hashicorp/vault/api"
 	"github.com/inovacc/omni/internal/cli/cmderr"
@@ -57,6 +59,12 @@ func New(opts Options) (*Client, error) {
 	}
 
 	if opts.TLSSkip {
+		// Disabling TLS verification means Vault tokens and secrets traverse an
+		// unverified channel, exposing them to MITM interception. Make this loud
+		// so an accidentally-inherited insecure profile is visible in logs/stderr.
+		slog.Warn("vault: TLS certificate verification disabled (Insecure); tokens and secrets are sent over an unverified channel — do not use against production Vault")
+		_, _ = fmt.Fprintln(os.Stderr, "vault: warning: TLS certificate verification disabled (--tls-skip); do not use against production Vault")
+
 		if err := config.ConfigureTLS(&api.TLSConfig{Insecure: true}); err != nil {
 			return nil, cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("vault: failed to configure TLS: %v", err))
 		}
@@ -268,7 +276,7 @@ func (c *Client) LoadToken() error {
 
 func getTokenFile() string {
 	if home, err := os.UserHomeDir(); err == nil {
-		return home + "/.vault-token"
+		return filepath.Join(home, ".vault-token")
 	}
 
 	return ".vault-token"

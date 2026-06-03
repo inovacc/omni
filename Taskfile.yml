@@ -28,9 +28,9 @@ tasks:
         platforms: [ linux, darwin ]
       - cmd: if not exist {{.BUILD_DIR}} mkdir {{.BUILD_DIR}}
         platforms: [ windows ]
-      - cmd: go build -ldflags="-s -w" -o {{.BUILD_DIR}}/{{.BINARY_NAME}} {{.MAIN_PACKAGE}}
+      - cmd: go build -trimpath -ldflags="-s -w" -o {{.BUILD_DIR}}/{{.BINARY_NAME}} {{.MAIN_PACKAGE}}
         platforms: [ linux, darwin ]
-      - cmd: go build -ldflags="-s -w" -o {{.BUILD_DIR}}\{{.BINARY_NAME}}.exe {{.MAIN_PACKAGE}}
+      - cmd: go build -trimpath -ldflags="-s -w" -o {{.BUILD_DIR}}\{{.BINARY_NAME}}.exe {{.MAIN_PACKAGE}}
         platforms: [ windows ]
 
   build:all:
@@ -41,19 +41,19 @@ tasks:
         platforms: [ linux, darwin ]
       - cmd: if not exist {{.BUILD_DIR}} mkdir {{.BUILD_DIR}}
         platforms: [ windows ]
-      - cmd: GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -ldflags="-s -w" -o {{.BUILD_DIR}}/{{.BINARY_NAME}}-linux-amd64 {{.MAIN_PACKAGE}}
+      - cmd: GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o {{.BUILD_DIR}}/{{.BINARY_NAME}}-linux-amd64 {{.MAIN_PACKAGE}}
         platforms: [ linux, darwin ]
-      - cmd: set GOOS=linux&& set GOARCH=amd64&& set CGO_ENABLED=0&& go build -ldflags="-s -w" -o {{.BUILD_DIR}}\{{.BINARY_NAME}}-linux-amd64 {{.MAIN_PACKAGE}}
+      - cmd: set GOOS=linux&& set GOARCH=amd64&& set CGO_ENABLED=0&& go build -trimpath -ldflags="-s -w" -o {{.BUILD_DIR}}\{{.BINARY_NAME}}-linux-amd64 {{.MAIN_PACKAGE}}
         platforms: [ windows ]
-      - cmd: GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -ldflags="-s -w" -o {{.BUILD_DIR}}/{{.BINARY_NAME}}-windows-amd64.exe {{.MAIN_PACKAGE}}
+      - cmd: GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o {{.BUILD_DIR}}/{{.BINARY_NAME}}-windows-amd64.exe {{.MAIN_PACKAGE}}
         platforms: [ linux, darwin ]
-      - cmd: set GOOS=windows&& set GOARCH=amd64&& set CGO_ENABLED=0&& go build -ldflags="-s -w" -o {{.BUILD_DIR}}\{{.BINARY_NAME}}-windows-amd64.exe {{.MAIN_PACKAGE}}
+      - cmd: set GOOS=windows&& set GOARCH=amd64&& set CGO_ENABLED=0&& go build -trimpath -ldflags="-s -w" -o {{.BUILD_DIR}}\{{.BINARY_NAME}}-windows-amd64.exe {{.MAIN_PACKAGE}}
         platforms: [ windows ]
 
   install:
     desc: Install omni to $GOPATH/bin
     cmds:
-      - go install -ldflags="-s -w" {{.MAIN_PACKAGE}}
+      - go install -trimpath -ldflags="-s -w" {{.MAIN_PACKAGE}}
 
   # === TEST TASKS ===
   test:

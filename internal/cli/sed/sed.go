@@ -332,6 +332,15 @@ func sedProcessReader(w io.Writer, r io.Reader, commands []sedCommand, opts SedO
 }
 
 func sedProcessInPlace(path string, commands []sedCommand, opts SedOptions) error {
+	// Stat the original file first so we can preserve its permission bits
+	// when writing the backup sidecar and the rewritten target. Falling back
+	// to 0600 (rather than a world-readable 0644) avoids widening access if
+	// the original mode is unavailable.
+	mode := os.FileMode(0600)
+	if info, statErr := os.Stat(path); statErr == nil {
+		mode = info.Mode().Perm()
+	}
+
 	// Read entire file
 	content, err := os.ReadFile(path)
 	if err != nil {
@@ -341,7 +350,7 @@ func sedProcessInPlace(path string, commands []sedCommand, opts SedOptions) erro
 	// Create backup if extension specified
 	if opts.InPlaceExt != "" {
 		backupPath := path + opts.InPlaceExt
-		if err := os.WriteFile(backupPath, content, 0644); err != nil {
+		if err := os.WriteFile(backupPath, content, mode); err != nil {
 			return err
 		}
 	}
@@ -372,6 +381,6 @@ func sedProcessInPlace(path string, commands []sedCommand, opts SedOptions) erro
 		}
 	}
 
-	// Write back
-	return os.WriteFile(path, []byte(output.String()), 0644)
+	// Write back, preserving the original file's permission bits.
+	return os.WriteFile(path, []byte(output.String()), mode)
 }

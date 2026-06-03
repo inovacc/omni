@@ -636,8 +636,32 @@ func RunPageDump(w io.Writer, dbPath string, pageID int, opts Options) error {
 		pageSize = 4096
 	}
 
+	// Validate the page size against the bbolt-legal range (power of two between
+	// 512 and 65536) before allocating. A crafted file can encode an arbitrary
+	// value in bytes 12..15, so an unvalidated size leads to an unbounded
+	// allocation (memory-exhaustion DoS). See HARDENING finding db-02.
+	if !isValidPageSize(pageSize) {
+		return cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("bbolt: invalid page size %d", pageSize))
+	}
+
+	if pageID < 0 {
+		return cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("bbolt: invalid page id %d", pageID))
+	}
+
+	// Reject page offsets that fall outside the file so a huge pageID cannot
+	// overflow the seek offset or force a read far past the file.
+	fi, err := f.Stat()
+	if err != nil {
+		return fmt.Errorf("bbolt: %w", err)
+	}
+
+	offset := int64(pageID) * int64(pageSize)
+	if offset < 0 || offset >= fi.Size() {
+		return cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("bbolt: page %d out of range", pageID))
+	}
+
 	// Seek to the requested page
-	_, err = f.Seek(int64(pageID*pageSize), 0)
+	_, err = f.Seek(offset, 0)
 	if err != nil {
 		return fmt.Errorf("bbolt: %w", err)
 	}
@@ -695,6 +719,17 @@ func RunPageDump(w io.Writer, dbPath string, pageID int, opts Options) error {
 	}
 
 	return nil
+}
+
+// isValidPageSize reports whether size is a legal bbolt page size: a power of
+// two between 512 and 65536 inclusive. Page sizes are read from untrusted file
+// headers, so this guards against unbounded allocations from crafted files.
+func isValidPageSize(size int) bool {
+	if size < 512 || size > 65536 {
+		return false
+	}
+
+	return size&(size-1) == 0
 }
 
 func formatValue(v []byte, asHex bool) string {

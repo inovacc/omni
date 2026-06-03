@@ -3,6 +3,7 @@ package profile
 import (
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"time"
@@ -176,9 +177,17 @@ func (s *Service) GetCredentials(provider Provider, name string) (Credentials, e
 		return nil, fmt.Errorf("unknown provider: %s", profile.Provider)
 	}
 
-	// Update last used timestamp
+	// Update last used timestamp. A persist failure here must not fail the
+	// credential read (credentials are intact regardless), but it is logged so
+	// silent profile-metadata corruption (e.g. a truncated write on a full
+	// disk) is observable rather than swallowed.
 	profile.LastUsedAt = time.Now()
-	_ = s.store.SaveProfile(profile)
+	if err := s.store.SaveProfile(profile); err != nil {
+		slog.Warn("failed to persist profile last-used timestamp",
+			slog.String("provider", string(provider)),
+			slog.String("name", name),
+			slog.Any("error", err))
+	}
 
 	return creds, nil
 }

@@ -112,11 +112,14 @@ func copyFile(src, dst string) error {
 		return err
 	}
 
-	defer func() {
-		_ = destination.Close()
-	}()
-
 	_, err = io.Copy(destination, source)
+
+	// Capture the destination Close error: for buffered/networked filesystems
+	// the final flush happens at Close, so an ENOSPC or write error may surface
+	// only here. Returning it prevents reporting success on a truncated copy.
+	if cerr := destination.Close(); err == nil {
+		err = cerr
+	}
 
 	return err
 }

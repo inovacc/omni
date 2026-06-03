@@ -220,6 +220,56 @@ func TestService_AddProfile_DuplicateName(t *testing.T) {
 	}
 }
 
+func TestFileStore_RejectsTraversalNames(t *testing.T) {
+	tmpDir, err := os.MkdirTemp("", "omni-profile-traversal-*")
+	if err != nil {
+		t.Fatalf("failed to create temp dir: %v", err)
+	}
+
+	t.Cleanup(func() { _ = os.RemoveAll(tmpDir) })
+
+	store := NewFileStore(tmpDir)
+
+	badNames := []string{
+		"..",
+		".",
+		"",
+		filepath.Join("..", "..", "escape"),
+		"../../.ssh/authorized_keys",
+		"foo/bar",
+		"sub" + string(os.PathSeparator) + "name",
+	}
+
+	for _, name := range badNames {
+		profile := &CloudProfile{Name: name, Provider: ProviderAWS}
+		if err := store.SaveProfile(profile); err == nil {
+			t.Errorf("SaveProfile(%q): expected rejection, got nil", name)
+		}
+
+		if err := store.SaveCredentials(ProviderAWS, name, []byte("x")); err == nil {
+			t.Errorf("SaveCredentials(%q): expected rejection, got nil", name)
+		}
+
+		if _, err := store.LoadProfile(ProviderAWS, name); err == nil {
+			t.Errorf("LoadProfile(%q): expected rejection, got nil", name)
+		}
+
+		if err := store.DeleteProfile(ProviderAWS, name); err == nil {
+			t.Errorf("DeleteProfile(%q): expected rejection, got nil", name)
+		}
+
+		if store.ProfileExists(ProviderAWS, name) {
+			t.Errorf("ProfileExists(%q): expected false for invalid name", name)
+		}
+	}
+
+	// Ensure nothing escaped the store directory.
+	parent := filepath.Dir(tmpDir)
+	if _, err := os.Stat(filepath.Join(parent, "escape.json")); !os.IsNotExist(err) {
+		t.Errorf("traversal wrote outside store dir: %v", err)
+	}
+}
+
 func TestService_ProviderMismatch(t *testing.T) {
 	svc, _ := newTestService(t)
 

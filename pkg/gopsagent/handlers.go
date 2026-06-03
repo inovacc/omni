@@ -12,8 +12,23 @@ import (
 	"runtime/debug"
 	"runtime/pprof"
 	"runtime/trace"
+	"sync"
 	"time"
 )
+
+// idleReadTimeout bounds how long a handler waits for the next byte from a
+// client before giving up. Without it, a client that connects and sends
+// nothing leaks its handler goroutine forever (process-04). It is generous
+// enough not to disturb well-behaved clients but closes hung connections.
+const idleReadTimeout = 30 * time.Second
+
+// profilerMu serializes the process-global profilers (CPU profile and
+// execution trace). runtime/pprof.StartCPUProfile and runtime/trace.Start are
+// process-wide singletons: concurrent OpCPUProfile/OpTrace requests would
+// otherwise interfere with one another. A request that arrives while a profile
+// is already running is rejected with a busy error rather than corrupting the
+// in-flight profile (process-04).
+var profilerMu sync.Mutex
 
 // Snapshot is the JSON payload of OpRuntimeSnapshot and OpMetricsStream frames.
 type Snapshot struct {
@@ -27,16 +42,38 @@ type Snapshot struct {
 	GoVersion  string `json:"go_version"`
 }
 
+// privileged reports whether an opcode is state-changing or
+// information-disclosing and must therefore only be served when an AuthKey is
+// configured (process-03). With the default Options{} (no AuthKey) these
+// opcodes are silently ignored so the agent is closed-by-default; read-only
+// introspection opcodes remain available unauthenticated as before.
+func privileged(op byte) bool {
+	switch op {
+	case OpShutdown, OpSetGCPercent, OpCPUProfile, OpTrace, OpHeapProfile, OpStack:
+		return true
+	default:
+		return false
+	}
+}
+
 // handle reads one opcode (after optional HMAC challenge) and dispatches.
 func (a *Agent) handle(conn net.Conn) {
 	defer func() { _ = conn.Close() }()
-	if len(a.opts.AuthKey) > 0 {
+	authed := len(a.opts.AuthKey) > 0
+	if authed {
 		if !runAuthChallenge(conn, a.opts.AuthKey) {
 			return
 		}
 	}
+	// Bound the opcode read so a client that connects but never sends an
+	// opcode cannot leak this handler goroutine forever (process-04).
+	_ = conn.SetReadDeadline(time.Now().Add(idleReadTimeout))
 	op := make([]byte, 1)
 	if _, err := io.ReadFull(conn, op); err != nil {
+		return
+	}
+	// State-changing / disclosing opcodes require an AuthKey (process-03).
+	if privileged(op[0]) && !authed {
 		return
 	}
 	switch op[0] {
@@ -78,8 +115,15 @@ func (a *Agent) handle(conn net.Conn) {
 }
 
 // runProfile reads a 4-byte LE duration (seconds, capped at 600), starts the
-// profile writing into conn, sleeps, then stops.
+// profile writing into conn, sleeps, then stops. Only one process-global
+// profiler may run at a time: a request arriving while another profile is
+// in flight is rejected with a busy error rather than corrupting it
+// (process-04).
 func runProfile(conn net.Conn, start func(io.Writer) error, stop func()) {
+	// Refresh the idle deadline for the framed duration read so a client that
+	// sends the opcode but withholds the duration bytes cannot hang the
+	// handler goroutine (process-04).
+	_ = conn.SetReadDeadline(time.Now().Add(idleReadTimeout))
 	var buf [4]byte
 	if _, err := io.ReadFull(conn, buf[:]); err != nil {
 		return
@@ -91,10 +135,18 @@ func runProfile(conn net.Conn, start func(io.Writer) error, stop func()) {
 	if secs > 600 {
 		secs = 600
 	}
+	if !profilerMu.TryLock() {
+		_, _ = fmt.Fprint(conn, "error: profiler busy: another CPU profile or trace is already running")
+		return
+	}
+	defer profilerMu.Unlock()
 	if err := start(conn); err != nil {
 		_, _ = fmt.Fprintf(conn, "error: %v", err)
 		return
 	}
+	// Clear the read deadline for the duration of the profile so the long
+	// sleep is not interrupted by a stale read deadline on the connection.
+	_ = conn.SetReadDeadline(time.Time{})
 	time.Sleep(time.Duration(secs) * time.Second)
 	stop()
 }
@@ -121,10 +173,18 @@ func runAuthChallenge(conn net.Conn, key []byte) bool {
 // runMetricsStream pushes NDJSON snapshots until the client disconnects.
 // Protocol: 4-byte LE uint32 interval-ms (clamped to [50ms, 60s]).
 func runMetricsStream(conn net.Conn) {
+	// Refresh the idle deadline for the framed interval read so a client that
+	// sends the opcode but withholds the interval bytes cannot hang the
+	// handler goroutine (process-04).
+	_ = conn.SetReadDeadline(time.Now().Add(idleReadTimeout))
 	var buf [4]byte
 	if _, err := io.ReadFull(conn, buf[:]); err != nil {
 		return
 	}
+	// The stream only writes from here on; clear the read deadline so it is
+	// not torn down by a stale deadline. Client disconnects surface as an
+	// encode error below.
+	_ = conn.SetReadDeadline(time.Time{})
 	ms := binary.LittleEndian.Uint32(buf[:])
 	if ms < 50 {
 		ms = 50

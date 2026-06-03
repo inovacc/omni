@@ -14,6 +14,30 @@ import (
 	"github.com/inovacc/omni/internal/cli/cmderr"
 )
 
+// maxExtractTotalBytes caps the cumulative number of bytes written during a
+// single archive extraction to guard against decompression-bomb DoS
+// (archive-05). 10 GiB is generous for legitimate CI/CD artifacts while still
+// bounding a small malicious archive that inflates to fill the disk.
+const maxExtractTotalBytes int64 = 10 << 30
+
+// secureJoin joins name onto an absolute, cleaned destDir and guarantees the
+// result stays within destDir. It rejects absolute entry names and any path
+// that escapes the destination via ".." segments (tar-slip / zip-slip,
+// archive-01/02/03/04). The caller passes an already-absolute, cleaned
+// cleanDest so the work is done once per extraction.
+func secureJoin(cleanDest, name string) (string, error) {
+	if filepath.IsAbs(name) {
+		return "", cmderr.Wrap(cmderr.ErrInvalidInput, "archive: entry has absolute path: "+name)
+	}
+
+	target := filepath.Clean(filepath.Join(cleanDest, name))
+	if target != cleanDest && !strings.HasPrefix(target, cleanDest+string(os.PathSeparator)) {
+		return "", cmderr.Wrap(cmderr.ErrInvalidInput, "archive: entry escapes destination: "+name)
+	}
+
+	return target, nil
+}
+
 func createTarArchive(w io.Writer, outFile *os.File, sources []string, opts ArchiveOptions, useGzip bool) error {
 	var tw *tar.Writer
 
@@ -149,6 +173,15 @@ func extractTarArchive(w io.Writer, opts ArchiveOptions) error {
 		destDir = "."
 	}
 
+	// Resolve the destination once so every entry can be containment-checked
+	// against it (tar-slip / symlink / hardlink escape: archive-01/03/04).
+	cleanDest, err := filepath.Abs(filepath.Clean(destDir))
+	if err != nil {
+		return fmt.Errorf("archive: %w", err)
+	}
+
+	var totalWritten int64
+
 	for {
 		header, err := tr.Next()
 		if err == io.EOF {
@@ -170,7 +203,12 @@ func extractTarArchive(w io.Writer, opts ArchiveOptions) error {
 			}
 		}
 
-		target := filepath.Join(destDir, name)
+		// Containment check: reject absolute names and ".." escapes before any
+		// filesystem write (archive-01).
+		target, err := secureJoin(cleanDest, name)
+		if err != nil {
+			return err
+		}
 
 		if opts.Verbose {
 			_, _ = fmt.Fprintln(w, name)
@@ -191,13 +229,36 @@ func extractTarArchive(w io.Writer, opts ArchiveOptions) error {
 				return err
 			}
 
-			_, err = io.Copy(outFile, tr)
+			// Bound the copy so a decompression bomb cannot fill the disk
+			// (archive-05). LimitReader caps the per-call read; the cumulative
+			// counter caps the whole extraction.
+			remaining := maxExtractTotalBytes - totalWritten
+			n, err := io.Copy(outFile, io.LimitReader(tr, remaining+1))
 			_ = outFile.Close()
 
 			if err != nil {
 				return err
 			}
+
+			totalWritten += n
+			if totalWritten > maxExtractTotalBytes {
+				return cmderr.Wrap(cmderr.ErrInvalidInput, "archive: extraction exceeds maximum allowed size")
+			}
 		case tar.TypeSymlink:
+			// Validate the symlink destination stays within destDir so a later
+			// entry cannot be written through an escaping symlink
+			// (archive-03). Reject absolute Linkname outright; resolve a
+			// relative Linkname against the link's own parent dir, then require
+			// the result to remain contained.
+			if filepath.IsAbs(header.Linkname) {
+				return cmderr.Wrap(cmderr.ErrInvalidInput, "archive: symlink target is absolute: "+header.Linkname)
+			}
+
+			resolved := filepath.Clean(filepath.Join(filepath.Dir(target), header.Linkname))
+			if resolved != cleanDest && !strings.HasPrefix(resolved, cleanDest+string(os.PathSeparator)) {
+				return cmderr.Wrap(cmderr.ErrInvalidInput, "archive: symlink target escapes destination: "+header.Linkname)
+			}
+
 			if err := os.MkdirAll(filepath.Dir(target), 0755); err != nil {
 				return err
 			}
@@ -206,11 +267,17 @@ func extractTarArchive(w io.Writer, opts ArchiveOptions) error {
 				return err
 			}
 		case tar.TypeLink:
+			// Both endpoints must be inside destDir; Linkname is attacker
+			// controlled and may contain ".." segments (archive-04).
+			linkTarget, err := secureJoin(cleanDest, header.Linkname)
+			if err != nil {
+				return cmderr.Wrap(cmderr.ErrInvalidInput, "archive: hardlink target escapes destination: "+header.Linkname)
+			}
+
 			if err := os.MkdirAll(filepath.Dir(target), 0755); err != nil {
 				return err
 			}
 
-			linkTarget := filepath.Join(destDir, header.Linkname)
 			if err := os.Link(linkTarget, target); err != nil {
 				return err
 			}

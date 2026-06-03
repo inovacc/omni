@@ -2,6 +2,7 @@ package pipeline
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"sync"
@@ -105,7 +106,7 @@ func (p *Pipeline) Run(ctx context.Context, in io.Reader, out io.Writer) error {
 
 	// Return the first meaningful error
 	for i, err := range errs {
-		if err != nil && err != io.ErrClosedPipe {
+		if err != nil && !errors.Is(err, io.ErrClosedPipe) {
 			return fmt.Errorf("stage %d (%s): %w", i, p.stages[i].Name(), err)
 		}
 	}

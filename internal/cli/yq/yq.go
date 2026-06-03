@@ -137,12 +137,21 @@ func parseYAML(content string) ([]any, error) {
 	return docs, nil
 }
 
+// maxYAMLDepth bounds recursion in the hand-rolled YAML parser. Untrusted
+// input (stdin/files) can otherwise drive unbounded recursion and exhaust the
+// goroutine stack, which Go cannot recover() from (process aborts: DoS).
+const maxYAMLDepth = 1000
+
 func parseYAMLDocument(content string) (any, error) {
 	lines := strings.Split(content, "\n")
-	return parseYAMLLines(lines, 0)
+	return parseYAMLLines(lines, 0, 0)
 }
 
-func parseYAMLLines(lines []string, baseIndent int) (any, error) {
+func parseYAMLLines(lines []string, baseIndent, depth int) (any, error) {
+	if depth > maxYAMLDepth {
+		return nil, cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("yq: YAML nesting exceeds maximum depth of %d", maxYAMLDepth))
+	}
+
 	if len(lines) == 0 {
 		return nil, nil //nolint:nilnil // Valid: empty input returns nil value
 	}
@@ -166,19 +175,19 @@ func parseYAMLLines(lines []string, baseIndent int) (any, error) {
 
 	// Array item
 	if strings.HasPrefix(trimmed, "- ") {
-		return parseYAMLArray(lines, baseIndent)
+		return parseYAMLArray(lines, baseIndent, depth)
 	}
 
 	// Object
 	if strings.Contains(trimmed, ":") {
-		return parseYAMLObject(lines, baseIndent)
+		return parseYAMLObject(lines, baseIndent, depth)
 	}
 
 	// Scalar value
 	return parseYAMLScalar(trimmed), nil
 }
 
-func parseYAMLArray(lines []string, _ int) ([]any, error) {
+func parseYAMLArray(lines []string, _, depth int) ([]any, error) {
 	var (
 		result      []any
 		currentItem []string
@@ -197,7 +206,7 @@ func parseYAMLArray(lines []string, _ int) ([]any, error) {
 		if strings.HasPrefix(trimmed, "- ") {
 			// New array item
 			if len(currentItem) > 0 {
-				item, err := parseArrayItem(currentItem, itemIndent)
+				item, err := parseArrayItem(currentItem, itemIndent, depth)
 				if err != nil {
 					return nil, err
 				}
@@ -219,7 +228,7 @@ func parseYAMLArray(lines []string, _ int) ([]any, error) {
 
 	// Handle last item
 	if len(currentItem) > 0 {
-		item, err := parseArrayItem(currentItem, itemIndent)
+		item, err := parseArrayItem(currentItem, itemIndent, depth)
 		if err != nil {
 			return nil, err
 		}
@@ -230,7 +239,7 @@ func parseYAMLArray(lines []string, _ int) ([]any, error) {
 	return result, nil
 }
 
-func parseArrayItem(lines []string, baseIndent int) (any, error) {
+func parseArrayItem(lines []string, baseIndent, depth int) (any, error) {
 	if len(lines) == 0 {
 		return nil, nil //nolint:nilnil // Valid: empty array item returns nil
 	}
@@ -240,10 +249,10 @@ func parseArrayItem(lines []string, baseIndent int) (any, error) {
 		return parseYAMLScalar(strings.TrimSpace(lines[0])), nil
 	}
 
-	return parseYAMLLines(lines, baseIndent+2)
+	return parseYAMLLines(lines, baseIndent+2, depth+1)
 }
 
-func parseYAMLObject(lines []string, _ int) (map[string]any, error) {
+func parseYAMLObject(lines []string, _, depth int) (map[string]any, error) {
 	result := make(map[string]any)
 
 	var (
@@ -266,7 +275,7 @@ func parseYAMLObject(lines []string, _ int) (map[string]any, error) {
 		if colonIdx > 0 && (keyIndent == -1 || indent == keyIndent) {
 			// Save previous key-value
 			if currentKey != "" {
-				value, err := parseYAMLValue(currentValue, keyIndent)
+				value, err := parseYAMLValue(currentValue, keyIndent, depth)
 				if err != nil {
 					return nil, err
 				}
@@ -291,7 +300,7 @@ func parseYAMLObject(lines []string, _ int) (map[string]any, error) {
 
 	// Handle last key
 	if currentKey != "" {
-		value, err := parseYAMLValue(currentValue, keyIndent)
+		value, err := parseYAMLValue(currentValue, keyIndent, depth)
 		if err != nil {
 			return nil, err
 		}
@@ -302,12 +311,12 @@ func parseYAMLObject(lines []string, _ int) (map[string]any, error) {
 	return result, nil
 }
 
-func parseYAMLValue(lines []string, baseIndent int) (any, error) {
+func parseYAMLValue(lines []string, baseIndent, depth int) (any, error) {
 	if len(lines) == 0 {
 		return nil, nil //nolint:nilnil // Valid: empty value returns nil
 	}
 
-	return parseYAMLLines(lines, baseIndent)
+	return parseYAMLLines(lines, baseIndent, depth+1)
 }
 
 func parseYAMLScalar(s string) any {

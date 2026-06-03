@@ -2,38 +2,42 @@
 
 package uname
 
-import "syscall"
+import "golang.org/x/sys/unix"
 
-// getKernelRelease returns the kernel release (e.g., "5.15.0-generic")
+// getKernelRelease returns the kernel release (e.g., "5.15.0-generic").
+//
+// Implemented via the uname(2) syscall through golang.org/x/sys/unix (no
+// os/exec). Unlike syscall.Uname/syscall.Utsname — which only exist on Linux
+// and a subset of BSDs — unix.Uname is portable across all unix GOOS targets
+// (linux, darwin, freebsd, openbsd, netbsd, ...), so this file builds cleanly
+// under the broad `unix` build tag.
 func getKernelRelease() string {
-	var uname syscall.Utsname
-	if err := syscall.Uname(&uname); err != nil {
+	var uts unix.Utsname
+	if err := unix.Uname(&uts); err != nil {
 		return "unknown"
 	}
 
-	return charsToString(uname.Release[:])
+	return charsToString(uts.Release[:])
 }
 
-// getKernelVersion returns the kernel version
+// getKernelVersion returns the kernel version.
 func getKernelVersion() string {
-	var uname syscall.Utsname
-	if err := syscall.Uname(&uname); err != nil {
+	var uts unix.Utsname
+	if err := unix.Uname(&uts); err != nil {
 		return "unknown"
 	}
 
-	return charsToString(uname.Version[:])
+	return charsToString(uts.Version[:])
 }
 
-// charsToString converts a fixed-size byte array to a string
-func charsToString(ca []int8) string {
-	s := make([]byte, 0, len(ca))
-	for _, c := range ca {
+// charsToString converts a NUL-terminated, fixed-size byte array (as returned
+// in unix.Utsname fields) to a Go string, stopping at the first NUL.
+func charsToString(ca []byte) string {
+	for i, c := range ca {
 		if c == 0 {
-			break
+			return string(ca[:i])
 		}
-
-		s = append(s, byte(c))
 	}
 
-	return string(s)
+	return string(ca)
 }

@@ -7,8 +7,11 @@ import (
 	"encoding/hex"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
+	"net/url"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/inovacc/omni/pkg/video/m3u8"
@@ -43,6 +46,11 @@ func (d *HLSDownloader) Download(ctx context.Context, path string, format *Forma
 		variantURL := selectVariant(playlist, manifestURL)
 		if variantURL == "" {
 			return fmt.Errorf("hls: no suitable variant found in master playlist")
+		}
+
+		// variantURL is derived from the (untrusted) master manifest; guard against SSRF.
+		if err := validateFetchURL(variantURL); err != nil {
+			return fmt.Errorf("hls: variant URL: %w", err)
 		}
 
 		manifestURL = variantURL
@@ -156,6 +164,11 @@ func (d *HLSDownloader) Download(ctx context.Context, path string, format *Forma
 }
 
 func (d *HLSDownloader) downloadSegment(ctx context.Context, opts Options, segURL string, key *m3u8.Key) ([]byte, error) {
+	// segURL is derived from the (untrusted) manifest; guard against SSRF.
+	if err := validateFetchURL(segURL); err != nil {
+		return nil, fmt.Errorf("segment URL: %w", err)
+	}
+
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, segURL, nil)
 	if err != nil {
 		return nil, err
@@ -193,6 +206,11 @@ func (d *HLSDownloader) downloadSegment(ctx context.Context, opts Options, segUR
 }
 
 func (d *HLSDownloader) decryptAES128(ctx context.Context, opts Options, data []byte, key *m3u8.Key) ([]byte, error) {
+	// key.URI comes verbatim from the (untrusted) EXT-X-KEY tag; guard against SSRF.
+	if err := validateFetchURL(key.URI); err != nil {
+		return nil, fmt.Errorf("key URI: %w", err)
+	}
+
 	// Fetch the key.
 	keyData, err := opts.Client.GetJSON(ctx, key.URI)
 	if err != nil {
@@ -254,6 +272,92 @@ func selectVariant(playlist *m3u8.Playlist, baseURL string) string {
 	}
 
 	return utils.URLJoin(baseURL, best.URL)
+}
+
+// allowLoopbackFetch, when true, permits fetching loopback addresses
+// (127.0.0.0/8, ::1). It defaults to false so production callers are protected
+// against SSRF. It exists so in-process tests backed by httptest servers (which
+// bind to loopback) can exercise the download paths. Non-loopback private,
+// link-local and metadata ranges remain blocked regardless of this toggle.
+var allowLoopbackFetch = false
+
+// validateFetchURL guards against SSRF for URLs taken from untrusted HLS
+// manifests (variant, segment and key URIs). It requires an http/https scheme
+// and rejects any host that resolves exclusively to private, loopback,
+// link-local, or otherwise non-public address ranges (e.g. the cloud metadata
+// endpoint 169.254.169.254). The default behavior of fetching ordinary public
+// URLs is unchanged.
+func validateFetchURL(raw string) error {
+	if raw == "" {
+		return fmt.Errorf("empty URL")
+	}
+
+	u, err := url.Parse(raw)
+	if err != nil {
+		return fmt.Errorf("invalid URL: %w", err)
+	}
+
+	scheme := strings.ToLower(u.Scheme)
+	if scheme != "http" && scheme != "https" {
+		return fmt.Errorf("unsupported scheme %q (only http/https allowed)", u.Scheme)
+	}
+
+	host := u.Hostname()
+	if host == "" {
+		return fmt.Errorf("missing host")
+	}
+
+	// If the host is a literal IP, validate it directly.
+	if ip := net.ParseIP(host); ip != nil {
+		if !isPublicIP(ip) {
+			return fmt.Errorf("host %q resolves to a non-public address", host)
+		}
+
+		return nil
+	}
+
+	// Otherwise resolve the hostname and reject if it maps only to
+	// non-public addresses.
+	addrs, err := net.LookupIP(host)
+	if err != nil {
+		return fmt.Errorf("resolving host %q: %w", host, err)
+	}
+
+	if len(addrs) == 0 {
+		return fmt.Errorf("host %q resolved to no addresses", host)
+	}
+
+	for _, ip := range addrs {
+		if !isPublicIP(ip) {
+			return fmt.Errorf("host %q resolves to a non-public address", host)
+		}
+	}
+
+	return nil
+}
+
+// isPublicIP reports whether ip is a routable, public address. It rejects
+// loopback, link-local (including the 169.254.0.0/16 cloud metadata range),
+// private, unspecified, and multicast addresses.
+func isPublicIP(ip net.IP) bool {
+	if ip.IsLoopback() && allowLoopbackFetch {
+		return true
+	}
+
+	if ip.IsLoopback() || ip.IsLinkLocalUnicast() || ip.IsLinkLocalMulticast() ||
+		ip.IsPrivate() || ip.IsUnspecified() || ip.IsMulticast() || ip.IsInterfaceLocalMulticast() {
+		return false
+	}
+
+	// Reject IPv4-mapped/embedded representations of the above.
+	if v4 := ip.To4(); v4 != nil {
+		// 100.64.0.0/10 (carrier-grade NAT / shared address space).
+		if v4[0] == 100 && v4[1]&0xc0 == 64 {
+			return false
+		}
+	}
+
+	return true
 }
 
 func pkcs7Unpad(data []byte) []byte {

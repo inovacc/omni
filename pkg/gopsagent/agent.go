@@ -28,6 +28,12 @@ type Options struct {
 	AllowNonLoopback bool
 }
 
+// maxConns caps the number of connections served concurrently. Beyond this the
+// acceptor blocks before accepting more work, bounding goroutine/FD growth from
+// a flood of clients. Kept small because the agent is a loopback-only control
+// channel, not a general-purpose server.
+const maxConns = 16
+
 // Agent owns the listener + acceptor goroutine.
 type Agent struct {
 	opts   Options
@@ -35,6 +41,10 @@ type Agent struct {
 	mu     sync.Mutex
 	closed bool
 	wg     sync.WaitGroup
+	// sem is a buffered-channel semaphore bounding concurrently-served
+	// connections to maxConns. A slot is acquired before handling a conn and
+	// released (defer) when the handler returns.
+	sem chan struct{}
 }
 
 // New constructs an Agent. Call Listen to start it.
@@ -42,7 +52,7 @@ func New(opts Options) *Agent {
 	if opts.Addr == "" {
 		opts.Addr = "127.0.0.1:0"
 	}
-	return &Agent{opts: opts}
+	return &Agent{opts: opts, sem: make(chan struct{}, maxConns)}
 }
 
 // Addr returns the bound address (host:port) after Listen succeeds. Empty before.
@@ -133,13 +143,20 @@ func (a *Agent) removePIDFile() error {
 
 func (a *Agent) acceptLoop() {
 	for {
+		// Acquire a semaphore slot before accepting more work so we cap the
+		// number of connections served concurrently. When all maxConns slots
+		// are in use the acceptor blocks here (clients queue in the kernel
+		// backlog) until a handler returns and frees a slot.
+		a.sem <- struct{}{}
 		conn, err := a.ln.Accept()
 		if err != nil {
+			<-a.sem
 			return
 		}
 		a.wg.Add(1)
 		go func() {
 			defer a.wg.Done()
+			defer func() { <-a.sem }() // release the slot on handler return
 			a.handle(conn)
 		}()
 	}

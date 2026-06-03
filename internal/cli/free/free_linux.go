@@ -1,4 +1,4 @@
-//go:build unix
+//go:build linux
 
 package free
 
@@ -8,7 +8,8 @@ import (
 	"os"
 	"strconv"
 	"strings"
-	"syscall"
+
+	"golang.org/x/sys/unix"
 
 	"github.com/inovacc/omni/internal/cli/cmderr"
 )
@@ -56,9 +57,12 @@ func getMemInfo() (MemInfo, error) {
 		return info, nil
 	}
 
-	// Fallback to sysinfo (works on Linux but less detailed)
-	var sysinfo syscall.Sysinfo_t
-	if err := syscall.Sysinfo(&sysinfo); err != nil {
+	// Fallback to sysinfo (works on Linux but less detailed).
+	// Use golang.org/x/sys/unix instead of the standard syscall package so the
+	// Sysinfo types/calls resolve without relying on Linux-only symbols that
+	// break cross-compilation under other unix GOOS values.
+	var sysinfo unix.Sysinfo_t
+	if err := unix.Sysinfo(&sysinfo); err != nil {
 		return info, cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("free: sysinfo: %v", err))
 	}
 

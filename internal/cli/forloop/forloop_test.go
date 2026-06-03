@@ -2,6 +2,11 @@ package forloop
 
 import (
 	"bytes"
+	"errors"
+	"io/fs"
+	"os"
+	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 )
@@ -268,6 +273,87 @@ func TestReplaceVariable(t *testing.T) {
 					tt.cmd, tt.varName, tt.value, got, tt.want)
 			}
 		})
+	}
+}
+
+// TestForLoop_InjectionSafe is a permanent regression test pinning the
+// shell-command-injection hardening of forloop's execution path.
+//
+// Threat model: the per-iteration loop VALUE (here, an item passed to RunEach)
+// is attacker-controlled data. Before the fix it was string-concatenated into
+// the executed `sh -c` command, so a value such as `x; touch MARKER` or
+// `$(touch MARKER)` / backtick form would be reparsed by the shell as
+// additional command syntax (injection). The fix passes each value via the
+// child process environment (cmd.Env) and leaves the trusted command TEMPLATE's
+// $var/${var} references intact, so on POSIX sh the shell expands the value as a
+// single inert word and its metacharacters never become commands.
+//
+// The command template is benign (`echo $item`) and references the loop
+// variable; the attack lives entirely in the data VALUE. The security assertion
+// is that the marker file is never created.
+//
+// Windows cmd (supply-01): the env-binding strategy alone is NOT sufficient for
+// cmd.exe, which performs `%var%` substitution at PARSE TIME — the raw value
+// (including `&`/`&&`/`|` separators) would be spliced into the command line
+// before tokenization, so `echo %item%` with item="x & type nul > MARKER" would
+// run the injected command and create the marker. The fix invokes the shell as
+// `cmd /V:ON /C ...` and rewrites references to the DELAYED-expansion form
+// `!item!`, which expands AFTER tokenization: the value lands as a single inert
+// token and its metacharacters are not reparsed as command syntax. This test
+// exercises both hosts (sh and cmd) against their respective separators and
+// asserts the marker is never created on either.
+func TestForLoop_InjectionSafe(t *testing.T) {
+	tmp := t.TempDir()
+	// Marker path must NOT exist after execution. Keep it free of shell
+	// metacharacters and spaces so a successful injection would actually create it.
+	marker := filepath.Join(tmp, "INJECTED_MARKER")
+
+	// Benign template that references the loop variable. The template never
+	// contains the malicious payload; only the data VALUE carries the attack.
+	const command = "echo $item"
+
+	// Injection vectors differ per shell. Each tries to create <marker>, which
+	// would happen only if the value were reparsed as command syntax.
+	var payloads []string
+	if runtime.GOOS == "windows" {
+		// cmd.exe separators: `&`, `&&`, `|`, plus a caret/quote variant. Use
+		// `type nul > <marker>` / `echo > <marker>` which create the file.
+		payloads = []string{
+			"x & type nul > " + marker,
+			"x && echo pwned > " + marker,
+			"x | echo > " + marker,
+			`x &^ echo "pwned" > ` + marker,
+		}
+	} else {
+		// POSIX sh vectors: `;`, `&&`, `$(...)`, and backticks. Each tries to
+		// run `touch <marker>`, which would create the file if reparsed as code.
+		payloads = []string{
+			"x; touch " + marker,
+			"x && touch " + marker,
+			"x$(touch " + marker + ")",
+			"x`touch " + marker + "`",
+		}
+	}
+
+	for _, payload := range payloads {
+		var buf bytes.Buffer
+		// Real execution path (not dry-run): RunEach -> executeCommand ->
+		// sh -c (POSIX) or cmd /V:ON /C (Windows).
+		if err := RunEach(&buf, []string{payload}, command, Options{}); err != nil {
+			// A non-nil error is acceptable (the shell may complain about the
+			// inert value); the security property is the marker's absence.
+			t.Logf("RunEach(payload=%q) returned err=%v (tolerated)", payload, err)
+		}
+
+		_, statErr := os.Stat(marker)
+		switch {
+		case statErr == nil:
+			t.Fatalf("command injection: marker file %q was created from loop value %q; "+
+				"the malicious value was executed as a command instead of treated as inert data",
+				marker, payload)
+		case !errors.Is(statErr, fs.ErrNotExist):
+			t.Fatalf("unexpected error stat-ing marker %q: %v", marker, statErr)
+		}
 	}
 }
 

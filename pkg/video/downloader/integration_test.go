@@ -23,6 +23,16 @@ func makeClient(_ *http.Client) *nethttp.Client {
 	return c
 }
 
+// TestMain enables loopback fetches for the duration of the test run. The
+// production SSRF guard (validateFetchURL) blocks loopback by default; tests
+// here intentionally drive httptest servers bound to 127.0.0.1, so loopback is
+// permitted only inside the test process. Non-loopback private and metadata
+// ranges remain blocked.
+func TestMain(m *testing.M) {
+	allowLoopbackFetch = true
+	os.Exit(m.Run())
+}
+
 // ---- selectVariant ----
 
 func TestSelectVariant_Empty(t *testing.T) {

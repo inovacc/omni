@@ -154,19 +154,27 @@ func listPath(path string, opts Options) ([]Entry, error) {
 		entries = append(entries, entry)
 	}
 
-	// Add . and .. for -a flag
+	// Add . and .. for -a flag. Build a prefix slice and prepend once so an
+	// empty entries slice (e.g. TOCTOU removal leaving zero visible entries)
+	// can never trigger an index-out-of-range panic.
 	if opts.All {
+		var prefix []Entry
+
 		if dotInfo, err := os.Lstat(path); err == nil {
 			dot := fileInfoToEntry(path, dotInfo)
 			dot.Name = "."
-			entries = append([]Entry{dot}, entries...)
+			prefix = append(prefix, dot)
 		}
 
 		parentPath := filepath.Dir(path)
 		if parentInfo, err := os.Lstat(parentPath); err == nil {
 			dotdot := fileInfoToEntry(parentPath, parentInfo)
 			dotdot.Name = ".."
-			entries = append([]Entry{entries[0], dotdot}, entries[1:]...)
+			prefix = append(prefix, dotdot)
+		}
+
+		if len(prefix) > 0 {
+			entries = append(prefix, entries...)
 		}
 	}
 

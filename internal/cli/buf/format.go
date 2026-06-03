@@ -54,7 +54,15 @@ func RunFormat(w io.Writer, dir string, opts FormatOptions) error {
 		}
 
 		if opts.Write {
-			if err := os.WriteFile(file, []byte(formatted), 0644); err != nil {
+			// Preserve the file's existing permission bits instead of forcing
+			// 0644, which would silently drop modes like 0600 or 0755 on
+			// rewrite. Fall back to 0644 only when Stat fails (e.g. the file
+			// does not exist yet).
+			mode := os.FileMode(0644)
+			if fi, statErr := os.Stat(file); statErr == nil {
+				mode = fi.Mode().Perm()
+			}
+			if err := os.WriteFile(file, []byte(formatted), mode); err != nil {
 				if errors.Is(err, os.ErrPermission) {
 					return cmderr.Wrap(cmderr.ErrPermission, fmt.Sprintf("buf: failed to write %s: %s", file, err))
 				}

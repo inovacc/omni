@@ -192,8 +192,12 @@ func printLong(w io.Writer, procs []Info, opts Options) error {
 			_, _ = fmt.Fprintf(w, "%-8s %5d %4.1f %4.1f %8d %8d %-8s %-4s %-5s %8s %s\n",
 				p.User, p.PID, p.CPU, p.MEM, p.VSZ, p.RSS, p.TTY, p.Stat, p.Start, p.Time, cmd)
 		} else if opts.Long {
+			stat := "?"
+			if len(p.Stat) > 0 {
+				stat = p.Stat[:1]
+			}
 			_, _ = fmt.Fprintf(w, "0 %s %5d %5d %5d  0  80  0 %8d %8d %-8s %8s %s\n",
-				p.Stat[:1], p.UID, p.PID, p.PPID, p.VSZ, p.RSS, p.TTY, p.Time, cmd)
+				stat, p.UID, p.PID, p.PPID, p.VSZ, p.RSS, p.TTY, p.Time, cmd)
 		} else {
 			_, _ = fmt.Fprintf(w, "%-8d %5d %5d  0 %-5s %8s %s\n",
 				p.UID, p.PID, p.PPID, p.Start, p.Time, cmd)

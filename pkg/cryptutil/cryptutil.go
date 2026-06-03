@@ -12,10 +12,24 @@ import (
 )
 
 const (
-	SaltSize    = 16
-	KeySize     = 32 // AES-256
-	NonceSize   = 12 // GCM nonce size
+	SaltSize  = 16
+	KeySize   = 32 // AES-256
+	NonceSize = 12 // GCM nonce size
+	// DefaultIter is the default PBKDF2-HMAC-SHA256 iteration count.
+	//
+	// NOTE: the iteration count is NOT stored in the ciphertext envelope
+	// (layout is salt + nonce + ciphertext), so decryption must use the same
+	// count the data was sealed with. Raising this default would make every
+	// existing ciphertext that relied on the default undecryptable, so it must
+	// not be bumped until the envelope persists the iteration count. See
+	// docs/quality/HARDENING.md finding crypto-02.
 	DefaultIter = 100000
+	// MinIter is the minimum PBKDF2 iteration count the package will use.
+	// Iteration counts below this floor are clamped up to it so a caller cannot
+	// silently derive a trivially brute-forceable key (e.g. WithIterations(1)).
+	// It is intentionally equal to DefaultIter so the floor never weakens an
+	// existing default-cost ciphertext round-trip. See finding crypto-01.
+	MinIter = DefaultIter
 )
 
 // Options configures encryption/decryption behavior
@@ -43,8 +57,13 @@ func applyOptions(opts []Option) Options {
 		opt(&o)
 	}
 
-	if o.Iterations <= 0 {
-		o.Iterations = DefaultIter
+	// Enforce a minimum iteration floor. Non-positive values fall back to the
+	// default; any positive value below the floor (e.g. WithIterations(1)) is
+	// clamped up so a weak KDF cost cannot be selected silently. Because the
+	// iteration count is not stored in the envelope, this clamp is applied
+	// symmetrically by both Encrypt and Decrypt, keeping round-trips consistent.
+	if o.Iterations < MinIter {
+		o.Iterations = MinIter
 	}
 
 	return o
@@ -166,9 +185,11 @@ func GenerateKey(size int) (string, error) {
 }
 
 // DeriveKey derives an encryption key from a password and salt using PBKDF2.
+// Iteration counts below MinIter are clamped up to it so a caller cannot derive
+// a key with a trivially low work factor (see finding crypto-01).
 func DeriveKey(password string, salt []byte, iterations, keySize int) []byte {
-	if iterations <= 0 {
-		iterations = DefaultIter
+	if iterations < MinIter {
+		iterations = MinIter
 	}
 
 	if keySize <= 0 {

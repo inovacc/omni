@@ -16,6 +16,49 @@ import (
 	_ "modernc.org/sqlite"
 )
 
+// readOnlyDSN builds a read-only DSN for modernc.org/sqlite from a filesystem
+// path. It uses the `file:` URI form (not raw `path+"?mode=ro"`, which the
+// driver silently ignores) so the connection is opened read-only and
+// PRAGMA query_only is enforced. The path is made absolute, slash-normalized
+// for cross-platform URI use, and characters that would corrupt the query
+// split (`?`, `#`, `%`) are percent-encoded so a path containing them cannot
+// silently defeat the read-only flag.
+func readOnlyDSN(dbPath string) string {
+	abs, err := filepath.Abs(dbPath)
+	if err != nil {
+		abs = dbPath
+	}
+
+	slashed := filepath.ToSlash(abs)
+
+	var b strings.Builder
+
+	for _, r := range slashed {
+		switch r {
+		case '?':
+			b.WriteString("%3F")
+		case '#':
+			b.WriteString("%23")
+		case '%':
+			b.WriteString("%25")
+		default:
+			b.WriteRune(r)
+		}
+	}
+
+	return "file:" + b.String() + "?mode=ro&_pragma=query_only(1)"
+}
+
+// quoteIdent escapes a SQLite identifier (table/column name) by wrapping it in
+// double quotes and doubling any embedded double-quote, per SQLite identifier
+// rules. Go's %q produces Go string-literal quoting, not SQL identifier
+// quoting, so it must not be used for identifiers. A NUL byte cannot appear in
+// a SQLite identifier; it is stripped to avoid a truncated/embedded-NUL name.
+func quoteIdent(name string) string {
+	name = strings.ReplaceAll(name, "\x00", "")
+	return `"` + strings.ReplaceAll(name, `"`, `""`) + `"`
+}
+
 // Options configures sqlite command behavior
 type Options struct {
 	JSON      bool           // --json: output as JSON
@@ -77,7 +120,7 @@ func RunStats(w io.Writer, dbPath string, opts Options) error {
 		return fmt.Errorf("sqlite: %w", err)
 	}
 
-	db, err := sql.Open("sqlite", dbPath+"?mode=ro")
+	db, err := sql.Open("sqlite", readOnlyDSN(dbPath))
 	if err != nil {
 		return cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("sqlite: %s", err))
 	}
@@ -138,7 +181,7 @@ func RunStats(w io.Writer, dbPath string, opts Options) error {
 
 // RunTables lists all tables in the database
 func RunTables(w io.Writer, dbPath string, opts Options) error {
-	db, err := sql.Open("sqlite", dbPath+"?mode=ro")
+	db, err := sql.Open("sqlite", readOnlyDSN(dbPath))
 	if err != nil {
 		return fmt.Errorf("sqlite: %w", err)
 	}
@@ -162,7 +205,7 @@ func RunTables(w io.Writer, dbPath string, opts Options) error {
 
 		// Get row count for tables
 		if t.Type == "table" {
-			_ = db.QueryRow(fmt.Sprintf("SELECT count(*) FROM %q", t.Name)).Scan(&t.RowCount)
+			_ = db.QueryRow(fmt.Sprintf("SELECT count(*) FROM %s", quoteIdent(t.Name))).Scan(&t.RowCount)
 		}
 
 		tables = append(tables, t)
@@ -189,7 +232,7 @@ func RunTables(w io.Writer, dbPath string, opts Options) error {
 
 // RunSchema shows table schema
 func RunSchema(w io.Writer, dbPath, table string, opts Options) error {
-	db, err := sql.Open("sqlite", dbPath+"?mode=ro")
+	db, err := sql.Open("sqlite", readOnlyDSN(dbPath))
 	if err != nil {
 		return fmt.Errorf("sqlite: %w", err)
 	}
@@ -255,14 +298,14 @@ func RunSchema(w io.Writer, dbPath, table string, opts Options) error {
 
 // RunColumns shows table columns
 func RunColumns(w io.Writer, dbPath, table string, opts Options) error {
-	db, err := sql.Open("sqlite", dbPath+"?mode=ro")
+	db, err := sql.Open("sqlite", readOnlyDSN(dbPath))
 	if err != nil {
 		return fmt.Errorf("sqlite: %w", err)
 	}
 
 	defer func() { _ = db.Close() }()
 
-	rows, err := db.Query(fmt.Sprintf("PRAGMA table_info(%q)", table))
+	rows, err := db.Query(fmt.Sprintf("PRAGMA table_info(%s)", quoteIdent(table)))
 	if err != nil {
 		return fmt.Errorf("sqlite: %w", err)
 	}
@@ -320,7 +363,7 @@ func RunColumns(w io.Writer, dbPath, table string, opts Options) error {
 
 // RunIndexes lists all indexes
 func RunIndexes(w io.Writer, dbPath string, opts Options) error {
-	db, err := sql.Open("sqlite", dbPath+"?mode=ro")
+	db, err := sql.Open("sqlite", readOnlyDSN(dbPath))
 	if err != nil {
 		return fmt.Errorf("sqlite: %w", err)
 	}
@@ -547,7 +590,7 @@ func RunVacuum(w io.Writer, dbPath string, opts Options) error {
 
 // RunCheck verifies database integrity
 func RunCheck(w io.Writer, dbPath string, opts Options) error {
-	db, err := sql.Open("sqlite", dbPath+"?mode=ro")
+	db, err := sql.Open("sqlite", readOnlyDSN(dbPath))
 	if err != nil {
 		return fmt.Errorf("sqlite: %w", err)
 	}
@@ -606,7 +649,7 @@ func RunCheck(w io.Writer, dbPath string, opts Options) error {
 
 // RunDump exports database as SQL
 func RunDump(w io.Writer, dbPath, table string, opts Options) error {
-	db, err := sql.Open("sqlite", dbPath+"?mode=ro")
+	db, err := sql.Open("sqlite", readOnlyDSN(dbPath))
 	if err != nil {
 		return fmt.Errorf("sqlite: %w", err)
 	}
@@ -652,7 +695,7 @@ func RunDump(w io.Writer, dbPath, table string, opts Options) error {
 
 		// Get data - use closure to ensure proper defer cleanup
 		func() {
-			rows, err := db.Query(fmt.Sprintf("SELECT * FROM %q", t))
+			rows, err := db.Query(fmt.Sprintf("SELECT * FROM %s", quoteIdent(t)))
 			if err != nil {
 				return
 			}
@@ -688,7 +731,7 @@ func RunDump(w io.Writer, dbPath, table string, opts Options) error {
 					}
 				}
 
-				_, _ = fmt.Fprintf(w, "INSERT INTO %q VALUES(%s);\n", t, strings.Join(vals, ","))
+				_, _ = fmt.Fprintf(w, "INSERT INTO %s VALUES(%s);\n", quoteIdent(t), strings.Join(vals, ","))
 			}
 
 			if err := rows.Err(); err != nil {

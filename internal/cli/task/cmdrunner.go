@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"os"
 	"os/exec"
 	"runtime"
 	"strings"
@@ -121,21 +122,90 @@ func NewShellCommandRunner(dir string) *ShellCommandRunner {
 	return &ShellCommandRunner{dir: dir}
 }
 
-// Run executes a command via the system shell
+// Run executes a command via the system shell.
+//
+// Security (supply-02): values reaching this runner can originate from task
+// config (task names, args derived from config) and are NOT necessarily
+// user-authored shell text. To prevent shell injection from interpolated
+// values, only a SINGLE arg is treated as a literal shell command line (the
+// sanctioned "run a shell command" feature). When multiple argv elements are
+// supplied, the non-leading elements are delivered to the program as inert
+// data, never re-parsed or expanded by the shell, so an element such as
+// "foo; rm -rf /", "$(reboot)", or (on Windows) "x>victim" / "a&&calc" cannot
+// inject additional commands:
+//
+//   - POSIX: `sh -c 'exec "$0" "$@"' prog arg...` binds the elements to the
+//     positional parameters, so the shell does no word-splitting, globbing, or
+//     substitution on them — they reach the program verbatim.
+//   - Windows: cmd.exe re-parses `& | > < ^` even inside an already-tokenized
+//     argument, because syscall.EscapeArg only quotes a space/tab/quote (a
+//     SPACE-FREE metacharacter argument is passed unquoted). The runner instead
+//     invokes `cmd /V:ON /C` and references each non-leading element via DELAYED
+//     expansion (`!OMNI_ARGn!`) sourced from the environment, so the value
+//     expands AFTER tokenization and its metacharacters are inert. See the
+//     multi-arg branch below for details and the `!`-literal limitation.
 func (r *ShellCommandRunner) Run(ctx context.Context, w io.Writer, args []string) error {
 	if len(args) == 0 {
 		return nil
 	}
 
-	// Join args into a command string
-	cmdStr := strings.Join(args, " ")
-
-	// Create command based on OS
+	// Create command based on OS.
 	var cmd *exec.Cmd
 	if runtime.GOOS == "windows" {
-		cmd = exec.CommandContext(ctx, "cmd", "/C", cmdStr)
+		if len(args) == 1 {
+			// Single arg: an explicit shell command line.
+			cmd = exec.CommandContext(ctx, "cmd", "/C", args[0])
+		} else {
+			// argv form: pass non-leading args as inert data via the process
+			// environment, referenced with DELAYED expansion (`!var!`).
+			//
+			// supply-02 (Windows): os/exec quotes an argument only when it
+			// contains a space/tab/quote (syscall.EscapeArg); it does NOT escape
+			// cmd.exe metacharacters (& | > < ^). A SPACE-FREE element such as
+			// `x>file` or `a&&calc` would therefore be passed UNQUOTED and
+			// cmd.exe would reparse the separators as command syntax (injection).
+			//
+			// The fix mirrors forloop supply-01: invoke `cmd /V:ON /C` and refer
+			// to each non-leading element as `!OMNI_ARGn!`. Delayed expansion
+			// substitutes the value AFTER the line is tokenized, so the value
+			// lands as a single inert token and its metacharacters are never
+			// reparsed as command syntax. The leading element (the program to
+			// run) is kept as a literal token so it still resolves as a command.
+			//
+			// Known limitation: delayed expansion treats `!` as special, so a
+			// non-leading value containing a literal `!` may be altered. This is
+			// the same accepted tradeoff as forloop: injection safety outweighs
+			// faithful handling of a literal `!` in untrusted argv values.
+			var b strings.Builder
+
+			b.WriteString(args[0])
+
+			env := os.Environ()
+
+			for i, a := range args[1:] {
+				name := fmt.Sprintf("OMNI_ARG%d", i)
+				env = append(env, name+"="+a)
+
+				b.WriteString(" !")
+				b.WriteString(name)
+				b.WriteString("!")
+			}
+
+			cmd = exec.CommandContext(ctx, "cmd", "/V:ON", "/C", b.String())
+			cmd.Env = env
+		}
 	} else {
-		cmd = exec.CommandContext(ctx, "sh", "-c", cmdStr)
+		if len(args) == 1 {
+			// Single arg: an explicit shell command line.
+			cmd = exec.CommandContext(ctx, "sh", "-c", args[0])
+		} else {
+			// argv form: run the first element as the command and bind the
+			// remaining elements to positional parameters so the shell does
+			// no word-splitting, globbing, or substitution on them.
+			// `sh -c 'exec "$0" "$@"' prog arg1 arg2 ...`
+			shArgs := append([]string{"-c", `exec "$0" "$@"`}, args...)
+			cmd = exec.CommandContext(ctx, "sh", shArgs...)
+		}
 	}
 
 	// Set working directory

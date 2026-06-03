@@ -10,7 +10,7 @@ import (
 
 const (
 	configFileName = "config.json"
-	configPerms    = 0644
+	configPerms    = 0600
 	dirPerms       = 0755
 )
 

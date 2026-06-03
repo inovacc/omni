@@ -13,6 +13,10 @@ import (
 	"github.com/inovacc/omni/internal/cli/cmderr"
 )
 
+// maxDdBlockSize caps the per-block buffer allocation to guard against
+// memory exhaustion from a malformed bs=/ibs=/obs= operand (1 GiB).
+const maxDdBlockSize int64 = 1 << 30
+
 // DdOptions configures the dd command behavior
 type DdOptions struct {
 	InputFile    string // if=FILE
@@ -59,6 +63,17 @@ func RunDd(w io.Writer, opts DdOptions) error {
 
 	if opts.StatusWriter == nil {
 		opts.StatusWriter = os.Stderr
+	}
+
+	// Validate block sizes are strictly positive and within a sane ceiling.
+	// A non-positive size would panic make([]byte, ...) / break the reslice
+	// loop; an absurdly large size would attempt an unbounded allocation.
+	if opts.InputBS <= 0 || opts.OutputBS <= 0 {
+		return cmderr.Wrap(cmderr.ErrInvalidInput, "dd: block size must be a positive value")
+	}
+
+	if opts.InputBS > maxDdBlockSize || opts.OutputBS > maxDdBlockSize {
+		return cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("dd: block size exceeds maximum of %d bytes", maxDdBlockSize))
 	}
 
 	// Parse conversions
@@ -310,6 +325,10 @@ func ParseDdSize(s string) (int64, error) {
 		return 0, cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("dd: invalid number: %s", numStr))
 	}
 
+	if num < 0 {
+		return 0, cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("dd: negative size: %s", numStr))
+	}
+
 	var multiplier int64
 
 	switch suffix {
@@ -333,5 +352,12 @@ func ParseDdSize(s string) (int64, error) {
 		return 0, cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("dd: unknown suffix: %s", suffix))
 	}
 
-	return num * multiplier, nil
+	result := num * multiplier
+	// Detect signed-integer multiplication overflow: a non-zero num that does
+	// not divide back out indicates the product wrapped around int64.
+	if num != 0 && result/num != multiplier {
+		return 0, cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("dd: size too large: %s", s))
+	}
+
+	return result, nil
 }

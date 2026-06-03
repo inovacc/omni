@@ -164,8 +164,9 @@ func initLogger(command string) *Logger {
 		return l
 	}
 
-	// Ensure log directory exists
-	if err := os.MkdirAll(logDir, 0755); err != nil {
+	// Ensure log directory exists. Logs may capture command stdout/stderr
+	// (potentially secret-bearing), so restrict the directory to the owner (0700).
+	if err := os.MkdirAll(logDir, 0700); err != nil {
 		_, _ = os.Stderr.WriteString("omni: failed to create log directory: " + err.Error() + "\n")
 		return l
 	}
@@ -177,7 +178,8 @@ func initLogger(command string) *Logger {
 		return l
 	}
 
-	file, err := os.OpenFile(logPath, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
+	// Owner-only (0600): captured output/queries may contain secrets.
+	file, err := os.OpenFile(logPath, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0600)
 	if err != nil {
 		_, _ = os.Stderr.WriteString("omni: failed to open log file: " + err.Error() + "\n")
 		return l
@@ -222,8 +224,9 @@ func New(logDir, command string) (*Logger, error) {
 		return l, nil
 	}
 
-	// Ensure log directory exists
-	if err := os.MkdirAll(logDir, 0755); err != nil {
+	// Ensure log directory exists. Logs may capture command stdout/stderr
+	// (potentially secret-bearing), so restrict the directory to the owner (0700).
+	if err := os.MkdirAll(logDir, 0700); err != nil {
 		return nil, fmt.Errorf("failed to create log directory: %w", err)
 	}
 
@@ -232,7 +235,8 @@ func New(logDir, command string) (*Logger, error) {
 		return nil, err
 	}
 
-	file, err := os.OpenFile(logPath, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
+	// Owner-only (0600): captured output/queries may contain secrets.
+	file, err := os.OpenFile(logPath, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0600)
 	if err != nil {
 		return nil, err
 	}
@@ -255,12 +259,14 @@ func NewWithExactPath(logPath string) (*Logger, error) {
 		return l, nil
 	}
 
-	// Ensure log directory exists
-	if err := os.MkdirAll(filepath.Dir(logPath), 0755); err != nil {
+	// Ensure log directory exists. Logs may capture command stdout/stderr
+	// (potentially secret-bearing), so restrict the directory to the owner (0700).
+	if err := os.MkdirAll(filepath.Dir(logPath), 0700); err != nil {
 		return nil, fmt.Errorf("failed to create log directory: %w", err)
 	}
 
-	file, err := os.OpenFile(logPath, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
+	// Owner-only (0600): captured output/queries may contain secrets.
+	file, err := os.OpenFile(logPath, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0600)
 	if err != nil {
 		return nil, err
 	}

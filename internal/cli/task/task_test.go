@@ -4,8 +4,10 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"io/fs"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 
@@ -1224,4 +1226,89 @@ func TestGetDirectDeps(t *testing.T) {
 			t.Error("GetDirectDeps() should error for unknown task")
 		}
 	})
+}
+
+// TestTaskRunner_InjectionSafe is a regression guard (supply-02) for shell
+// injection through ShellCommandRunner's MULTI-arg (argv) path.
+//
+// Threat model: values reaching the runner can originate from task config and
+// are NOT necessarily user-authored shell text. The SINGLE-arg form is the
+// sanctioned "run a shell command line" feature and is intentionally evaluated
+// by the shell. The MULTI-arg (argv) form, however, must deliver each element
+// as inert data: a non-leading element such as `a & type nul > MARKER`
+// (Windows) or `a; touch MARKER` (POSIX) must NOT be re-parsed by the shell as
+// additional command syntax.
+//
+//   - POSIX: `sh -c 'exec "$0" "$@"' prog arg...` binds the elements to the
+//     positional parameters, so the shell performs no word-splitting, globbing,
+//     or substitution on them — they reach the program verbatim.
+//   - Windows: cmd.exe re-parses `& | > < ^` even inside an already-tokenized
+//     argument that os/exec quoted, because syscall.EscapeArg only escapes
+//     space/tab/quote. The fix (mirroring forloop supply-01) invokes
+//     `cmd /V:ON /C` and references each non-leading element via DELAYED
+//     expansion (`!OMNI_ARGn!`) sourced from the environment, so values expand
+//     AFTER tokenization and their metacharacters are inert.
+//
+// The leading element is a benign command (`echo`); the attack lives entirely
+// in a NON-leading element. The security assertion is that the marker file is
+// never created.
+func TestTaskRunner_InjectionSafe(t *testing.T) {
+	tmp := t.TempDir()
+	// Marker path must NOT exist after execution. Keep it free of shell
+	// metacharacters and spaces so a successful injection would actually create
+	// it (and a quoted/inert value would not).
+	marker := filepath.Join(tmp, "INJECTED_MARKER")
+
+	// Each payload is a single NON-leading argv element carrying the attack.
+	// Vectors differ per shell; each tries to create <marker>.
+	var payloads []string
+	if runtime.GOOS == "windows" {
+		// cmd.exe command separators / redirection. Both spaced and SPACE-FREE
+		// variants are exercised: os/exec only double-quotes an argument that
+		// contains a space/tab/quote, so a space-free metacharacter argument is
+		// passed UNQUOTED and cmd.exe will reparse `& | > <` unless the runner
+		// neutralizes them (see supply-02 fix).
+		payloads = []string{
+			"a & type nul > " + marker,
+			"a && echo pwned > " + marker,
+			"a | echo > " + marker,
+			// Space-free vectors (the realistic gap): no space => not quoted.
+			"x>" + marker,
+			"x&&echo>" + marker,
+			"x|echo>" + marker,
+		}
+	} else {
+		// POSIX sh vectors: `;`, `&&`, `$(...)`, and backticks.
+		payloads = []string{
+			"a; touch " + marker,
+			"a && touch " + marker,
+			"a$(touch " + marker + ")",
+			"a`touch " + marker + "`",
+		}
+	}
+
+	runner := NewShellCommandRunner(tmp)
+
+	for _, payload := range payloads {
+		var buf bytes.Buffer
+		// Drive the real MULTI-arg path: benign leading command + malicious
+		// non-leading element. ShellCommandRunner.Run must treat the element as
+		// inert data, never as command syntax.
+		if err := runner.Run(context.Background(), &buf, []string{"echo", payload}); err != nil {
+			// A non-nil error is tolerated (the shell may complain about the
+			// inert value or an unknown program); the security property is the
+			// marker's absence.
+			t.Logf("Run(argv=[echo %q]) returned err=%v (tolerated)", payload, err)
+		}
+
+		_, statErr := os.Stat(marker)
+		switch {
+		case statErr == nil:
+			t.Fatalf("command injection: marker file %q was created from argv element %q; "+
+				"the malicious value was executed as a command instead of being treated as inert data",
+				marker, payload)
+		case !errors.Is(statErr, fs.ErrNotExist):
+			t.Fatalf("unexpected error stat-ing marker %q: %v", marker, statErr)
+		}
+	}
 }

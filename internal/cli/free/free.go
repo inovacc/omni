@@ -66,9 +66,11 @@ func RunFree(w io.Writer, opts FreeOptions) error {
 		suffix = "Ki"
 	}
 
-	// Calculate values
-	memUsed := info.MemTotal - info.MemFree - info.Buffers - info.Cached
-	swapUsed := info.SwapTotal - info.SwapFree
+	// Calculate values using saturating subtraction so inconsistent or
+	// partially-read source data (e.g. MemTotal == 0) cannot underflow uint64
+	// and print a nonsensical ~1.8e19 value.
+	memUsed := subSat(subSat(subSat(info.MemTotal, info.MemFree), info.Buffers), info.Cached)
+	swapUsed := subSat(info.SwapTotal, info.SwapFree)
 
 	// Print header
 	if opts.Human {
@@ -137,6 +139,15 @@ func RunFree(w io.Writer, opts FreeOptions) error {
 	_ = suffix // Suppress unused warning
 
 	return nil
+}
+
+// subSat returns a-b, saturating at zero instead of wrapping around when b > a.
+// This guards against uint64 underflow from inconsistent memory-source data.
+func subSat(a, b uint64) uint64 {
+	if b > a {
+		return 0
+	}
+	return a - b
 }
 
 func formatBytes(bytes uint64) string {

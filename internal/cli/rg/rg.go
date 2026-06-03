@@ -359,9 +359,19 @@ func searchDirParallel(ctx context.Context, w io.Writer, dir string, re *regexp.
 		}
 	})
 
-	// Send files to workers
+	// Send files to workers. Make the feeder cancellation-aware so it cannot
+	// block forever on fileCh once workers have exited on <-ctx.Done(): without
+	// this, a cancelled context leaves the feeder stuck on a full channel that
+	// no worker is draining, so wg.Wait()/close(resultCh) are never reached and
+	// the collector goroutine leaks (deadlock).
+feed:
 	for _, f := range files {
-		fileCh <- f
+		select {
+		case fileCh <- f:
+		case <-ctx.Done():
+			// Stop feeding; workers are draining or already exiting.
+			break feed
+		}
 	}
 
 	close(fileCh)

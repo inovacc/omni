@@ -23,6 +23,20 @@ var youtubeChannelRe = regexp.MustCompile(`(?i)^(?:https?://)?(?:www\.|m\.)?yout
 // Videos tab sorted by "Latest" on a channel page.
 const videosTabParams = "EgZ2aWRlb3PyBgQKAjoA"
 
+// Pagination safety bounds. The continuation loop is driven entirely by
+// server-controlled tokens; a hostile or malfunctioning server can return one
+// entry plus a fresh token on every page forever, exhausting memory. These caps
+// bound the work regardless of what the server returns. Real channels (the
+// largest are on the order of tens of thousands of videos) finish well within
+// these limits.
+const (
+	// maxChannelPages caps the number of continuation pages fetched after the
+	// initial browse response.
+	maxChannelPages = 10000
+	// maxChannelEntries caps the total number of video entries accumulated.
+	maxChannelEntries = 1000000
+)
+
 // YoutubeChannelExtractor extracts all videos from a YouTube channel.
 type YoutubeChannelExtractor struct {
 	extractor.BaseExtractor
@@ -67,13 +81,27 @@ func (e *YoutubeChannelExtractor) Extract(ctx context.Context, rawURL string, cl
 	entries, contToken := e.extractInitialEntries(resp)
 	info.Entries = append(info.Entries, entries...)
 
-	// Paginate until no more continuation tokens.
-	for contToken != "" {
+	// Paginate until no more continuation tokens. The loop is bounded by
+	// maxChannelPages / maxChannelEntries and by repeated-token detection so a
+	// hostile server cannot drive it forever (see netvideo-03).
+	seenTokens := make(map[string]struct{})
+	for page := 0; contToken != ""; page++ {
 		select {
 		case <-ctx.Done():
 			return info, ctx.Err()
 		default:
 		}
+
+		if page >= maxChannelPages || len(info.Entries) >= maxChannelEntries {
+			break
+		}
+
+		// A token we have already requested means the server is looping us;
+		// stop rather than fetch the same page indefinitely.
+		if _, dup := seenTokens[contToken]; dup {
+			break
+		}
+		seenTokens[contToken] = struct{}{}
 
 		contResp, contErr := e.browseChannel(ctx, client, "", contToken)
 		if contErr != nil {

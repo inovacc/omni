@@ -1,11 +1,16 @@
 package archive
 
 import (
+	"archive/tar"
 	"bytes"
+	"compress/gzip"
+	"errors"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/inovacc/omni/internal/cli/cmderr"
 )
 
 func TestRunArchive_NoOperation(t *testing.T) {
@@ -391,6 +396,167 @@ func TestRunUnzip(t *testing.T) {
 	})
 	if err != nil {
 		t.Fatalf("RunUnzip() error = %v", err)
+	}
+}
+
+// writeTarGz builds a .tar.gz archive at path from the supplied headers and
+// (for regular files) their contents. data may be nil for non-regular entries.
+func writeTarGz(t *testing.T, path string, headers []*tar.Header, data [][]byte) {
+	t.Helper()
+
+	f, err := os.Create(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = f.Close() }()
+
+	gw := gzip.NewWriter(f)
+	tw := tar.NewWriter(gw)
+
+	for i, h := range headers {
+		if err := tw.WriteHeader(h); err != nil {
+			t.Fatal(err)
+		}
+		if h.Typeflag == tar.TypeReg && i < len(data) && data[i] != nil {
+			if _, err := tw.Write(data[i]); err != nil {
+				t.Fatal(err)
+			}
+		}
+	}
+
+	if err := tw.Close(); err != nil {
+		t.Fatal(err)
+	}
+	if err := gw.Close(); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestExtractTar_RejectsPathTraversal(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	archivePath := filepath.Join(tmpDir, "evil.tar.gz")
+	writeTarGz(t, archivePath, []*tar.Header{
+		{Name: "../../../../etc/cron.d/evil", Mode: 0644, Size: 4, Typeflag: tar.TypeReg},
+	}, [][]byte{[]byte("boom")})
+
+	extractDir := filepath.Join(tmpDir, "out")
+	if err := os.MkdirAll(extractDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	var buf bytes.Buffer
+	err := RunArchive(&buf, []string{}, ArchiveOptions{
+		Extract:   true,
+		File:      archivePath,
+		Directory: extractDir,
+	})
+	if err == nil {
+		t.Fatal("expected path-traversal entry to be rejected")
+	}
+	if !errors.Is(err, cmderr.ErrInvalidInput) {
+		t.Errorf("expected ErrInvalidInput, got %v", err)
+	}
+}
+
+func TestExtractTar_RejectsAbsolutePath(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	archivePath := filepath.Join(tmpDir, "abs.tar.gz")
+	absName := "/abs-escape"
+	if os.PathSeparator == '\\' {
+		absName = "C:/abs-escape"
+	}
+	writeTarGz(t, archivePath, []*tar.Header{
+		{Name: absName, Mode: 0644, Size: 2, Typeflag: tar.TypeReg},
+	}, [][]byte{[]byte("hi")})
+
+	var buf bytes.Buffer
+	err := RunArchive(&buf, []string{}, ArchiveOptions{
+		Extract:   true,
+		File:      archivePath,
+		Directory: filepath.Join(tmpDir, "out"),
+	})
+	if err == nil {
+		t.Fatal("expected absolute entry name to be rejected")
+	}
+	if !errors.Is(err, cmderr.ErrInvalidInput) {
+		t.Errorf("expected ErrInvalidInput, got %v", err)
+	}
+}
+
+func TestExtractTar_RejectsEscapingSymlink(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	archivePath := filepath.Join(tmpDir, "symlink.tar.gz")
+	writeTarGz(t, archivePath, []*tar.Header{
+		{Name: "link", Linkname: "../../../../etc", Typeflag: tar.TypeSymlink, Mode: 0777},
+	}, nil)
+
+	var buf bytes.Buffer
+	err := RunArchive(&buf, []string{}, ArchiveOptions{
+		Extract:   true,
+		File:      archivePath,
+		Directory: filepath.Join(tmpDir, "out"),
+	})
+	if err == nil {
+		t.Fatal("expected escaping symlink to be rejected")
+	}
+	if !errors.Is(err, cmderr.ErrInvalidInput) {
+		t.Errorf("expected ErrInvalidInput, got %v", err)
+	}
+}
+
+func TestExtractTar_RejectsEscapingHardlink(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	archivePath := filepath.Join(tmpDir, "hardlink.tar.gz")
+	writeTarGz(t, archivePath, []*tar.Header{
+		{Name: "hl", Linkname: "../../../../etc/passwd", Typeflag: tar.TypeLink, Mode: 0644},
+	}, nil)
+
+	var buf bytes.Buffer
+	err := RunArchive(&buf, []string{}, ArchiveOptions{
+		Extract:   true,
+		File:      archivePath,
+		Directory: filepath.Join(tmpDir, "out"),
+	})
+	if err == nil {
+		t.Fatal("expected escaping hardlink to be rejected")
+	}
+	if !errors.Is(err, cmderr.ErrInvalidInput) {
+		t.Errorf("expected ErrInvalidInput, got %v", err)
+	}
+}
+
+func TestExtractTar_AllowsContainedRelativeSymlink(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	archivePath := filepath.Join(tmpDir, "good.tar.gz")
+	writeTarGz(t, archivePath, []*tar.Header{
+		{Name: "real.txt", Mode: 0644, Size: 5, Typeflag: tar.TypeReg},
+		{Name: "alias.txt", Linkname: "real.txt", Typeflag: tar.TypeSymlink, Mode: 0777},
+	}, [][]byte{[]byte("hello"), nil})
+
+	extractDir := filepath.Join(tmpDir, "out")
+
+	var buf bytes.Buffer
+	err := RunArchive(&buf, []string{}, ArchiveOptions{
+		Extract:   true,
+		File:      archivePath,
+		Directory: extractDir,
+	})
+	if err != nil {
+		// os.Symlink requires privilege/developer-mode on Windows; skip when
+		// the OS refuses to create the link (our containment check already
+		// passed, the failure is from os.Symlink itself).
+		if errors.Is(err, os.ErrPermission) || strings.Contains(err.Error(), "symlink") {
+			t.Skipf("symlink creation unsupported in this environment: %v", err)
+		}
+		t.Fatalf("contained relative symlink should extract cleanly: %v", err)
+	}
+	if _, err := os.Lstat(filepath.Join(extractDir, "alias.txt")); err != nil {
+		t.Errorf("expected contained symlink to be created: %v", err)
 	}
 }
 

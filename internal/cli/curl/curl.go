@@ -2,6 +2,7 @@ package curl
 
 import (
 	"bytes"
+	"crypto/tls"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -16,6 +17,60 @@ import (
 	"github.com/inovacc/omni/internal/cli/cmderr"
 	"github.com/inovacc/omni/pkg/cobra/helper/output"
 )
+
+const (
+	// defaultTimeout is applied when a library caller leaves Options.Timeout
+	// at the zero value, mirroring nethttp.NewClient's default.
+	defaultTimeout = 30 * time.Second
+
+	// maxRedirects bounds redirect following, matching net/http's default.
+	maxRedirects = 10
+)
+
+// checkRedirectTarget rejects redirects whose host resolves to a
+// private, loopback, or link-local address, limiting SSRF exposure when
+// following a 30x redirect from an attacker-controlled URL. Public hosts
+// are always permitted, so ordinary fetches are unaffected.
+func checkRedirectTarget(u *url.URL) error {
+	host := u.Hostname()
+	if host == "" {
+		return nil
+	}
+
+	if ip := net.ParseIP(host); ip != nil {
+		if isRestrictedIP(ip) {
+			return cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("curl: refusing redirect to restricted address %s", host))
+		}
+		return nil
+	}
+
+	// Hostname: resolve and reject if any address is restricted.
+	addrs, err := net.LookupIP(host)
+	if err != nil {
+		// Resolution failure surfaces later on the actual dial; do not block here.
+		return nil
+	}
+
+	for _, ip := range addrs {
+		if isRestrictedIP(ip) {
+			return cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("curl: refusing redirect to restricted address %s (%s)", host, ip))
+		}
+	}
+
+	return nil
+}
+
+// isRestrictedIP reports whether ip is in a range that should not be
+// reachable via an automatic redirect (loopback, link-local, private,
+// unspecified, or multicast).
+func isRestrictedIP(ip net.IP) bool {
+	return ip.IsLoopback() ||
+		ip.IsLinkLocalUnicast() ||
+		ip.IsLinkLocalMulticast() ||
+		ip.IsPrivate() ||
+		ip.IsUnspecified() ||
+		ip.IsMulticast()
+}
 
 // Options configures the curl command behavior
 type Options struct {
@@ -95,14 +150,47 @@ func Run(w io.Writer, args []string, opts Options) error {
 		req.Header.Set("User-Agent", "omni-curl/1.0")
 	}
 
+	// Clamp a sane default timeout for direct library callers that leave
+	// opts.Timeout at the zero value. The Cobra wrapper always passes 30s,
+	// so the CLI behavior is unchanged; this only protects other callers
+	// from an http.Client with no timeout (slow/hostile server hangs).
+	timeout := opts.Timeout
+	if timeout <= 0 {
+		timeout = defaultTimeout
+	}
+
 	// Create client
 	client := &http.Client{
-		Timeout: opts.Timeout,
+		Timeout: timeout,
+	}
+
+	// Wire the -k/--insecure flag into the transport. Default (no -k) keeps
+	// TLS verification on; only an explicit opt-in disables it, and we warn
+	// on stderr when verification is skipped.
+	if opts.Insecure {
+		_, _ = fmt.Fprintln(os.Stderr, "curl: warning: TLS certificate verification disabled (--insecure)")
+		client.Transport = &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, //nolint:gosec // opt-in via -k/--insecure
+		}
 	}
 
 	if !opts.FollowRedir {
 		client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
 			return http.ErrUseLastResponse
+		}
+	} else {
+		// Redirects are enabled: keep the default 10-redirect cap but reject
+		// hops to private/loopback/link-local hosts to limit SSRF via an
+		// attacker-controlled 30x redirect. Ordinary public fetches are
+		// unaffected.
+		client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+			if len(via) >= maxRedirects {
+				return fmt.Errorf("curl: stopped after %d redirects", maxRedirects)
+			}
+			if err := checkRedirectTarget(req.URL); err != nil {
+				return err
+			}
+			return nil
 		}
 	}
 

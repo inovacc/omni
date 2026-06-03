@@ -48,11 +48,36 @@ designed for Taskfile, CI/CD, and enterprise environments.`,
 	},
 }
 
+// panicExitCode is the exit code used when a command handler panics. It is
+// deliberately distinct from the cmderr sentinel codes (1-6) and from the Go
+// runtime's own panic exit code (2, which aliases ErrInvalidInput) so callers
+// can tell an internal panic apart from a normal classified failure.
+const panicExitCode = 70
+
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
+//
+// A deferred recover converts any panic in a command handler into a classified
+// error so logging is finalized, the error is printed in the standard
+// "Error: <msg>" format, and the process exits with a deterministic code
+// instead of leaking a raw runtime stack trace and exit code 2.
 func Execute() {
-	err := rootCmd.Execute()
+	var err error
 
+	defer func() {
+		if r := recover(); r != nil {
+			err = cmderr.WithExitCode(fmt.Errorf("panic: %v", r), panicExitCode)
+		}
+		finalize(err)
+	}()
+
+	err = rootCmd.Execute()
+}
+
+// finalize finalizes logging with the command/panic error, prints a
+// non-silent error to stderr, and exits with the mapped exit code. It is the
+// single completion path shared by the normal and panic-recovery flows.
+func finalize(err error) {
 	// Finalize logging with the actual command error
 	log := logger.Get()
 	if log != nil && log.IsActive() {

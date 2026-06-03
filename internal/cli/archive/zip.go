@@ -8,7 +8,29 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/inovacc/omni/internal/cli/cmderr"
 )
+
+// containedTarget validates that joining name onto destDir does not escape
+// destDir, defending against zip-slip path traversal (CWE-22). Entry names
+// from an untrusted archive may contain "../" segments or absolute paths that
+// filepath.Join/Clean would resolve outside the destination directory.
+func containedTarget(destDir, name string) (string, error) {
+	cleanDest, err := filepath.Abs(filepath.Clean(destDir))
+	if err != nil {
+		return "", cmderr.Wrap(cmderr.ErrIO, "archive: resolve destination: "+err.Error())
+	}
+
+	target := filepath.Join(cleanDest, name)
+	cleanTarget := filepath.Clean(target)
+
+	if cleanTarget != cleanDest && !strings.HasPrefix(cleanTarget, cleanDest+string(os.PathSeparator)) {
+		return "", cmderr.Wrap(cmderr.ErrInvalidInput, "archive: entry escapes destination: "+name)
+	}
+
+	return target, nil
+}
 
 func createZipArchive(w io.Writer, outFile *os.File, sources []string, opts ArchiveOptions) error {
 	zw := zip.NewWriter(outFile)
@@ -118,7 +140,10 @@ func extractZipArchive(w io.Writer, opts ArchiveOptions) error {
 			}
 		}
 
-		target := filepath.Join(destDir, name)
+		target, err := containedTarget(destDir, name)
+		if err != nil {
+			return err
+		}
 
 		if opts.Verbose {
 			_, _ = fmt.Fprintln(w, name)

@@ -15,6 +15,30 @@ import (
 
 const defaultUA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
 
+// maxResponseBytes caps how many bytes are read from a single HTTP response
+// body. Bodies (player JS, InnerTube JSON, webpages, M3U8 manifests, AES key
+// blobs) come from attacker-controllable servers; without a ceiling a hostile
+// or MITM'd host can stream an unbounded (or transparently gunzipped) body and
+// exhaust memory. 128 MiB comfortably exceeds any legitimate response while
+// bounding the worst case.
+const maxResponseBytes = 128 << 20 // 128 MiB
+
+// readAllLimited reads up to maxResponseBytes from r, returning an error if the
+// body exceeds the cap rather than silently truncating it.
+func readAllLimited(r io.Reader) ([]byte, error) {
+	// Read one extra byte so we can detect overflow of the real limit.
+	body, err := io.ReadAll(io.LimitReader(r, maxResponseBytes+1))
+	if err != nil {
+		return nil, err
+	}
+
+	if int64(len(body)) > maxResponseBytes {
+		return nil, fmt.Errorf("nethttp: response body exceeds %d byte limit", int64(maxResponseBytes))
+	}
+
+	return body, nil
+}
+
 // ClientOptions configures the HTTP client.
 type ClientOptions struct {
 	Proxy      string
@@ -155,7 +179,7 @@ func (c *Client) GetString(ctx context.Context, rawURL string) (string, error) {
 		return "", fmt.Errorf("nethttp: HTTP %d for %s", resp.StatusCode, rawURL)
 	}
 
-	body, err := io.ReadAll(resp.Body)
+	body, err := readAllLimited(resp.Body)
 	if err != nil {
 		return "", fmt.Errorf("nethttp: reading body: %w", err)
 	}
@@ -176,7 +200,7 @@ func (c *Client) GetJSON(ctx context.Context, rawURL string) ([]byte, error) {
 		return nil, fmt.Errorf("nethttp: HTTP %d for %s", resp.StatusCode, rawURL)
 	}
 
-	return io.ReadAll(resp.Body)
+	return readAllLimited(resp.Body)
 }
 
 // PostJSON sends a JSON POST request and returns the body.
@@ -202,7 +226,7 @@ func (c *Client) PostJSON(ctx context.Context, rawURL string, body io.Reader, ex
 
 	defer func() { _ = resp.Body.Close() }()
 
-	return io.ReadAll(resp.Body)
+	return readAllLimited(resp.Body)
 }
 
 // HTTPClient returns the underlying *http.Client.

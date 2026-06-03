@@ -63,8 +63,23 @@ func DefaultConfig() *ScanConfig {
 
 // Scanner scans directory structures
 type Scanner struct {
-	config    *ScanConfig
-	fileCount atomic.Int64
+	config     *ScanConfig
+	fileCount  atomic.Int64
+	progressMu sync.Mutex // serializes OnProgress callback invocation across parallel workers
+}
+
+// fireProgress invokes the configured OnProgress callback under a mutex so that
+// the caller-supplied callback is never called concurrently from multiple worker
+// goroutines in parallel mode. This preserves the single-threaded callback
+// contract regardless of the configured Parallel value.
+func (s *Scanner) fireProgress(count int64) {
+	if s.config.OnProgress == nil {
+		return
+	}
+
+	s.progressMu.Lock()
+	defer s.progressMu.Unlock()
+	s.config.OnProgress(int(count))
 }
 
 // Ensure Scanner implements DirectoryScanner
@@ -188,9 +203,7 @@ func (s *Scanner) scanDir(ctx context.Context, parent *models.Node, currentDepth
 
 		// Increment file count and fire progress callback
 		count := s.fileCount.Add(1)
-		if s.config.OnProgress != nil {
-			s.config.OnProgress(int(count))
-		}
+		s.fireProgress(count)
 
 		// Calculate hash for files if enabled
 		if s.config.ShowHash && !isDir {
@@ -259,9 +272,7 @@ func (s *Scanner) scanDirParallel(ctx context.Context, root *models.Node, worker
 		child.FileInfo = info
 
 		count := s.fileCount.Add(1)
-		if s.config.OnProgress != nil {
-			s.config.OnProgress(int(count))
-		}
+		s.fireProgress(count)
 
 		if s.config.ShowHash && !isDir {
 			hash, err := s.calculateFileHash(fullPath)
