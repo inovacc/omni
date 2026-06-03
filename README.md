@@ -145,6 +145,16 @@ omni decrypt -p mypass -a secret.enc
 | `kill` | Send signals |
 | `time` | Time a command |
 
+### Process (runtime-aware)
+| Command | Description |
+|---------|-------------|
+| `gops` | List Go processes via debug/buildinfo (subcmds: `list`, `kill`, `inspect`, `monitor`, `obfuscation`, `top`, `agent-cmd`, `trace`, `profile`, `stream`) |
+| `nodeps` | List/kill Node.js processes by binary basename |
+| `pyps` | List/kill Python processes by binary basename |
+| `javaps` | List/kill Java (JVM) processes by binary basename |
+
+All four support `--json`, `kill <pid\|name>`, and a `--recursive --yes` bulk-kill guard. `gops` additionally exposes the embeddable agent shipped in `pkg/gopsagent` — Go programs add three lines to expose runtime introspection over loopback TCP.
+
 ### Flow Control
 | Command | Description |
 |---------|-------------|

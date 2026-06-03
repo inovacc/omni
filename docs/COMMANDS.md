@@ -642,6 +642,52 @@ omni time            # Just show current time info
 
 ---
 
+## Process (runtime-aware)
+
+Four runtime-filtered process commands sharing `internal/cli/runtimeps` plumbing. Each lists processes by inspecting binaries on disk — no exec, no embedded agent required for list/kill. `gops` has a richer surface because Go binaries carry `debug/buildinfo` and can embed `pkg/gopsagent`.
+
+### gops - List and signal running Go processes
+```bash
+omni gops                                  # list (default)
+omni gops list [--all] [--json]
+omni gops kill <pid|name> [--signal TERM|KILL|INT|HUP] [--recursive] [--yes]
+omni gops inspect <pid> [--json]           # build info + obfuscation + agent presence
+omni gops monitor <pid> [--watch -i 1s] [--json]   # CPU/mem/IO/FD; --watch streams NDJSON
+omni gops obfuscation <pid|path> [--json]  # garble heuristic
+omni gops top [--all -i 1s]                # bubbletea TUI dashboard (q to quit)
+omni gops agent-cmd <pid> <stack|gc|memstats|version|stats|snapshot>
+omni gops trace <pid> -d 5s -f out.trace   # via embedded agent; analyze with go tool trace
+omni gops profile <pid> -d 30s -f out.pprof # via embedded agent; analyze with go tool pprof
+omni gops stream <pid> -i 1s               # NDJSON snapshot stream via embedded agent
+```
+
+**Safety:** `kill <name>` matching >1 process requires `--recursive`; `--recursive` requires `--yes`.
+
+**Agent (`pkg/gopsagent`):** Go programs add three lines to expose runtime introspection over a loopback TCP socket. Optional HMAC challenge (`Options.AuthKey` + `GOPS_AGENT_KEY` env). Optional startup notification via `~/.config/gops/config.json` (`{"notify_on_startup":true}`) or `GOPS_AGENT_NOTIFY=1`.
+
+### nodeps - List and signal running Node.js processes
+```bash
+omni nodeps                              # list (default)
+omni nodeps list [--all] [--json]
+omni nodeps kill <pid|name> [--recursive --yes] [--signal TERM|KILL|INT|HUP]
+```
+
+### pyps - List and signal running Python processes
+```bash
+omni pyps                                # list (default; matches python/python3/pythonw)
+omni pyps list [--all] [--json]
+omni pyps kill <pid|name> [--recursive --yes]
+```
+
+### javaps - List and signal running Java (JVM) processes
+```bash
+omni javaps                              # list (default; matches java/javaw)
+omni javaps list [--all] [--json]
+omni javaps kill <pid|name> [--recursive --yes]
+```
+
+---
+
 ## Flow Control
 
 ### xargs - Build and execute command lines from standard input

@@ -1,6 +1,6 @@
 # Feature Tracker
 
-> Last updated: February 2026
+> Last updated: 2026-05-24
 
 ---
 
@@ -67,6 +67,16 @@
 - Handler, repository, test code generators
 - cmdtree and aicontext template generation
 - All scaffolding functions accept `afero.Fs` for filesystem abstraction (in-memory testing)
+- `scaffold cobra add --platform-split` emits `cmd_<name>_{windows,darwin,unix}.go` with build tags so each platform supplies exactly one implementation
+- `scaffold cobra init --daemon` generates a complete self-daemonizing service (PID-file state via gopsutil, foreground/install/uninstall, systemd unit / launchd plist / Windows SCM)
+
+### Process (runtime-aware)
+- **Status:** Complete
+- `omni gops` — list, kill, inspect, monitor, obfuscation, top (bubbletea TUI), agent-cmd, trace, profile, stream
+- `omni nodeps`, `omni pyps`, `omni javaps` — list + kill for Node/Python/Java processes
+- Pure Go via `debug/buildinfo` + `gopsutil`; no exec, no agent required for list/kill/inspect/monitor/obfuscation/top
+- Safety: `kill <name>` matching >1 process requires `--recursive`; `--recursive` requires `--yes`
+- Embeddable agent in `pkg/gopsagent` — 3 lines for Go programs to expose runtime introspection over loopback TCP; optional HMAC challenge; optional startup notification via `~/.config/gops/config.json` or `GOPS_AGENT_NOTIFY=1`
 
 ### Project Analyzer
 - **Status:** Complete
@@ -84,9 +94,10 @@
 - Section filtering, compact mode, file output
 
 ### Reusable pkg/ Libraries
-- **Status:** Complete (16 packages)
+- **Status:** Complete (21 packages)
 - idgen, hashutil, jsonutil, encoding, cryptutil, sqlfmt, cssfmt, htmlfmt
-- textutil, search/grep, search/rg, twig, pipeline, video, figlet, buf
+- textutil, search/grep, search/rg, twig, pipeline, video, figlet, userdirs, cobra/helper
+- procutil, procmetrics, obfuscate, gopsagent (runtime-aware process tools, see Process feature above)
 
 ### Testing Infrastructure
 - **Status:** Complete

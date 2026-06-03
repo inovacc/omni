@@ -1,6 +1,6 @@
 # Bug Tracker
 
-> Last updated: February 2026
+> Last updated: 2026-05-17
 
 No confirmed bugs at this time. Issues are tracked as they are discovered.
 

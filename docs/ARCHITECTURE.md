@@ -258,6 +258,11 @@ flowchart TB
     internal/cli --> pkg/pipeline
     internal/cli --> pkg/video
     internal/cli --> pkg/cobra/helper/output
+    internal/cli --> pkg/procutil
+    internal/cli --> pkg/procmetrics
+    internal/cli --> pkg/obfuscate
+    internal/cli --> internal/gopsclient
+    internal/gopsclient --> pkg/gopsagent
 
     pkg/twig --> pkg/twig/scanner
     pkg/twig --> pkg/twig/formatter

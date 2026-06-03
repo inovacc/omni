@@ -32,6 +32,36 @@ replace (
 - `kubectl/pkg/cmd/apply/apply.go` - Apply command implementation
 - `client-go/tools/clientcmd/` - Kubeconfig handling
 
+### gops (inovacc/gops)
+
+| Component | Local Path | Module Path | Feature |
+|-----------|-----------|-------------|---------|
+| gops | `C:\Users\dyamm\My Drive\acer\projects\gops` | `github.com/inovacc/gops` | `omni gops` (+ nodeps/pyps/javaps) |
+
+**Integration model:** Source-adapted (NOT `replace`d). Selected files were ported into omni packages and marked with provenance in `THIRD_PARTY_LICENSES/gops-MIT.txt`:
+
+| omni file | gops source |
+|-----------|-------------|
+| `pkg/procutil/classify.go` | `internal/inspect/gobinary.go` + `process.go` |
+| `pkg/procutil/kill*.go` | `internal/killer/killer*.go` |
+| `pkg/obfuscate/obfuscate.go` | `internal/obfuscate/detector.go` + `verdict.go` |
+| `pkg/procmetrics/procmetrics.go` | `internal/monitor/collector.go` + `metrics.go` |
+| `pkg/gopsagent/{agent,auth,opcodes,handlers}.go` | `pkg/agent/{agent,auth,opcodes,handlers}.go` |
+| `internal/gopsclient/{client,discovery}.go` | `internal/agent/{client,discovery}.go` |
+| `internal/cli/runtimeps/top.go` | `internal/render/tui.go` |
+
+**License:** MIT (preserved verbatim in `THIRD_PARTY_LICENSES/gops-MIT.txt`).
+
+**Upstream:** https://github.com/inovacc/gops
+
+**Local-only addition:** `pkg/gopsagent/config.go` (notify-on-startup config — not present upstream).
+
+**Key files to monitor (upstream changes worth re-porting):**
+- `pkg/agent/handlers.go` - opcode dispatch table (new opcodes appear here first)
+- `pkg/agent/agent.go` - listen / accept loop / pid-file lifecycle
+- `internal/inspect/gobinary.go` - `debug/buildinfo` reading (Go version compat)
+- `internal/obfuscate/detector.go` - garble heuristic tuning
+
 ---
 
 ## Planned Integrations

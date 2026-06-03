@@ -9,24 +9,34 @@ This document analyzes the omni codebase to identify reusable patterns, code con
 ### Project Structure
 ```
 omni/
-├── cmd/                    # 98 Cobra CLI commands
-├── pkg/                    # 12 reusable Go libraries (importable externally)
-│   ├── idgen/              # UUID, ULID, KSUID, Nanoid, Snowflake
-│   ├── hashutil/           # MD5, SHA256, SHA512 hashing
-│   ├── jsonutil/           # jq-style JSON query engine
-│   ├── encoding/           # Base64, Base32, Base58
+├── cmd/                    # 100+ Cobra CLI commands
+├── pkg/                    # 21 reusable Go libraries (importable externally)
+│   ├── cobra/              # Cobra helpers (output formatter, etc.)
 │   ├── cryptutil/          # AES-256-GCM encrypt/decrypt
-│   ├── sqlfmt/             # SQL format/minify/validate
 │   ├── cssfmt/             # CSS format/minify/validate
+│   ├── encoding/           # Base64, Base32, Base58
+│   ├── figlet/             # FIGlet font parser + ASCII art
+│   ├── gopsagent/          # Embeddable runtime-introspection agent (TCP + HMAC + opcode dispatch)
+│   ├── hashutil/           # MD5, SHA256, SHA512 hashing
 │   ├── htmlfmt/            # HTML format/minify/validate
-│   ├── textutil/           # Sort, Uniq, Trim + diff/
+│   ├── idgen/              # UUID, ULID, KSUID, Nanoid, Snowflake
+│   ├── jsonutil/           # jq-style JSON query engine
+│   ├── obfuscate/          # Garble-style obfuscation detector (ELF/Mach-O/PE)
+│   ├── pipeline/           # Streaming io.Pipe stage engine
+│   ├── procmetrics/        # gopsutil-backed Collector for CPU/Mem/IO/FD
+│   ├── procutil/           # Runtime-aware process classification + signaller (Go/Node/Python/Java)
 │   ├── search/grep/        # Pattern search with options
 │   ├── search/rg/          # Gitignore parsing, file type matching
-│   └── twig/               # Tree scanning, formatting, comparison
+│   ├── sqlfmt/             # SQL format/minify/validate
+│   ├── textutil/           # Sort, Uniq, Trim + diff/
+│   ├── twig/               # Tree scanning, formatting, comparison
+│   ├── userdirs/           # XDG user directory paths
+│   └── video/              # Pure-Go YouTube/HLS/generic video downloader
 ├── internal/
-│   ├── cli/               # CLI wrappers (delegates to pkg/ for core logic)
-│   ├── flags/             # Feature flags system
-│   └── logger/            # KSUID-based logging
+│   ├── cli/                # CLI wrappers (delegates to pkg/ for core logic)
+│   ├── gopsclient/         # TCP client + discovery for pkg/gopsagent
+│   ├── flags/              # Feature flags system
+│   └── logger/             # KSUID-based logging
 └── main.go
 ```
 
