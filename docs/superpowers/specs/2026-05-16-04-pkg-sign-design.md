@@ -1,11 +1,11 @@
 # Phase 04 — pkg/sign/ — Signing Primitive
 
-**Status:** Planned
+**Status:** Complete (2026-06-03) — executed via `docs/superpowers/plans/2026-06-03-phase-04-pkg-sign.md`. ADRs 0005/0006 written; `pkg/secret` + `pkg/sign` (minisign-compatible Ed25519 keygen/sign/fail-closed-verify) + `omni sign`/`verify`/`sign keygen` CLI + `omni_sigstore`-tagged bundle verify + pipe + golden negatives delivered. Adversarial fail-open hunt (21 attacks) found no fail-open. Follow-ups: real-minisign interop cross-check; sigstore-go bloats go.mod via MVS despite the build tag.
 **Date:** 2026-05-16 (synthesized from ROADMAP — no phase directory yet)
 **Requirements:** SIGN-01 through SIGN-09
 **Depends on:** Phase 3
-**ADR Gate:** Required before any code lands (2 ADRs)
-**Plans:** TBD
+**ADR Gate:** Required before any code lands (2 ADRs) — ADR-0005, ADR-0006 written & accepted.
+**Plans:** `docs/superpowers/plans/2026-06-03-phase-04-pkg-sign.md`
 
 ---
 
