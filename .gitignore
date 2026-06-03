@@ -53,3 +53,18 @@ docs/testing/
 
 # vendored buf/googleapis testdata cache — not a public package
 /pkg/private/
+
+# --- generated artifacts & local junk (housekeeping 2026-06-03) ---
+/bin/
+*.log
+/coverage_*.txt
+__pycache__/
+*.pyc
+# code:sweep / quality-tool generated reports (docs/quality/HARDENING.md is hand-maintained — keep tracked)
+/CODE-SWEEP.md
+/docs/quality/AI-FIX-INSTRUCTIONS.md
+/docs/quality/bad-practices.*
+/docs/quality/cognitive.*
+/docs/quality/modernization.*
+/docs/quality/summary.json
+/docs/quality/vulnerabilities.*
