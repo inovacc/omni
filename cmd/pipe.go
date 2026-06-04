@@ -23,6 +23,7 @@ import (
 	"github.com/inovacc/omni/internal/cli/pipe"
 	"github.com/inovacc/omni/internal/cli/rev"
 	"github.com/inovacc/omni/internal/cli/sbom"
+	"github.com/inovacc/omni/internal/cli/scan"
 	"github.com/inovacc/omni/internal/cli/sed"
 	"github.com/inovacc/omni/internal/cli/shuf"
 	"github.com/inovacc/omni/internal/cli/sign"
@@ -223,6 +224,16 @@ func buildPipeRegistry() *command.Registry {
 	reg.Register("sbom", command.AdaptWriterReaderArgs(
 		func(w io.Writer, _ io.Reader, args []string) error {
 			return sbom.RunSBOM(w, args, sbom.SBOMOptions{Format: "spdx", From: "auto", OmniVersion: rootVersion()})
+		},
+	))
+
+	// scan: reads an SBOM from stdin and scans it against the signed OSV DB.
+	// Pipe stages take only (w, r, args), so the DB path/key and --fail-on gate
+	// come from the OMNI_SCAN_* environment via OptionsFromEnv. scan source and
+	// scan db update stay Cobra-only — they are not stdin transforms.
+	reg.Register("scan", command.AdaptWriterReaderArgs(
+		func(w io.Writer, r io.Reader, args []string) error {
+			return scan.RunScanStdin(w, r, args, scan.OptionsFromEnv())
 		},
 	))
 

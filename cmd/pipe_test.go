@@ -55,6 +55,34 @@ func TestPipeSignDispatchesToGlue(t *testing.T) {
 	}
 }
 
+// TestPipeRegistryHasScan asserts the scan command is wired into the unified
+// pipe registry so `omni pipe` can scan an SBOM read from stdin (scan source and
+// scan db update stay Cobra-only — they are not stdin transforms).
+func TestPipeRegistryHasScan(t *testing.T) {
+	reg := buildPipeRegistry()
+	if _, ok := reg.Get("scan"); !ok {
+		t.Error("buildPipeRegistry(): \"scan\" not registered")
+	}
+}
+
+// TestPipeScanDispatchesToGlue confirms the registered scan command reaches the
+// real scan.RunScanStdin glue: with no DB configured (no OMNI_SCAN_DB env) it
+// returns ErrInvalidInput ("--db ... is required"), proving the wiring is live.
+func TestPipeScanDispatchesToGlue(t *testing.T) {
+	t.Setenv("OMNI_SCAN_DB", "")
+	t.Setenv("OMNI_SCAN_DB_KEY", "")
+	reg := buildPipeRegistry()
+	cmd, ok := reg.Get("scan")
+	if !ok {
+		t.Fatal("scan not registered")
+	}
+	var buf bytes.Buffer
+	err := cmd.Run(context.Background(), &buf, strings.NewReader("{}"), nil)
+	if !cmderr.IsInvalidInput(err) {
+		t.Fatalf("scan with no DB: err = %v, want ErrInvalidInput", err)
+	}
+}
+
 // TestPipeSbomDispatchesToGlue confirms the registered sbom command reaches the
 // real sbom.RunSBOM glue (reader ignored): given a temp module directory it
 // writes SPDX JSON to the writer. This proves sbom participates in the unified
