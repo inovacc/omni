@@ -1209,3 +1209,35 @@ categories:
       - name: scan_source_unsupported
         args: ["scan", "source", "./..."]
         exit_code: 6
+
+  # attest: verify a committed, deterministically-signed DSSE/SLSA envelope
+  # (LOCAL builder.id, no timestamps). Output is path-free; strip_path would
+  # mangle the https://slsa.dev/... predicateType, so NO normalization is used —
+  # exact bytes are pinned. The SLSA-overclaim refusal is unit-tested (it needs
+  # OMNI_SIGN_PASSPHRASE, which the golden harness cannot set per-test).
+  - name: attest
+    tests:
+      # Valid envelope + matching artifact -> exit 0.
+      - name: attest_verify_ok
+        args: ["attest", "verify", "--key", "{fixtures}/test.pub", "--artifact", "{fixtures}/artifact.bin", "{fixtures}/app.intoto.jsonl"]
+        exit_code: 0
+
+      # Tampered payload -> signature no longer verifies -> ErrConflict (exit 1).
+      - name: attest_verify_tampered
+        args: ["attest", "verify", "--key", "{fixtures}/test.pub", "--artifact", "{fixtures}/artifact.bin", "{fixtures}/tampered.jsonl"]
+        exit_code: 1
+
+      # Wrong public key -> ErrConflict (exit 1).
+      - name: attest_verify_wrong_key
+        args: ["attest", "verify", "--key", "{fixtures}/wrong.pub", "--artifact", "{fixtures}/artifact.bin", "{fixtures}/app.intoto.jsonl"]
+        exit_code: 1
+
+      # Envelope that is not JSON -> ErrInvalidInput (exit 2).
+      - name: attest_verify_bad_envelope
+        args: ["attest", "verify", "--key", "{fixtures}/test.pub", "--artifact", "{fixtures}/artifact.bin", "{fixtures}/artifact.bin"]
+        exit_code: 2
+
+      # Unsupported predicate type -> ErrUnsupported (exit 6).
+      - name: attest_unsupported_predicate
+        args: ["attest", "--predicate-type", "spdx", "--key", "{fixtures}/test.key", "--artifact", "{fixtures}/artifact.bin"]
+        exit_code: 6

@@ -1,0 +1,5 @@
+{
+  "exit_code": 2,
+  "stdout_file": "attest_verify_bad_envelope.stdout",
+  "stderr": "Error: parse envelope JSON: invalid input\n"
+}

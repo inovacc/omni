@@ -357,6 +357,14 @@ tasks:
       - go test -coverprofile=cmderr-cov.out ./internal/cli/cmderr/...
       - go run ./tools/cmderr-cov -profile=cmderr-cov.out -min=90
 
+  attest:validate-schema:
+    desc: Validate the SLSA Provenance v1 predicate omni emits against the committed schema + ADR-0009 builder.id allowlist (CI gate, Phase 07)
+    deps: [ build ]
+    env:
+      OMNI_BIN: ./bin/omni
+    cmds:
+      - python testing/scripts/validate_slsa_schema.py
+
   check:
     desc: Run all quality checks (fmt, vet, lint, test)
     cmds:

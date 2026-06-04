@@ -1,0 +1,5 @@
+{
+  "exit_code": 1,
+  "stdout_file": "attest_verify_tampered.stdout",
+  "stderr": "Error: attestation verification failed: conflict\n"
+}

@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://slsa.dev/provenance/v1/schema",
+  "title": "SLSA Provenance v1 predicate",
+  "description": "JSON Schema for the SLSA Provenance v1 predicate (predicateType https://slsa.dev/provenance/v1), authored to the published SLSA v1.0 specification (https://slsa.dev/spec/v1.0/provenance). Used by 'task attest:validate-schema' to validate the predicate omni emits. Required fields follow the spec; optional fields are permitted but not required.",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["buildDefinition", "runDetails"],
+  "properties": {
+    "buildDefinition": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["buildType", "externalParameters"],
+      "properties": {
+        "buildType": {
+          "type": "string",
+          "format": "uri",
+          "minLength": 1
+        },
+        "externalParameters": {
+          "type": "object"
+        },
+        "internalParameters": {
+          "type": "object"
+        },
+        "resolvedDependencies": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/resourceDescriptor" }
+        }
+      }
+    },
+    "runDetails": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["builder"],
+      "properties": {
+        "builder": {
+          "type": "object",
+          "additionalProperties": true,
+          "required": ["id"],
+          "properties": {
+            "id": {
+              "type": "string",
+              "format": "uri",
+              "minLength": 1
+            },
+            "version": { "type": "object" },
+            "builderDependencies": {
+              "type": "array",
+              "items": { "$ref": "#/$defs/resourceDescriptor" }
+            }
+          }
+        },
+        "metadata": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "invocationId": { "type": "string" },
+            "startedOn": { "type": "string" },
+            "finishedOn": { "type": "string" }
+          }
+        },
+        "byproducts": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/resourceDescriptor" }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "resourceDescriptor": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "name": { "type": "string" },
+        "uri": { "type": "string" },
+        "digest": {
+          "type": "object",
+          "additionalProperties": { "type": "string" }
+        },
+        "content": { "type": "string" },
+        "downloadLocation": { "type": "string" },
+        "mediaType": { "type": "string" }
+      }
+    }
+  }
+}

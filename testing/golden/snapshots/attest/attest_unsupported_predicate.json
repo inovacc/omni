@@ -1,0 +1,5 @@
+{
+  "exit_code": 6,
+  "stdout_file": "attest_unsupported_predicate.stdout",
+  "stderr": "Error: only --predicate-type slsa-provenance is supported: unsupported\n"
+}
