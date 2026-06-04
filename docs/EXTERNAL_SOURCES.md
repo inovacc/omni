@@ -7,6 +7,24 @@ Monitor these repos for updates, security patches, and new features.
 
 ## Active Integrations
 
+### Vulnerability Data (OSV schema)
+
+`omni scan` consumes the **OSV vulnerability schema** as a data format (no code is
+vendored). The signed `osv-db.zip` bundle carries upstream OSV JSON records
+byte-for-byte; omni's pure-Go matcher reads only the documented fields and
+tolerates unknown ones (forward-compatible across OSV minor versions).
+
+| Source | URL | Use |
+|--------|-----|-----|
+| OSV schema | https://ossf.github.io/osv-schema/ | record shape (`affected[].ranges/versions`, `severity[]`) the matcher reads |
+| osv.dev export | https://osv.dev (gs://osv-vulnerabilities/Go/all.zip) | upstream Go ecosystem records repackaged into the signed bundle |
+| Go vuln DB | https://vuln.go.dev / golang.org/x/vulndb | Go-team-curated source (alternative feed) |
+
+**Note:** `golang.org/x/vuln` (govulncheck, for reachability) is intentionally NOT
+a dependency — reachability is deferred per ADR-0008 (it execs `go list` and would
+bloat `go.mod` via MVS). Its future home is a separate `contrib/govulncheck-scan`
+module.
+
 ### Kubernetes
 
 | Component | Local Path | Module Path | Feature |

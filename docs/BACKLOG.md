@@ -53,6 +53,10 @@ Surfaced by the hardening sweep on `harden/audit-fixes`; full context in `docs/q
 - [x] **[DONE 2026-06-03] `internal/cli/exec` test hermeticity:** Root cause — on Windows `os.UserHomeDir()` reads `USERPROFILE`, not `HOME`, so tests setting only `HOME` still saw the dev's real `~/.aws`/`~/.npmrc`/`~/.netrc`. Fixed test-only: set `USERPROFILE` alongside `HOME` to a `t.TempDir()`, isolate `PATH`, create a fake `.netrc` in the temp HOME, and assert the strict-mode `cmderr.ErrInvalidInput` sentinel fires before any exec. Production code confirmed correct.
 - [x] **[DONE 2026-06-03] `internal/cli/dotenv` export-format test:** Pinned `t.Setenv("SHELL", "/bin/bash")` so `DetectShell()` selects the POSIX branch deterministically on every OS (SHELL is checked before `runtime.GOOS`). Test-only; production behavior unchanged.
 
+### Phase 06 — scan reachability (deferred 2026-06-03)
+
+- [ ] **[BACKLOG] `contrib/govulncheck-scan` — reachability source scanning:** `omni scan source <dir>` (report only vulns whose symbol is actually called) was dropped from v1.0 (ADR-0008). Its only implementation, `golang.org/x/vuln`, (a) loads packages via `x/tools/go/packages` which execs `go list` (violates the no-exec rule) and (b) pulls `golang.org/x/vuln` + `golang.org/x/tools` into the main `go.mod` via MVS even behind a build tag (violates the lean-`go.mod` rule, ADR-0007). Future home: a self-contained `contrib/govulncheck-scan` module (mirroring `contrib/sigstore-verify`) under a sanctioned `go list` exec exception, decided in a follow-up ADR. Until then `omni scan source` returns `cmderr.ErrUnsupported` (exit 6).
+
 ### Pre-existing flaky tests
 
 - [x] **[DONE 2026-06-03] `internal/cli/exec/detector_test.go::TestDetectGo_PrivateWithNetrc`:** Fixed as part of the exec test-hermeticity work above — now sets `USERPROFILE` and creates a fake `.netrc` in the temp HOME, so it is deterministic on Windows too.

@@ -1,11 +1,12 @@
 # Phase 06 — pkg/scan/ — Vulnerability Scanning
 
-**Status:** Planned
+**Status:** Complete (2026-06-03) — executed via `docs/superpowers/plans/2026-06-03-phase-06-pkg-scan.md`. ADR-0008 written & decided; research spike → `docs/superpowers/research/phase-06/RESEARCH.md`. Delivered: `pkg/scan` (pure-Go OSV matcher, CVSS v3.1 severity, signed-DB load/verify, `--max-db-age` staleness), `pkg/sbom/format.Parse`+`Document.Components()`+`purl.Parse` (read side of the boundary), `omni scan` / `scan db update` CLI, pipe integration, golden masters (8 scan + reader round-trips). **Reachability dropped from v1.0 (SCAN-02 deferred):** `omni scan source` → `ErrUnsupported`; `golang.org/x/vuln` violates both no-exec and lean-`go.mod` (MVS) — future `contrib/govulncheck-scan` module.
 **Date:** 2026-05-16 (synthesized from ROADMAP — no phase directory yet)
-**Requirements:** SCAN-01 through SCAN-09
+**Requirements:** SCAN-01 through SCAN-09 (SCAN-02 reachability deferred per ADR-0008)
 **Depends on:** Phase 5
-**Research spike:** Required at phase-planning time (OSV DB distribution, OSV-scanner v2 API, grype v6 schema, `golang.org/x/vuln` public API)
-**Plans:** TBD
+**Research spike:** Done — `docs/superpowers/research/phase-06/RESEARCH.md` (OSV DB distribution, `golang.org/x/vuln` API/exec/weight, OSV schema + CVSS bands, reachability feasibility)
+**Plans:** `docs/superpowers/plans/2026-06-03-phase-06-pkg-scan.md`
+**ADR Gate:** `docs/adr/ADR-0008-pure-go-vuln-scan-and-signed-osv-db.md` (Accepted)
 
 ---
 

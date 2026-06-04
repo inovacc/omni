@@ -1056,6 +1056,36 @@ omni sbom . --format spdx --source-date 1970-01-01T00:00:00Z --out omni.spdx.jso
 omni sbom . --format spdx --out omni.spdx.json --sign --key release.key
 ```
 
+### scan - Scan an SBOM against a signed OSV vulnerability database
+```bash
+omni scan [OPTION]... <sbom.json> [flags]
+      --db FILE                 signed osv-db.zip bundle (verified on load; required)
+      --db-key FILE             minisign public key (*.pub) for the DB (required)
+      --db-sig FILE             detached signature path (default: <db>.minisig)
+      --fail-on LEVEL           fail (exit 1) on a finding >= LEVEL (none|low|medium|high|critical)
+      --max-db-age DUR          fail if the DB is older than DUR (e.g. 168h); 0 disables
+      --json                    emit JSON instead of the text table
+omni scan source <pattern>      reachability scan — deferred in v1.0 (returns unsupported, exit 6)
+omni scan db update --url URL --db-key FILE [--cache-dir DIR]   download + verify the OSV DB
+```
+
+Matches each SBOM component's Go purl against a `pkg/sign`-signed OSV database
+(SPDX 2.3 / CycloneDX 1.5 input — omni's own or third-party). Pure-Go, no exec,
+offline-first: the DB signature is verified on every load (a tampered/unsigned
+bundle fails closed → `cmderr.ErrConflict`) and `--max-db-age` rejects a stale DB
+loudly. `--fail-on` returns exit 1 for CI gating. Reachability source scanning is
+deferred per ADR-0008 (`omni scan source` → `ErrUnsupported`, exit 6); its future
+home is a separate `contrib/govulncheck-scan` module — never the main binary.
+`pkg/scan` imports only the `pkg/sbom/format.Document` boundary. See
+`docs/adr/ADR-0008-pure-go-vuln-scan-and-signed-osv-db.md`.
+
+**Examples:**
+```bash
+omni scan sbom.spdx.json --db osv-db.zip --db-key db.pub
+omni scan sbom.cdx.json --db osv-db.zip --db-key db.pub --fail-on high
+omni scan db update --url https://example.com/osv --db-key db.pub
+```
+
 ### encrypt - Encrypt data using AES-256-GCM
 ```bash
 omni encrypt [OPTION]... [FILE] [flags]
