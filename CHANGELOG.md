@@ -40,6 +40,13 @@ no-CGO, no new external processes in the binary.
   workflow was removed).
 - `golangci-lint` clean; cross-platform (Linux/macOS/Windows × amd64/arm64) builds verified.
 
+### Security
+- Patched all 4 `govulncheck`-reachable CVEs (2026-06-04): stdlib `net/textproto`
+  (GO-2026-5039), `mime` (GO-2026-5038), and `crypto/x509` (GO-2026-5037) via a
+  pinned `toolchain go1.26.4` (the `go 1.25.0` source floor is unchanged); and
+  `github.com/moby/spdystream` (GO-2026-4958) bumped v0.5.0 → v0.5.1. `govulncheck`
+  is now a **blocking** CI gate in both the test and release workflows.
+
 ### Notes
 - Golden-master fixtures are `-text`-locked (`.gitattributes`) so hashed/signed
   inputs are byte-stable across platforms.

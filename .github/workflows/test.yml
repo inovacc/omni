@@ -39,11 +39,11 @@ jobs:
       - name: Test
         run: go test ./... -count=1 -timeout 15m
 
-      # Advisory until the reachable Go stdlib / golang.org/x/net CVEs are
-      # patched (see docs/quality/MATURITY-2026-06-03.md). Make this blocking
-      # (drop continue-on-error) once the toolchain + x/net are bumped.
-      - name: govulncheck (advisory)
-        continue-on-error: true
+      # Blocking: the reachable stdlib (textproto/mime/x509, fixed in go1.26.4)
+      # and moby/spdystream (GO-2026-4958, fixed v0.5.1) CVEs were patched
+      # 2026-06-04. The patched toolchain is pinned via `toolchain go1.26.4`
+      # in go.mod (picked up by go-version-file above), so this gate is now hard.
+      - name: govulncheck (blocking)
         run: |
           go install golang.org/x/vuln/cmd/govulncheck@latest
           govulncheck ./...

@@ -39,8 +39,9 @@ jobs:
           version: latest
       - name: Test
         run: go test ./... -count=1 -timeout 15m
-      - name: govulncheck (advisory)
-        continue-on-error: true
+      # Blocking: reachable CVEs patched 2026-06-04 (toolchain go1.26.4 +
+      # moby/spdystream v0.5.1). A release must not ship with known reachable vulns.
+      - name: govulncheck (blocking)
         run: |
           go install golang.org/x/vuln/cmd/govulncheck@latest
           govulncheck ./...
