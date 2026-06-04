@@ -97,6 +97,7 @@ func finalize(err error) {
 }
 
 func init() {
+	rootCmd.Version = rootVersion()
 	rootCmd.SilenceErrors = true
 	rootCmd.SilenceUsage = true
 	rootCmd.CompletionOptions.DisableDefaultCmd = true

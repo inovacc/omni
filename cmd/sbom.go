@@ -5,14 +5,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// sbomVersion is the tool label embedded in generated SBOM documents. It is a
-// package-level constant because cmd/ has no shared version accessor yet; when
-// one is introduced, rootVersion should read from it.
-const sbomVersion = "dev"
-
-// rootVersion returns the omni version string used to label generated SBOMs.
-func rootVersion() string { return sbomVersion }
-
 var sbomCmd = &cobra.Command{
 	Use:   "sbom [OPTION]... PATH",
 	Short: "Generate an SBOM (SPDX 2.3 or CycloneDX 1.5) for a Go module dir or binary",
