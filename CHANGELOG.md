@@ -74,6 +74,14 @@ processes in the binary.
   `OpGC` auth gating; atomic 0600 credential writes; OSV version `v`-prefix normalization.
   Verified independently: build/vet/tests/golden (195/27 baseline) all green, `go.mod`
   unchanged, `govulncheck` 0.
+- Second-pass audit (the critic's gaps): fixed the `video/auth.go` CDP WebSocket
+  unbounded-read (32 MiB cap) and dial-SSRF (loopback-only guard), and scaffolding
+  `handler`/`repository` name path-traversal (reject separators / `..`). Triaged the
+  rest: cookie files already `0o600`; `OpRuntimeSnapshot` discloses counts only (no
+  gap); `dotenv` cmd-`set` escaping is a LOW operator-owned-`.env` trust boundary
+  (tracked). Open maintainer decision: `video/auth.go` spawns headless Chrome via
+  `exec.Command`, which is not in the documented sanctioned-exec allowlist — sanction
+  + document or remove.
 
 ### Notes
 - Golden-master fixtures are `-text`-locked (`.gitattributes`) so hashed/signed

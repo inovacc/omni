@@ -44,6 +44,14 @@ Resolved by the no-exec boundary decision: the invariant governs *utility reimpl
 - [x] **[RESOLVED — accepted] `internal/cli/exec/exec.go`:** ACCEPTED as a sanctioned exec wrapper (the launcher *is* the feature). Documented, not a violation. (was: no-exec-violation, Plan 14.)
 - [x] **[RESOLVED — accepted] `internal/cli/repo/remote.go`:** ACCEPTED as a sanctioned exec wrapper (`git`/`gh` clone orchestration). Documented. (was: no-exec-violation, Plan 13.) Optional future enhancement: pure-Go clone via `go-git` — nice-to-have, not required.
 
+### Hardening deferrals (2026-06-04 second-pass audit)
+
+Open items from `docs/quality/HARDENING-2026-06-04.md` (all 19 confirmed findings of that audit are FIXED; these are the second-pass triage residue):
+
+- [ ] **[DECISION / no-exec] `internal/cli/video/auth.go` headless-Chrome exec sink:** the YouTube cookie extractor spawns Chrome via `exec.Command`, which is NOT in the documented sanctioned-exec allowlist (`exec`/`forloop`/`task`/`terraform`/`repo`/git-gh-hacks/`buf generate`/machineid/uname). Maintainer decision needed: sanction + document it (the launcher *is* the feature, like `exec`/`repo`) or remove the path. The CDP read-cap and dial-SSRF defenses around it are already fixed.
+- [ ] **[BACKLOG / LOW] `dotenv` `FormatExport` cmd-`set` escaping:** the `eval "$(omni dotenv -e)"` path: the cmd.exe `set` branch does no escaping and the KEY is never escaped in any shell branch. LOW (operator-owned `.env` trust boundary); a robust per-shell key+value escaper (incl. cmd quoting) is the fix.
+- [ ] **[BACKLOG] second-pass audit completion:** the verify workflow hit a `StructuredOutput` tooling error; re-run a focused audit of the YAML alias-bomb (`yaml.Unmarshal` of untrusted Taskfile/buf configs) and bespoke recursive-parser depth (`jsonfmt`/`tomlutil`/`cssfmt`/`htmlfmt`/`sqlfmt`) — speculative, unconfirmed. Also apply the scaffolding name-traversal guard to the `cobra`/`mcp` scaffolders for parity.
+
 ### Hardening deferrals (from security/robustness audit, 2026-06-03)
 
 Surfaced by the hardening sweep on `harden/audit-fixes`; full context in `docs/quality/HARDENING.md`.

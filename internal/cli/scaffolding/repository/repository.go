@@ -40,6 +40,13 @@ func RunRepositoryInit(w io.Writer, fs afero.Fs, name string, opts RepositoryOpt
 		return cmderr.Wrap(cmderr.ErrInvalidInput, "scaffold: repository name is required")
 	}
 
+	// Reject a name that could escape opts.Dir via path traversal (CWE-22): the
+	// name is joined into the output path and may be templated from external
+	// input. It must be a bare identifier.
+	if strings.ContainsAny(name, `/\`) || strings.Contains(name, "..") {
+		return cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("scaffold: invalid repository name %q: must not contain path separators or '..'", name))
+	}
+
 	// Set defaults
 	if opts.Package == "" {
 		opts.Package = "repository"

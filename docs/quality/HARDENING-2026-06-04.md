@@ -45,7 +45,25 @@ engine) and excludes already-fixed items and the sanctioned exec wrappers.
 
 | 3–19 | the 17 MEDIUM/LOW findings (15 distinct fixes; `#5≡#8` HLS and `#9≡#16` scan-db-update deduped) | ✅ **fixed** 2026-06-04 | each remediated RED→GREEN with a new regression test (`repo` `--`-terminator + reject leading `-`; `archive` zip-bomb cap + `O_NOFOLLOW`/lstat symlink guard via `nofollow_{unix,windows}.go`; `gzip`/`bzip2` decompress cap; HLS + SBOM + scan-db-update `io.LimitReader` caps; scan-db-update `http.Client` timeout + redirect-host validation; `scan` v-prefix `semver.Canonical` normalization; `xmlutil` depth cap; WS `payloadLen` negative/overflow guard; `cp` mode preserve; `gopsclient` loopback-validate-before-dial + stream deadline; `gopsagent` `OpGC` gated by `privileged()`; `savecreds` atomic 0600). |
 
-**All 19 findings remediated 2026-06-04.** Independently verified (not trusting agent "fixed" claims): `go build ./...` + `go vet ./...` clean, every touched package's tests green, **golden 195/27 (baseline, 0 regressions)**, `go.mod` unchanged, `govulncheck` 0. The critic's second-pass targets below (`internal/cli/video/auth.go` CDP read/exec/dial, scaffolding path traversal, dotenv eval-escaping, YAML alias-bomb, full gops opcode diff, `go test -race`) remain for a follow-up audit.
+**All 19 findings remediated 2026-06-04.** Independently verified (not trusting agent "fixed" claims): `go build ./...` + `go vet ./...` clean, every touched package's tests green, **golden 195/27 (baseline, 0 regressions)**, `go.mod` unchanged, `govulncheck` 0.
+
+### Second-pass audit results (2026-06-04)
+
+The completeness-critic gaps were investigated (the automated verify workflow hit a `StructuredOutput` tooling error, so the surfaced findings were triaged by hand against the live source):
+
+| Target | Verdict | Action |
+|--------|---------|--------|
+| `video/auth.go` CDP response read loop | **REAL** — unbounded `append`, only a 10s deadline (no size cap) | ✅ fixed — `maxCDPResponse` 32 MiB cap |
+| `video/auth.go` CDP WebSocket dial | **REAL** — host from `/json/list`, no loopback check | ✅ fixed — `requireLoopbackHostPort` guard before dial + test |
+| `video/auth.go` cookie/prefs file perms | not an issue | already written `0o600` |
+| `video/auth.go` headless-Chrome `exec.Command` | **DESIGN DECISION** — real exec sink, NOT in the sanctioned allowlist | ⏸ **needs maintainer**: sanction + document (like `exec`/`repo`, "the launcher is the feature") or remove |
+| scaffolding name → path traversal (`handler`, `repository`) | **REAL** — no containment guard | ✅ fixed — reject path separators / `..` + RED→GREEN tests (cobra/mcp scaffolders: apply same guard as follow-up) |
+| `dotenv` `FormatExport` shell-escaping | REAL but **LOW** — operator-owned `.env`; the cmd `set` branch is unescaped and the KEY is never escaped | ⏸ documented trust boundary — not fixed (robust cmd-escaping is non-trivial; tracked in BACKLOG) |
+| `gopsagent` `OpRuntimeSnapshot` not in `privileged()` | **FALSE POSITIVE** — discloses only counts (goroutines/heap/cpu/version), no stacks; consistent with the unprivileged `OpStats`/`OpMemStats` (the sensitive `OpStack` IS privileged) | none |
+| YAML alias-bomb / bespoke recursive-parser depth (`jsonfmt`/`tomlutil`/`cssfmt`/`htmlfmt`/`sqlfmt`) | not confirmed (verify workflow failed before producing evidence) | ⏸ speculative — focused follow-up recommended |
+| `go test -race` | data-race class is exercised by CI (ubuntu `go test -race`); a local Windows run needs CGO + a C toolchain | covered in CI |
+
+**Open items for the maintainer:** (1) the `video/auth.go` Chrome `exec.Command` invariant decision (sanction-and-document vs remove); (2) `dotenv` cmd-`set` escaping (LOW); (3) optional follow-up audit of the YAML alias-bomb / recursive-parser-depth speculation.
 
 ## 🟠 High
 

@@ -265,6 +265,28 @@ func getCDPCookies(debugURL string) ([]*http.Cookie, error) {
 }
 
 // getCookiesViaWebSocket connects to Chrome's WebSocket and calls Network.getAllCookies.
+// maxCDPResponse bounds the total bytes buffered from a CDP WebSocket response
+// so a hostile/runaway debugger cannot exhaust memory (HARDENING 2026-06-04).
+const maxCDPResponse = 32 << 20
+
+// requireLoopbackHostPort returns an error unless hostport is a loopback host
+// (or "localhost"). omni only talks to the headless Chrome it spawned on a
+// localhost debug port; refusing a non-loopback host blocks a local process
+// that races the debug port from redirecting the dial (SSRF, defense-in-depth).
+func requireLoopbackHostPort(hostport string) error {
+	host, _, err := net.SplitHostPort(hostport)
+	if err != nil {
+		host = hostport
+	}
+	if host == "localhost" {
+		return nil
+	}
+	if ip := net.ParseIP(host); ip != nil && ip.IsLoopback() {
+		return nil
+	}
+	return fmt.Errorf("cdp: refusing to dial non-loopback debugger host %q", hostport)
+}
+
 func getCookiesViaWebSocket(wsURL string) ([]*http.Cookie, error) {
 	// Use a raw WebSocket connection via net.Dial + HTTP upgrade.
 	// Parse the wsURL to get host and path.
@@ -275,6 +297,12 @@ func getCookiesViaWebSocket(wsURL string) ([]*http.Cookie, error) {
 	path := "/"
 	if len(parts) > 1 {
 		path = "/" + parts[1]
+	}
+
+	// The debugger target is derived from Chrome's /json/list response; only ever
+	// dial omni's own localhost Chrome (defense-in-depth against debug-port races).
+	if err := requireLoopbackHostPort(host); err != nil {
+		return nil, err
 	}
 
 	conn, err := net.DialTimeout("tcp", host, 5*time.Second)
@@ -318,6 +346,9 @@ func getCookiesViaWebSocket(wsURL string) ([]*http.Cookie, error) {
 		rn, readErr := conn.Read(readBuf)
 		if rn > 0 {
 			responseData = append(responseData, readBuf[:rn]...)
+			if len(responseData) > maxCDPResponse {
+				return nil, fmt.Errorf("cdp: response exceeds %d byte limit", maxCDPResponse)
+			}
 			// Try to extract the JSON response from WebSocket frames.
 			if payload := wsExtractPayload(responseData); payload != nil {
 				var result struct {
