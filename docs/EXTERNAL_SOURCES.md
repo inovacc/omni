@@ -25,6 +25,23 @@ a dependency — reachability is deferred per ADR-0008 (it execs `go list` and w
 bloat `go.mod` via MVS). Its future home is a separate `contrib/govulncheck-scan`
 module.
 
+### Attestation specs (in-toto / DSSE / SLSA)
+
+`omni attest` consumes these published specifications as data formats (no code is
+vendored — `pkg/attest` is a pure-Go reimplementation; NOT an in-toto/sigstore SDK).
+
+| Spec | URL | Use |
+|------|-----|-----|
+| in-toto Statement v1 | https://in-toto.io/Statement/v1 | the attestation statement envelope (`_type`, `subject`, `predicateType`, `predicate`) |
+| SLSA Provenance v1 | https://slsa.dev/spec/v1.0/provenance | the provenance predicate shape (`buildDefinition`, `runDetails.builder.id`) |
+| DSSE / PAE | https://github.com/secure-systems-lab/dsse | the Pre-Authentication Encoding signed by `pkg/sign` |
+| SLSA Provenance v1 schema | committed at `testing/schemas/slsa-provenance-v1.schema.json` | CI `task attest:validate-schema` gate (authored to the SLSA v1.0 spec) |
+
+**Note:** the in-toto-golang / sigstore SDKs are intentionally NOT dependencies
+(they pull Rekor/go-tuf/protobuf-specs via MVS — ADR-0007/0009). omni-signed DSSE
+envelopes use a minisign signature blob (verifiable by `omni attest verify`, not
+generic cosign).
+
 ### Kubernetes
 
 | Component | Local Path | Module Path | Feature |

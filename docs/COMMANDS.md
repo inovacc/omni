@@ -1086,6 +1086,33 @@ omni scan sbom.cdx.json --db osv-db.zip --db-key db.pub --fail-on high
 omni scan db update --url https://example.com/osv --db-key db.pub
 ```
 
+### attest - Generate / verify SLSA provenance attestations (DSSE/in-toto)
+```bash
+omni attest [OPTION]... --artifact FILE [flags]
+  -k, --key FILE            secret key (*.key); passphrase via OMNI_SIGN_PASSPHRASE
+  -a, --artifact FILE       artifact to attest (its sha256 is the subject digest)
+      --predicate-type T    predicate type (only: slsa-provenance)
+      --builder-id URI      builder.id (must be ADR-0009-allowed; default: local)
+      --from-env            populate provenance from GITHUB_* env vars (release path)
+  -o, --out FILE            output envelope path (default: stdout)
+omni attest verify [-k pub] [-a artifact] ENVELOPE   fail-closed verification
+```
+
+Emits an in-toto Statement v1 with a SLSA Provenance v1 predicate in a DSSE
+envelope (PAE), signed with the Phase-04 `pkg/sign` Ed25519 key. The claimed SLSA
+level is fixed by ADR-0009 via `builder.id` (Build L2); omni refuses any builder.id
+outside the allowlist — there is NO flag to claim L3. `omni attest verify` fails
+closed on every error mode (bad signature, wrong key, tampered payload, malformed
+envelope, digest mismatch). Pure-Go, no exec, no new deps. NOTE: omni's DSSE
+signature is a minisign blob — verifiable by `omni attest verify`, not by generic
+cosign (ADR-0009). See `docs/adr/ADR-0009-honest-slsa-level-and-builder-id.md`.
+
+**Examples:**
+```bash
+OMNI_SIGN_PASSPHRASE=pw omni attest --key release.key --artifact app.tar.gz --out app.intoto.jsonl
+omni attest verify --key release.pub --artifact app.tar.gz app.intoto.jsonl
+```
+
 ### encrypt - Encrypt data using AES-256-GCM
 ```bash
 omni encrypt [OPTION]... [FILE] [flags]

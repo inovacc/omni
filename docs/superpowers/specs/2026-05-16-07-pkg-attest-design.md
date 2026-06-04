@@ -1,11 +1,11 @@
 # Phase 07 — pkg/attest/ — SLSA Attestation
 
-**Status:** Planned
+**Status:** Complete (2026-06-03) — executed via `docs/superpowers/plans/2026-06-03-phase-07-pkg-attest.md`. ADR-0009 written & accepted (honest SLSA Build **L2**, builder.id allowlist enforced in code, no numeric level field). Delivered: `pkg/attest` (pure-Go in-toto Statement v1 / SLSA Provenance v1 / DSSE PAE on stdlib — zero new deps), envelope Sign + fail-closed Verify (reuse `pkg/sign` Ed25519), `omni attest` / `attest verify` CLI + pipe `attest-verify`, 5 golden masters, and a CI `task attest:validate-schema` gate (SLSA v1.0 schema + builder.id allowlist). **Interop caveat:** omni's DSSE sig is a minisign blob — verifiable by `omni attest verify`, not by generic cosign (ADR-0009).
 **Date:** 2026-05-16 (synthesized from ROADMAP — no phase directory yet)
 **Requirements:** ATTEST-01 through ATTEST-09
 **Depends on:** Phase 6
-**ADR Gate:** Required before any code lands (1 ADR)
-**Plans:** TBD
+**ADR Gate:** `docs/adr/ADR-0009-honest-slsa-level-and-builder-id.md` (Accepted)
+**Plans:** `docs/superpowers/plans/2026-06-03-phase-07-pkg-attest.md`
 
 ---
 

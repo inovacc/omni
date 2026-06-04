@@ -16,6 +16,8 @@
 | Third-party licenses for ported code | `THIRD_PARTY_LICENSES/` |
 | SBOM generation (`omni sbom`, purl policy, determinism, `omni_sbomvalidate` tag, `pkg/sbom/format.Document` boundary) | `docs/adr/ADR-0007-sbom-determinism-and-purl-policy.md` |
 | Vuln scanning (`omni scan`, signed OSV DB, `--fail-on` CI gate, `--max-db-age`, CVSS v3.1 bands, reachability deferred) | `docs/adr/ADR-0008-pure-go-vuln-scan-and-signed-osv-db.md` |
+| SLSA attestation (`omni attest`, in-toto/DSSE/SLSA-v1, honest builder.id=L2, fail-closed verify, minisign-sig interop caveat) | `docs/adr/ADR-0009-honest-slsa-level-and-builder-id.md` |
+| v1.0 release policy (API freeze, reproducibility-or-fail, dogfooded sign/sbom/attest, honest announce) | `docs/adr/ADR-0010-v1-release-policy.md` |
 
 
 ## Project Overview
@@ -44,13 +46,15 @@
 
 ## Command Categories
 
-The full command inventory — 170+ commands across Core/File/Text/System/Process/Flow/Archive/Hash/Encoding/Data/Formatting/Protobuf/Code Gen/Security (incl. supply-chain: `sign`, `sbom`, `scan`)/Pagers/Comparison/Tooling/Network/Video/Cloud-DevOps/Git Hacks/Checks/Kubectl Hacks — lives in **`docs/COMMANDS.md`** (also browsable as `omni cmdtree`).
+The full command inventory — 170+ commands across Core/File/Text/System/Process/Flow/Archive/Hash/Encoding/Data/Formatting/Protobuf/Code Gen/Security (incl. supply-chain: `sign`, `sbom`, `scan`, `attest`)/Pagers/Comparison/Tooling/Network/Video/Cloud-DevOps/Git Hacks/Checks/Kubectl Hacks — lives in **`docs/COMMANDS.md`** (also browsable as `omni cmdtree`).
 
 Run `omni cmdtree` for the live tree, or `omni <verb> --help` for any verb's flags.
 
 **SBOM (`omni sbom`):** byte-deterministic SPDX 2.3 / CycloneDX 1.5 JSON for a Go module dir or binary. Pure-stdlib emitter; the heavy SPDX/CycloneDX validator libs compile only under the `omni_sbomvalidate` build tag (tests/CI only, never release builds). `pkg/sbom/format.Document` is the stable cross-package boundary that `pkg/scan` imports (not `pkg/sbom/model`); its read side (`format.Parse` + `Document.Components()`) was added in Phase 6. See `docs/adr/ADR-0007-sbom-determinism-and-purl-policy.md`.
 
 **Scan (`omni scan`):** pure-Go, no-exec, offline-first vulnerability matcher. Matches an SBOM (`pkg/sbom/format.Document`) against a `pkg/sign`-signed `osv-db.zip` (verified on load; tampered/stale fails closed), gates CI via `--fail-on <severity>` (`cmderr.ErrConflict`), severity via a hand-rolled CVSS v3.1 band (v4.0 numeric-or-`unknown`). Reachability (`omni scan source`) is **deferred per ADR-0008** — returns `ErrUnsupported`; its future home is a separate `contrib/govulncheck-scan` module (`golang.org/x/vuln` execs `go list` AND would pollute the main `go.mod` via MVS even behind a build tag). See `docs/adr/ADR-0008-pure-go-vuln-scan-and-signed-osv-db.md`.
+
+**Attest (`omni attest`):** pure-Go in-toto Statement v1 / SLSA Provenance v1 in a DSSE (PAE) envelope, signed with the Phase-04 `pkg/sign` Ed25519 key. Honest SLSA Build **L2** via an ADR-0009 `builder.id` allowlist enforced in code (no flag claims L3; no numeric level field). `omni attest verify` is fail-closed. Zero new deps. Interop caveat: omni's DSSE sig is a minisign blob — verifiable by `omni attest verify`, not generic cosign. A CI gate (`task attest:validate-schema`) validates the emitted predicate against the SLSA v1.0 schema + builder.id allowlist. See `docs/adr/ADR-0009-honest-slsa-level-and-builder-id.md`.
 
 ## Cloud & DevOps Integrations
 
