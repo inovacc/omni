@@ -1,7 +1,7 @@
 # Phase 07 — `pkg/attest/` SLSA Provenance Attestation Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
-> **HARD GATE:** Task 1 (ADR-0009, the honest-SLSA-level policy) MUST be written AND human-reviewed/approved BEFORE any code task (2+) begins. The spec (`docs/superpowers/specs/2026-05-16-07-pkg-attest-design.md`) makes the ADR gate non-negotiable: "no provenance output may claim a higher level than the ADR".
+> **HARD GATE — SATISFIED (2026-06-03):** ADR-0009 is written and accepted (pins SLSA Build **L2**, an ADR-pinned `builder.id` allowlist enforced in code, no numeric `slsaLevel` field, pure-Go format with zero new deps). Code tasks (2+) proceed.
 
 **Goal:** Ship `omni attest` / `omni attest verify` — a pure-Go generator and fail-closed verifier for DSSE-wrapped, in-toto-formatted **SLSA v1.0 provenance** attestations, signed with the Phase 04 `pkg/sign` Ed25519 primitive, claiming only the honest SLSA Build level (ADR-pinned, L2) that omni's GitHub-Actions release process actually achieves.
 
@@ -99,7 +99,7 @@ SLSA Provenance v1 predicate:
   - **`buildType` constant** = `https://slsa-framework.github.io/github-actions-buildtypes/workflow/v1` when `--from-env` detects GitHub Actions; otherwise `https://github.com/inovacc/omni/attest/local-buildtype/v1`.
   - **CI schema gate** = before every release, CI validates the emitted predicate against the official SLSA Provenance v1 JSON schema; the build fails on any deviation (Task 9 wires the `task` target).
   - **Enforcement in code:** the generator refuses (`cmderr.ErrInvalidInput`) any `--builder-id` value not in the ADR allowlist set defined in `pkg/attest`. There is no flag to claim L3.
-- [ ] **Step 2: Stop for human review.** Do NOT proceed to code until ADR-0009 is approved. This is the hard gate.
+- [x] **Step 2: DONE (2026-06-03).** ADR-0009 written and accepted at `docs/adr/ADR-0009-honest-slsa-level-and-builder-id.md`; decisions above are pinned. Proceed to Task 2.
 
 ---
 
