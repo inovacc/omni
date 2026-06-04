@@ -1,0 +1,59 @@
+name: Security
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  schedule:
+    # Weekly re-scan so newly-disclosed issues surface even without a push.
+    - cron: "0 6 * * 1"
+
+permissions:
+  contents: read
+
+jobs:
+  # Blocking: no committed secrets is a hard project rule. Test-fixture keys are
+  # allowlisted in .gitleaks.toml. Tools are go-installed (no third-party action
+  # trust), consistent with the self-contained-workflow stance in test.yml.
+  gitleaks:
+    name: secret scan (gitleaks, blocking)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # full history for secret scanning
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - name: Install gitleaks
+        # NOTE: the Go module path is still github.com/zricethezav/* even though
+        # the project moved to the gitleaks org.
+        run: go install github.com/zricethezav/gitleaks/v8@latest
+      - name: Scan for secrets
+        # --no-git scans the checked-out tree (the state that would land), which
+        # is the right semantics for a forward-looking PR/push gate. Full-history
+        # rotation scanning is handled out-of-band by scripts/check-leaks.sh.
+        run: gitleaks detect --source . --config .gitleaks.toml --no-git --redact --no-banner --verbose
+
+  # Advisory: omni intentionally implements weak-hash utilities (md5/sha1 ->
+  # G401/G501/G505) and reads user-specified paths by design (G304), so a hard
+  # gate would be all false positives. This reports findings for human triage
+  # without blocking; the by-design weak-crypto rules are excluded for signal.
+  gosec:
+    name: static security scan (gosec, advisory)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - name: Install gosec
+        run: go install github.com/securego/gosec/v2/cmd/gosec@latest
+      - name: gosec
+        continue-on-error: true
+        run: gosec -exclude=G401,G501,G505 -exclude-dir=.tmp -fmt=text ./...

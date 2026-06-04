@@ -1,0 +1,34 @@
+# gitleaks config for omni — extends the built-in ruleset and allowlists the
+# non-secret trees (test vectors, vendored third-party data, generated tables,
+# design docs) that the default rules false-positive on. Triaged 2026-06-04:
+# every default-rule hit in this repo's history was a JWT/api-key test vector,
+# vendored buf testdata, a generated SPDX license table, a planning-doc example,
+# or the RFC 6455 WebSocket handshake nonce — zero real secrets.
+#
+# Production code (cmd/, internal/cli/ non-test, pkg/ non-buf non-test) stays
+# fully scanned; only the trees below and the one RFC constant are exempt.
+title = "omni gitleaks config"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "omni allowlist: non-secret test/vendored/doc trees + RFC 6455 nonce"
+# Matched against each finding's file path (forward-slash form).
+paths = [
+  '''testing/.*''',                 # golden harness, fixtures, security test scripts
+  '''tools/golden/.*''',            # second golden harness (jwt example in yaml)
+  '''tests/.*''',                   # black-box command scripts (jwt examples)
+  '''pkg/buf/.*''',                 # vendored buf tree: third-party testdata + generated SPDX
+  '''docs/.*''',                    # design/plan docs with illustrative keys
+  '''\.planning.*''',               # archived planning docs (.planning / .planning-archive)
+  '''\.tmp/.*''',                   # ephemeral build dirs
+  '''THIRD_PARTY_LICENSES/.*''',
+  '''.*_test\.go$''',               # Go test files (jwt/api-key test vectors)
+]
+# Allowlist specific known-public values regardless of file (so we don't have to
+# exempt the production file that contains them):
+#   - dGhlIHNhbXBsZSBub25jZQ==  ->  RFC 6455 example Sec-WebSocket-Key ("the sample nonce")
+regexes = [
+  '''dGhlIHNhbXBsZSBub25jZQ==''',
+]

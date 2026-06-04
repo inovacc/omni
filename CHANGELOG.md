@@ -34,6 +34,12 @@ no-CGO, no new external processes in the binary.
   + `docs/API-FREEZE.md` API-freeze gate; `docs/RELEASE-NOTES-v1.0.md`.
 - Hardening sweep (51 findings): tar/zip-slip containment, both-platform command-
   injection fixes, decompression-bomb caps, fail-closed crypto.
+- **Security automation** — `.github/dependabot.yml` (gomod for root +
+  `contrib/sigstore-verify`, plus github-actions; weekly, grouped minor/patch) and a
+  `Security` workflow: gitleaks secret scan (**blocking**; `.gitleaks.toml` allowlists
+  the non-secret test/vendored/doc trees + the RFC 6455 handshake nonce after triaging
+  all 26 historical hits as false positives) and gosec static analysis (advisory —
+  the by-design weak-hash utility rules G401/G501/G505 are excluded for signal).
 
 ### Changed
 - CI `quality` jobs are self-contained (the previously-broken external reusable
