@@ -3,12 +3,25 @@ version: 2
 before:
   hooks:
     - go mod tidy
+    # Stage a host-arch omni used to sign/sbom the release artifacts (dogfooding,
+    # Phase 08 / ADR-0010). The per-target ./dist/.../omni path is unstable, so we
+    # build one host binary and point the signs/sboms hooks at it.
+    - go build -trimpath -buildvcs=true -ldflags "-s -w -X github.com/inovacc/omni/cmd.version={{ .Version }}" -o omni-host .
 
 builds:
-  - env:
+  - id: omni
+    binary: omni
+    env:
       - CGO_ENABLED=0
+    # Reproducibility (ADR-0010): -trimpath + -buildvcs + a pinned mod_timestamp
+    # remove path/VCS/file-mtime nondeterminism so the dual-build CI gate
+    # (omni reprocheck) sees byte-identical artifacts.
+    mod_timestamp: '{{ .CommitTimestamp }}'
     flags:
       - -trimpath
+      - -buildvcs=true
+    ldflags:
+      - -s -w -X github.com/inovacc/omni/cmd.version={{ .Version }}
     goos:
       - linux
       - windows
@@ -16,11 +29,9 @@ builds:
     goarch:
       - amd64
       - arm64
-    ldflags:
-      - -s -w
 
 archives:
-  - format: tar.gz
+  - formats: [tar.gz]
     name_template: >-
       {{ .ProjectName }}_
       {{- title .Os }}_
@@ -29,7 +40,59 @@ archives:
       {{- else }}{{ .Arch }}{{ end }}
     format_overrides:
       - goos: windows
-        format: zip
+        formats: [zip]
+
+checksum:
+  name_template: 'checksums.txt'
+  algorithm: sha256
+
+# Dogfood `omni sign`: sign every archive AND checksums.txt with the release key.
+# OMNI_RELEASE_KEY_PATH + OMNI_SIGN_PASSPHRASE are exported by the release workflow
+# from GitHub secrets; the passphrase is never a flag value.
+signs:
+  - id: omni-sign
+    cmd: ./omni-host
+    args: ["sign", "--key", "{{ .Env.OMNI_RELEASE_KEY_PATH }}", "--sig", "${signature}", "${artifact}"]
+    signature: "${artifact}.minisig"
+    artifacts: all
+    output: true
+
+# Dogfood `omni sbom`: one deterministic SPDX SBOM per built binary (over the raw
+# binary via debug/buildinfo), with a pinned source date for reproducibility.
+sboms:
+  - id: omni-sbom
+    cmd: ./omni-host
+    args:
+      - "sbom"
+      - "$artifact"
+      - "--from"
+      - "binary"
+      - "--format"
+      - "spdx"
+      - "--source-date"
+      - "{{ .CommitDate }}"
+      - "--out"
+      - "$document"
+    documents:
+      - "${artifact}.spdx.json"
+    artifacts: binary
+
+release:
+  # Honesty statement on every release (Pitfall 15 — no overclaim). Full body:
+  # docs/RELEASE-NOTES-v1.0.md.
+  header: |
+    omni {{ .Tag }} — built for me + my CI/CD pipelines (see "Audience & scope" in docs/RELEASE-NOTES-v1.0.md).
+  footer: |
+    ## What's NOT protected against
+    SLSA Build L2 only (NOT L3). No Rekor / Fulcio / OCI. Reachability scanning and
+    Sigstore bundle verification are opt-in build tags, absent from these binaries.
+    Full scope and pitfalls: docs/RELEASE-NOTES-v1.0.md and .planning-archive/research/PITFALLS.md.
+    ## Verify these artifacts
+    omni verify --key omni.pub --sig omni_<OS>_<arch>.tar.gz.minisig omni_<OS>_<arch>.tar.gz
+    omni attest verify --key omni.pub --artifact omni_<OS>_<arch>.tar.gz omni_<OS>_<arch>.tar.gz.intoto.jsonl
+  extra_files:
+    - glob: ./omni.pub                 # release PUBLIC key (written by the workflow)
+    - glob: ./dist/*.intoto.jsonl      # per-archive SLSA provenance (written by the workflow)
 
 changelog:
   sort: asc

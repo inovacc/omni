@@ -1,0 +1,9 @@
+# Golden-master fixtures are hashed and/or signed byte-for-byte (reprocheck digests,
+# attest subject digests, sign payloads, signed OSV DB zips). Git EOL conversion
+# would change those bytes on checkout and break verification/golden determinism
+# across platforms — so treat every fixture as binary (no autocrlf conversion).
+testing/golden/fixtures/** -text
+
+# Recorded golden stdout snapshots: keep LF for stable diffs (the harness also
+# normalizes newlines before comparison).
+testing/golden/snapshots/** -text

@@ -28,9 +28,12 @@ tasks:
         platforms: [ linux, darwin ]
       - cmd: if not exist {{.BUILD_DIR}} mkdir {{.BUILD_DIR}}
         platforms: [ windows ]
-      - cmd: go build -trimpath -ldflags="-s -w" -o {{.BUILD_DIR}}/{{.BINARY_NAME}} {{.MAIN_PACKAGE}}
+      # Dev builds stamp a deterministic version ("dev") so version-embedding
+      # output (omni sbom tool field, omni --version) is stable for golden tests.
+      # Release builds override this via GoReleaser's -X cmd.version={{.Version}}.
+      - cmd: go build -trimpath -ldflags="-s -w -X github.com/inovacc/omni/cmd.version=dev" -o {{.BUILD_DIR}}/{{.BINARY_NAME}} {{.MAIN_PACKAGE}}
         platforms: [ linux, darwin ]
-      - cmd: go build -trimpath -ldflags="-s -w" -o {{.BUILD_DIR}}\{{.BINARY_NAME}}.exe {{.MAIN_PACKAGE}}
+      - cmd: go build -trimpath -ldflags="-s -w -X github.com/inovacc/omni/cmd.version=dev" -o {{.BUILD_DIR}}\{{.BINARY_NAME}}.exe {{.MAIN_PACKAGE}}
         platforms: [ windows ]
 
   build:all:
@@ -357,6 +360,15 @@ tasks:
       - go test -coverprofile=cmderr-cov.out ./internal/cli/cmderr/...
       - go run ./tools/cmderr-cov -profile=cmderr-cov.out -min=90
 
+  freeze:check:
+    desc: Verify the frozen pkg/* public API matches docs/API-FREEZE.md
+    cmds:
+      - go run tools/freeze/freeze.go > .freeze.actual
+      - cmd: diff -u docs/API-FREEZE.md .freeze.actual
+        platforms: [ linux, darwin ]
+      - cmd: fc docs\API-FREEZE.md .freeze.actual
+        platforms: [ windows ]
+
   attest:validate-schema:
     desc: Validate the SLSA Provenance v1 predicate omni emits against the committed schema + ADR-0009 builder.id allowlist (CI gate, Phase 07)
     deps: [ build ]
@@ -364,6 +376,85 @@ tasks:
       OMNI_BIN: ./bin/omni
     cmds:
       - python testing/scripts/validate_slsa_schema.py
+
+  # === RELEASE DOGFOOD (Phase 08 / ADR-0010) ===
+  # Local mirror of the CI release pipeline so a maintainer can reproduce it on
+  # any OS. Set OMNI_RELEASE_KEY_PATH / OMNI_RELEASE_PUB_PATH / OMNI_SIGN_PASSPHRASE
+  # first (e.g. `OMNI_SIGN_PASSPHRASE=test go run . sign keygen --pub /tmp/omni.pub --key /tmp/omni.key`).
+  release:reproduce:
+    desc: Build all six targets twice and reprocheck (local reproducibility gate)
+    cmds:
+      - cmd: |
+          export SOURCE_DATE_EPOCH="$(git log -1 --format=%ct)"
+          for pass in A B; do
+            mkdir -p "repro/$pass"
+            for os in linux darwin windows; do for arch in amd64 arm64; do
+              ext=""; [ "$os" = windows ] && ext=".exe"
+              GOOS=$os GOARCH=$arch CGO_ENABLED=0 go build -trimpath -buildvcs=true \
+                -ldflags "-s -w" -o "repro/$pass/omni-$os-$arch$ext" .
+            done; done
+          done
+          args=""
+          for f in repro/A/*; do n="$(basename "$f")"; args="$args --a repro/A/$n --b repro/B/$n"; done
+          go run . reprocheck $args
+        platforms: [ linux, darwin ]
+
+  release:sbom-all:
+    desc: Emit an SPDX SBOM per built binary (deterministic source-date)
+    deps: [ build:all ]
+    cmds:
+      - cmd: |
+          d="$(git log -1 --format=%cI)"
+          for b in {{.BUILD_DIR}}/omni-*; do
+            case "$b" in *.spdx.json|*.minisig|*.intoto.jsonl) continue;; esac
+            go run . sbom "$b" --from binary --format spdx --source-date "$d" --out "$b.spdx.json"
+          done
+        platforms: [ linux, darwin ]
+
+  release:sign-all:
+    desc: Sign every built binary with $OMNI_RELEASE_KEY_PATH (OMNI_SIGN_PASSPHRASE in env)
+    deps: [ build:all ]
+    cmds:
+      - cmd: |
+          for b in {{.BUILD_DIR}}/omni-*; do
+            case "$b" in *.spdx.json|*.minisig|*.intoto.jsonl) continue;; esac
+            go run . sign --key "$OMNI_RELEASE_KEY_PATH" --sig "$b.minisig" "$b"
+          done
+        platforms: [ linux, darwin ]
+
+  release:attest:
+    desc: Generate a local SLSA attestation per built binary
+    deps: [ build:all ]
+    cmds:
+      - cmd: |
+          for b in {{.BUILD_DIR}}/omni-*; do
+            case "$b" in *.spdx.json|*.minisig|*.intoto.jsonl) continue;; esac
+            go run . attest --key "$OMNI_RELEASE_KEY_PATH" --artifact "$b" \
+              --predicate-type slsa-provenance --out "$b.intoto.jsonl"
+          done
+        platforms: [ linux, darwin ]
+
+  release:verify-all:
+    desc: Verify every signature + attestation against the public key
+    cmds:
+      - cmd: |
+          for b in {{.BUILD_DIR}}/omni-*; do
+            case "$b" in *.spdx.json|*.minisig|*.intoto.jsonl) continue;; esac
+            go run . verify --key "$OMNI_RELEASE_PUB_PATH" --sig "$b.minisig" "$b"
+            go run . attest verify --key "$OMNI_RELEASE_PUB_PATH" --artifact "$b" "$b.intoto.jsonl"
+          done
+        platforms: [ linux, darwin ]
+
+  release:dryrun:
+    desc: Full local dogfood — reproduce, sbom, sign, attest, verify, goreleaser snapshot
+    cmds:
+      - task: release:reproduce
+      - task: release:sbom-all
+      - task: release:sign-all
+      - task: release:attest
+      - task: release:verify-all
+      - cmd: goreleaser release --snapshot --clean --skip=publish
+        platforms: [ linux, darwin ]
 
   check:
     desc: Run all quality checks (fmt, vet, lint, test)

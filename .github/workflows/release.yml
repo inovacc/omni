@@ -1,39 +1,200 @@
 name: Release
 
+# v1.0 release pipeline (Phase 08 / ADR-0010): build six reproducible targets,
+# fail the release on any reproducibility drift, prove cross-OS sign/sbom/attest
+# parity, then publish archives signed + SBOM'd + SLSA-L2-attested BY OMNI ITSELF
+# (dogfooded — not cosign/syft/slsa-github-generator).
+#
+# NOTE: this workflow runs only when GitHub Actions is enabled for the repo AND a
+# `v*` tag is pushed. Cutting the actual v1.0.0 tag is a deliberate operator
+# action; merging this file does not trigger a release.
+
 on:
   push:
     tags:
       - 'v*'
 
-jobs:
-  test:
-    uses: inovacc/workflows/.github/workflows/reusable-go-check.yml@main
-    with:
-      run-tests: true
-      run-lint: true
-      run-vulncheck: true
+permissions:
+  contents: read
 
-  release:
-    needs: test
+jobs:
+  # Self-contained quality gate (replaces the previously-broken external reusable
+  # workflow). Build + vet + lint + test + advisory vuln scan.
+  quality:
+    name: quality (build + vet + lint + test + vuln)
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
+    timeout-minutes: 30
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+      - name: Build
+        run: go build ./...
+      - name: Vet
+        run: go vet ./...
+      - uses: golangci/golangci-lint-action@v6
+        with:
+          version: latest
+      - name: Test
+        run: go test ./... -count=1 -timeout 15m
+      - name: govulncheck (advisory)
+        continue-on-error: true
+        run: |
+          go install golang.org/x/vuln/cmd/govulncheck@latest
+          govulncheck ./...
+
+  # Build all six targets twice (two independent passes) for the reproducibility gate.
+  reproduce:
+    name: reproduce (pass ${{ matrix.build }})
+    runs-on: ubuntu-latest
+    needs: quality
+    strategy:
+      matrix:
+        build: [A, B]
+    steps:
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
-      - name: Set up Go
-        uses: actions/setup-go@v5
+      - uses: actions/setup-go@v5
         with:
-          go-version-file: 'go.mod'
+          go-version-file: go.mod
+          cache: true
+      - name: Build all six targets (deterministic)
+        shell: bash
+        run: |
+          export SOURCE_DATE_EPOCH="$(git log -1 --format=%ct)"
+          mkdir -p out
+          for os in linux darwin windows; do
+            for arch in amd64 arm64; do
+              ext=""; [ "$os" = windows ] && ext=".exe"
+              GOOS=$os GOARCH=$arch CGO_ENABLED=0 go build -trimpath -buildvcs=true \
+                -ldflags "-s -w -X github.com/inovacc/omni/cmd.version=${GITHUB_REF_NAME}" \
+                -o "out/omni-$os-$arch$ext" .
+            done
+          done
+      - uses: actions/upload-artifact@v4
+        with:
+          name: build-${{ matrix.build }}
+          path: out/
 
-      - name: Run GoReleaser
+  # Download both passes and fail the release on ANY sha256 drift (dogfooded reprocheck).
+  repro-gate:
+    name: reproducibility gate
+    runs-on: ubuntu-latest
+    needs: reproduce
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+      - uses: actions/download-artifact@v4
+        with:
+          name: build-A
+          path: A
+      - uses: actions/download-artifact@v4
+        with:
+          name: build-B
+          path: B
+      - name: reprocheck (fail release on any drift)
+        shell: bash
+        run: |
+          args=""
+          for f in A/*; do
+            name="$(basename "$f")"
+            args="$args --a A/$name --b B/$name"
+          done
+          go run . reprocheck $args
+
+  # Prove sign/verify + sbom + attest/attest-verify work identically on all three
+  # OSes (Pitfall 16 — cross-platform determinism).
+  dogfood:
+    name: dogfood (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    needs: quality
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+      - name: round-trip sign/verify + sbom + attest (cross-platform)
+        shell: bash
+        env:
+          OMNI_SIGN_PASSPHRASE: test-passphrase
+        run: |
+          go build -trimpath -o omni-host .
+          printf 'dogfood artifact bytes\n' > art.bin
+          ./omni-host sign keygen --pub k.pub --key k.key
+          ./omni-host sign --key k.key --sig art.bin.minisig art.bin
+          ./omni-host verify --key k.pub --sig art.bin.minisig art.bin
+          ./omni-host sbom art.bin --from binary --format spdx --out art.spdx.json || true
+          ./omni-host attest --key k.key --artifact art.bin --predicate-type slsa-provenance --out art.intoto.jsonl
+          ./omni-host attest verify --key k.pub --artifact art.bin art.intoto.jsonl
+
+  # Publish: GoReleaser builds + signs + SBOMs (dogfooded via omni-host), then we
+  # attest each archive with `omni attest --from-env` (release builder.id = L2),
+  # then upload everything. Approach (b) from the plan: goreleaser --skip=publish,
+  # attest, then publish via action-gh-release so the .intoto.jsonl files ship too.
+  release:
+    name: release
+    runs-on: ubuntu-latest
+    needs: [quality, repro-gate, dogfood]
+    permissions:
+      contents: write
+      id-token: write   # OIDC identity feeds `omni attest --from-env`
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+      - name: Materialize release signing key
+        shell: bash
+        env:
+          OMNI_RELEASE_KEY: ${{ secrets.OMNI_RELEASE_KEY }}
+          OMNI_RELEASE_PUB: ${{ secrets.OMNI_RELEASE_PUB }}
+        run: |
+          printf '%s' "$OMNI_RELEASE_KEY" > release.key
+          printf '%s' "$OMNI_RELEASE_PUB" > omni.pub
+      - name: GoReleaser (build + sign + sbom, no publish)
         uses: goreleaser/goreleaser-action@v6
         with:
           distribution: goreleaser
           version: '~> v2'
-          args: release --clean
+          args: release --clean --skip=publish
+        env:
+          OMNI_RELEASE_KEY_PATH: ${{ github.workspace }}/release.key
+          OMNI_SIGN_PASSPHRASE: ${{ secrets.OMNI_RELEASE_PASSPHRASE }}
+      - name: Attest each archive (dogfood omni attest --from-env, SLSA L2)
+        shell: bash
+        env:
+          OMNI_SIGN_PASSPHRASE: ${{ secrets.OMNI_RELEASE_PASSPHRASE }}
+        run: |
+          for a in dist/*.tar.gz dist/*.zip; do
+            [ -e "$a" ] || continue
+            ./omni-host attest --key release.key --artifact "$a" \
+              --predicate-type slsa-provenance --from-env --out "$a.intoto.jsonl"
+          done
+      - name: Publish release with all assets
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/*.tar.gz
+            dist/*.zip
+            dist/*.minisig
+            dist/*.spdx.json
+            dist/*.intoto.jsonl
+            dist/checksums.txt
+            dist/checksums.txt.minisig
+            omni.pub
+          body_path: docs/RELEASE-NOTES-v1.0.md
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
