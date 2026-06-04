@@ -83,6 +83,34 @@ func TestPipeScanDispatchesToGlue(t *testing.T) {
 	}
 }
 
+// TestPipeRegistryHasAttestVerify asserts the attest-verify command is wired
+// into the unified pipe registry so `omni pipe` can verify a DSSE envelope read
+// from stdin (attest generate stays Cobra-only — it needs key/flags and a file
+// path, not a stdin transform).
+func TestPipeRegistryHasAttestVerify(t *testing.T) {
+	reg := buildPipeRegistry()
+	if _, ok := reg.Get("attest-verify"); !ok {
+		t.Error("buildPipeRegistry(): \"attest-verify\" not registered")
+	}
+}
+
+// TestPipeAttestVerifyDispatchesToGlue confirms the registered attest-verify
+// command reaches the real attest.RunVerifyReader glue: invoked with no pubkey
+// path argument it returns an ErrInvalidInput ("missing public key path"),
+// proving the wiring is live.
+func TestPipeAttestVerifyDispatchesToGlue(t *testing.T) {
+	reg := buildPipeRegistry()
+	cmd, ok := reg.Get("attest-verify")
+	if !ok {
+		t.Fatal("attest-verify not registered")
+	}
+	var buf bytes.Buffer
+	err := cmd.Run(context.Background(), &buf, strings.NewReader(""), nil)
+	if !cmderr.IsInvalidInput(err) {
+		t.Fatalf("attest-verify with no args: err = %v, want ErrInvalidInput", err)
+	}
+}
+
 // TestPipeSbomDispatchesToGlue confirms the registered sbom command reaches the
 // real sbom.RunSBOM glue (reader ignored): given a temp module directory it
 // writes SPDX JSON to the writer. This proves sbom participates in the unified

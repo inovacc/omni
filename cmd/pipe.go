@@ -7,6 +7,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/inovacc/omni/internal/cli/attest"
 	"github.com/inovacc/omni/internal/cli/awk"
 	"github.com/inovacc/omni/internal/cli/base"
 	"github.com/inovacc/omni/internal/cli/caseconv"
@@ -214,6 +215,16 @@ func buildPipeRegistry() *command.Registry {
 	reg.Register("verify", command.AdaptWriterReaderArgs(
 		func(w io.Writer, r io.Reader, args []string) error {
 			return verify.RunVerify(w, r, args, verify.VerifyOptions{})
+		},
+	))
+
+	// attest-verify: verify a DSSE/SLSA provenance envelope read from stdin
+	// against the public key whose path is args[0]. attest (generate) stays
+	// Cobra-only — it consumes a file path and key/builder flags, not a stdin
+	// stream. Artifact binding is unavailable over the pipe interface.
+	reg.Register("attest-verify", command.AdaptWriterReaderArgs(
+		func(w io.Writer, r io.Reader, args []string) error {
+			return attest.RunVerifyReader(w, r, args)
 		},
 	))
 
