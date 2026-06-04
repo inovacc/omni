@@ -79,8 +79,16 @@ func scanComponents(comps []component, db *DB, opts Options) (Report, error) {
 
 	if opts.FailOn > SeverityUnknown {
 		for _, f := range findings {
-			sev, _ := ParseSeverity(f.Severity)
-			if sev >= opts.FailOn {
+			// Gate on the ordered enum carried on the Finding, NOT on re-parsing
+			// the label ("unknown" re-parses to 0 and would slip past any threshold).
+			// Fail closed on SeverityUnknown: a matched vulnerability with no usable
+			// CVSS data must trip an active gate rather than pass silently (many real
+			// advisories ship without a CVSS vector).
+			if f.sev == SeverityUnknown {
+				return rep, cmderr.Wrap(cmderr.ErrConflict,
+					"unscored vulnerability found; --fail-on fails closed on unknown severity")
+			}
+			if f.sev >= opts.FailOn {
 				return rep, cmderr.Wrap(cmderr.ErrConflict,
 					"vulnerabilities found at or above --fail-on threshold")
 			}

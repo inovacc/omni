@@ -58,6 +58,12 @@ processes in the binary.
   pinned `toolchain go1.26.4` (the `go 1.25.0` source floor is unchanged); and
   `github.com/moby/spdystream` (GO-2026-4958) bumped v0.5.0 → v0.5.1. `govulncheck`
   is now a **blocking** CI gate in both the test and release workflows.
+- **Hardening audit 2026-06-04** (`docs/quality/HARDENING-2026-06-04.md`, 19 adversarially-
+  verified findings). Fixed both HIGH issues: (1) `omni task` Windows command injection —
+  the leading argv token was written raw into the `cmd.exe` line and reparsed metacharacters
+  (`x&calc`); now every element is delayed-expanded (CWE-78). (2) `omni scan --fail-on` CI
+  gate silently passed findings with no CVSS score; the gate now **fails closed on unknown
+  severity** (CWE-755). Both proven RED→GREEN with new regression tests.
 
 ### Notes
 - Golden-master fixtures are `-text`-locked (`.gitattributes`) so hashed/signed

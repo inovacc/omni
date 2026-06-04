@@ -54,13 +54,15 @@ func matchEntry(e osvEntry, pkg, version string) (Finding, bool) {
 		if len(a.Severity) > 0 {
 			sev = a.Severity // affected-level severity overrides top-level
 		}
+		rank := severityLabel(sev)
 		return Finding{
 			ID:           e.ID,
 			Package:      pkg,
 			Version:      version,
 			FixedVersion: fixed,
-			Severity:     severityLabel(sev).String(),
+			Severity:     rank.String(),
 			Summary:      e.Summary,
+			sev:          rank,
 		}, true
 	}
 	return Finding{}, false

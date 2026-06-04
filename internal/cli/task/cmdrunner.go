@@ -169,24 +169,32 @@ func (r *ShellCommandRunner) Run(ctx context.Context, w io.Writer, args []string
 			// to each non-leading element as `!OMNI_ARGn!`. Delayed expansion
 			// substitutes the value AFTER the line is tokenized, so the value
 			// lands as a single inert token and its metacharacters are never
-			// reparsed as command syntax. The leading element (the program to
-			// run) is kept as a literal token so it still resolves as a command.
+			// reparsed as command syntax. EVERY element — including the leading
+			// program token (args[0]) — is bound to an env var and delayed-expanded.
 			//
 			// Known limitation: delayed expansion treats `!` as special, so a
 			// non-leading value containing a literal `!` may be altered. This is
 			// the same accepted tradeoff as forloop: injection safety outweighs
 			// faithful handling of a literal `!` in untrusted argv values.
+			// CWE-78 (HARDENING 2026-06-04): bind EVERY element — INCLUDING the
+			// leading program token args[0] — to OMNI_ARGn and reference it via
+			// delayed expansion, so nothing is concatenated raw into the cmd.exe
+			// line. Writing args[0] verbatim let cmd.exe reparse `& | < > ^` in the
+			// program token BEFORE delayed expansion ran, so a leading value like
+			// `x&calc` injected a chained command.
 			var b strings.Builder
-
-			b.WriteString(args[0])
 
 			env := os.Environ()
 
-			for i, a := range args[1:] {
+			for i, a := range args {
 				name := fmt.Sprintf("OMNI_ARG%d", i)
 				env = append(env, name+"="+a)
 
-				b.WriteString(" !")
+				if i > 0 {
+					b.WriteString(" ")
+				}
+
+				b.WriteString("!")
 				b.WriteString(name)
 				b.WriteString("!")
 			}

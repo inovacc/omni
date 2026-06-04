@@ -64,6 +64,11 @@ type Finding struct {
 	Severity     string `json:"severity"`            // Severity.String()
 	Summary      string `json:"summary"`             // OSV summary
 	Reachable    *bool  `json:"reachable,omitempty"` // set only by the reachability path
+
+	// sev is the ordered severity used for --fail-on gating. Unexported so it is
+	// never serialized; the gate must compare this enum, not re-parse the Severity
+	// label (an "unknown" label re-parses to 0 and would slip past any threshold).
+	sev Severity
 }
 
 // Report is the full scan result, sorted deterministically by (Package, ID).
