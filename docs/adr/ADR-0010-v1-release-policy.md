@@ -30,4 +30,17 @@ This ADR is the **hard gate**: the release machinery may not be wired until thes
 - **Versioning becomes honest.** The frozen set is explicit and golden-checked; Experimental packages keep their marker until a future triage; binaries carry a build-info-derived version (`omni --version`) that feeds SBOM/attest.
 - **No overclaim.** Level is L2 by builder.id; the announcement states scope and non-protections plainly.
 - **The omni binary stays pure.** `omni reprocheck` is pure stdlib; GoReleaser/CI exec is outside the binary (release machinery).
-- **Cutting the tag is a deliberate operator action.** This phase delivers and commits the machinery; publishing the actual `v1.0.0` tag + GitHub release (which requires GitHub Actions enabled) is a separate, intentional trigger — not an automatic consequence of merging this work.
+- **Cutting the tag is a deliberate operator action.** This phase delivers and commits the machinery; publishing the actual tag + GitHub release (which requires GitHub Actions enabled) is a separate, intentional trigger — not an automatic consequence of merging this work.
+
+## Addendum — 2026-06-04 (versioning reconciliation)
+
+- The Experimental count cited in the Context ("17 `pkg/*` packages") is now **22**
+  (the gops process-tools port and extra `pkg/video` subpackages were marked
+  afterwards). The frozen set is unaffected — `frozen ∩ experimental = ∅` was
+  re-verified and `freeze:check` is in sync. See `docs/VERSIONING.md` for the full
+  reconciliation and the per-package keep/promote rationale.
+- **Tag-number clarification:** `v1.0.0`–`v1.5.0` already exist (command-coverage
+  milestones), so the honest supply-chain release cannot re-publish `v1.0.0`. It
+  needs a **new** tag — recommended `v1.6.0` (the work is additive; no breaking
+  change to the frozen surface). The final number is a maintainer decision tracked
+  in `docs/VERSIONING.md`.

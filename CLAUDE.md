@@ -12,6 +12,7 @@
 | Testing reference (unit/golden/integration/coverage) | `docs/architecture/testing.md` |
 | High-level architecture diagrams | `docs/ARCHITECTURE.md` |
 | Roadmap / backlog / features / issues / bugs | `docs/{ROADMAP,BACKLOG,FEATURES,ISSUES,BUGS}.md` |
+| Versioning, API-stability policy & exit codes | `docs/VERSIONING.md`, `docs/API-FREEZE.md`, `docs/EXIT-CODES.md` |
 | External source attribution | `docs/EXTERNAL_SOURCES.md` |
 | Third-party licenses for ported code | `THIRD_PARTY_LICENSES/` |
 | SBOM generation (`omni sbom`, purl policy, determinism, `omni_sbomvalidate` tag, `pkg/sbom/format.Document` boundary) | `docs/adr/ADR-0007-sbom-determinism-and-purl-policy.md` |
