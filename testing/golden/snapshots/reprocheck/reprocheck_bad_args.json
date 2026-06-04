@@ -1,0 +1,5 @@
+{
+  "exit_code": 2,
+  "stdout_file": "reprocheck_bad_args.stdout",
+  "stderr": "Error: reprocheck requires equal, non-empty A/B file lists: invalid input\n"
+}

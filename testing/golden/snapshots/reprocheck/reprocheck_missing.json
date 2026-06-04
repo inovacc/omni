@@ -1,0 +1,5 @@
+{
+  "exit_code": 1,
+  "stdout_file": "reprocheck_missing.stdout",
+  "stderr": "Error: open <PATH> not found\n"
+}

@@ -1,0 +1,5 @@
+{
+  "exit_code": 1,
+  "stdout_file": "reprocheck_drift.stdout",
+  "stderr": "Error: reproducibility drift detected (binaries differ between builds): conflict\n"
+}

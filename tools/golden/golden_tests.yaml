@@ -1241,3 +1241,31 @@ categories:
       - name: attest_unsupported_predicate
         args: ["attest", "--predicate-type", "spdx", "--key", "{fixtures}/test.key", "--artifact", "{fixtures}/artifact.bin"]
         exit_code: 6
+
+  # reprocheck: deterministic sha256 digest-pair comparison (the release
+  # reproducibility gate). Fixtures are -text-locked (.gitattributes) so hashes are
+  # stable on every platform; strip_path normalizes the path token (hash16 is kept).
+  - name: reprocheck
+    tests:
+      # Identical bytes -> reproducible (exit 0); hash16 pinned, path stripped.
+      - name: reprocheck_match
+        args: ["reprocheck", "--a", "{fixtures}/same-a", "--b", "{fixtures}/same-b"]
+        exit_code: 0
+        normalizations: ["strip_path"]
+
+      # Differing bytes -> drift -> ErrConflict (exit 1).
+      - name: reprocheck_drift
+        args: ["reprocheck", "--a", "{fixtures}/diff-a", "--b", "{fixtures}/diff-b"]
+        exit_code: 1
+        normalizations: ["strip_path"]
+
+      # Unequal/empty A/B lists -> ErrInvalidInput (exit 2).
+      - name: reprocheck_bad_args
+        args: ["reprocheck", "--a", "{fixtures}/same-a"]
+        exit_code: 2
+
+      # Missing B file -> ErrNotFound (exit 1).
+      - name: reprocheck_missing
+        args: ["reprocheck", "--a", "{fixtures}/same-a", "--b", "{fixtures}/does-not-exist"]
+        exit_code: 1
+        normalizations: ["strip_path"]
