@@ -1113,6 +1113,23 @@ OMNI_SIGN_PASSPHRASE=pw omni attest --key release.key --artifact app.tar.gz --ou
 omni attest verify --key release.pub --artifact app.tar.gz app.intoto.jsonl
 ```
 
+### reprocheck - Compare build artifacts for reproducibility (sha256 digest pairs)
+```bash
+omni reprocheck --a FILE --b FILE [--a FILE --b FILE]...
+```
+
+Release-tooling primitive (Phase 08 / ADR-0010): sha256-hashes paired A/B build
+artifacts and reports `reproducible` (exit 0) or `DRIFT` (exit 1,
+`cmderr.ErrConflict`) on any mismatch — the CI dual-build job fails the release on
+drift. Pure-stdlib, no exec. Unequal/empty A/B lists → `ErrInvalidInput` (exit 2);
+a missing file → `ErrNotFound` (exit 1). `omni --version` is build-info-derived
+(dev builds stamp `dev`; releases stamp the tag via GoReleaser).
+
+**Examples:**
+```bash
+omni reprocheck --a passA/omni-linux-amd64 --b passB/omni-linux-amd64
+```
+
 ### encrypt - Encrypt data using AES-256-GCM
 ```bash
 omni encrypt [OPTION]... [FILE] [flags]

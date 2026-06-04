@@ -1,10 +1,11 @@
 # Phase 08 — v1.0 Release Cut
 
-**Status:** Planned
+**Status:** Complete (release MACHINERY) — 2026-06-04, executed via `docs/superpowers/plans/2026-06-03-phase-08-v1-release-cut.md`. ADR-0010 written & accepted. Delivered: `tools/freeze` API-freeze enumerator + `docs/API-FREEZE.md` golden (27 frozen pkgs / 598 symbols) + `task freeze:check`; `omni reprocheck` (pure-stdlib reproducibility digest-pair gate) + 4 golden masters; build-info version stamping (`cmd/version_info.go`, `omni --version`; dev builds stamp `dev` for determinism); extended `.goreleaser.yaml` (reproducible `-buildvcs`/pinned-timestamp, checksums, dogfooded `omni sign`/`sbom` hooks, honest release header/footer); self-contained `.github/workflows/release.yml` (dual-build repro gate + cross-OS sign/sbom/attest dogfood + `omni attest --from-env` L2); Taskfile `release:*` dogfood targets; `docs/RELEASE-NOTES-v1.0.md`; `.gitattributes` (fixtures `-text`-locked for cross-platform hash/signature stability). **NOT done (operator trigger):** cutting the live `v1.0.0` tag / GitHub release — outward-facing, requires GitHub Actions enabled (currently disabled).
 **Date:** 2026-05-16 (synthesized from ROADMAP — no phase directory yet)
 **Requirements:** REL-01 through REL-08
 **Depends on:** Phase 7
-**Plans:** TBD
+**ADR Gate:** `docs/adr/ADR-0010-v1-release-policy.md` (Accepted)
+**Plans:** `docs/superpowers/plans/2026-06-03-phase-08-v1-release-cut.md`
 
 ---
 

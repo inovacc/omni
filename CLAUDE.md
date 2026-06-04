@@ -46,7 +46,7 @@
 
 ## Command Categories
 
-The full command inventory — 170+ commands across Core/File/Text/System/Process/Flow/Archive/Hash/Encoding/Data/Formatting/Protobuf/Code Gen/Security (incl. supply-chain: `sign`, `sbom`, `scan`, `attest`)/Pagers/Comparison/Tooling/Network/Video/Cloud-DevOps/Git Hacks/Checks/Kubectl Hacks — lives in **`docs/COMMANDS.md`** (also browsable as `omni cmdtree`).
+The full command inventory — 170+ commands across Core/File/Text/System/Process/Flow/Archive/Hash/Encoding/Data/Formatting/Protobuf/Code Gen/Security (incl. supply-chain: `sign`, `sbom`, `scan`, `attest`; release tooling: `reprocheck`)/Pagers/Comparison/Tooling/Network/Video/Cloud-DevOps/Git Hacks/Checks/Kubectl Hacks — lives in **`docs/COMMANDS.md`** (also browsable as `omni cmdtree`).
 
 Run `omni cmdtree` for the live tree, or `omni <verb> --help` for any verb's flags.
 
