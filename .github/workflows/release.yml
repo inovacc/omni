@@ -1,13 +1,14 @@
 name: Release
 
-# v1.0 release pipeline (Phase 08 / ADR-0010): build six reproducible targets,
+# Release pipeline (Phase 08 / ADR-0010): build six reproducible targets,
 # fail the release on any reproducibility drift, prove cross-OS sign/sbom/attest
 # parity, then publish archives signed + SBOM'd + SLSA-L2-attested BY OMNI ITSELF
 # (dogfooded — not cosign/syft/slsa-github-generator).
 #
 # NOTE: this workflow runs only when GitHub Actions is enabled for the repo AND a
-# `v*` tag is pushed. Cutting the actual v1.0.0 tag is a deliberate operator
-# action; merging this file does not trigger a release.
+# `v*` tag is pushed. The honest supply-chain release is tagged v1.6.0 (v1.0.0–v1.5.0
+# were command-coverage; see docs/VERSIONING.md). Cutting the tag is a deliberate
+# operator action; merging this file does not trigger a release.
 
 on:
   push:
@@ -196,6 +197,6 @@ jobs:
             dist/checksums.txt
             dist/checksums.txt.minisig
             omni.pub
-          body_path: docs/RELEASE-NOTES-v1.0.md
+          body_path: docs/RELEASE-NOTES-v1.6.0.md
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

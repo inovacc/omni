@@ -79,14 +79,14 @@ sboms:
 
 release:
   # Honesty statement on every release (Pitfall 15 — no overclaim). Full body:
-  # docs/RELEASE-NOTES-v1.0.md.
+  # docs/RELEASE-NOTES-v1.6.0.md.
   header: |
-    omni {{ .Tag }} — built for me + my CI/CD pipelines (see "Audience & scope" in docs/RELEASE-NOTES-v1.0.md).
+    omni {{ .Tag }} — built for me + my CI/CD pipelines (see "Audience & scope" in docs/RELEASE-NOTES-v1.6.0.md).
   footer: |
     ## What's NOT protected against
     SLSA Build L2 only (NOT L3). No Rekor / Fulcio / OCI. Reachability scanning and
     Sigstore bundle verification are opt-in build tags, absent from these binaries.
-    Full scope and pitfalls: docs/RELEASE-NOTES-v1.0.md and .planning-archive/research/PITFALLS.md.
+    Full scope and pitfalls: docs/RELEASE-NOTES-v1.6.0.md and .planning-archive/research/PITFALLS.md.
     ## Verify these artifacts
     omni verify --key omni.pub --sig omni_<OS>_<arch>.tar.gz.minisig omni_<OS>_<arch>.tar.gz
     omni attest verify --key omni.pub --artifact omni_<OS>_<arch>.tar.gz omni_<OS>_<arch>.tar.gz.intoto.jsonl

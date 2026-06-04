@@ -39,8 +39,8 @@ This ADR is the **hard gate**: the release machinery may not be wired until thes
   afterwards). The frozen set is unaffected — `frozen ∩ experimental = ∅` was
   re-verified and `freeze:check` is in sync. See `docs/VERSIONING.md` for the full
   reconciliation and the per-package keep/promote rationale.
-- **Tag-number clarification:** `v1.0.0`–`v1.5.0` already exist (command-coverage
-  milestones), so the honest supply-chain release cannot re-publish `v1.0.0`. It
-  needs a **new** tag — recommended `v1.6.0` (the work is additive; no breaking
-  change to the frozen surface). The final number is a maintainer decision tracked
-  in `docs/VERSIONING.md`.
+- **Tag number — decided `v1.6.0`:** `v1.0.0`–`v1.5.0` already exist (command-coverage
+  milestones), so the honest supply-chain release cannot re-publish `v1.0.0`. It needs a
+  **new** tag; the maintainer chose **`v1.6.0`** (2026-06-04) — the work is additive, with
+  no breaking change to the frozen surface. Release notes: `docs/RELEASE-NOTES-v1.6.0.md`.
+  See `docs/VERSIONING.md`. The tag is not yet cut (deliberate operator action).

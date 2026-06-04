@@ -7,8 +7,9 @@ All notable changes to **omni** are documented here. The format follows
 
 ## [Unreleased]
 
-The supply-chain milestone (a self-verifying, dependency-light v1.0). All pure-Go,
-no-CGO, no new external processes in the binary.
+The supply-chain milestone (a self-verifying, dependency-light release, tagged
+**v1.6.0** — see `docs/VERSIONING.md`). All pure-Go, no-CGO, no new external
+processes in the binary.
 
 ### Added
 - **`omni sign` / `omni verify` / `omni sign keygen`** — minisign-compatible Ed25519
@@ -31,7 +32,7 @@ no-CGO, no new external processes in the binary.
 - **Release machinery** — reproducible GoReleaser builds (`-trimpath`/`-buildvcs`/
   pinned timestamp) that dogfood `omni sign`/`sbom`/`attest`; self-contained release
   workflow with a dual-build reproducibility gate + cross-OS dogfood; `task freeze:check`
-  + `docs/API-FREEZE.md` API-freeze gate; `docs/RELEASE-NOTES-v1.0.md`.
+  + `docs/API-FREEZE.md` API-freeze gate; `docs/RELEASE-NOTES-v1.6.0.md`.
 - Hardening sweep (51 findings): tar/zip-slip containment, both-platform command-
   injection fixes, decompression-bomb caps, fail-closed crypto.
 - **Security automation** — `.github/dependabot.yml` (gomod for root +
@@ -62,7 +63,7 @@ no-CGO, no new external processes in the binary.
 - Golden-master fixtures are `-text`-locked (`.gitattributes`) so hashed/signed
   inputs are byte-stable across platforms.
 - Cutting a tagged release publishes signed + SBOM'd + SLSA-L2-attested archives;
-  see `docs/RELEASE-NOTES-v1.0.md` for the honest "what's NOT protected" scope.
+  see `docs/RELEASE-NOTES-v1.6.0.md` for the honest "what's NOT protected" scope.
 
 ## [v1.5.0] – earlier
 Command-coverage milestones (160+ Unix-utility replacements across Core/File/Text/

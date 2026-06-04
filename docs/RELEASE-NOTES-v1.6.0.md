@@ -1,4 +1,8 @@
-# omni v1.0
+# omni v1.6.0 — the supply-chain milestone
+
+> `v1.0.0`–`v1.5.0` were the earlier command-coverage releases; `v1.6.0` is the
+> first *honest, self-verifying* supply-chain release (additive — no breaking change
+> to the frozen API surface; see `docs/VERSIONING.md`).
 
 > **Honesty first.** This release ships real, dogfooded supply-chain tooling at the level omni actually achieves — and says plainly what it does **not** do. No SLSA-L3 claim, no "enterprise supply-chain platform" claim.
 
@@ -6,7 +10,7 @@
 
 omni is built **for me and my CI/CD pipelines**. Broader open-source adoption is welcome but is **not** the design driver. Design decisions optimize for deterministic, dependency-light CI use on every OS — not for being a general-purpose security suite. If a choice helped "a general user" but cost determinism or added a heavy dependency, omni chose determinism.
 
-## What v1.0 protects
+## What v1.6.0 protects
 
 Every release archive is produced by the omni binary built in the same run (dogfooded), and is independently verifiable offline:
 
@@ -24,7 +28,7 @@ See `.planning-archive/research/PITFALLS.md` for the full analysis. In short:
 
 - **NOT SLSA L3.** omni does not run on a hermetic/isolated build service with non-falsifiable provenance. The honest level is **Build L2** (Pitfall 5). omni refuses to emit any other `builder.id`.
 - **No Rekor / Fulcio / OCI.** There is no transparency-log upload, no Fulcio/OIDC certificate issuance, and no OCI registry push. Sigstore support is **verification-only**, opt-in behind `-tags omni_sigstore`, and absent from release binaries (Pitfall 9).
-- **Reachability scanning is not in the release binaries.** `omni scan source` (call-graph reachability) is deferred from v1.0 — it requires `golang.org/x/vuln`, which execs `go list` and would bloat `go.mod` via MVS. It returns `unsupported` in these binaries; its future home is a separate `contrib/govulncheck-scan` module.
+- **Reachability scanning is not in the release binaries.** `omni scan source` (call-graph reachability) is deferred from this release — it requires `golang.org/x/vuln`, which execs `go list` and would bloat `go.mod` via MVS. It returns `unsupported` in these binaries; its future home is a separate `contrib/govulncheck-scan` module.
 - **The OSV DB is only as fresh as your last `omni scan db update`.** Offline scanning against a stale DB misses newly-disclosed vulnerabilities; `--max-db-age` makes staleness fail loudly rather than silently (Pitfall 11).
 - **SBOM transitive completeness is bounded by `debug/buildinfo`.** Binary SBOMs reflect what the Go toolchain recorded, not a full source-level dependency resolution (Pitfall 12).
 - **Cross-tool attestation interop:** omni's DSSE signature is a minisign blob, verifiable by `omni attest verify` but **not** by a generic cosign/sigstore verifier (ADR-0009).

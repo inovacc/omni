@@ -52,18 +52,17 @@ honor. Not part of the supply-chain core value.
 No package is currently a promotion candidate for the honest supply-chain release —
 the frozen 27 already cover the stable library surface.
 
-## Open decision — the release tag number (needs maintainer)
+## Release tag number — decided: `v1.6.0` (2026-06-04)
 
 The repo already carries `v1.0.0`–`v1.5.0` tags from the earlier command-coverage
-milestones. The "v1.0" in `docs/RELEASE-NOTES-v1.0.md` / ADR-0010 names the *honest,
-verifiable supply-chain milestone* — a **concept**, not a re-publish of the existing
-`v1.0.0` tag (which is taken). The honest release therefore needs a **new** tag:
+milestones, so the honest supply-chain release cannot re-publish `v1.0.0`. **Decision
+(maintainer, 2026-06-04): the next tag is `v1.6.0`.**
 
-- **`v1.6.0` (recommended)** — the supply-chain work is purely *additive* (new
-  `sign`/`sbom`/`scan`/`attest`/`reprocheck` commands + new packages; zero breaking
-  changes to the frozen surface). Semver: additive ⇒ minor bump.
-- **`v2.0.0`** — only if you want the version number itself to signal the
-  "honest/verifiable reset," accepting it is not a semver-breaking change.
+Rationale: the supply-chain work is purely *additive* (new `sign`/`sbom`/`scan`/
+`attest`/`reprocheck` commands + new packages; zero breaking changes to the frozen
+27-package surface). Semver: additive ⇒ minor bump. (`v2.0.0` was considered as a
+"reset" signal but rejected — nothing in the frozen surface breaks.)
 
-This is a maintainer policy call; it does not block any code work. Until decided,
-release docs should read "the supply-chain release" rather than implying `v1.0.0`.
+Release notes live in `docs/RELEASE-NOTES-v1.6.0.md`. The tag itself is **not yet
+cut** — that remains a deliberate operator action requiring GitHub Actions to be
+re-enabled (ADR-0010).
