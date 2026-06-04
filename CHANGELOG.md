@@ -40,6 +40,11 @@ no-CGO, no new external processes in the binary.
   the non-secret test/vendored/doc trees + the RFC 6455 handshake nonce after triaging
   all 26 historical hits as false positives) and gosec static analysis (advisory —
   the by-design weak-hash utility rules G401/G501/G505 are excluded for signal).
+- **cmderr contract guard** — `tools/cmderrlint`, a pure-Go (stdlib `go/ast`)
+  regression guard that fails if command code under `internal/cli` returns a raw
+  stdlib-error sentinel (e.g. `os.ErrPermission`) instead of classifying it through
+  `cmderr` (which would bypass the exit-code contract). Wired blocking into
+  `task lint:cmderr` + CI; it found and fixed a real `lsof` exit-code bug.
 
 ### Changed
 - CI `quality` jobs are self-contained (the previously-broken external reusable

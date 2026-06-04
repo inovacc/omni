@@ -88,7 +88,7 @@ func getNetworkFiles(opts Options) ([]OpenFile, error) {
 	procs, err := process.Processes()
 	if err != nil {
 		if errors.Is(err, os.ErrPermission) {
-			return nil, fmt.Errorf("%w", os.ErrPermission)
+			return nil, cmderr.Wrap(cmderr.ErrPermission, "list network files")
 		}
 		return nil, err
 	}

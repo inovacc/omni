@@ -347,6 +347,11 @@ tasks:
     cmds:
       - go run ./tools/helplint -dir cmd/
 
+  lint:cmderr:
+    desc: Guard the cmderr contract — no raw stdlib-error returns in internal/cli (regression guard, blocking)
+    cmds:
+      - go run ./tools/cmderrlint internal/cli
+
   lint:coverage:
     desc: Dual-rule coverage gate — pkg/ floor>=40% avg>=75%, internal/cli/ floor>=30% avg>=60%
     cmds:

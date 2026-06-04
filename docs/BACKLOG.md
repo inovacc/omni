@@ -32,10 +32,10 @@ See CLAUDE.md for the full command inventory.
 
 ### cmderr Phase 2 follow-ups (deferred from Phase 1)
 
-- [ ] **[BACKLOG] golangci-lint custom rule:** Add static analysis rule to catch raw `os.ErrX` returns that bypass cmderr classification. Target: Phase 2. (Discovered during Phase 1 audit.)
-- [ ] **[BACKLOG] Cross-command exit-code golden matrix:** Automated test matrix verifying every command returns the correct exit code for each error class (not-found=1, invalid=2, permission=3, io=4, timeout=5, unsupported=6). Target: Phase 2+. (Deferred from Phase 1 plan context.)
-- [ ] **[BACKLOG] `cmderr.Is<Class>()` convenience helpers:** e.g. `cmderr.IsNotFound(err)`, `cmderr.IsPermission(err)` for callers that need to inspect sentinel class without importing cmderr directly. Target: Phase 3.
-- [ ] **[BACKLOG] `docs/EXIT-CODES.md` generation:** Auto-generate a reference page from the cmderr sentinel table and EXIT-CODE-CHANGES.md. Target: Phase 3. (Deferred from Phase 1 CONTEXT.md Deferred Ideas.)
+- [x] **[DONE 2026-06-04] Static-analysis rule for raw `os.ErrX` returns:** Implemented as `tools/cmderrlint` — a pure-Go (go/ast, no `golang.org/x/tools`, honoring the lean-`go.mod` invariant — a `go/analysis` analyzer would pull `x/tools`) regression guard, wired blocking into `task lint:cmderr` + the `test.yml` quality job. Found and fixed a real bug (`lsof` network-mode permission errors exited 1 instead of 3). Not a golangci-lint plugin by design; runs as a standalone vet-style check.
+- [x] **[DONE 2026-06-04] Cross-command exit-code matrix:** Satisfied by the `cmderr_wave_a/b/z(_risky)` golden categories (per-command exit-code pinning across many commands) + `TestExitCodeFor` (full sentinel→code unit matrix incl. `WithExitCode`/`SilentExit`) + `docs/EXIT-CODES.md` (the human-readable contract).
+- [x] **[DONE] `cmderr.Is<Class>()` convenience helpers:** Present in `internal/cli/cmderr/cmderr.go` — `IsNotFound`, `IsInvalidInput`, `IsPermission`, `IsIO`, `IsConflict`, `IsTimeout`, `IsUnsupported`.
+- [x] **[DONE] `docs/EXIT-CODES.md`:** Exists with the full exit-code ↔ sentinel ↔ `Is*` table; referenced by `CONTRIBUTING.md`.
 
 ### no-exec items — RESOLVED via boundary decision (2026-06-03)
 

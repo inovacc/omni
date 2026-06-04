@@ -31,6 +31,11 @@ jobs:
       - name: Vet
         run: go vet ./...
 
+      - name: cmderr contract guard
+        # Blocking regression guard: no raw stdlib-error returns in internal/cli
+        # (they bypass cmderr classification -> wrong exit code). Pure-Go, stdlib-only.
+        run: go run ./tools/cmderrlint internal/cli
+
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v6
         with:
