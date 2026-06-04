@@ -1,0 +1,5 @@
+{
+  "exit_code": 1,
+  "stdout_file": "scan_fail_on_high.stdout",
+  "stderr": "Error: vulnerabilities found at or above --fail-on threshold: conflict\n"
+}

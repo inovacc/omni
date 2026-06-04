@@ -1158,3 +1158,54 @@ categories:
         args: ["sbom", "{fixtures}/mod", "--format", "spdx", "--validate"]
         exit_code: 6
         normalizations: ["strip_path"]
+
+  # scan: matches committed SBOMs against a FROZEN pkg/sign-signed osv-db.zip
+  # (manifest.generated pinned to 2026-01-01). renderText is path-free AND
+  # age-free (DBAge is --json-only), so POSITIVE outputs pin exact bytes with NO
+  # normalization (strip_path would mangle slash-bearing purls like
+  # github.com/vuln/pkg). Only path-bearing negatives use strip_path; the
+  # stale-DB case normalizes its drifting "generated <age> ago" via strip_db_age.
+  - name: scan
+    tests:
+      # No matching vulns -> exit 0.
+      - name: scan_clean
+        args: ["scan", "--db", "{fixtures}/osv-db.zip", "--db-key", "{fixtures}/db.pub", "{fixtures}/clean-sbom.json"]
+        exit_code: 0
+
+      # One matching vuln, no --fail-on -> exit 0, report on stdout (exact bytes).
+      - name: scan_vuln_report
+        args: ["scan", "--db", "{fixtures}/osv-db.zip", "--db-key", "{fixtures}/db.pub", "{fixtures}/vuln-sbom.json"]
+        exit_code: 0
+
+      # CI gating path: a high finding at/above --fail-on -> ErrConflict (exit 1).
+      - name: scan_fail_on_high
+        args: ["scan", "--db", "{fixtures}/osv-db.zip", "--db-key", "{fixtures}/db.pub", "--fail-on", "high", "{fixtures}/vuln-sbom.json"]
+        exit_code: 1
+
+      # Missing SBOM file -> ErrNotFound (exit 1); path in stderr -> strip_path.
+      - name: scan_missing_sbom
+        args: ["scan", "--db", "{fixtures}/osv-db.zip", "--db-key", "{fixtures}/db.pub", "{fixtures}/does-not-exist.json"]
+        exit_code: 1
+        normalizations: ["strip_path"]
+
+      # Malformed SBOM -> ErrInvalidInput (exit 2); path in stderr -> strip_path.
+      - name: scan_bad_sbom
+        args: ["scan", "--db", "{fixtures}/osv-db.zip", "--db-key", "{fixtures}/db.pub", "{fixtures}/bad-sbom.json"]
+        exit_code: 2
+        normalizations: ["strip_path"]
+
+      # Tampered DB -> signature verification fails closed -> ErrConflict (exit 1).
+      - name: scan_tampered_db
+        args: ["scan", "--db", "{fixtures}/osv-db.tampered.zip", "--db-key", "{fixtures}/db.pub", "{fixtures}/vuln-sbom.json"]
+        exit_code: 1
+
+      # Stale DB over --max-db-age -> fails LOUDLY -> ErrConflict (exit 1).
+      - name: scan_stale_db
+        args: ["scan", "--db", "{fixtures}/osv-db.zip", "--db-key", "{fixtures}/db.pub", "--max-db-age", "1s", "{fixtures}/vuln-sbom.json"]
+        exit_code: 1
+        normalizations: ["strip_db_age"]
+
+      # Reachability deferred (ADR-0008) -> ErrUnsupported (exit 6).
+      - name: scan_source_unsupported
+        args: ["scan", "source", "./..."]
+        exit_code: 6

@@ -1,0 +1,3 @@
+ID            PACKAGE              VERSION  FIXED  SEVERITY  SUMMARY
+GO-2026-0001  github.com/vuln/pkg  v1.0.0   1.2.3  high      Example high-severity vulnerability in github.com/vuln/pkg
+1 vulnerability found in 1 components scanned

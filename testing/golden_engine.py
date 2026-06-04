@@ -68,6 +68,14 @@ NORMALIZERS = {
         text,
         flags=re.IGNORECASE,
     ),
+    # Normalizes the wall-clock-relative DB age in a stale-DB error
+    # ("generated 3695h57m10s ago" -> "generated <AGE> ago") so the
+    # scan_stale_db golden is deterministic across runs.
+    "strip_db_age": lambda text: re.sub(
+        r"generated \S+ ago",
+        "generated <AGE> ago",
+        text,
+    ),
 }
 
 

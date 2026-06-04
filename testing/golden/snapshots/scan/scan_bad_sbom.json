@@ -1,0 +1,5 @@
+{
+  "exit_code": 2,
+  "stdout_file": "scan_bad_sbom.stdout",
+  "stderr": "Error: scan: parse SBOM <PATH> sbom: not valid JSON: invalid character 't' looking for beginning of object key string: invalid input\n"
+}

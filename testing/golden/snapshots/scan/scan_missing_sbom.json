@@ -1,0 +1,5 @@
+{
+  "exit_code": 1,
+  "stdout_file": "scan_missing_sbom.stdout",
+  "stderr": "Error: scan: <PATH> not found\n"
+}

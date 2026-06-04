@@ -1,0 +1,5 @@
+{
+  "exit_code": 1,
+  "stdout_file": "scan_stale_db.stdout",
+  "stderr": "Error: scan: vulnerability database is stale: generated <AGE> ago (max 1s): conflict\n"
+}

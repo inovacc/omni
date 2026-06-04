@@ -1,0 +1,5 @@
+{
+  "exit_code": 1,
+  "stdout_file": "scan_tampered_db.stdout",
+  "stderr": "Error: scan: osv db signature verification failed: sign: verification failed: data signature mismatch: conflict\n"
+}

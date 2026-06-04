@@ -18,7 +18,7 @@ MANIFEST_FILENAME = "manifest.json"
 MANIFEST_VERSION = 1
 
 # Normalizer names available in YAML registry
-NORMALIZER_NAMES = {"normalize_newlines", "strip_trailing_whitespace", "strip_path", "strip_temp_dir"}
+NORMALIZER_NAMES = {"normalize_newlines", "strip_trailing_whitespace", "strip_path", "strip_temp_dir", "strip_db_age"}
 
 
 def project_root() -> Path:

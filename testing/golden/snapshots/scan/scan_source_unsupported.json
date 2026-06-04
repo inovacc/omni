@@ -1,0 +1,5 @@
+{
+  "exit_code": 6,
+  "stdout_file": "scan_source_unsupported.stdout",
+  "stderr": "Error: omni scan source (reachability) is not available in this build; see docs/BACKLOG.md (deferred per ADR-0008): unsupported\n"
+}
