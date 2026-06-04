@@ -72,7 +72,7 @@ func matchEntry(e osvEntry, pkg, version string) (Finding, bool) {
 // block and returns the smallest applicable fix bound (or "").
 func affectedHit(a osvAffected, version string) (bool, string) {
 	for _, v := range a.Versions { // exact-membership shortcut (also covers ECOSYSTEM/GIT)
-		if v == version {
+		if exactVersionMatch(v, version) {
 			return true, smallestFixAbove(a, version)
 		}
 	}
@@ -85,6 +85,20 @@ func affectedHit(a osvAffected, version string) (bool, string) {
 		}
 	}
 	return false, ""
+}
+
+// exactVersionMatch reports whether an OSV versions[] entry and an SBOM purl
+// version denote the same release. When both are valid semver it compares the
+// canonical forms (normalizing the leading-"v" asymmetry between bare OSV
+// versions and "v"-prefixed module versions, mirroring the SEMVER interval
+// path); otherwise it falls back to raw equality for non-semver tags such as
+// pseudo-versions.
+func exactVersionMatch(osvVersion, version string) bool {
+	a, b := sv(osvVersion), sv(version)
+	if semver.IsValid(a) && semver.IsValid(b) {
+		return semver.Canonical(a) == semver.Canonical(b)
+	}
+	return osvVersion == version
 }
 
 // inOpenInterval walks ordered events: introduced opens an interval (empty/"0"

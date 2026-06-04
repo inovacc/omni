@@ -3,10 +3,13 @@ package repo
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/inovacc/omni/internal/cli/cmderr"
 )
 
 func TestResolvePath(t *testing.T) {
@@ -72,6 +75,92 @@ func TestNormalizeRemote(t *testing.T) {
 				t.Errorf("normalizeRemote(%q) = %q, want %q", tt.input, got, tt.want)
 			}
 		})
+	}
+}
+
+// TestCloneToTempRejectsLeadingDash verifies that a normalized clone target
+// beginning with "-" is rejected as invalid input (CWE-88 argument injection)
+// before any git/gh process is invoked. Without the guard, "-foo" would be
+// passed to `git clone`/`gh repo clone` as a flag rather than a URL.
+func TestCloneToTempRejectsLeadingDash(t *testing.T) {
+	malicious := []string{
+		"-malicious",
+		"--upload-pack=touch /tmp/pwn",
+		"-oProxyCommand=evil",
+	}
+
+	for _, target := range malicious {
+		t.Run(target, func(t *testing.T) {
+			dir, err := cloneToTemp(target)
+			if dir != "" {
+				_ = os.RemoveAll(dir)
+				t.Errorf("cloneToTemp(%q) returned non-empty dir %q; expected rejection", target, dir)
+			}
+
+			if !errors.Is(err, cmderr.ErrInvalidInput) {
+				t.Errorf("cloneToTemp(%q) error = %v, want cmderr.ErrInvalidInput", target, err)
+			}
+		})
+	}
+}
+
+// TestGitCloneArgsTerminator verifies the git clone argv places a "--" option
+// terminator immediately before the URL so a hostile URL cannot be parsed as a
+// flag, and that a leading-dash URL is rejected.
+func TestGitCloneArgsTerminator(t *testing.T) {
+	args, err := gitCloneArgs("owner/repo", "/tmp/dest")
+	if err != nil {
+		t.Fatalf("gitCloneArgs returned unexpected error: %v", err)
+	}
+
+	// "--" must appear, and the URL + dest must come after it.
+	idx := -1
+	for i, a := range args {
+		if a == "--" {
+			idx = i
+			break
+		}
+	}
+
+	if idx == -1 {
+		t.Fatalf("gitCloneArgs(%v) missing -- terminator", args)
+	}
+
+	if idx >= len(args)-2 || args[idx+2] != "/tmp/dest" {
+		t.Errorf("gitCloneArgs = %v; want URL then dest after --", args)
+	}
+
+	if _, err := gitCloneArgs("-evil", "/tmp/dest"); !errors.Is(err, cmderr.ErrInvalidInput) {
+		t.Errorf("gitCloneArgs(-evil) error = %v, want cmderr.ErrInvalidInput", err)
+	}
+}
+
+// TestGhCloneArgsTerminator verifies the gh repo clone argv places a "--"
+// terminator immediately before the URL and rejects leading-dash URLs.
+func TestGhCloneArgsTerminator(t *testing.T) {
+	args, err := ghCloneArgs("owner/repo", "/tmp/dest")
+	if err != nil {
+		t.Fatalf("ghCloneArgs returned unexpected error: %v", err)
+	}
+
+	idx := -1
+	for i, a := range args {
+		if a == "--" {
+			idx = i
+			break
+		}
+	}
+
+	if idx == -1 {
+		t.Fatalf("ghCloneArgs(%v) missing -- terminator", args)
+	}
+
+	if idx >= len(args)-1 || args[idx+1] != "owner/repo" {
+		t.Errorf("ghCloneArgs = %v; want URL immediately after --", args)
+	}
+
+	if _, err := ghCloneArgs("-evil", "/tmp/dest"); !errors.Is(err, cmderr.ErrInvalidInput) {
+		t.Errorf("ghCloneArgs(-evil) error = %v, want cmderr.ErrInvalidInput", err)
 	}
 }
 

@@ -297,6 +297,32 @@ func TestRunFromXML(t *testing.T) {
 	}
 }
 
+func TestRunFromXMLDeepNestingReturnsError(t *testing.T) {
+	// Build a deeply-nested XML doc above maxXMLDepth. Without a depth bound,
+	// the recursive toJSON conversion overflows the goroutine stack, which Go
+	// cannot recover() from (fatal error, process aborts: DoS). With the bound
+	// it must return cmderr.ErrInvalidInput instead.
+	const depth = 5000
+
+	var b strings.Builder
+	for i := 0; i < depth; i++ {
+		b.WriteString("<a>")
+	}
+	b.WriteString("x")
+	for i := 0; i < depth; i++ {
+		b.WriteString("</a>")
+	}
+
+	var buf bytes.Buffer
+	err := RunFromXML(&buf, strings.NewReader(b.String()), nil, FromXMLOptions{})
+	if err == nil {
+		t.Fatal("expected error for deeply nested XML, got nil")
+	}
+	if !errors.Is(err, cmderr.ErrInvalidInput) {
+		t.Errorf("expected ErrInvalidInput, got %v", err)
+	}
+}
+
 func TestEscapeXML(t *testing.T) {
 	tests := []struct {
 		input string

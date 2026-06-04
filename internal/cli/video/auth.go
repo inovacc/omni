@@ -236,7 +236,7 @@ func getCDPCookies(debugURL string) ([]*http.Cookie, error) {
 	defer func() { _ = resp.Body.Close() }()
 
 	var pages []struct {
-		ID                 string `json:"id"`
+		ID                   string `json:"id"`
 		WebSocketDebuggerURL string `json:"webSocketDebuggerUrl"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&pages); err != nil {
@@ -383,6 +383,12 @@ func wsEncodeTextFrame(payload []byte) []byte {
 	return frame
 }
 
+// maxWSFrame bounds the payload length we will accept from a WebSocket frame.
+// A 64-bit length with the high bit set decodes to a negative Go int, and even
+// a large positive length could trigger an unbounded slice/allocation. We only
+// ever read CDP responses from a localhost debugger, so 16 MiB is generous.
+const maxWSFrame = 16 << 20
+
 // wsExtractPayload extracts the payload from a WebSocket frame.
 func wsExtractPayload(data []byte) []byte {
 	if len(data) < 2 {
@@ -410,11 +416,19 @@ func wsExtractPayload(data []byte) []byte {
 		offset = 10
 	}
 
+	// Reject lengths that are negative (high bit set in a 64-bit length) or
+	// larger than we are willing to buffer. This must happen before any
+	// slicing or allocation below to avoid a slice-bounds panic.
+	if payloadLen < 0 || payloadLen > maxWSFrame {
+		return nil
+	}
+
 	if masked {
 		offset += 4
 	}
 
-	if len(data) < offset+payloadLen {
+	// Guard against offset+payloadLen overflowing past the buffer.
+	if offset+payloadLen < offset || len(data) < offset+payloadLen {
 		return nil
 	}
 

@@ -11,6 +11,19 @@ import (
 	"github.com/inovacc/omni/internal/cli/cmderr"
 )
 
+// maxDecompressBytes caps the cumulative number of bytes written when
+// decompressing a single bzip2 stream, guarding against a decompression-bomb
+// DoS (CWE-409) where a small high-ratio input inflates to fill the disk.
+// 10 GiB mirrors the archive extraction cap: generous for legitimate CI/CD
+// artifacts while still bounding a tiny malicious input.
+const maxDecompressBytes int64 = 10 << 30
+
+// decompressByteCap is the effective per-stream byte cap. It defaults to
+// maxDecompressBytes and is a package var (not a const) only so tests can
+// lower it to exercise the bomb guard without allocating a multi-GiB output.
+// Production code never reassigns it.
+var decompressByteCap = maxDecompressBytes
+
 // Bzip2Options configures the bzip2 command behavior
 type Bzip2Options struct {
 	Decompress bool // -d: decompress
@@ -43,9 +56,20 @@ func RunBzip2(w io.Writer, args []string, opts Bzip2Options) error {
 
 func bunzip2Reader(w io.Writer, r io.Reader) error {
 	br := bzip2.NewReader(r)
-	_, err := io.Copy(w, br)
 
-	return err
+	// Bound the copy so a decompression bomb cannot fill the disk (CWE-409).
+	// LimitReader caps the read at the cap plus one byte; if that extra byte is
+	// produced the stream exceeded the cap.
+	n, err := io.Copy(w, io.LimitReader(br, decompressByteCap+1))
+	if err != nil {
+		return err
+	}
+
+	if n > decompressByteCap {
+		return cmderr.Wrap(cmderr.ErrInvalidInput, "bzip2: decompressed output exceeds maximum allowed size")
+	}
+
+	return nil
 }
 
 func bunzip2File(w io.Writer, path string, opts Bzip2Options) error {

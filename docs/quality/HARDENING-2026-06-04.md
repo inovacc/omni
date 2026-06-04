@@ -43,7 +43,9 @@ engine) and excludes already-fixed items and the sanctioned exec wrappers.
 | 1 | `cmdinjection/task-shellrunner-windows-leading-element` (HIGH) | ✅ **fixed** 2026-06-04 | `args[0]` now routed through `!OMNI_ARG0!` delayed expansion like every other element; new Windows-only `TestShellCommandRunner_WindowsLeadingArgNoInjection` proves RED→GREEN (chained-redirect marker file created before the fix, not after). |
 | 2 | `verifysoundness/scan-failon-unknown-severity-bypass` (HIGH) | ✅ **fixed** 2026-06-04 | gate now compares the ordered `Finding.sev` enum and **fails closed on `SeverityUnknown`**; new `TestScanFailOnTripsOnUnknownSeverity` proves RED→GREEN at every threshold; scored-finding message unchanged (golden held at 195/27). |
 
-The remaining 17 findings (MEDIUM/LOW) and the critic's second-pass targets are tracked below and remediated in subsequent commits.
+| 3–19 | the 17 MEDIUM/LOW findings (15 distinct fixes; `#5≡#8` HLS and `#9≡#16` scan-db-update deduped) | ✅ **fixed** 2026-06-04 | each remediated RED→GREEN with a new regression test (`repo` `--`-terminator + reject leading `-`; `archive` zip-bomb cap + `O_NOFOLLOW`/lstat symlink guard via `nofollow_{unix,windows}.go`; `gzip`/`bzip2` decompress cap; HLS + SBOM + scan-db-update `io.LimitReader` caps; scan-db-update `http.Client` timeout + redirect-host validation; `scan` v-prefix `semver.Canonical` normalization; `xmlutil` depth cap; WS `payloadLen` negative/overflow guard; `cp` mode preserve; `gopsclient` loopback-validate-before-dial + stream deadline; `gopsagent` `OpGC` gated by `privileged()`; `savecreds` atomic 0600). |
+
+**All 19 findings remediated 2026-06-04.** Independently verified (not trusting agent "fixed" claims): `go build ./...` + `go vet ./...` clean, every touched package's tests green, **golden 195/27 (baseline, 0 regressions)**, `go.mod` unchanged, `govulncheck` 0. The critic's second-pass targets below (`internal/cli/video/auth.go` CDP read/exec/dial, scaffolding path traversal, dotenv eval-escaping, YAML alias-bomb, full gops opcode diff, `go test -race`) remain for a follow-up audit.
 
 ## 🟠 High
 

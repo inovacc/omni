@@ -82,6 +82,31 @@ func TestMatchExactVersionsList(t *testing.T) {
 	}
 }
 
+func TestMatchExactVersionsVPrefixAsymmetry(t *testing.T) {
+	// OSV versions[] are typically bare ("1.2.3") while an SBOM purl version may
+	// carry a leading "v" ("v1.2.3"). The exact-membership path must normalize
+	// both operands like the SEMVER interval path, otherwise ECOSYSTEM/GIT
+	// advisories silently MISS the vulnerable component.
+	e := entry("GO-7", "github.com/foo/bar", []string{"1.2.3"}, nil, nil)
+	if _, ok := matchEntry(e, "github.com/foo/bar", "v1.2.3"); !ok {
+		t.Error(`OSV versions=["1.2.3"] vs SBOM "v1.2.3" must HIT`)
+	}
+	// And the reverse asymmetry: OSV with a "v" prefix vs bare SBOM version.
+	e2 := entry("GO-8", "github.com/foo/bar", []string{"v1.2.3"}, nil, nil)
+	if _, ok := matchEntry(e2, "github.com/foo/bar", "1.2.3"); !ok {
+		t.Error(`OSV versions=["v1.2.3"] vs SBOM "1.2.3" must HIT`)
+	}
+	// Non-semver pseudo/tag versions still fall back to a raw equality compare.
+	e3 := entry("GO-9", "github.com/foo/bar",
+		[]string{"v0.0.0-20240101000000-abcdef123456"}, nil, nil)
+	if _, ok := matchEntry(e3, "github.com/foo/bar", "v0.0.0-20240101000000-abcdef123456"); !ok {
+		t.Error("non-semver pseudo-version must still match via raw equality")
+	}
+	if _, ok := matchEntry(e3, "github.com/foo/bar", "v0.0.0-20240101000000-000000000000"); ok {
+		t.Error("different non-semver pseudo-version must not match")
+	}
+}
+
 func TestMatchEcosystemRangeUsesVersionsOnly(t *testing.T) {
 	// ECOSYSTEM ranges are NOT interval-interpreted; only exact versions[] count.
 	e := entry("GO-6", "github.com/foo/bar", []string{"1.0.0"},

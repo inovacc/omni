@@ -121,5 +121,17 @@ func copyFile(src, dst string) error {
 		err = cerr
 	}
 
-	return err
+	if err != nil {
+		return err
+	}
+
+	// Preserve the source's permission bits (CWE-732): os.Create above opens the
+	// destination with mode 0666&~umask (typically 0644), which would silently
+	// widen a private source (e.g. a 0600 secret) into a world/group-readable
+	// copy. Narrow the destination to exactly the source's permission bits.
+	if cerr := os.Chmod(dst, sourceFileStat.Mode().Perm()); cerr != nil {
+		return cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("chmod %s: %s", dst, cerr))
+	}
+
+	return nil
 }

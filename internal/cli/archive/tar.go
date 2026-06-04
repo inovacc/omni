@@ -20,6 +20,12 @@ import (
 // bounding a small malicious archive that inflates to fill the disk.
 const maxExtractTotalBytes int64 = 10 << 30
 
+// extractByteCap is the effective per-extraction byte cap. It defaults to
+// maxExtractTotalBytes and is a package var (not a const) only so tests can
+// lower it to exercise the decompression-bomb guard without allocating a
+// multi-GiB archive. Production code never reassigns it.
+var extractByteCap = maxExtractTotalBytes
+
 // secureJoin joins name onto an absolute, cleaned destDir and guarantees the
 // result stays within destDir. It rejects absolute entry names and any path
 // that escapes the destination via ".." segments (tar-slip / zip-slip,
@@ -36,6 +42,52 @@ func secureJoin(cleanDest, name string) (string, error) {
 	}
 
 	return target, nil
+}
+
+// refuseWriteThroughSymlink defends against CWE-59 write-through escape. The
+// lexical secureJoin/containedTarget checks only reason about path strings;
+// they cannot see a symlink that already exists on disk inside a reused
+// destDir. Before writing a regular file (or creating its parent dirs) we walk
+// every already-existing path segment from cleanDest down to target with
+// os.Lstat and refuse if any component is a symlink, so an attacker who
+// pre-plants "<destDir>/sub -> /outside" cannot have "sub/evil" written through
+// it. cleanDest is assumed to already be absolute and cleaned; target must be
+// the contained result of secureJoin/containedTarget.
+func refuseWriteThroughSymlink(cleanDest, target string) error {
+	rel, err := filepath.Rel(cleanDest, target)
+	if err != nil {
+		return cmderr.Wrap(cmderr.ErrInvalidInput, "archive: cannot resolve entry path: "+target)
+	}
+
+	// Walk each intermediate segment under cleanDest. A non-existent segment is
+	// fine (it will be created fresh, not followed); only an existing symlink is
+	// rejected.
+	current := cleanDest
+
+	for _, seg := range strings.Split(filepath.ToSlash(rel), "/") {
+		if seg == "" || seg == "." {
+			continue
+		}
+
+		current = filepath.Join(current, seg)
+
+		info, err := os.Lstat(current)
+		if err != nil {
+			if os.IsNotExist(err) {
+				// This and every deeper segment does not exist yet; nothing on
+				// disk to follow.
+				return nil
+			}
+
+			return cmderr.Wrap(cmderr.ErrIO, "archive: stat extraction path: "+err.Error())
+		}
+
+		if info.Mode()&os.ModeSymlink != 0 {
+			return cmderr.Wrap(cmderr.ErrInvalidInput, "archive: refusing to write through symlink: "+current)
+		}
+	}
+
+	return nil
 }
 
 func createTarArchive(w io.Writer, outFile *os.File, sources []string, opts ArchiveOptions, useGzip bool) error {
@@ -220,11 +272,18 @@ func extractTarArchive(w io.Writer, opts ArchiveOptions) error {
 				return err
 			}
 		case tar.TypeReg:
+			// Refuse to write through any pre-existing on-disk symlink in the
+			// path (CWE-59); the lexical secureJoin above only checks the path
+			// string, not the filesystem.
+			if err := refuseWriteThroughSymlink(cleanDest, target); err != nil {
+				return err
+			}
+
 			if err := os.MkdirAll(filepath.Dir(target), 0755); err != nil {
 				return err
 			}
 
-			outFile, err := os.OpenFile(target, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, os.FileMode(header.Mode))
+			outFile, err := os.OpenFile(target, os.O_CREATE|os.O_WRONLY|os.O_TRUNC|oNoFollow, os.FileMode(header.Mode))
 			if err != nil {
 				return err
 			}
@@ -232,7 +291,7 @@ func extractTarArchive(w io.Writer, opts ArchiveOptions) error {
 			// Bound the copy so a decompression bomb cannot fill the disk
 			// (archive-05). LimitReader caps the per-call read; the cumulative
 			// counter caps the whole extraction.
-			remaining := maxExtractTotalBytes - totalWritten
+			remaining := extractByteCap - totalWritten
 			n, err := io.Copy(outFile, io.LimitReader(tr, remaining+1))
 			_ = outFile.Close()
 
@@ -241,7 +300,7 @@ func extractTarArchive(w io.Writer, opts ArchiveOptions) error {
 			}
 
 			totalWritten += n
-			if totalWritten > maxExtractTotalBytes {
+			if totalWritten > extractByteCap {
 				return cmderr.Wrap(cmderr.ErrInvalidInput, "archive: extraction exceeds maximum allowed size")
 			}
 		case tar.TypeSymlink:

@@ -18,6 +18,14 @@ import (
 	"github.com/inovacc/omni/pkg/video/utils"
 )
 
+// maxSegmentBytes caps how many bytes are read from a single HLS segment body.
+// Segment URLs come verbatim from an untrusted M3U8 manifest; without a ceiling
+// a hostile or MITM'd host can stream an unbounded (or transparently gunzipped)
+// body and exhaust memory. 256 MiB comfortably exceeds any legitimate media
+// segment while bounding the worst case. It is a var (not a const) only so tests
+// can lower it without allocating hundreds of MiB.
+var maxSegmentBytes int64 = 256 << 20 // 256 MiB
+
 // HLSDownloader downloads HLS/M3U8 streams.
 type HLSDownloader struct{}
 
@@ -189,9 +197,18 @@ func (d *HLSDownloader) downloadSegment(ctx context.Context, opts Options, segUR
 		return nil, fmt.Errorf("HTTP %d", resp.StatusCode)
 	}
 
-	data, err := io.ReadAll(resp.Body)
+	// Bound the per-segment read: segURL is attacker-controllable (it comes
+	// verbatim from the untrusted M3U8), so a bare io.ReadAll would let a hostile
+	// or MITM'd host stream an unbounded (or transparently gunzipped) body and
+	// exhaust memory. Read one byte past the cap to detect overflow and fail
+	// (rather than silently truncating).
+	data, err := io.ReadAll(io.LimitReader(resp.Body, maxSegmentBytes+1))
 	if err != nil {
 		return nil, err
+	}
+
+	if int64(len(data)) > maxSegmentBytes {
+		return nil, fmt.Errorf("hls: segment body exceeds %d byte limit", maxSegmentBytes)
 	}
 
 	// Decrypt if AES-128.

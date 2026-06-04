@@ -12,6 +12,19 @@ import (
 	"github.com/inovacc/omni/internal/cli/cmderr"
 )
 
+// maxDecompressBytes caps the cumulative number of bytes written when
+// decompressing a single gzip stream, guarding against a decompression-bomb
+// DoS (CWE-409) where a small high-ratio input inflates to fill the disk.
+// 10 GiB mirrors the archive extraction cap: generous for legitimate CI/CD
+// artifacts while still bounding a tiny malicious input.
+const maxDecompressBytes int64 = 10 << 30
+
+// decompressByteCap is the effective per-stream byte cap. It defaults to
+// maxDecompressBytes and is a package var (not a const) only so tests can
+// lower it to exercise the bomb guard without allocating a multi-GiB output.
+// Production code never reassigns it.
+var decompressByteCap = maxDecompressBytes
+
 // GzipOptions configures the gzip command behavior
 type GzipOptions struct {
 	Decompress bool // -d: decompress
@@ -75,9 +88,19 @@ func gunzipReader(w io.Writer, r io.Reader) error {
 
 	defer func() { _ = gr.Close() }()
 
-	_, err = io.Copy(w, gr)
+	// Bound the copy so a decompression bomb cannot fill the disk (CWE-409).
+	// LimitReader caps the read at the cap plus one byte; if that extra byte is
+	// produced the stream exceeded the cap.
+	n, err := io.Copy(w, io.LimitReader(gr, decompressByteCap+1))
+	if err != nil {
+		return err
+	}
 
-	return err
+	if n > decompressByteCap {
+		return cmderr.Wrap(cmderr.ErrInvalidInput, "gzip: decompressed output exceeds maximum allowed size")
+	}
+
+	return nil
 }
 
 func gzipFile(w io.Writer, path string, opts GzipOptions) error {

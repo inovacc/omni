@@ -129,6 +129,46 @@ func TestWsEncodeDecodeRoundtrip(t *testing.T) {
 	}
 }
 
+// TestWsExtractPayload_NegativePayloadLenNoPanic verifies that a 127-length
+// frame whose 64-bit length has the high bit set (which decodes to a negative
+// Go int) does not panic with a slice-bounds error and returns nil instead.
+// Regression for ws-frame-neg-payloadlen-panic.
+func TestWsExtractPayload_NegativePayloadLenNoPanic(t *testing.T) {
+	// Byte[1]=0x7F: unmasked, 127-length marker. The 8 length bytes
+	// 0xFF..0xF6 set the high bit, so the shift loop yields a negative int.
+	frame := []byte{0x01, 0x7F, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xF6}
+
+	defer func() {
+		if r := recover(); r != nil {
+			t.Fatalf("wsExtractPayload() panicked on negative payload length: %v", r)
+		}
+	}()
+
+	result := wsExtractPayload(frame)
+	if result != nil {
+		t.Errorf("wsExtractPayload() negative length should return nil, got: %v", result)
+	}
+}
+
+// TestWsExtractPayload_OversizedPayloadLen verifies that a frame declaring a
+// payload larger than maxWSFrame is rejected (returns nil) rather than
+// attempting a huge allocation/slice.
+func TestWsExtractPayload_OversizedPayloadLen(t *testing.T) {
+	// 127-length frame, 8-byte length = 0x00000000_20000000 (512 MiB),
+	// well above maxWSFrame but not negative.
+	frame := []byte{0x01, 0x7F, 0x00, 0x00, 0x00, 0x00, 0x20, 0x00, 0x00, 0x00}
+
+	defer func() {
+		if r := recover(); r != nil {
+			t.Fatalf("wsExtractPayload() panicked on oversized payload length: %v", r)
+		}
+	}()
+
+	if result := wsExtractPayload(frame); result != nil {
+		t.Errorf("wsExtractPayload() oversized length should return nil, got %d bytes", len(result))
+	}
+}
+
 // TestIsYouTubeDomain_Extra covers additional cases not in the base test.
 func TestIsYouTubeDomain_Extra(t *testing.T) {
 	tests := []struct {

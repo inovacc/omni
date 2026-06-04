@@ -182,11 +182,11 @@ func (s *FileStore) SaveCredentials(provider Provider, name string, encrypted []
 	}
 
 	path := s.credentialsPath(provider, name)
-	if err := os.WriteFile(path, encrypted, credentialPerms); err != nil {
-		return fmt.Errorf("writing credentials file: %w", err)
-	}
 
-	return nil
+	// Route through atomicWriteFile so the write is atomic AND the file ends up
+	// 0600 regardless of any pre-existing looser mode (os.WriteFile would leave a
+	// pre-planted 0644 cred file 0644 — CWE-367/732).
+	return atomicWriteFile(path, encrypted, credentialPerms)
 }
 
 // LoadProfile loads a profile's metadata from disk.

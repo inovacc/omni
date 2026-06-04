@@ -49,7 +49,7 @@ type Snapshot struct {
 // introspection opcodes remain available unauthenticated as before.
 func privileged(op byte) bool {
 	switch op {
-	case OpShutdown, OpSetGCPercent, OpCPUProfile, OpTrace, OpHeapProfile, OpStack:
+	case OpShutdown, OpGC, OpSetGCPercent, OpCPUProfile, OpTrace, OpHeapProfile, OpStack:
 		return true
 	default:
 		return false

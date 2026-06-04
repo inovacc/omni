@@ -2,10 +2,22 @@ package bzip2
 
 import (
 	"bytes"
+	"errors"
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/inovacc/omni/internal/cli/cmderr"
 )
+
+// zeroBombBz2 is a 47-byte bzip2 stream that decompresses to 200,000 zero
+// bytes (ratio > 4000:1). Used to exercise the decompression-bomb guard
+// without embedding a multi-GiB fixture.
+var zeroBombBz2 = []byte{
+	66, 90, 104, 57, 49, 65, 89, 38, 83, 89, 222, 26, 7, 58, 0, 1,
+	136, 68, 0, 192, 0, 0, 4, 0, 8, 32, 0, 48, 204, 5, 41, 166,
+	8, 91, 16, 133, 226, 238, 72, 167, 10, 18, 27, 195, 64, 231, 64,
+}
 
 // Pre-compressed bzip2 data for "hello world"
 var helloWorldBz2 = []byte{
@@ -15,6 +27,26 @@ var helloWorldBz2 = []byte{
 	0x80, 0x20, 0x00, 0x22, 0x03, 0x34, 0x84, 0x30,
 	0x21, 0xb6, 0x81, 0x54, 0x27, 0x8b, 0xb9, 0x22,
 	0x9c, 0x28, 0x48, 0x22, 0x7b, 0x89, 0xbc, 0x00,
+}
+
+// TestBunzip2Reader_DecompressionBomb verifies bunzip2Reader caps cumulative
+// output: a tiny, high-ratio input that inflates past the cap must return
+// cmderr.ErrInvalidInput instead of writing unbounded bytes
+// (decompression-bomb / CWE-409). Uses a test-only low cap to avoid allocating
+// a multi-GiB output.
+func TestBunzip2Reader_DecompressionBomb(t *testing.T) {
+	const testCap int64 = 4 << 10 // 4 KiB, well below the 200,000-byte payload
+	orig := decompressByteCap
+	decompressByteCap = testCap
+
+	defer func() { decompressByteCap = orig }()
+
+	var out bytes.Buffer
+
+	err := bunzip2Reader(&out, bytes.NewReader(zeroBombBz2))
+	if !errors.Is(err, cmderr.ErrInvalidInput) {
+		t.Fatalf("bunzip2Reader() over cap: got err=%v, want cmderr.ErrInvalidInput", err)
+	}
 }
 
 func TestRunBzip2_CompressionNotSupported(t *testing.T) {

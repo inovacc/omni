@@ -13,11 +13,14 @@ package scan
 import (
 	"archive/zip"
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
@@ -218,10 +221,59 @@ func RunDBUpdate(w io.Writer, _ Options, baseURL, cacheDir, keyPath string) erro
 	return err
 }
 
-// fetch GETs url into memory. A transport error or non-200 status is classified
-// as cmderr.ErrIO — the update could not be completed, but nothing is written.
+// fetchTimeout bounds the whole request/response for a single bundle download so
+// a hung or slow-loris server cannot stall the update indefinitely.
+const fetchTimeout = 60 * time.Second
+
+// maxRedirects caps how many redirect hops fetch will follow before giving up,
+// limiting redirect-loop and redirect-chain SSRF amplification.
+const maxRedirects = 5
+
+// maxFetchBytes is the hard ceiling on a single downloaded body (osv-db.zip or
+// .minisig). A larger body is refused as cmderr.ErrIO BEFORE any signature
+// verification, so an oversized response cannot exhaust memory. It is a var (not
+// a const) so tests can lower it without allocating hundreds of MiB.
+var maxFetchBytes int64 = 256 << 20 // 256 MiB
+
+// allowLoopbackFetch relaxes the SSRF guard to permit loopback redirect targets.
+// It defaults to false so production callers are protected against redirect-based
+// SSRF (e.g. a redirect to the cloud metadata endpoint or a loopback service). It
+// exists so in-process tests backed by httptest servers (which bind to 127.0.0.1)
+// can exercise the download paths. Non-loopback private, link-local and metadata
+// ranges remain blocked regardless of this toggle.
+var allowLoopbackFetch = false
+
+// fetch GETs url into memory with a bounded timeout, a body-size ceiling, and a
+// redirect guard that rejects redirect targets resolving to non-public address
+// ranges (SSRF). A transport error, non-200 status, oversized body, or refused
+// redirect is classified as cmderr.ErrIO — the update could not be completed, but
+// nothing is written. The guard runs BEFORE any signature verification.
 func fetch(url string) ([]byte, error) {
-	resp, err := http.Get(url) //nolint:gosec // URL is operator-provided (--url), not attacker-controlled.
+	if err := validateFetchURL(url); err != nil {
+		return nil, cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("scan db update: fetch %s: %v", url, err))
+	}
+
+	client := &http.Client{
+		Timeout: fetchTimeout,
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			if len(via) >= maxRedirects {
+				return fmt.Errorf("stopped after %d redirects", maxRedirects)
+			}
+			if err := validateFetchURL(req.URL.String()); err != nil {
+				return fmt.Errorf("refused redirect: %w", err)
+			}
+			return nil
+		},
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), fetchTimeout)
+	defer cancel()
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		return nil, cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("scan db update: fetch %s: %v", url, err))
+	}
+
+	resp, err := client.Do(req) //nolint:gosec // URL is operator-provided (--url) and SSRF-guarded above.
 	if err != nil {
 		return nil, cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("scan db update: fetch %s: %v", url, err))
 	}
@@ -229,11 +281,82 @@ func fetch(url string) ([]byte, error) {
 	if resp.StatusCode != http.StatusOK {
 		return nil, cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("scan db update: fetch %s: status %s", url, resp.Status))
 	}
-	data, err := io.ReadAll(resp.Body)
+
+	// Read at most maxFetchBytes+1: if we get the extra byte, the body exceeded
+	// the cap and we refuse it rather than buffering an unbounded response.
+	data, err := io.ReadAll(io.LimitReader(resp.Body, maxFetchBytes+1))
 	if err != nil {
 		return nil, cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("scan db update: read %s: %v", url, err))
 	}
+	if int64(len(data)) > maxFetchBytes {
+		return nil, cmderr.Wrap(cmderr.ErrIO,
+			fmt.Sprintf("scan db update: %s body exceeds %d-byte cap", url, maxFetchBytes))
+	}
 	return data, nil
+}
+
+// validateFetchURL guards the bundle download against SSRF. It requires an
+// http/https scheme and rejects any host that is a literal private, loopback,
+// link-local, or otherwise non-public IP (e.g. the cloud metadata endpoint
+// 169.254.169.254). Hostnames are resolved and rejected if they map only to
+// non-public addresses. It is applied both to the initial URL and to every
+// redirect target. Ordinary public URLs are unaffected.
+func validateFetchURL(raw string) error {
+	if raw == "" {
+		return fmt.Errorf("empty URL")
+	}
+	u, err := url.Parse(raw)
+	if err != nil {
+		return fmt.Errorf("invalid URL: %w", err)
+	}
+	scheme := strings.ToLower(u.Scheme)
+	if scheme != "http" && scheme != "https" {
+		return fmt.Errorf("unsupported scheme %q (only http/https allowed)", u.Scheme)
+	}
+	host := u.Hostname()
+	if host == "" {
+		return fmt.Errorf("missing host")
+	}
+	if ip := net.ParseIP(host); ip != nil {
+		if !isPublicFetchIP(ip) {
+			return fmt.Errorf("host %q resolves to a non-public address", host)
+		}
+		return nil
+	}
+	addrs, err := net.LookupIP(host)
+	if err != nil {
+		return fmt.Errorf("resolving host %q: %w", host, err)
+	}
+	if len(addrs) == 0 {
+		return fmt.Errorf("host %q resolved to no addresses", host)
+	}
+	for _, ip := range addrs {
+		if !isPublicFetchIP(ip) {
+			return fmt.Errorf("host %q resolves to a non-public address", host)
+		}
+	}
+	return nil
+}
+
+// isPublicFetchIP reports whether ip is a routable, public address. It rejects
+// loopback, link-local (including the 169.254.0.0/16 cloud metadata range),
+// private, unspecified, multicast, and carrier-grade-NAT addresses. Loopback is
+// permitted only when allowLoopbackFetch is set (test-only).
+func isPublicFetchIP(ip net.IP) bool {
+	if ip.IsLoopback() && allowLoopbackFetch {
+		return true
+	}
+	if ip.IsLoopback() || ip.IsLinkLocalUnicast() || ip.IsLinkLocalMulticast() ||
+		ip.IsPrivate() || ip.IsUnspecified() || ip.IsMulticast() || ip.IsInterfaceLocalMulticast() {
+		return false
+	}
+	if v4 := ip.To4(); v4 != nil {
+		// 100.64.0.0/10 (carrier-grade NAT / shared address space).
+		if v4[0] == 100 && v4[1]&0xc0 == 64 {
+			return false
+		}
+	}
+	return true
 }
 
 // writeAtomic writes data to path via a temp file in the same directory followed

@@ -2,6 +2,7 @@ package archive
 
 import (
 	"archive/tar"
+	"archive/zip"
 	"bytes"
 	"compress/gzip"
 	"errors"
@@ -557,6 +558,206 @@ func TestExtractTar_AllowsContainedRelativeSymlink(t *testing.T) {
 	}
 	if _, err := os.Lstat(filepath.Join(extractDir, "alias.txt")); err != nil {
 		t.Errorf("expected contained symlink to be created: %v", err)
+	}
+}
+
+// writeZip builds a .zip archive at path with a single entry whose stored
+// (uncompressed) content is body. The Store method keeps the on-disk archive
+// small relative to the declared uncompressed size when body is highly
+// compressible, but here we use it to deterministically control the number of
+// bytes extractZipArchive will write.
+func writeZip(t *testing.T, path, entryName string, body []byte) {
+	t.Helper()
+
+	f, err := os.Create(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = f.Close() }()
+
+	zw := zip.NewWriter(f)
+	hdr := &zip.FileHeader{Name: entryName, Method: zip.Deflate}
+	hdr.SetMode(0644)
+
+	wr, err := zw.CreateHeader(hdr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := wr.Write(body); err != nil {
+		t.Fatal(err)
+	}
+	if err := zw.Close(); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestExtractZip_RejectsDecompressionBomb(t *testing.T) {
+	// Temporarily shrink the extraction cap so the test stays fast and does
+	// not need a multi-GiB archive. The production default remains
+	// maxExtractTotalBytes (10 GiB).
+	orig := extractByteCap
+	extractByteCap = 16
+	defer func() { extractByteCap = orig }()
+
+	tmpDir := t.TempDir()
+	archivePath := filepath.Join(tmpDir, "bomb.zip")
+
+	// A single entry whose extracted size (64 bytes) exceeds the lowered cap.
+	writeZip(t, archivePath, "big.txt", bytes.Repeat([]byte("A"), 64))
+
+	extractDir := filepath.Join(tmpDir, "out")
+
+	var buf bytes.Buffer
+	err := RunArchive(&buf, []string{}, ArchiveOptions{
+		Extract:   true,
+		File:      archivePath,
+		Directory: extractDir,
+	})
+	if err == nil {
+		t.Fatal("expected decompression-bomb zip to be rejected")
+	}
+	if !errors.Is(err, cmderr.ErrInvalidInput) {
+		t.Errorf("expected ErrInvalidInput, got %v", err)
+	}
+	if !strings.Contains(err.Error(), "exceeds maximum allowed size") {
+		t.Errorf("expected size-cap message, got %v", err)
+	}
+}
+
+func TestExtractZip_AllowsUnderCap(t *testing.T) {
+	// An archive whose extracted size is within the cap must extract cleanly.
+	orig := extractByteCap
+	extractByteCap = 1 << 20 // 1 MiB
+	defer func() { extractByteCap = orig }()
+
+	tmpDir := t.TempDir()
+	archivePath := filepath.Join(tmpDir, "ok.zip")
+	writeZip(t, archivePath, "ok.txt", []byte("small body"))
+
+	extractDir := filepath.Join(tmpDir, "out")
+
+	var buf bytes.Buffer
+	err := RunArchive(&buf, []string{}, ArchiveOptions{
+		Extract:   true,
+		File:      archivePath,
+		Directory: extractDir,
+	})
+	if err != nil {
+		t.Fatalf("under-cap zip should extract cleanly: %v", err)
+	}
+
+	got, err := os.ReadFile(filepath.Join(extractDir, "ok.txt"))
+	if err != nil {
+		t.Fatalf("expected extracted file: %v", err)
+	}
+	if string(got) != "small body" {
+		t.Errorf("extracted content = %q, want %q", got, "small body")
+	}
+}
+
+// TestExtractTar_RefusesWriteThroughPreplantedSymlink defends against CWE-59
+// write-through escape: a symlink that already exists on disk inside a reused
+// destDir is not visible to the lexical secureJoin containment check, so an
+// entry named "<symlink>/file" would otherwise be written through the symlink
+// to a location outside destDir. The extractor must refuse before writing.
+func TestExtractTar_RefusesWriteThroughPreplantedSymlink(t *testing.T) {
+	if os.PathSeparator == '\\' {
+		t.Skip("symlink-through escape test requires POSIX symlink semantics")
+	}
+
+	tmpDir := t.TempDir()
+
+	// The attacker-controlled escape destination, outside extractDir.
+	escapeDir := filepath.Join(tmpDir, "escape")
+	if err := os.MkdirAll(escapeDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	extractDir := filepath.Join(tmpDir, "out")
+	if err := os.MkdirAll(extractDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	// Pre-plant a symlink inside the (reused) extraction dir that points out
+	// of the destination. A lexical containment check on "sub/evil.txt" passes
+	// because the literal path stays under extractDir.
+	preplanted := filepath.Join(extractDir, "sub")
+	if err := os.Symlink(escapeDir, preplanted); err != nil {
+		if errors.Is(err, os.ErrPermission) {
+			t.Skipf("symlink creation unsupported in this environment: %v", err)
+		}
+		t.Fatal(err)
+	}
+
+	archivePath := filepath.Join(tmpDir, "evil.tar.gz")
+	writeTarGz(t, archivePath, []*tar.Header{
+		{Name: "sub/evil.txt", Mode: 0644, Size: 4, Typeflag: tar.TypeReg},
+	}, [][]byte{[]byte("boom")})
+
+	var buf bytes.Buffer
+	err := RunArchive(&buf, []string{}, ArchiveOptions{
+		Extract:   true,
+		File:      archivePath,
+		Directory: extractDir,
+	})
+	if err == nil {
+		t.Fatal("expected write-through pre-planted symlink to be refused")
+	}
+	if !errors.Is(err, cmderr.ErrInvalidInput) {
+		t.Errorf("expected ErrInvalidInput, got %v", err)
+	}
+
+	// The escape file must NOT have been written through the symlink.
+	if _, statErr := os.Stat(filepath.Join(escapeDir, "evil.txt")); statErr == nil {
+		t.Error("file was written through the pre-planted symlink (escape succeeded)")
+	}
+}
+
+// TestExtractZip_RefusesWriteThroughPreplantedSymlink mirrors the tar case for
+// the zip extractor.
+func TestExtractZip_RefusesWriteThroughPreplantedSymlink(t *testing.T) {
+	if os.PathSeparator == '\\' {
+		t.Skip("symlink-through escape test requires POSIX symlink semantics")
+	}
+
+	tmpDir := t.TempDir()
+
+	escapeDir := filepath.Join(tmpDir, "escape")
+	if err := os.MkdirAll(escapeDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	extractDir := filepath.Join(tmpDir, "out")
+	if err := os.MkdirAll(extractDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	preplanted := filepath.Join(extractDir, "sub")
+	if err := os.Symlink(escapeDir, preplanted); err != nil {
+		if errors.Is(err, os.ErrPermission) {
+			t.Skipf("symlink creation unsupported in this environment: %v", err)
+		}
+		t.Fatal(err)
+	}
+
+	archivePath := filepath.Join(tmpDir, "evil.zip")
+	writeZip(t, archivePath, "sub/evil.txt", []byte("boom"))
+
+	var buf bytes.Buffer
+	err := RunArchive(&buf, []string{}, ArchiveOptions{
+		Extract:   true,
+		File:      archivePath,
+		Directory: extractDir,
+	})
+	if err == nil {
+		t.Fatal("expected write-through pre-planted symlink to be refused")
+	}
+	if !errors.Is(err, cmderr.ErrInvalidInput) {
+		t.Errorf("expected ErrInvalidInput, got %v", err)
+	}
+
+	if _, statErr := os.Stat(filepath.Join(escapeDir, "evil.txt")); statErr == nil {
+		t.Error("file was written through the pre-planted symlink (escape succeeded)")
 	}
 }
 

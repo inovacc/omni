@@ -3,10 +3,13 @@ package gzip
 import (
 	"bytes"
 	"compress/gzip"
+	"errors"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/inovacc/omni/internal/cli/cmderr"
 )
 
 func TestRunGzip_Compress(t *testing.T) {
@@ -326,6 +329,40 @@ func TestGzipReader(t *testing.T) {
 
 	if buf.Len() == 0 {
 		t.Error("gzipReader() should produce output")
+	}
+}
+
+// TestGunzipReader_DecompressionBomb verifies gunzipReader caps cumulative
+// output: a small, highly compressible input that inflates past the cap must
+// return cmderr.ErrInvalidInput instead of writing unbounded bytes
+// (decompression-bomb / CWE-409). Uses a test-only low cap to avoid allocating
+// a multi-GiB output.
+func TestGunzipReader_DecompressionBomb(t *testing.T) {
+	const testCap int64 = 4 << 10 // 4 KiB
+	orig := decompressByteCap
+	decompressByteCap = testCap
+
+	defer func() { decompressByteCap = orig }()
+
+	// Compress well above the cap; zeros compress to a tiny stream.
+	var compressed bytes.Buffer
+
+	gw := gzip.NewWriter(&compressed)
+	if _, err := gw.Write(make([]byte, testCap*8)); err != nil {
+		t.Fatalf("seed write: %v", err)
+	}
+
+	_ = gw.Close()
+
+	if compressed.Len() >= int(testCap) {
+		t.Fatalf("test setup: compressed size %d not below cap %d", compressed.Len(), testCap)
+	}
+
+	var out bytes.Buffer
+
+	err := gunzipReader(&out, &compressed)
+	if !errors.Is(err, cmderr.ErrInvalidInput) {
+		t.Fatalf("gunzipReader() over cap: got err=%v, want cmderr.ErrInvalidInput", err)
 	}
 }
 

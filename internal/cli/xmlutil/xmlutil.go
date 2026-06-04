@@ -239,6 +239,12 @@ func sortedKeys(m map[string]any) []string {
 	return keys
 }
 
+// maxXMLDepth bounds recursion when converting parsed XML to JSON. Untrusted
+// input (stdin/files) can otherwise drive unbounded recursion and exhaust the
+// goroutine stack, which Go cannot recover() from (process aborts: DoS).
+// Matches maxYAMLDepth in internal/cli/yq.
+const maxXMLDepth = 1000
+
 // parseXML parses XML into a JSON-compatible structure
 func parseXML(r io.Reader, opts FromXMLOptions) (any, error) {
 	decoder := xml.NewDecoder(r)
@@ -279,6 +285,10 @@ func parseXML(r io.Reader, opts FromXMLOptions) (any, error) {
 
 			stack = append(stack, node)
 
+			if len(stack) > maxXMLDepth {
+				return nil, cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("xmlutil: XML nesting exceeds maximum depth of %d", maxXMLDepth))
+			}
+
 		case xml.EndElement:
 			if len(stack) > 0 {
 				stack = stack[:len(stack)-1]
@@ -297,7 +307,7 @@ func parseXML(r io.Reader, opts FromXMLOptions) (any, error) {
 		return nil, fmt.Errorf("no root element")
 	}
 
-	return root.toJSON(opts), nil
+	return root.toJSON(opts, 0)
 }
 
 // xmlNode represents a parsed XML node
@@ -308,8 +318,13 @@ type xmlNode struct {
 	text     string
 }
 
-// toJSON converts an XML node to JSON-compatible map
-func (n *xmlNode) toJSON(opts FromXMLOptions) map[string]any {
+// toJSON converts an XML node to JSON-compatible map. depth bounds recursion
+// against deeply nested input (see maxXMLDepth).
+func (n *xmlNode) toJSON(opts FromXMLOptions, depth int) (map[string]any, error) {
+	if depth > maxXMLDepth {
+		return nil, cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("xmlutil: XML nesting exceeds maximum depth of %d", maxXMLDepth))
+	}
+
 	result := make(map[string]any)
 	content := make(map[string]any)
 
@@ -323,7 +338,7 @@ func (n *xmlNode) toJSON(opts FromXMLOptions) map[string]any {
 		if len(n.children) == 0 && len(n.attrs) == 0 {
 			// Simple text node - just use the text value
 			result[n.name] = n.text
-			return result
+			return result, nil
 		}
 
 		content[opts.TextKey] = n.text
@@ -338,12 +353,20 @@ func (n *xmlNode) toJSON(opts FromXMLOptions) map[string]any {
 	// Add children
 	for name, children := range childGroups {
 		if len(children) == 1 {
-			childJSON := children[0].toJSON(opts)
+			childJSON, err := children[0].toJSON(opts, depth+1)
+			if err != nil {
+				return nil, err
+			}
+
 			content[name] = childJSON[children[0].name]
 		} else {
 			arr := make([]any, len(children))
 			for i, child := range children {
-				childJSON := child.toJSON(opts)
+				childJSON, err := child.toJSON(opts, depth+1)
+				if err != nil {
+					return nil, err
+				}
+
 				arr[i] = childJSON[child.name]
 			}
 
@@ -357,7 +380,7 @@ func (n *xmlNode) toJSON(opts FromXMLOptions) map[string]any {
 		result[n.name] = content
 	}
 
-	return result
+	return result, nil
 }
 
 // getInput reads input from args (file or literal) or stdin

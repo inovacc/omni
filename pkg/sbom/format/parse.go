@@ -2,11 +2,21 @@ package format
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 
 	"github.com/inovacc/omni/pkg/sbom/purl"
 )
+
+// maxSBOMBytes caps how much Parse will read from r before giving up, so a
+// huge or pipe-fed SBOM cannot OOM the process (CWE-770). It is a var (not a
+// const) only so tests can lower it; production code never reassigns it.
+var maxSBOMBytes int64 = 256 << 20 // 256 MiB
+
+// ErrTooLarge is returned by Parse when the input exceeds maxSBOMBytes. The
+// input is rejected (not truncated) so a partially-read SBOM is never parsed.
+var ErrTooLarge = errors.New("sbom: input exceeds size limit")
 
 // Component is the exported, format-agnostic READ view of one SBOM component,
 // for consumers (pkg/scan) that read a Document. Name is the Go module path,
@@ -45,9 +55,14 @@ func (d *Document) Components() []Component {
 // so third-party SBOMs (e.g. syft output) parse cleanly. Only entry.purl is
 // populated — the read side needs nothing else.
 func Parse(r io.Reader) (*Document, error) {
-	raw, err := io.ReadAll(r)
+	// Read at most maxSBOMBytes+1: if we get the extra byte the input is over
+	// the limit and is rejected wholesale rather than silently truncated.
+	raw, err := io.ReadAll(io.LimitReader(r, maxSBOMBytes+1))
 	if err != nil {
 		return nil, err
+	}
+	if int64(len(raw)) > maxSBOMBytes {
+		return nil, fmt.Errorf("%w (%d bytes)", ErrTooLarge, maxSBOMBytes)
 	}
 	var probe struct {
 		SPDXVersion string `json:"spdxVersion"`

@@ -129,6 +129,16 @@ func extractZipArchive(w io.Writer, opts ArchiveOptions) error {
 		destDir = "."
 	}
 
+	// Resolve the destination once so the write-through-symlink walk
+	// (refuseWriteThroughSymlink) can reason about the same absolute root that
+	// containedTarget uses for its lexical check.
+	cleanDest, err := filepath.Abs(filepath.Clean(destDir))
+	if err != nil {
+		return cmderr.Wrap(cmderr.ErrIO, "archive: resolve destination: "+err.Error())
+	}
+
+	var totalWritten int64
+
 	for _, f := range r.File {
 		name := f.Name
 		if opts.StripComponents > 0 {
@@ -157,6 +167,12 @@ func extractZipArchive(w io.Writer, opts ArchiveOptions) error {
 			continue
 		}
 
+		// Refuse to write through any pre-existing on-disk symlink in the path
+		// (CWE-59); containedTarget above only checks the path string.
+		if err := refuseWriteThroughSymlink(cleanDest, target); err != nil {
+			return err
+		}
+
 		if err := os.MkdirAll(filepath.Dir(target), 0755); err != nil {
 			return err
 		}
@@ -166,18 +182,27 @@ func extractZipArchive(w io.Writer, opts ArchiveOptions) error {
 			return err
 		}
 
-		outFile, err := os.OpenFile(target, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, f.Mode())
+		outFile, err := os.OpenFile(target, os.O_CREATE|os.O_WRONLY|os.O_TRUNC|oNoFollow, f.Mode())
 		if err != nil {
 			_ = rc.Close()
 			return err
 		}
 
-		_, err = io.Copy(outFile, rc)
+		// Bound the copy so a decompression bomb cannot fill the disk
+		// (archive-05). LimitReader caps the per-call read; the cumulative
+		// counter caps the whole extraction. Mirrors extractTarArchive.
+		remaining := extractByteCap - totalWritten
+		n, err := io.Copy(outFile, io.LimitReader(rc, remaining+1))
 		_ = outFile.Close()
 		_ = rc.Close()
 
 		if err != nil {
 			return err
+		}
+
+		totalWritten += n
+		if totalWritten > extractByteCap {
+			return cmderr.Wrap(cmderr.ErrInvalidInput, "archive: extraction exceeds maximum allowed size")
 		}
 	}
 

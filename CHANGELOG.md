@@ -64,6 +64,16 @@ processes in the binary.
   (`x&calc`); now every element is delayed-expanded (CWE-78). (2) `omni scan --fail-on` CI
   gate silently passed findings with no CVSS score; the gate now **fails closed on unknown
   severity** (CWE-755). Both proven RED→GREEN with new regression tests.
+- Remediated the remaining **17 MEDIUM/LOW** findings from the same audit (each
+  RED→GREEN): decompression-bomb caps on zip / standalone gzip+bzip2 / HLS segments /
+  SBOM parse / OSV-DB download; `git/gh clone` argument-injection guard (`--` terminator
+  + reject leading `-`); `omni scan db update` request timeout, body cap, and
+  redirect-host SSRF validation; WebSocket frame negative-length panic guard; XML→JSON
+  recursion depth cap; archive symlink-follow guard (`O_NOFOLLOW`/lstat); `omni cp`
+  source-mode preservation; `gops` client loopback-before-dial + stream deadlines and
+  `OpGC` auth gating; atomic 0600 credential writes; OSV version `v`-prefix normalization.
+  Verified independently: build/vet/tests/golden (195/27 baseline) all green, `go.mod`
+  unchanged, `govulncheck` 0.
 
 ### Notes
 - Golden-master fixtures are `-text`-locked (`.gitattributes`) so hashed/signed
