@@ -4,13 +4,14 @@ import (
 	"errors"
 	"strings"
 	"testing"
+
+	"github.com/inovacc/omni/pkg/twig/models"
 )
 
 func TestParseString_FlatTree(t *testing.T) {
-	// Note: the parser currently does not strip Unicode tree connector prefixes
-	// (├── and └──) from node names because the byte-level slicing in parseLine
-	// uses i+4 which doesn't match the multi-byte UTF-8 tree characters.
-	// This is a characterization test documenting the current behavior.
+	// The parser strips the Unicode tree connector prefixes (├── and └──) from
+	// node names. parseLine compares the multi-byte UTF-8 box-drawing glyphs with
+	// strings.HasPrefix, so the connectors are recognized and removed.
 	input := `project/
 ├── README.md
 ├── src/
@@ -32,12 +33,12 @@ func TestParseString_FlatTree(t *testing.T) {
 		t.Fatalf("root children = %d, want 3", len(root.Children))
 	}
 
-	// Children retain tree connector prefixes in current implementation
-	if !strings.Contains(root.Children[0].Name, "README.md") {
-		t.Errorf("child[0] should contain README.md, got %q", root.Children[0].Name)
-	}
-	if !strings.Contains(root.Children[2].Name, "go.mod") {
-		t.Errorf("child[2] should contain go.mod, got %q", root.Children[2].Name)
+	// Connector prefixes are stripped: names are clean.
+	wantNames := []string{"README.md", "src", "go.mod"}
+	for i, want := range wantNames {
+		if got := root.Children[i].Name; got != want {
+			t.Errorf("child[%d] name = %q, want %q", i, got, want)
+		}
 	}
 }
 
@@ -251,5 +252,110 @@ func TestParseString_DirectoryIsDir(t *testing.T) {
 	readme := root.Children[1]
 	if readme.IsDir {
 		t.Error("README.md should not be a directory")
+	}
+}
+
+// flatNode is a depth-first flattening of a parsed tree used to pin the exact
+// name, level, dir flag, and path of every node, including deep nesting.
+type flatNode struct {
+	name  string
+	level int
+	isDir bool
+	path  string
+}
+
+func flatten(node *models.Node, out *[]flatNode) {
+	*out = append(*out, flatNode{
+		name:  node.Name,
+		level: node.Level,
+		isDir: node.IsDir,
+		path:  node.Path,
+	})
+	for _, child := range node.Children {
+		flatten(child, out)
+	}
+}
+
+// TestParseString_NestedTree pins the corrected indentation handling: the
+// box-drawing connectors are stripped from names and the "│   "/"    " indent
+// units drive nesting so that deeply nested nodes attach to the right parent.
+//
+// Before the byte-vs-rune fix, parseLine's fixed-width byte windows never matched
+// the multi-byte glyphs, so every line reported level 0, names kept their
+// connector prefixes, and grandchildren were flattened into siblings of their
+// parent's level. This test fails on that broken behavior.
+func TestParseString_NestedTree(t *testing.T) {
+	input := "project/\n" +
+		"├── src/\n" +
+		"│   ├── main.go\n" +
+		"│   └── util/\n" +
+		"│       └── helper.go\n" +
+		"└── README.md"
+
+	p := NewParser()
+	root, err := p.ParseString(input)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	var got []flatNode
+	flatten(root, &got)
+
+	want := []flatNode{
+		{name: "project", level: 0, isDir: true, path: "project"},
+		{name: "src", level: 1, isDir: true, path: "project/src"},
+		{name: "main.go", level: 2, isDir: false, path: "project/src/main.go"},
+		{name: "util", level: 2, isDir: true, path: "project/src/util"},
+		{name: "helper.go", level: 3, isDir: false, path: "project/src/util/helper.go"},
+		{name: "README.md", level: 1, isDir: false, path: "project/README.md"},
+	}
+
+	if len(got) != len(want) {
+		t.Fatalf("node count = %d, want %d\ngot: %+v", len(got), len(want), got)
+	}
+	for i, w := range want {
+		if got[i] != w {
+			t.Errorf("node[%d] = %+v, want %+v", i, got[i], w)
+		}
+	}
+}
+
+// TestParseLine_LevelAndName checks parseLine directly across the indent unit and
+// connector variants, with and without trailing spaces.
+func TestParseLine_LevelAndName(t *testing.T) {
+	p := &Parser{}
+
+	tests := []struct {
+		name      string
+		line      string
+		wantLevel int
+		wantName  string
+		wantComm  string
+	}{
+		{"mid connector, no indent", "├── README.md", 0, "README.md", ""},
+		{"last connector, no indent", "└── go.mod", 0, "go.mod", ""},
+		{"one pipe indent", "│   └── main.go", 1, "main.go", ""},
+		{"blank indent unit", "    └── helper.go", 1, "helper.go", ""},
+		{"two indent units", "│       └── deep.go", 2, "deep.go", ""},
+		{"connector without trailing space", "├──config.yaml", 0, "config.yaml", ""},
+		{"with comment", "├── main.go # entry", 0, "main.go", "entry"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			level, name, comment, err := p.parseLine(tt.line)
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if level != tt.wantLevel {
+				t.Errorf("level = %d, want %d", level, tt.wantLevel)
+			}
+			if name != tt.wantName {
+				t.Errorf("name = %q, want %q", name, tt.wantName)
+			}
+			if comment != tt.wantComm {
+				t.Errorf("comment = %q, want %q", comment, tt.wantComm)
+			}
+		})
 	}
 }
