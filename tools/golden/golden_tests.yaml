@@ -51,6 +51,15 @@ categories:
         args: ["url", "decode"]
         stdin: "hello%20world%26foo%3Dbar"
 
+      # Pins the --json shape (2-space indent + trailing newline) for the url
+      # encode/decode paths before the formatter unification; literal-arg input
+      # keeps these deterministic and path-free.
+      - name: url_encode_json
+        args: ["url", "encode", "--json", "hello world"]
+
+      - name: url_decode_json
+        args: ["url", "decode", "--json", "hello%20world"]
+
       - name: html_encode
         args: ["html", "encode"]
         stdin: "<div>test & \"quotes\"</div>"
