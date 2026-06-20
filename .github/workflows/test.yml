@@ -36,10 +36,13 @@ jobs:
         # (they bypass cmderr classification -> wrong exit code). Pure-Go, stdlib-only.
         run: go run ./tools/cmderrlint internal/cli
 
+      # Build golangci-lint FROM SOURCE with the runner's Go toolchain (go.mod
+      # targets go1.26.4): prebuilt release binaries lag the Go version and
+      # golangci-lint refuses to run when its build-Go < the targeted Go.
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@v6
-        with:
-          version: latest
+        run: |
+          go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.8.0
+          golangci-lint run ./... --timeout=10m
 
       - name: Test
         run: go test ./... -count=1 -timeout 15m
