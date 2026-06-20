@@ -28,6 +28,7 @@ import (
 	"time"
 
 	"github.com/inovacc/omni/internal/cli/cmderr"
+	"github.com/inovacc/omni/pkg/cobra/helper/output"
 	"github.com/inovacc/omni/pkg/sbom/format"
 	"github.com/inovacc/omni/pkg/scan"
 	"github.com/inovacc/omni/pkg/sign"
@@ -46,8 +47,9 @@ type Options struct {
 	// FailOn is the severity threshold label ("low"/"medium"/"high"/"critical").
 	// When non-empty, any finding at or above it trips cmderr.ErrConflict.
 	FailOn string
-	// JSON selects JSON output instead of the text table.
-	JSON bool
+	// OutputFormat selects the output format (JSON vs the text table). It is read
+	// from the global --json/--table flags via the unified output formatter.
+	OutputFormat output.Format
 	// MaxDBAge gates DB staleness. A DB older than MaxDBAge fails loudly
 	// (cmderr.ErrConflict). Zero disables the gate.
 	MaxDBAge time.Duration
@@ -103,7 +105,7 @@ func scanDoc(w io.Writer, doc *format.Document, opts Options) error {
 	}
 
 	report, scanErr := scan.Scan(doc, db, scan.Options{FailOn: sev})
-	if rErr := render(w, report, opts.JSON); rErr != nil {
+	if rErr := render(w, report, opts.OutputFormat); rErr != nil {
 		return rErr
 	}
 	return scanErr
@@ -148,7 +150,7 @@ func RunScanSource(w io.Writer, args []string, opts Options) error {
 	if scanErr != nil {
 		return scanErr // ErrUnsupported (deferred per ADR-0008)
 	}
-	return render(w, report, opts.JSON)
+	return render(w, report, opts.OutputFormat)
 }
 
 // dbZipName / dbSigName are the canonical file names of the signed OSV bundle and
@@ -491,12 +493,10 @@ func resolveFailOn(label string) (scan.Severity, error) {
 	return sev, nil
 }
 
-// render writes the report as JSON (opts.JSON) or a stable text table.
-func render(w io.Writer, report scan.Report, asJSON bool) error {
-	if asJSON {
-		enc := json.NewEncoder(w)
-		enc.SetIndent("", "  ")
-		if err := enc.Encode(report); err != nil {
+// render writes the report as JSON (FormatJSON) or a stable text table.
+func render(w io.Writer, report scan.Report, format output.Format) error {
+	if f := output.New(w, format); f.IsJSON() {
+		if err := f.Print(report); err != nil {
 			return cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("scan: encode JSON: %v", err))
 		}
 		return nil
