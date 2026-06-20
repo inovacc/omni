@@ -10,6 +10,7 @@ import (
 	"runtime"
 	"strings"
 
+	"github.com/inovacc/omni/internal/cli/cmderr"
 	"github.com/spf13/cobra"
 )
 
@@ -35,7 +36,7 @@ func (r *CobraCommandRunner) Run(ctx context.Context, w io.Writer, args []string
 	// Clone the root command to avoid state pollution
 	cmd := findSubCommand(r.rootCmd, args[0])
 	if cmd == nil {
-		return fmt.Errorf("unknown command: %s", args[0])
+		return cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("unknown command: %s", args[0]))
 	}
 
 	// Set output

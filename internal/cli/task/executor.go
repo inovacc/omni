@@ -6,6 +6,8 @@ import (
 	"io"
 	"sort"
 	"strings"
+
+	"github.com/inovacc/omni/internal/cli/cmderr"
 )
 
 // Executor handles task execution
@@ -212,7 +214,7 @@ func (e *Executor) executeCommand(ctx context.Context, cmd Command, resolver *Va
 
 	// If not an omni command and external not allowed, error
 	if !isOmni && !e.opts.AllowExternal {
-		return fmt.Errorf("unknown command: %s\n\nHint: Use --allow-external to run external commands", firstWord(cmdStr))
+		return cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("unknown command: %s\n\nHint: Use --allow-external to run external commands", firstWord(cmdStr)))
 	}
 
 	// Print command (unless silent)
