@@ -557,6 +557,23 @@ func TestRunDiff(t *testing.T) {
 			t.Error("expected error when comparing directories without recursive flag")
 		}
 	})
+
+	t.Run("directory vs file is ErrInvalidInput", func(t *testing.T) {
+		dir := filepath.Join(tmpDir, "dvfdir")
+		_ = os.MkdirAll(dir, 0755)
+		file := filepath.Join(tmpDir, "dvffile.txt")
+		_ = os.WriteFile(file, []byte("x"), 0644)
+
+		var buf bytes.Buffer
+
+		err := RunDiff(&buf, []string{dir, file}, DiffOptions{})
+		if err == nil {
+			t.Fatal("expected error when comparing a directory to a file")
+		}
+		if !errors.Is(err, cmderr.ErrInvalidInput) {
+			t.Fatalf("directory-vs-file error = %v, want errors.Is(cmderr.ErrInvalidInput)", err)
+		}
+	})
 }
 
 func TestTruncateOrPad(t *testing.T) {

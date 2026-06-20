@@ -87,11 +87,11 @@ func RunDiff(w io.Writer, args []string, opts DiffOptions) error {
 			return diffDirs(w, file1, file2, opts)
 		}
 
-		return fmt.Errorf("diff: %s: Is a directory", file1)
+		return cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("diff: %s: Is a directory", file1))
 	}
 
 	if info1.IsDir() || info2.IsDir() {
-		return fmt.Errorf("diff: cannot compare directory to file")
+		return cmderr.Wrap(cmderr.ErrInvalidInput, "diff: cannot compare directory to file")
 	}
 
 	return diffFiles(w, file1, file2, opts)
