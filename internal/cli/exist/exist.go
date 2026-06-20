@@ -1,7 +1,6 @@
 package exist
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -15,6 +14,7 @@ import (
 
 	"github.com/inovacc/omni/internal/cli/cmderr"
 	"github.com/inovacc/omni/internal/cli/ps"
+	"github.com/inovacc/omni/pkg/cobra/helper/output"
 	gnet "github.com/shirou/gopsutil/v3/net"
 	"github.com/shirou/gopsutil/v3/process"
 )
@@ -25,7 +25,9 @@ var ErrNotFound = errors.New("not found")
 // Options configures the exist command behavior.
 type Options struct {
 	Quiet bool // -q: suppress output
-	JSON  bool // --json: output as JSON
+	// OutputFormat selects the output format. It is read from the global
+	// --json/--table flags via the unified output formatter.
+	OutputFormat output.Format
 }
 
 // Result represents the existence check result.
@@ -324,11 +326,8 @@ func outputResult(w io.Writer, result Result, opts Options) error {
 		return nil
 	}
 
-	if opts.JSON {
-		encoder := json.NewEncoder(w)
-		encoder.SetIndent("", "  ")
-
-		if err := encoder.Encode(result); err != nil {
+	if f := output.New(w, opts.OutputFormat); f.IsJSON() {
+		if err := f.Print(result); err != nil {
 			return fmt.Errorf("exist: json encode: %w", err)
 		}
 	} else if result.Exists {
