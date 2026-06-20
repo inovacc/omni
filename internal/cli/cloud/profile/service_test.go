@@ -1,12 +1,14 @@
 package profile
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 
 	"github.com/inovacc/omni/internal/cli/cloud/crypto"
+	"github.com/inovacc/omni/internal/cli/cmderr"
 )
 
 func skipIfNoMachineID(t *testing.T) {
@@ -198,6 +200,18 @@ func TestService_SetDefault(t *testing.T) {
 	}
 }
 
+func TestService_SetDefault_NotFound(t *testing.T) {
+	svc, _ := newTestService(t)
+
+	err := svc.SetDefault(ProviderAWS, "does-not-exist")
+	if err == nil {
+		t.Fatal("expected error for missing profile")
+	}
+	if !errors.Is(err, cmderr.ErrNotFound) {
+		t.Errorf("missing profile should be ErrNotFound (exit 1): %v", err)
+	}
+}
+
 func TestService_AddProfile_DuplicateName(t *testing.T) {
 	svc, _ := newTestService(t)
 
@@ -217,6 +231,9 @@ func TestService_AddProfile_DuplicateName(t *testing.T) {
 	err := svc.AddProfile(profile, creds)
 	if err == nil {
 		t.Error("expected error for duplicate profile name")
+	}
+	if err != nil && !errors.Is(err, cmderr.ErrConflict) {
+		t.Errorf("duplicate profile should be ErrConflict (exit 1): %v", err)
 	}
 }
 
@@ -291,5 +308,8 @@ func TestService_ProviderMismatch(t *testing.T) {
 
 	if err != nil && !strings.Contains(err.Error(), "mismatch") {
 		t.Errorf("error should mention mismatch: %v", err)
+	}
+	if err != nil && !errors.Is(err, cmderr.ErrConflict) {
+		t.Errorf("provider mismatch should be ErrConflict (exit 1): %v", err)
 	}
 }

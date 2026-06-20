@@ -82,7 +82,7 @@ func Copy(src, dst string) error {
 	}
 
 	if !sourceFileStat.Mode().IsRegular() {
-		return fmt.Errorf("%s is not a regular file", src)
+		return cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("%s is not a regular file", src))
 	}
 
 	source, err := os.Open(src)

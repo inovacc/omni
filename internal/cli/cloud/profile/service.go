@@ -10,6 +10,7 @@ import (
 
 	"github.com/inovacc/omni/internal/cli/cloud/config"
 	"github.com/inovacc/omni/internal/cli/cloud/crypto"
+	"github.com/inovacc/omni/internal/cli/cmderr"
 )
 
 const (
@@ -67,12 +68,12 @@ func NewServiceWithDir(baseDir string) (*Service, error) {
 func (s *Service) AddProfile(profile *CloudProfile, creds Credentials) error {
 	// Validate provider match
 	if creds.Provider() != profile.Provider {
-		return fmt.Errorf("credential provider mismatch: got %s, want %s", creds.Provider(), profile.Provider)
+		return cmderr.Wrap(cmderr.ErrConflict, fmt.Sprintf("credential provider mismatch: got %s, want %s", creds.Provider(), profile.Provider))
 	}
 
 	// Check for existing profile
 	if s.store.ProfileExists(profile.Provider, profile.Name) {
-		return fmt.Errorf("profile already exists: %s/%s", profile.Provider, profile.Name)
+		return cmderr.Wrap(cmderr.ErrConflict, fmt.Sprintf("profile already exists: %s/%s", profile.Provider, profile.Name))
 	}
 
 	// Set timestamps
@@ -248,7 +249,7 @@ func (s *Service) DeleteProfile(provider Provider, name string) error {
 func (s *Service) SetDefault(provider Provider, name string) error {
 	// Verify profile exists
 	if !s.store.ProfileExists(provider, name) {
-		return fmt.Errorf("profile not found: %s/%s", provider, name)
+		return cmderr.Wrap(cmderr.ErrNotFound, fmt.Sprintf("profile not found: %s/%s", provider, name))
 	}
 
 	// Update old default profile

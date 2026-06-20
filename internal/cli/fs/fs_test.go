@@ -1,11 +1,38 @@
 package fs
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
 	"runtime"
 	"testing"
+
+	"github.com/inovacc/omni/internal/cli/cmderr"
 )
+
+func TestCopy_NonRegularSourceIsInvalidInput(t *testing.T) {
+	tmpDir, err := os.MkdirTemp("", "fs_copy_nonregular_test")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = os.RemoveAll(tmpDir) }()
+
+	// A directory is not a regular file; Copy must refuse it as ErrInvalidInput
+	// (exit 2), consistent with internal/cli/copy.
+	srcDir := filepath.Join(tmpDir, "srcdir")
+	if err := os.Mkdir(srcDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	dst := filepath.Join(tmpDir, "dst")
+
+	err = Copy(srcDir, dst)
+	if err == nil {
+		t.Fatal("expected error copying non-regular source")
+	}
+	if !errors.Is(err, cmderr.ErrInvalidInput) {
+		t.Errorf("non-regular source should be ErrInvalidInput (exit 2): %v", err)
+	}
+}
 
 func TestCd(t *testing.T) {
 	tmpDir, err := os.MkdirTemp("", "cd_test")
