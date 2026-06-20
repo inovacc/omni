@@ -10,13 +10,22 @@ import (
 
 	"github.com/inovacc/omni/internal/cli/cmderr"
 	"github.com/inovacc/omni/internal/cli/input"
+	"github.com/inovacc/omni/pkg/cobra/helper/output"
 )
 
 // PasteOptions configures the paste command behavior
 type PasteOptions struct {
-	Delimiters string // -d: use characters from LIST instead of TABs
-	Serial     bool   // -s: paste one file at a time instead of in parallel
-	Zero       bool   // -z: line delimiter is NUL, not newline
+	Delimiters   string        // -d: use characters from LIST instead of TABs
+	Serial       bool          // -s: paste one file at a time instead of in parallel
+	Zero         bool          // -z: line delimiter is NUL, not newline
+	OutputFormat output.Format // output format (text, json, table) — honors global --json
+}
+
+// PasteResult represents paste output for JSON mode. Each row holds the
+// per-file fields that were merged for that output line.
+type PasteResult struct {
+	Rows  [][]string `json:"rows"`
+	Count int        `json:"count"`
 }
 
 // RunPaste merges lines of files
@@ -40,21 +49,39 @@ func RunPaste(w io.Writer, r io.Reader, args []string, opts PasteOptions) error 
 		lineTerminator = "\x00"
 	}
 
+	f := output.New(w, opts.OutputFormat)
+	jsonMode := f.IsJSON()
+
+	var (
+		rows [][]string
+		err  error
+	)
+
 	if opts.Serial {
-		return pasteSerial(w, r, args, delimiters, lineTerminator)
+		rows, err = pasteSerial(w, r, args, delimiters, lineTerminator, jsonMode)
+	} else {
+		rows, err = pasteParallel(w, r, args, delimiters, lineTerminator, jsonMode)
 	}
 
-	return pasteParallel(w, r, args, delimiters, lineTerminator)
+	if err != nil {
+		return err
+	}
+
+	if jsonMode {
+		return f.Print(PasteResult{Rows: rows, Count: len(rows)})
+	}
+
+	return nil
 }
 
-func pasteParallel(w io.Writer, defaultReader io.Reader, files []string, delimiters, lineTerminator string) error {
+func pasteParallel(w io.Writer, defaultReader io.Reader, files []string, delimiters, lineTerminator string, jsonMode bool) ([][]string, error) {
 	// Open all files using input package
 	sources, err := input.Open(files, defaultReader)
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
-			return cmderr.Wrap(cmderr.ErrNotFound, fmt.Sprintf("paste: %s", err))
+			return nil, cmderr.Wrap(cmderr.ErrNotFound, fmt.Sprintf("paste: %s", err))
 		}
-		return fmt.Errorf("paste: %w", err)
+		return nil, fmt.Errorf("paste: %w", err)
 	}
 	defer input.CloseAll(sources)
 
@@ -64,6 +91,8 @@ func pasteParallel(w io.Writer, defaultReader io.Reader, files []string, delimit
 	}
 
 	delimIdx := 0
+
+	var rows [][]string
 
 	for {
 		var parts []string
@@ -81,6 +110,14 @@ func pasteParallel(w io.Writer, defaultReader io.Reader, files []string, delimit
 
 		if !anyMore {
 			break
+		}
+
+		if jsonMode {
+			row := make([]string, len(parts))
+			copy(row, parts)
+			rows = append(rows, row)
+
+			continue
 		}
 
 		// Join with delimiters (cycling through them)
@@ -102,18 +139,20 @@ func pasteParallel(w io.Writer, defaultReader io.Reader, files []string, delimit
 		_, _ = fmt.Fprint(w, result.String()+lineTerminator)
 	}
 
-	return nil
+	return rows, nil
 }
 
-func pasteSerial(w io.Writer, defaultReader io.Reader, files []string, delimiters, lineTerminator string) error {
+func pasteSerial(w io.Writer, defaultReader io.Reader, files []string, delimiters, lineTerminator string, jsonMode bool) ([][]string, error) {
 	sources, err := input.Open(files, defaultReader)
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
-			return cmderr.Wrap(cmderr.ErrNotFound, fmt.Sprintf("paste: %s", err))
+			return nil, cmderr.Wrap(cmderr.ErrNotFound, fmt.Sprintf("paste: %s", err))
 		}
-		return fmt.Errorf("paste: %w", err)
+		return nil, fmt.Errorf("paste: %w", err)
 	}
 	defer input.CloseAll(sources)
+
+	var rows [][]string
 
 	for _, src := range sources {
 		scanner := bufio.NewScanner(src.Reader)
@@ -124,7 +163,15 @@ func pasteSerial(w io.Writer, defaultReader io.Reader, files []string, delimiter
 		}
 
 		if err := scanner.Err(); err != nil {
-			return err
+			return nil, err
+		}
+
+		if jsonMode {
+			row := make([]string, len(parts))
+			copy(row, parts)
+			rows = append(rows, row)
+
+			continue
 		}
 
 		// Join with delimiters
@@ -146,7 +193,7 @@ func pasteSerial(w io.Writer, defaultReader io.Reader, files []string, delimiter
 		_, _ = fmt.Fprint(w, result.String()+lineTerminator)
 	}
 
-	return nil
+	return rows, nil
 }
 
 func expandDelimiters(s string) string {

@@ -25,6 +25,7 @@ With no FILE, or when FILE is -, read standard input.
 		opts.Delimiters, _ = cmd.Flags().GetString("delimiters")
 		opts.Serial, _ = cmd.Flags().GetBool("serial")
 		opts.Zero, _ = cmd.Flags().GetBool("zero-terminated")
+		opts.OutputFormat = getOutputOpts(cmd).GetFormat()
 
 		return paste.RunPaste(cmd.OutOrStdout(), cmd.InOrStdin(), args, opts)
 	},

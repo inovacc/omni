@@ -51,6 +51,8 @@ Examples:
 			opts.OnlyUnpaired2 = true
 		}
 
+		opts.OutputFormat = getOutputOpts(cmd).GetFormat()
+
 		return join.RunJoin(cmd.OutOrStdout(), args, opts)
 	},
 }

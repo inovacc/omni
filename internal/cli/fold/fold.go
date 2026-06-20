@@ -11,13 +11,21 @@ import (
 
 	"github.com/inovacc/omni/internal/cli/cmderr"
 	"github.com/inovacc/omni/internal/cli/input"
+	"github.com/inovacc/omni/pkg/cobra/helper/output"
 )
 
 // FoldOptions configures the fold command behavior
 type FoldOptions struct {
-	Width  int  // -w: use WIDTH columns instead of 80
-	Bytes  bool // -b: count bytes rather than columns
-	Spaces bool // -s: break at spaces
+	Width        int           // -w: use WIDTH columns instead of 80
+	Bytes        bool          // -b: count bytes rather than columns
+	Spaces       bool          // -s: break at spaces
+	OutputFormat output.Format // output format (text, json, table) — honors global --json
+}
+
+// FoldResult represents fold output for JSON mode.
+type FoldResult struct {
+	Lines []string `json:"lines"`
+	Count int      `json:"count"`
 }
 
 // RunFold wraps input lines to fit in specified width
@@ -36,29 +44,48 @@ func RunFold(w io.Writer, r io.Reader, args []string, opts FoldOptions) error {
 	}
 	defer input.CloseAll(sources)
 
+	f := output.New(w, opts.OutputFormat)
+	jsonMode := f.IsJSON()
+
+	var allLines []string
+
 	for _, src := range sources {
-		if err := foldReader(w, src.Reader, opts); err != nil {
+		lines, err := foldReader(w, src.Reader, opts, jsonMode)
+		if err != nil {
 			return err
 		}
+
+		if jsonMode {
+			allLines = append(allLines, lines...)
+		}
+	}
+
+	if jsonMode {
+		return f.Print(FoldResult{Lines: allLines, Count: len(allLines)})
 	}
 
 	return nil
 }
 
-func foldReader(w io.Writer, r io.Reader, opts FoldOptions) error {
+func foldReader(w io.Writer, r io.Reader, opts FoldOptions, jsonMode bool) ([]string, error) {
 	scanner := bufio.NewScanner(r)
+
+	var lines []string
+
 	for scanner.Scan() {
 		line := scanner.Text()
 
 		folded := foldLine(line, opts)
 		for _, part := range folded {
-			if _, err := fmt.Fprintln(w, part); err != nil {
-				return err
+			if jsonMode {
+				lines = append(lines, part)
+			} else if _, err := fmt.Fprintln(w, part); err != nil {
+				return nil, err
 			}
 		}
 	}
 
-	return scanner.Err()
+	return lines, scanner.Err()
 }
 
 func foldLine(line string, opts FoldOptions) []string {

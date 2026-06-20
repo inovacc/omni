@@ -26,6 +26,7 @@ Examples:
 		opts.Width, _ = cmd.Flags().GetInt("width")
 		opts.Bytes, _ = cmd.Flags().GetBool("bytes")
 		opts.Spaces, _ = cmd.Flags().GetBool("spaces")
+		opts.OutputFormat = getOutputOpts(cmd).GetFormat()
 
 		return fold.RunFold(cmd.OutOrStdout(), cmd.InOrStdin(), args, opts)
 	},
