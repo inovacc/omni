@@ -60,13 +60,13 @@ type GrepOutput struct {
 // r is the default input reader (used when args is empty or contains "-")
 func RunGrep(w io.Writer, r io.Reader, pattern string, args []string, opts GrepOptions) error {
 	if pattern == "" {
-		return fmt.Errorf("grep: no pattern specified")
+		return cmderr.Wrap(cmderr.ErrInvalidInput, "grep: no pattern specified")
 	}
 
 	// Compile the pattern
 	re, err := compilePattern(pattern, opts)
 	if err != nil {
-		return fmt.Errorf("grep: %w", err)
+		return cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("grep: %v", err))
 	}
 
 	// Determine input sources

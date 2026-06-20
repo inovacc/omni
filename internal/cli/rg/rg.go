@@ -168,7 +168,7 @@ func Run(ctx context.Context, w io.Writer, pattern string, paths []string, opts 
 
 	re, err := regexp.Compile(flags + regexPattern)
 	if err != nil {
-		return fmt.Errorf("rg: invalid pattern: %w", err)
+		return cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("rg: invalid pattern: %v", err))
 	}
 
 	// Prepare literal pattern for fast search
