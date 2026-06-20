@@ -359,6 +359,21 @@ tasks:
       - go run ./tools/covgate -profile=coverage.out -pkg-prefix=github.com/inovacc/omni/pkg/ -avg-min=75 -floor=40 -exclude=private
       - go run ./tools/covgate -profile=coverage.out -pkg-prefix=github.com/inovacc/omni/internal/cli/ -avg-min=60 -floor=30 -exclude=private,aws,vault,kubectl,terraform,kubehacks,cloud,video,chown,/cli/ln,templates
 
+  test:coverage:gate:
+    desc: Overall omni-owned coverage gate (weighted avg, excludes vendored/cloud-shim/buf) — advisory start, ratchets to 80% post-#010
+    # RATCHET PLAN (gated on plan 010): Today's omni-owned overall weighted avg is
+    # 73.3%; the advisory -avg-min below is deliberately set at 60 so `main` stays
+    # green. After plans/010-*.md merges and `task test:coverage:gate` reports an
+    # omni-owned overall avg >= 80% on a green `main`, raise -avg-min from 60 to 80
+    # in a dedicated `ci: ratchet overall coverage gate to 80%` commit. NEVER set 80
+    # speculatively — that turns `main` red, the explicit anti-goal of this gate.
+    cmds:
+      # Pure-Go, no-exec gate: tools/covgate parses the profile directly.
+      # Excludes the same vendored/cloud-shim surface as lint:coverage's
+      # internal/cli rule, plus 'buf' (vendored protobuf compiler skews the total).
+      - go test -short -coverprofile=overall-coverage.out ./pkg/... ./internal/cli/...
+      - go run ./tools/covgate -profile=overall-coverage.out -pkg-prefix=github.com/inovacc/omni/ -avg-min=60 -floor=0 -exclude=private,aws,vault,kubectl,terraform,kubehacks,cloud,video,chown,/cli/ln,templates,buf
+
   lint:cmderr-coverage:
     desc: Gate internal/cli/cmderr statement coverage at >=90% (pure-Go, cross-platform)
     cmds:
@@ -508,11 +523,13 @@ tasks:
         platforms: [ linux, darwin ]
       - cmd: if exist {{.BUILD_DIR}} rd /s /q {{.BUILD_DIR}}
         platforms: [ windows ]
-      - cmd: rm -f {{.COVERAGE_FILE}} coverage.html
+      - cmd: rm -f {{.COVERAGE_FILE}} coverage.html overall-coverage.out
         platforms: [ linux, darwin ]
       - cmd: if exist {{.COVERAGE_FILE}} del {{.COVERAGE_FILE}}
         platforms: [ windows ]
       - cmd: if exist coverage.html del coverage.html
+        platforms: [ windows ]
+      - cmd: if exist overall-coverage.out del overall-coverage.out
         platforms: [ windows ]
 
   # === DOCUMENTATION ===

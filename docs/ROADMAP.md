@@ -791,6 +791,7 @@ func printOutput(cmd *cobra.Command, data any, format OutputFormat) error {
 | Category | Coverage | Status |
 |----------|----------|--------|
 | **Overall** | 59.4% (includes vendored buf packages) | Skewed by vendor |
+| **Omni-owned overall** | 73.3% (pkg/ + internal/cli/, excludes vendored/cloud-shim/buf) | Gated by task test:coverage:gate |
 | **Omni-owned pkg/ avg** | ~78% (17 of 31 packages above 80%) | ✅ Good |
 | **Golden master tests** | 117 tests, 13 categories | ✅ Excellent |
 
@@ -987,7 +988,7 @@ Priority P2 - Specialized:
 - [ ] cmderr adopted in all commands
 - [ ] Full documentation
 - [ ] 80%+ overall test coverage
-- [ ] CI coverage enforcement
+- [x] CI coverage enforcement (overall omni-owned weighted-avg gate via task test:coverage:gate / CI job overall-coverage-gate; start 60% advisory, measured 73.3%, ratchets to 80% after plan 010)
 - [ ] Multi-platform automated releases
 
 ---
