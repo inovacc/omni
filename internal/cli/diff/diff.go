@@ -55,7 +55,7 @@ type DiffLine struct {
 // RunDiff executes the diff command.
 func RunDiff(w io.Writer, args []string, opts DiffOptions) error {
 	if len(args) < 2 {
-		return fmt.Errorf("diff: missing operand after '%s'", args[0])
+		return cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("diff: missing operand after '%s'", args[0]))
 	}
 
 	file1, file2 := args[0], args[1]

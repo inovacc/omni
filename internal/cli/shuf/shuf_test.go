@@ -2,10 +2,13 @@ package shuf
 
 import (
 	"bytes"
+	"errors"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/inovacc/omni/internal/cli/cmderr"
 )
 
 func TestRunShuf(t *testing.T) {
@@ -208,5 +211,15 @@ func TestIndexOf(t *testing.T) {
 		if result != tt.expected {
 			t.Errorf("indexOf(%q, %c) = %d, want %d", tt.data, tt.b, result, tt.expected)
 		}
+	}
+}
+
+func TestRunShuf_RepeatWithoutHeadCount_IsInvalidInput(t *testing.T) {
+	// --repeat (-r) without --head-count (-n) is a usage error -> exit 2.
+	// Text path:
+	var buf bytes.Buffer
+	err := RunShuf(&buf, []string{"a"}, ShufOptions{Echo: true, Repeat: true})
+	if !errors.Is(err, cmderr.ErrInvalidInput) {
+		t.Fatalf("text path: want ErrInvalidInput, got %v", err)
 	}
 }
