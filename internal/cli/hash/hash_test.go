@@ -2,10 +2,13 @@ package hash
 
 import (
 	"bytes"
+	"encoding/json"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/inovacc/omni/pkg/cobra/helper/output"
 )
 
 func TestRunHash(t *testing.T) {
@@ -63,6 +66,45 @@ func TestRunHash(t *testing.T) {
 				t.Errorf("RunHash() output = %v, want contains %v", buf.String(), tt.contains)
 			}
 		})
+	}
+}
+
+// TestRunHash_JSON asserts the global --json output mode (OutputFormat) emits a
+// structured HashesResult array, and that the default/text path is unchanged.
+func TestRunHash_JSON(t *testing.T) {
+	dir := t.TempDir()
+	file := filepath.Join(dir, "test.txt")
+	if err := os.WriteFile(file, []byte("test"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	var buf bytes.Buffer
+	opts := HashOptions{Algorithm: "sha256", OutputFormat: output.FormatJSON}
+	if err := RunHash(&buf, []string{file}, opts); err != nil {
+		t.Fatalf("RunHash(--json) error = %v", err)
+	}
+
+	var got HashesResult
+	if err := json.Unmarshal(buf.Bytes(), &got); err != nil {
+		t.Fatalf("output is not valid JSON: %v\noutput: %s", err, buf.String())
+	}
+	if got.Count != 1 || len(got.Hashes) != 1 {
+		t.Fatalf("unexpected count/len: count=%d hashes=%d", got.Count, len(got.Hashes))
+	}
+	// sha256 of "test"
+	const wantHash = "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08"
+	h := got.Hashes[0]
+	if h.Hash != wantHash || h.Algorithm != "sha256" || h.Path != file {
+		t.Fatalf("unexpected hash result: %+v", h)
+	}
+
+	// Text path must be unchanged (no JSON when OutputFormat is default/text).
+	var txt bytes.Buffer
+	if err := RunHash(&txt, []string{file}, HashOptions{Algorithm: "sha256"}); err != nil {
+		t.Fatalf("RunHash(text) error = %v", err)
+	}
+	if strings.Contains(txt.String(), "{") || !strings.Contains(txt.String(), wantHash) {
+		t.Fatalf("text path changed unexpectedly: %q", txt.String())
 	}
 }
 
