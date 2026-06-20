@@ -88,19 +88,19 @@ Surfaced by the hardening sweep on `harden/audit-fixes`; full context in `docs/q
 ### Cloud & DevOps Integrations
 
 #### Consul Integration
-- [ ] `consul members` - List cluster members
-- [ ] `consul kv` - Key-value store operations
-- [ ] `consul services` - Service catalog operations
+- [x] `consul members` - List cluster members (v1: read-only, net/http MVP — see docs/spikes/023)
+- [x] `consul kv get` - Read a key from the KV store (v1: read-only; `kv put`/`delete` write ops deferred)
+- [x] `consul services` - List catalog services (v1: read-only; service register/deregister deferred)
 
 #### Nomad Integration
-- [ ] `nomad job` - Job management
-- [ ] `nomad node` - Node operations
-- [ ] `nomad alloc` - Allocation operations
+- [x] `nomad job list` - List jobs (v1: read-only; `job run`/`stop` write ops deferred)
+- [x] `nomad node list` - List nodes (v1: read-only; node drain/eligibility deferred)
+- [x] `nomad alloc list` - List allocations (v1: read-only; alloc signal/restart deferred)
 
 #### Packer Integration
-- [ ] `packer build` - Build images
-- [ ] `packer validate` - Validate templates
-- [ ] `packer fmt` - Format templates
+- [ ] `packer build` - Build images (impossible under no-exec — see docs/spikes/023)
+- [ ] `packer validate` - Validate templates (deferred — see docs/spikes/023)
+- [ ] `packer fmt` - Format templates (deferred — see docs/spikes/023)
 
 ---
 
