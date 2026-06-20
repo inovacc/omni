@@ -1071,9 +1071,9 @@ Comprehensive data conversion, validation, and developer utilities inspired by C
 | `yaml validate` | Validate YAML | P1 |
 | `toml validate` | Validate TOML | P1 |
 | `xml validate` | Validate XML | P1 |
-| `email validate` | Validate email format | P2 |
+| `email validate` | Validate email format | ✅ Done |
 | `url validate` | Validate URL format | P2 |
-| `ip validate` | Validate IP address | P2 |
+| `ip validate` | Validate IP address | ✅ Done |
 
 ### Encode/Decode Utilities
 
@@ -1119,9 +1119,9 @@ Comprehensive data conversion, validation, and developer utilities inspired by C
 | `hash sha1` | SHA1 hash | P0 | ✅ Done |
 | `hash sha256` | SHA256 hash | P0 | ✅ Done |
 | `hash sha512` | SHA512 hash | P0 | ✅ Done |
-| `hash blake2b` | BLAKE2b hash | P1 | |
+| `hash blake2b` | BLAKE2b hash | P1 | ✅ Done |
 | `hash blake3` | BLAKE3 hash | P1 | |
-| `hmac` | HMAC generation | P2 | |
+| `hmac` | HMAC generation | P2 | ✅ Done |
 | `encrypt aes` | AES encryption | P0 | ✅ Done |
 | `decrypt aes` | AES decryption | P0 | ✅ Done |
 

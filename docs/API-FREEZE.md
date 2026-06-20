@@ -98,6 +98,7 @@ pkg/figlet figlet.WithFont()
 pkg/figlet figlet.WithLoadedFont()
 pkg/figlet figlet.WithWidth()
 pkg/hashutil hashutil.Algorithm
+pkg/hashutil hashutil.BLAKE2B
 pkg/hashutil hashutil.CRC32
 pkg/hashutil hashutil.CRC64
 pkg/hashutil hashutil.HashBytes()
@@ -261,6 +262,7 @@ pkg/sbom/format format.CycloneDX
 pkg/sbom/format format.Document
 pkg/sbom/format format.Document.Components()
 pkg/sbom/format format.Document.Encode()
+pkg/sbom/format format.ErrTooLarge
 pkg/sbom/format format.From()
 pkg/sbom/format format.Kind
 pkg/sbom/format format.Options

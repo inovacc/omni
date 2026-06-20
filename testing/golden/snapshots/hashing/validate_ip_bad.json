@@ -1,0 +1,5 @@
+{
+  "exit_code": 1,
+  "stdout_file": "validate_ip_bad.stdout",
+  "stderr": "Error: validate: invalid ip: ParseAddr(\"999.1.1.1\"): IPv4 field has value >255: conflict\n"
+}

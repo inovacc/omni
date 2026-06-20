@@ -100,6 +100,27 @@ categories:
         fixture: "test"
         normalizations: ["strip_path", "strip_temp_dir"]
 
+      - name: hash_blake2b_file
+        args: ["hash", "-a", "blake2b", "{file}"]
+        fixture: "test"
+        normalizations: ["strip_path", "strip_temp_dir"]
+
+      - name: hmac_sha256_stdin
+        args: ["hmac", "-k", "secret"]
+        stdin: "The quick brown fox jumps over the lazy dog"
+
+      - name: validate_email_ok
+        args: ["validate", "email", "user@example.com"]
+
+      - name: validate_email_bad
+        args: ["validate", "email", "nope"]
+
+      - name: validate_ip_ok
+        args: ["validate", "ip", "192.168.0.1"]
+
+      - name: validate_ip_bad
+        args: ["validate", "ip", "999.1.1.1"]
+
   # ===== TEXT PROCESSING =====
   - name: text
     tests:

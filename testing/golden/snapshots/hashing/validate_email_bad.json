@@ -1,0 +1,5 @@
+{
+  "exit_code": 1,
+  "stdout_file": "validate_email_bad.stdout",
+  "stderr": "Error: validate: invalid email: mail: missing '@' or angle-addr: conflict\n"
+}
