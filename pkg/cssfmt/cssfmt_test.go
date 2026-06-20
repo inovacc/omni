@@ -1,6 +1,7 @@
 package cssfmt
 
 import (
+	"strings"
 	"testing"
 )
 
@@ -187,5 +188,29 @@ func TestParseDeclarations(t *testing.T) {
 				t.Errorf("ParseDeclarations(%q) returned %d declarations, want %d", tt.input, len(got), tt.want)
 			}
 		})
+	}
+}
+
+func TestMinify_DeeplyNestedDoesNotCrash(t *testing.T) {
+	// Build CSS nested maxCSSDepth+50 at-rules deep. Without the depth cap this
+	// recurses past the goroutine stack limit and aborts the process (a Go stack
+	// overflow is unrecoverable). With the cap, Minify must RETURN (no panic) and
+	// produce non-empty output.
+	const n = maxCSSDepth + 50
+	deep := strings.Repeat("@media screen{", n) + "body{margin:0}" + strings.Repeat("}", n)
+
+	got := Minify(deep)
+	if got == "" {
+		t.Fatal("Minify(deeply nested): want non-empty output, got empty")
+	}
+
+	// Format is not recursive but must also survive the same input without crashing.
+	if Format(deep) == "" {
+		t.Fatal("Format(deeply nested): want non-empty output, got empty")
+	}
+
+	// A normal stylesheet must still minify correctly (no regression).
+	if out := Minify("body {\n  margin: 0;\n  padding: 0;\n}"); out != "body{margin:0;padding:0}" {
+		t.Fatalf("Minify(normal): got %q, want %q", out, "body{margin:0;padding:0}")
 	}
 }

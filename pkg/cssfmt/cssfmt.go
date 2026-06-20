@@ -126,6 +126,15 @@ type cssDeclaration struct {
 	value    string
 }
 
+// maxCSSDepth bounds nesting depth in minifyCSS. Untrusted input (stdin/files)
+// can otherwise drive unbounded recursion on nested at-rule bodies and exhaust
+// the goroutine stack, which Go cannot recover() from (process aborts: DoS).
+// Matches maxHTMLDepth in pkg/htmlfmt, maxXMLDepth in internal/cli/xmlutil, and
+// maxYAMLDepth in internal/cli/yq. Because Minify returns no error (frozen API),
+// over-depth at-rule bodies are emitted verbatim (un-minified passthrough) rather
+// than signaled as an error: output stays valid CSS and the process never crashes.
+const maxCSSDepth = 1000
+
 // formatCSS formats CSS with proper indentation
 func formatCSS(input string, opts Options) string {
 	rules := parseCSS(input)
@@ -195,8 +204,16 @@ func formatDeclarations(result *strings.Builder, declarations []cssDeclaration, 
 	}
 }
 
-// minifyCSS removes unnecessary whitespace from CSS
+// minifyCSS removes unnecessary whitespace from CSS.
 func minifyCSS(input string) string {
+	return minifyCSSDepth(input, 0)
+}
+
+// minifyCSSDepth is minifyCSS with an explicit recursion-depth counter. When
+// depth reaches maxCSSDepth it stops recursing into nested at-rule bodies and
+// emits them verbatim (see maxCSSDepth). This keeps Minify's signature (string,
+// no error) intact while making deeply nested input non-crashing.
+func minifyCSSDepth(input string, depth int) string {
 	rules := parseCSS(input)
 
 	var result strings.Builder
@@ -207,7 +224,15 @@ func minifyCSS(input string) string {
 
 			if rule.atRuleBody != "" {
 				result.WriteString("{")
-				result.WriteString(minifyCSS(rule.atRuleBody))
+				if depth >= maxCSSDepth {
+					// Depth cap reached: emit the remaining body verbatim instead
+					// of recursing (avoids unrecoverable stack overflow on
+					// adversarial input). Braces remain balanced because parseCSS
+					// already balanced atRuleBody when extracting it.
+					result.WriteString(rule.atRuleBody)
+				} else {
+					result.WriteString(minifyCSSDepth(rule.atRuleBody, depth+1))
+				}
 				result.WriteString("}")
 			} else {
 				result.WriteString(";")
