@@ -1,7 +1,5 @@
 package cmd
 
-// helplint:ignore — Long strings need omni-usage examples added in a future pass.
-
 import (
 	"fmt"
 
@@ -12,13 +10,21 @@ import (
 var ghCmd = &cobra.Command{
 	Use:   "gh",
 	Short: "GitHub CLI shortcuts",
-	Long:  `Convenience wrappers around common gh (GitHub CLI) operations.`,
+	Long: `Convenience wrappers around common gh (GitHub CLI) operations.
+
+Examples:
+  omni gh pr-checkout 42          # check out a pull request
+  omni gh issue-mine             # list issues assigned to you`,
 }
 
 var ghPRCheckoutCmd = &cobra.Command{
 	Use:   "pr-checkout <number>",
 	Short: "Check out a pull request",
-	Args:  cobra.ExactArgs(1),
+	Long: `Check out the branch of the given pull request number locally.
+
+Examples:
+  omni gh pr-checkout 42          # check out PR #42`,
+	Args: cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		n, err := parseIntArg(args[0], "PR number")
 		if err != nil {
@@ -32,7 +38,11 @@ var ghPRCheckoutCmd = &cobra.Command{
 var ghPRDiffCmd = &cobra.Command{
 	Use:   "pr-diff <number>",
 	Short: "Show diff for a pull request",
-	Args:  cobra.ExactArgs(1),
+	Long: `Show the diff for the given pull request number.
+
+Examples:
+  omni gh pr-diff 42             # show the diff for PR #42`,
+	Args: cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		n, err := parseIntArg(args[0], "PR number")
 		if err != nil {
@@ -53,7 +63,11 @@ var ghPRDiffCmd = &cobra.Command{
 var ghPRApproveCmd = &cobra.Command{
 	Use:   "pr-approve <number>",
 	Short: "Approve a pull request",
-	Args:  cobra.ExactArgs(1),
+	Long: `Submit an approving review for the given pull request number.
+
+Examples:
+  omni gh pr-approve 42          # approve PR #42`,
+	Args: cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		n, err := parseIntArg(args[0], "PR number")
 		if err != nil {
@@ -67,6 +81,10 @@ var ghPRApproveCmd = &cobra.Command{
 var ghIssueMineCmd = &cobra.Command{
 	Use:   "issue-mine",
 	Short: "List issues assigned to you",
+	Long: `List open issues assigned to the authenticated user.
+
+Examples:
+  omni gh issue-mine             # list your assigned issues`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		out, err := ghhacks.IssueMine()
 		if err != nil {
@@ -82,7 +100,12 @@ var ghIssueMineCmd = &cobra.Command{
 var ghRepoCloneOrgCmd = &cobra.Command{
 	Use:   "repo-clone-org <org>",
 	Short: "Clone all repositories in an organization",
-	Args:  cobra.ExactArgs(1),
+	Long: `Clone every repository in the given GitHub organization.
+
+Examples:
+  omni gh repo-clone-org myorg   # clone all repos in "myorg"
+  omni gh repo-clone-org myorg --limit 50`,
+	Args: cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		limit, _ := cmd.Flags().GetInt("limit")
 
@@ -102,7 +125,11 @@ var ghRepoCloneOrgCmd = &cobra.Command{
 var ghActionsRerunCmd = &cobra.Command{
 	Use:   "actions-rerun <run-id>",
 	Short: "Re-run a workflow run",
-	Args:  cobra.ExactArgs(1),
+	Long: `Re-run the GitHub Actions workflow run with the given ID.
+
+Examples:
+  omni gh actions-rerun 123456   # re-run workflow run 123456`,
+	Args: cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		n, err := parseIntArg(args[0], "run ID")
 		if err != nil {

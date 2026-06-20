@@ -1,7 +1,5 @@
 package cmd
 
-// helplint:ignore — Long strings need omni-usage examples added in a future pass.
-
 import (
 	"fmt"
 
@@ -45,7 +43,11 @@ Examples:
 var bboltInfoCmd = &cobra.Command{
 	Use:   "info <database>",
 	Short: "Display database information",
-	Args:  cobra.ExactArgs(1),
+	Long: `Display the page size and basic metadata of a BoltDB database.
+
+Examples:
+  omni bbolt info mydb.bolt       # show page size and metadata`,
+	Args: cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		jsonOutput, _ := cmd.Flags().GetBool("json")
 		return bbolt.RunInfo(cmd.OutOrStdout(), args[0], bbolt.Options{JSON: jsonOutput})
@@ -55,7 +57,11 @@ var bboltInfoCmd = &cobra.Command{
 var bboltStatsCmd = &cobra.Command{
 	Use:   "stats <database>",
 	Short: "Display database statistics",
-	Args:  cobra.ExactArgs(1),
+	Long: `Show bucket, key, and page statistics for a BoltDB database.
+
+Examples:
+  omni bbolt stats mydb.bolt      # show database statistics`,
+	Args: cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		jsonOutput, _ := cmd.Flags().GetBool("json")
 		return bbolt.RunStats(cmd.OutOrStdout(), args[0], bbolt.Options{JSON: jsonOutput})
@@ -65,7 +71,11 @@ var bboltStatsCmd = &cobra.Command{
 var bboltBucketsCmd = &cobra.Command{
 	Use:   "buckets <database>",
 	Short: "List all buckets in the database",
-	Args:  cobra.ExactArgs(1),
+	Long: `List the names of all top-level buckets in a BoltDB database.
+
+Examples:
+  omni bbolt buckets mydb.bolt    # list all buckets`,
+	Args: cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		jsonOutput, _ := cmd.Flags().GetBool("json")
 		return bbolt.RunBuckets(cmd.OutOrStdout(), args[0], bbolt.Options{JSON: jsonOutput})
@@ -75,7 +85,12 @@ var bboltBucketsCmd = &cobra.Command{
 var bboltKeysCmd = &cobra.Command{
 	Use:   "keys <database> <bucket>",
 	Short: "List keys in a bucket",
-	Args:  cobra.ExactArgs(2),
+	Long: `List the keys stored in a bucket, optionally filtered by prefix.
+
+Examples:
+  omni bbolt keys mydb.bolt users          # list keys in "users"
+  omni bbolt keys mydb.bolt users --prefix u`,
+	Args: cobra.ExactArgs(2),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		jsonOutput, _ := cmd.Flags().GetBool("json")
 		prefix, _ := cmd.Flags().GetString("prefix")
@@ -90,7 +105,12 @@ var bboltKeysCmd = &cobra.Command{
 var bboltGetCmd = &cobra.Command{
 	Use:   "get <database> <bucket> <key>",
 	Short: "Get value for a key",
-	Args:  cobra.ExactArgs(3),
+	Long: `Get the value stored for a key in a bucket.
+
+Examples:
+  omni bbolt get mydb.bolt users user1     # print the value
+  omni bbolt get mydb.bolt users user1 --hex`,
+	Args: cobra.ExactArgs(3),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		jsonOutput, _ := cmd.Flags().GetBool("json")
 		hexOutput, _ := cmd.Flags().GetBool("hex")
@@ -105,7 +125,11 @@ var bboltGetCmd = &cobra.Command{
 var bboltPutCmd = &cobra.Command{
 	Use:   "put <database> <bucket> <key> <value>",
 	Short: "Store a key-value pair",
-	Args:  cobra.ExactArgs(4),
+	Long: `Store a key-value pair in a bucket, creating the bucket if needed.
+
+Examples:
+  omni bbolt put mydb.bolt config version 1.0.0`,
+	Args: cobra.ExactArgs(4),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		jsonOutput, _ := cmd.Flags().GetBool("json")
 		return bbolt.RunPut(cmd.OutOrStdout(), args[0], args[1], args[2], args[3], bbolt.Options{JSON: jsonOutput})
@@ -115,7 +139,11 @@ var bboltPutCmd = &cobra.Command{
 var bboltDeleteCmd = &cobra.Command{
 	Use:   "delete <database> <bucket> <key>",
 	Short: "Delete a key from a bucket",
-	Args:  cobra.ExactArgs(3),
+	Long: `Delete a single key and its value from a bucket.
+
+Examples:
+  omni bbolt delete mydb.bolt users user1`,
+	Args: cobra.ExactArgs(3),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		jsonOutput, _ := cmd.Flags().GetBool("json")
 		return bbolt.RunDelete(cmd.OutOrStdout(), args[0], args[1], args[2], bbolt.Options{JSON: jsonOutput})
@@ -125,7 +153,12 @@ var bboltDeleteCmd = &cobra.Command{
 var bboltDumpCmd = &cobra.Command{
 	Use:   "dump <database> <bucket>",
 	Short: "Dump all keys and values in a bucket",
-	Args:  cobra.ExactArgs(2),
+	Long: `Dump every key and value in a bucket, optionally filtered by prefix.
+
+Examples:
+  omni bbolt dump mydb.bolt users          # dump the whole bucket
+  omni bbolt dump mydb.bolt users --hex`,
+	Args: cobra.ExactArgs(2),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		jsonOutput, _ := cmd.Flags().GetBool("json")
 		hexOutput, _ := cmd.Flags().GetBool("hex")
@@ -142,7 +175,11 @@ var bboltDumpCmd = &cobra.Command{
 var bboltCompactCmd = &cobra.Command{
 	Use:   "compact <source> <destination>",
 	Short: "Compact database to a new file",
-	Args:  cobra.ExactArgs(2),
+	Long: `Compact a BoltDB database into a new file, reclaiming free pages.
+
+Examples:
+  omni bbolt compact mydb.bolt mydb-compact.bolt`,
+	Args: cobra.ExactArgs(2),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		jsonOutput, _ := cmd.Flags().GetBool("json")
 		return bbolt.RunCompact(cmd.OutOrStdout(), args[0], args[1], bbolt.Options{JSON: jsonOutput})
@@ -152,7 +189,11 @@ var bboltCompactCmd = &cobra.Command{
 var bboltCheckCmd = &cobra.Command{
 	Use:   "check <database>",
 	Short: "Verify database integrity",
-	Args:  cobra.ExactArgs(1),
+	Long: `Verify the integrity of a BoltDB database and report any errors.
+
+Examples:
+  omni bbolt check mydb.bolt      # verify the database`,
+	Args: cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		jsonOutput, _ := cmd.Flags().GetBool("json")
 		return bbolt.RunCheck(cmd.OutOrStdout(), args[0], bbolt.Options{JSON: jsonOutput})
@@ -162,7 +203,11 @@ var bboltCheckCmd = &cobra.Command{
 var bboltPagesCmd = &cobra.Command{
 	Use:   "pages <database>",
 	Short: "List database pages",
-	Args:  cobra.ExactArgs(1),
+	Long: `List the pages of a BoltDB database with their types and sizes.
+
+Examples:
+  omni bbolt pages mydb.bolt      # list all pages`,
+	Args: cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		jsonOutput, _ := cmd.Flags().GetBool("json")
 		return bbolt.RunPages(cmd.OutOrStdout(), args[0], bbolt.Options{JSON: jsonOutput})
@@ -172,7 +217,11 @@ var bboltPagesCmd = &cobra.Command{
 var bboltPageCmd = &cobra.Command{
 	Use:   "page <database> <page-id>",
 	Short: "Hex dump of a specific page",
-	Args:  cobra.ExactArgs(2),
+	Long: `Print a hexadecimal dump of a specific page by ID.
+
+Examples:
+  omni bbolt page mydb.bolt 3      # hex dump of page 3`,
+	Args: cobra.ExactArgs(2),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		jsonOutput, _ := cmd.Flags().GetBool("json")
 
@@ -188,7 +237,11 @@ var bboltPageCmd = &cobra.Command{
 var bboltCreateBucketCmd = &cobra.Command{
 	Use:   "create-bucket <database> <bucket>",
 	Short: "Create a new bucket",
-	Args:  cobra.ExactArgs(2),
+	Long: `Create a new top-level bucket in a BoltDB database.
+
+Examples:
+  omni bbolt create-bucket mydb.bolt users`,
+	Args: cobra.ExactArgs(2),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		jsonOutput, _ := cmd.Flags().GetBool("json")
 		return bbolt.RunCreateBucket(cmd.OutOrStdout(), args[0], args[1], bbolt.Options{JSON: jsonOutput})
@@ -198,7 +251,11 @@ var bboltCreateBucketCmd = &cobra.Command{
 var bboltDeleteBucketCmd = &cobra.Command{
 	Use:   "delete-bucket <database> <bucket>",
 	Short: "Delete a bucket",
-	Args:  cobra.ExactArgs(2),
+	Long: `Delete a bucket and all of its keys from a BoltDB database.
+
+Examples:
+  omni bbolt delete-bucket mydb.bolt users`,
+	Args: cobra.ExactArgs(2),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		jsonOutput, _ := cmd.Flags().GetBool("json")
 		return bbolt.RunDeleteBucket(cmd.OutOrStdout(), args[0], args[1], bbolt.Options{JSON: jsonOutput})

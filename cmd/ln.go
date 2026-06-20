@@ -1,7 +1,5 @@
 package cmd
 
-// helplint:ignore — Long strings need omni-usage examples added in a future pass.
-
 import (
 	"github.com/inovacc/omni/internal/cli/ln"
 	"github.com/spf13/cobra"
@@ -19,7 +17,12 @@ Create hard links by default, symbolic links with --symbolic.
   -n, --no-dereference  treat LINK_NAME as a normal file if it is a symlink
   -v, --verbose      print name of each linked file
   -b, --backup       make a backup of each existing destination file
-  -r, --relative     create symbolic links relative to link location`,
+  -r, --relative     create symbolic links relative to link location
+
+Examples:
+  omni ln target.txt link.txt       # create a hard link
+  omni ln -s target.txt link.txt    # create a symbolic link
+  omni ln -sf target.txt link.txt   # replace an existing symlink`,
 	Args: cobra.MinimumNArgs(2),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		opts := ln.LnOptions{}

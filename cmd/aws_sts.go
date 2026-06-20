@@ -1,7 +1,5 @@
 package cmd
 
-// helplint:ignore — Long strings need omni-usage examples added in a future pass.
-
 import (
 	"context"
 
@@ -13,7 +11,11 @@ import (
 var stsCmd = &cobra.Command{
 	Use:   "sts",
 	Short: "AWS STS operations",
-	Long:  `AWS Security Token Service (STS) operations.`,
+	Long: `AWS Security Token Service (STS) operations.
+
+Examples:
+  omni aws sts get-caller-identity   # show the current identity
+  omni aws sts assume-role --role-arn ARN --role-session-name NAME`,
 }
 
 var stsGetCallerIdentityCmd = &cobra.Command{

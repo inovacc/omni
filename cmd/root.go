@@ -1,7 +1,5 @@
 package cmd
 
-// helplint:ignore — Long strings need omni-usage examples added in a future pass.
-
 import (
 	"errors"
 	"fmt"
@@ -13,7 +11,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const omniBanner = `
+var rootCmd = &cobra.Command{
+	Use:   "omni",
+	Short: "Go-native replacement for common shell utilities",
+	Long: `
   ██████╗ ███╗   ███╗███╗   ██╗██╗
  ██╔═══██╗████╗ ████║████╗  ██║██║
  ██║   ██║██╔████╔██║██╔██╗ ██║██║
@@ -21,13 +22,14 @@ const omniBanner = `
  ╚██████╔╝██║ ╚═╝ ██║██║ ╚████║██║
   ╚═════╝ ╚═╝     ╚═╝╚═╝  ╚═══╝╚═╝
   Shell utilities, rewritten in Go.
-`
+omni is a cross-platform, safe, Go-native replacement for common shell utilities,
+designed for Taskfile, CI/CD, and enterprise environments.
 
-var rootCmd = &cobra.Command{
-	Use:   "omni",
-	Short: "Go-native replacement for common shell utilities",
-	Long: omniBanner + `omni is a cross-platform, safe, Go-native replacement for common shell utilities,
-designed for Taskfile, CI/CD, and enterprise environments.`,
+Examples:
+  omni ls -l                      # list the current directory
+  omni cat file.txt               # print a file
+  omni grep -rn TODO src/         # recursive search
+  omni --help                     # list all commands`,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		if err := flags.ExportFlagsToEnv(); err != nil {
 			return

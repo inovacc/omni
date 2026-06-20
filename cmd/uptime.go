@@ -1,7 +1,5 @@
 package cmd
 
-// helplint:ignore — Long strings need omni-usage examples added in a future pass.
-
 import (
 	"github.com/inovacc/omni/internal/cli/uptime"
 	"github.com/spf13/cobra"
@@ -16,7 +14,12 @@ how many users are currently logged on, and the system load averages
 for the past 1, 5, and 15 minutes.
 
   -p, --pretty   show uptime in pretty format
-  -s, --since    system up since, in yyyy-mm-dd HH:MM:SS format`,
+  -s, --since    system up since, in yyyy-mm-dd HH:MM:SS format
+
+Examples:
+  omni uptime                     # time, uptime, users, load averages
+  omni uptime -p                  # pretty uptime
+  omni uptime -s                  # timestamp the system booted`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		opts := uptime.UptimeOptions{}
 

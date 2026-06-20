@@ -1,7 +1,5 @@
 package cmd
 
-// helplint:ignore — Long strings need omni-usage examples added in a future pass.
-
 import (
 	"github.com/inovacc/omni/internal/cli/stat"
 	"github.com/spf13/cobra"
@@ -11,7 +9,11 @@ import (
 var statCmd = &cobra.Command{
 	Use:   "stat [file...]",
 	Short: "Display file or file system status",
-	Long:  `Display file or file system status.`,
+	Long: `Display file or file system status.
+
+Examples:
+  omni stat file.txt              # show status for a file
+  omni stat --output json file.txt  # show status as JSON`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return stat.RunStat(cmd.OutOrStdout(), args, stat.StatOptions{OutputFormat: getOutputOpts(cmd).GetFormat()})
 	},

@@ -1,7 +1,5 @@
 package cmd
 
-// helplint:ignore — Long strings need omni-usage examples added in a future pass.
-
 import (
 	"github.com/inovacc/omni/internal/cli/chown"
 	"github.com/spf13/cobra"
@@ -27,7 +25,12 @@ Options:
   -f, --silent      suppress most error messages
   -h, --no-dereference  affect symbolic links instead of referenced file
       --reference   use RFILE's owner and group
-      --preserve-root  fail to operate recursively on '/'`,
+      --preserve-root  fail to operate recursively on '/'
+
+Examples:
+  omni chown root file.txt        # change the owner
+  omni chown root:staff file.txt  # change owner and group
+  omni chown -R app:app /srv/app  # change recursively`,
 	Args: cobra.MinimumNArgs(2),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		opts := chown.ChownOptions{}

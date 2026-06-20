@@ -1,7 +1,5 @@
 package cmd
 
-// helplint:ignore — Long strings need omni-usage examples added in a future pass.
-
 import (
 	"github.com/inovacc/omni/internal/cli/sqlite"
 	"github.com/inovacc/omni/internal/logger"
@@ -40,7 +38,11 @@ Examples:
 var sqliteStatsCmd = &cobra.Command{
 	Use:   "stats <database>",
 	Short: "Display database statistics",
-	Args:  cobra.ExactArgs(1),
+	Long: `Show table, index, and page statistics for a SQLite database.
+
+Examples:
+  omni sqlite stats mydb.sqlite   # show database statistics`,
+	Args: cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		jsonOutput, _ := cmd.Flags().GetBool("json")
 		return sqlite.RunStats(cmd.OutOrStdout(), args[0], sqlite.Options{JSON: jsonOutput})
@@ -50,7 +52,11 @@ var sqliteStatsCmd = &cobra.Command{
 var sqliteTablesCmd = &cobra.Command{
 	Use:   "tables <database>",
 	Short: "List all tables in the database",
-	Args:  cobra.ExactArgs(1),
+	Long: `List the names of all tables in a SQLite database.
+
+Examples:
+  omni sqlite tables mydb.sqlite  # list all tables`,
+	Args: cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		jsonOutput, _ := cmd.Flags().GetBool("json")
 		return sqlite.RunTables(cmd.OutOrStdout(), args[0], sqlite.Options{JSON: jsonOutput})
@@ -60,7 +66,12 @@ var sqliteTablesCmd = &cobra.Command{
 var sqliteSchemaCmd = &cobra.Command{
 	Use:   "schema <database> [table]",
 	Short: "Show table schema",
-	Args:  cobra.RangeArgs(1, 2),
+	Long: `Show the CREATE statements for a database, or for a single table.
+
+Examples:
+  omni sqlite schema mydb.sqlite          # schema for all tables
+  omni sqlite schema mydb.sqlite users    # schema for one table`,
+	Args: cobra.RangeArgs(1, 2),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		jsonOutput, _ := cmd.Flags().GetBool("json")
 
@@ -76,7 +87,11 @@ var sqliteSchemaCmd = &cobra.Command{
 var sqliteColumnsCmd = &cobra.Command{
 	Use:   "columns <database> <table>",
 	Short: "Show table columns",
-	Args:  cobra.ExactArgs(2),
+	Long: `Show the columns and their types for a table.
+
+Examples:
+  omni sqlite columns mydb.sqlite users   # list columns of "users"`,
+	Args: cobra.ExactArgs(2),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		jsonOutput, _ := cmd.Flags().GetBool("json")
 		return sqlite.RunColumns(cmd.OutOrStdout(), args[0], args[1], sqlite.Options{JSON: jsonOutput})
@@ -86,7 +101,11 @@ var sqliteColumnsCmd = &cobra.Command{
 var sqliteIndexesCmd = &cobra.Command{
 	Use:   "indexes <database>",
 	Short: "List all indexes",
-	Args:  cobra.ExactArgs(1),
+	Long: `List all indexes defined in a SQLite database.
+
+Examples:
+  omni sqlite indexes mydb.sqlite  # list all indexes`,
+	Args: cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		jsonOutput, _ := cmd.Flags().GetBool("json")
 		return sqlite.RunIndexes(cmd.OutOrStdout(), args[0], sqlite.Options{JSON: jsonOutput})
@@ -132,7 +151,11 @@ Examples:
 var sqliteVacuumCmd = &cobra.Command{
 	Use:   "vacuum <database>",
 	Short: "Optimize database",
-	Args:  cobra.ExactArgs(1),
+	Long: `Rebuild the database file to reclaim unused space (VACUUM).
+
+Examples:
+  omni sqlite vacuum mydb.sqlite  # compact the database`,
+	Args: cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		jsonOutput, _ := cmd.Flags().GetBool("json")
 		return sqlite.RunVacuum(cmd.OutOrStdout(), args[0], sqlite.Options{JSON: jsonOutput})
@@ -142,7 +165,11 @@ var sqliteVacuumCmd = &cobra.Command{
 var sqliteCheckCmd = &cobra.Command{
 	Use:   "check <database>",
 	Short: "Verify database integrity",
-	Args:  cobra.ExactArgs(1),
+	Long: `Run an integrity check on a SQLite database and report any errors.
+
+Examples:
+  omni sqlite check mydb.sqlite   # verify integrity`,
+	Args: cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		jsonOutput, _ := cmd.Flags().GetBool("json")
 		return sqlite.RunCheck(cmd.OutOrStdout(), args[0], sqlite.Options{JSON: jsonOutput})
@@ -152,7 +179,12 @@ var sqliteCheckCmd = &cobra.Command{
 var sqliteDumpCmd = &cobra.Command{
 	Use:   "dump <database> [table]",
 	Short: "Export database as SQL",
-	Args:  cobra.RangeArgs(1, 2),
+	Long: `Export a database (or a single table) as SQL statements to stdout.
+
+Examples:
+  omni sqlite dump mydb.sqlite > backup.sql   # dump the whole database
+  omni sqlite dump mydb.sqlite users          # dump one table`,
+	Args: cobra.RangeArgs(1, 2),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		table := ""
 		if len(args) > 1 {
@@ -166,7 +198,11 @@ var sqliteDumpCmd = &cobra.Command{
 var sqliteImportCmd = &cobra.Command{
 	Use:   "import <database> <sql-file>",
 	Short: "Import SQL file into database",
-	Args:  cobra.ExactArgs(2),
+	Long: `Execute the SQL statements in a file against a SQLite database.
+
+Examples:
+  omni sqlite import mydb.sqlite backup.sql   # import from a SQL file`,
+	Args: cobra.ExactArgs(2),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		jsonOutput, _ := cmd.Flags().GetBool("json")
 		return sqlite.RunImport(cmd.OutOrStdout(), args[0], args[1], sqlite.Options{JSON: jsonOutput})

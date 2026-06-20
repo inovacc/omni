@@ -1,7 +1,5 @@
 package cmd
 
-// helplint:ignore — Long strings need omni-usage examples added in a future pass.
-
 import (
 	"github.com/inovacc/omni/internal/cli/mkdir"
 	"github.com/spf13/cobra"
@@ -11,7 +9,12 @@ import (
 var mkdirCmd = &cobra.Command{
 	Use:   "mkdir [directory...]",
 	Short: "Create directories",
-	Long:  `Create the DIRECTORY(ies), if they do not already exist.`,
+	Long: `Create the DIRECTORY(ies), if they do not already exist.
+
+Examples:
+  omni mkdir build             # create a directory
+  omni mkdir -p a/b/c          # create parent directories as needed
+  omni mkdir dir1 dir2 dir3    # create multiple directories`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		parents, _ := cmd.Flags().GetBool("parents")
 		return mkdir.RunMkdir(args, mkdir.Options{Parents: parents})

@@ -1,7 +1,5 @@
 package cmd
 
-// helplint:ignore — Long strings need omni-usage examples added in a future pass.
-
 import (
 	pathutil "github.com/inovacc/omni/internal/cli/path"
 	"github.com/spf13/cobra"
@@ -11,14 +9,22 @@ import (
 var pathCmd = &cobra.Command{
 	Use:   "path",
 	Short: "Path manipulation utilities",
-	Long:  `Clean, resolve, and manipulate file paths using OS-native conventions.`,
+	Long: `Clean, resolve, and manipulate file paths using OS-native conventions.
+
+Examples:
+  omni path clean a/b/../c        # normalize a path
+  omni path abs ./file.txt        # resolve to an absolute path`,
 }
 
 // pathCleanCmd represents the path clean subcommand
 var pathCleanCmd = &cobra.Command{
 	Use:   "clean [path...]",
 	Short: "Return the shortest equivalent path with OS separators",
-	Long:  `Clean returns the shortest path name equivalent to path by purely lexical processing. It applies OS-native separators.`,
+	Long: `Clean returns the shortest path name equivalent to path by purely lexical processing. It applies OS-native separators.
+
+Examples:
+  omni path clean a/b/../c        # prints "a/c"
+  omni path clean ./foo/          # prints "foo"`,
 	Args:  cobra.MinimumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		opts := pathutil.CleanOptions{OutputFormat: getOutputOpts(cmd).GetFormat()}
@@ -30,7 +36,11 @@ var pathCleanCmd = &cobra.Command{
 var pathAbsCmd = &cobra.Command{
 	Use:   "abs [path...]",
 	Short: "Return the absolute path",
-	Long:  `Abs returns an absolute representation of path. Relative paths are resolved from the current working directory.`,
+	Long: `Abs returns an absolute representation of path. Relative paths are resolved from the current working directory.
+
+Examples:
+  omni path abs file.txt          # resolve relative to the working dir
+  omni path abs ../sibling        # resolve a parent-relative path`,
 	Args:  cobra.MinimumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		opts := pathutil.AbsOptions{OutputFormat: getOutputOpts(cmd).GetFormat()}

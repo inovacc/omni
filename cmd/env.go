@@ -1,7 +1,5 @@
 package cmd
 
-// helplint:ignore — Long strings need omni-usage examples added in a future pass.
-
 import (
 	"github.com/inovacc/omni/internal/cli/env"
 	"github.com/spf13/cobra"
@@ -12,7 +10,12 @@ var envCmd = &cobra.Command{
 	Use:   "env [NAME...]",
 	Short: "Print environment variables",
 	Long: `Print the values of the specified environment variables.
-If no NAME is specified, print all environment variables.`,
+If no NAME is specified, print all environment variables.
+
+Examples:
+  omni env                        # print all environment variables
+  omni env PATH                   # print a single variable
+  omni env HOME USER              # print several variables`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		opts := env.EnvOptions{}
 

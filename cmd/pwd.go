@@ -1,7 +1,5 @@
 package cmd
 
-// helplint:ignore — Long strings need omni-usage examples added in a future pass.
-
 import (
 	"github.com/inovacc/omni/internal/cli/pwd"
 	"github.com/spf13/cobra"
@@ -11,7 +9,10 @@ import (
 var pwdCmd = &cobra.Command{
 	Use:   "pwd",
 	Short: "Print working directory",
-	Long:  `Print the full filename of the current working directory.`,
+	Long: `Print the full filename of the current working directory.
+
+Examples:
+  omni pwd                        # print the working directory`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		opts := pwd.PwdOptions{OutputFormat: getOutputOpts(cmd).GetFormat()}
 		return pwd.RunPwd(cmd.OutOrStdout(), opts)

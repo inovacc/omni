@@ -59,7 +59,10 @@ whose vulnerable symbol is actually called.
 DEFERRED (ADR-0008): reachability requires golang.org/x/vuln, which execs
 "go list" (violating omni's no-exec rule) and pollutes the main go.mod via MVS.
 This command returns "unsupported" in v1.0; its future home is a self-contained
-contrib/govulncheck-scan module (see docs/BACKLOG.md).`,
+contrib/govulncheck-scan module (see docs/BACKLOG.md).
+
+Examples:
+  omni scan source ./...          # deferred in v1.0 — returns unsupported`,
 	Args: cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return scan.RunScanSource(cmd.OutOrStdout(), args, scanOptsFromFlags(cmd))
@@ -70,6 +73,10 @@ contrib/govulncheck-scan module (see docs/BACKLOG.md).`,
 var scanDBCmd = &cobra.Command{
 	Use:   "db",
 	Short: "Manage the OSV vulnerability database",
+	Long: `Manage the local signed OSV vulnerability database used by "omni scan".
+
+Examples:
+  omni scan db update --db-key db.pub   # download and verify the OSV DB`,
 }
 
 // scanDBUpdateCmd downloads the signed OSV bundle, verifies its signature with
@@ -85,7 +92,11 @@ download is fail-closed: nothing is written and the command exits non-zero.
 
   --url FILE        base URL serving osv-db.zip and osv-db.zip.minisig
   --cache-dir DIR   destination directory (default: <user cache>/omni/osv-db)
-  --db-key FILE     minisign public key (*.pub) used to verify the bundle (required)`,
+  --db-key FILE     minisign public key (*.pub) used to verify the bundle (required)
+
+Examples:
+  omni scan db update --db-key db.pub                 # download to the default cache
+  omni scan db update --db-key db.pub --cache-dir ./db`,
 	RunE: func(cmd *cobra.Command, _ []string) error {
 		baseURL, _ := cmd.Flags().GetString("url")
 		cacheDir, _ := cmd.Flags().GetString("cache-dir")

@@ -1,7 +1,5 @@
 package cmd
 
-// helplint:ignore — Long strings need omni-usage examples added in a future pass.
-
 import (
 	"os"
 	"regexp"
@@ -22,7 +20,14 @@ var tailCmd = &cobra.Command{
 With more than one FILE, precede each with a header giving the file name.
 With no FILE, or when FILE is -, read standard input.
 
-Numeric shortcuts are supported: -80 is equivalent to -n 80.`,
+Numeric shortcuts are supported: -80 is equivalent to -n 80.
+
+Examples:
+  omni tail file.txt              # last 10 lines
+  omni tail -n 20 file.txt        # last 20 lines
+  omni tail -f file.txt           # follow appended data
+  omni tail -5 file.txt           # numeric shortcut for -n 5
+  cat file.txt | omni tail        # read from stdin`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		opts := tail.TailOptions{}
 

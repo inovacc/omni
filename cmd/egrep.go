@@ -1,7 +1,5 @@
 package cmd
 
-// helplint:ignore — Long strings need omni-usage examples added in a future pass.
-
 import (
 	"github.com/inovacc/omni/internal/cli/grep"
 	"github.com/spf13/cobra"
@@ -12,7 +10,12 @@ var egrepCmd = &cobra.Command{
 	Use:   "egrep [options] PATTERN [FILE...]",
 	Short: "Print lines that match patterns (extended regexp)",
 	Long: `Search for PATTERN in each FILE using extended regular expressions.
-This is equivalent to 'grep -E'.`,
+This is equivalent to 'grep -E'.
+
+Examples:
+  omni egrep 'foo|bar' file.txt   # match foo or bar
+  omni egrep -i '^err' log.txt    # case-insensitive anchored match
+  cat log.txt | omni egrep 'a+b'  # search stdin`,
 	Args: cobra.MinimumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		opts := grep.GrepOptions{

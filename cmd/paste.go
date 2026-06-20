@@ -1,7 +1,5 @@
 package cmd
 
-// helplint:ignore — Long strings need omni-usage examples added in a future pass.
-
 import (
 	"github.com/inovacc/omni/internal/cli/paste"
 	"github.com/spf13/cobra"
@@ -18,7 +16,12 @@ With no FILE, or when FILE is -, read standard input.
 
   -d, --delimiters=LIST   reuse characters from LIST instead of TABs
   -s, --serial            paste one file at a time instead of in parallel
-  -z, --zero-terminated   line delimiter is NUL, not newline`,
+  -z, --zero-terminated   line delimiter is NUL, not newline
+
+Examples:
+  omni paste a.txt b.txt          # merge lines side by side
+  omni paste -d, a.txt b.txt      # use comma as the separator
+  omni paste -s file.txt          # join all lines of one file`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		opts := paste.PasteOptions{}
 

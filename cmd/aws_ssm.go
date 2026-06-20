@@ -1,7 +1,5 @@
 package cmd
 
-// helplint:ignore — Long strings need omni-usage examples added in a future pass.
-
 import (
 	"context"
 	"fmt"
@@ -14,7 +12,11 @@ import (
 var ssmCmd = &cobra.Command{
 	Use:   "ssm",
 	Short: "AWS SSM Parameter Store operations",
-	Long:  `AWS Systems Manager Parameter Store operations.`,
+	Long: `AWS Systems Manager Parameter Store operations.
+
+Examples:
+  omni aws ssm get-parameter --name /app/config   # read a parameter
+  omni aws ssm get-parameters-by-path --path /app/  # read a hierarchy`,
 }
 
 var ssmGetParameterCmd = &cobra.Command{

@@ -1,7 +1,5 @@
 package cmd
 
-// helplint:ignore — Long strings need omni-usage examples added in a future pass.
-
 import (
 	"errors"
 	"io"
@@ -34,7 +32,11 @@ Examples:
 var existFileCmd = &cobra.Command{
 	Use:   "file <path>",
 	Short: "Check if a regular file exists",
-	Args:  cobra.ExactArgs(1),
+	Long: `Check if PATH is an existing regular file. Exits 0 if it exists, 1 otherwise.
+
+Examples:
+  omni exist file go.mod          # succeed if go.mod is a regular file`,
+	Args: cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return runExist(cmd, args, exist.RunFile)
 	},
@@ -43,7 +45,11 @@ var existFileCmd = &cobra.Command{
 var existDirCmd = &cobra.Command{
 	Use:   "dir <path>",
 	Short: "Check if a directory exists",
-	Args:  cobra.ExactArgs(1),
+	Long: `Check if PATH is an existing directory. Exits 0 if it exists, 1 otherwise.
+
+Examples:
+  omni exist dir cmd              # succeed if cmd/ is a directory`,
+	Args: cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return runExist(cmd, args, exist.RunDir)
 	},
@@ -52,7 +58,11 @@ var existDirCmd = &cobra.Command{
 var existPathCmd = &cobra.Command{
 	Use:   "path <path>",
 	Short: "Check if any path exists (file, dir, symlink)",
-	Args:  cobra.ExactArgs(1),
+	Long: `Check if PATH exists as any kind (file, directory, or symlink). Exits 0 if it exists, 1 otherwise.
+
+Examples:
+  omni exist path go.mod          # succeed if go.mod exists at all`,
+	Args: cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return runExist(cmd, args, exist.RunPath)
 	},
@@ -61,7 +71,11 @@ var existPathCmd = &cobra.Command{
 var existCommandCmd = &cobra.Command{
 	Use:   "command <name>",
 	Short: "Check if a command exists in PATH",
-	Args:  cobra.ExactArgs(1),
+	Long: `Check if NAME is an executable found in PATH. Exits 0 if found, 1 otherwise.
+
+Examples:
+  omni exist command go           # succeed if "go" is in PATH`,
+	Args: cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return runExist(cmd, args, exist.RunCommand)
 	},
@@ -70,7 +84,11 @@ var existCommandCmd = &cobra.Command{
 var existEnvCmd = &cobra.Command{
 	Use:   "env <name>",
 	Short: "Check if an environment variable is set",
-	Args:  cobra.ExactArgs(1),
+	Long: `Check if the environment variable NAME is set. Exits 0 if set, 1 otherwise.
+
+Examples:
+  omni exist env PATH             # succeed if PATH is set`,
+	Args: cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return runExist(cmd, args, exist.RunEnv)
 	},
@@ -79,7 +97,11 @@ var existEnvCmd = &cobra.Command{
 var existProcessCmd = &cobra.Command{
 	Use:   "process <name|pid>",
 	Short: "Check if a process is running",
-	Args:  cobra.ExactArgs(1),
+	Long: `Check if a process matching NAME or PID is running. Exits 0 if running, 1 otherwise.
+
+Examples:
+  omni exist process 1234         # succeed if PID 1234 is running`,
+	Args: cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return runExist(cmd, args, exist.RunProcess)
 	},
@@ -88,7 +110,11 @@ var existProcessCmd = &cobra.Command{
 var existPortCmd = &cobra.Command{
 	Use:   "port <number>",
 	Short: "Check if a TCP port is listening",
-	Args:  cobra.ExactArgs(1),
+	Long: `Check if a TCP port is being listened on. Exits 0 if listening, 1 otherwise.
+
+Examples:
+  omni exist port 8080            # succeed if TCP port 8080 is listening`,
+	Args: cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return runExist(cmd, args, exist.RunPort)
 	},

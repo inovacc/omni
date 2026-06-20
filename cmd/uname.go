@@ -1,7 +1,5 @@
 package cmd
 
-// helplint:ignore — Long strings need omni-usage examples added in a future pass.
-
 import (
 	"github.com/inovacc/omni/internal/cli/uname"
 	"github.com/spf13/cobra"
@@ -21,7 +19,12 @@ var unameCmd = &cobra.Command{
   -m, --machine            print the machine hardware name
   -p, --processor          print the processor type
   -i, --hardware-platform  print the hardware platform
-  -o, --operating-system   print the operating system`,
+  -o, --operating-system   print the operating system
+
+Examples:
+  omni uname                      # kernel name (default)
+  omni uname -a                   # all available information
+  omni uname -m                   # machine hardware name`,
 	Args: cobra.NoArgs,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		opts := uname.UnameOptions{}

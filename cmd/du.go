@@ -1,7 +1,5 @@
 package cmd
 
-// helplint:ignore — Long strings need omni-usage examples added in a future pass.
-
 import (
 	"github.com/inovacc/omni/internal/cli/du"
 	"github.com/spf13/cobra"
@@ -23,7 +21,12 @@ var duCmd = &cobra.Command{
   -x, --one-file-system skip directories on different file systems
       --apparent-size   print apparent sizes, rather than disk usage
   -0, --null            end each output line with NUL, not newline
-  -B, --block-size=SIZE scale sizes by SIZE before printing them`,
+  -B, --block-size=SIZE scale sizes by SIZE before printing them
+
+Examples:
+  omni du                         # disk usage of the current tree
+  omni du -h /var/log             # human-readable usage of a directory
+  omni du -sh .                   # single summarized total`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		opts := du.DUOptions{}
 

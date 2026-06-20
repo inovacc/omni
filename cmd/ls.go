@@ -1,7 +1,5 @@
 package cmd
 
-// helplint:ignore — Long strings need omni-usage examples added in a future pass.
-
 import (
 	"github.com/inovacc/omni/internal/cli/ls"
 	"github.com/spf13/cobra"
@@ -12,7 +10,14 @@ var lsCmd = &cobra.Command{
 	Use:   "ls [file...]",
 	Short: "List directory contents",
 	Long: `List information about the FILEs (the current directory by default).
-Sort entries alphabetically if none of -tSU is specified.`,
+Sort entries alphabetically if none of -tSU is specified.
+
+Examples:
+  omni ls                  # list the current directory
+  omni ls -l               # long listing format
+  omni ls -la              # include hidden entries, long format
+  omni ls -lt              # sort by modification time, newest first
+  omni ls -R /path/to/dir  # list subdirectories recursively`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		opts := ls.Options{}
 

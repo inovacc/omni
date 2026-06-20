@@ -1,7 +1,5 @@
 package cmd
 
-// helplint:ignore — Long strings need omni-usage examples added in a future pass.
-
 import (
 	"github.com/inovacc/omni/internal/cli/df"
 	"github.com/spf13/cobra"
@@ -21,7 +19,12 @@ or all file systems by default.
   -t, --type=TYPE       limit listing to file systems of type TYPE
   -x, --exclude-type=TYPE  exclude file systems of type TYPE
   -l, --local           limit listing to local file systems
-  -P, --portability     use the POSIX output format`,
+  -P, --portability     use the POSIX output format
+
+Examples:
+  omni df                         # report all file systems
+  omni df -h                      # human-readable sizes
+  omni df -h /                    # disk usage for the root file system`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		opts := df.DFOptions{}
 

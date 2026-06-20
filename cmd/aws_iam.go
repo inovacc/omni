@@ -1,7 +1,5 @@
 package cmd
 
-// helplint:ignore — Long strings need omni-usage examples added in a future pass.
-
 import (
 	"context"
 
@@ -13,7 +11,11 @@ import (
 var iamCmd = &cobra.Command{
 	Use:   "iam",
 	Short: "AWS IAM operations",
-	Long:  `AWS Identity and Access Management (IAM) operations.`,
+	Long: `AWS Identity and Access Management (IAM) operations.
+
+Examples:
+  omni aws iam get-user              # show the current IAM user
+  omni aws iam list-roles            # list IAM roles`,
 }
 
 var iamGetUserCmd = &cobra.Command{

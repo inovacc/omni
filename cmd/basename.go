@@ -1,7 +1,5 @@
 package cmd
 
-// helplint:ignore — Long strings need omni-usage examples added in a future pass.
-
 import (
 	"github.com/inovacc/omni/internal/cli/basename"
 	"github.com/spf13/cobra"
@@ -12,7 +10,11 @@ var basenameCmd = &cobra.Command{
 	Use:   "basename NAME [SUFFIX]",
 	Short: "Strip directory and suffix from file names",
 	Long: `Print NAME with any leading directory components removed.
-If specified, also remove a trailing SUFFIX.`,
+If specified, also remove a trailing SUFFIX.
+
+Examples:
+  omni basename /usr/bin/sort     # prints "sort"
+  omni basename src/main.go .go   # strip the .go suffix -> "main"`,
 	Args: cobra.MinimumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		opts := basename.BasenameOptions{}

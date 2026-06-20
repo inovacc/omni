@@ -1,7 +1,5 @@
 package cmd
 
-// helplint:ignore — Long strings need omni-usage examples added in a future pass.
-
 import (
 	"github.com/inovacc/omni/internal/cli/grep"
 	"github.com/spf13/cobra"
@@ -12,7 +10,12 @@ var fgrepCmd = &cobra.Command{
 	Use:   "fgrep [options] PATTERN [FILE...]",
 	Short: "Print lines that match patterns (fixed strings)",
 	Long: `Search for PATTERN in each FILE using fixed strings (no regex).
-This is equivalent to 'grep -F'.`,
+This is equivalent to 'grep -F'.
+
+Examples:
+  omni fgrep 'a.b.c' file.txt     # match the literal string a.b.c
+  omni fgrep -i HELLO file.txt    # case-insensitive literal match
+  cat file.txt | omni fgrep '*'   # match a literal asterisk from stdin`,
 	Args: cobra.MinimumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		opts := grep.GrepOptions{
