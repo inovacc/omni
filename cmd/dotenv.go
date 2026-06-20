@@ -54,6 +54,8 @@ Load into shell:
 		shellStr, _ := cmd.Flags().GetString("shell")
 		opts.Shell = dotenv.ShellType(shellStr)
 
+		opts.OutputFormat = getOutputOpts(cmd).GetFormat()
+
 		return dotenv.RunDotenv(cmd.OutOrStdout(), args, opts)
 	},
 }

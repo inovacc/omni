@@ -258,6 +258,11 @@ categories:
         fixture: "KEY=value\nDB_HOST=localhost\nPORT=8080\n"
         normalizations: ["strip_path", "strip_temp_dir"]
 
+      - name: dotenv_json
+        args: ["dotenv", "--json", "{file}"]
+        fixture: "KEY=value\nDB_HOST=localhost\nPORT=8080\n"
+        normalizations: ["strip_path", "strip_temp_dir"]
+
   # ===== FORMAT =====
   - name: format
     tests:
