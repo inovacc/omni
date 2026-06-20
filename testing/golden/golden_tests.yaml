@@ -1203,6 +1203,23 @@ categories:
         args: ["scan", "--db", "{fixtures}/osv-db.zip", "--db-key", "{fixtures}/db.pub", "{fixtures}/vuln-sbom.json"]
         exit_code: 0
 
+      # --json pins (2-space indent + trailing newline). db_age drifts (duration
+      # since the FROZEN manifest.generated), so it is normalized; everything else
+      # is exact. Records before the formatter unification; byte-identical after.
+      - name: scan_clean_json
+        args: ["scan", "--db", "{fixtures}/osv-db.zip", "--db-key", "{fixtures}/db.pub", "--json", "{fixtures}/clean-sbom.json"]
+        exit_code: 0
+        normalize:
+          - pattern: "\"db_age\": \"[^\"]*\""
+            replacement: "\"db_age\": \"<AGE>\""
+
+      - name: scan_vuln_report_json
+        args: ["scan", "--db", "{fixtures}/osv-db.zip", "--db-key", "{fixtures}/db.pub", "--json", "{fixtures}/vuln-sbom.json"]
+        exit_code: 0
+        normalize:
+          - pattern: "\"db_age\": \"[^\"]*\""
+            replacement: "\"db_age\": \"<AGE>\""
+
       # CI gating path: a high finding at/above --fail-on -> ErrConflict (exit 1).
       - name: scan_fail_on_high
         args: ["scan", "--db", "{fixtures}/osv-db.zip", "--db-key", "{fixtures}/db.pub", "--fail-on", "high", "{fixtures}/vuln-sbom.json"]

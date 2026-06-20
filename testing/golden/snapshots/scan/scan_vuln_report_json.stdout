@@ -1,0 +1,14 @@
+{
+  "findings": [
+    {
+      "id": "GO-2026-0001",
+      "package": "github.com/vuln/pkg",
+      "version": "v1.0.0",
+      "fixed_version": "1.2.3",
+      "severity": "high",
+      "summary": "Example high-severity vulnerability in github.com/vuln/pkg"
+    }
+  ],
+  "scanned": 1,
+  "db_age": "<AGE>"
+}
