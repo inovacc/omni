@@ -1,8 +1,87 @@
 package yes
 
 import (
+	"bytes"
+	"context"
+	"errors"
+	"strings"
 	"testing"
+
+	"github.com/inovacc/omni/internal/cli/cmderr"
 )
+
+// errWriter fails on the first write, used to exercise the broken-pipe branch.
+type errWriter struct{ err error }
+
+func (e errWriter) Write([]byte) (int, error) { return 0, e.err }
+
+// TestRunYesContextCancelled asserts RunYes honours a cancelled context and
+// returns context.Canceled instead of looping forever.
+func TestRunYesContextCancelled(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel() // already done before the loop starts
+
+	var buf bytes.Buffer
+	err := RunYes(ctx, &buf, nil)
+	if !errors.Is(err, context.Canceled) {
+		t.Fatalf("RunYes(cancelled) error = %v, want context.Canceled", err)
+	}
+}
+
+// TestRunYesWriteError asserts a write failure is classified as cmderr.ErrIO.
+func TestRunYesWriteError(t *testing.T) {
+	w := errWriter{err: errors.New("broken pipe")}
+	err := RunYes(context.Background(), w, []string{"n"})
+	if !cmderr.IsIO(err) {
+		t.Fatalf("RunYes(write error) error = %v, want cmderr.ErrIO", err)
+	}
+	if !strings.Contains(err.Error(), "yes: write") {
+		t.Errorf("error %q does not mention 'yes: write'", err.Error())
+	}
+}
+
+// TestRunYesCustomOutput asserts that args are joined and written before
+// cancellation, and that the default "y" is used with no args.
+func TestRunYesCustomOutput(t *testing.T) {
+	tests := []struct {
+		name string
+		args []string
+		want string
+	}{
+		{"default", nil, "y"},
+		{"single arg", []string{"yep"}, "yep"},
+		{"joined args", []string{"a", "b", "c"}, "a b c"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// limitWriter cancels the context after the first successful write so
+			// the otherwise-infinite loop terminates deterministically.
+			ctx, cancel := context.WithCancel(context.Background())
+			var buf bytes.Buffer
+			lw := &cancelAfterWriteWriter{buf: &buf, cancel: cancel}
+			err := RunYes(ctx, lw, tt.args)
+			if !errors.Is(err, context.Canceled) {
+				t.Fatalf("RunYes error = %v, want context.Canceled", err)
+			}
+			line := strings.SplitN(buf.String(), "\n", 2)[0]
+			if line != tt.want {
+				t.Errorf("first line = %q, want %q", line, tt.want)
+			}
+		})
+	}
+}
+
+// cancelAfterWriteWriter records output then cancels the context so RunYes exits.
+type cancelAfterWriteWriter struct {
+	buf    *bytes.Buffer
+	cancel context.CancelFunc
+}
+
+func (c *cancelAfterWriteWriter) Write(p []byte) (int, error) {
+	n, err := c.buf.Write(p)
+	c.cancel()
+	return n, err
+}
 
 func TestYes(t *testing.T) {
 	t.Run("default output", func(t *testing.T) {
