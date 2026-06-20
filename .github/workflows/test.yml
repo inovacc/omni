@@ -127,3 +127,27 @@ jobs:
 
       - name: Run dual-rule coverage gate
         run: task lint:coverage
+
+  overall-coverage-gate:
+    name: overall coverage gate (omni-owned)
+    runs-on: ubuntu-latest
+    needs: quality-check
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Install Task
+        uses: arduino/setup-task@v2
+        with:
+          version: 3.x
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Run overall coverage gate
+        run: task test:coverage:gate
