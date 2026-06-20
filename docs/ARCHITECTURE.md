@@ -16,7 +16,6 @@ flowchart TB
             Grep[grep/]
             JQ[jq/]
             Hash[hash/]
-            Video[video/]
             Pipeline[pipeline/]
             Project[project/]
             Repo[repo/]
@@ -54,12 +53,6 @@ flowchart TB
         end
         subgraph Stream["Stream Engines"]
             PipelinePkg[pipeline]
-        end
-        subgraph Media["Media"]
-            VideoPkg[video]
-            Extractor[video/extractor]
-            Downloader[video/downloader]
-            M3U8[video/m3u8]
         end
         TextUtil[textutil]
         Figlet[figlet]
@@ -163,48 +156,6 @@ sequenceDiagram
     Engine-->>User: Filtered, sorted, limited output
 ```
 
-## Video Download Flow
-
-```mermaid
-sequenceDiagram
-    participant User
-    participant CLI as CLI (video/)
-    participant Client as video.Client
-    participant Registry as extractor/registry
-    participant YT as YouTube Extractor
-    participant JS as jsinterp (goja)
-    participant DL as downloader/http
-    participant HLS as downloader/hls
-
-    User->>CLI: omni video download "https://youtube.com/watch?v=..."
-    CLI->>Client: Download(ctx, url)
-    Client->>Registry: Match(url)
-    Registry-->>Client: YouTube extractor
-
-    Client->>YT: Extract(ctx, url)
-    YT->>YT: InnerTube API (android_vr client)
-    YT->>JS: Decrypt signatures (goja runtime)
-    JS-->>YT: Decrypted URLs
-    YT-->>Client: VideoInfo + []Format
-
-    Client->>Client: Select best format
-
-    alt HTTPS Direct
-        Client->>DL: Download(ctx, url, filepath)
-        DL->>DL: Range headers, .part files, retry
-        DL-->>Client: Complete
-    else HLS/M3U8
-        Client->>HLS: Download(ctx, url, filepath)
-        HLS->>HLS: Parse manifest
-        HLS->>HLS: Download segments
-        HLS->>HLS: AES-128 decrypt if needed
-        HLS->>HLS: Concatenate segments
-        HLS-->>Client: Complete
-    end
-
-    Client-->>User: Downloaded file
-```
-
 ## Tree Comparison Flow
 
 ```mermaid
@@ -256,7 +207,6 @@ flowchart TB
     internal/cli --> pkg/search/rg
     internal/cli --> pkg/twig
     internal/cli --> pkg/pipeline
-    internal/cli --> pkg/video
     internal/cli --> pkg/cobra/helper/output
     internal/cli --> pkg/procutil
     internal/cli --> pkg/procmetrics
@@ -271,16 +221,6 @@ flowchart TB
     pkg/twig --> pkg/twig/builder
     pkg/twig --> pkg/twig/parser
     pkg/twig --> pkg/twig/expander
-
-    pkg/video --> pkg/video/extractor
-    pkg/video --> pkg/video/downloader
-    pkg/video --> pkg/video/format
-    pkg/video --> pkg/video/m3u8
-    pkg/video --> pkg/video/nethttp
-    pkg/video --> pkg/video/jsinterp
-    pkg/video --> pkg/video/cache
-    pkg/video --> pkg/video/utils
-    pkg/video --> pkg/video/types
 
     pkg/textutil --> pkg/textutil/diff
 ```

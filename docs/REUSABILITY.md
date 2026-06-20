@@ -30,8 +30,7 @@ omni/
 │   ├── sqlfmt/             # SQL format/minify/validate
 │   ├── textutil/           # Sort, Uniq, Trim + diff/
 │   ├── twig/               # Tree scanning, formatting, comparison
-│   ├── userdirs/           # XDG user directory paths
-│   └── video/              # Pure-Go YouTube/HLS/generic video downloader
+│   └── userdirs/           # XDG user directory paths
 ├── internal/
 │   ├── cli/                # CLI wrappers (delegates to pkg/ for core logic)
 │   ├── gopsclient/         # TCP client + discovery for pkg/gopsagent

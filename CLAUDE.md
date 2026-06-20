@@ -47,7 +47,7 @@
 
 ## Command Categories
 
-The full command inventory — 170+ commands across Core/File/Text/System/Process/Flow/Archive/Hash/Encoding/Data/Formatting/Protobuf/Code Gen/Security (incl. supply-chain: `sign`, `sbom`, `scan`, `attest`; release tooling: `reprocheck`)/Pagers/Comparison/Tooling/Network/Video/Cloud-DevOps/Git Hacks/Checks/Kubectl Hacks — lives in **`docs/COMMANDS.md`** (also browsable as `omni cmdtree`).
+The full command inventory — 170+ commands across Core/File/Text/System/Process/Flow/Archive/Hash/Encoding/Data/Formatting/Protobuf/Code Gen/Security (incl. supply-chain: `sign`, `sbom`, `scan`, `attest`; release tooling: `reprocheck`)/Pagers/Comparison/Tooling/Network/Cloud-DevOps/Git Hacks/Checks/Kubectl Hacks — lives in **`docs/COMMANDS.md`** (also browsable as `omni cmdtree`).
 
 Run `omni cmdtree` for the live tree, or `omni <verb> --help` for any verb's flags.
 
@@ -72,7 +72,6 @@ Kubernetes (`omni kubectl` / `omni k`), Terraform (`omni tf`), AWS SDK, Git hack
 | `github.com/charmbracelet/bubbletea` | TUI framework for pagers |
 | `github.com/charmbracelet/lipgloss` | Terminal styling |
 | `gopkg.in/yaml.v3` | YAML parsing for yq, lint |
-| `github.com/dop251/goja` | Pure Go JS runtime (YouTube signature decryption) |
 | `github.com/spf13/afero` | Filesystem abstraction for testable scaffolding |
 | `github.com/bufbuild/protocompile` | Pure Go protobuf compiler (AST parser for buf format/lint) |
 
@@ -236,13 +235,12 @@ omni is a cross-platform, Go-native shell utility replacement providing determin
 ## Key Dependencies
 - `github.com/spf13/cobra` v1.10.2 - CLI command framework (all commands)
 - `github.com/charmbracelet/bubbletea` v1.3.10 - TUI pagers (less, more)
-- `github.com/dop251/goja` v0.0.0-20260106131823 - Pure Go JavaScript runtime (YouTube signature decryption in video package)
 - `gopkg.in/yaml.v3` v3.0.1 - YAML parsing (yq, dotenv, config parsing)
 - `github.com/aws/aws-sdk-go-v2` v1.41.1 - AWS SDK (with services: EC2, IAM, S3, SSM, STS)
 - `github.com/hashicorp/vault/api` v1.22.0 - HashiCorp Vault client (secret management)
 - `k8s.io/kubectl` v0.35.0 - Kubernetes kubectl client (with `k8s.io/cli-runtime`)
 - `go.etcd.io/bbolt` v1.4.3 - Pure Go key-value store (embedded database)
-- `modernc.org/sqlite` v1.44.3 - Pure Go SQLite driver (channel DB for video downloader, SQLite shell)
+- `modernc.org/sqlite` v1.44.3 - Pure Go SQLite driver (SQLite shell)
 - `golang.org/x/crypto` v0.48.0 - Stdlib crypto extensions (PBKDF2 for encryption)
 - `github.com/btcsuite/btcd/btcutil` v1.1.6 - Bitcoin utilities (Base58 encoding)
 - `github.com/bufbuild/protocompile` v0.14.1 - Pure Go protobuf compiler (buf format/lint)
@@ -299,7 +297,7 @@ omni is a cross-platform, Go-native shell utility replacement providing determin
 
 ## Naming Patterns
 - Command packages: `internal/cli/<command>/` (lowercase, single word or hyphenated)
-- Library packages: `pkg/<domain>/` (e.g., `pkg/video/`, `pkg/twig/`)
+- Library packages: `pkg/<domain>/` (e.g., `pkg/twig/`, `pkg/sbom/`)
 - Test files: `<name>_test.go` (always suffix test, never prefix)
 - Platform-specific: `<name>_unix.go`, `<name>_windows.go` with `//go:build` tags
 - Options structs: `<Command>Options` (PascalCase, e.g., `HeadOptions`, `HashOptions`)
@@ -357,7 +355,7 @@ omni is a cross-platform, Go-native shell utility replacement providing determin
 - Result structs
 - Run functions
 - High-level public APIs
-- Example: `pkg/video/types/types.go` exports `VideoInfo`, `Format`, etc.
+- Example: `pkg/sbom/format` exports `Document`, `Parse`, etc.
 ## Output Patterns
 ## Platform-Specific Code
 <!-- GSD:conventions-end -->

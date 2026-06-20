@@ -61,8 +61,7 @@ omni/
 │   ├── search/rg/          # Gitignore parsing, file type matching
 │   ├── pipeline/           # Streaming text processing engine
 │   ├── figlet/             # FIGlet font parser and ASCII art
-│   ├── twig/               # Tree scanning, formatting, comparison
-│   └── video/              # Video download engine (YouTube, HLS, generic)
+│   └── twig/               # Tree scanning, formatting, comparison
 ├── internal/
 │   ├── cli/               # CLI wrappers (I/O, flags, stdin handling)
 │   │   ├── ls/
@@ -969,12 +968,12 @@ Priority P2 - Specialized:
 - [x] ID generators (ksuid, ulid, uuid7, nanoid, Snowflake)
 - [x] JSON beautify/minify
 - [x] jq query engine
-- [x] Video download engine
+- [x] ~~Video download engine~~ — Removed (plan 015): the video feature was deleted to keep the no-exec invariant absolute.
 
 ### v0.7.0 - Engines & Media ✅
 - [x] Pipe engine (Cobra dispatch)
 - [x] Pipeline engine (streaming io.Pipe stages)
-- [x] Video download (pure Go youtube-dl port)
+- [x] ~~Video download (pure Go youtube-dl port)~~ — Removed (plan 015): feature deleted; `goja` dependency dropped.
 - [x] Protobuf tooling (buf lint, format, compile)
 
 ### v1.5.0 - Infrastructure & Analysis (Current) ✅
@@ -2465,11 +2464,11 @@ services:
 | pkg/encoding | 100.0% | Excellent |
 | pkg/twig/models | 100.0% | Excellent |
 | pkg/twig/expander | 98.1% | Excellent |
-| pkg/video/m3u8 | 96.8% | Excellent |
+| pkg/video/m3u8 | 96.8% | Removed (plan 015) |
 | pkg/twig/comparer | 96.3% | Excellent |
 | pkg/textutil/diff | 95.2% | Excellent |
 | pkg/textutil | 93.7% | Excellent |
-| pkg/video/jsinterp | 91.7% | Excellent |
+| pkg/video/jsinterp | 91.7% | Removed (plan 015) |
 | pkg/idgen | 90.3% | Excellent |
 | pkg/hashutil | 88.5% | Good |
 | pkg/cssfmt | 87.3% | Good |
@@ -2483,16 +2482,16 @@ services:
 | pkg/twig/parser | 79.1% | Acceptable |
 | pkg/search/grep | 77.9% | Acceptable |
 | pkg/htmlfmt | 77.9% | Acceptable |
-| pkg/video/cache | 73.3% | Acceptable |
+| pkg/video/cache | 73.3% | Removed (plan 015) |
 | pkg/jsonutil | 67.5% | Needs improvement |
-| pkg/video/nethttp | 61.8% | Needs improvement |
+| pkg/video/nethttp | 61.8% | Removed (plan 015) |
 | pkg/twig/builder | 58.9% | Needs improvement |
-| pkg/video/utils | 58.4% | Needs improvement |
-| pkg/video/format | 50.0% | Needs improvement |
-| pkg/video (root) | 46.0% | Needs improvement |
+| pkg/video/utils | 58.4% | Removed (plan 015) |
+| pkg/video/format | 50.0% | Removed (plan 015) |
+| pkg/video (root) | 46.0% | Removed (plan 015) |
 | pkg/twig | 44.3% | Needs improvement |
 | pkg/userdirs | 42.9% | Needs improvement |
-| pkg/video/extractor | 41.7% | Needs improvement |
-| pkg/video/downloader | 32.9% | Needs improvement |
-| pkg/video/extractor/youtube | 4.0% | Minimal |
-| pkg/video/extractor/generic | 0.0% | No tests |
+| pkg/video/extractor | 41.7% | Removed (plan 015) |
+| pkg/video/downloader | 32.9% | Removed (plan 015) |
+| pkg/video/extractor/youtube | 4.0% | Removed (plan 015) |
+| pkg/video/extractor/generic | 0.0% | Removed (plan 015) |

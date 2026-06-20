@@ -48,7 +48,7 @@ Resolved by the no-exec boundary decision: the invariant governs *utility reimpl
 
 Open items from `docs/quality/HARDENING-2026-06-04.md` (all 19 confirmed findings of that audit are FIXED; these are the second-pass triage residue):
 
-- [ ] **[DECISION / no-exec] `internal/cli/video/auth.go` headless-Chrome exec sink:** the YouTube cookie extractor spawns Chrome via `exec.Command`, which is NOT in the documented sanctioned-exec allowlist (`exec`/`forloop`/`task`/`terraform`/`repo`/git-gh-hacks/`buf generate`/machineid/uname). Maintainer decision needed: sanction + document it (the launcher *is* the feature, like `exec`/`repo`) or remove the path. The CDP read-cap and dial-SSRF defenses around it are already fixed.
+- [x] **[DECISION / no-exec] `internal/cli/video/auth.go` headless-Chrome exec sink:** ~~the YouTube cookie extractor spawns Chrome via `exec.Command`, which is NOT in the documented sanctioned-exec allowlist.~~ **Resolved — Removed (plan 015):** the entire `video` feature was deleted, so the Chrome-exec sink is gone and the no-exec invariant is now absolute. (Supersedes plan 008, which proposed surgically removing only this path.)
 - [ ] **[BACKLOG / LOW] `dotenv` `FormatExport` cmd-`set` escaping:** the `eval "$(omni dotenv -e)"` path: the cmd.exe `set` branch does no escaping and the KEY is never escaped in any shell branch. LOW (operator-owned `.env` trust boundary); a robust per-shell key+value escaper (incl. cmd quoting) is the fix.
 - [ ] **[BACKLOG] second-pass audit completion:** the verify workflow hit a `StructuredOutput` tooling error; re-run a focused audit of the YAML alias-bomb (`yaml.Unmarshal` of untrusted Taskfile/buf configs) and bespoke recursive-parser depth (`jsonfmt`/`tomlutil`/`cssfmt`/`htmlfmt`/`sqlfmt`) — speculative, unconfirmed. Also apply the scaffolding name-traversal guard to the `cobra`/`mcp` scaffolders for parity.
 
@@ -111,11 +111,12 @@ Surfaced by the hardening sweep on `harden/audit-fixes`; full context in `docs/q
 - [ ] `sed` does not implement the full GNU sed feature set (multi-line, hold space, branching) — only basic substitution patterns today.
 - [ ] `awk` does not implement the complete AWK language specification — covers common patterns only.
 - [ ] `rg` fidelity gaps: binary file detection is heuristic (null-byte check) and may misclassify files; `.gitignore` nested-negation edge cases may differ from ripgrep.
-- [ ] Video download limits: YouTube signature decryption is fragile (depends on goja JS runtime; YouTube player-JS changes require updates); no SAMPLE-AES HLS (only AES-128-CBC); no FFmpeg merge for video+audio (note: FFmpeg merge conflicts with the no-exec invariant).
+- [x] ~~Video download limits: YouTube signature decryption is fragile (depends on goja JS runtime; YouTube player-JS changes require updates); no SAMPLE-AES HLS; no FFmpeg merge.~~ **Removed (plan 015):** the video feature and its fragile `goja`-based signature decryption were deleted wholesale; `goja` is no longer a dependency.
 
-### Video Enhancements
-- [x] `omni video download <ID>` — shortcut to download by bare 11-char YouTube ID (auto-resolves to full URL)
-- [ ] Add `--description` flag to include video description in output/sidecar
+### Video Enhancements — Removed (plan 015)
+The entire `omni video` feature was removed in plan 015 (kept the no-exec invariant absolute). These items are obsolete:
+- [x] ~~`omni video download <ID>` — shortcut to download by bare 11-char YouTube ID~~ (feature removed in plan 015)
+- [x] ~~Add `--description` flag to include video description in output/sidecar~~ (feature removed in plan 015)
 
 ### Tree Enhancements
 - [ ] `omni tree` optimize with multi-analyzer architecture
@@ -198,7 +199,7 @@ Surfaced by the hardening sweep on `harden/audit-fixes`; full context in `docs/q
 
 ### Remaining
 - [ ] **Coverage gap in new gops packages (May 2026):** `internal/gopsclient` 31.3%, `internal/cli/runtimeps` 34.9%, `pkg/obfuscate` 55.6%, `pkg/procutil` 57.4%, `pkg/gopsagent` 59.1%. Target 80% per project policy. `pkg/procmetrics` already at 93.8%. Lower numbers reflect TUI/cobra-flag code paths and platform-conditional kill impls that need OS-specific test fixtures.
-- [ ] **Coverage gap (relocated from ISSUES.md, 2026-06-03):** `pkg/video/extractor/generic` has no unit tests (P2); `pkg/video/extractor/youtube` has minimal tests (~4.0%, P2). Target 80% per project policy.
+- [x] ~~**Coverage gap (relocated from ISSUES.md, 2026-06-03):** `pkg/video/extractor/generic` has no unit tests (P2); `pkg/video/extractor/youtube` has minimal tests (~4.0%, P2).~~ **Removed (plan 015):** `pkg/video` was deleted, so this coverage gap is moot.
 - [ ] Platform-specific tests (Windows edge cases, symlinks, permissions)
 - [ ] Large file (>1GB) handling tests
 - [ ] Benchmarks vs GNU tools (sort, grep, file operations)
@@ -266,7 +267,7 @@ df, du, env, whoami, uname, time, uptime, free, ps, kill, id, lsof
 Kubernetes, Terraform, Vault, AWS, Git hacks, Kubectl hacks
 
 ### v0.7.0 - Engines & Media ✅
-pipe (Cobra dispatch), pipeline (streaming), video (pure Go youtube-dl), buf (protobuf)
+pipe (Cobra dispatch), pipeline (streaming), video (pure Go youtube-dl — *removed in plan 015*), buf (protobuf)
 
 ### v1.0.0 - Production Ready
 - All P0 infrastructure items complete
