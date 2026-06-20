@@ -2,11 +2,13 @@ package diff
 
 import (
 	"bytes"
+	"errors"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 
+	"github.com/inovacc/omni/internal/cli/cmderr"
 	pkgdiff "github.com/inovacc/omni/pkg/textutil/diff"
 )
 
@@ -576,5 +578,14 @@ func TestTruncateOrPad(t *testing.T) {
 				t.Errorf("TruncateOrPad(%q, %d) = %q, want %q", tt.input, tt.width, result, tt.expected)
 			}
 		})
+	}
+}
+
+func TestRunDiff_MissingOperand_IsInvalidInput(t *testing.T) {
+	var buf bytes.Buffer
+	// Fewer than two operands is a usage error -> exit 2.
+	err := RunDiff(&buf, []string{"onlyone"}, DiffOptions{})
+	if !errors.Is(err, cmderr.ErrInvalidInput) {
+		t.Fatalf("want ErrInvalidInput, got %v", err)
 	}
 }
