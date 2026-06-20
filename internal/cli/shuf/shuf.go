@@ -119,7 +119,7 @@ func RunShuf(w io.Writer, args []string, opts ShufOptions) error {
 
 		if opts.Repeat {
 			if opts.HeadCount == 0 {
-				return fmt.Errorf("shuf: --repeat requires --head-count")
+				return cmderr.Wrap(cmderr.ErrInvalidInput, "shuf: --repeat requires --head-count")
 			}
 
 			for i := 0; i < opts.HeadCount; i++ {
@@ -136,7 +136,7 @@ func RunShuf(w io.Writer, args []string, opts ShufOptions) error {
 	if opts.Repeat {
 		// Output with repetition allowed
 		if opts.HeadCount == 0 {
-			return fmt.Errorf("shuf: --repeat requires --head-count")
+			return cmderr.Wrap(cmderr.ErrInvalidInput, "shuf: --repeat requires --head-count")
 		}
 
 		for i := 0; i < opts.HeadCount; i++ {
