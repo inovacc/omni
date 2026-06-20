@@ -1,5 +1,5 @@
 {
-  "exit_code": 1,
+  "exit_code": 2,
   "stdout_file": "pipe_invalid_separator.stdout",
-  "stderr": "Error: pipe: no commands provided\n"
+  "stderr": "Error: pipe: no commands provided: invalid input\n"
 }
