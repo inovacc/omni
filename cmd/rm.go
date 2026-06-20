@@ -1,7 +1,5 @@
 package cmd
 
-// helplint:ignore — Long strings need omni-usage examples added in a future pass.
-
 import (
 	"github.com/inovacc/omni/internal/cli/rm"
 	"github.com/spf13/cobra"
@@ -16,7 +14,13 @@ var rmCmd = &cobra.Command{
 
 Protected paths (system directories, SSH keys, credentials, etc.) cannot be
 deleted without explicit override flags. Use --force for non-critical
-protected paths, or --no-preserve-root for critical system paths.`,
+protected paths, or --no-preserve-root for critical system paths.
+
+Examples:
+  omni rm file.txt             # remove a file
+  omni rm -r dir/              # remove a directory recursively
+  omni rm -f missing.txt      # ignore nonexistent files
+  omni remove a.txt b.txt     # remove multiple files (alias)`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		recursive, _ := cmd.Flags().GetBool("recursive")
 		force, _ := cmd.Flags().GetBool("force")

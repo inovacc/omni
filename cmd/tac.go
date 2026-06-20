@@ -1,7 +1,5 @@
 package cmd
 
-// helplint:ignore — Long strings need omni-usage examples added in a future pass.
-
 import (
 	"github.com/inovacc/omni/internal/cli/tac"
 	"github.com/spf13/cobra"
@@ -17,7 +15,11 @@ With no FILE, or when FILE is -, read standard input.
 
   -b, --before             attach the separator before instead of after
   -r, --regex              interpret the separator as a regular expression
-  -s, --separator=STRING   use STRING as the separator instead of newline`,
+  -s, --separator=STRING   use STRING as the separator instead of newline
+
+Examples:
+  omni tac file.txt               # print lines in reverse order
+  cat file.txt | omni tac         # reverse lines from stdin`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		opts := tac.TacOptions{}
 

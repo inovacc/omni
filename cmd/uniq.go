@@ -1,7 +1,5 @@
 package cmd
 
-// helplint:ignore — Long strings need omni-usage examples added in a future pass.
-
 import (
 	"github.com/inovacc/omni/internal/cli/text"
 	"github.com/spf13/cobra"
@@ -17,7 +15,13 @@ writing to OUTPUT (or standard output).
 With no options, matching lines are merged to the first occurrence.
 
 Note: 'uniq' does not detect repeated lines unless they are adjacent.
-You may want to sort the input first, or use 'sort -u' without 'uniq'.`,
+You may want to sort the input first, or use 'sort -u' without 'uniq'.
+
+Examples:
+  omni uniq file.txt              # collapse adjacent duplicates
+  omni uniq -c file.txt           # prefix each line with its count
+  omni uniq -d file.txt           # only print duplicated lines
+  omni sort file.txt | omni uniq  # sort then deduplicate`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		opts := text.UniqOptions{}
 

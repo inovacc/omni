@@ -1,7 +1,5 @@
 package cmd
 
-// helplint:ignore — Long strings need omni-usage examples added in a future pass.
-
 import (
 	"github.com/inovacc/omni/internal/cli/cut"
 	"github.com/spf13/cobra"
@@ -29,7 +27,12 @@ range, or many ranges separated by commas.  Each range is one of:
   N     N'th byte, character or field, counted from 1
   N-    from N'th byte, character or field, to end of line
   N-M   from N'th to M'th (included) byte, character or field
-  -M    from first to M'th (included) byte, character or field`,
+  -M    from first to M'th (included) byte, character or field
+
+Examples:
+  omni cut -f1 -d: /etc/passwd    # first colon-delimited field
+  omni cut -c1-10 file.txt        # first 10 characters of each line
+  omni cut -f1,3 -d, data.csv     # fields 1 and 3 from CSV`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		opts := cut.CutOptions{}
 

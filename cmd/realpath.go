@@ -1,7 +1,5 @@
 package cmd
 
-// helplint:ignore — Long strings need omni-usage examples added in a future pass.
-
 import (
 	"github.com/inovacc/omni/internal/cli/realpath"
 	"github.com/spf13/cobra"
@@ -11,7 +9,11 @@ import (
 var realpathCmd = &cobra.Command{
 	Use:   "realpath [path...]",
 	Short: "Print the resolved path",
-	Long:  `Print the resolved absolute file name; all components must exist.`,
+	Long: `Print the resolved absolute file name; all components must exist.
+
+Examples:
+  omni realpath ./file.txt        # resolve to an absolute, real path
+  omni realpath ../dir            # resolve a relative directory`,
 	Args:  cobra.MinimumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		opts := realpath.RealpathOptions{OutputFormat: getOutputOpts(cmd).GetFormat()}

@@ -1,7 +1,5 @@
 package cmd
 
-// helplint:ignore — Long strings need omni-usage examples added in a future pass.
-
 import (
 	"github.com/inovacc/omni/internal/cli/column"
 	"github.com/spf13/cobra"
@@ -21,7 +19,12 @@ With no FILE, or when FILE is -, read standard input.
   -o, --output-separator=STRING  output separator for table mode
   -c, --columns=N        output width in characters (default 80)
   -x, --fillrows         fill rows before columns
-  -R, --right            right-align columns`,
+  -R, --right            right-align columns
+
+Examples:
+  omni column -t file.txt           # align whitespace-separated columns
+  omni column -t -s, data.csv       # align CSV into a table
+  cat /etc/passwd | omni column -t -s:  # tabulate stdin`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		opts := column.ColumnOptions{}
 

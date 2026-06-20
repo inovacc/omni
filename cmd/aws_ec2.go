@@ -1,7 +1,5 @@
 package cmd
 
-// helplint:ignore — Long strings need omni-usage examples added in a future pass.
-
 import (
 	"context"
 	"strings"
@@ -14,7 +12,11 @@ import (
 var ec2Cmd = &cobra.Command{
 	Use:   "ec2",
 	Short: "AWS EC2 operations",
-	Long:  `AWS EC2 instance and resource operations.`,
+	Long: `AWS EC2 instance and resource operations.
+
+Examples:
+  omni aws ec2 describe-instances    # list EC2 instances
+  omni aws ec2 describe-vpcs         # list VPCs`,
 }
 
 var ec2DescribeInstancesCmd = &cobra.Command{

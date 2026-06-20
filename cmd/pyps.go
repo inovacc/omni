@@ -25,13 +25,23 @@ Examples:
 var pypsListCmd = &cobra.Command{
 	Use:   "list",
 	Short: "List Python processes",
-	RunE:  func(cmd *cobra.Command, args []string) error { return runRuntimePsList(cmd, procutil.RuntimePython) },
+	Long: `List running Python processes.
+
+Examples:
+  omni pyps list                  # list Python processes
+  omni pyps list --json           # list as JSON`,
+	RunE: func(cmd *cobra.Command, args []string) error { return runRuntimePsList(cmd, procutil.RuntimePython) },
 }
 
 var pypsKillCmd = &cobra.Command{
 	Use:   "kill <pid|name>",
 	Short: "Signal one or more Python processes",
-	Args:  cobra.ExactArgs(1),
+	Long: `Signal a Python process by PID or by name.
+
+Examples:
+  omni pyps kill 12345            # signal by PID
+  omni pyps kill python --recursive --yes  # signal every match`,
+	Args: cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return runRuntimePsKill(cmd, procutil.RuntimePython, args[0])
 	},

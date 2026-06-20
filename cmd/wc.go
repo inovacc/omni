@@ -1,7 +1,5 @@
 package cmd
 
-// helplint:ignore — Long strings need omni-usage examples added in a future pass.
-
 import (
 	"github.com/inovacc/omni/internal/cli/wc"
 	"github.com/spf13/cobra"
@@ -18,7 +16,13 @@ characters delimited by white space.
 With no FILE, or when FILE is -, read standard input.
 
 The options below may be used to select which counts are printed, always in
-the following order: newline, word, character, byte, maximum line length.`,
+the following order: newline, word, character, byte, maximum line length.
+
+Examples:
+  omni wc file.txt                # lines, words, and bytes
+  omni wc -l file.txt             # line count only
+  omni wc -w file.txt             # word count only
+  cat file.txt | omni wc -c       # byte count from stdin`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		opts := wc.WCOptions{}
 

@@ -1,7 +1,5 @@
 package cmd
 
-// helplint:ignore — Long strings need omni-usage examples added in a future pass.
-
 import (
 	"fmt"
 
@@ -12,7 +10,12 @@ import (
 var gitCmd = &cobra.Command{
 	Use:   "git",
 	Short: "Git shortcuts and hacks",
-	Long:  `Git shortcut commands for common operations.`,
+	Long: `Git shortcut commands for common operations.
+
+Examples:
+  omni git status                 # short status (git status -sb)
+  omni git quick-commit -m "fix"  # stage all and commit
+  omni git log-graph              # pretty log with graph`,
 }
 
 // git quick-commit (gqc)

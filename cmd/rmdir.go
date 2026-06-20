@@ -1,7 +1,5 @@
 package cmd
 
-// helplint:ignore — Long strings need omni-usage examples added in a future pass.
-
 import (
 	"github.com/inovacc/omni/internal/cli/rm"
 	"github.com/spf13/cobra"
@@ -14,7 +12,11 @@ var rmdirCmd = &cobra.Command{
 	Long: `Remove the DIRECTORY(ies), if they are empty.
 
 Protected paths (system directories, credentials, etc.) cannot be
-deleted without the --no-preserve-root flag.`,
+deleted without the --no-preserve-root flag.
+
+Examples:
+  omni rmdir emptydir          # remove an empty directory
+  omni rmdir a b c             # remove multiple empty directories`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		noPreserveRoot, _ := cmd.Flags().GetBool("no-preserve-root")
 		return rm.RunRmdir(args, rm.RmdirOptions{

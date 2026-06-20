@@ -1,7 +1,5 @@
 package cmd
 
-// helplint:ignore — Long strings need omni-usage examples added in a future pass.
-
 import (
 	"bufio"
 	"encoding/json"
@@ -18,7 +16,12 @@ import (
 var cloudProfileCmd = &cobra.Command{
 	Use:   "profile",
 	Short: "Manage cloud profiles",
-	Long:  `Manage cloud profiles for AWS, Azure, and GCP.`,
+	Long: `Manage cloud profiles for AWS, Azure, and GCP.
+
+Examples:
+  omni cloud profile list                       # list configured profiles
+  omni cloud profile add myaws --provider aws   # add a profile
+  omni cloud profile use myaws                  # set the default profile`,
 }
 
 var cloudProfileAddCmd = &cobra.Command{

@@ -1,7 +1,5 @@
 package cmd
 
-// helplint:ignore — Long strings need omni-usage examples added in a future pass.
-
 import (
 	"github.com/inovacc/omni/internal/cli/xz"
 	"github.com/spf13/cobra"
@@ -54,7 +52,11 @@ var unxzCmd = &cobra.Command{
 
 Equivalent to xz -d.
 
-Note: Full decompression requires external library.`,
+Note: Full decompression requires external library.
+
+Examples:
+  omni unxz file.txt.xz           # decompress an xz file
+  omni unxz -k file.txt.xz        # decompress and keep the original`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		opts := xz.XzOptions{
 			Decompress: true,
@@ -75,7 +77,10 @@ var xzcatCmd = &cobra.Command{
 
 Equivalent to xz -dc.
 
-Note: Full decompression requires external library.`,
+Note: Full decompression requires external library.
+
+Examples:
+  omni xzcat file.txt.xz          # decompress and print to stdout`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return xz.RunXzcat(cmd.OutOrStdout(), args)
 	},

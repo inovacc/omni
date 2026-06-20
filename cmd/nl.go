@@ -1,7 +1,5 @@
 package cmd
 
-// helplint:ignore — Long strings need omni-usage examples added in a future pass.
-
 import (
 	"github.com/inovacc/omni/internal/cli/nl"
 	"github.com/spf13/cobra"
@@ -30,7 +28,12 @@ STYLE is one of:
 FORMAT is one of:
   ln     left justified, no leading zeros
   rn     right justified, no leading zeros (default)
-  rz     right justified, leading zeros`,
+  rz     right justified, leading zeros
+
+Examples:
+  omni nl file.txt                # number nonempty lines
+  omni nl -b a file.txt           # number all lines
+  cat file.txt | omni nl          # number lines from stdin`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		opts := nl.NlOptions{}
 

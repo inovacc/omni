@@ -1,7 +1,5 @@
 package cmd
 
-// helplint:ignore — Long strings need omni-usage examples added in a future pass.
-
 import (
 	"bytes"
 	"encoding/json"
@@ -56,7 +54,12 @@ type CommandDetail struct {
 var cmdtreeCmd = &cobra.Command{
 	Use:   "cmdtree",
 	Short: "Display command tree visualization",
-	Long:  "Display a tree visualization of all available commands with descriptions.",
+	Long: `Display a tree visualization of all available commands with descriptions.
+
+Examples:
+  omni cmdtree                    # full command tree
+  omni cmdtree -b                 # brief tree, short descriptions only
+  omni cmdtree -c grep            # details for a single command`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if getOutputOpts(cmd).GetFormat() == output.FormatJSON {
 			return printJSONTree(cmd, rootCmd)

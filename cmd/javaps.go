@@ -25,13 +25,23 @@ Examples:
 var javapsListCmd = &cobra.Command{
 	Use:   "list",
 	Short: "List Java (JVM) processes",
-	RunE:  func(cmd *cobra.Command, args []string) error { return runRuntimePsList(cmd, procutil.RuntimeJava) },
+	Long: `List running Java (JVM) processes.
+
+Examples:
+  omni javaps list                # list JVM processes
+  omni javaps list --json         # list as JSON`,
+	RunE: func(cmd *cobra.Command, args []string) error { return runRuntimePsList(cmd, procutil.RuntimeJava) },
 }
 
 var javapsKillCmd = &cobra.Command{
 	Use:   "kill <pid|name>",
 	Short: "Signal one or more Java processes",
-	Args:  cobra.ExactArgs(1),
+	Long: `Signal a Java process by PID or by name.
+
+Examples:
+  omni javaps kill 12345          # signal by PID
+  omni javaps kill java --recursive --yes  # signal every match`,
+	Args: cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return runRuntimePsKill(cmd, procutil.RuntimeJava, args[0])
 	},

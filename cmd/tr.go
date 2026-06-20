@@ -1,7 +1,5 @@
 package cmd
 
-// helplint:ignore — Long strings need omni-usage examples added in a future pass.
-
 import (
 	"github.com/inovacc/omni/internal/cli/tr"
 	"github.com/spf13/cobra"
@@ -41,7 +39,12 @@ Interpreted sequences are:
   [:punct:]    all punctuation characters
   [:graph:]    all printable characters, not including space
   [:print:]    all printable characters, including space
-  [:xdigit:]   all hexadecimal digits`,
+  [:xdigit:]   all hexadecimal digits
+
+Examples:
+  echo HELLO | omni tr A-Z a-z       # uppercase to lowercase
+  echo "a b c" | omni tr -d ' '      # delete spaces
+  echo "aaabbb" | omni tr -s a       # squeeze repeated characters`,
 	Args: cobra.RangeArgs(1, 2),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		opts := tr.TrOptions{}

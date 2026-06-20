@@ -1,7 +1,5 @@
 package cmd
 
-// helplint:ignore — Long strings need omni-usage examples added in a future pass.
-
 import (
 	"github.com/inovacc/omni/internal/cli/grep"
 	"github.com/spf13/cobra"
@@ -13,7 +11,13 @@ var grepCmd = &cobra.Command{
 	Short: "Print lines that match patterns",
 	Long: `Search for PATTERN in each FILE.
 When FILE is '-', read standard input.
-With no FILE, read '.' if recursive; otherwise, read standard input.`,
+With no FILE, read '.' if recursive; otherwise, read standard input.
+
+Examples:
+  omni grep error log.txt         # print lines containing "error"
+  omni grep -i warn log.txt       # case-insensitive search
+  omni grep -rn TODO src/         # recursive search with line numbers
+  cat log.txt | omni grep error   # search stdin`,
 	Args: cobra.MinimumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		opts := grep.GrepOptions{}

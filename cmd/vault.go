@@ -1,7 +1,5 @@
 package cmd
 
-// helplint:ignore — Long strings need omni-usage examples added in a future pass.
-
 import (
 	"context"
 	"encoding/json"
@@ -194,7 +192,11 @@ Examples:
 var vaultTokenCmd = &cobra.Command{
 	Use:   "token",
 	Short: "Token operations",
-	Long:  `Token management operations.`,
+	Long: `Token management operations.
+
+Examples:
+  omni vault token lookup         # show current token info
+  omni vault token renew          # renew the current token`,
 }
 
 var vaultTokenLookupCmd = &cobra.Command{
@@ -493,7 +495,11 @@ Examples:
 var vaultKVCmd = &cobra.Command{
 	Use:   "kv",
 	Short: "KV secrets engine operations",
-	Long:  `Interact with Vault's KV secrets engine (v2).`,
+	Long: `Interact with Vault's KV secrets engine (v2).
+
+Examples:
+  omni vault kv get secret/myapp        # read a secret
+  omni vault kv put secret/myapp k=v    # write a secret`,
 }
 
 var kvMount string
@@ -809,7 +815,11 @@ Examples:
 var vaultKVMetadataCmd = &cobra.Command{
 	Use:   "metadata",
 	Short: "KV metadata operations",
-	Long:  `Manage metadata for secrets in the KV secrets engine.`,
+	Long: `Manage metadata for secrets in the KV secrets engine.
+
+Examples:
+  omni vault kv metadata get secret/myapp     # show metadata
+  omni vault kv metadata delete secret/myapp  # delete all versions`,
 }
 
 var vaultKVMetadataGetCmd = &cobra.Command{

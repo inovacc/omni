@@ -1,7 +1,5 @@
 package cmd
 
-// helplint:ignore — Long strings need omni-usage examples added in a future pass.
-
 import (
 	"github.com/inovacc/omni/internal/cli/text"
 	"github.com/spf13/cobra"
@@ -13,7 +11,14 @@ var sortCmd = &cobra.Command{
 	Short: "Sort lines of text files",
 	Long: `Write sorted concatenation of all FILE(s) to standard output.
 
-With no FILE, or when FILE is -, read standard input.`,
+With no FILE, or when FILE is -, read standard input.
+
+Examples:
+  omni sort file.txt              # sort lines alphabetically
+  omni sort -n nums.txt           # numeric sort
+  omni sort -r file.txt           # reverse order
+  omni sort -u file.txt           # sort and drop duplicates
+  cat file.txt | omni sort        # read from stdin`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		opts := text.SortOptions{}
 

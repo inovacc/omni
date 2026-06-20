@@ -1,7 +1,5 @@
 package cmd
 
-// helplint:ignore — Long strings need omni-usage examples added in a future pass.
-
 import (
 	"github.com/inovacc/omni/internal/cli/whoami"
 	"github.com/spf13/cobra"
@@ -11,7 +9,10 @@ import (
 var whoamiCmd = &cobra.Command{
 	Use:   "whoami",
 	Short: "Print effective username",
-	Long:  `Print the user name associated with the current effective user ID.`,
+	Long: `Print the user name associated with the current effective user ID.
+
+Examples:
+  omni whoami                     # print the current user name`,
 	Args:  cobra.NoArgs,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		opts := whoami.WhoamiOptions{}

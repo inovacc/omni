@@ -1,7 +1,5 @@
 package cmd
 
-// helplint:ignore — Long strings need omni-usage examples added in a future pass.
-
 import (
 	"github.com/inovacc/omni/internal/cli/chmod"
 	"github.com/spf13/cobra"
@@ -27,7 +25,12 @@ Options:
   -v, --verbose    output a diagnostic for every file processed
   -c, --changes    like verbose but report only when a change is made
   -f, --silent     suppress most error messages
-      --reference  use RFILE's mode instead of MODE values`,
+      --reference  use RFILE's mode instead of MODE values
+
+Examples:
+  omni chmod 755 script.sh        # set octal mode
+  omni chmod u+x script.sh        # add execute for the owner
+  omni chmod -R go-w dir/         # recursively remove group/other write`,
 	Args: cobra.MinimumNArgs(2),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		opts := chmod.ChmodOptions{}

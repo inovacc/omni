@@ -1,7 +1,5 @@
 package cmd
 
-// helplint:ignore — Long strings need omni-usage examples added in a future pass.
-
 import (
 	"github.com/inovacc/omni/internal/cli/id"
 	"github.com/spf13/cobra"
@@ -18,7 +16,12 @@ or (when USER omitted) for the current user.
   -G, --groups  print all group IDs
   -n, --name    print a name instead of a number, for -ugG
   -r, --real    print the real ID instead of the effective ID, with -ugG
-  -u, --user    print only the effective user ID`,
+  -u, --user    print only the effective user ID
+
+Examples:
+  omni id                         # full id for the current user
+  omni id -u                      # effective user ID only
+  omni id -un                     # effective user name`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		opts := id.IDOptions{}
 

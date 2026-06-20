@@ -1,7 +1,5 @@
 package cmd
 
-// helplint:ignore — Long strings need omni-usage examples added in a future pass.
-
 import (
 	"github.com/inovacc/omni/internal/cli/free"
 	"github.com/spf13/cobra"
@@ -20,7 +18,12 @@ in the system, as well as the buffers and caches used by the kernel.
   -g, --gibibytes     show output in gibibytes
   -h, --human         show human-readable output
   -w, --wide          wide output
-  -t, --total         show total for RAM + swap`,
+  -t, --total         show total for RAM + swap
+
+Examples:
+  omni free                       # memory usage in kibibytes
+  omni free -h                    # human-readable output
+  omni free -m -t                 # mebibytes with a RAM+swap total`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		opts := free.FreeOptions{}
 

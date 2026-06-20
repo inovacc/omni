@@ -1,7 +1,5 @@
 package cmd
 
-// helplint:ignore — Long strings need omni-usage examples added in a future pass.
-
 import (
 	"fmt"
 	"os"
@@ -64,7 +62,11 @@ Subcommands:
   init       Initialize a new Cobra CLI application
   add        Add a new command to an existing application
   add-tools  Add cmdtree and aicontext to an existing project
-  config     Manage generator configuration`,
+  config     Manage generator configuration
+
+Examples:
+  omni scaffold cobra init myapp --module github.com/user/myapp
+  omni scaffold cobra add serve --parent root`,
 }
 
 var scaffoldCobraInitCmd = &cobra.Command{

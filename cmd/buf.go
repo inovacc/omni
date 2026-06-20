@@ -1,7 +1,5 @@
 package cmd
 
-// helplint:ignore — Long strings need omni-usage examples added in a future pass.
-
 import (
 	"github.com/inovacc/omni/internal/cli/buf"
 	"github.com/spf13/cobra"
@@ -214,7 +212,11 @@ var bufModCmd = &cobra.Command{
 
 Subcommands:
   init    Initialize a new buf module
-  update  Update dependencies`,
+  update  Update dependencies
+
+Examples:
+  omni buf mod init               # create a buf.yaml
+  omni buf mod update             # update dependencies`,
 }
 
 var bufModInitCmd = &cobra.Command{

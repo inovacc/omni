@@ -33,20 +33,34 @@ Examples:
 var gopsListCmd = &cobra.Command{
 	Use:   "list",
 	Short: "List Go processes (default action of `omni gops`)",
-	RunE:  func(cmd *cobra.Command, args []string) error { return runRuntimePsList(cmd, procutil.RuntimeGo) },
+	Long: `List running Go processes. This is the default action of "omni gops".
+
+Examples:
+  omni gops list                  # list Go processes
+  omni gops list --json           # list as JSON`,
+	RunE: func(cmd *cobra.Command, args []string) error { return runRuntimePsList(cmd, procutil.RuntimeGo) },
 }
 
 var gopsKillCmd = &cobra.Command{
 	Use:   "kill <pid|name>",
 	Short: "Signal one or more Go processes",
-	Args:  cobra.ExactArgs(1),
-	RunE:  func(cmd *cobra.Command, args []string) error { return runRuntimePsKill(cmd, procutil.RuntimeGo, args[0]) },
+	Long: `Signal a Go process by PID or by name.
+
+Examples:
+  omni gops kill 12345            # signal by PID
+  omni gops kill myapp --recursive --yes  # signal every matching process`,
+	Args: cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error { return runRuntimePsKill(cmd, procutil.RuntimeGo, args[0]) },
 }
 
 var gopsInspectCmd = &cobra.Command{
 	Use:   "inspect <pid>",
 	Short: "Detail report for a single Go process (build info + obfuscation)",
-	Args:  cobra.ExactArgs(1),
+	Long: `Show a detailed report (build info and obfuscation status) for one Go process.
+
+Examples:
+  omni gops inspect 12345         # detail report for a PID`,
+	Args: cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		format := "table"
 		if j, _ := cmd.Flags().GetBool("json"); j {
@@ -59,7 +73,12 @@ var gopsInspectCmd = &cobra.Command{
 var gopsMonitorCmd = &cobra.Command{
 	Use:   "monitor <pid>",
 	Short: "Sample CPU/memory/IO/FD metrics for a process (single-shot or --watch)",
-	Args:  cobra.ExactArgs(1),
+	Long: `Sample CPU, memory, IO, and FD metrics for a process, once or continuously.
+
+Examples:
+  omni gops monitor 12345         # single-shot sample
+  omni gops monitor 12345 --watch # stream metrics as NDJSON`,
+	Args: cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		watch, _ := cmd.Flags().GetBool("watch")
 		interval, _ := cmd.Flags().GetDuration("interval")
@@ -78,7 +97,12 @@ var gopsMonitorCmd = &cobra.Command{
 var gopsObfuscationCmd = &cobra.Command{
 	Use:   "obfuscation <pid|path>",
 	Short: "Detect garble-style obfuscation in a Go binary (by PID or file path)",
-	Args:  cobra.ExactArgs(1),
+	Long: `Detect garble-style obfuscation in a Go binary, by PID or by file path.
+
+Examples:
+  omni gops obfuscation 12345     # check a running process
+  omni gops obfuscation ./app     # check a binary on disk`,
+	Args: cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		format := "table"
 		if j, _ := cmd.Flags().GetBool("json"); j {
@@ -91,6 +115,11 @@ var gopsObfuscationCmd = &cobra.Command{
 var gopsTopCmd = &cobra.Command{
 	Use:   "top",
 	Short: "Interactive TUI dashboard of Go processes (q to quit)",
+	Long: `Launch an interactive TUI dashboard of Go processes. Press q to quit.
+
+Examples:
+  omni gops top                   # open the dashboard
+  omni gops top --interval 2s     # refresh every 2 seconds`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		interval, _ := cmd.Flags().GetDuration("interval")
 		all, _ := cmd.Flags().GetBool("all")
@@ -101,7 +130,12 @@ var gopsTopCmd = &cobra.Command{
 var gopsAgentCmd = &cobra.Command{
 	Use:   "agent-cmd <pid> <stack|gc|memstats|version|stats|snapshot>",
 	Short: "Send an opcode to a target's embedded gops agent",
-	Args:  cobra.ExactArgs(2),
+	Long: `Send an opcode to a target process's embedded gops agent.
+
+Examples:
+  omni gops agent-cmd 12345 stack     # request a stack dump
+  omni gops agent-cmd 12345 memstats  # request memory stats`,
+	Args: cobra.ExactArgs(2),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return runtimeps.RunAgentCmd(cmd.Context(), cmd.OutOrStdout(), args[0], args[1])
 	},
@@ -110,7 +144,12 @@ var gopsAgentCmd = &cobra.Command{
 var gopsTraceCmd = &cobra.Command{
 	Use:   "trace <pid>",
 	Short: "Capture a runtime trace from a target's embedded agent (analyze with `go tool trace`)",
-	Args:  cobra.ExactArgs(1),
+	Long: `Capture a runtime trace from a target's embedded agent. Analyze with "go tool trace".
+
+Examples:
+  omni gops trace 12345                  # capture a trace to stdout
+  omni gops trace 12345 -d 10s -f t.out  # 10s trace to a file`,
+	Args: cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		dur, _ := cmd.Flags().GetDuration("duration")
 		out, _ := cmd.Flags().GetString("file")
@@ -121,7 +160,12 @@ var gopsTraceCmd = &cobra.Command{
 var gopsProfileCmd = &cobra.Command{
 	Use:   "profile <pid>",
 	Short: "Capture a CPU profile from a target's embedded agent (analyze with `go tool pprof`)",
-	Args:  cobra.ExactArgs(1),
+	Long: `Capture a CPU profile from a target's embedded agent. Analyze with "go tool pprof".
+
+Examples:
+  omni gops profile 12345                 # capture a CPU profile to stdout
+  omni gops profile 12345 -d 30s -f p.out # 30s profile to a file`,
+	Args: cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		dur, _ := cmd.Flags().GetDuration("duration")
 		out, _ := cmd.Flags().GetString("file")
@@ -132,7 +176,12 @@ var gopsProfileCmd = &cobra.Command{
 var gopsStreamCmd = &cobra.Command{
 	Use:   "stream <pid>",
 	Short: "Stream NDJSON runtime snapshots from a target's embedded agent",
-	Args:  cobra.ExactArgs(1),
+	Long: `Stream NDJSON runtime snapshots from a target's embedded agent.
+
+Examples:
+  omni gops stream 12345                  # stream snapshots
+  omni gops stream 12345 --interval 500ms # one snapshot every 500ms`,
+	Args: cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		interval, _ := cmd.Flags().GetDuration("interval")
 		return runtimeps.RunStream(cmd.Context(), cmd.OutOrStdout(), args[0], runtimeps.StreamOptions{Interval: interval})

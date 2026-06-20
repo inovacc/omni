@@ -1,7 +1,5 @@
 package cmd
 
-// helplint:ignore — Long strings need omni-usage examples added in a future pass.
-
 import (
 	"strings"
 
@@ -21,7 +19,12 @@ FORMAT controls the output. Interpreted sequences are:
   %d   day of month (01..31)
   %H   hour (00..23)
   %M   minute (00..59)
-  %S   second (00..60)`,
+  %S   second (00..60)
+
+Examples:
+  omni date                       # current date and time
+  omni date -u                    # current time in UTC
+  omni date +%Y-%m-%d             # format as YYYY-MM-DD`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		opts := date.DateOptions{}
 

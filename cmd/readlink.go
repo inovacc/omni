@@ -1,7 +1,5 @@
 package cmd
 
-// helplint:ignore — Long strings need omni-usage examples added in a future pass.
-
 import (
 	"github.com/inovacc/omni/internal/cli/readlink"
 	"github.com/spf13/cobra"
@@ -20,7 +18,11 @@ var readlinkCmd = &cobra.Command{
   -q, --quiet                   suppress most error messages
   -s, --silent                  suppress most error messages
   -v, --verbose                 report error messages
-  -z, --zero                    end each output line with NUL, not newline`,
+  -z, --zero                    end each output line with NUL, not newline
+
+Examples:
+  omni readlink link             # print the target of a symlink
+  omni readlink -f path          # canonicalize, following all symlinks`,
 	Args: cobra.MinimumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		opts := readlink.ReadlinkOptions{}

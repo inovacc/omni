@@ -1,7 +1,5 @@
 package cmd
 
-// helplint:ignore — Long strings need omni-usage examples added in a future pass.
-
 import (
 	"github.com/inovacc/omni/internal/cli/terraform"
 	"github.com/spf13/cobra"
@@ -152,7 +150,11 @@ Examples:
 var tfStateCmd = &cobra.Command{
 	Use:   "state",
 	Short: "State management commands",
-	Long:  `Commands for managing Terraform state.`,
+	Long: `Commands for managing Terraform state.
+
+Examples:
+  omni tf state list              # list resources in state
+  omni tf state show aws_instance.example`,
 }
 
 var tfStateListCmd = &cobra.Command{
@@ -213,7 +215,11 @@ Examples:
 var tfWorkspaceCmd = &cobra.Command{
 	Use:   "workspace",
 	Short: "Workspace management commands",
-	Long:  `Commands for managing Terraform workspaces.`,
+	Long: `Commands for managing Terraform workspaces.
+
+Examples:
+  omni tf workspace list          # list workspaces
+  omni tf workspace select prod   # switch workspace`,
 }
 
 var tfWorkspaceListCmd = &cobra.Command{

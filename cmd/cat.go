@@ -1,7 +1,5 @@
 package cmd
 
-// helplint:ignore — Long strings need omni-usage examples added in a future pass.
-
 import (
 	"github.com/inovacc/omni/internal/cli/cat"
 	"github.com/spf13/cobra"
@@ -12,7 +10,14 @@ var catCmd = &cobra.Command{
 	Use:   "cat [file...]",
 	Short: "Concatenate files and print on the standard output",
 	Long: `Concatenate FILE(s) to standard output.
-With no FILE, or when FILE is -, read standard input.`,
+With no FILE, or when FILE is -, read standard input.
+
+Examples:
+  omni cat file.txt                 # print a file
+  omni cat a.txt b.txt              # concatenate files
+  omni cat -n file.txt              # number all lines
+  omni cat -b file.txt              # number non-blank lines
+  echo hello | omni cat             # read from stdin`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		opts := cat.CatOptions{}
 
