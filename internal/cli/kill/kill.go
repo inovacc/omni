@@ -234,7 +234,10 @@ func classifySignalErr(err error, pid int) error {
 		return cmderr.Wrap(cmderr.ErrPermission, fmt.Sprintf("kill: permission denied: pid %d", pid))
 	}
 
-	if isNoSuchProcess(err) {
+	// os.ErrProcessDone is what modern Go returns for a finished/nonexistent PID
+	// (pidfd-based on Linux, and on Windows); older Unix returns ESRCH, caught by
+	// isNoSuchProcess. Treat both as "no such process".
+	if isNoSuchProcess(err) || errors.Is(err, os.ErrProcessDone) {
 		return cmderr.Wrap(cmderr.ErrNotFound, fmt.Sprintf("kill: no such process: pid %d", pid))
 	}
 
