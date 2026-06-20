@@ -985,10 +985,15 @@ Priority P2 - Specialized:
 
 ### v2.0.0 - Production Ready
 - [ ] cmderr adopted in all commands
-- [ ] Full documentation
+- [x] Full documentation (generated, drift-checked command reference — plan 013)
 - [ ] 80%+ overall test coverage (in progress: measured 77.3% omni-owned weighted avg on the consolidated tree after plans 010 raised coverage + 015 removed low-coverage pkg/video; 2.7pt short of 80% — a follow-up coverage plan closes the gap before this box ticks)
 - [x] CI coverage enforcement (overall omni-owned weighted-avg gate via task test:coverage:gate / CI job overall-coverage-gate; ratcheted from advisory 60% to enforced 75% post plans 010/015, measured 77.3%; bumps to 80% once the coverage gap closes)
 - [ ] Multi-platform automated releases
+
+> v2.0 gates progressed (2026-06-20 consolidation): CI coverage gate live (plan 012,
+> ratcheted to enforced 75% — 2.7pt short of the 80% target, see plan 019),
+> command reference generated + drift-checked (plan 013), `--json` rollout begun (plan 011,
+> `dotenv` worked example + tracking checklist), `video` feature removed (plan 015).
 
 ---
 

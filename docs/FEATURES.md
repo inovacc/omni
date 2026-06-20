@@ -21,8 +21,11 @@
 ### Data Processing
 - **Status:** Complete
 - jq (JSON query), yq (YAML query), dotenv parser
-- JSON/CSV/XML bidirectional conversions
+- JSON ⇄ CSV/XML bidirectional conversions (`json toxml`/`fromxml`/`tocsv`/`fromcsv`)
+- XML utilities: `xml fmt` / `xml minify` / `xml validate` (golden-pinned — plan 014)
 - YAML/TOML/XML validation
+- Global `--json` output mode honored by structurable commands (rollout in progress —
+  `dotenv` worked example landed, remaining commands tracked per plan 011)
 
 ### Formatting Engines
 - **Status:** Complete
