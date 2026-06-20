@@ -534,25 +534,26 @@ tasks:
 
   # === DOCUMENTATION ===
   cmdtree:
-    desc: Display command tree visualization
+    desc: Regenerate docs/COMMANDS.md from the in-process command tree
     cmds:
-      - go run scripts/cmdtree/cmdtree.go
+      - go run tools/cmdref/cmdref.go
 
   docs:
-    desc: Generate all documentation (COMMANDS.md and cmdtree.go)
+    desc: Regenerate docs/COMMANDS.md from the in-process command tree
     cmds:
-      - go run scripts/cmdtree/cmdtree.go -out-docs docs/COMMANDS.md -out-go cmd/cmdtree.go
-      - echo "Documentation generated successfully"
+      - go run tools/cmdref/cmdref.go
+      - echo "docs/COMMANDS.md regenerated"
 
   docs:commands:
-    desc: Generate docs/COMMANDS.md from command definitions
+    desc: Regenerate docs/COMMANDS.md
     cmds:
-      - go run scripts/cmdtree/cmdtree.go -out-docs docs/COMMANDS.md
+      - go run tools/cmdref/cmdref.go
 
-  docs:cmdtree:
-    desc: Generate cmd/cmdtree.go with embedded tree
+  docs:check:
+    desc: Verify docs/COMMANDS.md matches a fresh regeneration (CI gate)
     cmds:
-      - go run scripts/cmdtree/cmdtree.go -out-go cmd/cmdtree.go
+      - go run tools/cmdref/cmdref.go > /dev/null
+      - cmd: git diff --exit-code -- docs/COMMANDS.md
 
   # === DOCKER TASKS ===
   docker:test:linux:
