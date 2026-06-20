@@ -2,7 +2,6 @@ package urlenc
 
 import (
 	"bufio"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -11,13 +10,16 @@ import (
 	"strings"
 
 	"github.com/inovacc/omni/internal/cli/cmderr"
+	"github.com/inovacc/omni/pkg/cobra/helper/output"
 )
 
 // Options configures the url encode/decode command behavior
 type Options struct {
 	Decode    bool // decode instead of encode
 	Component bool // encode/decode as URL component (more aggressive)
-	JSON      bool // --json: output as JSON
+	// OutputFormat selects the output format. It is read from the global
+	// --json/--table flags via the unified output formatter.
+	OutputFormat output.Format
 }
 
 // Result represents the output for JSON mode
@@ -34,27 +36,24 @@ func RunEncode(w io.Writer, args []string, opts Options) error {
 		return err
 	}
 
-	var output string
+	var encoded string
 	if opts.Component {
-		output = url.QueryEscape(input)
+		encoded = url.QueryEscape(input)
 	} else {
-		output = url.PathEscape(input)
+		encoded = url.PathEscape(input)
 	}
 
-	if opts.JSON {
+	if f := output.New(w, opts.OutputFormat); f.IsJSON() {
 		result := Result{
 			Input:  input,
-			Output: output,
+			Output: encoded,
 			Mode:   "encode",
 		}
 
-		enc := json.NewEncoder(w)
-		enc.SetIndent("", "  ")
-
-		return enc.Encode(result)
+		return f.Print(result)
 	}
 
-	_, _ = fmt.Fprintln(w, output)
+	_, _ = fmt.Fprintln(w, encoded)
 
 	return nil
 }
@@ -66,31 +65,28 @@ func RunDecode(w io.Writer, args []string, opts Options) error {
 		return err
 	}
 
-	var output string
+	var decoded string
 	if opts.Component {
-		output, err = url.QueryUnescape(input)
+		decoded, err = url.QueryUnescape(input)
 	} else {
-		output, err = url.PathUnescape(input)
+		decoded, err = url.PathUnescape(input)
 	}
 
 	if err != nil {
 		return cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("url decode: %s", err))
 	}
 
-	if opts.JSON {
+	if f := output.New(w, opts.OutputFormat); f.IsJSON() {
 		result := Result{
 			Input:  input,
-			Output: output,
+			Output: decoded,
 			Mode:   "decode",
 		}
 
-		enc := json.NewEncoder(w)
-		enc.SetIndent("", "  ")
-
-		return enc.Encode(result)
+		return f.Print(result)
 	}
 
-	_, _ = fmt.Fprintln(w, output)
+	_, _ = fmt.Fprintln(w, decoded)
 
 	return nil
 }

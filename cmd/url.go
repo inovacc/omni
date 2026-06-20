@@ -37,7 +37,7 @@ Examples:
 	RunE: func(cmd *cobra.Command, args []string) error {
 		opts := urlenc.Options{}
 		opts.Component, _ = cmd.Flags().GetBool("component")
-		opts.JSON, _ = cmd.Flags().GetBool("json")
+		opts.OutputFormat = getOutputOpts(cmd).GetFormat()
 
 		return urlenc.RunEncode(cmd.OutOrStdout(), args, opts)
 	},
@@ -57,7 +57,7 @@ Examples:
 	RunE: func(cmd *cobra.Command, args []string) error {
 		opts := urlenc.Options{}
 		opts.Component, _ = cmd.Flags().GetBool("component")
-		opts.JSON, _ = cmd.Flags().GetBool("json")
+		opts.OutputFormat = getOutputOpts(cmd).GetFormat()
 
 		return urlenc.RunDecode(cmd.OutOrStdout(), args, opts)
 	},
@@ -69,8 +69,6 @@ func init() {
 	urlCmd.AddCommand(urlDecodeCmd)
 
 	urlEncodeCmd.Flags().BoolP("component", "c", false, "use query component encoding (more aggressive)")
-	urlEncodeCmd.Flags().Bool("json", false, "output as JSON")
 
 	urlDecodeCmd.Flags().BoolP("component", "c", false, "use query component decoding")
-	urlDecodeCmd.Flags().Bool("json", false, "output as JSON")
 }
