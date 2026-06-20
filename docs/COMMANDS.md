@@ -1006,6 +1006,43 @@ omni yq -o json '.' config.yaml    # convert YAML to JSON
 omni yq '.items[]' data.yaml
 ```
 
+### json toxml / json fromxml - Convert between JSON and XML
+```bash
+omni json toxml [FILE] [flags]
+  -r, --root=NAME        root element name (default "root")
+  -i, --indent=STR       indentation string (default "  ")
+      --item-tag=NAME    tag for array items (default "item")
+      --attr-prefix=STR  prefix for attributes (default "-")
+
+omni json fromxml [FILE] [flags]
+      --attr-prefix=STR  prefix for attributes in JSON (default "-")
+      --text-key=STR     key for text content (default "#text")
+```
+
+**Examples:**
+```bash
+echo '{"name":"John"}' | omni json toxml
+cat data.xml | omni json fromxml
+omni json toxml -r person data.json
+```
+
+### xml - XML utilities (fmt, minify, validate, tojson, fromjson)
+```bash
+omni xml [FILE]                 # format (default)
+omni xml fmt [FILE]             # beautify
+omni xml minify [FILE]          # minify (compact)
+omni xml validate [FILE...]     # well-formedness check (--json for machine output)
+omni xml tojson [FILE]          # XML -> JSON
+omni xml fromjson [FILE]        # JSON -> XML
+```
+
+**Examples:**
+```bash
+omni xml fmt data.xml
+omni xml validate data.xml
+cat data.xml | omni xml tojson
+```
+
 ### dotenv - Load environment variables from .env files
 ```bash
 omni dotenv [OPTION]... [FILE]... [flags]
