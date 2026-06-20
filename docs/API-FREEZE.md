@@ -75,6 +75,7 @@ pkg/cssfmt cssfmt.WithSortRules()
 pkg/encoding encoding.Base32Decode()
 pkg/encoding encoding.Base32Encode()
 pkg/encoding encoding.Base58Decode()
+pkg/encoding encoding.Base58DecodeStrict()
 pkg/encoding encoding.Base58Encode()
 pkg/encoding encoding.Base64Decode()
 pkg/encoding encoding.Base64Encode()
@@ -261,6 +262,7 @@ pkg/sbom/format format.CycloneDX
 pkg/sbom/format format.Document
 pkg/sbom/format format.Document.Components()
 pkg/sbom/format format.Document.Encode()
+pkg/sbom/format format.ErrTooLarge
 pkg/sbom/format format.From()
 pkg/sbom/format format.Kind
 pkg/sbom/format format.Options
