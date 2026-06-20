@@ -125,53 +125,58 @@ func (p *Parser) Parse(reader io.Reader) (*models.Node, error) {
 	return root, nil
 }
 
-// parseLine parses a tree format line
-// Returns: level, name, comment, error
+// Box-drawing glyphs used by the formatter when rendering a tree. These are
+// multi-byte UTF-8 runes, so they MUST be compared with strings.HasPrefix
+// (rune-correct) rather than fixed-width byte windows such as line[i:i+4].
+const (
+	indentPipe  = "│   " // ancestor continuation: pipe + 3 spaces (4 display columns)
+	indentBlank = "    " // last-child continuation: 4 spaces
+	connectorT  = "├── " // mid child connector
+	connectorL  = "└── " // last child connector
+	connectorTB = "├──"  // mid child connector without trailing space
+	connectorLB = "└──"  // last child connector without trailing space
+)
+
+// parseLine parses a tree format line.
+// Returns: level, name, comment, error.
+//
+// The level is the number of indentation units ("│   " or "    ") that precede
+// the connector ("├── "/"└── "); the connector itself does not add a level. This
+// mirrors the grammar emitted by the formatter so that formatter output round-trips
+// back through the parser with correct nesting.
 func (p *Parser) parseLine(line string) (int, string, string, error) {
-	// Count indentation level
 	level := 0
-	i := 0
+	rest := line
 
-	for i < len(line) {
-		if line[i] == ' ' {
-			i++
-			continue
+	// Consume leading indentation units. Each unit is one nesting level.
+	for {
+		switch {
+		case strings.HasPrefix(rest, indentPipe):
+			level++
+			rest = rest[len(indentPipe):]
+		case strings.HasPrefix(rest, indentBlank):
+			level++
+			rest = rest[len(indentBlank):]
+		default:
+			goto connector
 		}
+	}
 
-		if i+3 < len(line) {
-			// Check for tree characters
-			if line[i:i+4] == "│   " {
-				level++
-				i += 4
-
-				continue
-			}
-
-			if line[i:i+4] == "├── " {
-				i += 4
-				break
-			}
-
-			if line[i:i+4] == "└── " {
-				i += 4
-				break
-			}
-			// Also handle without trailing space
-			if line[i:i+3] == "├──" || line[i:i+3] == "└──" {
-				i += 3
-				if i < len(line) && line[i] == ' ' {
-					i++
-				}
-
-				break
-			}
-		}
-		// If we can't recognize the pattern, just break
-		break
+connector:
+	// Consume the connector glyph that introduces this node's name.
+	switch {
+	case strings.HasPrefix(rest, connectorT):
+		rest = rest[len(connectorT):]
+	case strings.HasPrefix(rest, connectorL):
+		rest = rest[len(connectorL):]
+	case strings.HasPrefix(rest, connectorTB):
+		rest = rest[len(connectorTB):]
+	case strings.HasPrefix(rest, connectorLB):
+		rest = rest[len(connectorLB):]
 	}
 
 	// Extract name and comment
-	remaining := strings.TrimLeft(line[i:], " ")
+	remaining := strings.TrimLeft(rest, " ")
 	if remaining == "" {
 		return 0, "", "", ErrEmptyNodeName
 	}
