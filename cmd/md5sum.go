@@ -33,6 +33,7 @@ Examples:
 		opts.Quiet, _ = cmd.Flags().GetBool("quiet")
 		opts.Status, _ = cmd.Flags().GetBool("status")
 		opts.Warn, _ = cmd.Flags().GetBool("warn")
+		opts.OutputFormat = getOutputOpts(cmd).GetFormat()
 
 		return hash.RunMD5Sum(cmd.OutOrStdout(), args, opts)
 	},

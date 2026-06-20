@@ -67,22 +67,42 @@ categories:
         stdin: "test\n"
         normalizations: ["strip_path"]
 
+      - name: md5sum_json
+        args: ["md5sum", "--json"]
+        stdin: "test\n"
+
       - name: sha256sum_stdin
         args: ["sha256sum"]
         stdin: "test\n"
         normalizations: ["strip_path"]
+
+      - name: sha256sum_json
+        args: ["sha256sum", "--json"]
+        stdin: "test\n"
 
       - name: sha512sum_stdin
         args: ["sha512sum"]
         stdin: "test\n"
         normalizations: ["strip_path"]
 
+      - name: sha512sum_json
+        args: ["sha512sum", "--json"]
+        stdin: "test\n"
+
       - name: crc32sum_stdin
         args: ["crc32sum"]
         stdin: "test"
 
+      - name: crc32sum_json
+        args: ["crc32sum", "--json"]
+        stdin: "test"
+
       - name: crc64sum_stdin
         args: ["crc64sum"]
+        stdin: "test"
+
+      - name: crc64sum_json
+        args: ["crc64sum", "--json"]
         stdin: "test"
 
       - name: hash_crc32_file
