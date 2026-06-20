@@ -1,0 +1,5 @@
+{
+  "exit_code": 2,
+  "stdout_file": "sed_inplace_no_files.stdout",
+  "stderr": "Error: sed: no input files for in-place editing: invalid input\n"
+}

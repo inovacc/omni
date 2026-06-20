@@ -912,7 +912,7 @@ categories:
         exit_code: 2
         normalizations: ["strip_path"]
 
-      # --- sed (4) ---
+      # --- sed (6) ---
       - name: sed_bad_regex
         args: ["sed", "s/[[bad/x/"]
         stdin: "hello"
@@ -932,6 +932,18 @@ categories:
 
       - name: sed_unsupported_command
         args: ["sed", "z/a/b/"]
+        stdin: "hello"
+        exit_code: 2
+        normalizations: ["strip_path"]
+
+      - name: sed_inplace_no_files
+        args: ["sed", "-i", "s/a/b/"]
+        stdin: "hello"
+        exit_code: 2
+        normalizations: ["strip_path"]
+
+      - name: sed_inplace_on_stdin
+        args: ["sed", "-i", "s/a/b/", "-"]
         stdin: "hello"
         exit_code: 2
         normalizations: ["strip_path"]

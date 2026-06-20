@@ -1,0 +1,5 @@
+{
+  "exit_code": 2,
+  "stdout_file": "sed_inplace_on_stdin.stdout",
+  "stderr": "Error: sed: cannot do in-place editing on stdin: invalid input\n"
+}

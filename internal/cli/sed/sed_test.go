@@ -2,12 +2,37 @@ package sed
 
 import (
 	"bytes"
+	"errors"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
 	"testing"
+
+	"github.com/inovacc/omni/internal/cli/cmderr"
 )
+
+func TestRunSed_InPlaceUsageErrors_AreInvalidInput(t *testing.T) {
+	// -i with no input files is a usage error -> exit 2.
+	var buf bytes.Buffer
+	err := RunSed(&buf, strings.NewReader(""), []string{}, SedOptions{
+		Expression: []string{"s/a/b/"},
+		InPlace:    true,
+	})
+	if !errors.Is(err, cmderr.ErrInvalidInput) {
+		t.Fatalf("no-input-files: want ErrInvalidInput, got %v", err)
+	}
+
+	// -i on stdin ("-") is a usage error -> exit 2.
+	buf.Reset()
+	err = RunSed(&buf, strings.NewReader(""), []string{"-"}, SedOptions{
+		Expression: []string{"s/a/b/"},
+		InPlace:    true,
+	})
+	if !errors.Is(err, cmderr.ErrInvalidInput) {
+		t.Fatalf("in-place-on-stdin: want ErrInvalidInput, got %v", err)
+	}
+}
 
 func TestRunSed(t *testing.T) {
 	tmpDir, err := os.MkdirTemp("", "sed_test")

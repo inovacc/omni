@@ -6,6 +6,7 @@ import (
 	"io"
 	"strings"
 
+	"github.com/inovacc/omni/internal/cli/cmderr"
 	"github.com/spf13/pflag"
 )
 
@@ -37,18 +38,18 @@ func executeCommand(registry *CommandRegistry, cmdParts []string, stdin io.Reade
 // executeCobraCommand dispatches via Cobra's command tree.
 func executeCobraCommand(registry *CommandRegistry, cmdParts []string, stdin io.Reader, stdout io.Writer) error {
 	if registry.RootCmd == nil {
-		return fmt.Errorf("unknown command: %s", cmdParts[0])
+		return cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("unknown command: %s", cmdParts[0]))
 	}
 
 	// Find the command
 	cmd, args, err := registry.RootCmd.Find(cmdParts)
 	if err != nil {
-		return fmt.Errorf("unknown command: %s", cmdParts[0])
+		return cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("unknown command: %s", cmdParts[0]))
 	}
 
 	// Check if we found a valid command (not root)
 	if cmd == registry.RootCmd {
-		return fmt.Errorf("unknown command: %s", cmdParts[0])
+		return cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("unknown command: %s", cmdParts[0]))
 	}
 
 	// Set up input/output using Cobra's built-in methods
@@ -66,7 +67,7 @@ func executeCobraCommand(registry *CommandRegistry, cmdParts []string, stdin io.
 
 	// Parse flags
 	if err := cmd.ParseFlags(args); err != nil {
-		return fmt.Errorf("parsing flags: %w", err)
+		return cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("parsing flags: %s", err))
 	}
 
 	// Get remaining args after flags

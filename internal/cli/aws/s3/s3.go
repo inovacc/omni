@@ -15,6 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	awscommon "github.com/inovacc/omni/internal/cli/aws"
+	"github.com/inovacc/omni/internal/cli/cmderr"
 )
 
 // Client wraps the S3 client
@@ -105,7 +106,7 @@ func (c *Client) Ls(ctx context.Context, uri string, opts LsOptions) error {
 	}
 
 	if !s3uri.IsS3 {
-		return fmt.Errorf("invalid S3 URI: %s", uri)
+		return cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("invalid S3 URI: %s", uri))
 	}
 
 	return c.listObjects(ctx, s3uri.Bucket, s3uri.Key, opts)
@@ -214,7 +215,7 @@ func (c *Client) Cp(ctx context.Context, w io.Writer, src, dst string, opts CpOp
 		// Upload to S3
 		return c.uploadToS3(ctx, w, src, dstURI, opts)
 	default:
-		return fmt.Errorf("at least one argument must be an S3 URI")
+		return cmderr.Wrap(cmderr.ErrInvalidInput, "at least one argument must be an S3 URI")
 	}
 }
 
@@ -317,7 +318,7 @@ func (c *Client) Rm(ctx context.Context, w io.Writer, uri string, recursive, dry
 	}
 
 	if !s3uri.IsS3 {
-		return fmt.Errorf("invalid S3 URI: %s", uri)
+		return cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("invalid S3 URI: %s", uri))
 	}
 
 	if recursive {
@@ -399,7 +400,7 @@ func (c *Client) Mb(ctx context.Context, w io.Writer, uri string, region string)
 	}
 
 	if !s3uri.IsS3 {
-		return fmt.Errorf("invalid S3 URI: %s", uri)
+		return cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("invalid S3 URI: %s", uri))
 	}
 
 	input := &s3.CreateBucketInput{
@@ -431,7 +432,7 @@ func (c *Client) Rb(ctx context.Context, w io.Writer, uri string, force bool) er
 	}
 
 	if !s3uri.IsS3 {
-		return fmt.Errorf("invalid S3 URI: %s", uri)
+		return cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("invalid S3 URI: %s", uri))
 	}
 
 	if force {
