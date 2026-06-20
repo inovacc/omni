@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import shutil
 import subprocess
 import tempfile
 import time
@@ -107,29 +108,26 @@ def run_all(
     """Run all test cases, optionally in parallel."""
     temp_dir = tempfile.mkdtemp(prefix="omni_golden_")
     results: list[RunResult] = []
-
-    if workers <= 1:
-        for tc in test_cases:
-            result = run_test_case(tc, binary, timeout, temp_dir, project_root)
-            results.append(result)
-            if verbose:
-                print(f"  ran {tc.golden_key} ({result.duration_ms:.0f}ms, exit={result.exit_code})")
-    else:
-        tasks = [(tc, binary, timeout, temp_dir, project_root) for tc in test_cases]
-        with ProcessPoolExecutor(max_workers=workers) as pool:
-            futures = {pool.submit(_run_wrapper, t): t[0] for t in tasks}
-            for future in as_completed(futures):
-                result = future.result()
+    try:
+        if workers <= 1:
+            for tc in test_cases:
+                result = run_test_case(tc, binary, timeout, temp_dir, project_root)
                 results.append(result)
                 if verbose:
-                    print(f"  ran {result.test_case.golden_key} ({result.duration_ms:.0f}ms)")
+                    print(f"  ran {tc.golden_key} ({result.duration_ms:.0f}ms, exit={result.exit_code})")
+        else:
+            tasks = [(tc, binary, timeout, temp_dir, project_root) for tc in test_cases]
+            with ProcessPoolExecutor(max_workers=workers) as pool:
+                futures = {pool.submit(_run_wrapper, t): t[0] for t in tasks}
+                for future in as_completed(futures):
+                    result = future.result()
+                    results.append(result)
+                    if verbose:
+                        print(f"  ran {result.test_case.golden_key} ({result.duration_ms:.0f}ms)")
 
-    # Sort results to match input order
-    order = {tc.golden_key: i for i, tc in enumerate(test_cases)}
-    results.sort(key=lambda r: order.get(r.test_case.golden_key, 0))
-
-    # Cleanup temp dir
-    import shutil
-    shutil.rmtree(temp_dir, ignore_errors=True)
-
-    return results
+        # Sort results to match input order
+        order = {tc.golden_key: i for i, tc in enumerate(test_cases)}
+        results.sort(key=lambda r: order.get(r.test_case.golden_key, 0))
+        return results
+    finally:
+        shutil.rmtree(temp_dir, ignore_errors=True)
