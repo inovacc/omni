@@ -11,6 +11,7 @@ Modes:
 """
 
 import argparse
+import atexit
 import os
 import sys
 from pathlib import Path
@@ -48,6 +49,7 @@ def main():
     omni_bin = os.environ.get("OMNI_BIN", str(project_root / "bin" / "omni"))
 
     engine = GoldenEngine(binary_path=omni_bin, golden_base=str(golden_base))
+    atexit.register(engine.cleanup)
 
     try:
         tests = engine.load_registry()
