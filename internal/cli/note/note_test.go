@@ -8,6 +8,8 @@ import (
 	"runtime"
 	"strings"
 	"testing"
+
+	"github.com/inovacc/omni/pkg/cobra/helper/output"
 )
 
 func TestRunNoteAddAndList(t *testing.T) {
@@ -40,7 +42,7 @@ func TestRunNoteListJSON(t *testing.T) {
 	}
 
 	var out bytes.Buffer
-	if err := RunNote(&out, nil, Options{File: file, List: true, JSON: true}); err != nil {
+	if err := RunNote(&out, nil, Options{File: file, List: true, OutputFormat: output.FormatJSON}); err != nil {
 		t.Fatalf("RunNote(list json) error = %v", err)
 	}
 
@@ -107,7 +109,7 @@ func TestRunRemoveByID(t *testing.T) {
 	}
 
 	var out bytes.Buffer
-	if err := RunNote(&out, nil, Options{File: file, List: true, JSON: true}); err != nil {
+	if err := RunNote(&out, nil, Options{File: file, List: true, OutputFormat: output.FormatJSON}); err != nil {
 		t.Fatalf("RunNote(list json) error = %v", err)
 	}
 
@@ -126,7 +128,7 @@ func TestRunRemoveByID(t *testing.T) {
 	}
 
 	var listAfter bytes.Buffer
-	if err := RunNote(&listAfter, nil, Options{File: file, List: true, JSON: true}); err != nil {
+	if err := RunNote(&listAfter, nil, Options{File: file, List: true, OutputFormat: output.FormatJSON}); err != nil {
 		t.Fatalf("RunNote(list json after remove) error = %v", err)
 	}
 

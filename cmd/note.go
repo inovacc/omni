@@ -80,7 +80,6 @@ func init() {
 	noteCmd.AddCommand(noteRemoveCmd)
 
 	noteCmd.PersistentFlags().String("file", "", "path to notes JSON file (default: Documents/omni-notes.json)")
-	noteCmd.PersistentFlags().Bool("json", false, "output result in JSON")
 	noteCmd.Flags().Bool("list", false, "list saved notes instead of adding a new one")
 	noteCmd.Flags().IntP("limit", "n", 0, "show only last N notes (used with --list)")
 	noteListCmd.Flags().IntP("limit", "n", 0, "show only last N notes")
@@ -88,8 +87,8 @@ func init() {
 
 func noteOptionsFromFlags(cmd *cobra.Command) note.Options {
 	return note.Options{
-		File: noteStringFlag(cmd, "file"),
-		JSON: noteBoolFlag(cmd, "json"),
+		File:         noteStringFlag(cmd, "file"),
+		OutputFormat: getOutputOpts(cmd).GetFormat(),
 	}
 }
 
