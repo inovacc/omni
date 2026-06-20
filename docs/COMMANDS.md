@@ -682,7 +682,7 @@ omni base64 [OPTION]... [FILE] [flags]
 ### hash - Compute and check file hashes
 ```bash
 omni hash [OPTION]... [FILE]... [flags]
-  -a, --algorithm string    hash algorithm (md5, sha1, sha256, sha512, crc32, crc64)
+  -a, --algorithm string    hash algorithm (md5, sha1, sha256, sha512, crc32, crc64, blake2b)
   -b, --binary              read in binary mode
   -c, --check               read checksums from FILE and check them
       --quiet               don't print OK for verified files
@@ -1014,6 +1014,11 @@ omni comm [OPTION]... FILE1 FILE2 [flags]
   -z, --zero-terminated     line delimiter is NUL
 ```
 
+### consul - HashiCorp Consul CLI (read-only)
+```bash
+omni consul
+```
+
 ### crc32sum - Compute and check CRC32 checksums
 ```bash
 omni crc32sum [OPTION]... [FILE]... [flags]
@@ -1172,6 +1177,13 @@ omni gzip [OPTION]... [FILE]... [flags]
 ### hex - Hexadecimal encoding and decoding utilities
 ```bash
 omni hex
+```
+
+### hmac - Compute a keyed-hash message authentication code (HMAC)
+```bash
+omni hmac [OPTION]... [MESSAGE] [flags]
+  -a, --algorithm string    hash algorithm (sha256, sha1, sha512)
+  -k, --key string          shared secret key (required)
 ```
 
 ### html - HTML utilities (format, encode, decode)
@@ -1353,6 +1365,11 @@ omni netstat [OPTIONS] [flags]
   -p, --processes           show process using socket
   -t, --tcp                 display TCP sockets
   -u, --udp                 display UDP sockets
+```
+
+### nomad - HashiCorp Nomad CLI (read-only)
+```bash
+omni nomad
 ```
 
 ### note - Quick note taking to JSON in your Documents folder
@@ -1598,6 +1615,11 @@ omni unxz [OPTION]... [FILE]... [flags]
 omni url
 ```
 
+### validate - Validate data formats
+```bash
+omni validate
+```
+
 ### vault - HashiCorp Vault CLI
 ```bash
 omni vault
@@ -1612,15 +1634,6 @@ omni verify [OPTION]... FILE [flags]
   -k, --key string          path to the public key file
   -s, --sig string          path to the signature file (default: <FILE>.minisig)
       --trusted-root string  Sigstore trusted-root path (sigstore-verify module only)
-```
-
-### video - Download videos from YouTube and other platforms
-```bash
-omni video [URL] [flags]
-      --cookies string      Netscape cookie file path for interactive mode
-      --interactive         start interactive mode (same as 'video interactive')
-      --proxy string        HTTP/SOCKS proxy URL for interactive mode
-  -v, --verbose             verbose output for interactive mode
 ```
 
 ### which - Locate a command
@@ -1767,6 +1780,11 @@ omni
 +-- cmp                                      # Compare two files byte by byte
 +-- column                                   # Columnate lists
 +-- comm                                     # Compare two sorted files line by line
++-- consul                                   # HashiCorp Consul CLI (read-only)
+|   +-- kv                                   # Key-value store operations (read-only)
+|   |   \-- get                              # Get a value from the KV store
+|   +-- members                              # List cluster members
+|   \-- services                             # List catalog services
 +-- copy                                     # Alias for cp
 +-- cp                                       # Copy files and directories
 +-- crc32sum                                 # Compute and check CRC32 checksums
@@ -1854,6 +1872,7 @@ omni
 +-- hex                                      # Hexadecimal encoding and decoding uti...
 |   +-- decode                               # Decode hexadecimal to text
 |   \-- encode                               # Encode text to hexadecimal
++-- hmac                                     # Compute a keyed-hash message authenti...
 +-- html                                     # HTML utilities (format, encode, decode)
 |   +-- decode                               # HTML decode text
 |   +-- encode                               # HTML encode text
@@ -1920,6 +1939,13 @@ omni
 +-- nodeps                                   # List and signal running Node.js proce...
 |   +-- kill                                 # Signal one or more Node.js processes
 |   \-- list                                 # List Node.js processes
++-- nomad                                    # HashiCorp Nomad CLI (read-only)
+|   +-- alloc                                # Allocation operations (read-only)
+|   |   \-- list                             # List allocations
+|   +-- job                                  # Job operations (read-only)
+|   |   \-- list                             # List jobs
+|   \-- node                                 # Node operations (read-only)
+|       \-- list                             # List nodes
 +-- note                                     # Quick note taking to JSON in your Doc...
 |   +-- add                                  # Add a new note entry
 |   +-- list                                 # List note entries
@@ -2054,6 +2080,9 @@ omni
 |   +-- decode                               # URL decode text
 |   \-- encode                               # URL encode text
 +-- uuid                                     # Generate random UUIDs
++-- validate                                 # Validate data formats
+|   +-- email                                # Validate an email address
+|   \-- ip                                   # Validate an IPv4/IPv6 address
 +-- vault                                    # HashiCorp Vault CLI
 |   +-- delete                               # Delete secrets
 |   +-- kv                                   # KV secrets engine operations
@@ -2076,15 +2105,6 @@ omni
 |   |   \-- revoke                           # Revoke current token
 |   \-- write                                # Write secrets
 +-- verify                                   # Verify a detached minisign signature ...
-+-- video                                    # Download videos from YouTube and othe...
-|   +-- auth                                 # Extract YouTube cookies from Chrome b...
-|   +-- channel                              # Download all videos from a YouTube ch...
-|   +-- download                             # Download video(s) from URL
-|   +-- extractors                           # List all supported sites/extractors
-|   +-- info                                 # Show video metadata as JSON
-|   +-- interactive                          # Interactive video menu (formats, info...
-|   +-- list-formats                         # List available download formats
-|   \-- search                               # Search YouTube for videos
 +-- watch                                    # Execute a program periodically, showi...
 +-- wc                                       # Print newline, word, and byte counts ...
 +-- which                                    # Locate a command
@@ -2093,6 +2113,7 @@ omni
 +-- xml                                      # XML utilities (format, validate, conv...
 |   +-- fmt                                  # Format XML
 |   +-- fromjson                             # Convert JSON to XML
+|   +-- minify                               # Minify XML (remove whitespace)
 |   +-- tojson                               # Convert XML to JSON
 |   \-- validate                             # Validate XML syntax
 +-- xxd                                      # Make a hex dump or reverse it
