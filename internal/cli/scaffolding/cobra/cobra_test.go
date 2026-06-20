@@ -3,6 +3,7 @@ package cobra
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"go/parser"
 	"go/token"
 	"strings"
@@ -10,6 +11,7 @@ import (
 
 	"github.com/spf13/afero"
 
+	"github.com/inovacc/omni/internal/cli/cmderr"
 	"github.com/inovacc/omni/internal/cli/scaffolding"
 )
 
@@ -1209,4 +1211,26 @@ func TestRunCobraInitDaemon(t *testing.T) {
 			t.Error("expected error when both --service and --daemon are set")
 		}
 	})
+}
+
+func TestRunCobraInit_RejectsNameTraversal(t *testing.T) {
+	for _, bad := range []string{"../../evil", `..\evil`, "sub/evil"} {
+		fs := afero.NewMemMapFs()
+		var buf bytes.Buffer
+		err := RunCobraInit(&buf, fs, "/proj", CobraInitOptions{Module: "github.com/x/y", AppName: bad}, scaffolding.Options{})
+		if !errors.Is(err, cmderr.ErrInvalidInput) {
+			t.Fatalf("AppName %q: want ErrInvalidInput, got %v", bad, err)
+		}
+	}
+}
+
+func TestRunCobraAdd_RejectsNameTraversal(t *testing.T) {
+	for _, bad := range []string{"../evil", "sub/evil"} {
+		fs := afero.NewMemMapFs()
+		var buf bytes.Buffer
+		err := RunCobraAdd(&buf, fs, "/proj", CobraAddOptions{Name: bad}, scaffolding.Options{})
+		if !errors.Is(err, cmderr.ErrInvalidInput) {
+			t.Fatalf("Name %q: want ErrInvalidInput, got %v", bad, err)
+		}
+	}
 }

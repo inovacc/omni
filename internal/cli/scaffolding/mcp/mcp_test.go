@@ -3,6 +3,7 @@ package mcp
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"os/exec"
 	"path/filepath"
 	"strings"
@@ -10,6 +11,7 @@ import (
 
 	"github.com/spf13/afero"
 
+	"github.com/inovacc/omni/internal/cli/cmderr"
 	"github.com/inovacc/omni/internal/cli/scaffolding"
 )
 
@@ -287,6 +289,17 @@ func main() {
 	}
 
 	t.Log("Generated MCP project compiles successfully")
+}
+
+func TestRunMCPInit_RejectsNameTraversal(t *testing.T) {
+	for _, bad := range []string{"../evil", "sub/evil"} {
+		fs := afero.NewMemMapFs()
+		var buf bytes.Buffer
+		err := RunMCPInit(&buf, fs, bad, MCPOptions{Module: "github.com/x/y"}, scaffolding.Options{})
+		if !errors.Is(err, cmderr.ErrInvalidInput) {
+			t.Fatalf("name %q: want ErrInvalidInput, got %v", bad, err)
+		}
+	}
 }
 
 func TestDetectModule(t *testing.T) {
