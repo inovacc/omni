@@ -7,24 +7,25 @@ import (
 
 // TestParseLineCommentSplitting drives parseLine's name/comment extraction.
 //
-// NOTE: parseLine matches tree characters at the byte level (line[i:i+4]),
-// but box-drawing runes such as │ ├ └ are multi-byte in UTF-8, so those
-// byte comparisons never fire for real tree output — the higher layer strips
-// the prefixes. These cases therefore use plain inputs that exercise the
-// genuinely reachable branches: leading-space skipping and comment parsing.
+// NOTE: the corrected parseLine (plan 025) consumes leading indentation units
+// rune-correctly — one indentation unit (a pipe-continuation "│   " or a blank
+// "    " of four columns) advances exactly one nesting level — before stripping
+// the connector glyph and splitting name/comment. So a four-space leading
+// indent now yields level 1, not the old buggy level 0.
 func TestParseLineCommentSplitting(t *testing.T) {
 	tests := []struct {
 		name        string
 		line        string
+		wantLevel   int
 		wantName    string
 		wantComment string
 	}{
-		{"plain name", "file.txt", "file.txt", ""},
-		{"name and comment", "config.yaml # the config", "config.yaml", "the config"},
-		{"comment no space before hash", "a.txt#note", "a.txt", "note"},
-		{"double hash keeps second", "x.txt ## hash", "x.txt", "# hash"},
-		{"leading spaces skipped", "    plain.go", "plain.go", ""},
-		{"comment only yields empty name", "# only comment", "", "only comment"},
+		{"plain name", "file.txt", 0, "file.txt", ""},
+		{"name and comment", "config.yaml # the config", 0, "config.yaml", "the config"},
+		{"comment no space before hash", "a.txt#note", 0, "a.txt", "note"},
+		{"double hash keeps second", "x.txt ## hash", 0, "x.txt", "# hash"},
+		{"leading spaces skipped", "    plain.go", 1, "plain.go", ""},
+		{"comment only yields empty name", "# only comment", 0, "", "only comment"},
 	}
 
 	p := &Parser{}
@@ -34,8 +35,8 @@ func TestParseLineCommentSplitting(t *testing.T) {
 			if err != nil {
 				t.Fatalf("parseLine(%q) error: %v", tt.line, err)
 			}
-			if level != 0 {
-				t.Errorf("level = %d, want 0 (byte-level matcher does not advance on plain input)", level)
+			if level != tt.wantLevel {
+				t.Errorf("level = %d, want %d", level, tt.wantLevel)
 			}
 			if name != tt.wantName {
 				t.Errorf("name = %q, want %q", name, tt.wantName)
@@ -56,8 +57,8 @@ func TestParseLineEmptyName(t *testing.T) {
 }
 
 // TestParseStringDeepFlat exercises the end-to-end Parse path through several
-// sibling entries (each parsed as a flat child since the byte-level indentation
-// matcher does not advance levels on box-drawing runes).
+// sibling entries. With no leading indentation before each connector glyph,
+// all three entries are direct children of root (level 1 siblings).
 func TestParseStringDeepFlat(t *testing.T) {
 	input := "root/\n" +
 		"├── a.txt\n" +
