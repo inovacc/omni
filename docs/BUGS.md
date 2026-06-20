@@ -7,8 +7,9 @@
 ### BUG-0001: `omni video dl` fails on bot-gated YouTube videos (InnerTube LOGIN_REQUIRED)
 
 **Severity:** Medium
-**Status:** Open
-**Affected:** `omni video dl` (`pkg/video`, InnerTube client rotation)
+**Status:** Resolved (Won't-fix): video feature removed in plan 015
+**Resolution:** The entire `omni video` feature (commands, `internal/cli/video`, `pkg/video`, and the `goja` dependency) was removed in plan 015 to keep the no-exec invariant absolute. This bug is therefore moot — there is no longer a video downloader to bot-gate. Entry retained for historical record.
+**Affected:** `omni video dl` (`pkg/video`, InnerTube client rotation) — removed in plan 015
 **Platform:** All
 
 **Description:**

@@ -223,16 +223,6 @@ All four support `--json`, `kill <pid\|name>`, and a `--recursive --yes` bulk-ki
 | `random` | Generate random values |
 | `note` | Quick note taking to JSON in Documents |
 
-### Video Download
-| Command | Description |
-|---------|-------------|
-| `video download` | Download video from URL |
-| `video channel` | Download all videos from a YouTube channel (incremental, SQLite tracking) |
-| `video info` | Show video metadata as JSON |
-| `video list-formats` | List available formats |
-| `video search` | Search YouTube |
-| `video extractors` | List supported sites |
-
 ### TUI Pagers
 | Command | Description |
 |---------|-------------|
@@ -398,55 +388,6 @@ omni scaffold cobra config --show
 omni scaffold cobra config --init --author "John Doe" --license MIT
 ```
 
-## Video Download
-
-Download videos from YouTube and other platforms, pure Go (no FFmpeg required):
-
-```bash
-# Download video (best quality)
-omni video download "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
-# (saved to your user Downloads folder by default)
-
-# Download worst quality (smallest file)
-omni video download -f worst "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
-
-# Custom output filename
-omni video download -o "%(title)s.%(ext)s" "https://www.youtube.com/watch?v=..."
-
-# Show video metadata as JSON
-omni video info "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
-
-# List available formats
-omni video list-formats "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
-
-# Search YouTube
-omni video search "golang tutorial"
-
-# Resume a partial download
-omni video download -c "https://www.youtube.com/watch?v=..."
-
-# Rate-limited download
-omni video download --rate-limit 1M "https://www.youtube.com/watch?v=..."
-
-# Complete download: best quality + markdown sidecar (title, link, description)
-omni video download --complete "https://www.youtube.com/watch?v=..."
-
-# Download all videos from a YouTube channel (incremental)
-omni video channel "https://www.youtube.com/@GithubAwesome"
-
-# Limit to 5 most recent videos
-omni video channel "https://www.youtube.com/@GithubAwesome" --limit 5
-
-# Re-run skips already-downloaded videos
-omni video channel "https://www.youtube.com/@GithubAwesome"
-```
-
-**Supported sites:** YouTube (videos, playlists, channels, search), Generic (direct URLs, `<video>` tags, og:video)
-
-**Protocols:** HTTPS direct download, HLS/M3U8 (with AES-128 decryption)
-
-**Format selectors:** `best`, `worst`, `bestvideo`, `bestaudio`, format ID, `best[height<=720]`
-
 ## Project Analyzer
 
 Analyze any codebase directory for project type, languages, dependencies, git info, and health:
@@ -513,11 +454,6 @@ textutil.SortLines(lines, textutil.WithReverse())
 
 // Search with grep
 matches := grep.Search(lines, "app")
-
-// Download video
-import "github.com/inovacc/omni/pkg/video"
-client, _ := video.New(video.WithFormat("best"))
-_ = client.Download(ctx, "https://www.youtube.com/watch?v=...")
 ```
 
 ### Available Packages
@@ -539,7 +475,6 @@ _ = client.Download(ctx, "https://www.youtube.com/watch?v=...")
 | `pkg/pipeline` | `pipeline` | Streaming text processing engine (grep, sort, head, etc.) |
 | `pkg/twig` | `twig` | Directory tree scanning, formatting, comparison |
 | `pkg/figlet` | `figlet` | FIGlet font parser and ASCII art text renderer |
-| `pkg/video` | `video` | Video download engine (YouTube, HLS, generic) |
 
 ## Project Structure
 
@@ -566,21 +501,11 @@ omni/
 │   │   └── rg/             # Gitignore parsing, file type matching
 │   ├── pipeline/           # Streaming text processing engine
 │   ├── figlet/             # FIGlet font parser and ASCII art
-│   ├── twig/               # Tree scanning, formatting, comparison
-│   │   ├── scanner/
-│   │   ├── formatter/
-│   │   ├── comparer/
-│   │   └── ...
-│   └── video/              # Video download engine
-│       ├── extractor/      # Site-specific extractors (YouTube, Generic)
-│       ├── downloader/     # HTTP and HLS download engines
-│       ├── format/         # Format sorting and selection
-│       ├── m3u8/           # HLS manifest parser
-│       ├── nethttp/        # HTTP client with cookies/proxy
-│       ├── jsinterp/       # JS execution (YouTube signatures)
-│       ├── cache/          # Filesystem cache
-│       ├── utils/          # HTML, URL, sanitize helpers
-│       └── types/          # Shared data structures
+│   └── twig/               # Tree scanning, formatting, comparison
+│       ├── scanner/
+│       ├── formatter/
+│       ├── comparer/
+│       └── ...
 ├── internal/
 │   ├── cli/               # CLI wrappers (I/O, flags, stdin handling)
 │   │   ├── ls/
@@ -705,7 +630,6 @@ task lint               # Linting
 # Docker-based testing
 task docker:test:linux:blackbox  # Black-box in Linux container
 task docker:test:golden          # Golden tests in Linux container
-task docker:test:video           # Video comparison (omni vs yt-dlp)
 ```
 
 ## Contributing

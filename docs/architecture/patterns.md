@@ -22,8 +22,7 @@ omni/
 │   ├── pipeline/       # Streaming text processing engine
 │   ├── figlet/         # FIGlet font parser and ASCII art
 │   ├── twig/           # Tree scanning, formatting, comparison
-│   ├── userdirs/       # XDG user directory paths
-│   └── video/          # Video download engine (YouTube, HLS, generic)
+│   └── userdirs/       # XDG user directory paths
 ├── internal/cli/       # CLI wrappers (I/O, flags, stdin handling)
 │   ├── cmderr/         # Unified error model (sentinels, exit codes)
 │   ├── command/        # Unified Command interface + Registry + adapters

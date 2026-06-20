@@ -36,13 +36,6 @@
 - AES-256-GCM encryption/decryption
 - UUID v4/v7, ULID, KSUID, Nanoid, Snowflake generation
 
-### Video Download Engine
-- **Status:** Complete
-- Pure Go youtube-dl/yt-dlp port
-- YouTube (InnerTube API, signature decryption, playlists)
-- HLS/M3U8 with AES-128 decryption
-- Format selection, resume support, rate limiting
-
 ### Streaming Engines
 - **Status:** Complete
 - `pipe`: Cobra-dispatched command chaining with variable substitution
@@ -94,9 +87,9 @@
 - Section filtering, compact mode, file output
 
 ### Reusable pkg/ Libraries
-- **Status:** Complete (21 packages)
+- **Status:** Complete (20 packages)
 - idgen, hashutil, jsonutil, encoding, cryptutil, sqlfmt, cssfmt, htmlfmt
-- textutil, search/grep, search/rg, twig, pipeline, video, figlet, userdirs, cobra/helper
+- textutil, search/grep, search/rg, twig, pipeline, figlet, userdirs, cobra/helper
 - procutil, procmetrics, obfuscate, gopsagent (runtime-aware process tools, see Process feature above)
 
 ### Testing Infrastructure
