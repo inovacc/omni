@@ -70,3 +70,12 @@ __pycache__/
 /docs/quality/modernization.*
 /docs/quality/summary.json
 /docs/quality/vulnerabilities.*
+
+# release-time artifacts written by .github/workflows/release.yml + goreleaser
+# (release.key/omni.pub by the "Materialize" step, omni-host by the before-hook,
+# dist/ by goreleaser). Untracked, they put git in a "dirty state" and goreleaser
+# refuses to release. Never tracked.
+/release.key
+/omni.pub
+/omni-host
+/dist/
