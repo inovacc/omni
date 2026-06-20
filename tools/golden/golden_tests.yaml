@@ -490,6 +490,18 @@ categories:
         args: ["note", "list", "--json", "--file", "{file}"]
         fixture: "{\"notes\":[{\"id\":\"100\",\"text\":\"buy milk\",\"created_at\":\"2026-01-01T00:00:00Z\"},{\"id\":\"200\",\"text\":\"deploy\",\"created_at\":\"2026-01-02T00:00:00Z\"}]}\n"
 
+  # ===== LEAVE baselines (plan 024): commands whose --json is COMPACT (bare
+  # json.NewEncoder().Encode, no SetIndent). Routing them through the global
+  # formatter would re-indent every byte, so they are intentionally NOT
+  # converted. These cases pin the current compact shape so a future, announced
+  # (breaking-change-protocol) unification has a known baseline.
+  - name: cat
+    tests:
+      # cat --json emits a single-line compact array of {content} objects.
+      - name: cat_json_leave
+        args: ["cat", "--json"]
+        stdin: "line1\nline2\n"
+
   # ===== BUF (PROTOBUF) =====
   - name: buf
     tests:
