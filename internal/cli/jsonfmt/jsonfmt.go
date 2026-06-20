@@ -261,7 +261,8 @@ func Format(data []byte, opts Options) ([]byte, error) {
 	return output, nil
 }
 
-// MustBeautify formats JSON and panics on error
+// MustBeautify formats JSON and panics on error.
+// Must* panics by design; CLI commands use the error-returning variant — see plan 006.
 func MustBeautify(data []byte) []byte {
 	result, err := Beautify(data, "  ")
 	if err != nil {
@@ -271,7 +272,8 @@ func MustBeautify(data []byte) []byte {
 	return result
 }
 
-// MustMinify compacts JSON and panics on error
+// MustMinify compacts JSON and panics on error.
+// Must* panics by design; CLI commands use the error-returning variant — see plan 006.
 func MustMinify(data []byte) []byte {
 	result, err := Minify(data)
 	if err != nil {
