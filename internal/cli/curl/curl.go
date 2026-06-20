@@ -185,7 +185,7 @@ func Run(w io.Writer, args []string, opts Options) error {
 		// unaffected.
 		client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
 			if len(via) >= maxRedirects {
-				return fmt.Errorf("curl: stopped after %d redirects", maxRedirects)
+				return cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("curl: stopped after %d redirects", maxRedirects))
 			}
 			if err := checkRedirectTarget(req.URL); err != nil {
 				return err
