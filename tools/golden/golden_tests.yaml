@@ -464,6 +464,13 @@ categories:
         args: ["exist", "env", "NONEXISTENT_VAR_XYZ_12345"]
         exit_code: 1
 
+      # Pins the --json shape (2-space indent + trailing newline) for a
+      # deterministic, path-free env miss. Records before the formatter
+      # unification; must stay byte-identical after.
+      - name: exist_env_not_found_json
+        args: ["exist", "env", "NONEXISTENT_VAR_XYZ_12345", "--json"]
+        exit_code: 1
+
   # ===== BUF (PROTOBUF) =====
   - name: buf
     tests:

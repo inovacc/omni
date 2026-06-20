@@ -1,0 +1,5 @@
+{
+  "target": "NONEXISTENT_VAR_XYZ_12345",
+  "exists": false,
+  "type": "env"
+}
