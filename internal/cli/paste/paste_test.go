@@ -2,10 +2,13 @@ package paste
 
 import (
 	"bytes"
+	"encoding/json"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
+
+	outpkg "github.com/inovacc/omni/pkg/cobra/helper/output"
 )
 
 func TestRunPaste(t *testing.T) {
@@ -186,5 +189,49 @@ func TestExpandDelimiters(t *testing.T) {
 				t.Errorf("expandDelimiters(%q) = %q, want %q", tt.input, result, tt.expected)
 			}
 		})
+	}
+}
+
+func TestRunPaste_JSON(t *testing.T) {
+	tmpDir, err := os.MkdirTemp("", "paste_json_test")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	defer func() { _ = os.RemoveAll(tmpDir) }()
+
+	file1 := filepath.Join(tmpDir, "p1.txt")
+	file2 := filepath.Join(tmpDir, "p2.txt")
+	_ = os.WriteFile(file1, []byte("a\nb\n"), 0o600)
+	_ = os.WriteFile(file2, []byte("1\n2\n"), 0o600)
+
+	var buf bytes.Buffer
+	opts := PasteOptions{OutputFormat: outpkg.FormatJSON}
+
+	if err := RunPaste(&buf, nil, []string{file1, file2}, opts); err != nil {
+		t.Fatalf("RunPaste(--json) error = %v", err)
+	}
+
+	var got PasteResult
+	if err := json.Unmarshal(buf.Bytes(), &got); err != nil {
+		t.Fatalf("output is not valid JSON: %v\noutput: %s", err, buf.String())
+	}
+
+	if got.Count != 2 || len(got.Rows) != 2 {
+		t.Fatalf("unexpected paste result: %+v", got)
+	}
+
+	if got.Rows[0][0] != "a" || got.Rows[0][1] != "1" || got.Rows[1][0] != "b" || got.Rows[1][1] != "2" {
+		t.Fatalf("unexpected rows: %+v", got.Rows)
+	}
+
+	// Text path must be unchanged (no JSON when OutputFormat is default/text).
+	var txt bytes.Buffer
+	if err := RunPaste(&txt, nil, []string{file1, file2}, PasteOptions{}); err != nil {
+		t.Fatalf("RunPaste(text) error = %v", err)
+	}
+
+	if !strings.Contains(txt.String(), "a\t1") || strings.Contains(txt.String(), "{") {
+		t.Fatalf("text path changed unexpectedly: %q", txt.String())
 	}
 }

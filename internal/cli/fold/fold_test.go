@@ -2,10 +2,13 @@ package fold
 
 import (
 	"bytes"
+	"encoding/json"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/inovacc/omni/pkg/cobra/helper/output"
 )
 
 func TestRunFold(t *testing.T) {
@@ -240,5 +243,42 @@ func TestFoldLine(t *testing.T) {
 				t.Errorf("foldLine(%q) = %d lines, want %d", tt.line, len(result), tt.expected)
 			}
 		})
+	}
+}
+
+func TestRunFold_JSON(t *testing.T) {
+	in := strings.NewReader("abcdefghij\n")
+
+	var buf bytes.Buffer
+	opts := FoldOptions{Width: 4, OutputFormat: output.FormatJSON}
+
+	if err := RunFold(&buf, in, []string{"-"}, opts); err != nil {
+		t.Fatalf("RunFold(--json) error = %v", err)
+	}
+
+	var got FoldResult
+	if err := json.Unmarshal(buf.Bytes(), &got); err != nil {
+		t.Fatalf("output is not valid JSON: %v\noutput: %s", err, buf.String())
+	}
+
+	want := []string{"abcd", "efgh", "ij"}
+	if got.Count != len(want) || len(got.Lines) != len(want) {
+		t.Fatalf("unexpected fold result: %+v", got)
+	}
+
+	for i, w := range want {
+		if got.Lines[i] != w {
+			t.Fatalf("line %d = %q, want %q", i, got.Lines[i], w)
+		}
+	}
+
+	// Text path must be unchanged (no JSON when OutputFormat is default/text).
+	var txt bytes.Buffer
+	if err := RunFold(&txt, strings.NewReader("abcdefghij\n"), []string{"-"}, FoldOptions{Width: 4}); err != nil {
+		t.Fatalf("RunFold(text) error = %v", err)
+	}
+
+	if !strings.Contains(txt.String(), "abcd\nefgh\nij\n") || strings.Contains(txt.String(), "{") {
+		t.Fatalf("text path changed unexpectedly: %q", txt.String())
 	}
 }

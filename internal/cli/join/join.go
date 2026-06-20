@@ -9,22 +9,31 @@ import (
 	"strings"
 
 	"github.com/inovacc/omni/internal/cli/cmderr"
+	"github.com/inovacc/omni/pkg/cobra/helper/output"
 )
 
 // JoinOptions configures the join command behavior
 type JoinOptions struct {
-	Field1        int    // -1: join on this FIELD of file 1
-	Field2        int    // -2: join on this FIELD of file 2
-	Separator     string // -t: use CHAR as input and output field separator
-	OutputFields  string // -o: output format specification
-	IgnoreCase    bool   // -i: ignore case when comparing fields
-	CheckOrder    bool   // --check-order: check input is sorted
-	NoCheckOrder  bool   // --nocheck-order: do not check input is sorted
-	Empty         string // -e: replace missing fields with EMPTY
-	Unpaired1     bool   // -a 1: print unpairable lines from file 1
-	Unpaired2     bool   // -a 2: print unpairable lines from file 2
-	OnlyUnpaired1 bool   // -v 1: print only unpairable lines from file 1
-	OnlyUnpaired2 bool   // -v 2: print only unpairable lines from file 2
+	Field1        int           // -1: join on this FIELD of file 1
+	Field2        int           // -2: join on this FIELD of file 2
+	Separator     string        // -t: use CHAR as input and output field separator
+	OutputFields  string        // -o: output format specification
+	IgnoreCase    bool          // -i: ignore case when comparing fields
+	CheckOrder    bool          // --check-order: check input is sorted
+	NoCheckOrder  bool          // --nocheck-order: do not check input is sorted
+	Empty         string        // -e: replace missing fields with EMPTY
+	Unpaired1     bool          // -a 1: print unpairable lines from file 1
+	Unpaired2     bool          // -a 2: print unpairable lines from file 2
+	OnlyUnpaired1 bool          // -v 1: print only unpairable lines from file 1
+	OnlyUnpaired2 bool          // -v 2: print only unpairable lines from file 2
+	OutputFormat  output.Format // output format (text, json, table) — honors global --json
+}
+
+// JoinResult represents join output for JSON mode. Each row holds the
+// output fields of one joined (or unpaired) line.
+type JoinResult struct {
+	Rows  [][]string `json:"rows"`
+	Count int        `json:"count"`
 }
 
 // RunJoin joins lines of two files on a common field
@@ -72,6 +81,20 @@ func RunJoin(w io.Writer, args []string, opts JoinOptions) error {
 		index2[key] = append(index2[key], line)
 	}
 
+	f := output.New(w, opts.OutputFormat)
+	jsonMode := f.IsJSON()
+
+	var rows [][]string
+
+	emit := func(fields []string) {
+		if jsonMode {
+			rows = append(rows, fields)
+			return
+		}
+
+		_, _ = fmt.Fprintln(w, strings.Join(fields, sep))
+	}
+
 	// Track matched lines from file 2
 	matched2 := make(map[int]bool)
 
@@ -87,11 +110,11 @@ func RunJoin(w io.Writer, args []string, opts JoinOptions) error {
 			for _, line2 := range matches {
 				matched2[line2.index] = true
 				if !opts.OnlyUnpaired1 && !opts.OnlyUnpaired2 {
-					outputJoinedLine(w, line1, line2, opts, sep)
+					emit(joinedFields(line1, line2, opts))
 				}
 			}
 		} else if opts.Unpaired1 || opts.OnlyUnpaired1 {
-			outputUnpairedLine(w, line1, opts, sep)
+			emit(line1.fields)
 		}
 	}
 
@@ -99,9 +122,13 @@ func RunJoin(w io.Writer, args []string, opts JoinOptions) error {
 	if opts.Unpaired2 || opts.OnlyUnpaired2 {
 		for _, line2 := range lines2 {
 			if !matched2[line2.index] {
-				outputUnpairedLine(w, line2, opts, sep)
+				emit(line2.fields)
 			}
 		}
+	}
+
+	if jsonMode {
+		return f.Print(JoinResult{Rows: rows, Count: len(rows)})
 	}
 
 	return nil
@@ -162,13 +189,10 @@ func readJoinFile(path string, sep string) ([]joinLine, error) {
 	return lines, scanner.Err()
 }
 
-func outputJoinedLine(w io.Writer, line1, line2 joinLine, opts JoinOptions, sep string) {
-	outSep := sep
-	if outSep == " " {
-		outSep = " "
-	}
-
-	// Default: output join field, then remaining fields from both files
+// joinedFields builds the output fields for a joined pair: the join field
+// first, then the remaining fields of file 1, then the remaining fields of
+// file 2.
+func joinedFields(line1, line2 joinLine, opts JoinOptions) []string {
 	var parts []string
 
 	// Add join field
@@ -189,14 +213,5 @@ func outputJoinedLine(w io.Writer, line1, line2 joinLine, opts JoinOptions, sep 
 		}
 	}
 
-	_, _ = fmt.Fprintln(w, strings.Join(parts, outSep))
-}
-
-func outputUnpairedLine(w io.Writer, line joinLine, _ JoinOptions, sep string) {
-	outSep := sep
-	if outSep == " " {
-		outSep = " "
-	}
-
-	_, _ = fmt.Fprintln(w, strings.Join(line.fields, outSep))
+	return parts
 }

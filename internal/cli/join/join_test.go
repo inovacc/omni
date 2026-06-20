@@ -2,10 +2,13 @@ package join
 
 import (
 	"bytes"
+	"encoding/json"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
+
+	outpkg "github.com/inovacc/omni/pkg/cobra/helper/output"
 )
 
 func TestRunJoin(t *testing.T) {
@@ -220,5 +223,50 @@ func TestJoinLineKey(t *testing.T) {
 				t.Errorf("key(%d) = %q, want %q", tt.fieldIdx, result, tt.expected)
 			}
 		})
+	}
+}
+
+func TestRunJoin_JSON(t *testing.T) {
+	tmpDir, err := os.MkdirTemp("", "join_json_test")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	defer func() { _ = os.RemoveAll(tmpDir) }()
+
+	file1 := filepath.Join(tmpDir, "j1.txt")
+	file2 := filepath.Join(tmpDir, "j2.txt")
+	_ = os.WriteFile(file1, []byte("1 Alice\n2 Bob\n"), 0o600)
+	_ = os.WriteFile(file2, []byte("1 100\n2 200\n"), 0o600)
+
+	var buf bytes.Buffer
+	opts := JoinOptions{OutputFormat: outpkg.FormatJSON}
+
+	if err := RunJoin(&buf, []string{file1, file2}, opts); err != nil {
+		t.Fatalf("RunJoin(--json) error = %v", err)
+	}
+
+	var got JoinResult
+	if err := json.Unmarshal(buf.Bytes(), &got); err != nil {
+		t.Fatalf("output is not valid JSON: %v\noutput: %s", err, buf.String())
+	}
+
+	if got.Count != 2 || len(got.Rows) != 2 {
+		t.Fatalf("unexpected join result: %+v", got)
+	}
+
+	// Default join: join field first, then remaining fields of file1, then file2.
+	if got.Rows[0][0] != "1" || got.Rows[0][1] != "Alice" || got.Rows[0][2] != "100" {
+		t.Fatalf("unexpected first row: %+v", got.Rows[0])
+	}
+
+	// Text path must be unchanged (no JSON when OutputFormat is default/text).
+	var txt bytes.Buffer
+	if err := RunJoin(&txt, []string{file1, file2}, JoinOptions{}); err != nil {
+		t.Fatalf("RunJoin(text) error = %v", err)
+	}
+
+	if !strings.Contains(txt.String(), "1 Alice 100") || strings.Contains(txt.String(), "{") {
+		t.Fatalf("text path changed unexpectedly: %q", txt.String())
 	}
 }

@@ -209,9 +209,23 @@ categories:
         args: ["fold", "-w", "10"]
         stdin: "this is a long line that should be folded"
 
+      - name: fold_json
+        args: ["fold", "-w", "4", "--json"]
+        stdin: "abcdefghij\n"
+
       - name: cut_field
         args: ["cut", "-d", ",", "-f", "2"]
         stdin: "a,b,c\nd,e,f\n"
+
+      - name: paste_json
+        args: ["paste", "--json"]
+        stdin: "a\nb\nc\n"
+
+      - name: join_json
+        args: ["join", "--json", "{file}", "-"]
+        stdin: "1 100\n2 200\n"
+        fixture: "1 Alice\n2 Bob\n"
+        normalizations: ["strip_path", "strip_temp_dir"]
 
   # ===== TEXT WITH FILES =====
   - name: text_with_files
