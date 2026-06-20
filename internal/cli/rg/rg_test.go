@@ -4,11 +4,13 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 
+	"github.com/inovacc/omni/internal/cli/cmderr"
 	outputpkg "github.com/inovacc/omni/pkg/cobra/helper/output"
 )
 
@@ -641,5 +643,14 @@ testdata/
 	// Should NOT include testdata/
 	if strings.Contains(output, "testdata") {
 		t.Error("should NOT include files in testdata/")
+	}
+}
+
+func TestRunRg_InvalidPatternClassification(t *testing.T) {
+	var buf bytes.Buffer
+	// Invalid regex → ErrInvalidInput
+	err := Run(context.Background(), &buf, "(", []string{"."}, Options{})
+	if !errors.Is(err, cmderr.ErrInvalidInput) {
+		t.Fatalf("bad regex: want ErrInvalidInput, got %v", err)
 	}
 }

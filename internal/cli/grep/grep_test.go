@@ -2,10 +2,13 @@ package grep
 
 import (
 	"bytes"
+	"errors"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/inovacc/omni/internal/cli/cmderr"
 )
 
 func TestRunGrep(t *testing.T) {
@@ -695,4 +698,16 @@ func TestGrepWithOptions(t *testing.T) {
 			t.Errorf("GrepWithOptions() regex got %d matches, want 2", len(result))
 		}
 	})
+}
+
+func TestRunGrep_InvalidInputClassification(t *testing.T) {
+	var buf bytes.Buffer
+	// Empty pattern → ErrInvalidInput
+	if err := RunGrep(&buf, strings.NewReader(""), "", nil, GrepOptions{}); !errors.Is(err, cmderr.ErrInvalidInput) {
+		t.Fatalf("empty pattern: want ErrInvalidInput, got %v", err)
+	}
+	// Invalid regex → ErrInvalidInput
+	if err := RunGrep(&buf, strings.NewReader("x"), "(", nil, GrepOptions{ExtendedRegexp: true}); !errors.Is(err, cmderr.ErrInvalidInput) {
+		t.Fatalf("bad regex: want ErrInvalidInput, got %v", err)
+	}
 }
