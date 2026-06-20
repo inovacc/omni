@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/inovacc/omni/internal/cli/cmderr"
+	"github.com/inovacc/omni/pkg/cobra/helper/output"
 	"github.com/inovacc/omni/pkg/sign"
 )
 
@@ -149,7 +150,7 @@ func TestRunScanJSON(t *testing.T) {
 	sbom := writeSBOM(t, dir, "vuln-sbom.json", vulnSBOM)
 
 	var out bytes.Buffer
-	if err := RunScan(&out, []string{sbom}, Options{DBPath: dbPath, DBKeyPath: keyPath, JSON: true}); err != nil {
+	if err := RunScan(&out, []string{sbom}, Options{DBPath: dbPath, DBKeyPath: keyPath, OutputFormat: output.FormatJSON}); err != nil {
 		t.Fatalf("RunScan(--json) = %v", err)
 	}
 	s := out.String()

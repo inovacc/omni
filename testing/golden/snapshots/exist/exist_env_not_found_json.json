@@ -1,0 +1,5 @@
+{
+  "exit_code": 1,
+  "stdout_file": "exist_env_not_found_json.stdout",
+  "stderr": "Error: not found\n"
+}

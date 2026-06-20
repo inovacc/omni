@@ -119,7 +119,7 @@ func scanOptsFromFlags(cmd *cobra.Command) scan.Options {
 	opts.DBKeyPath, _ = cmd.Flags().GetString("db-key")
 	opts.DBSigPath, _ = cmd.Flags().GetString("db-sig")
 	opts.FailOn, _ = cmd.Flags().GetString("fail-on")
-	opts.JSON, _ = cmd.Flags().GetBool("json")
+	opts.OutputFormat = getOutputOpts(cmd).GetFormat()
 	opts.MaxDBAge, _ = cmd.Flags().GetDuration("max-db-age")
 	opts.Online, _ = cmd.Flags().GetBool("online")
 	return opts
@@ -137,7 +137,6 @@ func init() {
 	scanCmd.PersistentFlags().String("db-key", "", "minisign public key (*.pub) used to verify the bundle")
 	scanCmd.PersistentFlags().String("db-sig", "", "detached signature path (default: <db>.minisig)")
 	scanCmd.PersistentFlags().String("fail-on", "", "fail on a finding >= LEVEL (none|low|medium|high|critical)")
-	scanCmd.PersistentFlags().Bool("json", false, "emit JSON instead of the text table")
 	scanCmd.PersistentFlags().Duration("max-db-age", time.Duration(0), "fail if the DB is older than this (0 disables)")
 	scanCmd.PersistentFlags().Bool("online", false, "enable OSV-API enrichment over net/http (opt-in)")
 

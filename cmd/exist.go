@@ -99,7 +99,7 @@ type existRunFunc func(w io.Writer, target string, opts exist.Options) error
 func runExist(cmd *cobra.Command, args []string, fn existRunFunc) error {
 	opts := exist.Options{}
 	opts.Quiet, _ = cmd.Flags().GetBool("quiet")
-	opts.JSON, _ = cmd.Flags().GetBool("json")
+	opts.OutputFormat = getOutputOpts(cmd).GetFormat()
 
 	err := fn(cmd.OutOrStdout(), args[0], opts)
 	if errors.Is(err, exist.ErrNotFound) {
@@ -113,7 +113,6 @@ func init() {
 	rootCmd.AddCommand(existCmd)
 
 	existCmd.PersistentFlags().BoolP("quiet", "q", false, "suppress output")
-	existCmd.PersistentFlags().Bool("json", false, "output as JSON")
 
 	existCmd.AddCommand(existFileCmd)
 	existCmd.AddCommand(existDirCmd)

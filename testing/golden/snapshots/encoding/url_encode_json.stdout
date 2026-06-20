@@ -1,0 +1,5 @@
+{
+  "input": "hello world",
+  "output": "hello%20world",
+  "mode": "encode"
+}

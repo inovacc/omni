@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/inovacc/omni/internal/cli/cmderr"
+	"github.com/inovacc/omni/pkg/cobra/helper/output"
 	"github.com/inovacc/omni/pkg/userdirs"
 )
 
@@ -19,10 +20,12 @@ const defaultFileName = "omni-notes.json"
 
 // Options configures note command behavior.
 type Options struct {
-	File  string
-	List  bool
-	JSON  bool
-	Limit int
+	File string
+	List bool
+	// OutputFormat selects the output format. It is read from the global
+	// --json/--table flags via the unified output formatter.
+	OutputFormat output.Format
+	Limit        int
 }
 
 // Entry is a single note item.
@@ -58,13 +61,10 @@ func RunNote(w io.Writer, args []string, opts Options) error {
 		return err
 	}
 
-	if opts.JSON {
-		data, err := json.MarshalIndent(entry, "", "  ")
-		if err != nil {
+	if f := output.New(w, opts.OutputFormat); f.IsJSON() {
+		if err := f.Print(entry); err != nil {
 			return cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("note: marshal: %s", err))
 		}
-
-		_, _ = fmt.Fprintln(w, string(data))
 
 		return nil
 	}
@@ -96,13 +96,10 @@ func RunRemove(w io.Writer, args []string, opts Options) error {
 		return err
 	}
 
-	if opts.JSON {
-		data, err := json.MarshalIndent(removed, "", "  ")
-		if err != nil {
+	if f := output.New(w, opts.OutputFormat); f.IsJSON() {
+		if err := f.Print(removed); err != nil {
 			return cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("note: marshal: %s", err))
 		}
-
-		_, _ = fmt.Fprintln(w, string(data))
 
 		return nil
 	}
@@ -123,13 +120,10 @@ func runList(w io.Writer, path string, opts Options) error {
 		notes = notes[len(notes)-opts.Limit:]
 	}
 
-	if opts.JSON {
-		data, err := json.MarshalIndent(Store{Notes: notes}, "", "  ")
-		if err != nil {
+	if f := output.New(w, opts.OutputFormat); f.IsJSON() {
+		if err := f.Print(Store{Notes: notes}); err != nil {
 			return cmderr.Wrap(cmderr.ErrIO, fmt.Sprintf("note: marshal: %s", err))
 		}
-
-		_, _ = fmt.Fprintln(w, string(data))
 
 		return nil
 	}

@@ -11,6 +11,8 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+
+	"github.com/inovacc/omni/pkg/cobra/helper/output"
 )
 
 func TestRunFile(t *testing.T) {
@@ -357,7 +359,7 @@ func TestJSONOutput(t *testing.T) {
 	t.Run("file exists", func(t *testing.T) {
 		var buf bytes.Buffer
 
-		err := RunFile(&buf, tmpFile, Options{JSON: true})
+		err := RunFile(&buf, tmpFile, Options{OutputFormat: output.FormatJSON})
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -388,7 +390,7 @@ func TestJSONOutput(t *testing.T) {
 	t.Run("file not found", func(t *testing.T) {
 		var buf bytes.Buffer
 
-		err := RunFile(&buf, filepath.Join(tmpDir, "nope"), Options{JSON: true})
+		err := RunFile(&buf, filepath.Join(tmpDir, "nope"), Options{OutputFormat: output.FormatJSON})
 		if !errors.Is(err, ErrNotFound) {
 			t.Fatalf("expected ErrNotFound, got %v", err)
 		}
@@ -410,7 +412,7 @@ func TestJSONOutput(t *testing.T) {
 	t.Run("dir exists", func(t *testing.T) {
 		var buf bytes.Buffer
 
-		err := RunDir(&buf, tmpDir, Options{JSON: true})
+		err := RunDir(&buf, tmpDir, Options{OutputFormat: output.FormatJSON})
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -428,7 +430,7 @@ func TestJSONOutput(t *testing.T) {
 	t.Run("command exists", func(t *testing.T) {
 		var buf bytes.Buffer
 
-		err := RunCommand(&buf, "go", Options{JSON: true})
+		err := RunCommand(&buf, "go", Options{OutputFormat: output.FormatJSON})
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -446,7 +448,7 @@ func TestJSONOutput(t *testing.T) {
 	t.Run("env exists", func(t *testing.T) {
 		var buf bytes.Buffer
 
-		err := RunEnv(&buf, "TEST_JSON_VAR", Options{JSON: true})
+		err := RunEnv(&buf, "TEST_JSON_VAR", Options{OutputFormat: output.FormatJSON})
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -464,7 +466,7 @@ func TestJSONOutput(t *testing.T) {
 	t.Run("process exists", func(t *testing.T) {
 		var buf bytes.Buffer
 
-		err := RunProcess(&buf, strconv.Itoa(os.Getpid()), Options{JSON: true})
+		err := RunProcess(&buf, strconv.Itoa(os.Getpid()), Options{OutputFormat: output.FormatJSON})
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -491,7 +493,7 @@ func TestJSONOutput(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err = RunPort(&buf, portStr, Options{JSON: true})
+		err = RunPort(&buf, portStr, Options{OutputFormat: output.FormatJSON})
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -655,7 +657,7 @@ func TestJSONDetailsContent(t *testing.T) {
 
 	t.Run("file details has size", func(t *testing.T) {
 		var buf bytes.Buffer
-		if err := RunFile(&buf, tmpFile, Options{JSON: true}); err != nil {
+		if err := RunFile(&buf, tmpFile, Options{OutputFormat: output.FormatJSON}); err != nil {
 			t.Fatal(err)
 		}
 
@@ -685,7 +687,7 @@ func TestJSONDetailsContent(t *testing.T) {
 
 	t.Run("command details has path", func(t *testing.T) {
 		var buf bytes.Buffer
-		if err := RunCommand(&buf, "go", Options{JSON: true}); err != nil {
+		if err := RunCommand(&buf, "go", Options{OutputFormat: output.FormatJSON}); err != nil {
 			t.Fatal(err)
 		}
 
@@ -707,7 +709,7 @@ func TestJSONDetailsContent(t *testing.T) {
 
 	t.Run("env details has value", func(t *testing.T) {
 		var buf bytes.Buffer
-		if err := RunEnv(&buf, "TEST_DETAIL_VAR", Options{JSON: true}); err != nil {
+		if err := RunEnv(&buf, "TEST_DETAIL_VAR", Options{OutputFormat: output.FormatJSON}); err != nil {
 			t.Fatal(err)
 		}
 
@@ -729,7 +731,7 @@ func TestJSONDetailsContent(t *testing.T) {
 
 	t.Run("process details has pid", func(t *testing.T) {
 		var buf bytes.Buffer
-		if err := RunProcess(&buf, strconv.Itoa(os.Getpid()), Options{JSON: true}); err != nil {
+		if err := RunProcess(&buf, strconv.Itoa(os.Getpid()), Options{OutputFormat: output.FormatJSON}); err != nil {
 			t.Fatal(err)
 		}
 
@@ -752,4 +754,47 @@ func TestJSONDetailsContent(t *testing.T) {
 			t.Error("expected name in details")
 		}
 	})
+}
+
+// TestRunExist_JSONUnified verifies that, after routing --json through the
+// global output formatter, the JSON path still emits indented, parseable JSON
+// for the not-found case (which carries no drifting Details fields).
+func TestRunExist_JSONUnified(t *testing.T) {
+	const missing = "OMNI_NONEXISTENT_VAR_FOR_UNIFY_TEST"
+	os.Unsetenv(missing)
+
+	var buf bytes.Buffer
+
+	err := RunEnv(&buf, missing, Options{OutputFormat: output.FormatJSON})
+	if !errors.Is(err, ErrNotFound) {
+		t.Fatalf("RunEnv(--json) error = %v, want ErrNotFound", err)
+	}
+
+	var got Result
+	if err := json.Unmarshal(buf.Bytes(), &got); err != nil {
+		t.Fatalf("output not valid JSON: %v\noutput: %s", err, buf.String())
+	}
+
+	if got.Target != missing {
+		t.Errorf("Target = %q, want %q", got.Target, missing)
+	}
+
+	if got.Exists {
+		t.Errorf("Exists = true, want false")
+	}
+
+	if got.Type != "env" {
+		t.Errorf("Type = %q, want %q", got.Type, "env")
+	}
+
+	// The formatter must produce indented JSON with a trailing newline,
+	// byte-identical to the previous Encoder+SetIndent("", "  ") path.
+	out := buf.String()
+	if !strings.Contains(out, "\n  \"target\"") {
+		t.Errorf("expected 2-space indented JSON, got %q", out)
+	}
+
+	if !strings.HasSuffix(out, "}\n") {
+		t.Errorf("expected trailing newline after closing brace, got %q", out)
+	}
 }
