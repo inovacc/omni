@@ -986,8 +986,8 @@ Priority P2 - Specialized:
 ### v2.0.0 - Production Ready
 - [ ] cmderr adopted in all commands
 - [ ] Full documentation
-- [ ] 80%+ overall test coverage
-- [x] CI coverage enforcement (overall omni-owned weighted-avg gate via task test:coverage:gate / CI job overall-coverage-gate; start 60% advisory, measured 73.3%, ratchets to 80% after plan 010)
+- [ ] 80%+ overall test coverage (in progress: measured 77.3% omni-owned weighted avg on the consolidated tree after plans 010 raised coverage + 015 removed low-coverage pkg/video; 2.7pt short of 80% — a follow-up coverage plan closes the gap before this box ticks)
+- [x] CI coverage enforcement (overall omni-owned weighted-avg gate via task test:coverage:gate / CI job overall-coverage-gate; ratcheted from advisory 60% to enforced 75% post plans 010/015, measured 77.3%; bumps to 80% once the coverage gap closes)
 - [ ] Multi-platform automated releases
 
 ---
