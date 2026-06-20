@@ -1,0 +1,5 @@
+{
+  "exit_code": 1,
+  "stdout_file": "xml_validate_invalid.stdout",
+  "stderr": "Error: validation failed\n"
+}

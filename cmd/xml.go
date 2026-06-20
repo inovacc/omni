@@ -15,6 +15,7 @@ When called directly, formats XML (same as 'xml fmt').
 
 Subcommands:
   fmt         Format/beautify XML
+  minify      Minify XML (remove whitespace)
   validate    Validate XML syntax
   tojson      Convert XML to JSON
   fromjson    Convert JSON to XML
@@ -55,6 +56,26 @@ Examples:
 	RunE: func(cmd *cobra.Command, args []string) error {
 		opts := xmlfmt.Options{}
 		opts.Minify, _ = cmd.Flags().GetBool("minify")
+		opts.Indent, _ = cmd.Flags().GetString("indent")
+
+		return xmlfmt.Run(cmd.OutOrStdout(), args, opts)
+	},
+}
+
+var xmlMinifyCmd = &cobra.Command{
+	Use:     "minify [FILE]",
+	Aliases: []string{"min", "compact"},
+	Short:   "Minify XML (remove whitespace)",
+	Long: `Minify XML by removing insignificant whitespace.
+
+Reads XML from a file, argument, or stdin and outputs compact XML.
+
+Examples:
+  omni xml minify file.xml
+  omni xml minify "<root><item>value</item></root>"
+  cat file.xml | omni xml minify`,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		opts := xmlfmt.Options{Minify: true}
 		opts.Indent, _ = cmd.Flags().GetString("indent")
 
 		return xmlfmt.Run(cmd.OutOrStdout(), args, opts)
@@ -134,6 +155,7 @@ Examples:
 func init() {
 	rootCmd.AddCommand(xmlCmd)
 	xmlCmd.AddCommand(xmlFmtCmd)
+	xmlCmd.AddCommand(xmlMinifyCmd)
 	xmlCmd.AddCommand(xmlValidateCmd)
 	xmlCmd.AddCommand(xmlToJSONCmd)
 	xmlCmd.AddCommand(xmlFromJSONCmd)
@@ -145,6 +167,9 @@ func init() {
 	// Flags for xml fmt subcommand
 	xmlFmtCmd.Flags().BoolP("minify", "m", false, "minify XML (remove whitespace)")
 	xmlFmtCmd.Flags().StringP("indent", "i", "  ", "indentation string")
+
+	// Flags for xml minify subcommand
+	xmlMinifyCmd.Flags().StringP("indent", "i", "  ", "indentation string")
 
 	// Flags for xml validate subcommand (--json provided by root persistent flag)
 

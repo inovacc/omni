@@ -326,6 +326,21 @@ categories:
         args: ["dotenv", "--json", "{file}"]
         fixture: "KEY=value\nDB_HOST=localhost\nPORT=8080\n"
         normalizations: ["strip_path", "strip_temp_dir"]
+      - name: json_toxml_basic
+        args: ["json", "toxml"]
+        stdin: '{"name":"John","age":30}'
+
+      - name: json_toxml_root
+        args: ["json", "toxml", "-r", "person"]
+        stdin: '{"name":"John"}'
+
+      - name: json_fromxml_basic
+        args: ["json", "fromxml"]
+        stdin: "<root><name>John</name><age>30</age></root>"
+
+      - name: xml_tojson_basic
+        args: ["xml", "tojson"]
+        stdin: "<root><item>value</item></root>"
 
   # ===== FORMAT =====
   - name: format
@@ -361,6 +376,23 @@ categories:
       - name: html_minify
         args: ["html", "minify"]
         stdin: "<html>\n  <head>\n    <title>Test</title>\n  </head>\n  <body>\n    <p>Hello</p>\n  </body>\n</html>"
+
+      - name: xml_format
+        args: ["xml", "fmt"]
+        stdin: "<root><item>value</item></root>"
+
+      - name: xml_minify
+        args: ["xml", "minify"]
+        stdin: "<root>\n  <item>value</item>\n</root>"
+
+      - name: xml_validate_valid
+        args: ["xml", "validate"]
+        stdin: "<root><item>value</item></root>"
+
+      - name: xml_validate_invalid
+        args: ["xml", "validate"]
+        stdin: "<root><item></root>"
+        exit_code: 1
 
   # ===== UTILS =====
   - name: utils

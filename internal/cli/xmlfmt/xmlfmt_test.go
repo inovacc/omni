@@ -146,6 +146,21 @@ func TestMinifyPreservesContent(t *testing.T) {
 	}
 }
 
+func TestRunMinify(t *testing.T) {
+	var buf bytes.Buffer
+	in := []string{"<root>\n  <item>value</item>\n</root>"}
+	if err := Run(&buf, in, Options{Minify: true}); err != nil {
+		t.Fatalf("Run minify: unexpected error %v", err)
+	}
+	got := buf.String()
+	if strings.Contains(got, "\n  <item>") {
+		t.Fatalf("minify left indentation: %q", got)
+	}
+	if !strings.Contains(got, "<item>value</item>") {
+		t.Fatalf("minify dropped content: %q", got)
+	}
+}
+
 func TestFormatXMLDeclaration(t *testing.T) {
 	input := `<?xml version="1.0" encoding="UTF-8"?><root><item>value</item></root>`
 

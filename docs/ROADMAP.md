@@ -1037,10 +1037,10 @@ Comprehensive data conversion, validation, and developer utilities inspired by C
 | `json toyaml` | Convert JSON to YAML | P0 | ✅ Done |
 | `json fromyaml` | Convert YAML to JSON | P0 | ✅ Done |
 | `json fromtoml` | Convert TOML to JSON | P0 | ✅ Done |
-| `json toxml` | Convert JSON to XML | P1 | |
-| `json fromxml` | Convert XML to JSON | P1 | |
-| `json tocsv` | Convert JSON array to CSV | P1 | |
-| `json fromcsv` | Convert CSV to JSON | P1 | |
+| `json toxml` | Convert JSON to XML | P1 | ✅ Done |
+| `json fromxml` | Convert XML to JSON | P1 | ✅ Done |
+| `json tocsv` | Convert JSON array to CSV | P1 | ✅ Done |
+| `json fromcsv` | Convert CSV to JSON | P1 | ✅ Done |
 | `yaml toml` | Convert YAML to TOML | P2 | |
 | `yaml xml` | Convert YAML to XML | P2 | |
 | `xml yaml` | Convert XML to YAML | P2 | |
@@ -1055,9 +1055,9 @@ Comprehensive data conversion, validation, and developer utilities inspired by C
 | `json validate` | Validate JSON syntax | P0 | ✅ Done |
 | `json stats` | Show JSON statistics | P0 | ✅ Done |
 | `json keys` | List all JSON keys | P0 | ✅ Done |
-| `xml fmt` | Beautify XML | P1 | |
-| `xml minify` | Minify XML | P1 | |
-| `xml validate` | Validate XML | P1 | |
+| `xml fmt` | Beautify XML | P1 | ✅ Done |
+| `xml minify` | Minify XML | P1 | ✅ Done |
+| `xml validate` | Validate XML | P1 | ✅ Done |
 | `sql fmt` | Format SQL queries | P2 | |
 | `html fmt` | Format HTML | P2 | |
 | `css fmt` | Format CSS | P2 | |
@@ -1070,7 +1070,7 @@ Comprehensive data conversion, validation, and developer utilities inspired by C
 | `json validate` | Validate JSON | ✅ Done |
 | `yaml validate` | Validate YAML | P1 |
 | `toml validate` | Validate TOML | P1 |
-| `xml validate` | Validate XML | P1 |
+| `xml validate` | Validate XML | ✅ Done |
 | `email validate` | Validate email format | ✅ Done |
 | `url validate` | Validate URL format | P2 |
 | `ip validate` | Validate IP address | ✅ Done |
