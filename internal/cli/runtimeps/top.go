@@ -10,6 +10,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 
+	"github.com/inovacc/omni/internal/cli/cmderr"
 	"github.com/inovacc/omni/pkg/procmetrics"
 	"github.com/inovacc/omni/pkg/procutil"
 )
@@ -20,7 +21,7 @@ import (
 // Adapted from github.com/inovacc/gops (MIT) — see THIRD_PARTY_LICENSES/gops-MIT.txt.
 func RunTop(ctx context.Context, interval time.Duration, includeSelf bool) error {
 	if !isTTY() {
-		return fmt.Errorf("TUI requires a TTY; use `omni gops --json` for non-interactive output")
+		return cmderr.Wrap(cmderr.ErrUnsupported, "TUI requires a TTY; use `omni gops --json` for non-interactive output")
 	}
 	if interval <= 0 {
 		interval = time.Second

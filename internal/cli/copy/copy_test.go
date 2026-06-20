@@ -1,10 +1,37 @@
 package copy
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/inovacc/omni/internal/cli/cmderr"
 )
+
+func TestRunCopy_NonRegularSourceIsInvalidInput(t *testing.T) {
+	tmpDir, err := os.MkdirTemp("", "copy_nonregular_test")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = os.RemoveAll(tmpDir) }()
+
+	// A directory is not a regular file; copying it without -r must be refused
+	// as ErrInvalidInput (exit 2), matching the sibling "not a directory" guard.
+	srcDir := filepath.Join(tmpDir, "srcdir")
+	if err := os.Mkdir(srcDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	dst := filepath.Join(tmpDir, "dst")
+
+	err = RunCopy([]string{srcDir, dst}, CopyOptions{})
+	if err == nil {
+		t.Fatal("expected error copying non-regular source")
+	}
+	if !errors.Is(err, cmderr.ErrInvalidInput) {
+		t.Errorf("non-regular source should be ErrInvalidInput (exit 2): %v", err)
+	}
+}
 
 func TestRunCopy(t *testing.T) {
 	tmpDir, err := os.MkdirTemp("", "copy_test")
