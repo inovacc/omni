@@ -137,6 +137,68 @@ func TestBase58EncodeDecode(t *testing.T) {
 	}
 }
 
+func TestBase58DecodeStrict(t *testing.T) {
+	tests := []struct {
+		name      string
+		input     string
+		wantErr   bool
+		wantBytes []byte
+	}{
+		{
+			name:      "valid roundtrip hi",
+			input:     Base58Encode([]byte("hi")),
+			wantErr:   false,
+			wantBytes: []byte("hi"),
+		},
+		{
+			name:      "valid roundtrip hello",
+			input:     Base58Encode([]byte("hello")),
+			wantErr:   false,
+			wantBytes: []byte("hello"),
+		},
+		{
+			name:    "invalid chars 0OIl",
+			input:   "0OIl",
+			wantErr: true,
+		},
+		{
+			name:    "invalid char zero",
+			input:   "abc0def",
+			wantErr: true,
+		},
+		{
+			name:      "empty string",
+			input:     "",
+			wantErr:   false,
+			wantBytes: []byte{},
+		},
+		{
+			name:      "whitespace only",
+			input:     "  \t\n",
+			wantErr:   false,
+			wantBytes: []byte{},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := Base58DecodeStrict(tt.input)
+			if tt.wantErr {
+				if err == nil {
+					t.Errorf("Base58DecodeStrict(%q) expected error, got nil", tt.input)
+				}
+				return
+			}
+			if err != nil {
+				t.Fatalf("Base58DecodeStrict(%q) unexpected error: %v", tt.input, err)
+			}
+			if tt.wantBytes != nil && !bytes.Equal(got, tt.wantBytes) {
+				t.Errorf("Base58DecodeStrict(%q) = %v, want %v", tt.input, got, tt.wantBytes)
+			}
+		})
+	}
+}
+
 func TestWrapString(t *testing.T) {
 	tests := []struct {
 		name   string

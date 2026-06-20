@@ -2,12 +2,14 @@ package base
 
 import (
 	"bytes"
+	"errors"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 
 	"github.com/btcsuite/btcd/btcutil/base58"
+	"github.com/inovacc/omni/internal/cli/cmderr"
 	pkgenc "github.com/inovacc/omni/pkg/encoding"
 )
 
@@ -455,6 +457,54 @@ func TestBase58Extended(t *testing.T) {
 			if !bytes.Equal(decoded, input) {
 				t.Errorf("Roundtrip %d failed: got %v, want %v", i, decoded, input)
 			}
+		}
+	})
+}
+
+func TestRunBase58DecodeInvalid(t *testing.T) {
+	t.Run("invalid base58 yields ErrInvalidInput", func(t *testing.T) {
+		var buf bytes.Buffer
+		// "0OIl" contains characters not in the Bitcoin base58 alphabet
+		err := RunBase58(&buf, []string{"-"}, BaseOptions{Decode: true})
+		// We can't easily pipe stdin in a unit test, so test via a temp file
+		_ = err
+	})
+
+	t.Run("invalid base58 file yields ErrInvalidInput", func(t *testing.T) {
+		tmpDir := t.TempDir()
+		invalidFile := filepath.Join(tmpDir, "invalid.txt")
+		if err := os.WriteFile(invalidFile, []byte("0OIl\n"), 0644); err != nil {
+			t.Fatal(err)
+		}
+
+		var buf bytes.Buffer
+		err := RunBase58(&buf, []string{invalidFile}, BaseOptions{Decode: true})
+		if err == nil {
+			t.Fatal("RunBase58() expected error for invalid base58 input, got nil")
+		}
+		if !errors.Is(err, cmderr.ErrInvalidInput) {
+			t.Errorf("RunBase58() error = %v, want errors.Is(err, cmderr.ErrInvalidInput)", err)
+		}
+	})
+
+	t.Run("valid base58 decode roundtrip via file", func(t *testing.T) {
+		input := []byte("hello")
+		encoded := pkgenc.Base58Encode(input)
+
+		tmpDir := t.TempDir()
+		encFile := filepath.Join(tmpDir, "encoded.txt")
+		if err := os.WriteFile(encFile, []byte(encoded+"\n"), 0644); err != nil {
+			t.Fatal(err)
+		}
+
+		var buf bytes.Buffer
+		if err := RunBase58(&buf, []string{encFile}, BaseOptions{Decode: true}); err != nil {
+			t.Fatalf("RunBase58() unexpected error: %v", err)
+		}
+		// Output is decoded bytes + newline from Fprintln
+		got := bytes.TrimRight(buf.Bytes(), "\n")
+		if !bytes.Equal(got, input) {
+			t.Errorf("RunBase58() decoded = %v, want %v", got, input)
 		}
 	})
 }

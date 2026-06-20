@@ -142,7 +142,10 @@ func RunBase58(w io.Writer, args []string, opts BaseOptions) error {
 	for scanner.Scan() {
 		line := scanner.Text()
 		if opts.Decode {
-			decoded := pkgenc.Base58Decode(line)
+			decoded, err := pkgenc.Base58DecodeStrict(line)
+			if err != nil {
+				return cmderr.Wrap(cmderr.ErrInvalidInput, err.Error())
+			}
 			_, _ = w.Write(decoded)
 			_, _ = fmt.Fprintln(w)
 		} else {

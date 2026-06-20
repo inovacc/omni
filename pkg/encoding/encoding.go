@@ -49,9 +49,29 @@ func Base58Encode(data []byte) string {
 	return base58.Encode(data)
 }
 
-// Base58Decode decodes base58 data (Bitcoin alphabet)
+// Base58Decode decodes base58 data (Bitcoin alphabet).
+//
+// Deprecated: Use Base58DecodeStrict, which reports invalid input instead of
+// silently returning an empty slice. Will be removed after 2026-07-19.
 func Base58Decode(s string) []byte {
 	return base58.Decode(s)
+}
+
+// base58Alphabet is the Bitcoin base58 alphabet (excludes 0, O, I, l).
+const base58Alphabet = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
+
+// Base58DecodeStrict decodes base58 (Bitcoin alphabet) and reports invalid
+// input, unlike the deprecated Base58Decode which silently returns an empty
+// slice. An empty (or all-whitespace) input decodes to an empty slice with no
+// error.
+func Base58DecodeStrict(s string) ([]byte, error) {
+	clean := stripWhitespace(s)
+	for _, r := range clean {
+		if !strings.ContainsRune(base58Alphabet, r) {
+			return nil, fmt.Errorf("base58: invalid input: illegal character %q", r)
+		}
+	}
+	return base58.Decode(clean), nil
 }
 
 // WrapString wraps a string at the specified width, inserting newlines.
