@@ -2,10 +2,13 @@ package dotenv
 
 import (
 	"bytes"
+	"encoding/json"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/inovacc/omni/pkg/cobra/helper/output"
 )
 
 func TestRunDotenv(t *testing.T) {
@@ -88,6 +91,37 @@ func TestRunDotenv(t *testing.T) {
 			t.Fatalf("RunDotenv() quiet error = %v", err)
 		}
 	})
+}
+
+func TestRunDotenv_JSON(t *testing.T) {
+	dir := t.TempDir()
+	file := filepath.Join(dir, ".env")
+	if err := os.WriteFile(file, []byte("A=1\nB=2\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	var buf bytes.Buffer
+	opts := DotenvOptions{OutputFormat: output.FormatJSON}
+	if err := RunDotenv(&buf, []string{file}, opts); err != nil {
+		t.Fatalf("RunDotenv(--json) error = %v", err)
+	}
+
+	var got []EnvVar
+	if err := json.Unmarshal(buf.Bytes(), &got); err != nil {
+		t.Fatalf("output is not valid JSON: %v\noutput: %s", err, buf.String())
+	}
+	if len(got) != 2 || got[0].Key != "A" || got[0].Value != "1" || got[1].Key != "B" || got[1].Value != "2" {
+		t.Fatalf("unexpected JSON vars: %+v", got)
+	}
+
+	// Text path must be unchanged (no JSON when OutputFormat is default/text).
+	var txt bytes.Buffer
+	if err := RunDotenv(&txt, []string{file}, DotenvOptions{}); err != nil {
+		t.Fatalf("RunDotenv(text) error = %v", err)
+	}
+	if !strings.Contains(txt.String(), "A=1") || strings.Contains(txt.String(), "[") {
+		t.Fatalf("text path changed unexpectedly: %q", txt.String())
+	}
 }
 
 func TestParseDotenv(t *testing.T) {

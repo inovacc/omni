@@ -1,0 +1,14 @@
+[
+  {
+    "key": "KEY",
+    "value": "value"
+  },
+  {
+    "key": "DB_HOST",
+    "value": "localhost"
+  },
+  {
+    "key": "PORT",
+    "value": "8080"
+  }
+]

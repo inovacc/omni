@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/inovacc/omni/internal/cli/cmderr"
+	"github.com/inovacc/omni/pkg/cobra/helper/output"
 )
 
 // ShellType represents a shell type for export format
@@ -32,6 +33,8 @@ type DotenvOptions struct {
 	Override bool      // -o: override existing environment variables
 	Expand   bool      // -x: expand variables in values
 	Shell    ShellType // -s: target shell for export format
+
+	OutputFormat output.Format // output format (text, json, table) — honors global --json
 }
 
 // EnvVar represents an environment variable
@@ -158,7 +161,12 @@ func RunDotenv(w io.Writer, args []string, opts DotenvOptions) error {
 		shell = DetectShell()
 	}
 
-	// Output or set variables
+	// JSON output: emit the parsed vars as a structured array.
+	if output.New(w, opts.OutputFormat).IsJSON() {
+		return output.New(w, opts.OutputFormat).Print(allVars)
+	}
+
+	// Output or set variables (text / export — unchanged behavior).
 	for _, v := range allVars {
 		if opts.Export {
 			_, _ = fmt.Fprintln(w, FormatExport(v.Key, v.Value, shell))
