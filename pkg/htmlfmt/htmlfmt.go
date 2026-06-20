@@ -3,6 +3,7 @@ package htmlfmt
 
 import (
 	"bytes"
+	"fmt"
 	"sort"
 	"strings"
 
@@ -65,10 +66,42 @@ func CollapseWhitespace(s string) string {
 	return collapseWhitespace(s)
 }
 
+// maxHTMLDepth bounds nesting depth. Untrusted input (stdin/files) can otherwise
+// drive unbounded recursion in formatNode/minifyNode and exhaust the goroutine
+// stack, which Go cannot recover() from (process aborts: DoS). Matches
+// maxXMLDepth in internal/cli/xmlutil and maxYAMLDepth in internal/cli/yq.
+const maxHTMLDepth = 1000
+
+// checkHTMLDepth reports an error if the parsed node tree nests deeper than
+// maxHTMLDepth. It walks iteratively (explicit stack) so the check itself cannot
+// overflow, and runs before the recursive formatters descend.
+func checkHTMLDepth(root *html.Node) error {
+	type frame struct {
+		n     *html.Node
+		depth int
+	}
+	stack := []frame{{root, 0}}
+	for len(stack) > 0 {
+		f := stack[len(stack)-1]
+		stack = stack[:len(stack)-1]
+		if f.depth > maxHTMLDepth {
+			return fmt.Errorf("htmlfmt: HTML nesting exceeds maximum depth of %d", maxHTMLDepth)
+		}
+		for c := f.n.FirstChild; c != nil; c = c.NextSibling {
+			stack = append(stack, frame{c, f.depth + 1})
+		}
+	}
+	return nil
+}
+
 // formatHTML formats HTML with proper indentation
 func formatHTML(input string, opts Options) (string, error) {
 	doc, err := html.Parse(strings.NewReader(input))
 	if err != nil {
+		return "", err
+	}
+
+	if err := checkHTMLDepth(doc); err != nil {
 		return "", err
 	}
 
@@ -170,6 +203,10 @@ func formatNode(buf *bytes.Buffer, n *html.Node, depth int, opts Options) {
 func minifyHTML(input string) (string, error) {
 	doc, err := html.Parse(strings.NewReader(input))
 	if err != nil {
+		return "", err
+	}
+
+	if err := checkHTMLDepth(doc); err != nil {
 		return "", err
 	}
 

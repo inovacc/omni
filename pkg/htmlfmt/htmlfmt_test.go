@@ -1,6 +1,7 @@
 package htmlfmt
 
 import (
+	"strings"
 	"testing"
 )
 
@@ -181,5 +182,22 @@ func TestCollapseWhitespace(t *testing.T) {
 				t.Errorf("CollapseWhitespace(%q) = %q, want %q", tt.input, got, tt.want)
 			}
 		})
+	}
+}
+
+func TestFormat_RejectsDeeplyNested(t *testing.T) {
+	const n = maxHTMLDepth + 50
+	deep := strings.Repeat("<div>", n) + strings.Repeat("</div>", n)
+
+	if _, err := Format(deep); err == nil {
+		t.Fatal("Format(deeply nested): want error, got nil")
+	}
+	if _, err := Minify(deep); err == nil {
+		t.Fatal("Minify(deeply nested): want error, got nil")
+	}
+
+	// A normal document must still format without error.
+	if _, err := Format("<html><body><p>ok</p></body></html>"); err != nil {
+		t.Fatalf("Format(normal): unexpected error %v", err)
 	}
 }
