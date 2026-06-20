@@ -71,6 +71,13 @@ func RunCobraInit(w io.Writer, fs afero.Fs, dir string, opts CobraInitOptions, g
 		opts.AppName = parts[len(parts)-1]
 	}
 
+	// Reject a name that could escape dir via path traversal (CWE-22): AppName
+	// is joined into the output path and may come from external input (e.g. a CI
+	// job). It must be a bare identifier.
+	if strings.ContainsAny(opts.AppName, `/\`) || strings.Contains(opts.AppName, "..") {
+		return cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("scaffold: invalid app name %q: must not contain path separators or '..'", opts.AppName))
+	}
+
 	if opts.Description == "" {
 		opts.Description = fmt.Sprintf("%s is a CLI application", opts.AppName)
 	}
@@ -468,6 +475,11 @@ func parseModuleName(data []byte) string {
 func RunCobraAdd(w io.Writer, fs afero.Fs, dir string, opts CobraAddOptions, genOpts scaffolding.Options) error {
 	if opts.Name == "" {
 		return cmderr.Wrap(cmderr.ErrInvalidInput, "scaffold: command name is required")
+	}
+
+	// Reject a name that could escape cmdDir via path traversal (CWE-22).
+	if strings.ContainsAny(opts.Name, `/\`) || strings.Contains(opts.Name, "..") {
+		return cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("scaffold: invalid command name %q: must not contain path separators or '..'", opts.Name))
 	}
 
 	if opts.Parent == "" {

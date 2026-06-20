@@ -35,6 +35,13 @@ func RunMCPInit(w io.Writer, fs afero.Fs, name string, opts MCPOptions, genOpts 
 		return cmderr.Wrap(cmderr.ErrInvalidInput, "scaffold: MCP server name is required")
 	}
 
+	// Reject a name that is not a bare identifier: it is interpolated into
+	// generated source and must not contain path separators or '..' (CWE-22 parity
+	// with handler/repository scaffolders).
+	if strings.ContainsAny(name, `/\`) || strings.Contains(name, "..") {
+		return cmderr.Wrap(cmderr.ErrInvalidInput, fmt.Sprintf("scaffold: invalid MCP server name %q: must not contain path separators or '..'", name))
+	}
+
 	// Set defaults
 	if opts.Transport == "" {
 		opts.Transport = "stdio"
