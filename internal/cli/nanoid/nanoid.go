@@ -96,7 +96,8 @@ func NewString() string {
 	return idgen.NanoidString()
 }
 
-// MustNew generates a new NanoID and panics on error
+// MustNew generates a new NanoID and panics on error.
+// Must* panics by design; CLI commands use the error-returning variant — see plan 006.
 func MustNew() string {
 	n, err := idgen.GenerateNanoid()
 	if err != nil {

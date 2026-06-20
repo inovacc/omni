@@ -91,7 +91,8 @@ func NewUUID() string {
 	return u
 }
 
-// MustNewUUID returns a new random UUID string, panics on error
+// MustNewUUID returns a new random UUID string, panics on error.
+// Must* panics by design; CLI commands use the error-returning variant — see plan 006.
 func MustNewUUID() string {
 	u, err := idgen.GenerateUUID()
 	if err != nil {

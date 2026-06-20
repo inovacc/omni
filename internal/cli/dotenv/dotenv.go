@@ -364,7 +364,8 @@ func LoadDotenvOverride(files ...string) error {
 	return nil
 }
 
-// MustLoadDotenv loads .env file(s) and panics on error
+// MustLoadDotenv loads .env file(s) and panics on error.
+// Must* panics by design; CLI commands use the error-returning variant — see plan 006.
 func MustLoadDotenv(files ...string) {
 	if err := LoadDotenv(files...); err != nil {
 		panic(fmt.Sprintf("dotenv: %v", err))
