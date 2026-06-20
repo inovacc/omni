@@ -13,20 +13,23 @@ import (
 	"io"
 	"os"
 	"strings"
+
+	"golang.org/x/crypto/blake2b"
 )
 
 // Algorithm represents a hash algorithm.
 type Algorithm string
 
 const (
-	MD5    Algorithm = "md5"
-	SHA1   Algorithm = "sha1"
-	SHA224 Algorithm = "sha224"
-	SHA256 Algorithm = "sha256"
-	SHA384 Algorithm = "sha384"
-	SHA512 Algorithm = "sha512"
-	CRC32  Algorithm = "crc32"
-	CRC64  Algorithm = "crc64"
+	MD5     Algorithm = "md5"
+	SHA1    Algorithm = "sha1"
+	SHA224  Algorithm = "sha224"
+	SHA256  Algorithm = "sha256"
+	SHA384  Algorithm = "sha384"
+	SHA512  Algorithm = "sha512"
+	CRC32   Algorithm = "crc32"
+	CRC64   Algorithm = "crc64"
+	BLAKE2B Algorithm = "blake2b"
 )
 
 // HashFile computes the hash of a file at the given path.
@@ -85,6 +88,9 @@ func newHasher(algo Algorithm) hash.Hash {
 		return crc32.NewIEEE()
 	case CRC64:
 		return crc64.New(crc64.MakeTable(crc64.ECMA))
+	case BLAKE2B:
+		h, _ := blake2b.New256(nil) // 256-bit; nil key => unkeyed digest, never errors
+		return h
 	default:
 		return sha256.New()
 	}

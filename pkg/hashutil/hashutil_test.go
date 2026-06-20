@@ -18,6 +18,8 @@ func TestHashString(t *testing.T) {
 		{"sha1 test", "test", SHA1, "a94a8fe5ccb19ba61c4c0873d391e987982fbbd3"},
 		{"sha256 test", "test", SHA256, "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08"},
 		{"sha256 empty", "", SHA256, "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"},
+		{"blake2b empty", "", BLAKE2B, "0e5751c026e543b2e8ab2eb06099daa1d1e5df47778f7787faab45cdf12fe3a8"},
+		{"blake2b test", "test", BLAKE2B, "928b20366943e2afd11ebc0eae2e53a93bf177a4fcf35bcc64d503704e65e202"},
 	}
 
 	for _, tt := range tests {

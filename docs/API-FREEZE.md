@@ -99,6 +99,7 @@ pkg/figlet figlet.WithFont()
 pkg/figlet figlet.WithLoadedFont()
 pkg/figlet figlet.WithWidth()
 pkg/hashutil hashutil.Algorithm
+pkg/hashutil hashutil.BLAKE2B
 pkg/hashutil hashutil.CRC32
 pkg/hashutil hashutil.CRC64
 pkg/hashutil hashutil.HashBytes()
