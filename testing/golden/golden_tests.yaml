@@ -480,6 +480,16 @@ categories:
         args: ["exist", "env", "NONEXISTENT_VAR_XYZ_12345", "--json"]
         exit_code: 1
 
+  # ===== NOTE =====
+  - name: note
+    tests:
+      # note list --json reads a fixed-content store via --file, so IDs and
+      # timestamps are deterministic. Pins the --json shape before the
+      # formatter unification; must stay byte-identical after.
+      - name: note_list_json
+        args: ["note", "list", "--json", "--file", "{file}"]
+        fixture: "{\"notes\":[{\"id\":\"100\",\"text\":\"buy milk\",\"created_at\":\"2026-01-01T00:00:00Z\"},{\"id\":\"200\",\"text\":\"deploy\",\"created_at\":\"2026-01-02T00:00:00Z\"}]}\n"
+
   # ===== BUF (PROTOBUF) =====
   - name: buf
     tests:

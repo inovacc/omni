@@ -1,0 +1,14 @@
+{
+  "notes": [
+    {
+      "id": "100",
+      "text": "buy milk",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "200",
+      "text": "deploy",
+      "created_at": "2026-01-02T00:00:00Z"
+    }
+  ]
+}
