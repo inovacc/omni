@@ -171,7 +171,7 @@ jobs:
           printf '%s' "$OMNI_RELEASE_KEY" > release.key
           printf '%s' "$OMNI_RELEASE_PUB" > omni.pub
       - name: GoReleaser (build + sign + sbom, no publish)
-        uses: goreleaser/goreleaser-action@v6
+        uses: goreleaser/goreleaser-action@v7
         with:
           distribution: goreleaser
           version: '~> v2'
