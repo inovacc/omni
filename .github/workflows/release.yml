@@ -96,11 +96,11 @@ jobs:
         with:
           go-version-file: go.mod
           cache: true
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: build-A
           path: A
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: build-B
           path: B
