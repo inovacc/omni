@@ -80,7 +80,7 @@ jobs:
                 -o "out/omni-$os-$arch$ext" .
             done
           done
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: build-${{ matrix.build }}
           path: out/
